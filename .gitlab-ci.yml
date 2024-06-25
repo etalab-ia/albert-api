@@ -1,0 +1,33 @@
+stages:
+  - build
+
+.build_template:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - | # build and push image to gitlab registry
+      docker login --username gitlab-ci-token --password $CI_JOB_TOKEN $CI_REGISTRY
+      
+      if [[ $CI_COMMIT_BRANCH == "dev" ]]; then
+        docker build --tag ${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} $BUILD_ARGS $BUILD_CONTEXT
+        docker push ${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}
+        docker tag ${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} ${IMAGE_NAME}:latest
+        docker push ${IMAGE_NAME}:latest
+
+      elif [[ $CI_COMMIT_BRANCH == "main" ]]; then
+        docker build --tag ${IMAGE_NAME}:stable $BUILD_ARGS $BUILD_CONTEXT
+        docker push ${IMAGE_NAME}:stable
+      fi
+
+build:api:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"
+      changes:
+        - app/**/*
+  variables:
+    IMAGE_NAME: "${CI_REGISTRY_IMAGE}/app"
+    BUILD_CONTEXT: "./app"
+    BUILD_ARGS: "--file ./app/Dockerfile"
+  extends: .build_template
