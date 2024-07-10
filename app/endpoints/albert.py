@@ -50,15 +50,14 @@ async def chat_history(
 
     return chat_history
 
-
 @router.post("/files", tags=["Albert"])
 async def upload_files(
-    user: str,
-    files: List[UploadFile],
+    collection: str,
     model: str,
-    chunk_size: int = 3000,
-    chunk_overlap: int = 400,
-    chunk_min_size: int = 90,
+    files: List[UploadFile],
+    chunk_size: Optional[int] = 512,
+    chunk_overlap: Optional[int] = 0,
+    chunk_min_size: Optional[int] = 10,
     api_key: str = Security(check_api_key),
 ) -> FileUploadResponse:
     """
@@ -68,9 +67,9 @@ async def upload_files(
     response = {"object": "list", "data": []}
 
     try:
-        clients["files"].head_bucket(Bucket=user)
+        clients["files"].head_bucket(Bucket=collection)
     except ClientError:
-        clients["files"].create_bucket(Bucket=user)
+        clients["files"].create_bucket(Bucket=collection)
 
     loader = S3FileLoader(
         s3=clients["files"],
@@ -101,7 +100,7 @@ async def upload_files(
             # upload files into S3 bucket
             clients["files"].upload_fileobj(
                 file.file,
-                user,
+                collection,
                 file_id,
                 ExtraArgs={
                     "ContentType": file.content_type,
@@ -119,11 +118,11 @@ async def upload_files(
 
         try:
             # convert files into langchain documents
-            documents = loader._get_elements(file_id=file_id, bucket=user)
+            documents = loader._get_elements(file_id=file_id, bucket=collection)
         except Exception as e:
             logging.error(f"convert {file_name} into documents:\n{e}")
             status = "failed"
-            clients["files"].delete_object(Bucket=user, Key=file_id)
+            clients["files"].delete_object(Bucket=collection, Key=file_id)
             response["data"].append({"object": "upload", "id": file_id, "filename": file_name, "status": status})  # fmt: off
             continue
 
@@ -132,14 +131,14 @@ async def upload_files(
             db = await VectorStore.afrom_documents(
                 documents=documents,
                 embedding=embedding,
-                collection_name=user,
+                collection_name=collection,
                 url=clients["vectors"].url,
                 api_key=clients["vectors"].api_key,
             )
         except Exception as e:
             logging.error(f"create vectors of {file_name}:\n{e}")
             status = "failed"
-            clients["files"].delete_object(Bucket=user, Key=file_id)
+            clients["files"].delete_object(Bucket=collection, Key=file_id)
             response["data"].append({"object": "upload", "id": file_id, "filename": file_name, "status": status})  # fmt: off
             continue
 
@@ -150,10 +149,10 @@ async def upload_files(
     return response
 
 
-@router.get("/files/{user}/{file_id}")
-@router.get("/files/{user}")
+@router.get("/files/{collection}/{file_id}")
+@router.get("/files/{collection}")
 def files(
-    user: str, file_id: Optional[str] = None, api_key: str = Security(check_api_key)
+    collection: str, file_id: Optional[str] = None, api_key: str = Security(check_api_key)
 ) -> Union[File, FileResponse]:
     response = {"object": "list", "metadata": {"files": 0, "vectors": 0}, "data": []}
     """
@@ -162,13 +161,13 @@ def files(
     """
 
     try:
-        clients["files"].head_bucket(Bucket=user)
+        clients["files"].head_bucket(Bucket=collection)
     except ClientError:
         raise HTTPException(status_code=404, detail="Files not found")
 
     response = {"object": "list", "data": []}
-    objects = clients["files"].list_objects_v2(Bucket=user).get("Contents", [])
-    objects = [object | clients["files"].head_object(Bucket=user, Key=object["Key"])["Metadata"] for object in objects]  # fmt: off
+    objects = clients["files"].list_objects_v2(Bucket=collection).get("Contents", [])
+    objects = [object | clients["files"].head_object(Bucket=collection, Key=object["Key"])["Metadata"] for object in objects]  # fmt: off
     for object in objects:
         data = {
             "id": object["Key"],
@@ -188,32 +187,32 @@ def files(
     return response
 
 
-@router.delete("/files/{user}/{file_id}")
-@router.delete("/files/{user}")
+@router.delete("/files/{collection}/{file_id}")
+@router.delete("/files/{collection}")
 def delete_file(
-    user: str, file_id: Optional[str] = None, api_key: str = Security(check_api_key)
+    collection: str, file_id: Optional[str] = None, api_key: str = Security(check_api_key)
 ) -> Response:
     """
     Delete files from configured files and vectors databases.
     """
 
     try:
-        clients["files"].head_bucket(Bucket=user)
+        clients["files"].head_bucket(Bucket=collection)
     except ClientError:
         raise HTTPException(status_code=404, detail="Bucket not found")
 
     if file_id is None:
-        objects = clients["files"].list_objects_v2(Bucket=user)
+        objects = clients["files"].list_objects_v2(Bucket=collection)
         if "Contents" in objects:
             objects = [{"Key": obj["Key"]} for obj in objects["Contents"]]
-            clients["files"].delete_objects(Bucket=user, Delete={"Objects": objects})
+            clients["files"].delete_objects(Bucket=collection, Delete={"Objects": objects})
 
-        clients["files"].delete_bucket(Bucket=user)
-        clients["vectors"].delete_collection(user)
+        clients["files"].delete_bucket(Bucket=collection)
+        clients["vectors"].delete_collection(collection)
     else:
-        clients["files"].delete_object(Bucket=user, Key=file_id)
+        clients["files"].delete_object(Bucket=collection, Key=file_id)
         filter = rest.Filter(must=[rest.FieldCondition(key="metadata.file_id", match=rest.MatchAny(any=[file_id]))])  # fmt: off
-        clients["vectors"].delete(collection_name=user, points_selector=rest.FilterSelector(filter=filter))  # fmt: off
+        clients["vectors"].delete(collection_name=collection, points_selector=rest.FilterSelector(filter=filter))  # fmt: off
 
     return Response(status_code=204)
 
@@ -236,22 +235,13 @@ def tools(api_key: str = Security(check_api_key)) -> ToolResponse:
     return response
 
 
-@router.get("/collections/{user}")
-def collections(user: Optional[str], api_key: str = Security(check_api_key)) -> CollectionResponse:
+@router.get("/collections")
+def collections(api_key: str = Security(check_api_key)) -> CollectionResponse:
     """
     Get list of collections.
     """
 
     response = clients["vectors"].get_collections()
-    collections = [
-        {
-            "object": "collection",
-            "name": collection,
-            "type": "user" if collection == user else "public",
-        }
-        for collection in response.collections
-        if collection.name.startswith("public_") or collection.name == user
-    ]
-
     response = {"object": "list", "data": collections}
+    
     return response
