@@ -1,8 +1,8 @@
 version: "3.8"
 
 services:
-  api:
-    image: albert/api:latest
+  fastapi:
+    image: ghcr.io/etalab-ia/albert-api/fastapi:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     build:
       context: ./app
