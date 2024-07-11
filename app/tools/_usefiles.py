@@ -21,7 +21,7 @@ class UseFiles:
         self.user = user
         self.clients = clients
 
-    def get_rag_prompt(
+    def get_prompt(
         self,
         file_ids: Optional[List[str]] = None,
         **request,

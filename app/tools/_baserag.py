@@ -25,7 +25,7 @@ class BaseRAG:
         self.user = user
         self.clients = clients
 
-    def get_rag_prompt(
+    def get_prompt(
         self,
         embeddings_model: str,
         collections: List[Optional[str]],
@@ -37,14 +37,8 @@ class BaseRAG:
         if k > self.MAX_K:
             raise HTTPException(status_code=400, detail=f"K must be less than or equal to {self.MAX_K}")
 
-        try:
-            model_url = str(self.clients["openai"][embeddings_model].base_url)
-            model_url = model_url.replace("/v1/", "/tei/")
-        except KeyError:
-            raise HTTPException(status_code=404, detail="Model not found.")
-
-        embeddings = HuggingFaceEndpointEmbeddings(
-            model=model_url,
+        embeddings =" HuggingFaceEndpointEmbeddings"(
+            model=self.clients["openai"][embeddings_model].base_url,
             huggingfacehub_api_token=self.clients["openai"][embeddings_model].api_key,
         )
 

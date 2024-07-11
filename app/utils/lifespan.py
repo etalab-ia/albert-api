@@ -1,11 +1,24 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from openai import OpenAI
 
 from .config import CONFIG, logging
 
-clients = {"openai": dict(), "chathistory": None, "vectors": None, "files": None}
+
+class ModelDict(dict):
+    """
+    Overwrite __getitem__ method to raise a 404 error if model is not found.
+    """
+
+    def __getitem__(self, key: str):
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="Model not found.")
+
+
+clients = {"openai": ModelDict(), "chathistory": None, "vectors": None, "files": None}
 
 
 @asynccontextmanager

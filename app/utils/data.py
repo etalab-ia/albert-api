@@ -1,4 +1,3 @@
-from uuid import UUID
 from typing import List, Dict
 
 from qdrant_client.http import models as rest
@@ -11,7 +10,7 @@ def file_to_chunk(client, collection: str, file_ids=List[str]) -> List[Dict]:
     Args:
         client: vectors database client
         collection (str): name of vector collection.
-        file_ids (List[UUID]): list of file ID.
+        file_ids (List[str]): list of file ID.
 
     Return:
         List[Dict]

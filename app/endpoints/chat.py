@@ -1,79 +1,24 @@
-import urllib
-from typing import Union, Optional
 import uuid
 import sys
 
-import yaml
-from fastapi import APIRouter, HTTPException, Security
+from typing import Optional, Union
+from fastapi import APIRouter, Security, HTTPException
 from fastapi.responses import StreamingResponse
 
 sys.path.append("..")
 from utils.schemas import (
+    ChatHistory,
+    ChatHistoryResponse,
     ChatCompletionRequest,
     ChatCompletionResponse,
-    CompletionRequest,
-    CompletionResponse,
-    EmbeddingsRequest,
-    EmbeddingResponse,
-    Model,
-    ModelResponse,
 )
-from utils.lifespan import clients
 from utils.security import check_api_key
+from utils.lifespan import clients
 from tools import *
 from tools import __all__ as tools_list
 
 
 router = APIRouter()
-
-
-@router.get("/models/{model}")
-@router.get("/models")
-def models(
-    model: Optional[str] = None, api_key: str = Security(check_api_key)
-) -> Union[ModelResponse, Model]:
-    """
-    Model API similar to OpenAI's API.
-    See https://platform.openai.com/docs/api-reference/models/list for the API specification.
-    """
-    if model is not None:
-        try:
-            # support double encoding
-            unquote_model = urllib.parse.unquote(urllib.parse.unquote(model))
-            client = clients["openai"][unquote_model]
-            response = dict([row for row in client.models.list().data if row.id == unquote_model][0])  # fmt: off
-        except KeyError:
-            raise HTTPException(status_code=404, detail="Model not found.")
-    else:
-        base_urls = list()
-        response = {"object": "list", "data": []}
-        for model_id, client in clients["openai"].items():
-            if client.base_url not in base_urls:
-                base_urls.append(str(client.base_url))
-                for row in client.models.list().data:
-                    response["data"].append(dict(row))
-
-    return response
-
-
-@router.post("/completions")
-async def completions(
-    request: CompletionRequest, api_key: str = Security(check_api_key)
-) -> CompletionResponse:
-    """
-    Completion API similar to OpenAI's API.
-    See https://platform.openai.com/docs/api-reference/completions/create for the API specification.
-    """
-
-    request = dict(request)
-
-    try:
-        client = clients["openai"][request["model"]]
-    except KeyError:
-        raise HTTPException(status_code=404, detail="Model not found.")
-    response = client.completions.create(**request)
-
-    return response
 
 
 @router.post("/chat/completions")
@@ -100,7 +45,7 @@ async def chat_completions(
             func = globals()[tool["function"]["name"]](clients=clients, user=request["user"])
             tool_params = tool["function"]["parameters"]
             params = request | tool_params  # priority to tool parameters
-            prompt = func.get_rag_prompt(**params)
+            prompt = func.get_prompt(**params)
             request["messages"] = [{"role": "user", "content": prompt}]
         request.pop("tools")
 
@@ -162,20 +107,14 @@ async def chat_completions(
     return StreamingResponse(get_openai_generator(client, **request), media_type="text/event-stream")  # fmt: off
 
 
-@router.post("/embeddings")
-def embeddings(
-    request: EmbeddingsRequest, api_key: str = Security(check_api_key)
-) -> EmbeddingResponse:
+@router.get("/chat/history/{user}/{id}")
+@router.get("/chat/history/{user}")
+async def chat_history(
+    user: str, id: Optional[str] = None, api_key: str = Security(check_api_key)
+) -> Union[ChatHistoryResponse, ChatHistory]:
     """
-    Embedding API similar to OpenAI's API.
-    See https://platform.openai.com/docs/api-reference/embeddings/create for the API specification.
+    Get chat history of a user.
     """
+    chat_history = clients["chathistory"].get_chat_history(user_id=user, chat_id=id)
 
-    request = dict(request)
-    try:
-        client = clients["openai"][request["model"]]
-    except KeyError:
-        raise HTTPException(status_code=404, detail="Model not found.")
-    response = client.embeddings.create(**request)
-
-    return response
+    return chat_history

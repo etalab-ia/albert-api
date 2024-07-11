@@ -10,47 +10,15 @@ from langchain_community.vectorstores import Qdrant as VectorStore
 from qdrant_client.http import models as rest
 
 sys.path.append("..")
-from utils.schemas import (
-    CollectionResponse,
-    ToolResponse,
-    ChatHistory,
-    ChatHistoryResponse,
-    File,
-    FileResponse,
-    FileUploadResponse,
-)
+from utils.schemas import File, FileResponse, FileUploadResponse
 from utils.config import logging
 from utils.security import check_api_key
 from utils.lifespan import clients
 from helpers import S3FileLoader
-from tools import *
-from tools import __all__ as tools_list
 
 router = APIRouter()
 
-
-@router.get("/health")
-def health(api_key: str = Security(check_api_key)):
-    """
-    Health check.
-    """
-
-    return Response(status_code=200)
-
-
-@router.get("/chat/history/{user}/{id}")
-@router.get("/chat/history/{user}")
-async def chat_history(
-    user: str, id: Optional[str] = None, api_key: str = Security(check_api_key)
-) -> Union[ChatHistoryResponse, ChatHistory]:
-    """
-    Get chat history of a user.
-    """
-    chat_history = clients["chathistory"].get_chat_history(user_id=user, chat_id=id)
-
-    return chat_history
-
-@router.post("/files", tags=["Albert"])
+@router.post("/files")
 async def upload_files(
     collection: str,
     model: str,
@@ -78,15 +46,9 @@ async def upload_files(
         chunk_min_size=chunk_min_size,
     )
 
-    try:
-        model_url = str(clients["openai"][model].base_url)
-        model_url = model_url.replace("/v1/", "/tei/")
-    except KeyError:
-        raise HTTPException(status_code=404, detail="Model not found.")
-
     # @TODO: support openai embeddings class
     embedding = HuggingFaceEndpointEmbeddings(
-        model=model_url,
+        model=clients["openai"][model].base_url,
         huggingfacehub_api_token=clients["openai"][model].api_key,
     )
 
@@ -215,33 +177,3 @@ def delete_file(
         clients["vectors"].delete(collection_name=collection, points_selector=rest.FilterSelector(filter=filter))  # fmt: off
 
     return Response(status_code=204)
-
-
-@router.get("/tools")
-def tools(api_key: str = Security(check_api_key)) -> ToolResponse:
-    """
-    Get list a availables tools. Only RAG functions are currenty supported.
-    """
-    data = [
-        {
-            "id": globals()[tool].__name__,
-            "description": globals()[tool].__doc__.strip(),
-            "object": "tool",
-        }
-        for tool in tools_list
-    ]
-    response = {"object": "list", "data": data}
-
-    return response
-
-
-@router.get("/collections")
-def collections(api_key: str = Security(check_api_key)) -> CollectionResponse:
-    """
-    Get list of collections.
-    """
-
-    response = clients["vectors"].get_collections()
-    response = {"object": "list", "data": collections}
-    
-    return response
