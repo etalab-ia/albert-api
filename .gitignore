@@ -195,3 +195,5 @@ override.tf.json
 terraform.rc
 
 **/config.yml
+
+.idea
