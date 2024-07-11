@@ -116,4 +116,8 @@ general:
 
 ## Tests
 
-[TO DO] : écrire la doc et le code
+```bash
+cd app/tests
+CONFIG_FILE="../../config.yml" pytest test_models.py
+CONFIG_FILE="../../config.yml" pytest test_chat.py
+```
