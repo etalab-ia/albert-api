@@ -9,7 +9,6 @@ ENV PATH="/home/albert/.local/bin:${PATH}"
 
 WORKDIR /home/albert
 ADD ./pyproject.toml ./pyproject.toml
-RUN pip install --upgrade pip
 RUN pip install .
 ADD . /home/albert/app
 ENV PYTHONPATH="/home/albert/app:${PYTHONPATH}"
