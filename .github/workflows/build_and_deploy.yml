@@ -6,6 +6,7 @@ on:
       - main
       - staging
       - dev
+      - fix_docker_build_github_actions
 
 jobs:
   build-and-push:
@@ -35,6 +36,8 @@ jobs:
           context: app
           push: true
           tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline,mode=min
 
   deploy-dev:
     name: Deploy from ${{ github.ref_name }}/${{ github.sha }}
@@ -46,7 +49,7 @@ jobs:
         run: |
           curl --request POST \
           --form token=${{ secrets.GITLAB_CI_TOKEN }} \
-          --form ref=feat_albert_api \
+          --form ref=main \
           --form "variables[docker_image_tag]=latest" \
           --form "variables[application_to_deploy]=albert-api" \
           --form "variables[deployment_environment]=dev" \
