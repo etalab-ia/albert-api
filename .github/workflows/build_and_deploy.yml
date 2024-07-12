@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-and-push:
-    environment: ${{ github.ref_name == 'main' && 'prod' || 'staging' }}
+    if: github.ref_name == 'dev'
     name: Build and push from ${{ github.ref_name }}/${{ github.sha }}
     runs-on: ubuntu-latest
     env:
@@ -46,7 +46,7 @@ jobs:
         run: |
           curl --request POST \
           --form token=${{ secrets.GITLAB_CI_TOKEN }} \
-          --form ref=feat_albert_api \
+          --form ref=main \
           --form "variables[docker_image_tag]=latest" \
           --form "variables[application_to_deploy]=albert-api" \
           --form "variables[deployment_environment]=dev" \
