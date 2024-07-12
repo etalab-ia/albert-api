@@ -10,3 +10,4 @@ app.include_router(StandardRouter, tags=["Standard"], prefix="/v1")
 app.include_router(AlbertRouter, tags=["Albert"], prefix="/v1")
 
 print("test docker cache")
+print("test docker cache")
