@@ -36,8 +36,10 @@ jobs:
           context: app
           push: true
           tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}:latest
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
-          cache-to: type=inline,mode=min
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+#           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+#           cache-to: type=inline,mode=min
 
   deploy-dev:
     name: Deploy from ${{ github.ref_name }}/${{ github.sha }}
