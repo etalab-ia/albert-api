@@ -45,7 +45,11 @@ async def chat_completions(
             func = globals()[tool["function"]["name"]](clients=clients, user=request["user"])
             tool_params = tool["function"]["parameters"]
             params = request | tool_params  # priority to tool parameters
-            prompt = func.get_prompt(**params)
+            try:
+                prompt = func.get_prompt(**params)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
             request["messages"] = [{"role": "user", "content": prompt}]
         request.pop("tools")
 
