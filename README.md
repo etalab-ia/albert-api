@@ -116,4 +116,4 @@ general:
 
 ## Tests
 
-[TO DO] : écrire la doc et le code
+[TO DO] : écrire la doc et le code.
