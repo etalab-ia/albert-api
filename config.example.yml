@@ -3,27 +3,26 @@ general:
       - key: albert
       - key: etalab
 
-services:
-  models:
-      - url: https://api.openai.com/v1
-        key: mysecretkey1
+models:
+    - url: https://api.openai.com/v1
+      key: mysecretkey1
 
-  databases:
-    vectors:
-      type: qdrant
-      args:
-        url: qdrant
-        api_key: changeme
-        prefer_grpc: True
+databases:
+  vectors:
+    type: qdrant
+    args:
+      url: qdrant
+      api_key: changeme
+      prefer_grpc: True
 
-    chathistory:
-      type: redis
-      args:
-        host: redis
+  chathistory:
+    type: redis
+    args:
+      host: redis
 
-    files:
-      type: minio
-      args:
-        endpoint_url: minio
-        aws_access_key_id: minio
-        aws_secret_access_key: changeme
+  files:
+    type: minio
+    args:
+      endpoint_url: minio
+      aws_access_key_id: minio
+      aws_secret_access_key: changeme

@@ -3,7 +3,7 @@ import sys
 from fastapi import APIRouter, Security
 
 sys.path.append("..")
-from utils.schemas import ToolResponse
+from schemas.tools import ToolResponse
 from utils.security import check_api_key
 from tools import *
 from tools import __all__ as tools_list

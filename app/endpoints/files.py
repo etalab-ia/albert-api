@@ -3,6 +3,7 @@ import uuid
 import sys
 
 from typing import List, Optional, Union
+
 from fastapi import APIRouter, Response, Security, UploadFile, HTTPException
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from botocore.exceptions import ClientError
@@ -10,15 +11,17 @@ from langchain_community.vectorstores import Qdrant as VectorStore
 from qdrant_client.http import models as rest
 
 sys.path.append("..")
-from utils.schemas import File, FileResponse, FileUploadResponse
+from schemas.files import File, FileResponse, FileUploadResponse
 from utils.config import logging
-from utils.security import check_api_key
+from utils.security import check_api_key, secure_data
 from utils.lifespan import clients
 from helpers import S3FileLoader
 
 router = APIRouter()
 
+
 @router.post("/files")
+@secure_data
 async def upload_files(
     collection: str,
     model: str,
@@ -31,6 +34,8 @@ async def upload_files(
     """
     Upload files into the configured files and vectors databases.
     """
+    if collection.startswith("public-"):
+        raise HTTPException(status_code=400, detail="Public collections are read-only.")
 
     response = {"object": "list", "data": []}
 
@@ -46,9 +51,8 @@ async def upload_files(
         chunk_min_size=chunk_min_size,
     )
 
-    # @TODO: support openai embeddings class
     embedding = HuggingFaceEndpointEmbeddings(
-        model=clients["openai"][model].base_url,
+        model=str(clients["openai"][model].base_url).rstrip("/"),
         huggingfacehub_api_token=clients["openai"][model].api_key,
     )
 
@@ -113,8 +117,11 @@ async def upload_files(
 
 @router.get("/files/{collection}/{file_id}")
 @router.get("/files/{collection}")
-def files(
-    collection: str, file_id: Optional[str] = None, api_key: str = Security(check_api_key)
+@secure_data
+async def files(
+    collection: str,
+    file_id: Optional[str] = None,
+    api_key: str = Security(check_api_key),
 ) -> Union[File, FileResponse]:
     response = {"object": "list", "metadata": {"files": 0, "vectors": 0}, "data": []}
     """
@@ -151,7 +158,8 @@ def files(
 
 @router.delete("/files/{collection}/{file_id}")
 @router.delete("/files/{collection}")
-def delete_file(
+@secure_data
+async def delete_file(
     collection: str, file_id: Optional[str] = None, api_key: str = Security(check_api_key)
 ) -> Response:
     """

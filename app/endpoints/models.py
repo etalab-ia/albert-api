@@ -2,10 +2,10 @@ import urllib
 from typing import Union, Optional
 import sys
 
-from fastapi import APIRouter, HTTPException, Security
+from fastapi import APIRouter, Security
 
 sys.path.append("..")
-from utils.schemas import Model, ModelResponse
+from schemas.models import Model, ModelResponse
 from utils.lifespan import clients
 from utils.security import check_api_key
 

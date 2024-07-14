@@ -5,6 +5,7 @@ from fastapi import HTTPException
 
 sys.path.append("..")
 from utils.data import file_to_chunk
+from utils.security import secure_data
 
 
 class UseFiles:
@@ -17,10 +18,10 @@ class UseFiles:
 
     DEFAULT_PROMPT_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : %(prompt)s\n\nDocuments :\n\n%(docs)s"
 
-    def __init__(self, clients: dict, user: str):
-        self.user = user
+    def __init__(self, clients: dict):
         self.clients = clients
 
+    @secure_data
     async def get_prompt(
         self,
         file_ids: Optional[List[str]] = None,

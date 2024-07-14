@@ -1,9 +1,9 @@
 import sys
 
-from fastapi import APIRouter, HTTPException, Security
+from fastapi import APIRouter, Security
 
 sys.path.append("..")
-from utils.schemas import CompletionRequest, CompletionResponse
+from schemas.completions import CompletionRequest, CompletionResponse
 from utils.lifespan import clients
 from utils.security import check_api_key
 

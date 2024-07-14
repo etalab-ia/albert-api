@@ -1,9 +1,13 @@
 from typing import List, Optional
+import sys
 
 from langchain_community.vectorstores import Qdrant
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from fastapi import HTTPException
 from qdrant_client.http import models as rest
+
+sys.path.append("..")
+from utils.security import secure_data
 
 
 class BaseRAG:
@@ -12,8 +16,8 @@ class BaseRAG:
 
     Args:
         embeddings_model (str): OpenAI embeddings model
-        collection (List[Optional[str]]): Collection names. Defaults to "user" parameter.
-        file_ids (Optional[List[str]], optional): List of file ids for user collections (after upload files). Defaults to None.
+        collection (List[Optional[str]]): Collection names.
+        file_ids (Optional[List[str]], optional): List of file IDs in the selected collections (after upload files). Defaults to None (all files are selected).
         k (int, optional): Top K per collection (max: 6). Defaults to 4.
         prompt_template (Optional[str], optional): Prompt template. Defaults to DEFAULT_PROMPT_TEMPLATE.
     """
@@ -21,10 +25,10 @@ class BaseRAG:
     DEFAULT_PROMPT_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : %(prompt)s\n\nDocuments :\n\n%(docs)s"
     MAX_K = 6
 
-    def __init__(self, clients: dict, user: str):
-        self.user = user
+    def __init__(self, clients: dict):
         self.clients = clients
 
+    @secure_data
     async def get_prompt(
         self,
         embeddings_model: str,
@@ -35,10 +39,12 @@ class BaseRAG:
         **request,
     ) -> str:
         if k > self.MAX_K:
-            raise HTTPException(status_code=400, detail=f"K must be less than or equal to {self.MAX_K}")
+            raise HTTPException(
+                status_code=400, detail=f"K must be less than or equal to {self.MAX_K}"
+            )
 
-        embeddings =" HuggingFaceEndpointEmbeddings"(
-            model=self.clients["openai"][embeddings_model].base_url,
+        embeddings = HuggingFaceEndpointEmbeddings(
+            model=self.clients["openai"][embeddings_model].base_url.rstrip("/"),
             huggingfacehub_api_token=self.clients["openai"][embeddings_model].api_key,
         )
 
@@ -60,7 +66,7 @@ class BaseRAG:
                 collection_name=collection,
             )
             docs.extend(vectorstore.similarity_search(prompt, k=k, filter=filter))
-        
+
         docs = "\n\n".join([doc.page_content for doc in docs])
 
         prompt = prompt_template % {"docs": docs, "prompt": prompt}

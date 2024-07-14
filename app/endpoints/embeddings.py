@@ -1,9 +1,9 @@
 import sys
 
-from fastapi import APIRouter, HTTPException, Security
+from fastapi import APIRouter, Security
 
 sys.path.append("..")
-from utils.schemas import EmbeddingsRequest, EmbeddingResponse
+from schemas.embeddings import EmbeddingsRequest, EmbeddingResponse
 from utils.lifespan import clients
 from utils.security import check_api_key
 
