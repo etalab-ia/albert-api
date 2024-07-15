@@ -1,6 +1,10 @@
 from typing import List, Dict
 
 from qdrant_client.http import models as rest
+from nltk.corpus import stopwords
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
+from langchain_community.vectorstores import Qdrant
+from fastapi import HTTPException
 
 
 def file_to_chunk(client, collection: str, file_ids=List[str]) -> List[Dict]:
@@ -33,3 +37,33 @@ def file_to_chunk(client, collection: str, file_ids=List[str]) -> List[Dict]:
     ]
 
     return data
+
+def get_all_collections(vectorstore):
+    """
+    Get all collections from a vectorstore.
+    
+    Parameters:
+        vectorstore (Qdrant): The vectorstore to get the collections from.
+    """
+    all_collections = [collection.name for collection in vectorstore.get_collections().collections]
+    
+    return all_collections
+
+def search_multiple_collections(vectorstore, emmbeddings, prompt:str, collections:list, k:int=4, filter:dict=None):
+
+    all_collections = get_all_collections(vectorstore)
+
+    docs = []
+    for collection in collections:
+        # check if collections exists
+        if collection not in all_collections:
+            raise HTTPException(status_code=404, detail=f"Collection {collection} not found")
+
+        vectorstore = Qdrant(
+            client=vectorstore,
+            embeddings=emmbeddings,
+            collection_name=collection,
+        )
+        docs.extend(vectorstore.similarity_search(prompt, k=k, filter=filter))
+
+    return docs

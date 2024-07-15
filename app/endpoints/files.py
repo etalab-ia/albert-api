@@ -52,7 +52,7 @@ async def upload_files(
     )
 
     embedding = HuggingFaceEndpointEmbeddings(
-        model=str(clients["openai"][model].base_url).rstrip("/"),
+        model=str(clients["openai"][model].base_url),
         huggingfacehub_api_token=clients["openai"][model].api_key,
     )
 

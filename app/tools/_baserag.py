@@ -1,13 +1,13 @@
 from typing import List, Optional
 import sys
 
-from langchain_community.vectorstores import Qdrant
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from fastapi import HTTPException
 from qdrant_client.http import models as rest
 
 sys.path.append("..")
 from utils.security import secure_data
+from utils.data import search_multiple_collections, get_all_collections
 
 
 class BaseRAG:
@@ -32,7 +32,7 @@ class BaseRAG:
     async def get_prompt(
         self,
         embeddings_model: str,
-        collections: List[Optional[str]],
+        collections: Optional[List[str]] = None,
         file_ids: Optional[List[str]] = None,
         k: Optional[int] = 4,
         prompt_template: Optional[str] = DEFAULT_PROMPT_TEMPLATE,
@@ -43,32 +43,25 @@ class BaseRAG:
                 status_code=400, detail=f"K must be less than or equal to {self.MAX_K}"
             )
 
+        collections = collections or get_all_collections(self.clients["vectors"])
         embeddings = HuggingFaceEndpointEmbeddings(
-            model=self.clients["openai"][embeddings_model].base_url.rstrip("/"),
+            model=str(self.clients["openai"][embeddings_model].base_url),
             huggingfacehub_api_token=self.clients["openai"][embeddings_model].api_key,
         )
 
-        all_collections = [
-            collection.name for collection in self.clients["vectors"].get_collections().collections
-        ]
         filter = rest.Filter(must=[rest.FieldCondition(key="metadata.file_id", match=rest.MatchAny(any=file_ids))]) if file_ids else None  # fmt: off
         prompt = request["messages"][-1]["content"]
 
-        docs = []
-        for collection in collections:
-            # check if collections exists
-            if collection not in all_collections:
-                raise HTTPException(status_code=404, detail=f"Collection {collection} not found")
-
-            vectorstore = Qdrant(
-                client=self.clients["vectors"],
-                embeddings=embeddings,
-                collection_name=collection,
-            )
-            docs.extend(vectorstore.similarity_search(prompt, k=k, filter=filter))
+        docs = search_multiple_collections(
+            vectorstore=self.clients["vectors"],
+            emmbeddings=embeddings,
+            prompt=prompt,
+            collections=collections,
+            k=k,
+            filter=filter,
+        )
 
         docs = "\n\n".join([doc.page_content for doc in docs])
-
         prompt = prompt_template % {"docs": docs, "prompt": prompt}
 
         return prompt
