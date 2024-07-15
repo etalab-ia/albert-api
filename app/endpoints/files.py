@@ -112,7 +112,7 @@ async def upload_files(
             {"object": "upload", "id": file_id, "filename": file_name, "status": status}
         )
 
-    return response
+    return FileUploadResponse(**response)
 
 
 @router.get("/files/{collection}/{file_id}")
@@ -148,12 +148,12 @@ async def files(
         response["data"].append(data)
 
         if object["Key"] == file_id:
-            return data
+            return File(**data)
 
     if file_id:  # if loop pass without return data
         raise HTTPException(status_code=404, detail="File not found.")
 
-    return response
+    return FileResponse(**response)
 
 
 @router.delete("/files/{collection}/{file_id}")

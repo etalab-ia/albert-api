@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class Collection(BaseModel):
     object: Literal["collection"]
     name: str
-    type: Literal["public", "user"]
+    type: Literal["public", "private"]
 
 
 class CollectionResponse(BaseModel):

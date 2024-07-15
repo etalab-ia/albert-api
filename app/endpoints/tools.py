@@ -26,4 +26,4 @@ def tools(api_key: str = Security(check_api_key)) -> ToolResponse:
     ]
     response = {"object": "list", "data": data}
 
-    return response
+    return ToolResponse(**response)

@@ -1,4 +1,5 @@
 import sys
+import re
 
 from fastapi import APIRouter, Security
 
@@ -17,13 +18,21 @@ def collections(api_key: str = Security(check_api_key)) -> CollectionResponse:
     """
 
     response = clients["vectors"].get_collections()
-    collections = [
-        # remove api_key prefix from collection name (see secure_data for details)
-        collection.replace(f"{api_key}-", "")
-        for collection in response.collections
-        if collection.startswith(f"{api_key}-") or collection.startswith("public-")
-    ]
+
+    collections = list()
+    for collection in response.collections:
+        if collection.name.startswith(f"{api_key}-"):
+            # remove api_key prefix from collection name (see secure_data for details)
+            collections.append(
+                {
+                    "object": "collection",
+                    "name": collection.name.replace(f"{api_key}-", ""),
+                    "type": "private",
+                }
+            )
+        elif not bool(re.search("^[a-z0-9]{16}-", collection.name)):
+            collections.append({"object": "collection", "name": collection.name, "type": "public"})
 
     response = {"object": "list", "data": collections}
 
-    return response
+    return CollectionResponse(**response)

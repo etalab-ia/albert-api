@@ -7,12 +7,12 @@ from functools import wraps
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from .config import API_KEYS, ENCODED_KEY_LENGTH, SALT
+from .config import API_KEYS
 
 
 def encode_string(input: str) -> str:
     """
-    Generate a 12 length unique code from an input string using salted SHA-256 hashing.
+    Generate a 16 length unique code from an input string using salted SHA-256 hashing.
 
     Args:
         input_string (str): The input string to generate the code from.
@@ -23,7 +23,7 @@ def encode_string(input: str) -> str:
     hash = hashlib.sha256((input).encode()).digest()
     hash = base64.urlsafe_b64encode(hash).decode()
     # remove special characters and limit length
-    hash = "".join(c for c in hash if c.isalnum())[:ENCODED_KEY_LENGTH].lower()
+    hash = "".join(c for c in hash if c.isalnum())[:16].lower()
 
     return hash
 
@@ -45,7 +45,7 @@ def check_api_key(
     if api_key.credentials not in API_KEYS:
         raise HTTPException(status_code=403, detail="Invalid API key")
 
-    key_id = encode_string(input=api_key.credentials, salt=SALT)
+    key_id = encode_string(input=api_key.credentials)
 
     return key_id
 

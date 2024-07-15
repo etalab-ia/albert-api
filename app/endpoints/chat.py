@@ -85,7 +85,7 @@ async def chat_completions(
                 },
             )
 
-        return response
+        return ChatCompletionResponse(**response)
 
     # stream case
     def get_openai_generator(client, **request):
@@ -128,4 +128,5 @@ async def chat_history(
     """
     chat_history = clients["chathistory"].get_chat_history(user_id=user, chat_id=id)
 
+    # @TODO: add pydantic model for chat history    
     return chat_history

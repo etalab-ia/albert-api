@@ -20,6 +20,5 @@ CONFIG_FILE = os.getenv("CONFIG_FILE", "../config.yml")
 logging.info(f"loading configuration file: {CONFIG_FILE}")
 CONFIG = load_and_validate_yaml(CONFIG_FILE)
 
-ENCODED_KEY_LENGTH = 16
 API_KEYS = [key.key for key in CONFIG.auth.keys]
 logging.info(f"{len(API_KEYS)} API keys found in the configuration file.")

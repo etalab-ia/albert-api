@@ -25,4 +25,4 @@ async def completions(
     client = clients["openai"][request["model"]]
     response = client.completions.create(**request)
 
-    return response
+    return CompletionResponse(**response)

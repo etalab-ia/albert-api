@@ -9,7 +9,6 @@ class Key(BaseModel):
 
 class Auth(BaseModel):
     keys: List[Key]
-    salt: str
 
     @validator("keys")
     def validate_keys(cls, v):
