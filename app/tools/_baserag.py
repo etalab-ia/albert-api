@@ -16,7 +16,7 @@ class BaseRAG:
 
     Args:
         embeddings_model (str): OpenAI embeddings model
-        collection (List[Optional[str]]): Collection names.
+        collection (Optional[List[str]], optional): List of collections to search in. Defaults to None (all collections).
         file_ids (Optional[List[str]], optional): List of file IDs in the selected collections (after upload files). Defaults to None (all files are selected).
         k (int, optional): Top K per collection (max: 6). Defaults to 4.
         prompt_template (Optional[str], optional): Prompt template. Defaults to DEFAULT_PROMPT_TEMPLATE.
@@ -42,8 +42,7 @@ class BaseRAG:
             raise HTTPException(
                 status_code=400, detail=f"K must be less than or equal to {self.MAX_K}"
             )
-
-        collections = collections or get_all_collections(self.clients["vectors"])
+        
         embeddings = HuggingFaceEndpointEmbeddings(
             model=str(self.clients["openai"][embeddings_model].base_url),
             huggingfacehub_api_token=self.clients["openai"][embeddings_model].api_key,
@@ -52,6 +51,13 @@ class BaseRAG:
         filter = rest.Filter(must=[rest.FieldCondition(key="metadata.file_id", match=rest.MatchAny(any=file_ids))]) if file_ids else None  # fmt: off
         prompt = request["messages"][-1]["content"]
 
+        all_collections = get_all_collections(vectorstore=self.clients["vectors"], api_key=request["api_key"])
+        collections = collections or all_collections
+        
+        for collection in collections:
+            if collection not in all_collections:
+                raise HTTPException(status_code=404, detail="Collection not found.")
+        
         docs = search_multiple_collections(
             vectorstore=self.clients["vectors"],
             emmbeddings=embeddings,
@@ -60,7 +66,6 @@ class BaseRAG:
             k=k,
             filter=filter,
         )
-
         docs = "\n\n".join([doc.page_content for doc in docs])
         prompt = prompt_template % {"docs": docs, "prompt": prompt}
 

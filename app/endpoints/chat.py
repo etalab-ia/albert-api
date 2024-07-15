@@ -46,13 +46,13 @@ async def chat_completions(
         for tool in tools:
             if tool["function"]["name"] not in tools_list:
                 raise HTTPException(status_code=404, detail="Tool not found")
-            func = globals()[tool["function"]["name"]](clients=clients, user=request["user"])
+            func = globals()[tool["function"]["name"]](clients=clients)
             params = request | tool["function"]["parameters"]
             params["api_key"] = api_key
             try:
                 prompt = await func.get_prompt(**params)
             except Exception as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=f"tool error {e}")
 
             request["messages"] = [{"role": "user", "content": prompt}]
         request.pop("tools")
@@ -85,7 +85,7 @@ async def chat_completions(
                 },
             )
 
-        return ChatCompletionResponse(**response)
+        return response
 
     # stream case
     def get_openai_generator(client, **request):
@@ -128,5 +128,5 @@ async def chat_history(
     """
     chat_history = clients["chathistory"].get_chat_history(user_id=user, chat_id=id)
 
-    # @TODO: add pydantic model for chat history    
+    # @TODO: add pydantic model for chat history
     return chat_history

@@ -30,8 +30,14 @@ def collections(api_key: str = Security(check_api_key)) -> CollectionResponse:
                     "type": "private",
                 }
             )
-        elif not bool(re.search("^[a-z0-9]{16}-", collection.name)):
-            collections.append({"object": "collection", "name": collection.name, "type": "public"})
+        elif collection.name.startswith("public-"):
+            collections.append(
+                {
+                    "object": "collection",
+                    "name": collection.name.replace("public-", ""),
+                    "type": "public",
+                }
+            )
 
     response = {"object": "list", "data": collections}
 

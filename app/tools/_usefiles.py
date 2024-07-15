@@ -13,7 +13,8 @@ class UseFiles:
     Fill your prompt with file contents. Your prompt must contain "{files}" placeholder.
 
     Args:
-        file_ids (List[str]): List of file ids.
+        collection (str): Collection name.
+        file_ids (List[str]): List of file ids in the selected collection.
     """
 
     DEFAULT_PROMPT_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : %(prompt)s\n\nDocuments :\n\n%(docs)s"
@@ -24,6 +25,7 @@ class UseFiles:
     @secure_data
     async def get_prompt(
         self,
+        collection: str,
         file_ids: Optional[List[str]] = None,
         **request,
     ) -> str:
@@ -37,7 +39,7 @@ class UseFiles:
                 status_code=400, detail='User message must contain "{files}" with UseFiles tool.'
             )
         data = file_to_chunk(
-            client=self.clients["vectors"], collection=request["user"], file_ids=file_ids
+            client=self.clients["vectors"], collection=collection, file_ids=file_ids
         )
         if not data:
             raise HTTPException(status_code=404, detail="Files not found.")
