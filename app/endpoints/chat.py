@@ -31,7 +31,10 @@ async def chat_completions(
 
     request = dict(request)
     chat_id = request.pop("id")
-    client = clients["openai"][request["model"]]
+    try:
+        client = clients["openai"][request["model"]]
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Model not found.")
 
     # tools
     user_message = request["messages"][-1]  # keep user message without tools for chat history
@@ -46,7 +49,7 @@ async def chat_completions(
             tool_params = tool["function"]["parameters"]
             params = request | tool_params  # priority to tool parameters
             try:
-                prompt = func.get_prompt(**params)
+                prompt = await func.get_prompt(**params)
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 

@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+<<<<<<< HEAD
   fastapi:
     image: ghcr.io/etalab-ia/albert-api/fastapi:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -14,12 +15,27 @@ services:
       - 8000:8000
     volumes:
      - ./conf:/home/albert/conf # a config.yml file should be in this folder
+=======
+  # api:
+  #   image: albert/api:latest
+  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+  #   build:
+  #     context: ./app
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   environment:
+  #     - CONFIG_FILE=${CONFIG_FILE:-"/home/albert/conf/config.yml"}
+  #   ports:
+  #     - 8000:8000
+  #   volumes:
+  #    - ./conf:/home/albert/conf # a config.yml file should be in this folder
+>>>>>>> 66b7378 (init commit)
 
   qdrant:
     image: qdrant/qdrant:v1.9.7-unprivileged
     restart: always
-    environment:
-      - QDRANT__SERVICE__API_KEY=${QDRANT_PASSWORD:-"changeme"}
+    # environment:
+    #   - QDRANT__SERVICE__API_KEY=${QDRANT_PASSWORD:-"changeme"}
     ports: 
       - 6333:6333
       - 6334:6334
