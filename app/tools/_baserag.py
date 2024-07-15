@@ -25,7 +25,7 @@ class BaseRAG:
         self.user = user
         self.clients = clients
 
-    def get_prompt(
+    async def get_prompt(
         self,
         embeddings_model: str,
         collections: List[Optional[str]],
