@@ -1,5 +1,6 @@
 import base64
 import uuid
+import json
 
 from typing import List, Optional, Union
 
@@ -27,10 +28,34 @@ async def upload_files(
     chunk_size: Optional[int] = 512,
     chunk_overlap: Optional[int] = 0,
     chunk_min_size: Optional[int] = 10,
+    json_key_to_embed: Optional[str] = None,
+    json_metadata_keys: Optional[str] = None,
     api_key: str = Security(check_api_key),
 ) -> FileUploadResponse:
     """
-    Upload files into the configured files and vectors databases.
+    Upload multiple files to be processed, chunked, and stored into the configured files and vectors databases.
+
+    **Parameters**:
+    - **collection** (string): The collection name where the files will be stored.
+    - **model** (string): The embedding model to use for creating vectors.
+    - **chunk_size** (int): The maximum size of each text chunk.
+    - **chunk_overlap** (int): The number of characters overlapping between chunks.
+    - **chunk_min_size** (int): The minimum size of a chunk to be considered valid.
+
+    **Parameters - for JSON files only:**
+    - **json_key_to_embed** (List[dict]): A list of dictionaries specifying the key to embed for each **JSON** file to upload. Each dictionary should contain:
+        - **filename** (string): The name of the file.
+        - **key** (string): The key to embed.
+        - example : [{"filename": "my_file.json", "key": "description"}]
+    - **json_metadata_keys** (List[dict], optional): A list of dictionaries specifying metadata keys for each **JSON** file tu upload.
+                                                     If empty, all keys except **json_key_to_embed** will be stored as metadatas
+    Each dictionary should contain:
+      - **filename** (string): The name of the file.
+      - **keys** (List[string]): A list of metadata keys to extract.
+      - example : [{"filename": "my_file.json", "keys": ["title","url"]}]
+
+    **Request body**
+    - **files** : Files to upload.
     """
     if collection.startswith("public-"):
         raise HTTPException(status_code=400, detail="Public collections are read-only.")
@@ -42,13 +67,20 @@ async def upload_files(
     except ClientError:
         clients["files"].create_bucket(Bucket=collection)
 
+    json_metadata_keys = (
+        json.loads(json_metadata_keys) if json_metadata_keys else None
+    )  # Converts json string input into a list of dictionnaries
+
+    json_key_to_embed = (
+        json.loads(json_key_to_embed) if json_key_to_embed else None
+    )  # Converts json string input into a list of dictionnaries
+
     loader = S3FileLoader(
         s3=clients["files"],
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         chunk_min_size=chunk_min_size,
     )
-
     embedding = HuggingFaceEndpointEmbeddings(
         model=str(clients["openai"][model].base_url),
         huggingfacehub_api_token=clients["openai"][model].api_key,
@@ -58,6 +90,43 @@ async def upload_files(
         status = "success"
         file_id = str(uuid.uuid4())
         file_name = file.filename.strip()
+
+        if file.content_type == "application/json":
+            if json_metadata_keys:
+                try:
+                    file_metadata_keys = next(
+                        (
+                            item["keys"]
+                            for item in json_metadata_keys
+                            if item["filename"] == file.filename
+                        ),
+                        None,
+                    )
+                except Exception as e:
+                    logging.error(f"looking for keys to store as metadatas from {file_name} :\n{e}")
+                    status = "failed"
+                    response["data"].append({"object": "upload", "id": file_id, "filename": file_name, "status": status})  # fmt: off
+                    continue
+            else:
+                file_metadata_keys = None
+
+            try:
+                file_key_to_embed = next(
+                    (
+                        item["key"]
+                        for item in json_key_to_embed
+                        if item["filename"] == file.filename
+                    ),
+                    None,
+                )
+            except Exception as e:
+                logging.error(f"looking for key to embed from {file_name} :\n{e}")
+                status = "failed"
+                response["data"].append({"object": "upload", "id": file_id, "filename": file_name, "status": status})  # fmt: off
+                continue
+
+        else:
+            file_metadata_keys, file_key_to_embed = None, None
 
         encoded_file_name = base64.b64encode(file_name.encode("utf-8")).decode("ascii")
         try:
@@ -82,7 +151,12 @@ async def upload_files(
 
         try:
             # convert files into langchain documents
-            documents = loader._get_elements(file_id=file_id, bucket=collection)
+            documents = loader._get_elements(
+                file_id=file_id,
+                bucket=collection,
+                json_key_to_embed=file_key_to_embed,
+                json_metadata_keys=file_metadata_keys,
+            )
         except Exception as e:
             logging.error(f"convert {file_name} into documents:\n{e}")
             status = "failed"

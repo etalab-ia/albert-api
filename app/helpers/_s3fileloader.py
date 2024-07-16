@@ -1,6 +1,7 @@
 import os
 import tempfile
 from typing import TYPE_CHECKING, Any, Callable, List, Optional
+import magic
 
 from langchain_community.document_loaders.unstructured import UnstructuredBaseLoader
 
@@ -19,9 +20,9 @@ class S3FileLoader(UnstructuredBaseLoader):
         *,
         mode: str = "single",
         post_processors: Optional[List[Callable]] = None,
-        chunk_size=3000,
-        chunk_overlap=400,
-        chunk_min_size=90,
+        chunk_size: Optional[int] = 512,
+        chunk_overlap: Optional[int] = 0,
+        chunk_min_size: Optional[int] = 10,
         **unstructured_kwargs: Any,
     ):
         """Initialize loader.
@@ -39,7 +40,13 @@ class S3FileLoader(UnstructuredBaseLoader):
         self.chunk_overlap = chunk_overlap
         self.chunk_min_size = chunk_min_size
 
-    def _get_elements(self, bucket: str, file_id: str) -> List:
+    def _get_elements(
+        self,
+        bucket: str,
+        file_id: str,
+        json_key_to_embed: Optional[str],
+        json_metadata_keys: Optional[List[str]],
+    ) -> List:
         """Get elements.
 
         Args:
@@ -49,19 +56,19 @@ class S3FileLoader(UnstructuredBaseLoader):
         Returns:
             documents (list): list of Langchain documents.
         """
-
         with tempfile.TemporaryDirectory() as temp_dir:
             file_path = f"{temp_dir}/{file_id}"
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             self.s3.download_file(bucket, file_id, file_path)
 
             # Returns a list of Langchain documents
-
             return self.parser.parse_and_chunk(
                 file_path=file_path,
                 chunk_size=self.chunk_size,
                 chunk_overlap=self.chunk_overlap,
                 chunk_min_size=self.chunk_min_size,
+                json_key_to_embed=json_key_to_embed,
+                json_metadata_keys=json_metadata_keys,
             )
 
     def _get_metadata(self, bucket, file_id) -> dict:
