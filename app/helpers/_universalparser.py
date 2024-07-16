@@ -1,6 +1,8 @@
 from docx import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from llmsherpa.readers import LayoutPDFReader
+
+# from llmsherpa.readers import LayoutPDFReader
+from langchain_community.document_loaders import PDFMinerLoader
 from langchain.docstore.document import Document as langchain_doc
 import magic
 import json
@@ -97,18 +99,23 @@ class UniversalParser:
         Returns:
             list: List of Langchain documents, where each document corresponds to a text chunk.
         """
-        llmsherpa_api_url = (
-            "https://readers.llmsherpa.com/api/document/developer/parseDocument?renderFormat=all"
-        )
 
-        pdf_reader = LayoutPDFReader(llmsherpa_api_url)
-        doc = pdf_reader.read_pdf(file_path)
+        # Llmsherpa is replaced by PDFMiner for now
 
-        def concatene_chunks(doc):
-            chunks = []
-            for chunk in doc.chunks():
-                chunks.append(chunk.to_text())
-            return "\n".join(chunks)
+        # llmsherpa_api_url = (
+        #     "https://readers.llmsherpa.com/api/document/developer/parseDocument?renderFormat=all"
+        # )
+        # pdf_reader = LayoutPDFReader(llmsherpa_api_url)
+        # doc = pdf_reader.read_pdf(file_path)
+
+        # def concatene_chunks(doc):
+        #     chunks = []
+        #     for chunk in doc.chunks():
+        #         chunks.append(chunk.to_text())
+        #     return "\n".join(chunks)
+
+        loader = PDFMinerLoader(file_path)
+        doc = loader.load()
 
         chunks = []
         text_splitter = RecursiveCharacterTextSplitter(
@@ -119,7 +126,7 @@ class UniversalParser:
             separators=["\n\n", "\n"],
         )
         # Splitting text because too long
-        splitted_text = text_splitter.split_text(concatene_chunks(doc))
+        splitted_text = text_splitter.split_text(doc[0].page_content)
 
         for k, text in enumerate(splitted_text):
             if len(text) > chunk_min_size:  # We avoid meaningless little chunks
