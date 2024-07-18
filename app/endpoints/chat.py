@@ -1,21 +1,19 @@
 import uuid
-import sys
-
 from typing import Optional, Union
+
 from fastapi import APIRouter, Security, HTTPException
 from fastapi.responses import StreamingResponse
 
-sys.path.append("..")
-from schemas.chat import (
+from app.schemas.chat import (
     ChatHistory,
     ChatHistoryResponse,
     ChatCompletionRequest,
     ChatCompletionResponse,
 )
-from utils.security import check_api_key, secure_data
-from utils.lifespan import clients
-from tools import *
-from tools import __all__ as tools_list
+from app.utils.security import check_api_key, secure_data
+from app.utils.lifespan import clients
+from app.tools import *
+from app.tools import __all__ as tools_list
 
 
 router = APIRouter()
@@ -37,6 +35,17 @@ async def chat_completions(
     except KeyError:
         raise HTTPException(status_code=404, detail="Model not found.")
 
+    if request["user"]:
+        # retrieve chat history
+        if chat_id:
+            chat_history = clients["chathistory"].get_chat_history(
+                user_id=request["user"], chat_id=chat_id
+            )
+            if "messages" in chat_history.keys():  # to avoid empty chat history
+                request["messages"] = chat_history["messages"] + request["messages"]
+        else:
+            chat_id = str(uuid.uuid4())
+
     # tools
     user_message = request["messages"][-1]  # keep user message without tools for chat history
     tools = request.get("tools")
@@ -56,17 +65,6 @@ async def chat_completions(
 
             request["messages"] = [{"role": "user", "content": prompt}]
         request.pop("tools")
-
-    if request["user"]:
-        # retrieve chat history
-        if chat_id:
-            chat_history = clients["chathistory"].get_chat_history(
-                user_id=request["user"], chat_id=chat_id
-            )
-            if "messages" in chat_history.keys():  # to avoid empty chat history
-                request["messages"] = chat_history["messages"] + request["messages"]
-        else:
-            chat_id = str(uuid.uuid4())
 
     # non stream case
     if not request["stream"]:

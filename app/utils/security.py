@@ -7,7 +7,7 @@ from functools import wraps
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from .lifespan import clients
+from app.utils.lifespan import clients
 
 
 def encode_string(input: str) -> str:

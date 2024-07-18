@@ -21,10 +21,10 @@ dependencies = [
     "docx==0.2.4",
     "pyyaml==6.0.1",
     "python-docx==1.1.2",
-    "llmsherpa==0.1.4",
     "unstructured==0.14.9",
     "python-magic==0.4.27",
     "grist-api==0.1.0",
+    "pdfminer.six==20240706",
 ]
 
 [tool.setuptools]

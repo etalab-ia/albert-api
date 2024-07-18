@@ -1,12 +1,10 @@
-import sys
 import re
 
 from fastapi import APIRouter, Security
 
-sys.path.append("..")
-from schemas.collections import CollectionResponse
-from utils.security import check_api_key
-from utils.lifespan import clients
+from app.schemas.collections import CollectionResponse
+from app.utils.security import check_api_key
+from app.utils.lifespan import clients
 
 router = APIRouter()
 

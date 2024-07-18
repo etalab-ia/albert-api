@@ -1,13 +1,11 @@
 from typing import List, Optional
-import sys
 
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from fastapi import HTTPException
 from qdrant_client.http import models as rest
 
-sys.path.append("..")
-from utils.security import secure_data
-from utils.data import search_multiple_collections, get_all_collections
+from app.utils.security import secure_data
+from app.utils.data import search_multiple_collections, get_all_collections
 
 
 class BaseRAG:

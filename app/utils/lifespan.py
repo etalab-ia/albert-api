@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
 
-from .config import CONFIG, logging
+from app.utils.config import CONFIG, logging
 
 
 class ModelDict(dict):
@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     # auth
     if CONFIG.auth:
         if CONFIG.auth.type == "grist":
-            from helpers import GristKeyManager
+            from app.helpers import GristKeyManager
 
             clients["auth"] = GristKeyManager(**CONFIG.auth.args)
     else:
@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
 
     # chathistory
     if CONFIG.databases.chathistory.type == "redis":
-        from helpers import RedisChatHistory
+        from app.helpers import RedisChatHistory
 
         clients["chathistory"] = RedisChatHistory(**CONFIG.databases.chathistory.args)
 
