@@ -1,11 +1,8 @@
-import sys
-
 from fastapi import APIRouter, Security
 
-sys.path.append("..")
-from schemas.embeddings import EmbeddingsRequest, EmbeddingResponse
-from utils.lifespan import clients
-from utils.security import check_api_key
+from app.schemas.embeddings import EmbeddingsRequest, EmbeddingResponse
+from app.utils.lifespan import clients
+from app.utils.security import check_api_key
 
 
 router = APIRouter()
@@ -24,4 +21,4 @@ async def embeddings(
     client = clients["openai"][request["model"]]
     response = client.embeddings.create(**request)
 
-    return EmbeddingResponse(**response)
+    return response

@@ -1,7 +1,6 @@
 from docx import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-# from llmsherpa.readers import LayoutPDFReader
 from langchain_community.document_loaders import PDFMinerLoader
 from langchain.docstore.document import Document as langchain_doc
 import magic
@@ -99,20 +98,6 @@ class UniversalParser:
         Returns:
             list: List of Langchain documents, where each document corresponds to a text chunk.
         """
-
-        # Llmsherpa is replaced by PDFMiner for now
-
-        # llmsherpa_api_url = (
-        #     "https://readers.llmsherpa.com/api/document/developer/parseDocument?renderFormat=all"
-        # )
-        # pdf_reader = LayoutPDFReader(llmsherpa_api_url)
-        # doc = pdf_reader.read_pdf(file_path)
-
-        # def concatene_chunks(doc):
-        #     chunks = []
-        #     for chunk in doc.chunks():
-        #         chunks.append(chunk.to_text())
-        #     return "\n".join(chunks)
 
         loader = PDFMinerLoader(file_path)
         doc = loader.load()

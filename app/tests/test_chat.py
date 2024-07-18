@@ -1,9 +1,6 @@
-import sys
-
 from fastapi.testclient import TestClient
 
-sys.path.append("..")
-from main import app
+from app.main import app
 
 model = "AgentPublic/llama3-instruct-8b"
 prompt = "Hello world !"

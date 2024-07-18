@@ -56,12 +56,7 @@ def get_all_collections(vectorstore, api_key: str):
 
 
 def search_multiple_collections(
-    vectorstore,
-    emmbeddings,
-    prompt: str,
-    collections: list,
-    k: int = 4,
-    filter: dict = None,
+    vectorstore, emmbeddings, prompt: str, collections: list, k: int = 4, filter: dict = None
 ):
     docs = []
     for collection in collections:
@@ -72,5 +67,8 @@ def search_multiple_collections(
         )
 
         docs.extend(vectorstore.similarity_search(prompt, k=k, filter=filter))
+
+    # sort by similarity score and get top k
+    docs = sorted(docs, key=lambda x: x[1], reverse=True)[:k]
 
     return docs

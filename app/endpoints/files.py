@@ -1,6 +1,5 @@
 import base64
 import uuid
-import sys
 
 from typing import List, Optional, Union
 
@@ -10,12 +9,11 @@ from botocore.exceptions import ClientError
 from langchain_community.vectorstores import Qdrant as VectorStore
 from qdrant_client.http import models as rest
 
-sys.path.append("..")
-from schemas.files import File, FileResponse, FileUploadResponse
-from utils.config import logging
-from utils.security import check_api_key, secure_data
-from utils.lifespan import clients
-from helpers import S3FileLoader
+from app.schemas.files import File, FileResponse, FileUploadResponse
+from app.utils.config import logging
+from app.utils.security import check_api_key, secure_data
+from app.utils.lifespan import clients
+from app.helpers import S3FileLoader
 
 router = APIRouter()
 

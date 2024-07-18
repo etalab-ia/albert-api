@@ -1,11 +1,9 @@
-import sys
 from typing import List, Optional
 
 from fastapi import HTTPException
 
-sys.path.append("..")
-from utils.data import file_to_chunk
-from utils.security import secure_data
+from app.utils.data import file_to_chunk
+from app.utils.security import secure_data
 
 
 class UseFiles:
@@ -29,10 +27,6 @@ class UseFiles:
         file_ids: Optional[List[str]] = None,
         **request,
     ) -> str:
-        if "user" not in request:
-            raise HTTPException(
-                status_code=400, detail="User parameter must be provide with UseFiles tool."
-            )
         prompt = request["messages"][-1]["content"]
         if "{files}" not in prompt:
             raise HTTPException(

@@ -1,13 +1,11 @@
 import urllib
 from typing import Union, Optional
-import sys
 
 from fastapi import APIRouter, Security
 
-sys.path.append("..")
-from schemas.models import Model, ModelResponse
-from utils.lifespan import clients
-from utils.security import check_api_key
+from app.schemas.models import Model, ModelResponse
+from app.utils.lifespan import clients
+from app.utils.security import check_api_key
 
 
 router = APIRouter()

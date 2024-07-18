@@ -1,12 +1,9 @@
-import sys
-
 from fastapi import APIRouter, Security
 
-sys.path.append("..")
-from schemas.tools import ToolResponse
-from utils.security import check_api_key
-from tools import *
-from tools import __all__ as tools_list
+from app.schemas.tools import ToolResponse
+from app.utils.security import check_api_key
+from app.tools import *
+from app.tools import __all__ as tools_list
 
 router = APIRouter()
 
