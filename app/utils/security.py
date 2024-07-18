@@ -7,7 +7,7 @@ from functools import wraps
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from .config import API_KEYS
+from .lifespan import clients
 
 
 def encode_string(input: str) -> str:
@@ -38,14 +38,19 @@ def check_api_key(
         api_key (Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key")]): The API key to check.
 
     Returns:
-        str: The encoded API key.
+        str: The encoded API key or "no-auth" if no authentication is set in the configuration file.
     """
-    if api_key.scheme != "Bearer":
-        raise HTTPException(status_code=403, detail="Invalid authentication scheme")
-    if api_key.credentials not in API_KEYS:
-        raise HTTPException(status_code=403, detail="Invalid API key")
 
-    key_id = encode_string(input=api_key.credentials)
+    if clients["auth"]:
+        if api_key.scheme != "Bearer":
+            raise HTTPException(status_code=403, detail="Invalid authentication scheme")
+
+        if not clients["auth"].check_api_key(api_key.credentials):
+            raise HTTPException(status_code=403, detail="Invalid API key")
+
+        key_id = encode_string(input=api_key.credentials)
+    else:
+        key_id = "no-auth"
 
     return key_id
 
@@ -59,6 +64,9 @@ def secure_data(func):
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
+        if kwargs["api_key"] == "no-auth":
+            return await func(*args, **kwargs)
+
         # for GET endpoints
         if "collection" in kwargs and not kwargs["collection"].startswith("public-"):
             kwargs["collection"] = f"{kwargs['api_key']}-{kwargs['collection']}"

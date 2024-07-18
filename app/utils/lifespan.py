@@ -25,6 +25,15 @@ clients = {"openai": ModelDict(), "chathistory": None, "vectors": None, "files":
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
+    # auth
+    if CONFIG.auth:
+        if CONFIG.auth.type == "grist":
+            from helpers import GristKeyManager
+
+            clients["auth"] = GristKeyManager(**CONFIG.auth.args)
+    else:
+        clients["auth"] = None
+
     models = list()
     for model in CONFIG.models:
         client = OpenAI(base_url=model.url, api_key=model.key, timeout=10)
