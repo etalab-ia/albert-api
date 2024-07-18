@@ -1,6 +1,6 @@
 from typing import List, Optional, Literal
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 class Key(BaseModel):
@@ -8,13 +8,8 @@ class Key(BaseModel):
 
 
 class Auth(BaseModel):
-    keys: List[Key]
-
-    @validator("keys")
-    def validate_keys(cls, v):
-        if v is None:
-            raise ValueError("At least one key must be specified if keys section is present")
-        return v
+    type: Literal["grist"]
+    args: dict
 
 class Model(BaseModel):
     url: str
@@ -43,6 +38,6 @@ class Databases(BaseModel):
 
 
 class Config(BaseModel):
-    auth: Auth
+    auth: Optional[Auth] = None
     models: List[Model] = Field(..., min_items=1)
     databases: Databases

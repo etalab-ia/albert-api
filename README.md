@@ -52,25 +52,27 @@ Les tools sont une fonctionnalité définie OpenAI que l'on surcharge dans le ca
 
 > 📖 [Notebook de démonstration : RAG](./tutorials/retrival_augmented_generation.ipynb)
 
+![](./assets/chatcompletion.png)
+
 ### Accès par token
 
-Albert API permet de protégrer son accès avec un ou plusieurs tokens d'authentification, voir la section [Configuration](#configuration) pour plus d'informations.
+Albert API permet de protégrer son accès avec un ou plusieurs tokens d'authentification, voir la section [Auth](#auth) pour plus d'informations.
 
 ## Configuration
 
 Toute la configuration de l'API Albert se fait dans fichier de configuration qui doit respecter les  spécifications suivantes (voir *[config.example.yml](./config.example.yml)* pour un exemple) :
 
 ```yaml
-auth:
-  keys:
-    - key: [required]
+auth: [optional]
+  type: [optional]
+  args: [optional] 
+    [arg_name]: [value]
     ...
   
 models:
     - url: [required]
       key: [optional]
     ...
-
 
 databases:
   chathistory:
@@ -100,6 +102,12 @@ CONFIG_FILE=<path_to_the_file> uvicorn main:app --reload --port 8080 --log-level
 
 La configuration permet de spéficier le token d'accès à l'API, les API de modèles auquel à accès l'API d'Albert ainsi que les bases de données nécessaires à sont fonctionnement. 
 
+### Auth
+
+Les IAM supportés, de nouveaux seront disponibles prochainements :
+
+* [Grist](https://www.getgrist.com/)
+
 ### Databases
 
 3 bases de données sont à configurées dans le fichier de configuration (*[config.example.yml](./config.example.yml)*) : 
@@ -109,11 +117,11 @@ La configuration permet de spéficier le token d'accès à l'API, les API de mod
 
 Voici les types de base de données supportées, de nouvelles seront disponibles prochainements : 
 
-| Service | Type |
+| Database | Type |
 | --- | --- |
-| vectors | qdrant | 
-| chathistory | redis |
-| files | minio |
+| vectors | [qdrant](https://qdrant.tech/) | 
+| chathistory | [redis](https://redis.io/) |
+| files | [minio](https://min.io/) |
 
 ## Tests
 
