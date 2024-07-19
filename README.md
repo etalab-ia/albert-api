@@ -1,26 +1,5 @@
 # Albert API
 
-## Quickstart
-
-1. Installez [libmagic](https://man7.org/linux/man-pages/man3/libmagic.3.html)
-
-2. Installez les packages Python
-
-  ```bash 
-  cd app
-  pip install .
-  ```
-
-3. Créez un fichier *config.yml* à la racine du repository sur la base du fichier d'exemple *[config.example.yml](./config.example.yml)*
-
-  Si vous souhaitez configurer les accès aux modèles et aux bases de données, consultez la [Configuration](#configuration).
-
-  Pour lancer l'API : 
-  ```bash
-  cd app
-  uvicorn main:app --reload --port 8080 --log-level debug
-  ```
-
 ## Fonctionnalités
 
 ### OpenAI conventions
@@ -56,7 +35,7 @@ Les tools sont une fonctionnalité définie OpenAI que l'on surcharge dans le ca
 
 > 📖 [Notebook de démonstration](./tutorials/retrival_augmented_generation.ipynb)
 
-### Résumer un document (summarize)
+#### Résumer un document (summarize)
 
 > 📖 [Notebook de démonstration](./tutorials/summarize.ipynb)
 
