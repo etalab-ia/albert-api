@@ -14,6 +14,7 @@ databases:
     type: redis
     args:
       host: redis
+      password: changeme
 
   files:
     type: minio

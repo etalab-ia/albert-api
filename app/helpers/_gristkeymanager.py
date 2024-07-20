@@ -6,16 +6,16 @@ from redis import Redis
 
 
 class GristKeyManager(GristDocAPI):
-    CACHE_EXPIRATION = 86400 # 24h
+    CACHE_EXPIRATION = 3600 # 1h
 
-    def __init__(self, table_id: str, redis_host: str, redis_port: int, *args, **kwargs):
+    def __init__(self, table_id: str, redis_host: str, redis_port: int, redis_password:str=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.api_key = kwargs.get("api_key")
         self.doc_id = kwargs.get("doc_id")
         self.table_id = table_id
         self.redis_host = redis_host
         self.redis_port = redis_port
-        self.redis = Redis(host=self.redis_host, port=self.redis_port)
+        self.redis = Redis(host=self.redis_host, port=self.redis_port, password=redis_password)
 
     def check_api_key(self, key: str):
         """

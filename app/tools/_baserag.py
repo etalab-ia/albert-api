@@ -18,9 +18,12 @@ class BaseRAG:
         file_ids (Optional[List[str]], optional): List of file IDs in the selected collections (after upload files). Defaults to None (all files are selected).
         k (int, optional): Top K per collection (max: 6). Defaults to 4.
         prompt_template (Optional[str], optional): Prompt template. Defaults to DEFAULT_PROMPT_TEMPLATE.
+
+    DEFAULT_PROMPT_TEMPLATE:
+        "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n\n{files}"
     """
 
-    DEFAULT_PROMPT_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : %(prompt)s\n\nDocuments :\n\n%(docs)s"
+    DEFAULT_PROMPT_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n\n{files}"
     MAX_K = 6
 
     def __init__(self, clients: dict):
@@ -40,7 +43,11 @@ class BaseRAG:
             raise HTTPException(
                 status_code=400, detail=f"K must be less than or equal to {self.MAX_K}"
             )
-        
+
+        if "{files}" not in prompt_template or "{prompt}" not in prompt_template:
+            raise HTTPException(
+                status_code=400, detail="Prompt template must contain '{files}' and '{prompt}'"
+            )
         embeddings = HuggingFaceEndpointEmbeddings(
             model=str(self.clients["openai"][embeddings_model].base_url),
             huggingfacehub_api_token=self.clients["openai"][embeddings_model].api_key,
@@ -49,22 +56,24 @@ class BaseRAG:
         filter = rest.Filter(must=[rest.FieldCondition(key="metadata.file_id", match=rest.MatchAny(any=file_ids))]) if file_ids else None  # fmt: off
         prompt = request["messages"][-1]["content"]
 
-        all_collections = get_all_collections(vectorstore=self.clients["vectors"], api_key=request["api_key"])
+        all_collections = get_all_collections(
+            vectorstore=self.clients["vectors"], api_key=request["api_key"]
+        )
         collections = collections or all_collections
-        
+
         for collection in collections:
             if collection not in all_collections:
                 raise HTTPException(status_code=404, detail="Collection not found.")
-        
+
         docs = search_multiple_collections(
             vectorstore=self.clients["vectors"],
-            emmbeddings=embeddings,
+            embeddings=embeddings,
             prompt=prompt,
             collections=collections,
             k=k,
             filter=filter,
         )
         docs = "\n\n".join([doc.page_content for doc in docs])
-        prompt = prompt_template % {"docs": docs, "prompt": prompt}
+        prompt = prompt_template.format(files=docs, prompt=prompt)
 
         return prompt

@@ -9,11 +9,11 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      - CONFIG_FILE=${CONFIG_FILE:-"/home/albert/conf/config.yml"}
+      - CONFIG_FILE=/home/albert/conf/config.yml
     ports:
       - 8000:8000
     volumes:
-     - ./conf:/home/albert/conf # a config.yml file should be in this folder
+     - .:/home/albert/conf # a config.yml file should be in this folder
 
   qdrant:
     image: qdrant/qdrant:v1.9.7-unprivileged
@@ -41,8 +41,9 @@ services:
 
   redis:
     image: redis/redis-stack-server:7.2.0-v11
-    command: redis-server --dir /data --requirepass changeme --save 60 1 --appendonly yes
     restart: always
+    environment:
+      REDIS_ARGS: --dir /data --requirepass changeme --user username on >password ~* allcommands --save 60 1 --appendonly yes
     ports:
       - 6379:6379
     volumes:

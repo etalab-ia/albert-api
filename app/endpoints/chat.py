@@ -35,8 +35,8 @@ async def chat_completions(
     except KeyError:
         raise HTTPException(status_code=404, detail="Model not found.")
 
+    # retrieve chat history
     if request["user"]:
-        # retrieve chat history
         if chat_id:
             chat_history = clients["chathistory"].get_chat_history(
                 user_id=request["user"], chat_id=chat_id
@@ -50,8 +50,6 @@ async def chat_completions(
     user_message = request["messages"][-1]  # keep user message without tools for chat history
     tools = request.get("tools")
     if tools:
-        if not request["user"]:
-            raise HTTPException(status_code=403, detail="A user is required to use tools.")
         for tool in tools:
             if tool["function"]["name"] not in tools_list:
                 raise HTTPException(status_code=404, detail="Tool not found")

@@ -67,30 +67,31 @@ def secure_data(func):
         if kwargs["api_key"] == "no-auth":
             return await func(*args, **kwargs)
 
-        # for GET endpoints
-        if "collection" in kwargs and not kwargs["collection"].startswith("public-"):
-            kwargs["collection"] = f"{kwargs['api_key']}-{kwargs['collection']}"
-        if "collections" in kwargs:
-            kwargs["collections"] = [
-                f"{kwargs['api_key']}-{collection}"
-                if not collection.startswith("public-")
-                else collection
-                for collection in kwargs["collections"]
-            ]
-        if "user" in kwargs:
+        # for request parameters
+        if "user" in kwargs and kwargs["user"] is not None:
             kwargs["user"] = f"{kwargs['api_key']}-{kwargs['user']}"
 
-        # for POST endpoints
-        if "request" in kwargs:
-            kwargs["request"] = dict(kwargs["request"])
-            if "collection" in kwargs["request"] and not kwargs["request"]["collection"].startswith(
-                "public-"
-            ):
-                kwargs["request"]["collection"] = (
-                    f"{kwargs['api_key']}-{kwargs['request']['collection']}"
-                )
-            if "user" in kwargs["request"]:
-                kwargs["request"]["user"] = f"{kwargs['api_key']}-{kwargs['request']['user']}"
+        if "collection" in kwargs and kwargs["collection"] is not None:
+            if not kwargs["collection"].startswith("public-"):
+                kwargs["collection"] = f"{kwargs['api_key']}-{kwargs['collection']}"
+
+        if "collections" in kwargs and kwargs["collections"] is not None:
+            kwargs["collections"] = [f"{kwargs['api_key']}-{collection}" if not collection.startswith("public-") else collection for collection in kwargs["collections"]]  # fmt: off
+
+        # for request body
+        if "request" not in kwargs:
+            return await func(*args, **kwargs)
+
+        kwargs["request"] = dict(kwargs["request"])
+        if "user" in kwargs["request"] and kwargs["request"]["user"] is not None:
+            kwargs["request"]["user"] = f"{kwargs['api_key']}-{kwargs["request"]['user']}"
+
+        if "collection" in kwargs["request"] and kwargs["request"]["collection"] is not None:
+            if not kwargs["request"]["collection"].startswith("public-"):
+                kwargs["request"]["collection"] = f"{kwargs['api_key']}-{kwargs['request']['collection']}"  # fmt: off
+
+        if "collections" in kwargs["request"] and kwargs["request"]["collections"] is not None:
+            kwargs["request"]["collections"] = [f"{kwargs['api_key']}-{collection}" if not collection.startswith("public-") else collection for collection in kwargs["request"]["collections"]]  # fmt: off
 
         return await func(*args, **kwargs)
 
