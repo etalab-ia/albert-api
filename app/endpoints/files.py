@@ -38,9 +38,9 @@ async def upload_files(
     **Parameters**:
     - **collection** (string): The collection name where the files will be stored.
     - **model** (string): The embedding model to use for creating vectors.
-    - **chunk_size** (int): The maximum size of each text chunk.
+    - **chunk_size** (int): The maximum number of characters of each text chunk.
     - **chunk_overlap** (int): The number of characters overlapping between chunks.
-    - **chunk_min_size** (int): The minimum size of a chunk to be considered valid.
+    - **chunk_min_size** (int): The minimum number of characters of a chunk to be considered valid.
 
     **Parameters - for JSON files only:**
     - **json_key_to_embed** (List[dict]): A list of dictionaries specifying the key to embed for each **JSON** file to upload. Each dictionary should contain:
@@ -61,7 +61,6 @@ async def upload_files(
         raise HTTPException(status_code=400, detail="Public collections are read-only.")
 
     response = {"object": "list", "data": []}
-
     try:
         clients["files"].head_bucket(Bucket=collection)
     except ClientError:
@@ -70,7 +69,6 @@ async def upload_files(
     json_metadata_keys = (
         json.loads(json_metadata_keys) if json_metadata_keys else None
     )  # Converts json string input into a list of dictionnaries
-
     json_key_to_embed = (
         json.loads(json_key_to_embed) if json_key_to_embed else None
     )  # Converts json string input into a list of dictionnaries
@@ -90,7 +88,6 @@ async def upload_files(
         status = "success"
         file_id = str(uuid.uuid4())
         file_name = file.filename.strip()
-
         if file.content_type == "application/json":
             if json_metadata_keys:
                 try:

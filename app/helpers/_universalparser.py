@@ -46,7 +46,7 @@ class UniversalParser:
             chunk_size (int): Maximum size of each text chunk.
             chunk_overlap (int): Number of characters overlapping between chunks.
             chunk_min_size (int): Minimum size of a chunk to be considered valid.
-            json_key_to_embed (str): Key to embed, for JSON files only. (default: 'text')
+            json_key_to_embed (str): Key to embed, for JSON files only. (default: None)
             json_metadata_keys (List[str]): List of keys to store as Langchain metadata, for JSON files only.
                                             If empty, all keys except json_key_to_embed will be stored as metadatas (default: None)
 
@@ -134,14 +134,22 @@ class UniversalParser:
         splitted_text = text_splitter.split_text(doc[0].page_content)
 
         for k, text in enumerate(splitted_text):
-            if len(text) > chunk_min_size:  # We avoid meaningless little chunks
+            if chunk_min_size:
+                if len(text) > chunk_min_size:  # We avoid meaningless little chunks
+                    chunk = langchain_doc(
+                        page_content=self.cleaner.clean_string(text),
+                        metadata={
+                            "file_id": file_path.split("/")[-1],
+                        },
+                    )
+            else:
                 chunk = langchain_doc(
                     page_content=self.cleaner.clean_string(text),
                     metadata={
                         "file_id": file_path.split("/")[-1],
                     },
                 )
-                chunks.append(chunk)
+            chunks.append(chunk)
 
         return chunks  # List of langchain documents
 
@@ -185,14 +193,24 @@ class UniversalParser:
                     # Adding previous subpart to result
 
                     if splitted_text:
-                        for k, chunk in enumerate(splitted_text):
-                            chunk = langchain_doc(
-                                page_content=self.cleaner.clean_string(chunk),
-                                metadata={
-                                    "file_id": file_path.split("/")[-1],
-                                    "title": title,
-                                },
-                            )
+                        for k, text in enumerate(splitted_text):
+                            if chunk_min_size:
+                                if len(text) > chunk_min_size:  # We avoid meaningless little chunks
+                                    chunk = langchain_doc(
+                                        page_content=self.cleaner.clean_string(text),
+                                        metadata={
+                                            "file_id": file_path.split("/")[-1],
+                                            "title": title,
+                                        },
+                                    )
+                            else:
+                                chunk = langchain_doc(
+                                    page_content=self.cleaner.clean_string(text),
+                                    metadata={
+                                        "file_id": file_path.split("/")[-1],
+                                        "title": title,
+                                    },
+                                )
                             documents.append(chunk)
                 # Updating title for new subpart
                 title = paragraph.text.strip()
@@ -206,42 +224,60 @@ class UniversalParser:
             splitted_text = text_splitter.split_text(full_text)
 
             if splitted_text:
-                for k, chunk in enumerate(splitted_text):
-                    if len(chunk) > chunk_min_size:  # We avoid meaningless little chunks
+                for k, text in enumerate(splitted_text):
+                    if chunk_min_size:
+                        if len(text) > chunk_min_size:  # We avoid meaningless little chunks
+                            chunk = langchain_doc(
+                                page_content=self.cleaner.clean_string(text),
+                                metadata={
+                                    "file_id": file_path.split("/")[-1],
+                                    "title": title,
+                                },
+                            )
+                    else:
                         chunk = langchain_doc(
-                            page_content=self.cleaner.clean_string(chunk),
+                            page_content=self.cleaner.clean_string(text),
                             metadata={
                                 "file_id": file_path.split("/")[-1],
                                 "title": title,
                             },
                         )
-                        documents.append(chunk)
+                    documents.append(chunk)
 
         elif text_chunks:
             full_text = "\n".join([p.text for p in text_chunks])
             splitted_text = text_splitter.split_text(full_text)
 
-            for k, chunk in enumerate(splitted_text):
-                if len(chunk) > chunk_min_size:  # We avoid meaningless little chunks
-                    chunks = langchain_doc(
-                        page_content=self.cleaner.clean_string(chunk),
+            for k, text in enumerate(splitted_text):
+                if chunk_min_size:
+                    if len(text) > chunk_min_size:  # We avoid meaningless little chunks
+                        chunk = langchain_doc(
+                            page_content=self.cleaner.clean_string(text),
+                            metadata={
+                                "file_id": file_path.split("/")[-1],
+                                "title": title,
+                            },
+                        )
+                else:
+                    chunk = langchain_doc(
+                        page_content=self.cleaner.clean_string(text),
                         metadata={
                             "file_id": file_path.split("/")[-1],
                             "title": title,
                         },
                     )
-                    documents.append(chunks)
+                documents.append(chunk)
 
         return documents  # List of langchain documents
 
     def _json_to_chunks(
         self,
         file_path: str,
-        chunk_size: int,
-        chunk_overlap: int,
-        chunk_min_size: int,
         json_key_to_embed: str,
         json_metadata_keys: Optional[List[str]],
+        chunk_size: Optional[int],
+        chunk_overlap: Optional[int],
+        chunk_min_size: Optional[int],
     ) -> list:
         """
         Converts a JSON file into a list of chunks.
@@ -272,7 +308,6 @@ class UniversalParser:
             is_separator_regex=False,
             separators=["\n"],
         )
-
         for i, dic in enumerate(data):
             if not json_metadata_keys:
                 # If json_metadata_keys is empty, all  keys except the key to embed will be stored as metadatas
@@ -286,11 +321,17 @@ class UniversalParser:
             meta_data["file_id"] = file_path.split("/")[-1]
             splitted_text = text_splitter.split_text(dic[json_key_to_embed])
             for k, text in enumerate(splitted_text):
-                if len(text) > chunk_min_size:  # We avoid meaningless little chunks
+                if chunk_min_size:
+                    if len(text) > chunk_min_size:  # We avoid meaningless little chunks
+                        chunk = langchain_doc(
+                            page_content=self.cleaner.clean_string(text),
+                            metadata=meta_data,
+                        )
+                else:
                     chunk = langchain_doc(
                         page_content=self.cleaner.clean_string(text),
                         metadata=meta_data,
                     )
 
-                    chunks.append(chunk)
+                chunks.append(chunk)
         return chunks  # Returns a list of Langchain documents
