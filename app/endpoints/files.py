@@ -27,7 +27,7 @@ async def upload_files(
     files: List[UploadFile],
     chunk_size: Optional[int] = 512,
     chunk_overlap: Optional[int] = 0,
-    chunk_min_size: Optional[int] = 10,
+    chunk_min_size: Optional[int] = None,
     json_key_to_embed: Optional[str] = None,
     json_metadata_keys: Optional[str] = None,
     api_key: str = Security(check_api_key),
@@ -57,8 +57,6 @@ async def upload_files(
     **Request body**
     - **files** : Files to upload.
     """
-    if collection.startswith("public-"):
-        raise HTTPException(status_code=400, detail="Public collections are read-only.")
 
     response = {"object": "list", "data": []}
     try:

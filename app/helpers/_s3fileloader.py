@@ -20,9 +20,9 @@ class S3FileLoader(UnstructuredBaseLoader):
         *,
         mode: str = "single",
         post_processors: Optional[List[Callable]] = None,
-        chunk_size: Optional[int] = 512,
-        chunk_overlap: Optional[int] = 0,
-        chunk_min_size: Optional[int] = 10,
+        chunk_size: Optional[int],
+        chunk_overlap: Optional[int] ,
+        chunk_min_size: Optional[int] ,
         **unstructured_kwargs: Any,
     ):
         """Initialize loader.
