@@ -18,7 +18,7 @@ async def embeddings(
     """
 
     request = dict(request)
-    client = clients["openai"][request["model"]]
+    client = clients["models"][request["model"]]
     response = client.embeddings.create(**request)
 
     return response

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class File(BaseModel):
-    object: Literal["file"]
+    object: Literal["file"] = "file"
     id: UUID
     bytes: int
     filename: str
@@ -13,17 +13,17 @@ class File(BaseModel):
 
 
 class FileResponse(BaseModel):
-    object: Literal["list"]
+    object: Literal["list"] = "list"
     data: List[File]
 
 
-class FileUpload(BaseModel):
-    object: Literal["upload"]
+class Upload(BaseModel):
+    object: Literal["upload"] = "upload"
     id: UUID
     filename: str
-    status: Literal["success", "failed"]
+    status: Literal["success", "failed"] = "success"
 
 
-class FileUploadResponse(BaseModel):
-    object: Literal["list"]
-    data: List[FileUpload]
+class UploadResponse(BaseModel):
+    object: Literal["list"] = "list"
+    data: List[Upload]

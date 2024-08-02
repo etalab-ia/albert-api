@@ -1,12 +1,13 @@
 from typing import Dict, List, Optional, Union, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 from openai.types.chat import (
     ChatCompletionMessageParam,
     ChatCompletion,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
+    ChatCompletionChunk,
 )
 
 
@@ -26,18 +27,10 @@ class ChatCompletionRequest(BaseModel):
     tool_choice: Optional[Union[Literal["none"], ChatCompletionToolChoiceOptionParam]] = "none"
     tools: List[ChatCompletionToolParam] = None
 
-    # albert additionnal params
-    id: Optional[str] = None
-
 
 class ChatCompletionResponse(ChatCompletion):
+    metadata: Optional[dict] = None
+
+
+class ChatCompletionChunkResponse(ChatCompletionChunk):
     pass
-
-
-class ChatHistory(BaseModel):
-    created: int
-    messages: List[ChatCompletionMessageParam]
-
-
-class ChatHistoryResponse(RootModel):
-    root: Dict[UUID, ChatHistory]

@@ -7,10 +7,10 @@ from typing import List, Optional, Union
 from fastapi import APIRouter, Response, Security, UploadFile, HTTPException
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from botocore.exceptions import ClientError
-from langchain_community.vectorstores import Qdrant as VectorStore
-from qdrant_client.http import models as rest
+from langchain_community.vectorstores import Qdrant
+from qdrant_client.http.models import Filter, FieldCondition, MatchAny, FilterSelector
 
-from app.schemas.files import File, FileResponse, FileUploadResponse
+from app.schemas.files import File, FileResponse, Upload, UploadResponse
 from app.utils.config import logging
 from app.utils.security import check_api_key, secure_data
 from app.utils.lifespan import clients
@@ -31,9 +31,9 @@ async def upload_files(
     json_key_to_embed: Optional[str] = None,
     json_metadata_keys: Optional[str] = None,
     api_key: str = Security(check_api_key),
-) -> FileUploadResponse:
+) -> UploadResponse:
     """
-    Upload multiple files to be processed, chunked, and stored into the configured files and vectors databases.
+    Upload multiple files to be processed, chunked, and stored into a vector database. Supported file types : docx, pdf, json.
 
     **Parameters**:
     - **collection** (string): The collection name where the files will be stored.
@@ -58,7 +58,7 @@ async def upload_files(
     - **files** : Files to upload.
     """
 
-    response = {"object": "list", "data": []}
+    data = list()
     try:
         clients["files"].head_bucket(Bucket=collection)
     except ClientError:
@@ -78,12 +78,11 @@ async def upload_files(
         chunk_min_size=chunk_min_size,
     )
     embedding = HuggingFaceEndpointEmbeddings(
-        model=str(clients["openai"][model].base_url),
-        huggingfacehub_api_token=clients["openai"][model].api_key,
+        model=str(clients["models"][model].base_url),
+        huggingfacehub_api_token=clients["models"][model].api_key,
     )
 
     for file in files:
-        status = "success"
         file_id = str(uuid.uuid4())
         file_name = file.filename.strip()
         if file.content_type == "application/json":
@@ -99,8 +98,7 @@ async def upload_files(
                     )
                 except Exception as e:
                     logging.error(f"looking for keys to store as metadatas from {file_name} :\n{e}")
-                    status = "failed"
-                    response["data"].append({"object": "upload", "id": file_id, "filename": file_name, "status": status})  # fmt: off
+                    data.append(Upload(id=file_id, filename=file_name, status="failed"))
                     continue
             else:
                 file_metadata_keys = None
@@ -116,8 +114,7 @@ async def upload_files(
                 )
             except Exception as e:
                 logging.error(f"looking for key to embed from {file_name} :\n{e}")
-                status = "failed"
-                response["data"].append({"object": "upload", "id": file_id, "filename": file_name, "status": status})  # fmt: off
+                data.append(Upload(id=file_id, filename=file_name, status="failed"))
                 continue
 
         else:
@@ -140,8 +137,7 @@ async def upload_files(
             )
         except Exception as e:
             logging.error(f"store {file_name}:\n{e}")
-            status = "failed"
-            response["data"].append({"object": "upload", "id": file_id, "filename": file_name, "status": status})  # fmt: off
+            data.append(Upload(id=file_id, filename=file_name, status="failed"))
             continue
 
         try:
@@ -154,14 +150,13 @@ async def upload_files(
             )
         except Exception as e:
             logging.error(f"convert {file_name} into documents:\n{e}")
-            status = "failed"
             clients["files"].delete_object(Bucket=collection, Key=file_id)
-            response["data"].append({"object": "upload", "id": file_id, "filename": file_name, "status": status})  # fmt: off
+            data.append(Upload(id=file_id, filename=file_name, status="failed"))
             continue
 
         try:
             # create vectors from documents
-            db = await VectorStore.afrom_documents(
+            db = await Qdrant.afrom_documents(
                 documents=documents,
                 embedding=embedding,
                 collection_name=collection,
@@ -170,29 +165,25 @@ async def upload_files(
             )
         except Exception as e:
             logging.error(f"create vectors of {file_name}:\n{e}")
-            status = "failed"
             clients["files"].delete_object(Bucket=collection, Key=file_id)
-            response["data"].append({"object": "upload", "id": file_id, "filename": file_name, "status": status})  # fmt: off
+            data.append(Upload(id=file_id, filename=file_name, status="failed"))
             continue
 
-        response["data"].append(
-            {"object": "upload", "id": file_id, "filename": file_name, "status": status}
-        )
+        data.append(Upload(id=file_id, filename=file_name, status="success"))
 
-    return FileUploadResponse(**response)
+    return UploadResponse(data=data)
 
 
-@router.get("/files/{collection}/{file_id}")
+@router.get("/files/{collection}/{file}")
 @router.get("/files/{collection}")
 @secure_data
 async def files(
     collection: str,
-    file_id: Optional[str] = None,
+    file: Optional[str] = None,
     api_key: str = Security(check_api_key),
 ) -> Union[File, FileResponse]:
-    response = {"object": "list", "metadata": {"files": 0, "vectors": 0}, "data": []}
     """
-    Upload files can be used in tools. 
+    Upload files can be used in tools.
     Use Mistral IA conventions: https://docs.mistral.ai/api/#operation/files_api_routes_upload_file
     """
 
@@ -201,36 +192,36 @@ async def files(
     except ClientError:
         raise HTTPException(status_code=404, detail="Files not found")
 
-    response = {"object": "list", "data": []}
+    data = list()
     objects = clients["files"].list_objects_v2(Bucket=collection).get("Contents", [])
     objects = [object | clients["files"].head_object(Bucket=collection, Key=object["Key"])["Metadata"] for object in objects]  # fmt: off
     for object in objects:
-        data = {
-            "id": object["Key"],
-            "object": "file",
-            "bytes": object["Size"],
-            "filename": base64.b64decode(object["filename"].encode("ascii")).decode("utf-8"),
-            "created_at": round(object["LastModified"].timestamp()),
-        }
-        response["data"].append(data)
+        file = File(
+            id=object["Key"],
+            object="file",
+            bytes=object["Size"],
+            filename=base64.b64decode(object["filename"].encode("ascii")).decode("utf-8"),
+            created_at=round(object["LastModified"].timestamp()),
+        )
+        data.append(file)
 
-        if object["Key"] == file_id:
-            return File(**data)
+        if object["Key"] == file:
+            return file
 
-    if file_id:  # if loop pass without return data
+    if file:  # if loop pass without return data
         raise HTTPException(status_code=404, detail="File not found.")
 
-    return FileResponse(**response)
+    return FileResponse(data=data)
 
 
-@router.delete("/files/{collection}/{file_id}")
+@router.delete("/files/{collection}/{file}")
 @router.delete("/files/{collection}")
 @secure_data
 async def delete_file(
-    collection: str, file_id: Optional[str] = None, api_key: str = Security(check_api_key)
+    collection: str, file: Optional[str] = None, api_key: str = Security(check_api_key)
 ) -> Response:
     """
-    Delete files from configured files and vectors databases.
+    Delete files and relative collections.
     """
 
     try:
@@ -238,7 +229,7 @@ async def delete_file(
     except ClientError:
         raise HTTPException(status_code=404, detail="Bucket not found")
 
-    if file_id is None:
+    if file is None:
         objects = clients["files"].list_objects_v2(Bucket=collection)
         if "Contents" in objects:
             objects = [{"Key": obj["Key"]} for obj in objects["Contents"]]
@@ -247,8 +238,10 @@ async def delete_file(
         clients["files"].delete_bucket(Bucket=collection)
         clients["vectors"].delete_collection(collection)
     else:
-        clients["files"].delete_object(Bucket=collection, Key=file_id)
-        filter = rest.Filter(must=[rest.FieldCondition(key="metadata.file_id", match=rest.MatchAny(any=[file_id]))])  # fmt: off
-        clients["vectors"].delete(collection_name=collection, points_selector=rest.FilterSelector(filter=filter))  # fmt: off
+        clients["files"].delete_object(Bucket=collection, Key=file)
+        filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=[file]))])
+        clients["vectors"].delete(
+            collection_name=collection, points_selector=FilterSelector(filter=filter)
+        )
 
     return Response(status_code=204)

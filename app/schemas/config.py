@@ -8,7 +8,7 @@ class Key(BaseModel):
 
 
 class Auth(BaseModel):
-    type: Literal["grist"]
+    type: Literal["grist"] = "grist"
     args: dict
 
 class Model(BaseModel):
@@ -17,22 +17,22 @@ class Model(BaseModel):
 
 
 class VectorDB(BaseModel):
-    type: Literal["qdrant"]
+    type: Literal["qdrant"] = "qdrant"
     args: dict
 
 
-class ChatHistoryDB(BaseModel):
-    type: Literal["redis"]
+class CacheDB(BaseModel):
+    type: Literal["redis"] = "redis"
     args: dict
 
 
 class FilesDB(BaseModel):
-    type: Literal["minio"]
+    type: Literal["minio"] = "minio"
     args: dict
 
 
 class Databases(BaseModel):
-    chathistory: ChatHistoryDB
+    cache: CacheDB
     vectors: VectorDB
     files: FilesDB
 

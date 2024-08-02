@@ -4,11 +4,11 @@ from pydantic import BaseModel
 
 
 class Tool(BaseModel):
+    object: Literal["tool"] = "tool"
     id: str
     description: str
-    object: Literal["tool"]
 
 
 class ToolResponse(BaseModel):
-    object: Literal["list"]
+    object: Literal["list"] = "list"
     data: List[Tool]

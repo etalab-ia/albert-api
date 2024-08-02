@@ -1,45 +1,39 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
-from qdrant_client.http import models as rest
-from nltk.corpus import stopwords
-from langchain_huggingface import HuggingFaceEndpointEmbeddings
-from langchain_community.vectorstores import Qdrant
 from fastapi import HTTPException
+from qdrant_client import QdrantClient
+from qdrant_client.http.models import Filter
+from langchain_community.vectorstores import Qdrant
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
+
+from app.schemas.chunks import Chunk
 
 
-def file_to_chunk(client, collection: str, file_ids=List[str]) -> List[Dict]:
-    """
-    Get chunk from file IDs.
+def get_chunks(
+    vectorstore: QdrantClient, collection: str, filter: Optional[Filter] = None
+) -> List[Chunk]:
+    try:
+        chunks = vectorstore.scroll(
+            collection_name=collection, with_payload=True, with_vectors=False, scroll_filter=filter
+        )[0]
+    except Exception:
+        raise HTTPException(status_code=404, detail="chunk not found.")
 
-    Args:
-        client: vectors database client
-        collection (str): name of vector collection.
-        file_ids (List[str]): list of file ID.
-
-    Return:
-        List[Dict]
-    """
-
-    filter = rest.Filter(
-        must=[rest.FieldCondition(key="metadata.file_id", match=rest.MatchAny(any=file_ids))]
-    )
-    records = client.scroll(
-        collection_name=collection, with_payload=True, with_vectors=False, scroll_filter=filter
-    )
-
-    data = [
-        {
-            "file_id": record.payload["metadata"]["file_id"],
-            "vector_id": record.id,
-            "chunk": record.payload["page_content"],
-        }
-        for record in records[0]
-    ]
+    data = list()
+    for chunk in chunks:
+        data.append(
+            Chunk(
+                collection=collection,
+                id=chunk.id,
+                metadata=chunk.payload["metadata"],
+                content=chunk.payload["page_content"],
+            )
+        )
 
     return data
 
 
-def get_all_collections(vectorstore, api_key: str):
+def get_all_collections(vectorstore: QdrantClient, api_key: str):
     """
     Get all collections from a vectorstore.
 
@@ -56,19 +50,24 @@ def get_all_collections(vectorstore, api_key: str):
 
 
 def search_multiple_collections(
-    vectorstore, embeddings, prompt: str, collections: list, k: int = 4, filter: dict = None
+    vectorstore: QdrantClient,
+    embeddings: HuggingFaceEndpointEmbeddings,
+    prompt: str,
+    collections: list,
+    k: Optional[int] = 4,
+    filter: Optional[dict] = None,
 ):
     docs = []
     for collection in collections:
-        vectorstore = Qdrant(
+        lanchain_qdrant = Qdrant(
             client=vectorstore,
             embeddings=embeddings,
             collection_name=collection,
         )
-        docs.extend(vectorstore.similarity_search_with_score(prompt, k=k, filter=filter))
-    
+        docs.extend(lanchain_qdrant.similarity_search_with_score(prompt, k=k, filter=filter))
+
     # sort by similarity score and get top k
     docs = sorted(docs, key=lambda x: x[1], reverse=True)[:k]
     docs = [doc[0] for doc in docs]
-    
+
     return docs

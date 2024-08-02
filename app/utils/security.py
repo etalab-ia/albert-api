@@ -57,9 +57,8 @@ def check_api_key(
 
 def secure_data(func):
     """
-    Decorator to isolate user data (collections and chat history) by API key. Collections and users
-    parameters are prefixed with the encoded API key to avoid a user can access data from another
-    user.
+    Decorator to isolate user data (collections) by API key. Collections parameter is prefixed with 
+    the encoded API key to avoid a user can access data from another user.
     """
 
     @wraps(func)
@@ -68,9 +67,6 @@ def secure_data(func):
             return await func(*args, **kwargs)
 
         # for request parameters
-        if "user" in kwargs and kwargs["user"] is not None:
-            kwargs["user"] = f"{kwargs['api_key']}-{kwargs['user']}"
-
         if "collection" in kwargs and kwargs["collection"] is not None:
             if not kwargs["collection"].startswith("public-"):
                 kwargs["collection"] = f"{kwargs['api_key']}-{kwargs['collection']}"
@@ -83,9 +79,6 @@ def secure_data(func):
             return await func(*args, **kwargs)
 
         kwargs["request"] = dict(kwargs["request"])
-        if "user" in kwargs["request"] and kwargs["request"]["user"] is not None:
-            kwargs["request"]["user"] = f"{kwargs['api_key']}-{kwargs["request"]['user']}"
-
         if "collection" in kwargs["request"] and kwargs["request"]["collection"] is not None:
             if not kwargs["request"]["collection"].startswith("public-"):
                 kwargs["request"]["collection"] = f"{kwargs['api_key']}-{kwargs['request']['collection']}"  # fmt: off

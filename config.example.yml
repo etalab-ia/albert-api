@@ -10,7 +10,7 @@ databases:
       api_key: changeme
       prefer_grpc: True
 
-  chathistory:
+  cache:
     type: redis
     args:
       host: redis

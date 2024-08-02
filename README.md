@@ -78,19 +78,19 @@ models:
     ...
 
 databases:
-  chathistory:
+  cache: [required]
     type: [required] # see following Database section for the list of supported db type
     args: [required] 
       [arg_name]: [value]
       ...
     
-  vectors:
+  vectors: [required]
     type: [required] # see following Database section for the list of supported db type
     args: [required] 
       [arg_name]: [value]
       ...
   
-  files:
+  files: [required]
     type: [required] # see following Database section for the list of supported db type
     args: [required] 
       [arg_name]: [value]
@@ -113,17 +113,12 @@ Les IAM supportés, de nouveaux seront disponibles prochainements :
 
 #### Databases
 
-3 bases de données sont à configurées dans le fichier de configuration (*[config.example.yml](./config.example.yml)*) : 
-* vectors : pour le vector store
-* chathistory : pour la mémoire des conversations
-* files : pour déposés des fichiers avec lesquels on souhaite converser
-
-Voici les types de base de données supportées, de nouvelles seront disponibles prochainements : 
+Voici les types de base de données supportées, à configurer dans le fichier de configuration (*[config.example.yml](./config.example.yml)*) : : 
 
 | Database | Type |
 | --- | --- |
 | vectors | [qdrant](https://qdrant.tech/) | 
-| chathistory | [redis](https://redis.io/) |
+| cache | [redis](https://redis.io/) |
 | files | [minio](https://min.io/) |
 
 ## Tests

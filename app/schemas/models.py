@@ -5,5 +5,5 @@ from openai.types import Model
 
 
 class ModelResponse(BaseModel):
-    object: Literal["list"]
+    object: Literal["list"] = "list"
     data: List[Model]

@@ -18,21 +18,12 @@ class ModelDict(dict):
             raise HTTPException(status_code=404, detail="Model not found.")
 
 
-clients = {"openai": ModelDict(), "chathistory": None, "vectors": None, "files": None}
+clients = {"models": ModelDict(), "cache": None, "vectors": None, "files": None}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
-
-    # auth
-    if CONFIG.auth:
-        if CONFIG.auth.type == "grist":
-            from app.helpers import GristKeyManager
-
-            clients["auth"] = GristKeyManager(**CONFIG.auth.args)
-    else:
-        clients["auth"] = None
 
     models = list()
     for model in CONFIG.models:
@@ -49,18 +40,16 @@ async def lifespan(app: FastAPI):
             else:
                 models.append(model.id)
 
-            clients["openai"][model.id] = client
+            clients["models"][model.id] = client
 
-    if "openai" not in clients.keys():
+    if len(clients["models"].keys()) == 0:
         raise ValueError("No model can be reached.")
 
-    # @TODO: support a database set by API key
+    # cache
+    if CONFIG.databases.cache.type == "redis":
+        from redis import Redis
 
-    # chathistory
-    if CONFIG.databases.chathistory.type == "redis":
-        from app.helpers import RedisChatHistory
-
-        clients["chathistory"] = RedisChatHistory(**CONFIG.databases.chathistory.args)
+        clients["cache"] = Redis(**CONFIG.databases.cache.args)
 
     # vectors
     if CONFIG.databases.vectors.type == "qdrant":
@@ -80,6 +69,15 @@ async def lifespan(app: FastAPI):
             config=Config(signature_version="s3v4"),
             **CONFIG.databases.files.args,
         )
+
+    # auth
+    if CONFIG.auth:
+        if CONFIG.auth.type == "grist":
+            from app.helpers import GristKeyManager
+
+            clients["auth"] = GristKeyManager(redis=clients["cache"], **CONFIG.auth.args)
+    else:
+        clients["auth"] = None
 
     yield  # release ressources when api shutdown
     clients.clear()

@@ -6,6 +6,7 @@ from qdrant_client.http import models as rest
 
 from app.utils.security import secure_data
 from app.utils.data import search_multiple_collections, get_all_collections
+from app.schemas.chunks import Chunk
 
 
 class BaseRAG:
@@ -38,7 +39,7 @@ class BaseRAG:
         k: Optional[int] = 4,
         prompt_template: Optional[str] = DEFAULT_PROMPT_TEMPLATE,
         **request,
-    ) -> str:
+    ) -> tuple[str, dict]:
         if k > self.MAX_K:
             raise HTTPException(
                 status_code=400, detail=f"K must be less than or equal to {self.MAX_K}"
@@ -49,8 +50,8 @@ class BaseRAG:
                 status_code=400, detail="Prompt template must contain '{files}' and '{prompt}'"
             )
         embeddings = HuggingFaceEndpointEmbeddings(
-            model=str(self.clients["openai"][embeddings_model].base_url),
-            huggingfacehub_api_token=self.clients["openai"][embeddings_model].api_key,
+            model=str(self.clients["models"][embeddings_model].base_url),
+            huggingfacehub_api_token=self.clients["models"][embeddings_model].api_key,
         )
 
         filter = rest.Filter(must=[rest.FieldCondition(key="metadata.file_id", match=rest.MatchAny(any=file_ids))]) if file_ids else None  # fmt: off
@@ -73,7 +74,8 @@ class BaseRAG:
             k=k,
             filter=filter,
         )
+        metadata = {"chunks": [doc.metadata for doc in docs]}
         docs = "\n\n".join([doc.page_content for doc in docs])
         prompt = prompt_template.format(files=docs, prompt=prompt)
 
-        return prompt
+        return prompt, metadata
