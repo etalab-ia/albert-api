@@ -42,11 +42,11 @@ async def chat_completions(
             params = request | tool["function"]["parameters"]
             params["api_key"] = api_key
             try:
-                prompt, tool_metadata = await func.get_prompt(**params)
+                tool_output = await func.get_prompt(**params)
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"tool error {e}")
-            metadata.append({tool["function"]["name"]: tool_metadata})
-            request["messages"] = [{"role": "user", "content": prompt}]
+            metadata.append({tool["function"]["name"]: tool_output})
+            request["messages"] = [{"role": "user", "content": tool_output.prompt}]
         request.pop("tools")
 
     # non stream case

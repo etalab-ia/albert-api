@@ -7,6 +7,7 @@ from qdrant_client.http import models as rest
 from app.utils.security import secure_data
 from app.utils.data import search_multiple_collections, get_all_collections
 from app.schemas.chunks import Chunk
+from app.schemas.tools import ToolOutput
 
 
 class BaseRAG:
@@ -39,7 +40,7 @@ class BaseRAG:
         k: Optional[int] = 4,
         prompt_template: Optional[str] = DEFAULT_PROMPT_TEMPLATE,
         **request,
-    ) -> tuple[str, dict]:
+    ) -> ToolOutput:
         if k > self.MAX_K:
             raise HTTPException(
                 status_code=400, detail=f"K must be less than or equal to {self.MAX_K}"
@@ -78,4 +79,4 @@ class BaseRAG:
         docs = "\n\n".join([doc.page_content for doc in docs])
         prompt = prompt_template.format(files=docs, prompt=prompt)
 
-        return prompt, metadata
+        return ToolOutput(prompt=prompt, metadata=metadata)
