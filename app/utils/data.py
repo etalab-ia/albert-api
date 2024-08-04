@@ -10,7 +10,7 @@ from app.schemas.chunks import Chunk
 
 
 def get_chunks(
-    vectorstore: QdrantClient, collection: str, filter: Optional[Filter] = None
+    vectorstore: QdrantClient, collection: str, filter: Optional[Filter] = None,
 ) -> List[Chunk]:
     try:
         chunks = vectorstore.scroll(

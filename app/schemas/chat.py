@@ -29,7 +29,7 @@ class ChatCompletionRequest(BaseModel):
 
 
 class ChatCompletionResponse(ChatCompletion):
-    metadata: Optional[dict] = None
+    metadata: Optional[List[dict]] = []
 
 
 class ChatCompletionChunkResponse(ChatCompletionChunk):

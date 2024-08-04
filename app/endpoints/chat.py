@@ -32,7 +32,7 @@ async def chat_completions(
     client = clients["models"][request["model"]]
 
     # tools
-    metadata = None
+    metadata = list()
     tools = request.get("tools")
     if tools:
         for tool in tools:
@@ -42,10 +42,10 @@ async def chat_completions(
             params = request | tool["function"]["parameters"]
             params["api_key"] = api_key
             try:
-                prompt, metadata = await func.get_prompt(**params)
+                prompt, tool_metadata = await func.get_prompt(**params)
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"tool error {e}")
-
+            metadata.append({tool["function"]["name"]: tool_metadata})
             request["messages"] = [{"role": "user", "content": prompt}]
         request.pop("tools")
 

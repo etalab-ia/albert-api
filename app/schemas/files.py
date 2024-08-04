@@ -1,4 +1,4 @@
-from typing import Literal, List
+from typing import Literal, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -9,6 +9,7 @@ class File(BaseModel):
     id: UUID
     bytes: int
     filename: str
+    chunk_ids: Optional[list] = []
     created_at: int
 
 

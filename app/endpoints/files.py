@@ -13,8 +13,10 @@ from qdrant_client.http.models import Filter, FieldCondition, MatchAny, FilterSe
 from app.schemas.files import File, FileResponse, Upload, UploadResponse
 from app.utils.config import logging
 from app.utils.security import check_api_key, secure_data
+from app.utils.data import get_chunks
 from app.utils.lifespan import clients
 from app.helpers import S3FileLoader
+
 
 router = APIRouter()
 
@@ -195,15 +197,26 @@ async def files(
     data = list()
     objects = clients["files"].list_objects_v2(Bucket=collection).get("Contents", [])
     objects = [object | clients["files"].head_object(Bucket=collection, Key=object["Key"])["Metadata"] for object in objects]  # fmt: off
+    file_ids = [object["Key"] for object in objects]
+    filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=file_ids))])
+    chunks = get_chunks(vectorstore=clients["vectors"], collection=collection, filter=filter)
+
     for object in objects:
-        file = File(
-            id=object["Key"],
-            object="file",
-            bytes=object["Size"],
-            filename=base64.b64decode(object["filename"].encode("ascii")).decode("utf-8"),
-            created_at=round(object["LastModified"].timestamp()),
+        chunk_ids = list()
+        for chunk in chunks:
+            if chunk.metadata["file_id"] == object["Key"]:
+                chunk_ids.append(chunk.id)
+
+        data.append(
+            File(
+                id=object["Key"],
+                object="file",
+                bytes=object["Size"],
+                filename=base64.b64decode(object["filename"].encode("ascii")).decode("utf-8"),
+                chunk_ids=chunk_ids,
+                created_at=round(object["LastModified"].timestamp()),
+            )
         )
-        data.append(file)
 
         if object["Key"] == file:
             return file
