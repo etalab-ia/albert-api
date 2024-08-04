@@ -75,7 +75,7 @@ def secure_data(func):
             kwargs["collections"] = [f"{kwargs['api_key']}-{collection}" if not collection.startswith("public-") else collection for collection in kwargs["collections"]]  # fmt: off
 
         # for request body
-        if "request" not in kwargs:
+        if "request" not in kwargs or kwargs["request"] is None:
             return await func(*args, **kwargs)
 
         kwargs["request"] = dict(kwargs["request"])

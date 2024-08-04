@@ -10,11 +10,17 @@ from app.schemas.chunks import Chunk
 
 
 def get_chunks(
-    vectorstore: QdrantClient, collection: str, filter: Optional[Filter] = None,
+    vectorstore: QdrantClient,
+    collection: str,
+    filter: Optional[Filter] = None,
 ) -> List[Chunk]:
     try:
         chunks = vectorstore.scroll(
-            collection_name=collection, with_payload=True, with_vectors=False, scroll_filter=filter
+            collection_name=collection,
+            with_payload=True,
+            with_vectors=False,
+            scroll_filter=filter,
+            limit=100,  # @TDOO: add paginatio
         )[0]
     except Exception:
         raise HTTPException(status_code=404, detail="chunk not found.")
