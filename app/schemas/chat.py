@@ -27,10 +27,11 @@ class ChatCompletionRequest(BaseModel):
     tool_choice: Optional[Union[Literal["none"], ChatCompletionToolChoiceOptionParam]] = "none"
     tools: List[ChatCompletionToolParam] = None
 
+from app.schemas.tools import ToolOutput
 
 class ChatCompletionResponse(ChatCompletion):
-    metadata: Optional[List[dict]] = []
+    metadata: Optional[List[Dict[str, ToolOutput]]] = []
 
 
 class ChatCompletionChunkResponse(ChatCompletionChunk):
-    pass
+    metadata: Optional[List[Dict[str, ToolOutput]]] = []
