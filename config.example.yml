@@ -1,5 +1,6 @@
 models:
     - url: https://api.openai.com/v1
+      type: text-generation
       key: mysecretkey1
 
 databases:

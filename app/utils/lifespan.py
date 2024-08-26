@@ -1,4 +1,10 @@
 from contextlib import asynccontextmanager
+import requests
+import time
+from functools import partial
+
+from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
+from app.schemas.models import Model, ModelResponse
 
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
@@ -25,9 +31,54 @@ clients = {"models": ModelDict(), "cache": None, "vectors": None, "files": None}
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
+    def get_models_list(self, *args, **kwargs):
+        """
+        Custom method to overwrite OpenAI's list method (client.models.list()). This method support
+        embeddings API models deployed with HuggingFace Text Embeddings Inference (see: https://github.com/huggingface/text-embeddings-inference).
+        """
+        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else None
+        data = list()
+
+        if self.type == LANGUAGE_MODEL_TYPE:
+            endpoint = f"{self.base_url}models"
+            response = requests.get(url=endpoint, headers=headers).json()
+            for row in response["data"]:
+                data.append(
+                    Model(
+                        id=row["id"],
+                        object="model",
+                        owned_by=row.get("owned_by", ""),
+                        created=row.get("created", round(time.time())),
+                        max_model_len=row.get("max_model_len", None),
+                        type=LANGUAGE_MODEL_TYPE,
+                    )
+                )
+
+        elif self.type == EMBEDDINGS_MODEL_TYPE:
+            endpoint = str(self.base_url).replace("/v1/", "/info")
+            response = requests.get(url=endpoint, headers=headers).json()
+            data.append(
+                Model(
+                    id=response["model_id"],
+                    object="model",
+                    owned_by="huggingface-text-embeddings-inference",
+                    max_model_len=response.get("max_input_length", None),
+                    created=round(time.time()),
+                    type=EMBEDDINGS_MODEL_TYPE,
+                )
+            )
+        else:
+            raise HTTPException(status_code=400, detail="Model type not supported.")
+
+        return ModelResponse(data=data)
+
     models = list()
     for model in CONFIG.models:
+        
         client = OpenAI(base_url=model.url, api_key=model.key, timeout=10)
+        client.type = model.type
+        client.models.list = partial(get_models_list, client)
+        
         try:
             response = client.models.list()
         except Exception as e:
