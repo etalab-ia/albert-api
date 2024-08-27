@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Security
 
-from app.schemas.tools import ToolResponse
+from app.schemas.tools import Tools
 from app.utils.security import check_api_key
 from app.tools import *
 from app.tools import __all__ as tools_list
@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.get("/tools")
-def tools(api_key: str = Security(check_api_key)) -> ToolResponse:
+def tools(user: str = Security(check_api_key)) -> Tools:
     """
     Get list a availables tools. Only RAG functions are currenty supported.
     """
@@ -23,4 +23,4 @@ def tools(api_key: str = Security(check_api_key)) -> ToolResponse:
     ]
     response = {"object": "list", "data": data}
 
-    return ToolResponse(**response)
+    return Tools(**response)

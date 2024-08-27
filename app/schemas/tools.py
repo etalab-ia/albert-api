@@ -9,7 +9,7 @@ class Tool(BaseModel):
     description: str
 
 
-class ToolResponse(BaseModel):
+class Tools(BaseModel):
     object: Literal["list"] = "list"
     data: List[Tool]
 

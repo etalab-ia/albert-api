@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Security, HTTPException
 
-from app.schemas.embeddings import EmbeddingsRequest, EmbeddingResponse
+from app.schemas.embeddings import EmbeddingsRequest, Embeddings
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE
@@ -10,8 +10,8 @@ router = APIRouter()
 
 @router.post("/embeddings")
 async def embeddings(
-    request: EmbeddingsRequest, api_key: str = Security(check_api_key)
-) -> EmbeddingResponse:
+    request: EmbeddingsRequest, user: str = Security(check_api_key)
+) -> Embeddings:
     """
     Embedding API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/embeddings/create for the API specification.

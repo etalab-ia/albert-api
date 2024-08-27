@@ -4,9 +4,7 @@ from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from fastapi import HTTPException
 from qdrant_client.http import models as rest
 
-from app.utils.security import secure_data
-from app.utils.data import search_multiple_collections, get_all_collections
-from app.schemas.chunks import Chunk
+from app.utils.data import search_multiple_collections, get_collections, get_collection
 from app.schemas.tools import ToolOutput
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE
 
@@ -19,20 +17,18 @@ class BaseRAG:
         embeddings_model (str): OpenAI embeddings model
         collection (Optional[List[str]], optional): List of collections to search in. Defaults to None (all collections).
         file_ids (Optional[List[str]], optional): List of file IDs in the selected collections (after upload files). Defaults to None (all files are selected).
-        k (int, optional): Top K per collection (max: 6). Defaults to 4.
+        k (int, optional): Top K per collection. Defaults to 4.
         prompt_template (Optional[str], optional): Prompt template. Defaults to DEFAULT_PROMPT_TEMPLATE.
 
     DEFAULT_PROMPT_TEMPLATE:
-        "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n\n{files}"
+        "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n\n{documents}"
     """
 
-    DEFAULT_PROMPT_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n\n{files}"
-    MAX_K = 6
+    DEFAULT_PROMPT_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n\n{documents}"
 
     def __init__(self, clients: dict):
         self.clients = clients
 
-    @secure_data
     async def get_prompt(
         self,
         embeddings_model: str,
@@ -42,19 +38,25 @@ class BaseRAG:
         prompt_template: Optional[str] = DEFAULT_PROMPT_TEMPLATE,
         **request,
     ) -> ToolOutput:
-        if k > self.MAX_K:
+        if "{prompt}" not in prompt_template or "{documents}" not in prompt_template:
             raise HTTPException(
-                status_code=400, detail=f"K must be less than or equal to {self.MAX_K}"
+                status_code=400,
+                detail="Prompt template must contain '{prompt}' and '{documents}' placeholders.",
             )
 
-        if "{files}" not in prompt_template or "{prompt}" not in prompt_template:
-            raise HTTPException(
-                status_code=400, detail="Prompt template must contain '{files}' and '{prompt}'"
-            )
-        
-        if self.clients["models"][embeddings_model].type != EMBEDDINGS_MODEL_TYPE:
-            raise HTTPException(status_code=400, detail=f"Model type must be {EMBEDDINGS_MODEL_TYPE}")
-        embeddings = HuggingFaceEndpointEmbeddings(
+        if collections:
+            collections = [get_collection(vectorstore=self.clients["vectors"], user=request["user"], collection=collection) for collection in collections]  # fmt: off
+        else:
+            collections = get_collections(vectorstore=self.clients["vectors"], user=request["user"])
+
+        for collection in collections:
+            if collection.model != embeddings_model:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{collection.name} collection is set for {embeddings_model} model.",
+                )
+
+        embedding = HuggingFaceEndpointEmbeddings(
             model=str(self.clients["models"][embeddings_model].base_url).removesuffix("v1/"),
             huggingfacehub_api_token=self.clients["models"][embeddings_model].api_key,
         )
@@ -62,25 +64,18 @@ class BaseRAG:
         filter = rest.Filter(must=[rest.FieldCondition(key="metadata.file_id", match=rest.MatchAny(any=file_ids))]) if file_ids else None  # fmt: off
         prompt = request["messages"][-1]["content"]
 
-        all_collections = get_all_collections(
-            vectorstore=self.clients["vectors"], api_key=request["api_key"]
-        )
-        collections = collections or all_collections
-
-        for collection in collections:
-            if collection not in all_collections:
-                raise HTTPException(status_code=404, detail="Collection not found.")
-
-        docs = search_multiple_collections(
+        documents = search_multiple_collections(
             vectorstore=self.clients["vectors"],
-            embeddings=embeddings,
+            embedding=embedding,
             prompt=prompt,
-            collections=collections,
+            collections=[collections.name for collections in collections],
+            user=request["user"],
             k=k,
             filter=filter,
         )
-        metadata = {"chunks": [doc.metadata for doc in docs]}
-        docs = "\n\n".join([doc.page_content for doc in docs])
-        prompt = prompt_template.format(files=docs, prompt=prompt)
+
+        metadata = {"chunks": [document.metadata for document in documents]}
+        documents = "\n\n".join([document.page_content for document in documents])
+        prompt = prompt_template.format(documents=documents, prompt=prompt)
 
         return ToolOutput(prompt=prompt, metadata=metadata)

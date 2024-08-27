@@ -16,7 +16,7 @@ app = FastAPI(
 
 
 @app.get("/health")
-def health(api_key: str = Security(check_api_key)):
+def health(user: str = Security(check_api_key)):
     """
     Health check.
     """

@@ -24,5 +24,5 @@ class CompletionRequest(BaseModel):
     user: Optional[str] = None
 
 
-class CompletionResponse(Completion):
+class Completions(Completion):
     pass

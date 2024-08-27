@@ -44,8 +44,6 @@ class S3FileLoader(UnstructuredBaseLoader):
         self,
         bucket: str,
         file_id: str,
-        json_key_to_embed: Optional[str],
-        json_metadata_keys: Optional[List[str]],
     ) -> List:
         """Get elements.
 
@@ -67,8 +65,6 @@ class S3FileLoader(UnstructuredBaseLoader):
                 chunk_size=self.chunk_size,
                 chunk_overlap=self.chunk_overlap,
                 chunk_min_size=self.chunk_min_size,
-                json_key_to_embed=json_key_to_embed,
-                json_metadata_keys=json_metadata_keys,
             )
 
     def _get_metadata(self, bucket, file_id) -> dict:

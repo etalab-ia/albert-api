@@ -12,7 +12,7 @@ Ce formalisme permet d'intégrer facilement l'API Albert avec des librairies tie
 
 ### Converser avec un modèle de langage (chat memory) 
 
-<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/tutorials/chat_completions.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/chat_completions.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
@@ -20,7 +20,7 @@ Albert API intègre nativement la mémorisation des messages pour les conversati
 
 ### Accéder à plusieurs modèles de langage (multi models)
 
-<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/tutorials/models.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/models.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
@@ -34,12 +34,12 @@ Les tools sont une fonctionnalité définie OpenAI que l'on surcharge dans le ca
 
 #### Interroger des documents (RAG)
 
-<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/tutorials/retrival_augmented_generation.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/retrival_augmented_generation.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
 #### Résumer un document (summarize)
 
-<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/tutorials/summarize.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/summarize.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>

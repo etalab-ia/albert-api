@@ -6,11 +6,11 @@ from redis import Redis
 
 
 class GristKeyManager(GristDocAPI):
-    CACHE_EXPIRATION = 3600 # 1h
+    CACHE_EXPIRATION = 3600  # 1h
 
-    def __init__(self, table_id: str, redis, *args, **kwargs):
+    def __init__(self, table_id: str, redis: Redis, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_key = kwargs.get("api_key")
+        self.user = kwargs.get("user")
         self.doc_id = kwargs.get("doc_id")
         self.table_id = table_id
         self.redis = redis
@@ -28,9 +28,9 @@ class GristKeyManager(GristDocAPI):
 
         return False
 
-    def redis_cache(func):
+    def cache(func):
         """
-        Decorator to cache the result of a function in Redis with a 24h expiration.
+        Decorator to cache the result of a function in Redis.
         """
 
         def wrapper(self):
@@ -40,14 +40,13 @@ class GristKeyManager(GristDocAPI):
                 result = result.decode("utf-8").split(":")
                 return result
             result = func(self)
-            self.redis.set(key, ":".join(result))
-            self.redis.expire(key, self.CACHE_EXPIRATION)
+            self.redis.setex(key, self.CACHE_EXPIRATION, ":".join(result))
 
             return result
 
         return wrapper
 
-    @redis_cache
+    @cache
     def _get_api_keys(self):
         """
         Get all keys from a table in the Grist document.

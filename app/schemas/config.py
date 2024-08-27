@@ -2,6 +2,10 @@ from typing import List, Optional, Literal
 
 from pydantic import BaseModel, Field
 
+# Variables
+METADATA_COLLECTION = "collections"
+PUBLIC_COLLECTION_TYPE = "public"
+PRIVATE_COLLECTION_TYPE = "private"
 EMBEDDINGS_MODEL_TYPE = "text-embeddings-inference"
 LANGUAGE_MODEL_TYPE = "text-generation"
 
@@ -44,5 +48,5 @@ class Databases(BaseModel):
 
 class Config(BaseModel):
     auth: Optional[Auth] = None
-    models: List[Model] = Field(..., min_items=1)
+    models: List[Model] = Field(..., min_length=1)
     databases: Databases

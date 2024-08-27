@@ -3,19 +3,18 @@ from typing import Union, Optional
 
 from fastapi import APIRouter, Security
 
-from app.schemas.models import Model, ModelResponse
+from app.schemas.models import Model, Models
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 
 
 router = APIRouter()
 
-
 @router.get("/models/{model}")
 @router.get("/models")
 async def models(
-    model: Optional[str] = None, api_key: str = Security(check_api_key)
-) -> Union[ModelResponse, Model]:
+    model: Optional[str] = None, user: str = Security(check_api_key)
+) -> Union[Models, Model]:
     """
     Model API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/models/list for the API specification.
@@ -32,6 +31,6 @@ async def models(
                 row = dict(row)
                 row["type"] = client.type
                 response["data"].append(dict(row))
-        response = ModelResponse(**response)
+        response = Models(**response)
 
     return response

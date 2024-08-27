@@ -12,5 +12,5 @@ class EmbeddingsRequest(BaseModel):
     user: Optional[str] = None
 
 
-class EmbeddingResponse(CreateEmbeddingResponse):
+class Embeddings(CreateEmbeddingResponse):
     pass

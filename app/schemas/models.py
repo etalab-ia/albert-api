@@ -10,6 +10,6 @@ class Model(Model):
     type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE]
 
 
-class ModelResponse(BaseModel):
+class Models(BaseModel):
     object: Literal["list"] = "list"
     data: List[Model]

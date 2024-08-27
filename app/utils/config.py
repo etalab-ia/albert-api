@@ -4,10 +4,14 @@ import yaml
 
 from app.schemas.config import Config
 
-logging.basicConfig(format="%(levelname)s:%(asctime)s: %(message)s", level=logging.INFO)
+logging.basicConfig(format="%(levelname)s:%(asctime)s:%(name)s: %(message)s", level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(os.getenv("LOG_LEVEL", logging.DEBUG))
 
+# Configuration
 CONFIG_FILE = os.getenv("CONFIG_FILE", "config.yml")
-logging.info(f"loading configuration file: {CONFIG_FILE}")
+assert os.path.exists(CONFIG_FILE), f"error: configuration file {CONFIG_FILE} not found"
+LOGGER.info(f"loading configuration file: {CONFIG_FILE}")
 CONFIG = Config(**yaml.safe_load(open(CONFIG_FILE, "r")))
 
 # Metadata
