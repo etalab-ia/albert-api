@@ -4,12 +4,9 @@
 
 ### OpenAI conventions
 
-En ce base sur le [client officiel python d'OpenAI](https://github.com/openai/openai-python/tree/main), Albert API expose des endpoints respectant les conventions définies par OpenAI : 
+En ce base sur 
 
-- `/v1/models`
-- `/v1/completions`
-- `/v1/chat/completions`
-- `/v1/embeddings`
+En ce base sur les convetion les conventions définies par OpenAI, l'API Albert expose des endpoints qui peuvent être appelés avec le [client officiel python d'OpenAI](https://github.com/openai/openai-python/tree/main). 
 
 Ce formalisme permet d'intégrer facilement l'API Albert avec des librairies tierces comme [Langchain](https://www.langchain.com/) ou [LlamaIndex](https://www.llamaindex.ai/).
 
