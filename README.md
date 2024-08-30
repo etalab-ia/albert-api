@@ -13,17 +13,21 @@ En ce base sur le [client officiel python d'OpenAI](https://github.com/openai/op
 
 Ce formalisme permet d'intégrer facilement l'API Albert avec des librairies tierces comme [Langchain](https://www.langchain.com/) ou [LlamaIndex](https://www.llamaindex.ai/).
 
-### Converser avec un modèle de langage (chat memory)
+### Converser avec un modèle de langage (chat memory) 
+
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/tutorials/chat_completions.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 
 Albert API intègre nativement la mémorisation des messages pour les conversations sans surcharger d'arguments le endpoint `/v1/chat/completions` par rapport à la documentation d'OpenAI. Cela consiste à envoyer à chaque requête au modèle l'historique de la conversation pour lui fournir le contexte.
 
-> 📖 [Notebook de démonstration](./tutorials/chat_completions.ipynb)
-
 ### Accéder à plusieurs modèles de langage (multi models)
 
-Grâce à un fichier de configuration (*[config.example.yml](./config.example.yml)*) vous pouvez connecter autant d'API de modèles que vous le souhaitez. L'API Albert se charge de mutualiser l'accès à tous ces modèles dans une unique API. Vous pouvez constater les différents modèles accessibles en appelant le endpoint `/v1/models`.
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/tutorials/models.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 
-> 📖 [Notebook de démonstration](./tutorials/models.ipynb)
+Grâce à un fichier de configuration (*[config.example.yml](./config.example.yml)*) vous pouvez connecter autant d'API de modèles que vous le souhaitez. L'API Albert se charge de mutualiser l'accès à tous ces modèles dans une unique API. Vous pouvez constater les différents modèles accessibles en appelant le endpoint `/v1/models`.
 
 ### Fonctionnalités avancées (tools) 
 
@@ -33,8 +37,12 @@ Les tools sont une fonctionnalité définie OpenAI que l'on surcharge dans le ca
 
 #### Interroger des documents (RAG)
 
-> 📖 [Notebook de démonstration](./tutorials/retrival_augmented_generation.ipynb)
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/tutorials/retrival_augmented_generation.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 
 #### Résumer un document (summarize)
 
-> 📖 [Notebook de démonstration](./tutorials/summarize.ipynb)
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/tutorials/summarize.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
