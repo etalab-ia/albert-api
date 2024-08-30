@@ -24,16 +24,14 @@ async def models(
         # support double encoding
         unquote_model = urllib.parse.unquote(urllib.parse.unquote(model))
         client = clients["models"][unquote_model]
-        response = dict([row for row in client.models.list().data if row.id == unquote_model][0])
-        response = Model(**response)
+        response = [row for row in client.models.list().data if row.id == unquote_model][0]
     else:
-        base_urls = list()
         response = {"object": "list", "data": []}
         for model_id, client in clients["models"].items():
-            if client.base_url not in base_urls:
-                base_urls.append(str(client.base_url))
-                for row in client.models.list().data:
-                    response["data"].append(dict(row))
+            for row in client.models.list().data:
+                row = dict(row)
+                row["type"] = client.type
+                response["data"].append(dict(row))
         response = ModelResponse(**response)
 
     return response

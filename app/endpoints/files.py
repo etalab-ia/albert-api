@@ -11,6 +11,7 @@ from langchain_community.vectorstores import Qdrant
 from qdrant_client.http.models import Filter, FieldCondition, MatchAny, FilterSelector
 
 from app.schemas.files import File, FileResponse, Upload, UploadResponse
+from app.schemas.config import EMBEDDINGS_MODEL_TYPE
 from app.utils.config import logging
 from app.utils.security import check_api_key, secure_data
 from app.utils.data import get_chunks
@@ -79,8 +80,11 @@ async def upload_files(
         chunk_overlap=chunk_overlap,
         chunk_min_size=chunk_min_size,
     )
+
+    if clients["models"][model].type != EMBEDDINGS_MODEL_TYPE:
+        raise HTTPException(status_code=400, detail=f"Model type must be {EMBEDDINGS_MODEL_TYPE}")
     embedding = HuggingFaceEndpointEmbeddings(
-        model=str(clients["models"][model].base_url),
+        model=str(clients["models"][model].base_url).removesuffix("v1/"),
         huggingfacehub_api_token=clients["models"][model].api_key,
     )
 

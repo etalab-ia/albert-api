@@ -8,6 +8,7 @@ from app.utils.security import secure_data
 from app.utils.data import search_multiple_collections, get_all_collections
 from app.schemas.chunks import Chunk
 from app.schemas.tools import ToolOutput
+from app.schemas.config import EMBEDDINGS_MODEL_TYPE
 
 
 class BaseRAG:
@@ -50,8 +51,11 @@ class BaseRAG:
             raise HTTPException(
                 status_code=400, detail="Prompt template must contain '{files}' and '{prompt}'"
             )
+        
+        if self.clients["models"][embeddings_model].type != EMBEDDINGS_MODEL_TYPE:
+            raise HTTPException(status_code=400, detail=f"Model type must be {EMBEDDINGS_MODEL_TYPE}")
         embeddings = HuggingFaceEndpointEmbeddings(
-            model=str(self.clients["models"][embeddings_model].base_url),
+            model=str(self.clients["models"][embeddings_model].base_url).removesuffix("v1/"),
             huggingfacehub_api_token=self.clients["models"][embeddings_model].api_key,
         )
 

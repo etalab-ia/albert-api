@@ -2,6 +2,9 @@ from typing import List, Optional, Literal
 
 from pydantic import BaseModel, Field
 
+EMBEDDINGS_MODEL_TYPE = "text-embeddings-inference"
+LANGUAGE_MODEL_TYPE = "text-generation"
+
 
 class Key(BaseModel):
     key: str
@@ -11,8 +14,10 @@ class Auth(BaseModel):
     type: Literal["grist"] = "grist"
     args: dict
 
+
 class Model(BaseModel):
     url: str
+    type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE]
     key: Optional[str] = "EMPTY"
 
 
