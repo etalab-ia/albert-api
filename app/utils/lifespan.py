@@ -3,13 +3,12 @@ import requests
 import time
 from functools import partial
 
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
-from app.schemas.models import Model, ModelResponse
-
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
 
-from app.utils.config import CONFIG, logging
+from app.utils.config import CONFIG, LOGGER
+from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION
+from app.schemas.models import Model, Models
 
 
 class ModelDict(dict):
@@ -41,7 +40,7 @@ async def lifespan(app: FastAPI):
 
         if self.type == LANGUAGE_MODEL_TYPE:
             endpoint = f"{self.base_url}models"
-            response = requests.get(url=endpoint, headers=headers).json()
+            response = requests.get(url=endpoint, headers=headers, timeout=10).json()
             for row in response["data"]:
                 data.append(
                     Model(
@@ -56,7 +55,7 @@ async def lifespan(app: FastAPI):
 
         elif self.type == EMBEDDINGS_MODEL_TYPE:
             endpoint = str(self.base_url).replace("/v1/", "/info")
-            response = requests.get(url=endpoint, headers=headers).json()
+            response = requests.get(url=endpoint, headers=headers, timeout=10).json()
             data.append(
                 Model(
                     id=response["model_id"],
@@ -70,19 +69,18 @@ async def lifespan(app: FastAPI):
         else:
             raise HTTPException(status_code=400, detail="Model type not supported.")
 
-        return ModelResponse(data=data)
+        return Models(data=data)
 
     models = list()
     for model in CONFIG.models:
-        
         client = OpenAI(base_url=model.url, api_key=model.key, timeout=10)
         client.type = model.type
         client.models.list = partial(get_models_list, client)
-        
+
         try:
             response = client.models.list()
         except Exception as e:
-            logging.info(f"error to request the model API on {model.url}, skipping:\n{e}")
+            LOGGER.info(f"error to request the model API on {model.url}, skipping:\n{e}")
             continue
 
         for model in response.data:
@@ -109,6 +107,11 @@ async def lifespan(app: FastAPI):
         clients["vectors"] = QdrantClient(**CONFIG.databases.vectors.args)
         clients["vectors"].url = CONFIG.databases.vectors.args["url"]
         clients["vectors"].api_key = CONFIG.databases.vectors.args["api_key"]
+
+        if not clients["vectors"].collection_exists(collection_name=METADATA_COLLECTION):
+            clients["vectors"].create_collection(
+                collection_name=METADATA_COLLECTION, vectors_config={}, on_disk_payload=False
+            )
 
     # files
     if CONFIG.databases.files.type == "minio":

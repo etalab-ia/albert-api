@@ -11,7 +11,7 @@ class Chunk(BaseModel):
     content: str
 
 
-class ChunkResponse(BaseModel):
+class Chunks(BaseModel):
     object: Literal["list"] = "list"
     data: List[Chunk]
 

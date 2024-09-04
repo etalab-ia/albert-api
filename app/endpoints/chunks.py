@@ -3,8 +3,8 @@ from typing import Union, Optional
 from fastapi import APIRouter, Security
 from qdrant_client.http.models import Filter, HasIdCondition
 
-from app.schemas.chunks import ChunkResponse, Chunk, ChunkRequest
-from app.utils.security import check_api_key, secure_data
+from app.schemas.chunks import Chunks, Chunk, ChunkRequest
+from app.utils.security import check_api_key
 from app.utils.lifespan import clients
 from app.utils.data import get_chunks
 
@@ -13,13 +13,12 @@ router = APIRouter()
 
 @router.get("/chunks/{collection}/{chunk}")
 @router.post("/chunks/{collection}")
-@secure_data
 async def chunks(
     collection: str,
     chunk: Optional[str] = None,
     request: Optional[ChunkRequest] = None,
-    api_key: str = Security(check_api_key),
-) -> Union[Chunk, ChunkResponse]:
+    user: str = Security(check_api_key),
+) -> Union[Chunk, Chunks]:
     """
     Get a chunk.
     """
@@ -30,4 +29,4 @@ async def chunks(
     if not request:
         return chunks[0]
 
-    return ChunkResponse(data=chunks)
+    return Chunks(data=chunks)

@@ -1,4 +1,4 @@
-from typing import Literal, List, Optional
+from typing import Literal, List, Optional, Dict
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ class File(BaseModel):
     created_at: int
 
 
-class FileResponse(BaseModel):
+class Files(BaseModel):
     object: Literal["list"] = "list"
     data: List[File]
 
@@ -25,6 +25,15 @@ class Upload(BaseModel):
     status: Literal["success", "failed"] = "success"
 
 
-class UploadResponse(BaseModel):
+class Uploads(BaseModel):
     object: Literal["list"] = "list"
     data: List[Upload]
+
+
+class Json(BaseModel):
+    text: str
+    metadata: Optional[Dict] = None
+
+
+class JsonFile(BaseModel):
+    documents: List[Json]
