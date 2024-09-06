@@ -174,11 +174,15 @@ async def files(
     user: str = Security(check_api_key),
 ) -> Union[File, Files]:
     """
-    Upload files can be used in tools.
-    Use Mistral IA conventions: https://docs.mistral.ai/api/#operation/files_api_routes_upload_file
+    Get files from a collection. Only files from private collections are returned.
     """
 
-    collection = get_collection(vectorstore=clients["vectors"], collection=collection, user=user)
+    collection = get_collection(
+        vectorstore=clients["vectors"],
+        collection=collection,
+        user=user,
+        type=PRIVATE_COLLECTION_TYPE,
+    )
 
     data = list()
     objects = clients["files"].list_objects_v2(Bucket=collection.id).get("Contents", [])
@@ -219,7 +223,7 @@ async def delete_file(
     collection: str, file: Optional[str] = None, user: str = Security(check_api_key)
 ) -> Response:
     """
-    Delete files and relative collections.
+    Delete files and relative collections. Only files from private collections can be deleted.
     """
 
     response = delete_contents(
