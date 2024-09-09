@@ -2,7 +2,7 @@ from functools import partial
 import time
 from typing import Dict, List, Literal
 
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 import requests
 
 from app.schemas.config import Config
@@ -10,7 +10,7 @@ from app.schemas.embeddings import Embeddings
 from app.schemas.models import Model, Models
 from app.utils.config import logger, DEFAULT_INTERNET_EMBEDDINGS_MODEL_URL, DEFAULT_INTERNET_LANGUAGE_MODEL_URL
 from app.utils.exceptions import ContextLengthExceededException, ModelNotAvailableException, ModelNotFoundException
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE
 
 
 def get_models_list(self, *args, **kwargs):
@@ -44,6 +44,15 @@ def get_models_list(self, *args, **kwargs):
             self.owned_by = "huggingface-text-embeddings-inference"
             self.created = round(time.time())
             self.max_context_length = response.get("max_input_length", None)
+
+        elif self.type == AUDIO_MODEL_TYPE:
+            endpoint = f"{self.base_url}models/Systran/faster-whisper-large-v3"
+            response = requests.get(url=endpoint, headers=headers, timeout=self.DEFAULT_TIMEOUT).json()
+
+            self.id = response["id"]
+            self.owned_by = response.get("owned_by", "")
+            self.created = response.get("created", round(time.time()))
+            self.max_context_length = None
 
         self.status = "available"
 
@@ -125,6 +134,36 @@ class ModelClient(OpenAI):
         self.check_context_length = partial(check_context_length, self)
 
 
+# TODO merge with ModelClient for all models and adapt endpoint to not use anymore the httpx async client
+class AsyncModelClient(AsyncOpenAI):
+    DEFAULT_TIMEOUT = 10
+
+    def __init__(self, type=Literal[AUDIO_MODEL_TYPE], *args, **kwargs):
+        """
+        AsyncModelClient class extends AsyncOpenAI class to support custom methods.
+        """
+        timeout = 60 if type == AUDIO_MODEL_TYPE else self.DEFAULT_TIMEOUT
+        super().__init__(timeout=timeout, *args, **kwargs)
+        self.type = type
+
+        # set attributes for unavailable models
+        self.id = ""
+        self.owned_by = ""
+        self.created = round(time.time())
+        self.max_context_length = None
+
+        # set real attributes if model is available
+        self.models.list = partial(get_models_list, self)
+        response = self.models.list()
+
+        if self.type == EMBEDDINGS_MODEL_TYPE:
+            response = self.embeddings.create(model=self.id, input="hello world")
+            self.vector_size = len(response.data[0].embedding)
+            self.embeddings.create = partial(create_embeddings, self)
+
+        self.check_context_length = partial(check_context_length, self)
+
+
 class ModelClients(dict):
     """
     Overwrite __getitem__ method to raise a 404 error if model is not found.
@@ -132,7 +171,8 @@ class ModelClients(dict):
 
     def __init__(self, config: Config):
         for model_config in config.models:
-            model = ModelClient(base_url=model_config.url, api_key=model_config.key, type=model_config.type)
+            model_client_class = ModelClient if model_config.type != AUDIO_MODEL_TYPE else AsyncModelClient
+            model = model_client_class(base_url=model_config.url, api_key=model_config.key, type=model_config.type)
             if model.status == "unavailable":
                 logger.error(f"unavailable model API on {model_config.url}, skipping.")
                 continue

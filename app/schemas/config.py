@@ -2,7 +2,7 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE
 
 
 class ConfigBaseModel(BaseModel):
@@ -21,7 +21,7 @@ class Auth(ConfigBaseModel):
 
 class Model(ConfigBaseModel):
     url: str
-    type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE]
+    type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE, AUDIO_MODEL_TYPE]
     key: Optional[str] = "EMPTY"
 
 

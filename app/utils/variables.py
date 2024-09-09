@@ -1,3 +1,4 @@
+AUDIO_MODEL_TYPE = "automatic-speech-recognition"
 INTERNET_COLLECTION_ID = "internet"
 PUBLIC_COLLECTION_TYPE = "public"
 PRIVATE_COLLECTION_TYPE = "private"
