@@ -1,3 +1,4 @@
+AUDIO_MODEL_TYPE = "audio-transcription"
 METADATA_COLLECTION_ID = "collections"
 PUBLIC_COLLECTION_TYPE = "public"
 PRIVATE_COLLECTION_TYPE = "private"
