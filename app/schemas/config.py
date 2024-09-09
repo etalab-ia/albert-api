@@ -8,6 +8,7 @@ PUBLIC_COLLECTION_TYPE = "public"
 PRIVATE_COLLECTION_TYPE = "private"
 EMBEDDINGS_MODEL_TYPE = "text-embeddings-inference"
 LANGUAGE_MODEL_TYPE = "text-generation"
+AUDIO_MODEL_TYPE = "audio-transcription"
 
 
 class Key(BaseModel):
@@ -21,7 +22,7 @@ class Auth(BaseModel):
 
 class Model(BaseModel):
     url: str
-    type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE]
+    type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE, AUDIO_MODEL_TYPE]
     key: Optional[str] = "EMPTY"
 
 

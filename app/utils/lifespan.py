@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from openai import OpenAI
 
 from app.utils.config import CONFIG, LOGGER
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION
+from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION, AUDIO_MODEL_TYPE
 from app.schemas.models import Model, Models
 
 
@@ -64,6 +64,17 @@ async def lifespan(app: FastAPI):
                     max_model_len=response.get("max_input_length", None),
                     created=round(time.time()),
                     type=EMBEDDINGS_MODEL_TYPE,
+                )
+            )
+        elif self.type == AUDIO_MODEL_TYPE:
+            data.append(
+                Model(
+                    id=0, #todo: fix this & find a way to get the model id from the api?
+                    object="model",
+                    owned_by="openai",
+                    max_model_len=None,
+                    created=round(time.time()),
+                    type=AUDIO_MODEL_TYPE,
                 )
             )
         else:
