@@ -11,7 +11,7 @@ import requests
 from app.schemas.config import Config
 from app.schemas.models import Model, Models
 from app.utils.config import CONFIG, LOGGER
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION_ID
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION_ID, AUDIO_MODEL_TYPE
 
 from ._gristkeymanager import GristKeyManager
 
@@ -66,6 +66,19 @@ def get_models_list(self, *args, **kwargs):
                 type=EMBEDDINGS_MODEL_TYPE,
             )
         )
+
+    elif self.type == AUDIO_MODEL_TYPE:
+        data.append(
+            Model(
+                id=0, #todo: fix this & find a way to get the model id from the api?
+                object="model",
+                owned_by="openai",
+                max_model_len=None,
+                created=round(time.time()),
+                type=AUDIO_MODEL_TYPE,
+            )
+        )
+
     else:
         raise HTTPException(status_code=400, detail="Model type not supported.")
 
