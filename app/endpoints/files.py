@@ -3,22 +3,15 @@ import uuid
 from typing import List, Optional, Union
 
 from fastapi import APIRouter, Response, Security, UploadFile, HTTPException
-from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from botocore.exceptions import ClientError
 from langchain_qdrant import QdrantVectorStore
-from qdrant_client.http.models import Filter, FieldCondition, MatchAny, PointStruct
+from qdrant_client.http.models import Filter, FieldCondition, MatchAny
 
-from app.schemas.collections import Collection
 from app.schemas.files import File, Files, Upload, Uploads
-from app.schemas.config import (
-    METADATA_COLLECTION,
-    PRIVATE_COLLECTION_TYPE,
-    PUBLIC_COLLECTION_TYPE,
-    EMBEDDINGS_MODEL_TYPE,
-)
+from app.schemas.config import PRIVATE_COLLECTION_TYPE
 from app.utils.config import LOGGER
 from app.utils.security import check_api_key
-from app.utils.data import get_chunks, get_collection, delete_contents
+from app.utils.data import get_chunks, get_collection_id, delete_contents, create_collection
 from app.utils.lifespan import clients
 from app.helpers import S3FileLoader
 
@@ -57,33 +50,21 @@ async def upload_files(
     - **files** : Files to upload.
     """
 
-    # assertations
-    if clients["models"][embeddings_model].type != EMBEDDINGS_MODEL_TYPE:
-        raise HTTPException(status_code=400, detail=f"Model type must be {EMBEDDINGS_MODEL_TYPE}")
-
-    collection_name = collection
-    collection = get_collection(
-        vectorstore=clients["vectors"], user=user, collection=collection, errors="ignore"
+    # if collection already exists, return collection ID too
+    collection_id = create_collection(
+        collection=collection,
+        vectorstore=clients["vectors"],
+        embeddings_model=embeddings_model,
+        user=user,
     )
-    if collection and collection.type == PUBLIC_COLLECTION_TYPE:
-        raise HTTPException(status_code=400, detail="A public collection already exists with the same name")  # fmt: off
-    if collection and collection.model != embeddings_model:
-        raise HTTPException(status_code=400, detail="Collection already exists with a different model.")  # fmt: off
 
     # upload
     data = list()
-    collection_id = collection.id if collection else str(uuid.uuid4())
-
     loader = S3FileLoader(
         s3=clients["files"],
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         chunk_min_size=chunk_min_size,
-    )
-
-    embedding = HuggingFaceEndpointEmbeddings(
-        model=str(clients["models"][embeddings_model].base_url).removesuffix("v1/"),
-        huggingfacehub_api_token=clients["models"][embeddings_model].api_key,
     )
 
     try:
@@ -130,7 +111,7 @@ async def upload_files(
             # create vectors from documents
             db = await QdrantVectorStore.afrom_documents(
                 documents=documents,
-                embedding=embedding,
+                embedding=clients["models"][embeddings_model].embedding,
                 collection_name=collection_id,
                 url=clients["vectors"].url,
                 api_key=clients["vectors"].api_key,
@@ -140,26 +121,6 @@ async def upload_files(
             clients["files"].delete_object(Bucket=collection_id, Key=file_id)
             data.append(Upload(id=file_id, filename=file_name, status="failed"))
             continue
-
-        if not collection:
-            metadata = Collection(
-                id=collection_id,
-                name=collection_name,
-                type=PRIVATE_COLLECTION_TYPE,
-                model=embeddings_model,
-                user=user,
-                description=None,
-            )
-            clients["vectors"].upsert(
-                collection_name=METADATA_COLLECTION,
-                points=[
-                    PointStruct(
-                        id=collection_id,
-                        payload=dict(metadata),
-                        vector={},
-                    )
-                ],
-            )
 
         data.append(Upload(id=file_id, filename=file_name, status="success"))
 
@@ -177,7 +138,7 @@ async def files(
     Get files from a collection. Only files from private collections are returned.
     """
 
-    collection = get_collection(
+    collection_id = get_collection_id(
         vectorstore=clients["vectors"],
         collection=collection,
         user=user,
@@ -185,11 +146,11 @@ async def files(
     )
 
     data = list()
-    objects = clients["files"].list_objects_v2(Bucket=collection.id).get("Contents", [])
-    objects = [object | clients["files"].head_object(Bucket=collection.id, Key=object["Key"])["Metadata"] for object in objects]  # fmt: off
+    objects = clients["files"].list_objects_v2(Bucket=collection_id).get("Contents", [])
+    objects = [object | clients["files"].head_object(Bucket=collection_id, Key=object["Key"])["Metadata"] for object in objects]  # fmt: off
     file_ids = [object["Key"] for object in objects]
     filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=file_ids))])
-    chunks = get_chunks(vectorstore=clients["vectors"], collection=collection.id, filter=filter)
+    chunks = get_chunks(vectorstore=clients["vectors"], collection=collection, filter=filter, user=user)
 
     for object in objects:
         chunk_ids = list()
@@ -210,7 +171,7 @@ async def files(
         if str(object.id) == file:
             return object
 
-    LOGGER.debug(f"{collection.name} files: {data}")
+    LOGGER.debug(f"files: {data}")
     if file:  # if loop pass without return data
         raise HTTPException(status_code=404, detail="File not found.")
 

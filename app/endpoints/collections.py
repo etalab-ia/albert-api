@@ -5,11 +5,7 @@ from fastapi import APIRouter, Security, Response
 from app.schemas.collections import Collections, Collection
 from app.utils.security import check_api_key
 from app.utils.lifespan import clients
-from app.utils.data import (
-    get_collections as _get_collections,
-    get_collection as _get_collection,
-    delete_contents,
-)
+from app.utils.data import get_collection_metadata, get_collections_metadata, delete_contents
 from app.utils.config import LOGGER
 
 router = APIRouter()
@@ -24,11 +20,11 @@ async def get_collections(
     Get list of collections.
     """
     if collection is None:
-        collections = _get_collections(vectorstore=clients["vectors"], user=user)
+        collections = get_collections_metadata(vectorstore=clients["vectors"], user=user)
         LOGGER.debug(f"collections: {collections}")
         return collections
     else:
-        collection = _get_collection(
+        collection = get_collection_metadata(
             vectorstore=clients["vectors"], user=user, collection=collection
         )
         LOGGER.debug(f"collection: {collection}")
