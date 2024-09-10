@@ -32,6 +32,9 @@ async def chat_completions(
     url = f"{client.base_url}chat/completions"
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
+    if not client.check_context_length(model=request["model"], messages=request["messages"]):
+        raise HTTPException(status_code=400, detail="Context length too large")
+
     # tool call
     metadata = list()
     tools = request.get("tools")
@@ -50,6 +53,9 @@ async def chat_completions(
             metadata.append({tool["function"]["name"]: tool_output})
             request["messages"] = [{"role": "user", "content": tool_output.prompt}]
         request.pop("tools")
+
+        if not client.check_context_length(model=request["model"], messages=request["messages"]):
+            raise HTTPException(status_code=400, detail="Context length too large after tool call")
 
     # non stream case
     if not request["stream"]:
