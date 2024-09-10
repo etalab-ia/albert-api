@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI):
         elif self.type == AUDIO_MODEL_TYPE:
             data.append(
                 Model(
-                    id=0, #todo: fix this & find a way to get the model id from the api?
+                    id="Systran/faster-distil-whisper-large-v3", #todo: fix this & find a way to get the model id from the api?
                     object="model",
                     owned_by="openai",
                     max_model_len=None,

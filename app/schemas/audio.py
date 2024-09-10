@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Union, Literal, Tuple
 
 from pydantic import BaseModel, Field
+from fastapi import UploadFile, File
 
 '''
 from openai.types.chat import (
@@ -16,8 +17,7 @@ from app.schemas.tools import ToolOutput
 
 #cf https://platform.openai.com/docs/api-reference/audio/createTranscription
 class AudioTranscriptionRequest(BaseModel):
-    model: str
-    file: str
+    model: Optional[str] = None
     language: Optional[str] = None
     prompt: Optional[str] = None
     response_format: Optional[str] = "json"
