@@ -27,7 +27,7 @@ if __name__ == "__main__":
     )
 
     COLLECTION = "test"
-    FILE_NAME = "my_document.pdf"
+    FILE_NAME = "test.pdf"
     session = requests.session()
     session.headers = {"Authorization": f"Bearer {args.api_key}"}
     user = encode_string(input=args.api_key)
@@ -58,20 +58,19 @@ if __name__ == "__main__":
     collections = Collections(**collections)
 
     logging.info("test: before upload file, collection does not exists")
-    if COLLECTION in [collection.name for collection in collections.data]:
+    if COLLECTION in [collection.id for collection in collections.data]:
         response = session.delete(f"{args.base_url}/collections", params={"collection": COLLECTION}, timeout=10)
         assert response.status_code == 204, f"error: delete collection ({response.status_code})"
 
     logging.info("test: get_collections does not return metadata collection")
     assert METADATA_COLLECTION not in [
-        collection.name for collection in collections.data
+        collection.id for collection in collections.data
     ], f"{METADATA_COLLECTION} metadata collection is display in collections"
 
 
     if not os.path.exists(FILE_NAME):
-        doc_url = "https://www.legifrance.gouv.fr/download/file/rxcTl0H4YnnzLkMLiP4x15qORfLSKk_h8QsSb2xnJ8Y=/JOE_TEXTE"
+        doc_url = "http://www.legifrance.gouv.fr/download/file/rxcTl0H4YnnzLkMLiP4x15qORfLSKk_h8QsSb2xnJ8Y=/JOE_TEXTE"
         wget.download(doc_url, out=FILE_NAME)
-
     params = {
         "embeddings_model": EMBEDDINGS_MODEL,
         "collection": COLLECTION,
@@ -144,11 +143,11 @@ if __name__ == "__main__":
 
     logging.info("test: upload file create a collection")
     assert COLLECTION in [
-        collection.name for collection in collections.data
+        collection.id for collection in collections.data
     ], f"{COLLECTION} collection does not exists"
 
     logging.info("test: upload file create a collection with private type")
-    collection = [collection for collection in collections.data if collection.name == COLLECTION][0]
+    collection = [collection for collection in collections.data if collection.id == COLLECTION][0]
     assert (
         collection.type == PRIVATE_COLLECTION_TYPE
     ), f"{COLLECTION} collection type is not {PRIVATE_COLLECTION_TYPE}"

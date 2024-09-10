@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import HTTPException
 from qdrant_client.http.models import Filter, FieldCondition, MatchAny
 
-from app.utils.data import get_chunks, get_collection
+from app.utils.data import get_chunks, get_collection_id
 from app.schemas.tools import ToolOutput
 
 
@@ -33,12 +33,17 @@ class UseFiles:
                 status_code=400, detail='User message must contain "{files}" with UseFiles tool.'
             )
 
-        collection = get_collection(vectorstore=self.clients["vectors"], collection=collection, user=request["user"])
+        collection_id = get_collection_id(
+            vectorstore=self.clients["vectors"], collection=collection, user=request["user"]
+        )
         filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=file_ids))])
         chunks = get_chunks(
-            vectorstore=self.clients["vectors"], collection=collection.id, filter=filter
+            vectorstore=self.clients["vectors"],
+            collection=collection_id,
+            filter=filter,
+            user=request["user"],
         )
-        
+
         metadata = {"chunks": chunk.metadata for chunk in chunks}
         files = "\n\n".join([chunk.content for chunk in chunks])
         prompt = prompt.replace("{files}", files)
