@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import List, Dict
 import requests
 import time
 from functools import partial
@@ -73,14 +74,25 @@ async def lifespan(app: FastAPI):
 
         return Models(data=data)
 
+    def check_context_length(
+        self, model: str, messages: List[Dict[str, str]], add_special_tokens: bool = True
+    ):
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        prompt = "\n".join([message["role"] + ": " + message["content"] for message in messages])
+        data = {"model": model, "prompt": prompt, "add_special_tokens": add_special_tokens}
+
+        response = requests.post(
+            str(self.base_url).replace("/v1/", "/tokenize"), json=data, headers=headers
+        )
+        response.raise_for_status()
+        return response.json()["count"] <= response.json()["max_model_len"]
+
     models = list()
     for model in CONFIG.models:
         client = OpenAI(base_url=model.url, api_key=model.key, timeout=10)
         client.type = model.type
         client.models.list = partial(get_models_list, client)
-        client.embedding = HuggingFaceEndpointEmbeddings(
-            model=str(client.base_url).removesuffix("v1/"), huggingfacehub_api_token=client.api_key
-        )
+
         try:
             response = client.models.list()
             model = response.data[0]
@@ -93,8 +105,15 @@ async def lifespan(app: FastAPI):
         models.append(model.id)
         # get vector size
         if client.type == EMBEDDINGS_MODEL_TYPE:
+            client.embedding = HuggingFaceEndpointEmbeddings(
+                model=str(client.base_url).removesuffix("v1/"),
+                huggingfacehub_api_token=client.api_key,
+            )
             response = client.embeddings.create(model=model.id, input="hello world")
             client.vector_size = len(response.data[0].embedding)
+
+        if client.type == LANGUAGE_MODEL_TYPE:
+            client.check_context_length = partial(check_context_length, client)
 
         clients["models"][model.id] = client
 
