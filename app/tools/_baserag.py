@@ -1,12 +1,14 @@
 from typing import List, Optional
 
-from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from fastapi import HTTPException
 from qdrant_client.http import models as rest
 
-from app.utils.data import search_multiple_collections, get_collections, get_collection
+from app.utils.data import (
+    search_multiple_collections,
+    get_collection_metadata,
+    get_collections_metadata,
+)
 from app.schemas.tools import ToolOutput
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE
 
 
 class BaseRAG:
@@ -45,30 +47,27 @@ class BaseRAG:
             )
 
         if collections:
-            collections = [get_collection(vectorstore=self.clients["vectors"], user=request["user"], collection=collection) for collection in collections]  # fmt: off
+            collections = [get_collection_metadata(vectorstore=self.clients["vectors"], user=request["user"], collection=collection) for collection in collections]  # fmt: off
         else:
-            collections = get_collections(vectorstore=self.clients["vectors"], user=request["user"])
+            collections = get_collections_metadata(
+                vectorstore=self.clients["vectors"], user=request["user"]
+            )
 
         for collection in collections:
             if collection.model != embeddings_model:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"{collection.name} collection is set for {embeddings_model} model.",
+                    detail=f"{collection.id} collection is set for {embeddings_model} model.",
                 )
-
-        embedding = HuggingFaceEndpointEmbeddings(
-            model=str(self.clients["models"][embeddings_model].base_url).removesuffix("v1/"),
-            huggingfacehub_api_token=self.clients["models"][embeddings_model].api_key,
-        )
 
         filter = rest.Filter(must=[rest.FieldCondition(key="metadata.file_id", match=rest.MatchAny(any=file_ids))]) if file_ids else None  # fmt: off
         prompt = request["messages"][-1]["content"]
 
         documents = search_multiple_collections(
             vectorstore=self.clients["vectors"],
-            embedding=embedding,
+            embedding=self.clients["models"][embeddings_model].embedding,
             prompt=prompt,
-            collections=[collections.name for collections in collections],
+            collections=[collections.id for collections in collections],
             user=request["user"],
             k=k,
             filter=filter,

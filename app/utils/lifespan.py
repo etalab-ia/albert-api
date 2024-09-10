@@ -5,6 +5,7 @@ from functools import partial
 
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
 from app.utils.config import CONFIG, LOGGER
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION, AUDIO_MODEL_TYPE
@@ -41,17 +42,18 @@ async def lifespan(app: FastAPI):
         if self.type == LANGUAGE_MODEL_TYPE:
             endpoint = f"{self.base_url}models"
             response = requests.get(url=endpoint, headers=headers, timeout=10).json()
-            for row in response["data"]:
-                data.append(
-                    Model(
-                        id=row["id"],
-                        object="model",
-                        owned_by=row.get("owned_by", ""),
-                        created=row.get("created", round(time.time())),
-                        max_model_len=row.get("max_model_len", None),
-                        type=LANGUAGE_MODEL_TYPE,
-                    )
+            assert len(response["data"]) == 1, "Only one model per model API is supported."
+            response = response["data"][0]
+            data.append(
+                Model(
+                    id=response["id"],
+                    object="model",
+                    owned_by=response.get("owned_by", ""),
+                    created=response.get("created", round(time.time())),
+                    max_model_len=response.get("max_model_len", None),
+                    type=LANGUAGE_MODEL_TYPE,
                 )
+            )
 
         elif self.type == EMBEDDINGS_MODEL_TYPE:
             endpoint = str(self.base_url).replace("/v1/", "/info")
@@ -87,20 +89,25 @@ async def lifespan(app: FastAPI):
         client = OpenAI(base_url=model.url, api_key=model.key, timeout=10)
         client.type = model.type
         client.models.list = partial(get_models_list, client)
-
+        client.embedding = HuggingFaceEndpointEmbeddings(
+            model=str(client.base_url).removesuffix("v1/"), huggingfacehub_api_token=client.api_key
+        )
         try:
             response = client.models.list()
+            model = response.data[0]
+            if model.id in models:
+                raise ValueError(f"Model id {model.id} is duplicated, not allowed.")
         except Exception as e:
             LOGGER.info(f"error to request the model API on {model.url}, skipping:\n{e}")
             continue
 
-        for model in response.data:
-            if model.id in models:
-                raise ValueError(f"Model id {model.id} is duplicated, not allowed.")
-            else:
-                models.append(model.id)
+        models.append(model.id)
+        # get vector size
+        if client.type == EMBEDDINGS_MODEL_TYPE:
+            response = client.embeddings.create(model=model.id, input="hello world")
+            client.vector_size = len(response.data[0].embedding)
 
-            clients["models"][model.id] = client
+        clients["models"][model.id] = client
 
     if len(clients["models"].keys()) == 0:
         raise ValueError("No model can be reached.")
