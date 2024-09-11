@@ -54,7 +54,22 @@ services:
         timeout: 10s
         retries: 5
 
+  streamlit:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 8501:8501
+    volumes:
+      - ./ui:/app
+    environment:
+      - BASE_URL=http://fastapi:8000/v1
+    depends_on:
+      - fastapi
+
 volumes:
   qdrant:
   minio:
   redis:
+  streamlit:
