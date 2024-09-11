@@ -6,10 +6,8 @@ from streamlit_local_storage import LocalStorage
 import time
 import os
 
-# Replace the existing BASE_URL definition with:
-BASE_URL = os.getenv("BASE_URL", "https://albert.api.dev.etalab.gouv.fr/v1")
+BASE_URL = "https://albert.api.dev.etalab.gouv.fr/v1"
 
-# Initialize local storage
 local_storage = LocalStorage()
 
 def generate_default_collection_name():

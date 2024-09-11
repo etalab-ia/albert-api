@@ -60,7 +60,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - 8501:8501
+      - 8502:8501  # Change this line
     volumes:
       - ./ui:/app
     environment:
