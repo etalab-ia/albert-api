@@ -66,7 +66,7 @@ La configuration permet de spéficier le token d'accès à l'API, les API de mod
 
 #### Auth
 
-Les IAM supportés, de nouveaux seront disponibles prochainements :
+Les IAM supportés, de nouveaux seront disponibles prochainement :
 
 * [Grist](https://www.getgrist.com/)
 
@@ -79,3 +79,25 @@ Voici les types de base de données supportées, à configurer dans le fichier d
 | vectors | [qdrant](https://qdrant.tech/) | 
 | cache | [redis](https://redis.io/) |
 | files | [minio](https://min.io/) |
+
+## Lancement de Streamlit localement
+
+Pour exécuter l'application Streamlit localement, utilisez la commande suivante :
+
+```bash
+streamlit run ui/app.py
+```
+
+Assurez-vous que toutes les dépendances nécessaires sont installées. Vous devez créer un environnement virtuel et installer les dépendances en utilisant :
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+puis installer les dépendances :
+
+```bash
+cd app
+pip install .
+```

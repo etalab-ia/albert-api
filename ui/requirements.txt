@@ -1,4 +1,0 @@
-requests==2.32.3
-streamlit_local_storage
-streamlit==1.38.0
-openai==1.44.1

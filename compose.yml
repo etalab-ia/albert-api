@@ -67,6 +67,7 @@ services:
       - BASE_URL=http://fastapi:8000/v1
     depends_on:
       - fastapi
+    command: ["streamlit", "run", "app.py", "--server.port=8501", "--browser.gatherUsageStats", "false"]
 
 volumes:
   qdrant:

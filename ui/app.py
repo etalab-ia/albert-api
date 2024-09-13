@@ -5,14 +5,15 @@ import uuid
 from streamlit_local_storage import LocalStorage
 import time
 import os
+from dotenv import load_dotenv
 
-BASE_URL = "https://albert.api.dev.etalab.gouv.fr/v1"
+load_dotenv()
+
+BASE_URL = os.getenv("API_URL")
 
 local_storage = LocalStorage()
 
-def generate_default_collection_name():
-    return f"collection_{uuid.uuid4().hex[:8]}"
-
+collection_name = "Mes Documents"
 # Authentification
 def authenticate(api_key):
     try:
@@ -149,7 +150,7 @@ def main():
         st.session_state.language_model = None
         st.session_state.embeddings_model = None
         st.session_state.documents_uploaded = False
-        st.session_state.collection_name = generate_default_collection_name()
+        st.session_state.collection_name = collection_name
         st.session_state.chat_history = []
     
     if 'files_uploaded' not in st.session_state:
@@ -192,7 +193,7 @@ def main():
             private_collections = [(c['id'], c['doc_count']) for c in collections if c["type"] == "private"]
             if not private_collections:
                 # Créer une collection par défaut si aucune n'existe
-                default_collection_name = generate_default_collection_name()
+                default_collection_name = collection_name
                 private_collections = [(default_collection_name, 0)]
             return private_collections
 
@@ -221,12 +222,12 @@ def main():
                     if collections:
                         st.session_state.collection_name = collection_ids[0]
                     else:
-                        st.session_state.collection_name = generate_default_collection_name()
+                        st.session_state.collection_name = collection_name
                     st.rerun()
                 else:
                     st.sidebar.error(f"Échec de la suppression de la collection '{st.session_state.collection_name}'")
         else:
-            st.session_state.collection_name = generate_default_collection_name()
+            st.session_state.collection_name = collection_name
 
         st.sidebar.write(f"Collection actuelle : {st.session_state.collection_name}")
 
