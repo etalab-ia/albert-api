@@ -1,13 +1,9 @@
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import HTTPException
 from qdrant_client.http import models as rest
 
-from app.utils.data import (
-    search_multiple_collections,
-    get_collection_id,
-    get_collection_metadata,
-)
+from app.helpers import VectorStore
 from app.schemas.tools import ToolOutput
 
 
@@ -54,31 +50,13 @@ Veuillez apporter une réponse circonstanciée à cette question en respectant s
         k: Optional[int] = 4,
         **request,
     ) -> ToolOutput:
-        collection_id = get_collection_id(
-            vectorstore=self.clients["vectors"], user=request["user"], collection=self.COLLECTION
-        )
-        collection_metadata = get_collection_metadata(
-            vectorstore=self.clients["vectors"], user=request["user"], collection=self.COLLECTION
-        )
-        if collection_metadata.model != embeddings_model:
-            raise HTTPException(
-                status_code=400,
-                detail=f"{collection_metadata.id} collection is set for {collection_metadata.model} model.",
-            )
+        vectorstore = VectorStore(clients=self.clients, user=request["user"])
+        collection = vectorstore.get_collection_metadata(collection_names=[self.COLLECTION])[0]
         prompt = request["messages"][-1]["content"]
-        response = self.clients["models"][embeddings_model].embeddings.create(
-            input=[prompt], model=embeddings_model
-        )
-        vector = response.data[0].embedding
-
-        results = self.clients["vectors"].search(
-            collection_name=collection_id, query_vector=vector, limit=k
-        )
+        results = vectorstore.search(collection_names=[collection.name], prompt=prompt, k=k, model=embeddings_model)
 
         context = "\n\n\n".join([
-            f"Question: {result.payload.get('description', 'N/A')}\n"
-            f"Réponse: {result.payload.get('reponse', 'N/A')}"
-            for result in results
+            f"Question: {result.payload.get('description', 'N/A')}\n" f"Réponse: {result.payload.get('reponse', 'N/A')}" for result in results
         ])
 
         prompt = self.DEFAULT_PROMPT_TEMPLATE.format(context=context, prompt=prompt)
