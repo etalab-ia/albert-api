@@ -2,19 +2,16 @@ import base64
 import uuid
 from typing import List, Optional, Union
 
-from fastapi import APIRouter, Response, Security, UploadFile, HTTPException
 from botocore.exceptions import ClientError
-from langchain_qdrant import QdrantVectorStore
-from qdrant_client.http.models import Filter, FieldCondition, MatchAny
+from fastapi import APIRouter, HTTPException, Response, Security, UploadFile
+from qdrant_client.http.models import FieldCondition, Filter, MatchAny
 
+from app.helpers import S3FileLoader, VectorStore
 from app.schemas.files import File, Files, Upload, Uploads
-from app.schemas.config import PRIVATE_COLLECTION_TYPE
 from app.utils.config import LOGGER
-from app.utils.security import check_api_key
-from app.utils.data import get_chunks, get_collection_id, delete_contents, create_collection
+from app.utils.data import delete_contents
 from app.utils.lifespan import clients
-from app.helpers import S3FileLoader
-
+from app.utils.security import check_api_key
 
 router = APIRouter()
 
@@ -50,23 +47,14 @@ async def upload_files(
     - **files** : Files to upload.
     """
 
+    loader = S3FileLoader(s3=clients["files"], chunk_size=chunk_size, chunk_overlap=chunk_overlap, chunk_min_size=chunk_min_size)
+    vectorstore = VectorStore(clients=clients, user=user)
+
     # if collection already exists, return collection ID too
-    collection_id = create_collection(
-        collection=collection,
-        vectorstore=clients["vectors"],
-        embeddings_model=embeddings_model,
-        user=user,
-    )
+    collection_id = vectorstore.create_collection(collection_name=collection, model=embeddings_model)
 
     # upload
     data = list()
-    loader = S3FileLoader(
-        s3=clients["files"],
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
-        chunk_min_size=chunk_min_size,
-    )
-
     try:
         clients["files"].head_bucket(Bucket=collection_id)
     except ClientError:
@@ -82,13 +70,7 @@ async def upload_files(
                 file.file,
                 collection_id,
                 file_id,
-                ExtraArgs={
-                    "ContentType": file.content_type,
-                    "Metadata": {
-                        "filename": encoded_file_name,
-                        "id": file_id,
-                    },
-                },
+                ExtraArgs={"ContentType": file.content_type, "Metadata": {"filename": encoded_file_name, "id": file_id}},
             )
         except Exception as e:
             LOGGER.error(f"store {file_name}:\n{e}")
@@ -108,14 +90,11 @@ async def upload_files(
             continue
 
         try:
+            for document in documents:
+                document.id = str(uuid.uuid4())
             # create vectors from documents
-            db = await QdrantVectorStore.afrom_documents(
-                documents=documents,
-                embedding=clients["models"][embeddings_model].embedding,
-                collection_name=collection_id,
-                url=clients["vectors"].url,
-                api_key=clients["vectors"].api_key,
-            )
+            vectorstore.from_documents(documents=documents, model=embeddings_model, collection_name=collection)
+
         except Exception as e:
             LOGGER.error(f"create vectors of {file_name}:\n{e}")
             clients["files"].delete_object(Bucket=collection_id, Key=file_id)
@@ -138,19 +117,15 @@ async def files(
     Get files from a collection. Only files from private collections are returned.
     """
 
-    collection_id = get_collection_id(
-        vectorstore=clients["vectors"],
-        collection=collection,
-        user=user,
-        type=PRIVATE_COLLECTION_TYPE,
-    )
+    vectorstore = VectorStore(clients=clients, user=user)
+    collection = vectorstore.get_collection_metadata(collection_names=[collection])[0]
 
     data = list()
-    objects = clients["files"].list_objects_v2(Bucket=collection_id).get("Contents", [])
-    objects = [object | clients["files"].head_object(Bucket=collection_id, Key=object["Key"])["Metadata"] for object in objects]  # fmt: off
+    objects = clients["files"].list_objects_v2(Bucket=collection.id).get("Contents", [])
+    objects = [object | clients["files"].head_object(Bucket=collection.id, Key=object["Key"])["Metadata"] for object in objects]
     file_ids = [object["Key"] for object in objects]
     filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=file_ids))])
-    chunks = get_chunks(vectorstore=clients["vectors"], collection=collection, filter=filter, user=user)
+    chunks = vectorstore.get_chunks(collection_name=collection.name, filter=filter)
 
     for object in objects:
         chunk_ids = list()
@@ -180,19 +155,12 @@ async def files(
 
 @router.delete("/files/{collection}/{file}")
 @router.delete("/files/{collection}")
-async def delete_file(
-    collection: str, file: Optional[str] = None, user: str = Security(check_api_key)
-) -> Response:
+async def delete_file(collection: str, file: Optional[str] = None, user: str = Security(check_api_key)) -> Response:
     """
     Delete files and relative collections. Only files from private collections can be deleted.
     """
 
-    response = delete_contents(
-        s3=clients["files"],
-        vectorstore=clients["vectors"],
-        user=user,
-        collection=collection,
-        file=file,
-    )
+    vectorstore = VectorStore(clients=clients, user=user)
+    response = delete_contents(s3=clients["files"], vectorstore=vectorstore, collection_name=collection, file=file)
 
     return response

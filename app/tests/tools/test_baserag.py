@@ -13,15 +13,13 @@ from app.schemas.chat import ChatCompletion
 class TestTools:
     FILE_URL = "https://www.legifrance.gouv.fr/download/file/rxcTl0H4YnnzLkMLiP4x15qORfLSKk_h8QsSb2xnJ8Y=/JOE_TEXTE"
     FILE_PATH = "test.pdf"
-    COLLECTION = "collection"
+    COLLECTION = "pytest"
 
     def test_baserag_tool_response_status_code(self, args, session):
         """Setup for other tests."""
 
         # delete collection if exists
-        response = session.get(
-            f"{args["base_url"]}/collections", params={"collection": self.COLLECTION}, timeout=10
-        )
+        response = session.get(f"{args["base_url"]}/collections", params={"collection": self.COLLECTION}, timeout=10)
         if response.status_code == 200:
             response = session.delete(
                 f"{args["base_url"]}/collections",
@@ -41,9 +39,7 @@ class TestTools:
         assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
         models = response.json()
         models = Models(data=[Model(**model) for model in models["data"]])
-        self.EMBEDDINGS_MODEL = [
-            model for model in models.data if model.type == EMBEDDINGS_MODEL_TYPE
-        ][0].id
+        self.EMBEDDINGS_MODEL = [model for model in models.data if model.type == EMBEDDINGS_MODEL_TYPE][0].id
         logging.debug(f"embeddings_model: {self.EMBEDDINGS_MODEL}")
 
         # upload file
@@ -66,9 +62,7 @@ class TestTools:
         assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
         models = response.json()
         models = Models(data=[Model(**model) for model in models["data"]])
-        self.LANGUAGE_MODEL = [model for model in models.data if model.type == LANGUAGE_MODEL_TYPE][
-            0
-        ].id
+        self.LANGUAGE_MODEL = [model for model in models.data if model.type == LANGUAGE_MODEL_TYPE][0].id
         logging.debug(f"language_model: {self.LANGUAGE_MODEL}")
 
         # test baserag tool
@@ -108,11 +102,7 @@ class TestTools:
         assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
         models = response.json()
         models = Models(data=[Model(**model) for model in models["data"]])
-        wrong_embeddings_model = [
-            model
-            for model in models.data
-            if model.type == EMBEDDINGS_MODEL_TYPE and model.id != self.EMBEDDINGS_MODEL
-        ][0].id
+        wrong_embeddings_model = [model for model in models.data if model.type == EMBEDDINGS_MODEL_TYPE and model.id != self.EMBEDDINGS_MODEL][0].id
         logging.debug(f"wrong_embeddings_model: {wrong_embeddings_model}")
 
         data = {
