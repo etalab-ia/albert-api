@@ -1,16 +1,15 @@
-from contextlib import asynccontextmanager
-from typing import List, Dict
-import requests
 import time
+from contextlib import asynccontextmanager
 from functools import partial
+from typing import Dict, List
 
+import requests
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
-from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
-from app.utils.config import CONFIG, LOGGER
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION
 from app.schemas.models import Model, Models
+from app.utils.config import CONFIG, LOGGER
 
 
 class ModelDict(dict):
@@ -32,6 +31,7 @@ clients = {"models": ModelDict(), "cache": None, "vectors": None, "files": None}
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
+    # @TODO: add cache
     def get_models_list(self, *args, **kwargs):
         """
         Custom method to overwrite OpenAI's list method (client.models.list()). This method support
@@ -74,16 +74,12 @@ async def lifespan(app: FastAPI):
 
         return Models(data=data)
 
-    def check_context_length(
-        self, model: str, messages: List[Dict[str, str]], add_special_tokens: bool = True
-    ):
+    def check_context_length(self, model: str, messages: List[Dict[str, str]], add_special_tokens: bool = True):
         headers = {"Authorization": f"Bearer {self.api_key}"}
         prompt = "\n".join([message["role"] + ": " + message["content"] for message in messages])
         data = {"model": model, "prompt": prompt, "add_special_tokens": add_special_tokens}
 
-        response = requests.post(
-            str(self.base_url).replace("/v1/", "/tokenize"), json=data, headers=headers
-        )
+        response = requests.post(str(self.base_url).replace("/v1/", "/tokenize"), json=data, headers=headers)
         response.raise_for_status()
         return response.json()["count"] <= response.json()["max_model_len"]
 
@@ -105,10 +101,6 @@ async def lifespan(app: FastAPI):
         models.append(model.id)
         # get vector size
         if client.type == EMBEDDINGS_MODEL_TYPE:
-            client.embedding = HuggingFaceEndpointEmbeddings(
-                model=str(client.base_url).removesuffix("v1/"),
-                huggingfacehub_api_token=client.api_key,
-            )
             response = client.embeddings.create(model=model.id, input="hello world")
             client.vector_size = len(response.data[0].embedding)
 
@@ -121,41 +113,36 @@ async def lifespan(app: FastAPI):
         raise ValueError("No model can be reached.")
 
     # cache
-    if CONFIG.databases.cache.type == "redis":
-        from redis import Redis
 
-        clients["cache"] = Redis(**CONFIG.databases.cache.args)
+    from redis import Redis
+
+    clients["cache"] = Redis(**CONFIG.databases.cache.args)
 
     # vectors
-    if CONFIG.databases.vectors.type == "qdrant":
-        from qdrant_client import QdrantClient
+    from qdrant_client import QdrantClient
 
-        clients["vectors"] = QdrantClient(**CONFIG.databases.vectors.args)
-        clients["vectors"].url = CONFIG.databases.vectors.args["url"]
-        clients["vectors"].api_key = CONFIG.databases.vectors.args["api_key"]
+    clients["vectors"] = QdrantClient(**CONFIG.databases.vectors.args)
+    clients["vectors"].url = CONFIG.databases.vectors.args["url"]
+    clients["vectors"].api_key = CONFIG.databases.vectors.args["api_key"]
 
-        if not clients["vectors"].collection_exists(collection_name=METADATA_COLLECTION):
-            clients["vectors"].create_collection(
-                collection_name=METADATA_COLLECTION, vectors_config={}, on_disk_payload=False
-            )
+    if not clients["vectors"].collection_exists(collection_name=METADATA_COLLECTION):
+        clients["vectors"].create_collection(collection_name=METADATA_COLLECTION, vectors_config={}, on_disk_payload=False)
 
     # files
-    if CONFIG.databases.files.type == "minio":
-        import boto3
-        from botocore.client import Config
+    import boto3
+    from botocore.client import Config
 
-        clients["files"] = boto3.client(
-            service_name="s3",
-            config=Config(signature_version="s3v4"),
-            **CONFIG.databases.files.args,
-        )
+    clients["files"] = boto3.client(
+        service_name="s3",
+        config=Config(signature_version="s3v4"),
+        **CONFIG.databases.files.args,
+    )
 
     # auth
     if CONFIG.auth:
-        if CONFIG.auth.type == "grist":
-            from app.helpers import GristKeyManager
+        from app.helpers import GristKeyManager
 
-            clients["auth"] = GristKeyManager(redis=clients["cache"], **CONFIG.auth.args)
+        clients["auth"] = GristKeyManager(redis=clients["cache"], **CONFIG.auth.args)
     else:
         clients["auth"] = None
 

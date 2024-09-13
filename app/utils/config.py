@@ -1,5 +1,6 @@
-import os
 import logging
+import os
+
 import yaml
 
 from app.schemas.config import Config

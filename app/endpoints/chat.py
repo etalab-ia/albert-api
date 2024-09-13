@@ -17,9 +17,7 @@ router = APIRouter()
 
 
 @router.post("/chat/completions")
-async def chat_completions(
-    request: ChatCompletionRequest, user: str = Security(check_api_key)
-) -> Union[ChatCompletion, ChatCompletionChunk]:
+async def chat_completions(request: ChatCompletionRequest, user: str = Security(check_api_key)) -> Union[ChatCompletion, ChatCompletionChunk]:
     """Completion API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/chat/create for the API specification.
     """
@@ -60,12 +58,7 @@ async def chat_completions(
     # non stream case
     if not request["stream"]:
         async_client = httpx.AsyncClient(timeout=20)
-        response = await async_client.request(
-            method="POST",
-            url=url,
-            headers=headers,
-            json=request,
-        )
+        response = await async_client.request(method="POST", url=url, headers=headers, json=request)
         response.raise_for_status()
         data = response.json()
         data["metadata"] = metadata
@@ -74,12 +67,7 @@ async def chat_completions(
     # stream case
     async def forward_stream(client, request: dict):
         async with httpx.AsyncClient(timeout=20) as async_client:
-            async with async_client.stream(
-                method="POST",
-                url=url,
-                headers=headers,
-                json=request,
-            ) as response:
+            async with async_client.stream(method="POST", url=url, headers=headers, json=request) as response:
                 i = 0
                 async for chunk in response.aiter_raw():
                     if i == 0:
