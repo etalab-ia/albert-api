@@ -1,14 +1,15 @@
-from contextlib import asynccontextmanager
-import requests
 import time
+from contextlib import asynccontextmanager
 from functools import partial
+from typing import Dict, List
 
+import requests
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
 
-from app.utils.config import CONFIG, LOGGER
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION
 from app.schemas.models import Model, Models
+from app.utils.config import CONFIG, LOGGER
 
 
 class ModelDict(dict):
@@ -30,6 +31,7 @@ clients = {"models": ModelDict(), "cache": None, "vectors": None, "files": None}
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
+    # @TODO: add cache
     def get_models_list(self, *args, **kwargs):
         """
         Custom method to overwrite OpenAI's list method (client.models.list()). This method support
@@ -41,17 +43,18 @@ async def lifespan(app: FastAPI):
         if self.type == LANGUAGE_MODEL_TYPE:
             endpoint = f"{self.base_url}models"
             response = requests.get(url=endpoint, headers=headers, timeout=10).json()
-            for row in response["data"]:
-                data.append(
-                    Model(
-                        id=row["id"],
-                        object="model",
-                        owned_by=row.get("owned_by", ""),
-                        created=row.get("created", round(time.time())),
-                        max_model_len=row.get("max_model_len", None),
-                        type=LANGUAGE_MODEL_TYPE,
-                    )
+            assert len(response["data"]) == 1, "Only one model per model API is supported."
+            response = response["data"][0]
+            data.append(
+                Model(
+                    id=response["id"],
+                    object="model",
+                    owned_by=response.get("owned_by", ""),
+                    created=response.get("created", round(time.time())),
+                    max_model_len=response.get("max_model_len", None),
+                    type=LANGUAGE_MODEL_TYPE,
                 )
+            )
 
         elif self.type == EMBEDDINGS_MODEL_TYPE:
             endpoint = str(self.base_url).replace("/v1/", "/info")
@@ -71,6 +74,15 @@ async def lifespan(app: FastAPI):
 
         return Models(data=data)
 
+    def check_context_length(self, model: str, messages: List[Dict[str, str]], add_special_tokens: bool = True):
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        prompt = "\n".join([message["role"] + ": " + message["content"] for message in messages])
+        data = {"model": model, "prompt": prompt, "add_special_tokens": add_special_tokens}
+
+        response = requests.post(str(self.base_url).replace("/v1/", "/tokenize"), json=data, headers=headers)
+        response.raise_for_status()
+        return response.json()["count"] <= response.json()["max_model_len"]
+
     models = list()
     for model in CONFIG.models:
         client = OpenAI(base_url=model.url, api_key=model.key, timeout=10)
@@ -79,57 +91,58 @@ async def lifespan(app: FastAPI):
 
         try:
             response = client.models.list()
+            model = response.data[0]
+            if model.id in models:
+                raise ValueError(f"Model id {model.id} is duplicated, not allowed.")
         except Exception as e:
             LOGGER.info(f"error to request the model API on {model.url}, skipping:\n{e}")
             continue
 
-        for model in response.data:
-            if model.id in models:
-                raise ValueError(f"Model id {model.id} is duplicated, not allowed.")
-            else:
-                models.append(model.id)
+        models.append(model.id)
+        # get vector size
+        if client.type == EMBEDDINGS_MODEL_TYPE:
+            response = client.embeddings.create(model=model.id, input="hello world")
+            client.vector_size = len(response.data[0].embedding)
 
-            clients["models"][model.id] = client
+        if client.type == LANGUAGE_MODEL_TYPE:
+            client.check_context_length = partial(check_context_length, client)
+
+        clients["models"][model.id] = client
 
     if len(clients["models"].keys()) == 0:
         raise ValueError("No model can be reached.")
 
     # cache
-    if CONFIG.databases.cache.type == "redis":
-        from redis import Redis
 
-        clients["cache"] = Redis(**CONFIG.databases.cache.args)
+    from redis import Redis
+
+    clients["cache"] = Redis(**CONFIG.databases.cache.args)
 
     # vectors
-    if CONFIG.databases.vectors.type == "qdrant":
-        from qdrant_client import QdrantClient
+    from qdrant_client import QdrantClient
 
-        clients["vectors"] = QdrantClient(**CONFIG.databases.vectors.args)
-        clients["vectors"].url = CONFIG.databases.vectors.args["url"]
-        clients["vectors"].api_key = CONFIG.databases.vectors.args["api_key"]
+    clients["vectors"] = QdrantClient(**CONFIG.databases.vectors.args)
+    clients["vectors"].url = CONFIG.databases.vectors.args["url"]
+    clients["vectors"].api_key = CONFIG.databases.vectors.args["api_key"]
 
-        if not clients["vectors"].collection_exists(collection_name=METADATA_COLLECTION):
-            clients["vectors"].create_collection(
-                collection_name=METADATA_COLLECTION, vectors_config={}, on_disk_payload=False
-            )
+    if not clients["vectors"].collection_exists(collection_name=METADATA_COLLECTION):
+        clients["vectors"].create_collection(collection_name=METADATA_COLLECTION, vectors_config={}, on_disk_payload=False)
 
     # files
-    if CONFIG.databases.files.type == "minio":
-        import boto3
-        from botocore.client import Config
+    import boto3
+    from botocore.client import Config
 
-        clients["files"] = boto3.client(
-            service_name="s3",
-            config=Config(signature_version="s3v4"),
-            **CONFIG.databases.files.args,
-        )
+    clients["files"] = boto3.client(
+        service_name="s3",
+        config=Config(signature_version="s3v4"),
+        **CONFIG.databases.files.args,
+    )
 
     # auth
     if CONFIG.auth:
-        if CONFIG.auth.type == "grist":
-            from app.helpers import GristKeyManager
+        from app.helpers import GristKeyManager
 
-            clients["auth"] = GristKeyManager(redis=clients["cache"], **CONFIG.auth.args)
+        clients["auth"] = GristKeyManager(redis=clients["cache"], **CONFIG.auth.args)
     else:
         clients["auth"] = None
 

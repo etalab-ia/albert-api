@@ -17,4 +17,4 @@ class Chunks(BaseModel):
 
 
 class ChunkRequest(BaseModel):
-    ids: List[str]
+    chunks: List[str]

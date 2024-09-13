@@ -6,7 +6,7 @@ from qdrant_client.http.models import Filter, HasIdCondition
 from app.schemas.chunks import Chunks, Chunk, ChunkRequest
 from app.utils.security import check_api_key
 from app.utils.lifespan import clients
-from app.utils.data import get_chunks, get_collection
+from app.helpers._vectorstore import VectorStore
 
 router = APIRouter()
 
@@ -23,11 +23,10 @@ async def chunks(
     Get a chunk.
     """
 
-    ids = [chunk] if chunk else dict(request)["ids"]
+    vectorstore = VectorStore(clients=clients, user=user)
+    ids = [chunk] if chunk else dict(request)["chunks"]
     filter = Filter(must=[HasIdCondition(has_id=ids)])
-    collection = get_collection(vectorstore=clients["vectors"], collection=collection, user=user)
-
-    chunks = get_chunks(vectorstore=clients["vectors"], collection=collection.id, filter=filter)
+    chunks = vectorstore.get_chunks(collection_name=collection, filter=filter)
     if not request:
         return chunks[0]
 

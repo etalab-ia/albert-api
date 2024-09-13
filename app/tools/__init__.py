@@ -1,4 +1,4 @@
 from ._baserag import BaseRAG
-from ._usefiles import UseFiles
+from ._sppfewshots import SPPFewShots
 
-__all__ = ["BaseRAG", "UseFiles"]
+__all__ = ["BaseRAG", "SPPFewShots"]
