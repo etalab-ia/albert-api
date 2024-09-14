@@ -4,11 +4,10 @@
 
 1. Installez [libmagic](https://man7.org/linux/man-pages/man3/libmagic.3.html)
 
-2. Installez les packages Python
+2. Installez les packages Python dans un environnement virtuel dédié
 
   ```bash 
-  cd app
-  pip install .
+  pip install app/.
   ```
 
 3. Créez un fichier *config.yml* à la racine du repository sur la base du fichier d'exemple *[config.example.yml](./config.example.yml)*
@@ -66,16 +65,30 @@ La configuration permet de spéficier le token d'accès à l'API, les API de mod
 
 #### Auth
 
-Les IAM supportés, de nouveaux seront disponibles prochainements :
+Les IAM supportés, de nouveaux seront disponibles prochainement :
 
 * [Grist](https://www.getgrist.com/)
 
 #### Databases
 
-Voici les types de base de données supportées, à configurer dans le fichier de configuration (*[config.example.yml](./config.example.yml)*) : : 
+Voici les types de base de données supportées, à configurer dans le fichier de configuration (*[config.example.yml](./config.example.yml)*) : 
 
 | Database | Type |
 | --- | --- |
 | vectors | [qdrant](https://qdrant.tech/) | 
 | cache | [redis](https://redis.io/) |
 | files | [minio](https://min.io/) |
+
+## Déploiement de l'interface Streamlit
+
+1. Installez les packages Python dans un environnement virtuel
+
+  ```bash 
+  pip install ui/.
+  ```
+
+2. Exécutez l'application Streamlit
+
+  ```bash
+  streamlit run ui/app.py
+  ```

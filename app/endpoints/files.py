@@ -50,7 +50,7 @@ async def upload_files(
     loader = S3FileLoader(s3=clients["files"], chunk_size=chunk_size, chunk_overlap=chunk_overlap, chunk_min_size=chunk_min_size)
     vectorstore = VectorStore(clients=clients, user=user)
 
-    # if collection already exists, return collection ID too
+    # if collection already exists, return the collection ID
     collection_id = vectorstore.create_collection(collection_name=collection, model=embeddings_model)
 
     # upload
@@ -106,6 +106,7 @@ async def upload_files(
     return Uploads(data=data)
 
 
+# @TODO: add pagination
 @router.get("/files/{collection}/{file}")
 @router.get("/files/{collection}")
 async def files(

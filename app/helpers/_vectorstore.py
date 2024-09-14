@@ -130,7 +130,6 @@ class VectorStore:
 
             filter = Filter(must=must, should=should)
             data = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter)[0]
-            # LOGGER.debug(f"collections: {data}")
             metadata.extend(data)
 
         else:
@@ -154,6 +153,10 @@ class VectorStore:
                 if not data and errors == "raise":
                     raise HTTPException(status_code=404, detail=f"Collection {collection_name} not found")
                 metadata.extend(data)
+
+        # sort by updated_at and remove duplicates collections with same names (keep the latest version), concerns only public collections
+        sorted_data = sorted(metadata, key=lambda x: x.payload.get("updated_at", 0), reverse=False)
+        metadata = list({item.payload["name"]: item for item in sorted_data}.values())
 
         for i in range(len(metadata)):
             metadata[i] = CollectionMetadata(
@@ -182,6 +185,9 @@ class VectorStore:
         Returns:
             str: The collection id.
         """
+        if collection_name == "":
+            raise HTTPException(status_code=400, detail="Collection name is required")
+
         if self.models[model].type != EMBEDDINGS_MODEL_TYPE:
             raise HTTPException(status_code=400, detail="Model type must be {EMBEDDINGS_MODEL_TYPE}")
 
@@ -193,7 +199,7 @@ class VectorStore:
             if collection.type == PUBLIC_COLLECTION_TYPE:
                 raise HTTPException(status_code=400, detail="A public collection already exists with the same name")
             if collection.model != model:
-                raise HTTPException(status_code=400, detail="Collection already exists with a different model.")
+                raise HTTPException(status_code=400, detail="A collection already exists with a different model.")
 
             # update metadata
             metadata = dict(collection)

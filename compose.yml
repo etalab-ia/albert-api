@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   fastapi:
-    image: ghcr.io/etalab-ia/albert-api/fastapi:latest
+    image: ghcr.io/etalab-ia/albert-api/app:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     build:
       context: ./app
@@ -53,6 +53,17 @@ services:
         interval: 4s
         timeout: 10s
         retries: 5
+
+  streamlit:
+    image: ghcr.io/etalab-ia/albert-api/ui:latest
+    command: ["streamlit", "run", "app.py", "--server.port=8501", "--browser.gatherUsageStats", "false", "--theme.base", "light"]
+    restart: always
+    environment:
+      - BASE_URL=http://fastapi:8000/v1
+    ports:
+      - 8501:8501
+    depends_on:
+      - fastapi
 
 volumes:
   qdrant:
