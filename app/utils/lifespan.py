@@ -26,7 +26,7 @@ class ModelDict(dict):
 
 clients = {"models": ModelDict(), "cache": None, "vectors": None, "files": None}
 
-
+# @TODO: create a ClientsManager helper to manage clients
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""

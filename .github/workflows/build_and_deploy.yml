@@ -13,7 +13,7 @@ jobs:
     name: Build and push from ${{ github.ref_name }}/${{ github.sha }}
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: ghcr.io/${{ github.repository }}/albert-api
+      IMAGE_NAME: ghcr.io/${{ github.repository }}
       IMAGE_TAG: ${{ github.sha }}
     steps:
       - name: Checkout repository
@@ -29,12 +29,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Build and push app
         uses: docker/build-push-action@v6
         with:
           context: app
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}:latest
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/app:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build and push ui
+        uses: docker/build-push-action@v6
+        with:
+          context: ui
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/ui:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
