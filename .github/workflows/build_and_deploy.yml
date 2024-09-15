@@ -34,7 +34,7 @@ jobs:
         with:
           context: app
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/app:latest
+          tags: ${{ env.IMAGE_NAME }}/app:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/app:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
       
@@ -43,7 +43,7 @@ jobs:
         with:
           context: ui
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/ui:latest
+          tags: ${{ env.IMAGE_NAME }}/ui:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/ui:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
