@@ -156,7 +156,7 @@ class VectorStore:
 
         # sort by updated_at and remove duplicates collections with same names (keep the latest version), concerns only public collections
         sorted_data = sorted(metadata, key=lambda x: x.payload.get("updated_at", 0), reverse=False)
-        metadata = list({item.payload["name"]: item for item in sorted_data}.values())
+        metadata = list({item.payload["name"]: item for item in sorted_data if "name" in item.payload}.values())
 
         for i in range(len(metadata)):
             metadata[i] = CollectionMetadata(
