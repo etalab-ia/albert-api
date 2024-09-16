@@ -1,9 +1,7 @@
-from typing import Literal, List
-
-from pydantic import BaseModel
+from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 from openai.types import Model
-
-from app.schemas.config import LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE
+from pydantic import BaseModel
+from typing import List, Literal
 
 
 class Model(Model):

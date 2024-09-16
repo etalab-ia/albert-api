@@ -1,7 +1,6 @@
-from typing import Optional, List, Union, Dict, Iterable
-
-from pydantic import BaseModel, Field
 from openai.types import Completion
+from pydantic import BaseModel, Field
+from typing import Dict, Iterable, List, Optional, Union
 
 
 class CompletionRequest(BaseModel):

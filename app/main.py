@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Response, Security
-
 from app.endpoints import chat, chunks, collections, completions, embeddings, files, models, tools
 from app.utils.config import APP_CONTACT_EMAIL, APP_CONTACT_URL, APP_DESCRIPTION, APP_VERSION
 from app.utils.lifespan import lifespan
 from app.utils.security import check_api_key
+from fastapi import FastAPI, Response, Security
 
 app = FastAPI(
     title="Albert API",

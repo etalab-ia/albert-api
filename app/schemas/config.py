@@ -1,6 +1,5 @@
-from typing import List, Literal, Optional
-
 from pydantic import BaseModel, Field
+from typing import List, Literal, Optional
 
 # Variables
 METADATA_COLLECTION = "collections"

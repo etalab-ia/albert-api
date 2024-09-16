@@ -1,9 +1,7 @@
+from app.schemas.config import Config
 import logging
 import os
-
 import yaml
-
-from app.schemas.config import Config
 
 logging.basicConfig(format="%(levelname)s:%(asctime)s:%(name)s: %(message)s", level=logging.INFO)
 LOGGER = logging.getLogger(__name__)

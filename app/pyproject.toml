@@ -1,7 +1,7 @@
 [project]
-name = "albert-api"
+name = "albert"
 version = "1.0.0"
-description = "Albert API."
+description = "Albert API and UI"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = [
@@ -21,6 +21,9 @@ dependencies = [
     "python-magic==0.4.27",
     "grist-api==0.1.0",
     "pdfminer.six==20240706",
+    "requests==2.32.3",
+    "streamlit_local_storage==0.0.23",
+    "streamlit==1.38.0",
 ]
 
 [tool.setuptools]
@@ -31,6 +34,6 @@ line-length = 150
 
 [tool.ruff.isort]
 force-sort-within-sections = true
-known-first-party = ["app"]
+known-first-party = ["app", "Chat", "config", "utils", "pages", "Files"]
 forced-separate = ["tests"]
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+section-order = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]

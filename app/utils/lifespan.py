@@ -1,15 +1,13 @@
-import time
-from contextlib import asynccontextmanager
-from functools import partial
-from typing import Dict, List
-
-import requests
-from fastapi import FastAPI, HTTPException
-from openai import OpenAI
-
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION
 from app.schemas.models import Model, Models
 from app.utils.config import CONFIG, LOGGER
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException
+from functools import partial
+from openai import OpenAI
+import requests
+import time
+from typing import Dict, List
 
 
 class ModelDict(dict):

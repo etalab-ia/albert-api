@@ -1,9 +1,7 @@
-from typing import Literal, List, Optional, Dict, Any
-from uuid import UUID
-
+from app.schemas.config import PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 from pydantic import BaseModel
-
-from app.schemas.config import PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE
+from typing import Any, Dict, List, Literal, Optional
+from uuid import UUID
 
 
 class Collection(BaseModel):

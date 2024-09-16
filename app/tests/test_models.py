@@ -1,6 +1,5 @@
-import pytest
-
 from app.schemas.models import Model, Models
+import pytest
 
 
 @pytest.mark.usefixtures("args", "session")

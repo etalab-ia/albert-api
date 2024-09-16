@@ -1,14 +1,12 @@
-import json
-from typing import List, Optional
-
-from docx import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PDFMinerLoader
-from langchain.docstore.document import Document as LangchainDocument
-import magic
-
 from ._textcleaner import TextCleaner
 from app.schemas.files import JsonFile
+from docx import Document
+import json
+from langchain.docstore.document import Document as LangchainDocument
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import PDFMinerLoader
+import magic
+from typing import List, Optional
 
 
 class UniversalParser:
@@ -317,5 +315,100 @@ class UniversalParser:
                     metadata=document.metadata,
                 )
                 chunks.append(chunk)
+
+        return chunks
+
+    # create a method which parse html
+    def _html_to_chunks(
+        self,
+        html,
+        chunk_size: Optional[int],
+        chunk_overlap: Optional[int],
+        chunk_min_size: Optional[int],
+    ) -> List[LangchainDocument]:
+        """
+        Converts HTML content into a list of text chunks.
+
+        Args:
+            html (BeautifulSoup): Parsed HTML content.
+            chunk_size (int): Maximum size of each text chunk.
+            chunk_overlap (int): Number of characters overlapping between chunks.
+            chunk_min_size (int): Minimum size of a chunk to be considered valid.
+
+        Returns:
+            list: List of Langchain documents, where each document corresponds to a text chunk.
+        """
+        allowed_tags = ["h1", "h2", "h3", "h4", "li", "p"]
+        excluded_words = [
+            "obsolète",
+            "cookies",
+            "confidentialité",
+            "Abonnez",
+            "Suivez",
+            "etalab-2.0",
+            "participez",
+            "en détail",
+            "mots clés",
+            "abonnez-vous",
+            "suivez-nous",
+            "dans la même thématique",
+        ]
+        extracted_text = []
+        extracted_title = []
+        first_element = None
+
+        li_consecutive_count = 0
+        li_temp_storage = []
+
+        for element in html.descendants:
+            if element.name in ["h1", "h2"]:
+                text = element.get_text(" ", strip=True)
+                if len(text.split()) > 1 and not any(word in text.lower() for word in excluded_words):
+                    extracted_title.append(text)
+                    first_element = True
+            if first_element is None and element.name in ["p"]:
+                text = element.get_text(" ", strip=True)
+                if len(text.split()) > 10 and not any(word in text.lower() for word in excluded_words):
+                    extracted_text.append(text)
+            elif first_element and element.name in allowed_tags:
+                if element.name in ["h2", "h3", "p"]:
+                    text = element.get_text(" ", strip=True)
+                    if len(text.split()) > 3 and not any(word in text.lower() for word in excluded_words):
+                        if 1 <= li_consecutive_count <= 5:
+                            processed_li_temp = "\n".join(li_temp_storage).strip()
+                            extracted_text.append(processed_li_temp)
+                        extracted_text.append(text)
+                    li_consecutive_count = 0
+                    li_temp_storage = []
+                elif element.name in ["li"]:
+                    text = element.get_text(" ", strip=True)
+                    if len(text.split()) > 3 and not any(word in text.lower() for word in excluded_words):
+                        li_consecutive_count += 1
+                        li_temp_storage.append(text)
+
+        processed_title = " - ".join(extracted_title).strip()
+        processed_title = max([(text, len(text.split())) for text in processed_title.split(" - ")], key=lambda x: x[1])[0]
+        processed_text = "\n".join(extracted_text).strip()
+
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            length_function=len,
+            is_separator_regex=False,
+            separators=["\n\n", "\n"],
+        )
+
+        splitted_text = text_splitter.split_text(processed_text)
+        chunks = []
+
+        for k, text in enumerate(splitted_text):
+            if chunk_min_size and len(text) < chunk_min_size:
+                continue
+
+            chunk = LangchainDocument(
+                page_content=self.cleaner.clean_string(text),
+                metadata={"title": processed_title},
+            )
+            chunks.append(chunk)
 
         return chunks

@@ -90,5 +90,5 @@ Voici les types de base de données supportées, à configurer dans le fichier d
 2. Exécutez l'application Streamlit
 
   ```bash
-  streamlit run ui/app.py
+  streamlit run ui/chat.py --server.port 8501 --browser.gatherUsageStats false --theme.base light
   ```

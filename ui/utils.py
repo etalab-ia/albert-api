@@ -2,7 +2,6 @@ from typing import List
 
 import requests
 import streamlit as st
-
 from config import BASE_URL, DEFAULT_COLLECTION
 
 

@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Security, HTTPException
-
-from app.schemas.embeddings import EmbeddingsRequest, Embeddings
+from app.schemas.config import EMBEDDINGS_MODEL_TYPE
+from app.schemas.embeddings import Embeddings, EmbeddingsRequest
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE
+from fastapi import APIRouter, HTTPException, Security
 
 router = APIRouter()
 

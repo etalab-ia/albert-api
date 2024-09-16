@@ -1,12 +1,10 @@
-import os
+from app.schemas.chat import ChatCompletion
+from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
+from app.schemas.models import Model, Models
 import logging
-
+import os
 import pytest
 import wget
-
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
-from app.schemas.models import Models, Model
-from app.schemas.chat import ChatCompletion
 
 
 @pytest.mark.usefixtures("args", "session")

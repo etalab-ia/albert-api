@@ -1,6 +1,5 @@
-from typing import Literal, List
-
 from pydantic import BaseModel
+from typing import List, Literal
 
 
 class Chunk(BaseModel):

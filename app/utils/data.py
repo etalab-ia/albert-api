@@ -1,13 +1,11 @@
-from typing import Optional
-
+from app.helpers import VectorStore
+from app.schemas.config import PRIVATE_COLLECTION_TYPE
+from app.utils.config import LOGGER
 from boto3 import client as Boto3Client
 from botocore.exceptions import ClientError
 from fastapi import HTTPException, Response
 from qdrant_client.http.models import FieldCondition, Filter, FilterSelector, MatchAny
-
-from app.helpers import VectorStore
-from app.schemas.config import PRIVATE_COLLECTION_TYPE
-from app.utils.config import LOGGER
+from typing import Optional
 
 
 def delete_contents(s3: Boto3Client, vectorstore: VectorStore, collection_name: Optional[str] = None, file: Optional[str] = None) -> Response:

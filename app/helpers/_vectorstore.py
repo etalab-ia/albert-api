@@ -1,13 +1,11 @@
-import time
-import uuid
-from typing import List, Optional
-
-from fastapi import HTTPException
-from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, PointIdsList, PointStruct, VectorParams
-
 from app.schemas.chunks import Chunk
 from app.schemas.collections import CollectionMetadata, Document
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
+from fastapi import HTTPException
+from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, PointIdsList, PointStruct, VectorParams
+import time
+from typing import List, Optional
+import uuid
 
 
 class VectorStore:
@@ -156,7 +154,7 @@ class VectorStore:
 
         # sort by updated_at and remove duplicates collections with same names (keep the latest version), concerns only public collections
         sorted_data = sorted(metadata, key=lambda x: x.payload.get("updated_at", 0), reverse=False)
-        metadata = list({item.payload["name"]: item for item in sorted_data}.values())
+        metadata = list({item.payload["name"]: item for item in sorted_data if "name" in item.payload}.values())
 
         for i in range(len(metadata)):
             metadata[i] = CollectionMetadata(

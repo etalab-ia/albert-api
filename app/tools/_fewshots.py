@@ -1,18 +1,17 @@
-from typing import Optional
-
-from fastapi import HTTPException
-from qdrant_client.http import models as rest
-
 from app.helpers import VectorStore
 from app.schemas.tools import ToolOutput
+from fastapi import HTTPException
+from qdrant_client.http import models as rest
+from typing import Optional
 
 
-class SPPFewShots:
+class FewShots:
     """
-    Service Public Plus Fewshots RAG.
+    Fewshots RAG.
 
     Args:
         embeddings_model (str): OpenAI embeddings model
+        collection (str): Collection name. The collection must have question/answer pairs in metadata.
         k (int, optional): Top K per collection. Defaults to 4.
     """
 
@@ -56,7 +55,7 @@ Veuillez apporter une réponse circonstanciée à cette question en respectant s
         results = vectorstore.search(collection_names=[collection.name], prompt=prompt, k=k, model=embeddings_model)
 
         context = "\n\n\n".join([
-            f"Question: {result.payload.get('description', 'N/A')}\n" f"Réponse: {result.payload.get('reponse', 'N/A')}" for result in results
+            f"Question: {result.payload.get('question', 'N/A')}\n" f"Réponse: {result.payload.get('answer', 'N/A')}" for result in results
         ])
 
         prompt = self.DEFAULT_PROMPT_TEMPLATE.format(context=context, prompt=prompt)

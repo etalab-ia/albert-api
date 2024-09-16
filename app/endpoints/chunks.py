@@ -1,12 +1,10 @@
-from typing import Union, Optional
-
+from app.helpers._vectorstore import VectorStore
+from app.schemas.chunks import Chunk, ChunkRequest, Chunks
+from app.utils.lifespan import clients
+from app.utils.security import check_api_key
 from fastapi import APIRouter, Security
 from qdrant_client.http.models import Filter, HasIdCondition
-
-from app.schemas.chunks import Chunks, Chunk, ChunkRequest
-from app.utils.security import check_api_key
-from app.utils.lifespan import clients
-from app.helpers._vectorstore import VectorStore
+from typing import Optional, Union
 
 router = APIRouter()
 

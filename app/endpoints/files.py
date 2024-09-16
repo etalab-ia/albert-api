@@ -1,17 +1,15 @@
-import base64
-import uuid
-from typing import List, Optional, Union
-
-from botocore.exceptions import ClientError
-from fastapi import APIRouter, HTTPException, Response, Security, UploadFile
-from qdrant_client.http.models import FieldCondition, Filter, MatchAny
-
 from app.helpers import S3FileLoader, VectorStore
 from app.schemas.files import File, Files, Upload, Uploads
 from app.utils.config import LOGGER
 from app.utils.data import delete_contents
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
+import base64
+from botocore.exceptions import ClientError
+from fastapi import APIRouter, HTTPException, Response, Security, UploadFile
+from qdrant_client.http.models import FieldCondition, Filter, MatchAny
+from typing import List, Optional, Union
+import uuid
 
 router = APIRouter()
 
@@ -49,6 +47,11 @@ async def upload_files(
 
     loader = S3FileLoader(s3=clients["files"], chunk_size=chunk_size, chunk_overlap=chunk_overlap, chunk_min_size=chunk_min_size)
     vectorstore = VectorStore(clients=clients, user=user)
+    
+    if collection == "internet":
+        raise HTTPException(
+            status_code=400, detail="Collection name 'internet' is reserved."
+        )
 
     # if collection already exists, return the collection ID
     collection_id = vectorstore.create_collection(collection_name=collection, model=embeddings_model)

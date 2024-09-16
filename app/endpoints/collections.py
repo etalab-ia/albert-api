@@ -1,13 +1,11 @@
-from typing import Union, Optional
-
-from fastapi import APIRouter, Security, Response
-
-from app.schemas.collections import Collections, Collection
-from app.utils.security import check_api_key
-from app.utils.lifespan import clients
-from app.utils.data import delete_contents
-from app.utils.config import LOGGER
 from app.helpers import VectorStore
+from app.schemas.collections import Collection, Collections
+from app.utils.config import LOGGER
+from app.utils.data import delete_contents
+from app.utils.lifespan import clients
+from app.utils.security import check_api_key
+from fastapi import APIRouter, Response, Security
+from typing import Optional, Union
 
 router = APIRouter()
 

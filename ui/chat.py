@@ -1,10 +1,15 @@
 import time
 
-from openai import OpenAI
 import streamlit as st
+from config import (
+    BASE_URL,
+    DEFAULT_COLLECTION,
+    EMBEDDINGS_MODEL_TYPE,
+    LANGUAGE_MODEL_TYPE,
+    PRIVATE_COLLECTION_TYPE,
+)
+from openai import OpenAI
 from streamlit_local_storage import LocalStorage
-
-from config import BASE_URL, DEFAULT_COLLECTION, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, PRIVATE_COLLECTION_TYPE
 from utils import check_api_key, get_collections, get_files, get_models, set_config
 
 set_config()

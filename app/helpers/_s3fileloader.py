@@ -1,11 +1,9 @@
+from ._universalparser import UniversalParser
+from langchain_community.document_loaders.unstructured import UnstructuredBaseLoader
+import magic
 import os
 import tempfile
 from typing import TYPE_CHECKING, Any, Callable, List, Optional
-import magic
-
-from langchain_community.document_loaders.unstructured import UnstructuredBaseLoader
-
-from ._universalparser import UniversalParser
 
 if TYPE_CHECKING:
     import botocore

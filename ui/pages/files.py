@@ -1,12 +1,25 @@
+import datetime as dt
 import time
 
-from streamlit_local_storage import LocalStorage
-import streamlit as st
-import datetime as dt
 import pandas as pd
-
-from config import BASE_URL, DEFAULT_COLLECTION, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, PRIVATE_COLLECTION_TYPE
-from utils import delete_file, check_api_key, upload_file, set_config, get_models, get_collections, get_files
+import streamlit as st
+from config import (
+    BASE_URL,
+    DEFAULT_COLLECTION,
+    EMBEDDINGS_MODEL_TYPE,
+    LANGUAGE_MODEL_TYPE,
+    PRIVATE_COLLECTION_TYPE,
+)
+from streamlit_local_storage import LocalStorage
+from utils import (
+    check_api_key,
+    delete_file,
+    get_collections,
+    get_files,
+    get_models,
+    set_config,
+    upload_file,
+)
 
 set_config()
 local_storage = LocalStorage()

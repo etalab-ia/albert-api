@@ -1,10 +1,9 @@
-from pydantic import RootModel, validator
-from fastapi import HTTPException
-
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE
 from app.utils.lifespan import clients
+from fastapi import HTTPException
+from pydantic import BaseModel, RootModel, validator
 
-from pydantic import BaseModel
+
 class EmbeddingsModel(BaseModel):
     root: str
 

@@ -1,10 +1,9 @@
-from typing import List, Optional
-
-from fastapi import HTTPException
-from qdrant_client.http.models import FieldCondition, Filter, MatchAny
-
 from app.helpers import VectorStore
 from app.schemas.tools import ToolOutput
+from app.helpers import UseInternet
+from fastapi import HTTPException
+from qdrant_client.http.models import FieldCondition, Filter, MatchAny
+from typing import List, Optional
 
 
 class BaseRAG:
@@ -45,7 +44,17 @@ class BaseRAG:
         # file ids filter
         filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=file_ids))]) if file_ids else None
 
+        use_internet = False
+
+        if collections and "internet" in collections:
+            use_internet = True
+            collections.remove("internet")
+
         documents = vectorstore.search(model=embeddings_model, prompt=prompt, collection_names=collections, k=k, filter=filter)
+
+        if use_internet:
+            search = UseInternet()
+            documents.extend(search.search_internet(prompt, n=k))
 
         metadata = {"chunks": [document.metadata for document in documents]}
         documents = "\n\n".join([document.page_content for document in documents])

@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Security
-
 from app.schemas.completions import CompletionRequest, Completions
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
-
+from fastapi import APIRouter, Security
 
 router = APIRouter()
 
