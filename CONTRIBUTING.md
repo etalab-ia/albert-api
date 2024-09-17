@@ -13,7 +13,7 @@ Merci de respecter la convention suivante pour vos commits :
 feat(collections): collection name retriever
 ```
 
-&ast;*Le thème est optionnel et doit correspondre à un thématique de la code base (deploy, collections, models, ...).
+*Le thème est optionnel et doit correspondre à un thématique de la code base (deploy, collections, models, ...).
 
 # Packages
 
@@ -45,6 +45,16 @@ Merci avant chaque pull request, de vérifier le bon déploiement de votre API �
 # Linter
 
 Le linter du projet est [Ruff](https://beta.ruff.rs/docs/configuration/). Les règles de formatages spécifiques au projet sont dans le fichier *[pyproject.toml](./pyproject.toml)*.
+
+## Configurer Ruff avec pre-commit
+
+1. Installez les hooks de pre-commit
+
+    ```bash
+    pre-commit install
+    ```
+
+    Ruff s'exécutera automatiquement à chaque commit.
 
 ## Configurer Ruff sur VSCode
 

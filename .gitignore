@@ -200,3 +200,4 @@ terraform.rc
 **/config.yml
 .DS_Store
 .idea
+.vscode
