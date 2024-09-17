@@ -22,7 +22,7 @@ feat(collections): collection name retriever
 2. Dans un environnement virtuel Python, installez les packages Python présents dans le fichier *[pyproject.toml](./pyproject.toml)*
 
   ```bash 
-  pip install ".[ui,app,dev]"
+  pip install ".[ui,app,dev,test]"
   pre-commit install
   ```
 
@@ -37,7 +37,7 @@ Merci avant chaque pull request, de vérifier le bon déploiement de votre API �
     ```
 
 2. Executez les tests unitaires
-
+    
     ```bash
     PYTHONPATH=. pytest -v --exitfirst app/tests --base-url http://localhost:8080/v1 --api-key API_KEY
     ```

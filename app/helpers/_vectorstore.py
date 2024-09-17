@@ -1,12 +1,12 @@
 import time
-import uuid
 from typing import List, Optional
+import uuid
 
 from fastapi import HTTPException
+from langchain.docstore.document import Document
 from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, PointIdsList, PointStruct, VectorParams
 
 from app.schemas.chunks import Chunk
-from langchain.docstore.document import Document
 from app.schemas.collections import CollectionMetadata
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 

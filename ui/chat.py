@@ -1,7 +1,8 @@
-import streamlit as st
-from config import BASE_URL
 from openai import OpenAI
-from utils import get_collections, get_models, set_config, header
+import streamlit as st
+
+from config import BASE_URL
+from utils import get_collections, get_models, header, set_config
 
 # Config
 set_config()
