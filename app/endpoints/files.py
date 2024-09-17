@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Response, Security, UploadFile
 from qdrant_client.http.models import FieldCondition, Filter, MatchAny
 
 from app.helpers import S3FileLoader, VectorStore
+from app.schemas.config import PUBLIC_COLLECTION_TYPE
 from app.schemas.files import File, Files, Upload, Uploads
 from app.utils.config import LOGGER
 from app.utils.data import delete_contents
@@ -117,11 +118,14 @@ async def files(
     """
     Get files from a collection. Only files from private collections are returned.
     """
-
+    data = list()
     vectorstore = VectorStore(clients=clients, user=user)
     collection = vectorstore.get_collection_metadata(collection_names=[collection])[0]
+    if collection.type == PUBLIC_COLLECTION_TYPE:
+        if file:
+            raise HTTPException(status_code=404, detail="File not found.")
+        return Files(data=data)
 
-    data = list()
     objects = clients["files"].list_objects_v2(Bucket=collection.id).get("Contents", [])
     objects = [object | clients["files"].head_object(Bucket=collection.id, Key=object["Key"])["Metadata"] for object in objects]
     file_ids = [object["Key"] for object in objects]

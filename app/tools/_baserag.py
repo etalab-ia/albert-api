@@ -14,7 +14,6 @@ class BaseRAG:
     Args:
         embeddings_model (str): OpenAI embeddings model
         collection (List[str], optional): List of collections to search in. Defaults to None (all collections).
-        file_ids (Optional[List[str]], optional): List of file IDs in the selected collections (after upload files). Defaults to None (all files are selected).
         k (int, optional): Top K per collection. Defaults to 4.
         prompt_template (Optional[str], optional): Prompt template. Defaults to DEFAULT_PROMPT_TEMPLATE.
 
@@ -31,7 +30,6 @@ class BaseRAG:
         self,
         embeddings_model: str,
         collections: List[str] = [],
-        file_ids: Optional[List[str]] = None,
         k: Optional[int] = 4,
         prompt_template: Optional[str] = DEFAULT_PROMPT_TEMPLATE,
         **request,
@@ -42,10 +40,7 @@ class BaseRAG:
         vectorstore = VectorStore(clients=self.clients, user=request["user"])
         prompt = request["messages"][-1]["content"]
 
-        # file ids filter
-        filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=file_ids))]) if file_ids else None
-
-        documents = vectorstore.search(model=embeddings_model, prompt=prompt, collection_names=collections, k=k, filter=filter)
+        documents = vectorstore.search(model=embeddings_model, prompt=prompt, collection_names=collections, k=k)
 
         metadata = {"chunks": [document.metadata for document in documents]}
         documents = "\n\n".join([document.page_content for document in documents])

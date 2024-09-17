@@ -1,10 +1,11 @@
+import time
 from typing import List
 
 import requests
 import streamlit as st
+from streamlit_local_storage import LocalStorage
 
-from config import BASE_URL, DEFAULT_COLLECTION
-
+from config import BASE_URL, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, LOCAL_STORAGE_KEY
 
 def set_config():
     st.set_page_config(
@@ -20,10 +21,48 @@ def set_config():
     )
 
 
+def header():
+    col1, col2 = st.columns([0.9, 0.1])
+    with col1:
+        st.subheader("Albert playground")
+
+    # Authentication
+    local_storage = LocalStorage()
+    API_KEY = authenticate(local_storage=local_storage)
+    with col2:
+        logout = st.button("Logout")
+        if logout:
+            local_storage.deleteItem(LOCAL_STORAGE_KEY)
+            st.rerun()
+    st.markdown("***")
+    
+    return API_KEY
+
+    
 def check_api_key(base_url: str, api_key: str):
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(url=base_url.replace("/v1", "/health"), headers=headers)
     return response.status_code == 200
+
+
+def authenticate(local_storage: LocalStorage):
+    API_KEY = local_storage.getItem(LOCAL_STORAGE_KEY)
+    if API_KEY is None:
+        with st.form(key="my_form"):
+            API_KEY = st.text_input(label="Please enter your API key", type="password")
+            submit = st.form_submit_button(label="Submit")
+            if submit:
+                if check_api_key(base_url=BASE_URL, api_key=API_KEY):
+                    local_storage.setItem(LOCAL_STORAGE_KEY, API_KEY)
+                    st.toast("Authentication succeed", icon="✅")
+                    time.sleep(0.5)
+                    st.rerun()
+                else:
+                    st.toast("Please enter a correct API key", icon="❌")
+            else:
+                st.stop()
+
+    return API_KEY
 
 
 @st.cache_data(show_spinner=False)
@@ -33,7 +72,10 @@ def get_models(api_key: str):
     assert response.status_code == 200
     models = response.json()["data"]
 
-    return models
+    embeddings_models = [model["id"] for model in models if model["type"] == EMBEDDINGS_MODEL_TYPE]
+    language_models = [model["id"] for model in models if model["type"] == LANGUAGE_MODEL_TYPE]
+
+    return language_models, embeddings_models
 
 
 def get_collections(api_key: str):

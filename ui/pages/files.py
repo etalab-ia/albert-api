@@ -1,56 +1,34 @@
+import datetime as dt
 import time
 
-from streamlit_local_storage import LocalStorage
-import streamlit as st
-import datetime as dt
 import pandas as pd
+import streamlit as st
 
-from config import BASE_URL, DEFAULT_COLLECTION, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, PRIVATE_COLLECTION_TYPE
-from utils import delete_file, check_api_key, upload_file, set_config, get_models, get_collections, get_files
+from utils import delete_file, get_collections, get_files, get_models, header, set_config, upload_file
 
+# Config
 set_config()
-local_storage = LocalStorage()
-key = "albertApiKey"
+API_KEY = header()
 
-# Header
-col1, col2, col3 = st.columns([0.8, 0.1, 0.1])
-with col1:
-    st.subheader("Albert playground")
-
-with col3:
-    logout = st.button("Logout")
-    if logout:
-        local_storage.deleteItem(key)
-        st.rerun()
-
-# Authentication
-API_KEY = local_storage.getItem(key)
-if API_KEY is None or not check_api_key(base_url=BASE_URL, api_key=API_KEY):
-    st.stop()
-
+# Data
 try:
-    models = get_models(api_key=API_KEY)
-    embeddings_models = [model["id"] for model in models if model["type"] == EMBEDDINGS_MODEL_TYPE]
-    language_models = [model["id"] for model in models if model["type"] == LANGUAGE_MODEL_TYPE]
-
+    language_models, embeddings_models = get_models(api_key=API_KEY)
     collections = get_collections(api_key=API_KEY)
-    private_collections = [collection for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE]
-    private_collection_names = [collection["id"] for collection in private_collections]
-    files = get_files(api_key=API_KEY, collections=private_collection_names) if private_collections else {}
+    file_data = get_files(api_key=API_KEY, collections=collections)
 except Exception as e:
     st.error(f"Error to fetch user data: {e}")
     st.stop()
 
 table = []
-for collection, file in files.items():
-    for i in range(len(file)):
+for collection, files in file_data.items():
+    for file in files:
         table.append([
             collection,
-            [private_collection["model"] for private_collection in private_collections if private_collection["id"] == collection][0],
-            file[i]["id"],
-            file[i]["filename"],
-            f"{file[i]['bytes'] / (1024 * 1024):.2f} MB",
-            dt.datetime.fromtimestamp(file[i]["created_at"]).strftime("%Y-%m-%d"),
+            [collection["model"] for collection in collections if collection["id"] == collection][0],
+            file["id"],
+            file["filename"],
+            f"{file['bytes'] / (1024 * 1024):.2f} MB",
+            dt.datetime.fromtimestamp(file["created_at"]).strftime("%Y-%m-%d"),
         ])
 
 columns = ["Collection", "Embeddings model", "ID", "Name", "Size", "Created at"]
@@ -65,12 +43,12 @@ with col1:
     st.subheader("Upload files")
     collection = st.text_input(
         "Collection",
-        placeholder=DEFAULT_COLLECTION,
+        placeholder="Mes documents",
         help="The collection will be created if it does not exist. You can't upload files in a public collection or in a private collection with different embeddings model.",
     )
     embeddings_model = st.selectbox("Embeddings model", embeddings_models)
     file_to_upload = st.file_uploader(f"Choisir un fichier à ajouter à {collection}", type=["pdf", "docx"])
-    submit_upload = st.button("Upload")
+    submit_upload = st.button("Upload", disabled=not collection or not file_to_upload)
     if file_to_upload and submit_upload and collection:
         with st.spinner("Téléchargement et traitement du document en cours..."):
             result = upload_file(api_key=API_KEY, file=file_to_upload, embeddings_model=embeddings_model, collection_name=collection)
@@ -83,7 +61,7 @@ with col2:
     file_id = st.selectbox("Select file to delete", df["ID"])
     if file_id:
         file_collection = [collection for collection, file in files.items() if file_id in [f["id"] for f in file]][0]
-    submit_delete = st.button("Delete")
+    submit_delete = st.button("Delete", disabled=not file_id)
     if submit_delete:
         delete_file(api_key=API_KEY, collection_name=file_collection, file_id=file_id)
         time.sleep(0.5)

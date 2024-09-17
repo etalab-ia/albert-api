@@ -7,7 +7,7 @@
 2. Installez les packages Python dans un environnement virtuel dédié
 
   ```bash 
-  pip install app/.
+  pip install ".[app]"
   ```
 
 3. Créez un fichier *config.yml* à la racine du repository sur la base du fichier d'exemple *[config.example.yml](./config.example.yml)*
@@ -84,7 +84,7 @@ Voici les types de base de données supportées, à configurer dans le fichier d
 1. Installez les packages Python dans un environnement virtuel
 
   ```bash 
-  pip install ui/.
+  pip install ".[ui]"
   ```
 
 2. Exécutez l'application Streamlit

@@ -32,7 +32,8 @@ jobs:
       - name: Build and push app
         uses: docker/build-push-action@v6
         with:
-          context: app
+          context: .
+          file: ./app/Dockerfile
           push: true
           tags: ${{ env.IMAGE_NAME }}/app:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/app:latest
           cache-from: type=gha
@@ -41,7 +42,8 @@ jobs:
       - name: Build and push ui
         uses: docker/build-push-action@v6
         with:
-          context: ui
+          context: .
+          file: ./ui/Dockerfile
           push: true
           tags: ${{ env.IMAGE_NAME }}/ui:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/ui:latest
           cache-from: type=gha
