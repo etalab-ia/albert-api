@@ -1,9 +1,8 @@
 import logging
-import json
 
 import pytest
 
-from app.schemas.chat import ChatCompletion, ChatCompletionChunk
+from app.schemas.chat import ChatCompletion  # , ChatCompletionChunk
 from app.schemas.config import LANGUAGE_MODEL_TYPE
 
 
@@ -15,9 +14,7 @@ class TestChat:
         response = session.get(f"{args['base_url']}/models")
         assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
         response_json = response.json()
-        model = [
-            model["id"] for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE
-        ][0]
+        model = [model["id"] for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE][0]
         logging.debug(f"model: {model}")
 
         params = {
@@ -28,9 +25,7 @@ class TestChat:
             "max_tokens": 10,
         }
         response = session.post(f"{args['base_url']}/chat/completions", json=params)
-        assert (
-            response.status_code == 200
-        ), f"error: retrieve chat completions ({response.status_code})"
+        assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_unstreamed_response_schemas(self, args, session):
         """Test the GET /chat/completions response schemas."""
@@ -38,9 +33,7 @@ class TestChat:
         response = session.get(f"{args['base_url']}/models")
         assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
         response_json = response.json()
-        model = [
-            model["id"] for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE
-        ][0]
+        model = [model["id"] for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE][0]
         logging.debug(f"model: {model}")
 
         params = {
@@ -63,9 +56,7 @@ class TestChat:
         response = session.get(f"{args['base_url']}/models")
         assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
         response_json = response.json()
-        model = [
-            model["id"] for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE
-        ][0]
+        model = [model["id"] for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE][0]
         logging.debug(f"model: {model}")
 
         params = {
@@ -76,9 +67,7 @@ class TestChat:
             "max_tokens": 10,
         }
         response = session.post(f"{args['base_url']}/chat/completions", json=params)
-        assert (
-            response.status_code == 200
-        ), f"error: retrieve chat completions ({response.status_code})"
+        assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
     # def test_chat_completions_streamed_response_schemas(self, args, session):
     #     """Test the GET /chat/completions response schemas."""

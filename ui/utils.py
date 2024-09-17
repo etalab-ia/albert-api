@@ -7,6 +7,7 @@ from streamlit_local_storage import LocalStorage
 
 from config import BASE_URL, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, LOCAL_STORAGE_KEY
 
+
 def set_config():
     st.set_page_config(
         page_title="Albert",
@@ -35,10 +36,10 @@ def header():
             local_storage.deleteItem(LOCAL_STORAGE_KEY)
             st.rerun()
     st.markdown("***")
-    
+
     return API_KEY
 
-    
+
 def check_api_key(base_url: str, api_key: str):
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(url=base_url.replace("/v1", "/health"), headers=headers)

@@ -1,7 +1,5 @@
 from typing import Optional
 
-from fastapi import HTTPException
-from qdrant_client.http import models as rest
 
 from app.helpers import VectorStore
 from app.schemas.tools import ToolOutput
@@ -56,9 +54,9 @@ Veuillez apporter une réponse circonstanciée à cette question en respectant s
         prompt = request["messages"][-1]["content"]
         results = vectorstore.search(collection_names=[collection.name], prompt=prompt, k=k, model=embeddings_model)
 
-        context = "\n\n\n".join([
-            f"Question: {result.payload.get('question', 'N/A')}\n" f"Réponse: {result.payload.get('answer', 'N/A')}" for result in results
-        ])
+        context = "\n\n\n".join(
+            [f"Question: {result.payload.get('question', 'N/A')}\n" f"Réponse: {result.payload.get('answer', 'N/A')}" for result in results]
+        )
 
         prompt = self.DEFAULT_PROMPT_TEMPLATE.format(context=context, prompt=prompt)
         metadata = {"chunks": [result.id for result in results]}

@@ -15,6 +15,7 @@ from app.schemas.config import LANGUAGE_MODEL_TYPE
 
 router = APIRouter()
 
+
 # @TODO: remove tooling from here
 @router.post("/chat/completions")
 async def chat_completions(request: ChatCompletionRequest, user: str = Security(check_api_key)) -> Union[ChatCompletion, ChatCompletionChunk]:
@@ -65,7 +66,7 @@ async def chat_completions(request: ChatCompletionRequest, user: str = Security(
         return ChatCompletion(**data)
 
     # stream case
-    async def forward_stream(url:str, headers:dict, request: dict):
+    async def forward_stream(url: str, headers: dict, request: dict):
         async with httpx.AsyncClient(timeout=20) as async_client:
             async with async_client.stream(method="POST", url=url, headers=headers, json=request) as response:
                 i = 0

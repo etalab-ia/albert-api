@@ -138,7 +138,7 @@ class TestFiles:
         params = {"embeddings_model": EMBEDDINGS_MODEL, "collection": COLLECTION}
         files = {"files": (os.path.basename(FILE_NAME), open(FILE_NAME, "rb"), "application/pdf")}
         response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=30)
-    
+
         uploads = response.json()
         uploads["data"] = [Upload(**upload) for upload in uploads["data"]]
         uploads = Uploads(**uploads)

@@ -1,13 +1,13 @@
-from typing import Dict, List, Optional, Union, Literal
+from typing import Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
 from openai.types.chat import (
-    ChatCompletionMessageParam,
     ChatCompletion,
+    ChatCompletionChunk,
+    ChatCompletionMessageParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
-    ChatCompletionChunk,
 )
+from pydantic import BaseModel, Field
 
 from app.schemas.tools import ToolOutput
 

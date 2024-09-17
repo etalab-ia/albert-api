@@ -30,13 +30,7 @@ class UniversalParser:
         self.cleaner = TextCleaner()
         pass
 
-    def parse_and_chunk(
-        self,
-        file_path: str,
-        chunk_size: int,
-        chunk_overlap: int,
-        chunk_min_size: int,
-    ):
+    def parse_and_chunk(self, file_path: str, chunk_size: int, chunk_overlap: int, chunk_min_size: int):
         """
         Parses a file and splits it into text chunks based on the file type.
 
@@ -54,6 +48,7 @@ class UniversalParser:
         """
         file_type = magic.from_file(file_path, mime=True)
 
+        # @TODO: check if it a possible option ?
         if file_type == self.TXT_TYPE:
             # In the case the json file is stored as text/plain instead of application/json
             with open(file_path, "r") as file:
@@ -68,27 +63,12 @@ class UniversalParser:
             file_type = "unknown"
 
         if file_type == self.PDF_TYPE:
-            chunks = self._pdf_to_chunks(
-                file_path=file_path,
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap,
-                chunk_min_size=chunk_min_size,
-            )
+            chunks = self._pdf_to_chunks(file_path=file_path, chunk_size=chunk_size, chunk_overlap=chunk_overlap, chunk_min_size=chunk_min_size)
         elif file_type == self.DOCX_TYPE:
-            chunks = self._docx_to_chunks(
-                file_path=file_path,
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap,
-                chunk_min_size=chunk_min_size,
-            )
+            chunks = self._docx_to_chunks(file_path=file_path, chunk_size=chunk_size, chunk_overlap=chunk_overlap, chunk_min_size=chunk_min_size)
 
         elif file_type == self.JSON_TYPE:
-            chunks = self._json_to_chunks(
-                file_path=file_path,
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap,
-                chunk_min_size=chunk_min_size,
-            )
+            chunks = self._json_to_chunks(file_path=file_path, chunk_size=chunk_size, chunk_overlap=chunk_overlap, chunk_min_size=chunk_min_size)
 
         else:
             raise NotImplementedError(f"Unsupported input file format ({file_path}): {file_type}")
@@ -97,9 +77,7 @@ class UniversalParser:
 
     ## Parser and chunking functions
 
-    def _pdf_to_chunks(
-        self, file_path: str, chunk_size: int, chunk_overlap: int, chunk_min_size: int
-    ) -> List[LangchainDocument]:
+    def _pdf_to_chunks(self, file_path: str, chunk_size: int, chunk_overlap: int, chunk_min_size: int) -> List[LangchainDocument]:
         """
         Parse a PDF file and converts it into a list of text chunks.
 
@@ -118,11 +96,7 @@ class UniversalParser:
 
         chunks = []
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            length_function=len,
-            is_separator_regex=False,
-            separators=["\n\n", "\n"],
+            chunk_size=chunk_size, chunk_overlap=chunk_overlap, length_function=len, is_separator_regex=False, separators=["\n\n", "\n"]
         )
         # Splitting text because too long
         splitted_text = text_splitter.split_text(doc[0].page_content)
@@ -130,30 +104,14 @@ class UniversalParser:
         for k, text in enumerate(splitted_text):
             if chunk_min_size:
                 if len(text) > chunk_min_size:  # We avoid meaningless little chunks
-                    chunk = LangchainDocument(
-                        page_content=self.cleaner.clean_string(text),
-                        metadata={
-                            "file_id": file_path.split("/")[-1],
-                        },
-                    )
+                    chunk = LangchainDocument(page_content=self.cleaner.clean_string(text), metadata={"file_id": file_path.split("/")[-1]})
             else:
-                chunk = LangchainDocument(
-                    page_content=self.cleaner.clean_string(text),
-                    metadata={
-                        "file_id": file_path.split("/")[-1],
-                    },
-                )
+                chunk = LangchainDocument(page_content=self.cleaner.clean_string(text), metadata={"file_id": file_path.split("/")[-1]})
             chunks.append(chunk)
 
         return chunks  # List of langchain documents
 
-    def _docx_to_chunks(
-        self,
-        file_path: str,
-        chunk_size: int,
-        chunk_overlap: int,
-        chunk_min_size: int,
-    ) -> List[LangchainDocument]:
+    def _docx_to_chunks(self, file_path: str, chunk_size: int, chunk_overlap: int, chunk_min_size: int) -> List[LangchainDocument]:
         """
         Parse a DOCX file and converts it into a list of text chunks.
 
@@ -169,10 +127,7 @@ class UniversalParser:
         documents = []
 
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            length_function=len,
-            is_separator_regex=False,
+            chunk_size=chunk_size, chunk_overlap=chunk_overlap, length_function=len, is_separator_regex=False
         )
 
         doc = Document(file_path)
@@ -191,19 +146,11 @@ class UniversalParser:
                             if chunk_min_size:
                                 if len(text) > chunk_min_size:  # We avoid meaningless little chunks
                                     chunk = LangchainDocument(
-                                        page_content=self.cleaner.clean_string(text),
-                                        metadata={
-                                            "file_id": file_path.split("/")[-1],
-                                            "title": title,
-                                        },
+                                        page_content=self.cleaner.clean_string(text), metadata={"file_id": file_path.split("/")[-1], "title": title}
                                     )
                             else:
                                 chunk = LangchainDocument(
-                                    page_content=self.cleaner.clean_string(text),
-                                    metadata={
-                                        "file_id": file_path.split("/")[-1],
-                                        "title": title,
-                                    },
+                                    page_content=self.cleaner.clean_string(text), metadata={"file_id": file_path.split("/")[-1], "title": title}
                                 )
                             documents.append(chunk)
                 # Updating title for new subpart
@@ -222,19 +169,11 @@ class UniversalParser:
                     if chunk_min_size:
                         if len(text) > chunk_min_size:  # We avoid meaningless little chunks
                             chunk = LangchainDocument(
-                                page_content=self.cleaner.clean_string(text),
-                                metadata={
-                                    "file_id": file_path.split("/")[-1],
-                                    "title": title,
-                                },
+                                page_content=self.cleaner.clean_string(text), metadata={"file_id": file_path.split("/")[-1], "title": title}
                             )
                     else:
                         chunk = LangchainDocument(
-                            page_content=self.cleaner.clean_string(text),
-                            metadata={
-                                "file_id": file_path.split("/")[-1],
-                                "title": title,
-                            },
+                            page_content=self.cleaner.clean_string(text), metadata={"file_id": file_path.split("/")[-1], "title": title}
                         )
                     documents.append(chunk)
 
@@ -246,30 +185,18 @@ class UniversalParser:
                 if chunk_min_size:
                     if len(text) > chunk_min_size:  # We avoid meaningless little chunks
                         chunk = LangchainDocument(
-                            page_content=self.cleaner.clean_string(text),
-                            metadata={
-                                "file_id": file_path.split("/")[-1],
-                                "title": title,
-                            },
+                            page_content=self.cleaner.clean_string(text), metadata={"file_id": file_path.split("/")[-1], "title": title}
                         )
                 else:
                     chunk = LangchainDocument(
-                        page_content=self.cleaner.clean_string(text),
-                        metadata={
-                            "file_id": file_path.split("/")[-1],
-                            "title": title,
-                        },
+                        page_content=self.cleaner.clean_string(text), metadata={"file_id": file_path.split("/")[-1], "title": title}
                     )
                 documents.append(chunk)
 
         return documents
 
     def _json_to_chunks(
-        self,
-        file_path: str,
-        chunk_size: Optional[int],
-        chunk_overlap: Optional[int],
-        chunk_min_size: Optional[int],
+        self, file_path: str, chunk_size: Optional[int], chunk_overlap: Optional[int], chunk_min_size: Optional[int]
     ) -> List[LangchainDocument]:
         """
         Converts a JSON file into a list of chunks.
@@ -288,15 +215,9 @@ class UniversalParser:
             data = json.load(file)
             data = JsonFile(**data)  # Validate the JSON file
 
-        (file_path.split("/")[-1],)
-
         chunks = []
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            length_function=len,
-            is_separator_regex=False,
-            separators=["\n"],
+            chunk_size=chunk_size, chunk_overlap=chunk_overlap, length_function=len, is_separator_regex=False, separators=["\n"]
         )
 
         for i, document in enumerate(data.documents):
@@ -307,15 +228,10 @@ class UniversalParser:
 
             splitted_text = text_splitter.split_text(document.text)
             for k, text in enumerate(splitted_text):
-                if (
-                    chunk_min_size and len(text) < chunk_min_size
-                ):  # We avoid meaningless little chunks
+                if chunk_min_size and len(text) < chunk_min_size:  # We avoid meaningless little chunks
                     continue
 
-                chunk = LangchainDocument(
-                    page_content=self.cleaner.clean_string(text),
-                    metadata=document.metadata,
-                )
+                chunk = LangchainDocument(page_content=self.cleaner.clean_string(text), metadata=document.metadata)
                 chunks.append(chunk)
 
         return chunks

@@ -19,15 +19,14 @@ class TestModels:
         response = session.get(f"{args['base_url']}/models")
         assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
 
-        model = response.json()["data"][0]["id"]      
+        model = response.json()["data"][0]["id"]
         response = session.get(f"{args['base_url']}/models/{model}")
         assert response.status_code == 200, f"error: retrieve model ({response.status_code})"
-        
+
         model = Model(**response.json())
         assert isinstance(model, Model)
-    
+
     def test_get_models_non_existing_model(self, args, session):
         """Test the GET /models response status code for a non-existing model."""
         response = session.get(f"{args['base_url']}/models/non-existing-model")
         assert response.status_code == 404, f"error: retrieve non-existing model ({response.status_code})"
-    

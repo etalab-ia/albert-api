@@ -22,7 +22,8 @@ feat(collections): collection name retriever
 2. Dans un environnement virtuel Python, installez les packages Python présents dans le fichier *[pyproject.toml](./pyproject.toml)*
 
   ```bash 
-  pip install ".[ui,app]"
+  pip install ".[ui,app,dev]"
+  pre-commit install
   ```
 
 # Tests

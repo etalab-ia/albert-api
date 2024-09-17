@@ -13,6 +13,7 @@ class Tools(BaseModel):
     object: Literal["list"] = "list"
     data: List[Tool]
 
+
 class ToolOutput(BaseModel):
     prompt: str
     metadata: dict

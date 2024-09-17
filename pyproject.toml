@@ -31,15 +31,21 @@ app = [
     "grist-api==0.1.0",
     "pdfminer.six==20240706",
 ]
+dev = [
+    "ruff==0.6.5",
+    "pre-commit==3.6.2",
+]
 
-[tool.setuptools]
-packages = []
+[tool.ruff]
+line-length = 150
 
-[ruff]
-line-length = 15
+[tool.ruff.lint]
+ignore = ["F403", "F841"] # import * and never used variables
 
 [ruff.isort]
 force-sort-within-sections = true
 known-first-party = ["config", "utils", "app"]
 forced-separate = ["tests"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+

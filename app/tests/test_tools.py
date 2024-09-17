@@ -2,6 +2,7 @@ import pytest
 
 from app.schemas.tools import Tools, Tool
 
+
 @pytest.mark.usefixtures("args", "session")
 class TestTools:
     def test_get_tools_response_status_code(self, args, session):

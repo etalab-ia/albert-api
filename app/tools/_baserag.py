@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 from fastapi import HTTPException
-from qdrant_client.http.models import FieldCondition, Filter, MatchAny
 
 from app.helpers import VectorStore
 from app.schemas.tools import ToolOutput

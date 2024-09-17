@@ -9,9 +9,7 @@ router = APIRouter()
 
 
 @router.post("/embeddings")
-async def embeddings(
-    request: EmbeddingsRequest, user: str = Security(check_api_key)
-) -> Embeddings:
+async def embeddings(request: EmbeddingsRequest, user: str = Security(check_api_key)) -> Embeddings:
     """
     Embedding API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/embeddings/create for the API specification.

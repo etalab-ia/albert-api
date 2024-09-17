@@ -10,6 +10,7 @@ from app.helpers._vectorstore import VectorStore
 
 router = APIRouter()
 
+
 # @TODO: add pagination
 @router.get("/chunks/{collection}/{chunk}")
 @router.post("/chunks/{collection}")

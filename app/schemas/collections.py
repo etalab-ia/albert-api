@@ -8,7 +8,7 @@ from app.schemas.config import PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE
 
 class Collection(BaseModel):
     object: Literal["collection"] = "collection"
-    id: str # name 
+    id: str  # name
     type: Literal[PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE]
     model: str
     user: Optional[str] = None
@@ -26,6 +26,7 @@ class Document(BaseModel):
     id: UUID
     page_content: str
     metadata: Dict[str, Any]
+
 
 class CollectionMetadata(BaseModel):
     id: str

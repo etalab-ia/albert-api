@@ -11,7 +11,6 @@ from app.utils.config import LOGGER
 
 
 def delete_contents(s3: Boto3Client, vectorstore: VectorStore, collection_name: Optional[str] = None, file: Optional[str] = None) -> Response:
-    
     collections = vectorstore.get_collection_metadata(collection_names=[collection_name], type=PRIVATE_COLLECTION_TYPE)
 
     for collection in collections:

@@ -1,14 +1,12 @@
 from typing import Annotated
 import hashlib
-import secrets
 import base64
-from functools import wraps
 
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.utils.lifespan import clients
-from app.schemas.collections import PUBLIC_COLLECTION_TYPE
+
 
 def encode_string(input: str) -> str:
     """

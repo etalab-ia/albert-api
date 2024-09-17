@@ -9,9 +9,7 @@ router = APIRouter()
 
 
 @router.post("/completions")
-async def completions(
-    request: CompletionRequest, user: str = Security(check_api_key)
-) -> Completions:
+async def completions(request: CompletionRequest, user: str = Security(check_api_key)) -> Completions:
     """
     Completion API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/completions/create for the API specification.

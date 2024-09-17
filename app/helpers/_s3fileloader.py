@@ -1,14 +1,10 @@
 import os
 import tempfile
-from typing import TYPE_CHECKING, Any, Callable, List, Optional
-import magic
+from typing import Any, Callable, List, Optional
 
 from langchain_community.document_loaders.unstructured import UnstructuredBaseLoader
 
 from ._universalparser import UniversalParser
-
-if TYPE_CHECKING:
-    import botocore
 
 
 class S3FileLoader(UnstructuredBaseLoader):
@@ -21,8 +17,8 @@ class S3FileLoader(UnstructuredBaseLoader):
         mode: str = "single",
         post_processors: Optional[List[Callable]] = None,
         chunk_size: Optional[int],
-        chunk_overlap: Optional[int] ,
-        chunk_min_size: Optional[int] ,
+        chunk_overlap: Optional[int],
+        chunk_min_size: Optional[int],
         **unstructured_kwargs: Any,
     ):
         """Initialize loader.
@@ -40,11 +36,7 @@ class S3FileLoader(UnstructuredBaseLoader):
         self.chunk_overlap = chunk_overlap
         self.chunk_min_size = chunk_min_size
 
-    def _get_elements(
-        self,
-        bucket: str,
-        file_id: str,
-    ) -> List:
+    def _get_elements(self, bucket: str, file_id: str) -> List:
         """Get elements.
 
         Args:
@@ -61,10 +53,7 @@ class S3FileLoader(UnstructuredBaseLoader):
 
             # Returns a list of Langchain documents
             return self.parser.parse_and_chunk(
-                file_path=file_path,
-                chunk_size=self.chunk_size,
-                chunk_overlap=self.chunk_overlap,
-                chunk_min_size=self.chunk_min_size,
+                file_path=file_path, chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap, chunk_min_size=self.chunk_min_size
             )
 
     def _get_metadata(self, bucket, file_id) -> dict:

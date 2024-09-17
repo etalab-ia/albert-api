@@ -22,14 +22,16 @@ except Exception as e:
 table = []
 for collection, files in file_data.items():
     for file in files:
-        table.append([
-            collection,
-            [collection["model"] for collection in collections if collection["id"] == collection][0],
-            file["id"],
-            file["filename"],
-            f"{file['bytes'] / (1024 * 1024):.2f} MB",
-            dt.datetime.fromtimestamp(file["created_at"]).strftime("%Y-%m-%d"),
-        ])
+        table.append(
+            [
+                collection,
+                [collection["model"] for collection in collections if collection["id"] == collection][0],
+                file["id"],
+                file["filename"],
+                f"{file['bytes'] / (1024 * 1024):.2f} MB",
+                dt.datetime.fromtimestamp(file["created_at"]).strftime("%Y-%m-%d"),
+            ]
+        )
 
 columns = ["Collection", "Embeddings model", "ID", "Name", "Size", "Created at"]
 df = pd.DataFrame(table, columns=columns)

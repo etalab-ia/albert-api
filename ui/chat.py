@@ -1,5 +1,3 @@
-import time
-
 import streamlit as st
 from config import BASE_URL
 from openai import OpenAI
