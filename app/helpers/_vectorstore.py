@@ -154,6 +154,11 @@ class VectorStore:
                     raise HTTPException(status_code=404, detail=f"Collection {collection_name} not found")
                 metadata.extend(data)
 
+        # @TODO: the 2 following checks, they are still needed ?
+        # remove collection that does not exist
+        existing_collection_ids = [collection.name for collection in self.vectors.get_collections().collections]
+        metadata = [collection for collection in metadata if collection.id in existing_collection_ids]
+
         # sort by updated_at and remove duplicates collections with same names (keep the latest version), concerns only public collections
         sorted_data = sorted(metadata, key=lambda x: x.payload.get("updated_at", 0), reverse=False)
         metadata = list({item.payload["name"]: item for item in sorted_data if "name" in item.payload}.values())
