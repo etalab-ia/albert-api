@@ -1,9 +1,8 @@
-from typing import Literal, List, Optional, Dict, Any
-from uuid import UUID
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel
 
-from app.schemas.config import PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE
+from app.schemas.config import PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 
 
 class Collection(BaseModel):
@@ -20,12 +19,6 @@ class Collection(BaseModel):
 class Collections(BaseModel):
     object: Literal["list"] = "list"
     data: List[Collection]
-
-
-class Document(BaseModel):
-    id: UUID
-    page_content: str
-    metadata: Dict[str, Any]
 
 
 class CollectionMetadata(BaseModel):

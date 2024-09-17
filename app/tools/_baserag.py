@@ -39,10 +39,10 @@ class BaseRAG:
         vectorstore = VectorStore(clients=self.clients, user=request["user"])
         prompt = request["messages"][-1]["content"]
 
-        documents = vectorstore.search(model=embeddings_model, prompt=prompt, collection_names=collections, k=k)
+        chunks = vectorstore.search(model=embeddings_model, prompt=prompt, collection_names=collections, k=k)
 
-        metadata = {"chunks": [document.metadata for document in documents]}
-        documents = "\n\n".join([document.page_content for document in documents])
+        metadata = {"chunks": [chunk.metadata for chunk in chunks]}
+        documents = "\n\n".join([chunk.content for chunk in chunks])
         prompt = prompt_template.format(documents=documents, prompt=prompt)
 
         return ToolOutput(prompt=prompt, metadata=metadata)

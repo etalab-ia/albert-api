@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, Security
 
-from app.endpoints import chat, chunks, collections, completions, embeddings, files, models, tools
+from app.endpoints import chat, chunks, collections, completions, embeddings, files, models, search, tools
 from app.utils.config import APP_CONTACT_EMAIL, APP_CONTACT_URL, APP_DESCRIPTION, APP_VERSION
 from app.utils.lifespan import lifespan
 from app.utils.security import check_api_key
@@ -31,4 +31,5 @@ app.include_router(embeddings.router, tags=["Embeddings"], prefix="/v1")
 app.include_router(collections.router, tags=["Collections"], prefix="/v1")
 app.include_router(chunks.router, tags=["Chunks"], prefix="/v1")
 app.include_router(files.router, tags=["Files"], prefix="/v1")
+app.include_router(search.router, tags=["Search"], prefix="/v1")
 app.include_router(tools.router, tags=["Tools"], prefix="/v1")

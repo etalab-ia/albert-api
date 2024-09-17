@@ -6,7 +6,8 @@ from fastapi import HTTPException
 from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, PointIdsList, PointStruct, VectorParams
 
 from app.schemas.chunks import Chunk
-from app.schemas.collections import CollectionMetadata, Document
+from langchain.docstore.document import Document
+from app.schemas.collections import CollectionMetadata
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 
 
@@ -23,7 +24,7 @@ class VectorStore:
         Add documents to a collection.
 
         Parameters:
-            documents (List[Document]): A list of Document objects to add to the collection.
+            documents (List[Document]): A list of Langchain Document objects to add to the collection.
             model (str): The model to use for embeddings.
             collection_name (str): The name of the collection to add the documents to.
         """
@@ -63,11 +64,11 @@ class VectorStore:
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
         filter: Optional[Filter] = None,
-    ) -> List[Document]:
+    ) -> List[Chunk]:
         response = self.models[model].embeddings.create(input=[prompt], model=model)
         vector = response.data[0].embedding
 
-        documents = []
+        chunks = []
         collections = self.get_collection_metadata(collection_names=collection_names)
         for collection in collections:
             if collection.model != model:
@@ -81,21 +82,20 @@ class VectorStore:
                 with_payload=True,
                 query_filter=filter,
             )
+            for i, result in enumerate(results):
+                results[i] = result.model_dump()
+                results[i]["collection"] = collection.name
 
-            documents.extend(results)
+            chunks.extend(results)
 
         # sort by similarity score and get top k
-        documents = sorted(documents, key=lambda x: x.score, reverse=True)[:k]
-        documents = [
-            Document(
-                id=document.id,
-                page_content=document.payload["page_content"],
-                metadata=document.payload["metadata"],
-            )
-            for document in documents
+        chunks = sorted(chunks, key=lambda x: x["score"], reverse=True)[:k]
+        chunks = [
+            Chunk(id=chunk["id"], collection=chunk["collection"], content=chunk["payload"]["page_content"], metadata=chunk["payload"]["metadata"])
+            for chunk in chunks
         ]
 
-        return documents
+        return chunks
 
     def get_collection_metadata(self, collection_names: List[str] = [], type: str = "all", errors: str = "raise") -> List[CollectionMetadata]:
         """
@@ -258,15 +258,9 @@ class VectorStore:
             scroll_filter=filter,
             limit=100,  # @TODO: add pagination
         )[0]
-        data = list()
-        for chunk in chunks:
-            data.append(
-                Chunk(
-                    collection=collection_name,
-                    id=chunk.id,
-                    metadata=chunk.payload["metadata"],
-                    content=chunk.payload["page_content"],
-                )
-            )
+        chunks = [
+            Chunk(collection=collection_name, id=chunk.id, metadata=chunk.payload["metadata"], content=chunk.payload["page_content"])
+            for chunk in chunks
+        ]
 
-        return data
+        return chunks
