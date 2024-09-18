@@ -71,11 +71,11 @@ async def upload_files(
                 file.file,
                 collection_id,
                 file_id,
-                ExtraArgs={"ContentType": file.content_type, "Metadata": {"filename": encoded_file_name, "id": file_id}},
+                ExtraArgs={"ContentType": file.content_type, "Metadata": {"file_name": encoded_file_name, "id": file_id}},
             )
         except Exception as e:
             LOGGER.error(f"store {file_name}:\n{e}")
-            data.append(Upload(id=file_id, filename=file_name, status="failed"))
+            data.append(Upload(id=file_id, file_name=file_name, status="failed"))
             continue
 
         try:
@@ -87,7 +87,7 @@ async def upload_files(
         except Exception as e:
             LOGGER.error(f"convert {file_name} into documents:\n{e}")
             clients["files"].delete_object(Bucket=collection_id, Key=file_id)
-            data.append(Upload(id=file_id, filename=file_name, status="failed"))
+            data.append(Upload(id=file_id, file_name=file_name, status="failed"))
             continue
 
         try:
@@ -99,15 +99,14 @@ async def upload_files(
         except Exception as e:
             LOGGER.error(f"create vectors of {file_name}:\n{e}")
             clients["files"].delete_object(Bucket=collection_id, Key=file_id)
-            data.append(Upload(id=file_id, filename=file_name, status="failed"))
+            data.append(Upload(id=file_id, file_name=file_name, status="failed"))
             continue
 
-        data.append(Upload(id=file_id, filename=file_name, status="success"))
+        data.append(Upload(id=file_id, file_name=file_name, status="success"))
 
     return Uploads(data=data)
 
 
-# @TODO: add pagination
 @router.get("/files/{collection}/{file}")
 @router.get("/files/{collection}")
 async def files(
@@ -142,8 +141,8 @@ async def files(
             id=object["Key"],
             object="file",
             bytes=object["Size"],
-            filename=base64.b64decode(object["filename"].encode("ascii")).decode("utf-8"),
-            chunk_ids=chunk_ids,
+            file_name=base64.b64decode(object["file_name"].encode("ascii")).decode("utf-8"),
+            chunks=chunk_ids,
             created_at=round(object["LastModified"].timestamp()),
         )
         data.append(object)

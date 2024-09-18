@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 class Chunk(BaseModel):
     object: Literal["chunk"] = "chunk"
-    collection: str
     id: str
     metadata: dict
     content: str

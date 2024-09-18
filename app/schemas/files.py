@@ -8,8 +8,8 @@ class File(BaseModel):
     object: Literal["file"] = "file"
     id: UUID
     bytes: int
-    filename: str
-    chunk_ids: Optional[list] = []
+    file_name: str
+    chunks: Optional[list] = []
     created_at: int
 
 
@@ -21,7 +21,7 @@ class Files(BaseModel):
 class Upload(BaseModel):
     object: Literal["upload"] = "upload"
     id: UUID
-    filename: str
+    file_name: str
     status: Literal["success", "failed"] = "success"
 
 

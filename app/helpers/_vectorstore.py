@@ -31,7 +31,7 @@ class VectorStore:
 
         collection = self.get_collection_metadata(collection_names=[collection_name])[0]
         if collection.model != model:
-            raise HTTPException(status_code=400, detail=f"Model {collection.model} does not match {model}")
+            raise HTTPException(status_code=400, detail="Wrong model collection")
 
         for i in range(0, len(documents), self.BATCH_SIZE):
             batch = documents[i : i + self.BATCH_SIZE]
@@ -72,7 +72,7 @@ class VectorStore:
         collections = self.get_collection_metadata(collection_names=collection_names)
         for collection in collections:
             if collection.model != model:
-                raise HTTPException(status_code=400, detail=f"Model {collection.model} does not match {model}")
+                raise HTTPException(status_code=400, detail="Wrong model collection")
 
             results = self.vectors.search(
                 collection_name=collection.id,
@@ -82,18 +82,13 @@ class VectorStore:
                 with_payload=True,
                 query_filter=filter,
             )
-            for i, result in enumerate(results):
-                results[i] = result.model_dump()
-                results[i]["collection"] = collection.name
-
+            for result in results:
+                result.payload["metadata"]["collection"] = collection.name
             chunks.extend(results)
 
         # sort by similarity score and get top k
-        chunks = sorted(chunks, key=lambda x: x["score"], reverse=True)[:k]
-        chunks = [
-            Chunk(id=chunk["id"], collection=chunk["collection"], content=chunk["payload"]["page_content"], metadata=chunk["payload"]["metadata"])
-            for chunk in chunks
-        ]
+        chunks = sorted(chunks, key=lambda x: x.score, reverse=True)[:k]
+        chunks = [Chunk(id=chunk.id, content=chunk.payload["page_content"], metadata=chunk.payload["metadata"]) for chunk in chunks]
 
         return chunks
 
@@ -251,16 +246,9 @@ class VectorStore:
             List[Chunk]: A list of Chunk objects containing the retrieved chunks.
         """
         collection = self.get_collection_metadata(collection_names=[collection_name], type="all")[0]
-        chunks = self.vectors.scroll(
-            collection_name=collection.id,
-            with_payload=True,
-            with_vectors=False,
-            scroll_filter=filter,
-            limit=100,  # @TODO: add pagination
-        )[0]
-        chunks = [
-            Chunk(collection=collection_name, id=chunk.id, metadata=chunk.payload["metadata"], content=chunk.payload["page_content"])
-            for chunk in chunks
-        ]
+        chunks = self.vectors.scroll(collection_name=collection.id, with_payload=True, with_vectors=False, scroll_filter=filter)[0]
+        for chunk in chunks:
+            chunk.payload["metadata"]["collection"] = collection.name
+        chunks = [Chunk(id=chunk.id, metadata=chunk.payload["metadata"], content=chunk.payload["page_content"]) for chunk in chunks]
 
         return chunks

@@ -86,7 +86,7 @@ class TestFiles:
         files["data"] = [File(**file) for file in files["data"]]
         assert len(files["data"]) == 1, f"error: number of files ({len(files)})"
         files = Files(**files)
-        assert files.data[0].filename == FILE_NAME, f"error: filename ({files.data[0].filename})"
+        assert files.data[0].file_name == FILE_NAME, f"error: file name ({files.data[0].file_name})"
         assert files.data[0].id == file_id, f"error: file id ({files.data[0].id})"
 
     def test_collection_creation(self, args, session, setup):

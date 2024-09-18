@@ -23,6 +23,8 @@ async def search(request: SearchRequest, user: str = Security(check_api_key)) ->
     """
 
     vectorstore = VectorStore(clients=clients, user=user)
-    data = vectorstore.search(prompt=request.prompt, collection_names=request.collections, k=request.k, score_threshold=request.score_threshold)
+    data = vectorstore.search(
+        prompt=request.prompt, model=request.model, collection_names=request.collections, k=request.k, score_threshold=request.score_threshold
+    )
 
     return Chunks(data=data)
