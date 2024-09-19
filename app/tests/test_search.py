@@ -1,10 +1,11 @@
-import os
 import logging
+import os
+
 import pytest
 import wget
 
-from app.schemas.chunks import Chunk, Chunks
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE
+from app.schemas.search import Search, Searches
 
 
 @pytest.fixture(scope="function")
@@ -66,9 +67,9 @@ class TestSearch:
         response = session.post(f"{args['base_url']}/search", json=data)
         assert response.status_code == 200, f"error: search request ({response.status_code} - {response.text})"
 
-        chunks = Chunks(**response.json())
-        assert isinstance(chunks, Chunks)
-        assert all(isinstance(chunk, Chunk) for chunk in chunks.data)
+        searches = Searches(**response.json())
+        assert isinstance(searches, Searches)
+        assert all(isinstance(search, Search) for search in searches.data)
 
     def test_search_with_score_threshold(self, args, session, setup):
         """Test search with a score threshold."""

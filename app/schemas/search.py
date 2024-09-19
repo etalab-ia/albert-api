@@ -1,6 +1,8 @@
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+from app.schemas.chunks import Chunk
 
 
 class SearchRequest(BaseModel):
@@ -15,3 +17,13 @@ class SearchRequest(BaseModel):
         if value.strip() == "":
             raise ValueError("Prompt cannot be empty")
         return value
+
+
+class Search(BaseModel):
+    score: float
+    chunk: Chunk
+
+
+class Searches(BaseModel):
+    object: Literal["list"] = "list"
+    data: List[Search]

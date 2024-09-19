@@ -9,6 +9,7 @@ from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny
 from app.schemas.chunks import Chunk
 from app.schemas.collections import CollectionMetadata
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
+from app.schemas.search import Search
 
 
 class VectorStore:
@@ -64,7 +65,7 @@ class VectorStore:
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
         filter: Optional[Filter] = None,
-    ) -> List[Chunk]:
+    ) -> List[Search]:
         response = self.models[model].embeddings.create(input=[prompt], model=model)
         vector = response.data[0].embedding
 
@@ -88,9 +89,12 @@ class VectorStore:
 
         # sort by similarity score and get top k
         chunks = sorted(chunks, key=lambda x: x.score, reverse=True)[:k]
-        chunks = [Chunk(id=chunk.id, content=chunk.payload["page_content"], metadata=chunk.payload["metadata"]) for chunk in chunks]
+        data = [
+            Search(score=chunk.score, chunk=Chunk(id=chunk.id, content=chunk.payload["page_content"], metadata=chunk.payload["metadata"]))
+            for chunk in chunks
+        ]
 
-        return chunks
+        return data
 
     def get_collection_metadata(self, collection_names: List[str] = [], type: str = "all", errors: str = "raise") -> List[CollectionMetadata]:
         """
