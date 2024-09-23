@@ -1,12 +1,13 @@
-import os
 import logging
+import os
+
 import pytest
 import wget
 
-from app.schemas.files import Upload, Uploads, Files, File
-from app.schemas.collections import Collections, Collection
-from app.schemas.models import Models, Model
-from app.schemas.config import PRIVATE_COLLECTION_TYPE, METADATA_COLLECTION, LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE
+from app.schemas.collections import Collection, Collections
+from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE
+from app.schemas.files import File, Files, Upload, Uploads
+from app.schemas.models import Model, Models
 from app.utils.security import encode_string
 
 

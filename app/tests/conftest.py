@@ -1,6 +1,7 @@
+import logging
+
 import pytest
 import requests
-import logging
 
 
 def pytest_addoption(parser):

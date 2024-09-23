@@ -1,6 +1,6 @@
 import pytest
 
-from app.schemas.tools import Tools, Tool
+from app.schemas.tools import Tool, Tools
 
 
 @pytest.mark.usefixtures("args", "session")

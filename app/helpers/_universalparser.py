@@ -2,13 +2,14 @@ import json
 from typing import List, Optional
 
 from docx import Document
+from langchain.docstore.document import Document as LangchainDocument
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PDFMinerLoader
-from langchain.docstore.document import Document as LangchainDocument
 import magic
 
-from ._textcleaner import TextCleaner
 from app.schemas.files import JsonFile
+
+from ._textcleaner import TextCleaner
 
 
 class UniversalParser:

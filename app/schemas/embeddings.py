@@ -1,7 +1,7 @@
-from typing import Optional, Literal, List, Union
+from typing import List, Literal, Optional, Union
 
-from pydantic import BaseModel
 from openai.types import CreateEmbeddingResponse
+from pydantic import BaseModel
 
 
 class EmbeddingsRequest(BaseModel):

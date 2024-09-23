@@ -1,4 +1,4 @@
-from typing import Literal, List, Optional, Dict
+from typing import Dict, List, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel

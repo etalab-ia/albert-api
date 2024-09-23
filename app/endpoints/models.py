@@ -1,11 +1,10 @@
-from typing import Union, Optional
+from typing import Optional, Union
 
 from fastapi import APIRouter, Security
 
 from app.schemas.models import Model, Models
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
-
 
 router = APIRouter()
 

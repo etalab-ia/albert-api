@@ -1,9 +1,9 @@
-from typing import Annotated
-import hashlib
 import base64
+import hashlib
+from typing import Annotated
 
-from fastapi import HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.utils.lifespan import clients
 
