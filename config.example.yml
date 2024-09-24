@@ -2,6 +2,7 @@ models:
     - url: https://api.openai.com/v1
       type: text-generation
       key: mysecretkey1
+      search_internet: True
 
 databases:
   vectors:

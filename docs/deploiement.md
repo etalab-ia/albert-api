@@ -47,12 +47,6 @@ databases:
     args: [required] 
       [arg_name]: [value]
       ...
-  
-  files: [required]
-    type: [required] # see following Database section for the list of supported db type
-    args: [required] 
-      [arg_name]: [value]
-      ...
 ```
 
 **Par défaut, l'API va chercher un fichier nommé *config.yml* la racine du dépot.** Néanmoins, vous pouvez spécifier un autre fichier de config comme ceci :

@@ -1,38 +1,64 @@
-from typing import Dict, List, Literal, Optional
+from typing import List, Literal, Optional
+import json
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from app.utils.variables import CHUNKERS, SUPPORTED_FILE_TYPES
 
 
 class File(BaseModel):
     object: Literal["file"] = "file"
-    id: UUID
+    id: str
     bytes: int
-    file_name: str
-    chunks: Optional[list] = []
+    name: str
+    chunks: list = []
     created_at: int
 
 
 class Files(BaseModel):
     object: Literal["list"] = "list"
-    data: List[File]
+    data: List[str]
 
 
-class Upload(BaseModel):
-    object: Literal["upload"] = "upload"
-    id: UUID
-    file_name: str
-    status: Literal["success", "failed"] = "success"
+class ChunkerArgs(BaseModel):
+    chunk_size: int = Field(512)
+    chunk_overlap: int = Field(0)
+    length_function: Literal["len"] = Field("len")
+    is_separator_regex: bool = Field(False)
+    separators: List[str] = Field(["\n\n", "\n", ". ", " "])
+
+    # additional arguments
+    chunk_min_size: Optional[int] = Field(0)
 
 
-class Uploads(BaseModel):
-    object: Literal["list"] = "list"
-    data: List[Upload]
+class Chunker(BaseModel):
+    name: Optional[Literal[*CHUNKERS]] = Field(None)
+    args: Optional[ChunkerArgs] = Field(None)
+
+
+class FilesRequest(BaseModel):
+    collection: UUID = Field(...)
+    chunker: Optional[Chunker] = Field(None)
+    file_type: Optional[Literal[*SUPPORTED_FILE_TYPES]] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_to_json(cls, value):
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
+
+    @field_validator("collection", mode="after")
+    @classmethod
+    def convert_to_string(cls, value):
+        return str(value)
 
 
 class Json(BaseModel):
+    title: str
     text: str
-    metadata: Optional[Dict] = None
+    metadata: dict = {}
 
 
 class JsonFile(BaseModel):
