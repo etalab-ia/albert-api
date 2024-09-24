@@ -61,7 +61,7 @@ class UniversalParser:
                     pass
 
         if file_type not in self.SUPPORTED_FILE_TYPES:
-            file_type = "unknown"
+            raise NotImplementedError(f"Unsupported input file format ({file_path}): {file_type}")
 
         if file_type == self.PDF_TYPE:
             chunks = self._pdf_to_chunks(file_path=file_path, chunk_size=chunk_size, chunk_overlap=chunk_overlap, chunk_min_size=chunk_min_size)
@@ -70,9 +70,6 @@ class UniversalParser:
 
         elif file_type == self.JSON_TYPE:
             chunks = self._json_to_chunks(file_path=file_path, chunk_size=chunk_size, chunk_overlap=chunk_overlap, chunk_min_size=chunk_min_size)
-
-        else:
-            raise NotImplementedError(f"Unsupported input file format ({file_path}): {file_type}")
 
         return chunks
 

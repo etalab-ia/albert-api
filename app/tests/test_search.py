@@ -2,7 +2,6 @@ import logging
 import os
 
 import pytest
-import wget
 
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE
 from app.schemas.search import Search, Searches
@@ -11,8 +10,7 @@ from app.schemas.search import Search, Searches
 @pytest.fixture(scope="function")
 def setup(args, session):
     COLLECTION = "pytest"
-    FILE_NAME = "pytest.pdf"
-    FILE_URL = "http://www.legifrance.gouv.fr/download/file/rxcTl0H4YnnzLkMLiP4x15qORfLSKk_h8QsSb2xnJ8Y=/JOE_TEXTE"
+    FILE_PATH = "app/tests/pytest.pdf"
 
     # Delete the collection if it exists
     response = session.delete(f"{args['base_url']}/collections/{COLLECTION}")
@@ -24,22 +22,19 @@ def setup(args, session):
     EMBEDDINGS_MODEL = [model["id"] for model in response if model["type"] == EMBEDDINGS_MODEL_TYPE][0]
     logging.debug(f"model: {EMBEDDINGS_MODEL}")
 
-    # Download a file
-    if not os.path.exists(FILE_NAME):
-        wget.download(FILE_URL, out=FILE_NAME)
-
     # Upload the file to the collection
     params = {"embeddings_model": EMBEDDINGS_MODEL, "collection": COLLECTION}
-    files = {"files": (os.path.basename(FILE_NAME), open(FILE_NAME, "rb"), "application/pdf")}
+    files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
     response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=30)
     assert response.status_code == 200, f"error: upload file ({response.status_code} - {response.text})"
+    assert response.json()["data"][0]["status"] == "success"
 
     # Check if the file is uploaded
     response = session.get(f"{args['base_url']}/files/{COLLECTION}", timeout=10)
     assert response.status_code == 200, f"error: retrieve files ({response.status_code} - {response.text})"
     files = response.json()
     assert len(files["data"]) == 1
-    assert files["data"][0]["file_name"] == FILE_NAME
+    assert files["data"][0]["file_name"] == os.path.basename(FILE_PATH)
     FILE_ID = files["data"][0]["id"]
 
     CHUNK_IDS = files["data"][0]["chunks"]
@@ -50,9 +45,6 @@ def setup(args, session):
     assert response.status_code == 200, f"error: retrieve chunks ({response.status_code} - {response.text})"
     chunks = response.json()
     MAX_K = len(chunks["data"])
-
-    if os.path.exists(FILE_NAME):
-        os.remove(FILE_NAME)
 
     yield EMBEDDINGS_MODEL, FILE_ID, MAX_K, COLLECTION
 

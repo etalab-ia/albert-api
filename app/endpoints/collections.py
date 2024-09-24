@@ -12,7 +12,6 @@ from app.utils.security import check_api_key
 router = APIRouter()
 
 
-# @TODO: remove get one collection and a /collections/search to similarity search (remove /tools)
 @router.get("/collections/{collection}")
 @router.get("/collections")
 async def get_collections(collection: Optional[str] = None, user: str = Security(check_api_key)) -> Union[Collection, Collections]:

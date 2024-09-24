@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from openai.types.chat import (
     ChatCompletion,
@@ -9,10 +9,9 @@ from openai.types.chat import (
 )
 from pydantic import BaseModel, Field
 
-from app.schemas.tools import ToolOutput
-
 
 class ChatCompletionRequest(BaseModel):
+    # See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py
     messages: List[ChatCompletionMessageParam]
     model: str
     stream: Optional[Literal[True, False]] = False
@@ -27,11 +26,18 @@ class ChatCompletionRequest(BaseModel):
     stop: Union[Optional[str], List[str]] = Field(default_factory=list)
     tool_choice: Optional[Union[Literal["none"], ChatCompletionToolChoiceOptionParam]] = "none"
     tools: List[ChatCompletionToolParam] = None
+    user: Optional[str] = None
+    best_of: Optional[int] = None
+    top_k: int = -1
+    min_p: float = 0.0
+
+    class ConfigDict:
+        extra = "allow"
 
 
 class ChatCompletion(ChatCompletion):
-    metadata: Optional[List[Dict[str, ToolOutput]]] = []
+    pass
 
 
 class ChatCompletionChunk(ChatCompletionChunk):
-    metadata: Optional[List[Dict[str, ToolOutput]]] = []
+    pass

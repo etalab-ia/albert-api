@@ -2,7 +2,6 @@ import logging
 import os
 
 import pytest
-import wget
 
 from app.schemas.collections import Collection, Collections
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE
@@ -14,19 +13,12 @@ from app.utils.security import encode_string
 @pytest.fixture(scope="function")
 def setup(args, session):
     COLLECTION = "pytest"
-    FILE_NAME = "pytest.pdf"
-    FILE_URL = "http://www.legifrance.gouv.fr/download/file/rxcTl0H4YnnzLkMLiP4x15qORfLSKk_h8QsSb2xnJ8Y=/JOE_TEXTE"
-
-    if not os.path.exists(FILE_NAME):
-        wget.download(FILE_URL, out=FILE_NAME)
+    FILE_PATH = "app/tests/pytest.pdf"
 
     USER = encode_string(input=args["api_key"])
     logging.info(f"test user ID: {USER}")
 
-    yield COLLECTION, FILE_NAME, USER
-
-    if os.path.exists(FILE_NAME):
-        os.remove(FILE_NAME)
+    yield COLLECTION, FILE_PATH, USER
 
 
 @pytest.mark.usefixtures("args", "session", "setup")
@@ -52,21 +44,20 @@ class TestFiles:
         assert isinstance(collections, Collections)
         assert all(isinstance(collection, Collection) for collection in collections.data)
 
-        if COLLECTION in [collection.id for collection in collections.data]:
-            response = session.delete(f"{args['base_url']}/collections", params={"collection": COLLECTION}, timeout=10)
-            assert response.status_code == 204, f"error: delete collection ({response.status_code})"
+        response = session.delete(f"{args['base_url']}/collections", params={"collection": COLLECTION}, timeout=10)
+        assert response.status_code == 204 or response.status_code == 404, f"error: delete collection ({response.status_code})"
 
         assert METADATA_COLLECTION not in [
             collection.id for collection in collections.data
         ], f"{METADATA_COLLECTION} metadata collection is displayed in collections"
 
     def test_upload_file(self, args, session, setup):
-        COLLECTION, FILE_NAME, _ = setup
+        COLLECTION, FILE_PATH, _ = setup
         models = self.get_models(args, session)
         EMBEDDINGS_MODEL = [model for model in models.data if model.type == EMBEDDINGS_MODEL_TYPE][0].id
 
         params = {"embeddings_model": EMBEDDINGS_MODEL, "collection": COLLECTION}
-        files = {"files": (os.path.basename(FILE_NAME), open(FILE_NAME, "rb"), "application/pdf")}
+        files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
         response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=30)
 
         assert response.status_code == 200, f"error: upload file ({response.status_code} - {response.text})"
@@ -87,7 +78,7 @@ class TestFiles:
         files["data"] = [File(**file) for file in files["data"]]
         assert len(files["data"]) == 1, f"error: number of files ({len(files)})"
         files = Files(**files)
-        assert files.data[0].file_name == FILE_NAME, f"error: file name ({files.data[0].file_name})"
+        assert files.data[0].file_name == os.path.basename(FILE_PATH), f"error: file name ({files.data[0].file_name})"
         assert files.data[0].id == file_id, f"error: file id ({files.data[0].id})"
 
     def test_collection_creation(self, args, session, setup):
@@ -107,7 +98,7 @@ class TestFiles:
         assert collection.user == USER, f"{COLLECTION} collection user is not {USER}"
 
     def test_upload_with_wrong_model(self, args, session, setup):
-        COLLECTION, FILE_NAME, _ = setup
+        COLLECTION, FILE_PATH, _ = setup
         models = self.get_models(args, session)
 
         language_model = [model for model in models.data if model.type == LANGUAGE_MODEL_TYPE][0].id
@@ -115,29 +106,29 @@ class TestFiles:
             "embeddings_model": language_model,
             "collection": COLLECTION,
         }
-        files = {"files": (os.path.basename(FILE_NAME), open(FILE_NAME, "rb"), "application/pdf")}
+        files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
         response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=10)
 
         assert response.status_code == 400, f"error: upload file ({response.status_code} - {response.text})"
 
     def test_upload_with_non_existing_model(self, args, session, setup):
-        COLLECTION, FILE_NAME, _ = setup
+        COLLECTION, FILE_PATH, _ = setup
 
         params = {
             "embeddings_model": "test",
             "collection": COLLECTION,
         }
-        files = {"files": (os.path.basename(FILE_NAME), open(FILE_NAME, "rb"), "application/pdf")}
+        files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
         response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=10)
 
         assert response.status_code == 404, f"error: upload file ({response.status_code} - {response.text})"
 
     def test_delete_file(self, args, session, setup):
-        COLLECTION, FILE_NAME, _ = setup
+        COLLECTION, FILE_PATH, _ = setup
         models = self.get_models(args, session)
         EMBEDDINGS_MODEL = [model for model in models.data if model.type == EMBEDDINGS_MODEL_TYPE][0].id
         params = {"embeddings_model": EMBEDDINGS_MODEL, "collection": COLLECTION}
-        files = {"files": (os.path.basename(FILE_NAME), open(FILE_NAME, "rb"), "application/pdf")}
+        files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
         response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=30)
 
         uploads = response.json()
