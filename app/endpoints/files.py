@@ -1,14 +1,15 @@
 import base64
-from typing import List, Optional, Union
+from typing import Optional, Union
 import uuid
 
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, HTTPException, Response, Security, UploadFile
 from qdrant_client.http.models import FieldCondition, Filter, MatchAny
 
+
 from app.helpers import S3FileLoader, VectorStore
 from app.schemas.config import PUBLIC_COLLECTION_TYPE
-from app.schemas.files import File, Files, Upload, Uploads
+from app.schemas.files import File, Files, FilesRequest
 from app.utils.config import LOGGER
 from app.utils.data import delete_contents
 from app.utils.lifespan import clients
@@ -18,19 +19,11 @@ router = APIRouter()
 
 
 @router.post("/files")
-async def upload_files(
-    collection: str,
-    embeddings_model: str,
-    files: List[UploadFile],
-    chunk_size: Optional[int] = 512,
-    chunk_overlap: Optional[int] = 0,
-    chunk_min_size: Optional[int] = None,
-    user: str = Security(check_api_key),
-) -> Uploads:
+async def upload_file(request: FilesRequest, file: UploadFile, user: str = Security(check_api_key)) -> Response:
     """
     Upload multiple files to be processed, chunked, and stored into a vector database. Supported file types : docx, pdf, json.
 
-    **Parameters**:
+    **Args**:
     - **collection** (string): The collection name where the files will be stored.
     - **embeddings_model** (string): The embedding model to use for creating vectors. A collection must have only one embedding model.
     - **chunk_size** (int): The maximum number of characters of each text chunk.
@@ -43,68 +36,38 @@ async def upload_files(
     - **json**: JavaScript Object Notation file.
         For JSON, file structure like: {"documents": [{"text": "hello world", "metadata": {"title": "my document"}}, ...]} or {"documents": [{"text": "hello world"}, ...]}
         Each document must have a "text" key and "metadata" key (optional) with dict type value.
+    - **html**: Hypertext Markup Language file.
 
     **Request body**
     - **files** : Files to upload.
     """
 
-    loader = S3FileLoader(s3=clients["files"], chunk_size=chunk_size, chunk_overlap=chunk_overlap, chunk_min_size=chunk_min_size)
+    loader = S3FileLoader(
+        s3=clients["files"], chunk_size=request.chunk_size, chunk_overlap=request.chunk_overlap, chunk_min_size=request.chunk_min_size
+    )
     vectorstore = VectorStore(clients=clients, user=user)
 
-    # if collection already exists, return the collection ID
-    collection_id = vectorstore.create_collection(collection_name=collection, model=embeddings_model)
-
-    # upload
-    data = list()
     try:
-        clients["files"].head_bucket(Bucket=collection_id)
+        clients["files"].head_bucket(Bucket=request.collection)
     except ClientError:
-        clients["files"].create_bucket(Bucket=collection_id)
+        clients["files"].create_bucket(Bucket=request.collection)
 
-    for file in files:
-        file_id = str(uuid.uuid4())
-        file_name = file.filename.strip()
-        encoded_file_name = base64.b64encode(file_name.encode("utf-8")).decode("ascii")
-        try:
-            # upload files into S3 bucket
-            clients["files"].upload_fileobj(
-                file.file,
-                collection_id,
-                file_id,
-                ExtraArgs={"ContentType": file.content_type, "Metadata": {"file_name": encoded_file_name, "id": file_id}},
-            )
-        except Exception as e:
-            LOGGER.error(f"store {file_name}:\n{e}")
-            data.append(Upload(id=file_id, file_name=file_name, status="failed"))
-            continue
+    file_id = str(uuid.uuid4())
+    file_name = file.filename.strip()
 
-        try:
-            # convert files into langchain documents
-            documents = loader._get_elements(
-                file_id=file_id,
-                bucket=collection_id,
-            )
-        except Exception as e:
-            LOGGER.error(f"convert {file_name} into documents:\n{e}")
-            clients["files"].delete_object(Bucket=collection_id, Key=file_id)
-            data.append(Upload(id=file_id, file_name=file_name, status="failed"))
-            continue
+    try:
+        # convert files into chunks (Langchain documents format)
+        documents = loader._get_elements(file_id=file_id, bucket=request.collection)
+        for document in documents:
+            document.id = str(uuid.uuid4())
+        # create vectors from documents
+        vectorstore.from_documents(documents=documents, model=request.embeddings_model, collection_name=request.collection)
 
-        try:
-            for document in documents:
-                document.id = str(uuid.uuid4())
-            # create vectors from documents
-            vectorstore.from_documents(documents=documents, model=embeddings_model, collection_name=collection)
+    except Exception as e:
+        LOGGER.error(f"upload file {file_name}:\n{e}")
+        raise HTTPException(status_code=400, detail=f"error during file conversion: {e}")
 
-        except Exception as e:
-            LOGGER.error(f"create vectors of {file_name}:\n{e}")
-            clients["files"].delete_object(Bucket=collection_id, Key=file_id)
-            data.append(Upload(id=file_id, file_name=file_name, status="failed"))
-            continue
-
-        data.append(Upload(id=file_id, file_name=file_name, status="success"))
-
-    return Uploads(data=data)
+    return Response(status_code=201)
 
 
 @router.get("/files/{collection}/{file}")
@@ -165,6 +128,9 @@ async def delete_file(collection: str, file: Optional[str] = None, user: str = S
     """
 
     vectorstore = VectorStore(clients=clients, user=user)
-    response = delete_contents(s3=clients["files"], vectorstore=vectorstore, collection_name=collection, file=file)
+    try:
+        delete_contents(s3=clients["files"], vectorstore=vectorstore, collection_name=collection, file=file)
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    return response
+    return Response(status_code=204)

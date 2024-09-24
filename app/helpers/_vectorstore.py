@@ -1,38 +1,37 @@
 import time
 from typing import List, Optional
-import uuid
 
 from fastapi import HTTPException
 from langchain.docstore.document import Document
-from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, PointIdsList, PointStruct, VectorParams
+from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, PointIdsList, PointStruct, VectorParams, HasIdCondition
 
 from app.schemas.chunks import Chunk
-from app.schemas.collections import CollectionMetadata
+from app.schemas.collections import Collection
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 from app.schemas.search import Search
 
 
 class VectorStore:
     BATCH_SIZE = 32
+    FORBIDDEN_COLLECTION_NAMES = ["internet", "collections"]
 
     def __init__(self, clients: dict, user: str):
         self.vectors = clients["vectors"]
         self.models = clients["models"]
         self.user = user
 
-    def from_documents(self, documents: List[Document], model: str, collection_name: str) -> None:
+    def from_documents(self, documents: List[Document], model: str, collection_id: str) -> None:
         """
         Add documents to a collection.
 
-        Parameters:
+        Args:
             documents (List[Document]): A list of Langchain Document objects to add to the collection.
             model (str): The model to use for embeddings.
             collection_name (str): The name of the collection to add the documents to.
         """
 
-        collection = self.get_collection_metadata(collection_names=[collection_name])[0]
-        if collection.model != model:
-            raise HTTPException(status_code=400, detail="Wrong model collection")
+        collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
+        assert collection.model != model, "Wrong model collection"
 
         for i in range(0, len(documents), self.BATCH_SIZE):
             batch = documents[i : i + self.BATCH_SIZE]
@@ -45,14 +44,7 @@ class VectorStore:
             self.vectors.upsert(
                 collection_name=collection.id,
                 points=[
-                    PointStruct(
-                        id=document.id,
-                        vector=vector,
-                        payload={
-                            "page_content": document.page_content,
-                            "metadata": document.metadata,
-                        },
-                    )
+                    PointStruct(id=document.id, vector=vector, payload={"page_content": document.page_content, "metadata": document.metadata})
                     for document, vector in zip(batch, vectors)
                 ],
             )
@@ -61,7 +53,7 @@ class VectorStore:
         self,
         prompt: str,
         model: str,
-        collection_names: List[str],
+        collection_ids: List[str],
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
         filter: Optional[Filter] = None,
@@ -70,21 +62,16 @@ class VectorStore:
         vector = response.data[0].embedding
 
         chunks = []
-        collections = self.get_collection_metadata(collection_names=collection_names)
+        collections = self.get_collection_metadata(collection_ids=collection_ids)
         for collection in collections:
             if collection.model != model:
                 raise HTTPException(status_code=400, detail="Wrong model collection")
 
             results = self.vectors.search(
-                collection_name=collection.id,
-                query_vector=vector,
-                limit=k,
-                score_threshold=score_threshold,
-                with_payload=True,
-                query_filter=filter,
+                collection_name=collection.id, query_vector=vector, limit=k, score_threshold=score_threshold, with_payload=True, query_filter=filter
             )
             for result in results:
-                result.payload["metadata"]["collection"] = collection.name
+                result.payload["metadata"]["collection"] = collection.id
             chunks.extend(results)
 
         # sort by similarity score and get top k
@@ -96,24 +83,24 @@ class VectorStore:
 
         return data
 
-    def get_collection_metadata(self, collection_names: List[str] = [], type: str = "all", errors: str = "raise") -> List[CollectionMetadata]:
+    def get_collection_metadata(self, collection_ids: List[str] = [], type: str = "all", errors: str = "raise") -> List[Collection]:
         """
         Get metadata of collections.
 
-        Parameters:
+        Args:
             collection_names (List[str]): List of collection names to retrieve metadata for. If is an empty list, all collections will be considered.
             type (str): The type of collections to get. "all" (default) will get all collections. "public" will get only public collections. "private" will get only private collections.
             errors (str): How to handle errors. "raise" (default) will raise an HTTPException if a collection is not found. "ignore" will skip collections that are not found.
 
         Returns:
-            List[CollectionMetadata]: A list of CollectionMetadata objects containing the metadata for the specified collections.
+            List[Collection]: A list of Collection objects containing the metadata for the specified collections.
         """
         assert errors in ["raise", "ignore"], "errors must be 'raise' or 'ignore'"
         assert type in ["all", PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE], "type must be 'all', 'public' or 'private'"
 
         metadata = []
-        collection_names = [collection for collection in collection_names if collection is not None]
-        if not collection_names:
+        collection_ids = [collection for collection in collection_ids if collection is not None]
+        if not collection_ids:
             if type == "all":
                 must = []
                 should = [
@@ -132,8 +119,8 @@ class VectorStore:
             metadata.extend(data)
 
         else:
-            for collection_name in collection_names:
-                must = [FieldCondition(key="name", match=MatchAny(any=[collection_name]))]
+            for collection_id in collection_ids:
+                must = [HasIdCondition(has_id=collection_id)]
                 should = []
                 if type == "all":
                     should = [
@@ -150,20 +137,15 @@ class VectorStore:
                 data = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter)[0]
                 # LOGGER.debug(f"{collection} collection: {data}")
                 if not data and errors == "raise":
-                    raise HTTPException(status_code=404, detail=f"Collection {collection_name} not found")
+                    raise HTTPException(status_code=404, detail=f"Collection {collection_id} not found")
                 metadata.extend(data)
 
-        # @TODO: the 2 following checks, they are still needed ?
-        # remove collection that does not exist
+        # sanity check: remove collection that does not exist
         existing_collection_ids = [collection.name for collection in self.vectors.get_collections().collections]
         metadata = [collection for collection in metadata if collection.id in existing_collection_ids]
 
-        # sort by updated_at and remove duplicates collections with same names (keep the latest version), concerns only public collections
-        sorted_data = sorted(metadata, key=lambda x: x.payload.get("updated_at", 0), reverse=False)
-        metadata = list({item.payload["name"]: item for item in sorted_data if "name" in item.payload}.values())
-
         for i in range(len(metadata)):
-            metadata[i] = CollectionMetadata(
+            metadata[i] = Collection(
                 id=metadata[i].id,
                 name=metadata[i].payload.get("name"),
                 type=metadata[i].payload.get("type"),
@@ -176,11 +158,11 @@ class VectorStore:
 
         return metadata
 
-    def create_collection(self, collection_name: str, model: str) -> str:
+    def create_collection(self, collection_id: str, collection_name: str, model: str) -> str:
         """
         Create a collection, if collection already exists, return the collection id.
 
-        Parameters:
+        Args:
             collection (str): The name of the collection to create.
             vectorstore (Qdrant): The vectorstore to create the collection in.
             embeddings_model (str): The embeddings model to use.
@@ -189,13 +171,17 @@ class VectorStore:
         Returns:
             str: The collection id.
         """
-        if collection_name == "":
+        # @TODO: replace by pydantic validation (path: )
+        if collection_name.strip() == "":
             raise HTTPException(status_code=400, detail="Collection name is required")
+
+        if collection_name in self.FORBIDDEN_COLLECTION_NAMES:
+            raise HTTPException(status_code=400, detail="Collection name is forbidden")
 
         if self.models[model].type != EMBEDDINGS_MODEL_TYPE:
             raise HTTPException(status_code=400, detail="Model type must be {EMBEDDINGS_MODEL_TYPE}")
 
-        collections = self.get_collection_metadata(collection_names=[collection_name], type="all", errors="ignore")
+        collections = self.get_collection_metadata(collection_ids=[collection_id], type="all", errors="ignore")
 
         # if collection already exists
         if collections:
@@ -212,8 +198,6 @@ class VectorStore:
             self.vectors.upsert(collection_name=METADATA_COLLECTION, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
 
         else:
-            collection_id = str(uuid.uuid4())
-
             # create metadata
             metadata = {
                 "name": collection_name,
@@ -242,7 +226,7 @@ class VectorStore:
         """
         Get chunks from a collection.
 
-        Parameters:
+        Args:
             collection_name (str): The name of the collection to get chunks from.
             filter (Optional[Filter]): Optional filter to apply when retrieving chunks.
 

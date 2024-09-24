@@ -17,7 +17,7 @@ class TextCleaner:
         input_string = input_string.replace("\x00", "")
 
         # Remove non-printable characters
-        input_string = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", input_string)
+        input_string = re.sub(r"(\x00|\x1f|\x7f|\x9f)", "", input_string)
 
         # Normalize Unicode characters to NFC (Normalization Form C)
         input_string = unicodedata.normalize("NFC", input_string)

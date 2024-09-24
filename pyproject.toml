@@ -30,6 +30,9 @@ app = [
     "python-magic==0.4.27",
     "grist-api==0.1.0",
     "pdfminer.six==20240706",
+    "beautifulsoup4==4.12.3",
+    "duckduckgo-search==6.2.13",
+    "numpy==2.1.1",
 ]
 dev = [
     "ruff==0.6.5",

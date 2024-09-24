@@ -8,6 +8,7 @@ from app.utils.security import check_api_key
 router = APIRouter()
 
 
+# @ TODO pass to async with httpsx
 @router.post("/embeddings")
 async def embeddings(request: EmbeddingsRequest, user: str = Security(check_api_key)) -> Embeddings:
     """

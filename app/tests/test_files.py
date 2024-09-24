@@ -18,22 +18,20 @@ def setup(args, session):
     USER = encode_string(input=args["api_key"])
     logging.info(f"test user ID: {USER}")
 
-    yield COLLECTION, FILE_PATH, USER
+    response = session.get(f"{args['base_url']}/models", timeout=10)
+    models = response.json()
+    models["data"] = [Model(**model) for model in models["data"]]
+    models = Models(**models)
+    EMBEDDINGS_MODEL = [model for model in models.data if model.type == EMBEDDINGS_MODEL_TYPE][0].id
+    LANGUAGE_MODEL = [model for model in models.data if model.type == LANGUAGE_MODEL_TYPE][0].id
+
+    yield COLLECTION, FILE_PATH, USER, EMBEDDINGS_MODEL, LANGUAGE_MODEL
 
 
 @pytest.mark.usefixtures("args", "session", "setup")
 class TestFiles:
-    def get_models(self, args, session):
-        response = session.get(f"{args['base_url']}/models", timeout=10)
-
-        models = response.json()
-        models["data"] = [Model(**model) for model in models["data"]]
-        models = Models(**models)
-
-        return models
-
     def test_get_collections(self, args, session, setup):
-        COLLECTION, _, _ = setup
+        COLLECTION, _, _, _, _ = setup
         response = session.get(f"{args['base_url']}/collections", timeout=10)
         assert response.status_code == 200, f"error: retrieve collections ({response.status_code} - {response.text})"
 
@@ -52,9 +50,7 @@ class TestFiles:
         ], f"{METADATA_COLLECTION} metadata collection is displayed in collections"
 
     def test_upload_file(self, args, session, setup):
-        COLLECTION, FILE_PATH, _ = setup
-        models = self.get_models(args, session)
-        EMBEDDINGS_MODEL = [model for model in models.data if model.type == EMBEDDINGS_MODEL_TYPE][0].id
+        COLLECTION, FILE_PATH, _, EMBEDDINGS_MODEL, _ = setup
 
         params = {"embeddings_model": EMBEDDINGS_MODEL, "collection": COLLECTION}
         files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
@@ -82,7 +78,7 @@ class TestFiles:
         assert files.data[0].id == file_id, f"error: file id ({files.data[0].id})"
 
     def test_collection_creation(self, args, session, setup):
-        COLLECTION, _, USER = setup
+        COLLECTION, _, USER, _, _ = setup
 
         response = session.get(f"{args['base_url']}/collections", timeout=10)
         assert response.status_code == 200, f"error: retrieve collections ({response.status_code})"
@@ -98,14 +94,9 @@ class TestFiles:
         assert collection.user == USER, f"{COLLECTION} collection user is not {USER}"
 
     def test_upload_with_wrong_model(self, args, session, setup):
-        COLLECTION, FILE_PATH, _ = setup
-        models = self.get_models(args, session)
+        COLLECTION, FILE_PATH, _, _, LANGUAGE_MODEL = setup
 
-        language_model = [model for model in models.data if model.type == LANGUAGE_MODEL_TYPE][0].id
-        params = {
-            "embeddings_model": language_model,
-            "collection": COLLECTION,
-        }
+        params = {"embeddings_model": LANGUAGE_MODEL, "collection": COLLECTION}
         files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
         response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=10)
 
@@ -114,19 +105,15 @@ class TestFiles:
     def test_upload_with_non_existing_model(self, args, session, setup):
         COLLECTION, FILE_PATH, _ = setup
 
-        params = {
-            "embeddings_model": "test",
-            "collection": COLLECTION,
-        }
+        params = {"embeddings_model": "test", "collection": COLLECTION}
         files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
         response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=10)
 
         assert response.status_code == 404, f"error: upload file ({response.status_code} - {response.text})"
 
     def test_delete_file(self, args, session, setup):
-        COLLECTION, FILE_PATH, _ = setup
-        models = self.get_models(args, session)
-        EMBEDDINGS_MODEL = [model for model in models.data if model.type == EMBEDDINGS_MODEL_TYPE][0].id
+        COLLECTION, FILE_PATH, _, EMBEDDINGS_MODEL, _ = setup
+
         params = {"embeddings_model": EMBEDDINGS_MODEL, "collection": COLLECTION}
         files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
         response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=30)
@@ -157,7 +144,7 @@ class TestFiles:
         assert response.status_code == 404, f"error: retrieve files ({response.status_code})"
 
     def test_delete_collection(self, args, session, setup):
-        COLLECTION, _, _ = setup
+        COLLECTION, _, _, _, _ = setup
         file_id = self.test_upload_file(args, session, setup)
 
         # Delete the collection
@@ -171,3 +158,11 @@ class TestFiles:
     def test_delete_metadata_collection(self, args, session):
         response = session.delete(f"{args['base_url']}/collections/{METADATA_COLLECTION}", timeout=10)
         assert response.status_code == 404, f"error: delete metadata collection ({response.status_code} - {response.text})"
+
+    def test_create_collection_with_empty_name(self, args, session):
+        _, FILE_PATH, _, EMBEDDINGS_MODEL, _ = setup
+
+        params = {"embeddings_model": EMBEDDINGS_MODEL, "collection": " "}
+        files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
+        response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=30)
+        assert response.status_code == 400, f"error: create collection with empty name ({response.status_code} - {response.text})"

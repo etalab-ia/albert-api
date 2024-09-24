@@ -1,10 +1,10 @@
 from typing import Optional, Union
 
-from fastapi import APIRouter, Response, Security
+
+from fastapi import APIRouter, Response, Security, HTTPException
 
 from app.helpers import VectorStore
-from app.schemas.collections import Collection, Collections
-from app.utils.config import LOGGER
+from app.schemas.collections import Collection, Collections, CreateCollectionRequest
 from app.utils.data import delete_contents
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
@@ -17,26 +17,14 @@ router = APIRouter()
 async def get_collections(collection: Optional[str] = None, user: str = Security(check_api_key)) -> Union[Collection, Collections]:
     """
     Get list of collections.
+
+    Args:
+        collection (str): ID of the collection.
     """
 
     vectorstore = VectorStore(clients=clients, user=user)
 
-    collections = vectorstore.get_collection_metadata(collection_names=[collection])
-    LOGGER.debug(f"collections: {collections}")
-    data = []
-    for row in collections:
-        data.append(
-            Collection(
-                id=row.name,
-                type=row.type,
-                model=row.model,
-                user=row.user,
-                description=row.description,
-                created_at=row.created_at,
-                updated_at=row.updated_at,
-            )
-        )
-
+    data = vectorstore.get_collection_metadata(collection_names=[collection])
     if collection:
         return data[0]
 
@@ -51,6 +39,17 @@ async def delete_collections(collection: Optional[str] = None, user: str = Secur
     """
 
     vectorstore = VectorStore(clients=clients, user=user)
-    response = delete_contents(s3=clients["files"], vectorstore=vectorstore, collection_name=collection)
+    try:
+        delete_contents(s3=clients["files"], vectorstore=vectorstore, collection_name=collection)
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    return response
+    return Response(status_code=204)
+
+
+@router.post("/collections")
+async def create_collection(request: CreateCollectionRequest, user: str = Security(check_api_key)) -> Response:
+    vectorstore = VectorStore(clients=clients, user=user)
+    collection_id = vectorstore.create_collection(name=request.name, model=request.model)
+
+    return Response(status_code=201)

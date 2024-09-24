@@ -7,7 +7,7 @@ from langchain_community.document_loaders.unstructured import UnstructuredBaseLo
 from ._universalparser import UniversalParser
 
 
-class S3FileLoader(UnstructuredBaseLoader):
+class Universal(UnstructuredBaseLoader):
     """Load from `Amazon AWS S3` files into Langchain documents."""
 
     def __init__(

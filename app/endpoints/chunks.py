@@ -10,11 +10,7 @@ router = APIRouter()
 
 
 @router.get("/chunks/{collection}/{chunk}")
-async def get_chunk(
-    collection: str,
-    chunk: str,
-    user: str = Security(check_api_key),
-) -> Chunk:
+async def get_chunk(collection: str, chunk: str, user: str = Security(check_api_key)) -> Chunk:
     """
     Get a single chunk.
     """
@@ -26,11 +22,7 @@ async def get_chunk(
 
 
 @router.post("/chunks/{collection}")
-async def get_chunks(
-    collection: str,
-    request: ChunkRequest,
-    user: str = Security(check_api_key),
-) -> Chunks:
+async def get_chunks(collection: str, request: ChunkRequest, user: str = Security(check_api_key)) -> Chunks:
     """
     Get multiple chunks.
     """

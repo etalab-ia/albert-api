@@ -1,14 +1,14 @@
 from typing import Dict, List, Literal, Optional
-from uuid import UUID
 
 from pydantic import BaseModel
+from fastapi import Form
 
 
 class File(BaseModel):
     object: Literal["file"] = "file"
-    id: UUID
+    id: str
     bytes: int
-    file_name: str
+    name: str
     chunks: Optional[list] = []
     created_at: int
 
@@ -18,16 +18,12 @@ class Files(BaseModel):
     data: List[File]
 
 
-class Upload(BaseModel):
-    object: Literal["upload"] = "upload"
-    id: UUID
-    file_name: str
-    status: Literal["success", "failed"] = "success"
-
-
-class Uploads(BaseModel):
-    object: Literal["list"] = "list"
-    data: List[Upload]
+class FilesRequest(BaseModel):
+    collection: str = Form(...)
+    embeddings_model: str = Form(...)
+    chunk_size: int = Form(512)
+    chunk_overlap: int = Form(0)
+    chunk_min_size: Optional[int] = Form(None)
 
 
 class Json(BaseModel):

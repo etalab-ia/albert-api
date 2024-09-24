@@ -34,7 +34,6 @@ Grâce à un fichier de configuration (*[config.example.yml](./config.example.ym
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
-
 ## 🧑‍💻 Contribuez au projet
 
 Albert API est un projet open source, vous pouvez contribuez au projet, veuillez lire notre [guide de contribution](./CONTRIBUTING.md).
