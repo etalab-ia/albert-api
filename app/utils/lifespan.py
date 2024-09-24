@@ -1,11 +1,11 @@
-import time
 from contextlib import asynccontextmanager
 from functools import partial
+import time
 from typing import Dict, List
 
-import requests
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
+import requests
 
 from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION
 from app.schemas.models import Model, Models

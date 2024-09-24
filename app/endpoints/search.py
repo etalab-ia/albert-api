@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Security
 
 from app.helpers import VectorStore
-from app.schemas.search import SearchRequest, Searches
+from app.schemas.search import Searches, SearchRequest
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 

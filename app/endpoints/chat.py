@@ -1,17 +1,17 @@
-import httpx
 import json
 from typing import Union
 
-from fastapi import APIRouter, Security, HTTPException
+from fastapi import APIRouter, HTTPException, Security
 from fastapi.responses import StreamingResponse
+import httpx
 
-from app.schemas.chat import ChatCompletionRequest, ChatCompletion, ChatCompletionChunk
-from app.utils.security import check_api_key
-from app.utils.lifespan import clients
-from app.utils.config import LOGGER
+from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
+from app.schemas.config import LANGUAGE_MODEL_TYPE
 from app.tools import *
 from app.tools import __all__ as tools_list
-from app.schemas.config import LANGUAGE_MODEL_TYPE
+from app.utils.config import LOGGER
+from app.utils.lifespan import clients
+from app.utils.security import check_api_key
 
 router = APIRouter()
 
