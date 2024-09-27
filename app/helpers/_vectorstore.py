@@ -3,7 +3,17 @@ from typing import List, Optional
 
 from fastapi import HTTPException
 from langchain.docstore.document import Document
-from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, PointIdsList, PointStruct, VectorParams, HasIdCondition
+from qdrant_client.http.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    FilterSelector,
+    HasIdCondition,
+    MatchAny,
+    PointIdsList,
+    PointStruct,
+    VectorParams,
+)
 
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
@@ -27,7 +37,7 @@ class VectorStore:
         Args:
             documents (List[Document]): A list of Langchain Document objects to add to the collection.
             model (str): The model to use for embeddings.
-            collection_name (str): The name of the collection to add the documents to.
+            collection_id (str): The id of the collection to add the documents to.
         """
 
         collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
@@ -42,7 +52,7 @@ class VectorStore:
 
             # insert vectors
             self.vectors.upsert(
-                collection_name=collection.id,
+                collection_name=collection_id,
                 points=[
                     PointStruct(id=document.id, vector=vector, payload={"page_content": document.page_content, "metadata": document.metadata})
                     for document, vector in zip(batch, vectors)
@@ -53,19 +63,20 @@ class VectorStore:
         self,
         prompt: str,
         model: str,
-        collection_ids: List[str],
+        collection_ids: List[str] = [],
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
         filter: Optional[Filter] = None,
     ) -> List[Search]:
+        collections = self.get_collection_metadata(collection_ids=collection_ids)
+
         response = self.models[model].embeddings.create(input=[prompt], model=model)
         vector = response.data[0].embedding
 
         chunks = []
-        collections = self.get_collection_metadata(collection_ids=collection_ids)
+
         for collection in collections:
-            if collection.model != model:
-                raise HTTPException(status_code=400, detail="Wrong model collection")
+            assert collection.model != model, "Wrong model collection"
 
             results = self.vectors.search(
                 collection_name=collection.id, query_vector=vector, limit=k, score_threshold=score_threshold, with_payload=True, query_filter=filter
@@ -88,7 +99,7 @@ class VectorStore:
         Get metadata of collections.
 
         Args:
-            collection_names (List[str]): List of collection names to retrieve metadata for. If is an empty list, all collections will be considered.
+            collection_ids (List[str]): List of collection ids to retrieve metadata for. If is an empty list, all collections will be considered.
             type (str): The type of collections to get. "all" (default) will get all collections. "public" will get only public collections. "private" will get only private collections.
             errors (str): How to handle errors. "raise" (default) will raise an HTTPException if a collection is not found. "ignore" will skip collections that are not found.
 
@@ -99,7 +110,7 @@ class VectorStore:
         assert type in ["all", PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE], "type must be 'all', 'public' or 'private'"
 
         metadata = []
-        collection_ids = [collection for collection in collection_ids if collection is not None]
+        # if no collection ids are provided, get all collections
         if not collection_ids:
             if type == "all":
                 must = []
@@ -158,51 +169,41 @@ class VectorStore:
 
         return metadata
 
-    def create_collection(self, collection_id: str, collection_name: str, model: str) -> str:
+    def create_collection(self, collection_id: str, collection_name: str, collection_model: str, collection_type: str) -> str:
         """
         Create a collection, if collection already exists, return the collection id.
 
         Args:
-            collection (str): The name of the collection to create.
-            vectorstore (Qdrant): The vectorstore to create the collection in.
-            embeddings_model (str): The embeddings model to use.
-            user (str): The user to create the collection for.
+            collection_id (str): The id of the collection to create.
+            collection_name (str): The name of the collection to create.
+            collection_model (str): The model of the collection to create.
+            collection_type (str): The type of the collection to create.
 
         Returns:
             str: The collection id.
         """
-        # @TODO: replace by pydantic validation (path: )
-        if collection_name.strip() == "":
-            raise HTTPException(status_code=400, detail="Collection name is required")
-
-        if collection_name in self.FORBIDDEN_COLLECTION_NAMES:
-            raise HTTPException(status_code=400, detail="Collection name is forbidden")
-
-        if self.models[model].type != EMBEDDINGS_MODEL_TYPE:
-            raise HTTPException(status_code=400, detail="Model type must be {EMBEDDINGS_MODEL_TYPE}")
+        assert collection_name not in self.FORBIDDEN_COLLECTION_NAMES, "Forbidden collection name."
+        assert self.models[collection_model].type == EMBEDDINGS_MODEL_TYPE, "Wrong model type."
+        assert collection_type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
         collections = self.get_collection_metadata(collection_ids=[collection_id], type="all", errors="ignore")
 
         # if collection already exists
         if collections:
             collection = collections[0]
-            if collection.type == PUBLIC_COLLECTION_TYPE:
-                raise HTTPException(status_code=400, detail="A public collection already exists with the same name")
-            if collection.model != model:
-                raise HTTPException(status_code=400, detail="A collection already exists with a different model.")
+            assert collection.model == collection_model, "Wrong collection model."
 
             # update metadata
             metadata = dict(collection)
             metadata["updated_at"] = round(time.time())
-            collection_id = metadata.pop("id")
             self.vectors.upsert(collection_name=METADATA_COLLECTION, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
 
         else:
             # create metadata
             metadata = {
                 "name": collection_name,
-                "type": PRIVATE_COLLECTION_TYPE,
-                "model": model,
+                "type": collection_type,
+                "model": collection_model,
                 "user": self.user,
                 "description": None,
                 "created_at": round(time.time()),
@@ -212,31 +213,42 @@ class VectorStore:
 
             # create collection
             self.vectors.create_collection(
-                collection_name=collection_id, vectors_config=VectorParams(size=self.models[model].vector_size, distance=Distance.COSINE)
+                collection_name=collection_id, vectors_config=VectorParams(size=self.models[collection_model].vector_size, distance=Distance.COSINE)
             )
 
-        return collection_id
+    def delete_collection(self, collection_id: str):
+        collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
+        assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
-    def delete_collection(self, collection_name: str):
-        collection = self.get_collection_metadata(collection_names=[collection_name])[0]
         self.vectors.delete_collection(collection_name=collection.id)
         self.vectors.delete(collection_name=METADATA_COLLECTION, points_selector=PointIdsList(points=[collection.id]))
 
-    def get_chunks(self, collection_name: str, filter: Optional[Filter] = None) -> List[Chunk]:
+    def delete_chunks(self, collection_id: str, filter: Optional[Filter] = None):
+        """
+        Delete chunks from a collection.
+
+        Args:
+            collection_id (str): The id of the collection to delete chunks from.
+            filter (Optional[Filter]): Optional filter to apply when deleting chunks. If no filter is provided, all chunks will be deleted.
+        """
+        collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
+        self.vectors.delete(collection_name=collection.id, points_selector=FilterSelector(filter=filter))
+
+    def get_chunks(self, collection_id: str, filter: Optional[Filter] = None) -> List[Chunk]:
         """
         Get chunks from a collection.
 
         Args:
-            collection_name (str): The name of the collection to get chunks from.
+            collection_id (str): The id of the collection to get chunks from.
             filter (Optional[Filter]): Optional filter to apply when retrieving chunks.
 
         Returns:
             List[Chunk]: A list of Chunk objects containing the retrieved chunks.
         """
-        collection = self.get_collection_metadata(collection_names=[collection_name], type="all")[0]
+        collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
         chunks = self.vectors.scroll(collection_name=collection.id, with_payload=True, with_vectors=False, scroll_filter=filter)[0]
         for chunk in chunks:
-            chunk.payload["metadata"]["collection"] = collection.name
+            chunk.payload["metadata"]["collection"] = collection.id
         chunks = [Chunk(id=chunk.id, metadata=chunk.payload["metadata"], content=chunk.payload["page_content"]) for chunk in chunks]
 
         return chunks

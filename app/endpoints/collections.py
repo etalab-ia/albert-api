@@ -5,7 +5,6 @@ from fastapi import APIRouter, Response, Security, HTTPException
 
 from app.helpers import VectorStore
 from app.schemas.collections import Collection, Collections, CreateCollectionRequest
-from app.utils.data import delete_contents
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 
@@ -23,8 +22,12 @@ async def get_collections(collection: Optional[str] = None, user: str = Security
     """
 
     vectorstore = VectorStore(clients=clients, user=user)
+    try:
+        collection_ids = [collection] if collection else []
+        data = vectorstore.get_collection_metadata(collection_ids=collection_ids)
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    data = vectorstore.get_collection_metadata(collection_names=[collection])
     if collection:
         return data[0]
 
@@ -32,15 +35,16 @@ async def get_collections(collection: Optional[str] = None, user: str = Security
 
 
 @router.delete("/collections/{collection}")
-@router.delete("/collections")
 async def delete_collections(collection: Optional[str] = None, user: str = Security(check_api_key)) -> Response:
     """
-    Get private collections and relative files.
-    """
+    Delete private collections.
 
+    Args:
+        collection (str, optional): ID of the collection. If not provided, all collections for the user are deleted.
+    """
     vectorstore = VectorStore(clients=clients, user=user)
     try:
-        delete_contents(s3=clients["files"], vectorstore=vectorstore, collection_name=collection)
+        vectorstore.delete_collection(collection_id=collection)
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -49,7 +53,19 @@ async def delete_collections(collection: Optional[str] = None, user: str = Secur
 
 @router.post("/collections")
 async def create_collection(request: CreateCollectionRequest, user: str = Security(check_api_key)) -> Response:
+    """
+    Create a new private collection.
+
+    Args:
+        request (CreateCollectionRequest): Request body.
+    """
     vectorstore = VectorStore(clients=clients, user=user)
-    collection_id = vectorstore.create_collection(name=request.name, model=request.model)
+
+    try:
+        vectorstore.create_collection(
+            collection_id=request.id, collection_name=request.name, collection_model=request.model, collection_type=request.type
+        )
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     return Response(status_code=201)

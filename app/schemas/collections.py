@@ -24,6 +24,7 @@ class Collections(BaseModel):
 class CollectionRequest(BaseModel):
     name: str = Field(..., min_length=1)
     model: str = Field(...)
+    type: Literal[PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE] = Field(...)
 
     @field_validator("name", mode="before")
     def strip(cls, v):

@@ -1,4 +1,3 @@
-import base64
 from typing import Optional, Union
 import uuid
 
@@ -6,12 +5,9 @@ from botocore.exceptions import ClientError
 from fastapi import APIRouter, HTTPException, Response, Security, UploadFile
 from qdrant_client.http.models import FieldCondition, Filter, MatchAny
 
-
 from app.helpers import S3FileLoader, VectorStore
-from app.schemas.config import PUBLIC_COLLECTION_TYPE
 from app.schemas.files import File, Files, FilesRequest
 from app.utils.config import LOGGER
-from app.utils.data import delete_contents
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 
@@ -82,54 +78,48 @@ async def files(
     """
     data = list()
     vectorstore = VectorStore(clients=clients, user=user)
-    collection = vectorstore.get_collection_metadata(collection_names=[collection])[0]
-    if collection.type == PUBLIC_COLLECTION_TYPE:
-        if file:
-            raise HTTPException(status_code=404, detail="File not found.")
-        return Files(data=data)
-
-    objects = clients["files"].list_objects_v2(Bucket=collection.id).get("Contents", [])
-    objects = [object | clients["files"].head_object(Bucket=collection.id, Key=object["Key"])["Metadata"] for object in objects]
-    file_ids = [object["Key"] for object in objects]
-    filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=file_ids))])
+    collection = vectorstore.get_collection_metadata(collection_ids=[collection])[0]
+    filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=file))]) if file else None
     chunks = vectorstore.get_chunks(collection_name=collection.name, filter=filter)
 
-    for object in objects:
-        chunk_ids = list()
-        for chunk in chunks:
-            if chunk.metadata["file_id"] == object["Key"]:
-                chunk_ids.append(chunk.id)
+    data = list()
+    for chunk in chunks:
+        if chunk.metadata["file_id"] not in data:
+            data[chunk.metadata["file_id"]] = File(
+                id=chunk.metadata["file_id"],
+                object="file",
+                bytes=chunk.metadata["size"],
+                name=chunk.metadata["file_name"],
+                chunks=[chunk.id],
+                created_at=round(chunk.metadata["created_at"].timestamp()),
+            )
+        else:
+            data[chunk.metadata["file_id"]].chunks.append(chunk.id)
 
-        object = File(
-            id=object["Key"],
-            object="file",
-            bytes=object["Size"],
-            file_name=base64.b64decode(object["file_name"].encode("ascii")).decode("utf-8"),
-            chunks=chunk_ids,
-            created_at=round(object["LastModified"].timestamp()),
-        )
-        data.append(object)
-
-        if str(object.id) == file:
-            return object
-
-    LOGGER.debug(f"files: {data}")
-    if file:  # if loop pass without return data
-        raise HTTPException(status_code=404, detail="File not found.")
-
-    return Files(data=data)
+    if file:
+        if file not in data:
+            raise HTTPException(status_code=404, detail="File not found.")
+        else:
+            return data[file]
+    else:
+        data = list(data.values())
+        return Files(data=data)
 
 
 @router.delete("/files/{collection}/{file}")
-@router.delete("/files/{collection}")
 async def delete_file(collection: str, file: Optional[str] = None, user: str = Security(check_api_key)) -> Response:
     """
     Delete files and relative collections. Only files from private collections can be deleted.
+
+    Args:
+        collection (str): The collection name where the files will be deleted.
+        file (str): The file name to delete.
     """
 
     vectorstore = VectorStore(clients=clients, user=user)
     try:
-        delete_contents(s3=clients["files"], vectorstore=vectorstore, collection_name=collection, file=file)
+        filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=[file]))])
+        vectorstore.delete_chunks(collection_name=collection, filter=filter)
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
