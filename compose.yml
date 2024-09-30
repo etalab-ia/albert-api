@@ -35,19 +35,6 @@ services:
     volumes:
       - qdrant:/qdrant/storage
 
-  minio:
-    image: minio/minio:latest
-    restart: always
-    command: server /data --console-address ":9001"
-    environment:
-      - MINIO_ROOT_USER=minio
-      - MINIO_ROOT_PASSWORD=changeme
-    ports:
-      - 9000:9000
-      - 9001:9001
-    volumes:
-      - minio:/data
-
   redis:
     image: redis/redis-stack-server:7.2.0-v11
     restart: always
@@ -65,5 +52,4 @@ services:
 
 volumes:
   qdrant:
-  minio:
   redis:

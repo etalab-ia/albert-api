@@ -13,7 +13,6 @@ class Collection(BaseModel):
     user: Optional[str] = None
     description: Optional[str] = None
     created_at: Optional[int] = None
-    updated_at: Optional[int] = None
 
 
 class Collections(BaseModel):
@@ -24,7 +23,7 @@ class Collections(BaseModel):
 class CollectionRequest(BaseModel):
     name: str = Field(..., min_length=1)
     model: str = Field(...)
-    type: Literal[PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE] = Field(...)
+    type: Literal[PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE] = Field(PRIVATE_COLLECTION_TYPE)
 
     @field_validator("name", mode="before")
     def strip(cls, v):

@@ -1,18 +1,31 @@
 from typing import List
 import uuid
 
-from bs4 import BeautifulSoup
 from duckduckgo_search import DDGS
 import numpy as np
 import requests
 
+from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
+from app.helpers.parsers import HTMLParser
 from app.schemas.chunks import Chunk
 from app.schemas.search import Search
-from app.helpers.parsers import HTMLParser
 
 
 class SearchOnInternet:
-    LIMITED_DOMAINS = []
+    LIMITED_DOMAINS = [
+        "service-public.fr",
+        ".gouv.fr",
+        "france-identite.gouv.fr",
+        "caf.fr",
+        "info-retraite.fr",
+        "ameli.fr",
+        "education.gouv.fr",
+        "elysee.fr",
+        "vie-publique.fr",
+        "wikipedia.org",
+        "autoritedelaconcurrence.fr",
+    ]
+
     USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:10.0) Gecko/20100101 Firefox/10.0"
     PAGE_LOAD_TIMEOUT = 60
     CHUNK_SIZE = 1000
@@ -38,6 +51,10 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         self.parser = HTMLParser()
 
     def search(self, prompt: str, language_model: str, embeddings_model: str, n: int = 3) -> List:
+        parser = HTMLParser()
+        chunker = LangchainRecursiveCharacterTextSplitter(
+            chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
+        )
         query = self._get_web_query(prompt=prompt, language_model=language_model)
 
         with DDGS() as ddgs:
@@ -54,12 +71,9 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             except Exception:
                 continue
 
-            file = BeautifulSoup(response.text, "html.parser")
-
-            # @ TODO : change this
-            chunks = self.parser._html_to_chunks(
-                file=file, file_name=url, chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
-            )
+            # TODO change this
+            documents = parser.parse(file=response.text, file_name=url)
+            chunks = chunker.split(documents)
 
             documents.extend(chunks)
 

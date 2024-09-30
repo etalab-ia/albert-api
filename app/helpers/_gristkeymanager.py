@@ -1,6 +1,5 @@
 import datetime as dt
 
-from fastapi import HTTPException
 from grist_api import GristDocAPI
 from redis import Redis
 
@@ -55,14 +54,9 @@ class GristKeyManager(GristDocAPI):
 
         keys = []
         for record in records:
-            try:
-                if record.EXPIRATION:
-                    if record.EXPIRATION > dt.datetime.now().timestamp():
-                        keys.append(record.KEY)
-                else:
-                    keys.append(record.KEY)  # key without expiration
-            except AttributeError:
-                # @TODO : remove HTTPException here
-                raise HTTPException(status_code=500, detail="Invalid Grist table schema")
-
+            if record.EXPIRATION:
+                if record.EXPIRATION > dt.datetime.now().timestamp():
+                    keys.append(record.KEY)
+            else:
+                keys.append(record.KEY)  # key without expiration
         return keys

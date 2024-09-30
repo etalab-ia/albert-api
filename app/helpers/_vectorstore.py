@@ -21,7 +21,7 @@ from app.schemas.search import Search
 
 
 class VectorStore:
-    BATCH_SIZE = 32
+    BATCH_SIZE = 48
     FORBIDDEN_COLLECTION_NAMES = ["internet", "collections"]
 
     def __init__(self, clients: dict, user: str):
@@ -38,9 +38,8 @@ class VectorStore:
             model (str): The model to use for embeddings.
             collection_id (str): The id of the collection to add the documents to.
         """
-
         collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
-        assert collection.model != model, "Wrong model collection"
+        assert collection.model == model, "Wrong model collection"
 
         for i in range(0, len(documents), self.BATCH_SIZE):
             batch = documents[i : i + self.BATCH_SIZE]
@@ -74,7 +73,7 @@ class VectorStore:
 
         chunks = []
         for collection in collections:
-            assert collection.model != model, "Wrong model collection"
+            assert collection.model == model, "Wrong model collection"
 
             results = self.vectors.search(
                 collection_name=collection.id, query_vector=vector, limit=k, score_threshold=score_threshold, with_payload=True, query_filter=filter
@@ -134,7 +133,7 @@ class VectorStore:
 
         else:
             for collection_id in collection_ids:
-                must = [HasIdCondition(has_id=collection_id)]
+                must = [HasIdCondition(has_id=[collection_id])]
                 should = []
                 if type == "all":
                     should = [
@@ -163,7 +162,6 @@ class VectorStore:
                 user=metadata[i].payload.get("user"),
                 description=metadata[i].payload.get("description"),
                 created_at=metadata[i].payload.get("created_at"),
-                updated_at=metadata[i].payload.get("updated_at"),
             )
 
         return metadata
@@ -186,34 +184,23 @@ class VectorStore:
         assert collection_type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
         collections = self.get_collection_metadata(collection_ids=[collection_id], type="all", errors="ignore")
+        assert not collections, "Collection already exists."
 
-        # if collection already exists
-        if collections:
-            collection = collections[0]
-            assert collection.model == collection_model, "Wrong collection model."
+        # create metadata
+        metadata = {
+            "name": collection_name,
+            "type": collection_type,
+            "model": collection_model,
+            "user": self.user,
+            "description": None,
+            "created_at": round(time.time()),
+        }
+        self.vectors.upsert(collection_name=METADATA_COLLECTION, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
 
-            # update metadata
-            metadata = dict(collection)
-            metadata["updated_at"] = round(time.time())
-            self.vectors.upsert(collection_name=METADATA_COLLECTION, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
-
-        else:
-            # create metadata
-            metadata = {
-                "name": collection_name,
-                "type": collection_type,
-                "model": collection_model,
-                "user": self.user,
-                "description": None,
-                "created_at": round(time.time()),
-                "updated_at": round(time.time()),
-            }
-            self.vectors.upsert(collection_name=METADATA_COLLECTION, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
-
-            # create collection
-            self.vectors.create_collection(
-                collection_name=collection_id, vectors_config=VectorParams(size=self.models[collection_model].vector_size, distance=Distance.COSINE)
-            )
+        # create collection
+        self.vectors.create_collection(
+            collection_name=collection_id, vectors_config=VectorParams(size=self.models[collection_model].vector_size, distance=Distance.COSINE)
+        )
 
     def delete_collection(self, collection_id: str):
         collection = self.get_collection_metadata(collection_ids=[collection_id])[0]

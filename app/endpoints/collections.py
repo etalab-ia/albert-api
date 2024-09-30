@@ -1,8 +1,8 @@
 from typing import Optional, Union
-
+import uuid
 
 from fastapi import APIRouter, Response, Security, HTTPException
-
+from fastapi.responses import JSONResponse
 from app.helpers import VectorStore
 from app.schemas.collections import Collection, Collections, CollectionRequest
 from app.utils.lifespan import clients
@@ -34,6 +34,26 @@ async def get_collections(collection: Optional[str] = None, user: str = Security
     return Collections(data=data)
 
 
+@router.post("/collections")
+async def create_collection(request: CollectionRequest, user: str = Security(check_api_key)) -> Response:
+    """
+    Create a new private collection.
+
+    Args:
+        request (CreateCollectionRequest): Request body.
+    """
+    vectorstore = VectorStore(clients=clients, user=user)
+    collection_id = str(uuid.uuid4())
+    try:
+        vectorstore.create_collection(
+            collection_id=collection_id, collection_name=request.name, collection_model=request.model, collection_type=request.type
+        )
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return JSONResponse(status_code=201, content={"id": collection_id})
+
+
 @router.delete("/collections/{collection}")
 async def delete_collections(collection: Optional[str] = None, user: str = Security(check_api_key)) -> Response:
     """
@@ -49,23 +69,3 @@ async def delete_collections(collection: Optional[str] = None, user: str = Secur
         raise HTTPException(status_code=400, detail=str(e))
 
     return Response(status_code=204)
-
-
-@router.post("/collections")
-async def create_collection(request: CollectionRequest, user: str = Security(check_api_key)) -> Response:
-    """
-    Create a new private collection.
-
-    Args:
-        request (CreateCollectionRequest): Request body.
-    """
-    vectorstore = VectorStore(clients=clients, user=user)
-
-    try:
-        vectorstore.create_collection(
-            collection_id=request.id, collection_name=request.name, collection_model=request.model, collection_type=request.type
-        )
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    return Response(status_code=201)

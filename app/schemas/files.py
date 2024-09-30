@@ -1,9 +1,10 @@
-from typing import Dict, List, Literal, Optional
+from typing import List, Literal, Optional
+import json
+from uuid import UUID
 
-from fastapi import Form
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.utils.variables import CHUNKERS, DEFAULT_CHUNKER, SUPPORTED_FILE_TYPES
+from app.utils.variables import CHUNKERS, SUPPORTED_FILE_TYPES
 
 
 class File(BaseModel):
@@ -11,7 +12,7 @@ class File(BaseModel):
     id: str
     bytes: int
     name: str
-    chunks: Optional[list] = []
+    chunks: list = []
     created_at: int
 
 
@@ -21,32 +22,43 @@ class Files(BaseModel):
 
 
 class ChunkerArgs(BaseModel):
-    chunk_size: int = Form(512)
-    chunk_overlap: int = Form(0)
-    length_function: Literal[len] = len
-    is_separator_regex: bool = False
-    separators: List[str] = ["\n\n", "\n"]
+    chunk_size: int = Field(512)
+    chunk_overlap: int = Field(0)
+    length_function: Literal["len"] = Field("len")
+    is_separator_regex: bool = Field(False)
+    separators: List[str] = Field(["\n\n", "\n", ". ", " "])
 
     # additional arguments
-    chunk_min_size: Optional[int] = Form(None)
+    chunk_min_size: Optional[int] = Field(0)
 
 
 class Chunker(BaseModel):
-    name: Literal[*CHUNKERS] = DEFAULT_CHUNKER
-    args: ChunkerArgs
+    name: Optional[Literal[*CHUNKERS]] = Field(None)
+    args: Optional[ChunkerArgs] = Field(None)
 
 
 class FilesRequest(BaseModel):
-    collection: str = Form(...)
-    embeddings_model: str = Form(...)
-    chunker: Chunker
-    file_type: Optional[Literal[*SUPPORTED_FILE_TYPES]] = None  # TODO: try with tuple(List)
-    file_name: Optional[str] = Field(None, min_length=1)
+    collection: UUID = Field(...)
+    chunker: Optional[Chunker] = Field(None)
+    file_type: Optional[Literal[*SUPPORTED_FILE_TYPES]] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_to_json(cls, value):
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
+
+    @field_validator("collection", mode="after")
+    @classmethod
+    def convert_to_string(cls, value):
+        return str(value)
 
 
 class Json(BaseModel):
+    title: str
     text: str
-    metadata: Optional[Dict] = None
+    metadata: dict = {}
 
 
 class JsonFile(BaseModel):

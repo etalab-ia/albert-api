@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Response, Security
 
 from app.endpoints import chat, chunks, collections, completions, embeddings, files, models, search
+from app.helpers import ContentSizeLimitMiddleware
 from app.utils.config import APP_CONTACT_EMAIL, APP_CONTACT_URL, APP_DESCRIPTION, APP_VERSION
 from app.utils.lifespan import lifespan
 from app.utils.security import check_api_key
@@ -23,6 +24,8 @@ def health(user: str = Security(check_api_key)):
 
     return Response(status_code=200)
 
+
+app.add_middleware(ContentSizeLimitMiddleware)
 
 app.include_router(models.router, tags=["Models"], prefix="/v1")
 app.include_router(chat.router, tags=["Chat"], prefix="/v1")

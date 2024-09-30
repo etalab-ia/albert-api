@@ -1,4 +1,5 @@
 from typing import List
+from io import BytesIO
 
 from bs4 import BeautifulSoup
 from langchain.docstore.document import Document as LangchainDocument
@@ -18,7 +19,7 @@ class HTMLParser(BaseParser):
     def __init__(self):
         pass
 
-    def parse(self, file: BeautifulSoup) -> List[LangchainDocument]:
+    def parse(self, file: BytesIO) -> List[LangchainDocument]:
         """
         Parse a HTML file and converts it into a list of Langchain documents.
 
@@ -28,6 +29,9 @@ class HTMLParser(BaseParser):
         Returns:
             List[LangchainDocument]: List of Langchain documents.
         """
+
+        file = self.file.read().decode("utf-8")
+        file = BeautifulSoup(file, "html.parser")
 
         for element in file.descendants:
             if element.name in ["h1", "h2"]:
@@ -59,7 +63,6 @@ class HTMLParser(BaseParser):
         title = max([(text, len(text.split())) for text in title.split(" - ")], key=lambda x: x[1])[0]
         text = "\n".join(self.EXTRACTED_TEXT).strip()
 
-        metadata = {"title": title}
-        documents = [LangchainDocument(page_content=self.clean(text), metadata=metadata)]
+        documents = [LangchainDocument(page_content=self.clean(text), metadata={"title": title})]
 
         return documents

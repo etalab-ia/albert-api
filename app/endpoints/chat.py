@@ -33,7 +33,6 @@ async def chat_completions(request: ChatCompletionRequest, user: str = Security(
     if not request["stream"]:
         async_client = httpx.AsyncClient(timeout=20)
         response = await async_client.request(method="POST", url=url, headers=headers, json=request)
-        print(response.text)
         response.raise_for_status()
         data = response.json()
         return ChatCompletion(**data)
