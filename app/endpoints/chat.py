@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 import httpx
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
-from app.schemas.config import LANGUAGE_MODEL_TYPE
+from app.utils.variables import LANGUAGE_MODEL_TYPE
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 

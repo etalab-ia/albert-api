@@ -1,6 +1,6 @@
 from ._gristkeymanager import GristKeyManager
-from ._useinternet import UseInternet
+from ._searchoninternet import SearchOnInternet
+from ._fileuploader import FileUploader
 from ._vectorstore import VectorStore
-from ._uploadfile import UploadFile
 
-__all__ = ["GristKeyManager", "UseInternet", "VectorStore", "UploadFile"]
+__all__ = ["GristKeyManager", "SearchOnInternet", "VectorStore", "FileUploader"]

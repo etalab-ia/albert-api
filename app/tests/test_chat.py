@@ -4,7 +4,7 @@ import logging
 import pytest
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk
-from app.schemas.config import LANGUAGE_MODEL_TYPE
+from app.utils.variables import LANGUAGE_MODEL_TYPE
 
 
 @pytest.mark.usefixtures("args", "session")

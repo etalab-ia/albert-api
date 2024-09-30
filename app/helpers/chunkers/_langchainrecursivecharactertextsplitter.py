@@ -2,12 +2,12 @@ from typing import List, Optional
 import uuid
 
 from langchain.docstore.document import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter as LangChainRecursiveCharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from app.schemas.chunks import Chunk
 
 
-class RecursiveCharacterTextSplitter(LangChainRecursiveCharacterTextSplitter):
+class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
     def __init__(self, chunk_min_size: Optional[int] = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.chunk_min_size = chunk_min_size

@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE
 from app.schemas.search import Search, Searches
 
 

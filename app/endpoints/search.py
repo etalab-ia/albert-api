@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Security
+from fastapi import APIRouter, HTTPException, Security
 
-from app.helpers import VectorStore, UseInternet
+from app.helpers import VectorStore, SearchOnInternet
 from app.schemas.search import Searches, SearchRequest
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
@@ -21,17 +21,22 @@ async def search(request: SearchRequest, user: str = Security(check_api_key)) ->
         Chunks: The chunks.
     """
 
-    use_internet = bool(request.collections.pop("internet"))
+    search_on_internet = bool(request.collections.pop("internet"))
 
     vectorstore = VectorStore(clients=clients, user=user)
-    data = vectorstore.search(
-        prompt=request.prompt, model=request.model, collection_names=request.collections, k=request.k, score_threshold=request.score_threshold
-    )
+    try:
+        data = vectorstore.search(
+            prompt=request.prompt, model=request.model, collection_names=request.collections, k=request.k, score_threshold=request.score_threshold
+        )
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    if use_internet:
-        search = UseInternet()
-        data.extend(search.search_internet(prompt=request.prompt, n=4))
-
-    data = sorted(data, key=lambda x: x.score, reverse=False)[: request.k]
+    if search_on_internet:
+        internet = SearchOnInternet()
+        try:
+            data.extend(internet.search(prompt=request.prompt, n=4))
+        except AssertionError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        data = sorted(data, key=lambda x: x.score, reverse=False)[: request.k]
 
     return Searches(data=data)

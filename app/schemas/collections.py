@@ -2,7 +2,7 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.schemas.config import PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
+from app.utils.variables import PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 
 
 class Collection(BaseModel):

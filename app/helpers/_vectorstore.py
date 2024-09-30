@@ -1,8 +1,7 @@
 import time
 from typing import List, Optional
 
-from fastapi import HTTPException
-from langchain.docstore.document import Document
+from langchain.docstore.document import Document as LangchainDocument
 from qdrant_client.http.models import (
     Distance,
     FieldCondition,
@@ -17,7 +16,7 @@ from qdrant_client.http.models import (
 
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 from app.schemas.search import Search
 
 
@@ -30,7 +29,7 @@ class VectorStore:
         self.models = clients["models"]
         self.user = user
 
-    def from_documents(self, documents: List[Document], model: str, collection_id: str) -> None:
+    def from_documents(self, documents: List[LangchainDocument], model: str, collection_id: str) -> None:
         """
         Add documents to a collection.
 
@@ -74,7 +73,6 @@ class VectorStore:
         vector = response.data[0].embedding
 
         chunks = []
-
         for collection in collections:
             assert collection.model != model, "Wrong model collection"
 
@@ -87,12 +85,12 @@ class VectorStore:
 
         # sort by similarity score and get top k
         chunks = sorted(chunks, key=lambda x: x.score, reverse=True)[:k]
-        data = [
+        searches = [
             Search(score=chunk.score, chunk=Chunk(id=chunk.id, content=chunk.payload["page_content"], metadata=chunk.payload["metadata"]))
             for chunk in chunks
         ]
 
-        return data
+        return searches
 
     def get_collection_metadata(self, collection_ids: List[str] = [], type: str = "all", errors: str = "raise") -> List[Collection]:
         """
@@ -101,15 +99,19 @@ class VectorStore:
         Args:
             collection_ids (List[str]): List of collection ids to retrieve metadata for. If is an empty list, all collections will be considered.
             type (str): The type of collections to get. "all" (default) will get all collections. "public" will get only public collections. "private" will get only private collections.
-            errors (str): How to handle errors. "raise" (default) will raise an HTTPException if a collection is not found. "ignore" will skip collections that are not found.
+            errors (str): How to handle errors. "raise" (default) will raise an AssertionException if a collection is not found. "ignore" will skip collections that are not found.
 
         Returns:
             List[Collection]: A list of Collection objects containing the metadata for the specified collections.
         """
-        assert errors in ["raise", "ignore"], "errors must be 'raise' or 'ignore'"
-        assert type in ["all", PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE], "type must be 'all', 'public' or 'private'"
+        assert errors in ["raise", "ignore"], "Errors argument must be 'raise' or 'ignore'"
+        assert type in ["all", PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE], "Type must be 'all', 'public' or 'private'."
 
         metadata = []
+
+        # sanity check: remove collection that does not exist
+        existing_collection_ids = [collection.name for collection in self.vectors.get_collections().collections]
+
         # if no collection ids are provided, get all collections
         if not collection_ids:
             if type == "all":
@@ -127,6 +129,7 @@ class VectorStore:
 
             filter = Filter(must=must, should=should)
             data = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter)[0]
+            data = [collection for collection in data if collection.id in existing_collection_ids]
             metadata.extend(data)
 
         else:
@@ -146,14 +149,10 @@ class VectorStore:
 
                 filter = Filter(must=must, should=should)
                 data = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter)[0]
-                # LOGGER.debug(f"{collection} collection: {data}")
-                if not data and errors == "raise":
-                    raise HTTPException(status_code=404, detail=f"Collection {collection_id} not found")
+                data = [collection for collection in data if collection.id in existing_collection_ids]
+                if not data:
+                    assert errors == "ignore", "Collection not found"
                 metadata.extend(data)
-
-        # sanity check: remove collection that does not exist
-        existing_collection_ids = [collection.name for collection in self.vectors.get_collections().collections]
-        metadata = [collection for collection in metadata if collection.id in existing_collection_ids]
 
         for i in range(len(metadata)):
             metadata[i] = Collection(

@@ -1,13 +1,11 @@
 from typing import Optional, Union
 import uuid
 
-from botocore.exceptions import ClientError
 from fastapi import APIRouter, HTTPException, Response, Security, UploadFile
 from qdrant_client.http.models import FieldCondition, Filter, MatchAny
 
-from app.helpers import S3FileLoader, VectorStore
+from app.helpers import FileUploader, VectorStore
 from app.schemas.files import File, Files, FilesRequest
-from app.utils.config import LOGGER
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 
@@ -38,30 +36,29 @@ async def upload_file(request: FilesRequest, file: UploadFile, user: str = Secur
     - **files** : Files to upload.
     """
 
-    loader = S3FileLoader(
-        s3=clients["files"], chunk_size=request.chunk_size, chunk_overlap=request.chunk_overlap, chunk_min_size=request.chunk_min_size
-    )
-    vectorstore = VectorStore(clients=clients, user=user)
-
-    try:
-        clients["files"].head_bucket(Bucket=request.collection)
-    except ClientError:
-        clients["files"].create_bucket(Bucket=request.collection)
-
     file_id = str(uuid.uuid4())
     file_name = file.filename.strip()
 
     try:
-        # convert files into chunks (Langchain documents format)
-        documents = loader._get_elements(file_id=file_id, bucket=request.collection)
-        for document in documents:
-            document.id = str(uuid.uuid4())
-        # create vectors from documents
-        vectorstore.from_documents(documents=documents, model=request.embeddings_model, collection_name=request.collection)
+        uploader = FileUploader(
+            clients=clients, user=user, file=file, collection_id=request.collection_id, file_name=request.file_name, file_type=request.file_type
+        )
 
+        # load
+        file = uploader.load()
+
+        # parse
+        documents = uploader.parse(file=file)
+
+        # chunk
+        chunks = uploader.chunk(chunker_name=request.chunker.name, chunker_args=request.chunker.args)
+
+        # embed
+        uploader.embed(model=request.embeddings_model, collection_id=request.collection)
+
+    # TODO: replace exception by AssertionError after catch every possible errors
     except Exception as e:
-        LOGGER.error(f"upload file {file_name}:\n{e}")
-        raise HTTPException(status_code=400, detail=f"error during file conversion: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
     return Response(status_code=201)
 
@@ -80,7 +77,11 @@ async def files(
     vectorstore = VectorStore(clients=clients, user=user)
     collection = vectorstore.get_collection_metadata(collection_ids=[collection])[0]
     filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=file))]) if file else None
-    chunks = vectorstore.get_chunks(collection_name=collection.name, filter=filter)
+
+    try:
+        chunks = vectorstore.get_chunks(collection_name=collection.name, filter=filter)
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     data = list()
     for chunk in chunks:
@@ -119,7 +120,7 @@ async def delete_file(collection: str, file: Optional[str] = None, user: str = S
     vectorstore = VectorStore(clients=clients, user=user)
     try:
         filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=[file]))])
-        vectorstore.delete_chunks(collection_name=collection, filter=filter)
+        vectorstore.delete_chunks(collection_id=collection, filter=filter)
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

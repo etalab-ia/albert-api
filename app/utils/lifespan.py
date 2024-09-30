@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from openai import OpenAI
 import requests
 
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION
 from app.schemas.models import Model, Models
 from app.utils.config import CONFIG, LOGGER
 
@@ -114,7 +114,6 @@ async def lifespan(app: FastAPI):
         raise ValueError("No model can be reached.")
 
     # cache
-
     from redis import Redis
 
     clients["cache"] = Redis(**CONFIG.databases.cache.args)
@@ -128,16 +127,6 @@ async def lifespan(app: FastAPI):
 
     if not clients["vectors"].collection_exists(collection_name=METADATA_COLLECTION):
         clients["vectors"].create_collection(collection_name=METADATA_COLLECTION, vectors_config={}, on_disk_payload=False)
-
-    # files
-    import boto3
-    from botocore.client import Config
-
-    clients["files"] = boto3.client(
-        service_name="s3",
-        config=Config(signature_version="s3v4"),
-        **CONFIG.databases.files.args,
-    )
 
     # auth
     if CONFIG.auth:

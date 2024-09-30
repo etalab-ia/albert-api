@@ -4,7 +4,7 @@ import os
 import pytest
 
 from app.schemas.collections import Collection, Collections
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE
 from app.schemas.files import File, Files, Upload, Uploads
 from app.schemas.models import Model, Models
 from app.utils.security import encode_string

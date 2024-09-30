@@ -6,12 +6,12 @@ from duckduckgo_search import DDGS
 import numpy as np
 import requests
 
-from app.helpers import UniversalParser
 from app.schemas.chunks import Chunk
 from app.schemas.search import Search
+from app.helpers.parsers import HTMLParser
 
 
-class UseInternet:
+class SearchOnInternet:
     LIMITED_DOMAINS = []
     USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:10.0) Gecko/20100101 Firefox/10.0"
     PAGE_LOAD_TIMEOUT = 60
@@ -35,7 +35,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
 
     def __init__(self, clients: dict):
         self.clients = clients
-        self.parser = UniversalParser()
+        self.parser = HTMLParser()
 
     def search(self, prompt: str, language_model: str, embeddings_model: str, n: int = 3) -> List:
         query = self._get_web_query(prompt=prompt, language_model=language_model)
@@ -55,6 +55,8 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
                 continue
 
             file = BeautifulSoup(response.text, "html.parser")
+
+            # @ TODO : change this
             chunks = self.parser._html_to_chunks(
                 file=file, file_name=url, chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
             )

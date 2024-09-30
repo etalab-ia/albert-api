@@ -7,6 +7,7 @@ from app.utils.security import check_api_key
 router = APIRouter()
 
 
+# @ TODO pass to async with httpsx
 @router.post("/completions")
 async def completions(request: CompletionRequest, user: str = Security(check_api_key)) -> Completions:
     """

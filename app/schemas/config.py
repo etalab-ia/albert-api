@@ -2,12 +2,7 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-# Variables
-METADATA_COLLECTION = "collections"
-PUBLIC_COLLECTION_TYPE = "public"
-PRIVATE_COLLECTION_TYPE = "private"
-EMBEDDINGS_MODEL_TYPE = "text-embeddings-inference"
-LANGUAGE_MODEL_TYPE = "text-generation"
+from app.utils.variables import LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE
 
 
 class Key(BaseModel):
@@ -35,15 +30,9 @@ class CacheDB(BaseModel):
     args: dict
 
 
-class FilesDB(BaseModel):
-    type: Literal["minio"] = "minio"
-    args: dict
-
-
 class Databases(BaseModel):
     cache: CacheDB
     vectors: VectorDB
-    files: FilesDB
 
 
 class Config(BaseModel):

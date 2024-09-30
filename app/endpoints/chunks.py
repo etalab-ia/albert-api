@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Security
+from fastapi import APIRouter, HTTPException, Security
 from qdrant_client.http.models import Filter, HasIdCondition
 
 from app.helpers._vectorstore import VectorStore
@@ -17,7 +17,10 @@ async def get_chunk(collection: str, chunk: str, user: str = Security(check_api_
     vectorstore = VectorStore(clients=clients, user=user)
     ids = [chunk]
     filter = Filter(must=[HasIdCondition(has_id=ids)])
-    chunks = vectorstore.get_chunks(collection_name=collection, filter=filter)
+    try:
+        chunks = vectorstore.get_chunks(collection_name=collection, filter=filter)
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return chunks[0]
 
 
@@ -29,5 +32,8 @@ async def get_chunks(collection: str, request: ChunkRequest, user: str = Securit
     vectorstore = VectorStore(clients=clients, user=user)
     ids = request.chunks
     filter = Filter(must=[HasIdCondition(has_id=ids)])
-    chunks = vectorstore.get_chunks(collection_name=collection, filter=filter)
+    try:
+        chunks = vectorstore.get_chunks(collection_name=collection, filter=filter)
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return Chunks(data=chunks)

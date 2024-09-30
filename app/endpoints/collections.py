@@ -4,7 +4,7 @@ from typing import Optional, Union
 from fastapi import APIRouter, Response, Security, HTTPException
 
 from app.helpers import VectorStore
-from app.schemas.collections import Collection, Collections, CreateCollectionRequest
+from app.schemas.collections import Collection, Collections, CollectionRequest
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 
@@ -52,7 +52,7 @@ async def delete_collections(collection: Optional[str] = None, user: str = Secur
 
 
 @router.post("/collections")
-async def create_collection(request: CreateCollectionRequest, user: str = Security(check_api_key)) -> Response:
+async def create_collection(request: CollectionRequest, user: str = Security(check_api_key)) -> Response:
     """
     Create a new private collection.
 

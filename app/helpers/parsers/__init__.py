@@ -1,6 +1,7 @@
-from ._docxparser import DocxParser
 from ._htmlparser import HTMLParser
 from ._jsonparser import JSONParser
 from ._pdfparser import PDFParser
+from ._baseparser import BaseParser
 
-__all__ = ["HTMLParser", "JSONParser", "DocxParser", "PDFParser"]
+
+__all__ = ["HTMLParser", "JSONParser", "PDFParser", "BaseParser"]

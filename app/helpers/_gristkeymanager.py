@@ -62,6 +62,7 @@ class GristKeyManager(GristDocAPI):
                 else:
                     keys.append(record.KEY)  # key without expiration
             except AttributeError:
+                # @TODO : remove HTTPException here
                 raise HTTPException(status_code=500, detail="Invalid Grist table schema")
 
         return keys
