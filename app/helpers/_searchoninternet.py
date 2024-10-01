@@ -1,4 +1,5 @@
-from typing import List
+from io import BytesIO
+from typing import List, Optional
 import uuid
 
 from duckduckgo_search import DDGS
@@ -49,18 +50,20 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
     def __init__(self, clients: dict):
         self.clients = clients
         self.parser = HTMLParser()
+        # TODO: change this after create client manager class
+        self.language_model = [model for model in self.clients["models"].keys() if self.clients["models"][model].search_internet][0]
 
-    def search(self, prompt: str, language_model: str, embeddings_model: str, n: int = 3) -> List:
+    def search(self, prompt: str, embeddings_model: str, n: int = 3, score_threshold: Optional[float] = None) -> List:
         parser = HTMLParser()
         chunker = LangchainRecursiveCharacterTextSplitter(
             chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
         )
-        query = self._get_web_query(prompt=prompt, language_model=language_model)
+        query = self._get_web_query(prompt=prompt)
 
         with DDGS() as ddgs:
             results = list(ddgs.text(query, region="fr-fr", safesearch="On", max_results=n))
 
-        documents = []
+        chunks = []
         for result in results:
             url = result["href"].lower()
 
@@ -71,14 +74,16 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             except Exception:
                 continue
 
-            # TODO change this
-            documents = parser.parse(file=response.text, file_name=url)
-            chunks = chunker.split(documents)
+            file = BytesIO(response.text.encode("utf-8"))
+            documents = parser.parse(file=file)
+            for document in documents:
+                document.metadata["file_name"] = url
 
-            documents.extend(chunks)
+            document_chunks = chunker.split(documents)
+            chunks.extend(document_chunks)
 
         data = []
-        if len(documents) == 0:
+        if len(chunks) == 0:
             return data
 
         response = self.clients["models"][embeddings_model].embeddings.create(input=[prompt], model=embeddings_model)
@@ -94,6 +99,8 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         cosine = np.dot(vectors, vector) / (np.linalg.norm(vectors, axis=1) * np.linalg.norm(vector))
 
         for chunk, score in zip(documents, cosine):
+            if score_threshold and score < score_threshold:
+                continue
             search = Search(score=score, chunk=Chunk(id=str(uuid.uuid4()), content=chunk.page_content, metadata=chunk.metadata))
             data.append(search)
 
@@ -101,8 +108,8 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
 
     def _get_web_query(self, prompt: str, language_model: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        response = self.clients["models"][language_model].chat.completions.create(
-            messages=[{"role": "user", "content": prompt}], model=language_model, temperature=0.2, stream=False
+        response = self.clients["models"][self.language_model].chat.completions.create(
+            messages=[{"role": "user", "content": prompt}], model=self.language_model, temperature=0.2, stream=False
         )
         query = response.choices[0].message.content
 

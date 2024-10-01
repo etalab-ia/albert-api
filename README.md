@@ -8,32 +8,46 @@ Albert API est une API open source d'IA générative développée par Etalab. El
 
 ### OpenAI conventions
 
-En ce basant sur les conventions définies par OpenAI, l'API Albert expose des endpoints qui peuvent être appelés avec le [client officiel python d'OpenAI](https://github.com/openai/openai-python/tree/main). Ce formalisme permet d'intégrer facilement l'API Albert avec des bibliothèques tierces comme [Langchain](https://www.langchain.com/) ou [LlamaIndex](https://www.llamaindex.ai/).
+En se basant sur les conventions définies par OpenAI, l'API Albert expose des endpoints qui peuvent être appelés avec le [client officiel python d'OpenAI](https://github.com/openai/openai-python/tree/main). Ce formalisme permet d'intégrer facilement l'API Albert avec des bibliothèques tierces comme [Langchain](https://www.langchain.com/) ou [LlamaIndex](https://www.llamaindex.ai/).
 
 ## ⚙️ Fonctionnalités
 
 ### Converser avec un modèle de langage (chat memory)
 
+L'API Albert permet de converser avec différents modèles de langage.
+
 <a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/chat_completions.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
-Albert API intègre nativement la mémorisation des messages pour les conversations sans surcharger d'arguments le endpoint `/v1/chat/completions` par rapport à la documentation d'OpenAI. Cela consiste à envoyer à chaque requête au modèle l'historique de la conversation pour lui fournir le contexte.
-
 ### Accéder à plusieurs modèles de langage (multi models)
+
+L'API Albert permet d'accéder à un ensemble de modèles de langage et d'embeddings grâce à une API unique.
 
 <a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/models.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
-Grâce à un fichier de configuration (*[config.example.yml](./config.example.yml)*) vous pouvez connecter autant d'API de modèles que vous le souhaitez. L'API Albert se charge de mutualiser l'accès à tous ces modèles dans une unique API. Vous pouvez obtenir la liste des différents modèles accessibles en appelant le endpoint `/v1/models`.
+### Interroger vos documents (RAG)
 
-### Interroger des documents (RAG)
+L'API Albert permet d'interroger des documents dans une base vectorielle. Ces documents sont classés dans des collections. Vous pouvez créer vos collections privées et utilisé les collections publiques déjà existantes. Enfin une collection "internet" permet d'effectuer une recherche sur internet pour compléter la réponse du modèle.
 
 <a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/retrival_augmented_generation.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
+
+### Importer sa base de connaissances dans Albert (knowledge database)
+
+L'API Albert permet d'importer sa base de connaissances dans une base vectorielle. Cette base vectorielle peut ensuite être utilisée pour faire de la RAG (Retrieval Augmented Generation).
+
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/import_knowledge_database.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
 ## 🧑‍💻 Contribuez au projet
 
 Albert API est un projet open source, vous pouvez contribuez au projet, veuillez lire notre [guide de contribution](./CONTRIBUTING.md).
+
+## Installation
+
+Pour déployer l'API Albert sur votre propre infrastructure, suivez la [documentation](./docs/deployment.md).

@@ -18,7 +18,7 @@ class File(BaseModel):
 
 class Files(BaseModel):
     object: Literal["list"] = "list"
-    data: List[File]
+    data: List[str]
 
 
 class ChunkerArgs(BaseModel):

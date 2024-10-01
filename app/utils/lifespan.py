@@ -89,6 +89,7 @@ async def lifespan(app: FastAPI):
         client = OpenAI(base_url=model.url, api_key=model.key, timeout=10)
         client.type = model.type
         client.models.list = partial(get_models_list, client)
+        client.search_internet = model.search_internet
 
         try:
             response = client.models.list()
@@ -100,6 +101,7 @@ async def lifespan(app: FastAPI):
             continue
 
         models.append(model.id)
+
         # get vector size
         if client.type == EMBEDDINGS_MODEL_TYPE:
             response = client.embeddings.create(model=model.id, input="hello world")

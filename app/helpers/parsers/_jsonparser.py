@@ -34,7 +34,8 @@ class JSONParser(BaseParser):
         document = [
             LangchainDocument(
                 page_content=self.clean(document.text),
-                metadata=document.metadata | {"file_id": str(uuid.uuid4()), "file_name": document.title, "file_size": len(document.text)},
+                metadata=document.metadata
+                | {"file_id": str(uuid.uuid4()), "file_name": document.title, "file_size": len(document.text.encode("utf-8"))},
             )
             for document in file.documents
         ]

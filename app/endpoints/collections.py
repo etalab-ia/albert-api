@@ -1,46 +1,24 @@
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 import uuid
+from uuid import UUID
 
-from fastapi import APIRouter, Response, Security, HTTPException
+from fastapi import APIRouter, HTTPException, Response, Security
 from fastapi.responses import JSONResponse
+
 from app.helpers import VectorStore
-from app.schemas.collections import Collection, Collections, CollectionRequest
+from app.schemas.collections import Collection, CollectionRequest, Collections
+from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
+from app.utils.variables import PUBLIC_COLLECTION_TYPE, INTERNET_COLLECTION_ID
 
 router = APIRouter()
 
 
-@router.get("/collections/{collection}")
-@router.get("/collections")
-async def get_collections(collection: Optional[str] = None, user: str = Security(check_api_key)) -> Union[Collection, Collections]:
-    """
-    Get list of collections.
-
-    Args:
-        collection (str): ID of the collection.
-    """
-
-    vectorstore = VectorStore(clients=clients, user=user)
-    try:
-        collection_ids = [collection] if collection else []
-        data = vectorstore.get_collection_metadata(collection_ids=collection_ids)
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    if collection:
-        return data[0]
-
-    return Collections(data=data)
-
-
 @router.post("/collections")
-async def create_collection(request: CollectionRequest, user: str = Security(check_api_key)) -> Response:
+async def create_collection(request: CollectionRequest, user: User = Security(check_api_key)) -> Response:
     """
-    Create a new private collection.
-
-    Args:
-        request (CreateCollectionRequest): Request body.
+    Create a new collection.
     """
     vectorstore = VectorStore(clients=clients, user=user)
     collection_id = str(uuid.uuid4())
@@ -54,14 +32,44 @@ async def create_collection(request: CollectionRequest, user: str = Security(che
     return JSONResponse(status_code=201, content={"id": collection_id})
 
 
-@router.delete("/collections/{collection}")
-async def delete_collections(collection: Optional[str] = None, user: str = Security(check_api_key)) -> Response:
+@router.get("/collections/{collection}")
+@router.get("/collections")
+async def get_collections(
+    collection: Optional[Union[UUID, Literal["internet"]]] = None, user: User = Security(check_api_key)
+) -> Union[Collection, Collections]:
     """
-    Delete private collections.
+    Get list of collections.
+    """
+    internet_collection = Collection(
+        id=INTERNET_COLLECTION_ID,
+        name=INTERNET_COLLECTION_ID,
+        model=None,
+        type=PUBLIC_COLLECTION_TYPE,
+        description="Use this collection to search on the internet.",
+    )
+    if collection == "internet":
+        return internet_collection
 
-    Args:
-        collection (str, optional): ID of the collection. If not provided, all collections for the user are deleted.
+    collection_ids = [str(collection)] if collection else []
+    vectorstore = VectorStore(clients=clients, user=user)
+    try:
+        data = vectorstore.get_collection_metadata(collection_ids=collection_ids)
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if collection:
+        return data[0]
+
+    data.append(internet_collection)
+    return Collections(data=data)
+
+
+@router.delete("/collections/{collection}")
+async def delete_collections(collection: UUID, user: User = Security(check_api_key)) -> Response:
     """
+    Delete a collection.
+    """
+    collection = str(collection)
     vectorstore = VectorStore(clients=clients, user=user)
     try:
         vectorstore.delete_collection(collection_id=collection)

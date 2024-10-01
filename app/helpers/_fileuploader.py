@@ -9,11 +9,18 @@ from app.helpers import VectorStore
 from app.helpers.chunkers import *
 from app.helpers.parsers import HTMLParser, JSONParser, PDFParser
 from app.schemas.chunks import Chunk
-from app.utils.variables import CHUNKERS, DEFAULT_CHUNKER, HTML_TYPE, JSON_TYPE, PDF_TYPE, PRIVATE_COLLECTION_TYPE, SUPPORTED_FILE_TYPES
+from app.schemas.security import User
+from app.utils.variables import (
+    CHUNKERS,
+    DEFAULT_CHUNKER,
+    HTML_TYPE,
+    JSON_TYPE,
+    PDF_TYPE,
+    SUPPORTED_FILE_TYPES,
+)
 
 
 class FileUploader:
-    MAX_FILE_SIZE = 536870912  # 512 MB
     TYPE_DICT = {
         "json": JSON_TYPE,
         "html": HTML_TYPE,
@@ -21,13 +28,12 @@ class FileUploader:
     }
 
     def __init__(
-        self, file: UploadFile, collection_id: str, clients: dict, user: str, file_name: Optional[str] = None, file_type: Optional[str] = None
+        self, file: UploadFile, collection_id: str, clients: dict, user: User, file_name: Optional[str] = None, file_type: Optional[str] = None
     ):
         self.clients = clients
         self.user = user
         self.collection_id = collection_id
         self.file_size = file.size
-        assert self.file_size < self.MAX_FILE_SIZE, f"File size exceeds the maximum limit of {self.MAX_FILE_SIZE} bytes"
         self.file = file.file.read()
         self.file_name = file_name.strip() if file_name else file.filename.strip()
         self.file_id = str(uuid.uuid4())
@@ -37,7 +43,7 @@ class FileUploader:
         assert self.file_type in SUPPORTED_FILE_TYPES, f"Unsupported file type: {self.file_type}"
 
         self.vectorstore = VectorStore(clients=self.clients, user=self.user)
-        collection = self.vectorstore.get_collection_metadata(collection_ids=[self.collection_id], type=PRIVATE_COLLECTION_TYPE)[0]
+        collection = self.vectorstore.get_collection_metadata(collection_ids=[self.collection_id])[0]
         self.model = collection.model
         self.metadata = {
             "file_id": self.file_id,
@@ -67,7 +73,7 @@ class FileUploader:
         chunker = globals()[chunker_name](**chunker_args)
 
         for document in documents:
-            document_chunks = chunker.chunk(document.page_content)
+            document_chunks = chunker.split_text(document.page_content)
             for chunk in document_chunks:
                 chunks.append(Chunk(id=str(uuid.uuid4()), content=chunk, metadata=document.metadata))
 

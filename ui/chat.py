@@ -1,4 +1,5 @@
 from openai import OpenAI
+import requests
 import streamlit as st
 
 from config import BASE_URL
@@ -29,9 +30,12 @@ with st.sidebar:
 
     st.title("RAG parameters")
     params["rag"]["embeddings_model"] = st.selectbox("Embeddings model", embeddings_models)
-    model_collections = [collection["id"] for collection in collections if collection["model"] == params["rag"]["embeddings_model"]]
+    model_collections = [
+        f"{collection["id"]} ({collection["name"]})" for collection in collections if collection["model"] == params["rag"]["embeddings_model"]
+    ] + ["internet"]
     if model_collections:
-        params["rag"]["collections"] = st.multiselect(label="Collections", options=model_collections, default=[model_collections[0]])
+        selected_collections = st.multiselect(label="Collections", options=model_collections, default=[model_collections[0]])
+        params["rag"]["collections"] = [collection.split(" ")[0] for collection in selected_collections]
         params["rag"]["k"] = st.number_input("Top K", value=3)
 
 # Main
@@ -62,8 +66,22 @@ if prompt := st.chat_input("Message to Albert"):
 
     with st.chat_message("assistant"):
         if rag:
-            params["sampling_params"]["tools"] = [{"function": {"name": "BaseRAG", "parameters": params["rag"]}, "type": "function"}]
-        stream = openai_client.chat.completions.create(stream=True, messages=st.session_state.messages, **params["sampling_params"])
+            data = {
+                "collections": params["rag"]["collections"],
+                "model": params["rag"]["embeddings_model"],
+                "k": params["rag"]["k"],
+                "prompt": prompt,
+            }
+            response = requests.post(f"{BASE_URL}/search", json=data, headers={"Authorization": f"Bearer {API_KEY}"})
+            assert response.status_code == 200
+            prompt_template = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"
+            chunks = "\n".join([result["chunk"]["content"] for result in response.json()["data"]])
+            prompt = prompt_template.format(prompt=prompt, chunks=chunks)
+            messages = st.session_state.messages[:-1] + [{"role": "user", "content": prompt}]
+        else:
+            messages = st.session_state.messages
+
+        stream = openai_client.chat.completions.create(stream=True, messages=messages, **params["sampling_params"])
         response = st.write_stream(stream)
 
     assistant_message = {"role": "assistant", "content": response}

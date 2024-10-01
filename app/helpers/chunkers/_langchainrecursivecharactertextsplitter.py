@@ -12,7 +12,7 @@ class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
         super().__init__(*args, **kwargs)
         self.chunk_min_size = chunk_min_size
 
-    def chunk(self, document: Document) -> List[Chunk]:
+    def split(self, document: Document) -> List[Chunk]:
         data = list()
         chunks = self.split_text(document.page_content)
 

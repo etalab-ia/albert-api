@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Security
 import httpx
 
 from app.schemas.completions import CompletionRequest, Completions
+from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 from app.utils.variables import LANGUAGE_MODEL_TYPE
@@ -10,7 +11,7 @@ router = APIRouter()
 
 
 @router.post("/completions")
-async def completions(request: CompletionRequest, user: str = Security(check_api_key)) -> Completions:
+async def completions(request: CompletionRequest, user: User = Security(check_api_key)) -> Completions:
     """
     Completion API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/completions/create for the API specification.

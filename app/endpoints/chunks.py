@@ -7,12 +7,13 @@ from app.helpers import VectorStore
 from app.schemas.chunks import Chunk, ChunkRequest, Chunks
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
+from app.schemas.security import User
 
 router = APIRouter()
 
 
 @router.get("/chunks/{collection}/{chunk}")
-async def get_chunk(collection: UUID, chunk: str, user: str = Security(check_api_key)) -> Chunk:
+async def get_chunk(collection: UUID, chunk: str, user: User = Security(check_api_key)) -> Chunk:
     """
     Get a single chunk.
     """
@@ -28,7 +29,7 @@ async def get_chunk(collection: UUID, chunk: str, user: str = Security(check_api
 
 
 @router.post("/chunks/{collection}")
-async def get_chunks(collection: UUID, request: ChunkRequest, user: str = Security(check_api_key)) -> Chunks:
+async def get_chunks(collection: UUID, request: ChunkRequest, user: User = Security(check_api_key)) -> Chunks:
     """
     Get multiple chunks.
     """

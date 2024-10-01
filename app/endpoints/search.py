@@ -1,42 +1,47 @@
 from fastapi import APIRouter, HTTPException, Security
 
-from app.helpers import VectorStore, SearchOnInternet
+from app.helpers import SearchOnInternet, VectorStore
 from app.schemas.search import Searches, SearchRequest
+from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
+from app.utils.variables import INTERNET_COLLECTION_ID
 
 router = APIRouter()
 
 
 @router.post("/search")
-async def search(request: SearchRequest, user: str = Security(check_api_key)) -> Searches:
+async def search(request: SearchRequest, user: User = Security(check_api_key)) -> Searches:
     """
     Similarity search for chunks in the vector store.
-
-    Args:
-        request (SearchRequest): The search request.
-        user (str): The user.
-
-    Returns:
-        Chunks: The chunks.
     """
 
-    search_on_internet = bool(request.collections.pop("internet"))
-
     vectorstore = VectorStore(clients=clients, user=user)
-    try:
-        data = vectorstore.search(
-            prompt=request.prompt, model=request.model, collection_names=request.collections, k=request.k, score_threshold=request.score_threshold
-        )
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    search_on_internet = True
+    search_on_collections = True
+    if len(request.collections) > 0:
+        if INTERNET_COLLECTION_ID in request.collections:
+            request.collections.remove(INTERNET_COLLECTION_ID)
+            if len(request.collections) == 0:
+                search_on_collections = False
+        else:
+            search_on_internet = False
 
-    if search_on_internet:
-        internet = SearchOnInternet()
+    if search_on_collections:
         try:
-            data.extend(internet.search(prompt=request.prompt, n=4))
+            data = vectorstore.search(prompt=request.prompt, collection_ids=request.collections, k=request.k, score_threshold=request.score_threshold)
         except AssertionError as e:
             raise HTTPException(status_code=400, detail=str(e))
+
+    if search_on_internet:
+        internet = SearchOnInternet(clients=clients)
+        if search_on_collections:
+            collection_model = vectorstore.get_collection_metadata(collection_ids=request.collections)[0].model
+        else:
+            collection_model = internet.embeddings_model
+            data = []
+
+        data.extend(internet.search(prompt=request.prompt, n=4, model=collection_model, score_threshold=request.score_threshold))
         data = sorted(data, key=lambda x: x.score, reverse=False)[: request.k]
 
     return Searches(data=data)

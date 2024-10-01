@@ -21,7 +21,6 @@ class ContentSizeLimitMiddleware:
     ):
         self.app = app
         self.max_content_size = max_content_size or self.MAX_CONTENT_SIZE
-        print(self.max_content_size)
 
     def receive_wrapper(self, receive):
         received = 0

@@ -1,4 +1,3 @@
-from typing import Optional, Union
 from uuid import UUID
 
 from fastapi import APIRouter, Body, HTTPException, Response, Security, UploadFile
@@ -8,7 +7,8 @@ from qdrant_client.http.models import FieldCondition, Filter, MatchAny
 
 from app.helpers import VectorStore
 from app.helpers._fileuploader import FileUploader
-from app.schemas.files import File, Files, FilesRequest, ChunkerArgs
+from app.schemas.files import ChunkerArgs, File, Files, FilesRequest
+from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 
@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.post("/files")
-async def upload_file(file: UploadFile = FastApiFile(...), request: FilesRequest = Body(...), user: str = Security(check_api_key)) -> Response:
+async def upload_file(file: UploadFile = FastApiFile(...), request: FilesRequest = Body(...), user: User = Security(check_api_key)) -> Response:
     """
     Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.
 
@@ -42,7 +42,7 @@ async def upload_file(file: UploadFile = FastApiFile(...), request: FilesRequest
     try:
         uploader = FileUploader(clients=clients, user=user, file=file, collection_id=request.collection, file_type=request.file_type)
         documents = uploader.parse()
-        chunks = uploader.chunk(documents=documents, chunker_name=chunker_name, chunker_args=chunker_args)
+        chunks = uploader.split(documents=documents, chunker_name=chunker_name, chunker_args=chunker_args)
         uploader.embed(chunks=chunks)
 
     except AssertionError as e:
@@ -51,21 +51,33 @@ async def upload_file(file: UploadFile = FastApiFile(...), request: FilesRequest
     return JSONResponse(status_code=201, content={"id": uploader.file_id})
 
 
-@router.get("/files/{collection}/{file}")
 @router.get("/files/{collection}")
-async def files(
-    collection: UUID,
-    file: Optional[UUID] = None,
-    user: str = Security(check_api_key),
-) -> Union[File, Files]:
+async def get_files(collection: UUID, user: User = Security(check_api_key)) -> Files:
     """
-    Get files from a collection. Only files from private collections are returned.
+    Get all files ID from a collection.
+    """
+    collection = str(collection)
+    vectorstore = VectorStore(clients=clients, user=user)
+
+    try:
+        chunks = vectorstore.get_chunks(collection_id=collection)
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    data = list(set(chunk.metadata["file_id"] for chunk in chunks))
+
+    return Files(data=data)
+
+
+@router.get("/files/{collection}/{file}")
+async def files(collection: UUID, file: UUID, user: User = Security(check_api_key)) -> File:
+    """
+    Get information about a file from a collection.
     """
 
-    collection = str(collection)
-    file = str(file) if file else None
+    collection, file = str(collection), str(file)
     vectorstore = VectorStore(clients=clients, user=user)
-    filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=[file]))]) if file else None
+    filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=[file]))])
 
     try:
         chunks = vectorstore.get_chunks(collection_id=collection, filter=filter)
@@ -86,22 +98,18 @@ async def files(
         else:
             data[chunk.metadata["file_id"]].chunks.append(chunk.id)
 
-    if file:
-        if file not in data:
-            raise HTTPException(status_code=404, detail="File not found.")
-        else:
-            return data[file]
-    else:
-        return Files(data=list(data.values()))
+    if file not in data:
+        raise HTTPException(status_code=404, detail="File not found.")
+
+    return data[file]
 
 
 @router.delete("/files/{collection}/{file}")
-async def delete_file(collection: UUID, file: Optional[UUID] = None, user: str = Security(check_api_key)) -> Response:
+async def delete_file(collection: UUID, file: UUID, user: User = Security(check_api_key)) -> Response:
     """
-    Delete files and relative collections. Only files from private collections can be deleted.
+    Delete files and relative collections.
     """
-    collection = str(collection)
-    file = str(file) if file else None
+    collection, file = str(collection), str(file)
     vectorstore = VectorStore(clients=clients, user=user)
     try:
         filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=[file]))])

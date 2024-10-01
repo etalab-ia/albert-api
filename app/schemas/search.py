@@ -1,5 +1,5 @@
-from typing import List, Literal, Optional
-
+from typing import List, Literal, Optional, Union
+from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.chunks import Chunk
@@ -7,8 +7,7 @@ from app.schemas.chunks import Chunk
 
 class SearchRequest(BaseModel):
     prompt: str
-    model: str
-    collections: List[str]
+    collections: Optional[List[Union[UUID, Literal["internet"]]]] = None
     k: int = Field(gt=0, description="Number of results to return")
     score_threshold: Optional[float] = None
 
@@ -17,6 +16,12 @@ class SearchRequest(BaseModel):
         if value.strip() == "":
             raise ValueError("Prompt cannot be empty")
         return value
+
+    @field_validator("collections")
+    def convert_to_string(cls, v):
+        if v is None:
+            return []
+        return list(set(str(collection) for collection in v))
 
 
 class Search(BaseModel):

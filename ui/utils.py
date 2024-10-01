@@ -1,5 +1,5 @@
 import time
-from typing import List
+from typing import List, Optional
 
 import requests
 import streamlit as st
@@ -88,35 +88,37 @@ def get_collections(api_key: str):
     return collections
 
 
-def get_files(api_key: str, collections: List[str]):
+def get_files(api_key: str, collection_ids: List[str]):
     files = {}
     headers = {"Authorization": f"Bearer {api_key}"}
-    for collection in collections:
-        response = requests.get(f"{BASE_URL}/files/{collection}", headers=headers)
+    for collection_id in collection_ids:
+        files[collection_id] = []
+        response = requests.get(f"{BASE_URL}/files/{collection_id}", headers=headers)
         assert response.status_code == 200
         data = response.json()["data"]
-        files[collection] = data
+        for file_id in data:
+            response = requests.get(f"{BASE_URL}/files/{collection_id}/{file_id}", headers=headers)
+            assert response.status_code == 200
+            files[collection_id].append(response.json())
 
     return files
 
 
-def upload_file(api_key: str, file, embeddings_model, collection_name):
+def upload_file(api_key: str, file, collection_id: str) -> Optional[str]:
     headers = {"Authorization": f"Bearer {api_key}"}
-    params = {"collection": collection_name, "embeddings_model": embeddings_model}
-    files = {"files": (file.name, file.getvalue(), file.type)}
-    response = requests.post(url=f"{BASE_URL}/files", params=params, files=files, headers=headers)
-    data = response.json()["data"][0]
-    status = data["status"]
+    files = {"file": (file.name, file.getvalue(), file.type)}
+    data = {"request": '{"collection": "%s"}' % collection_id}
+    response = requests.post(f"{BASE_URL}/files", data=data, files=files, headers=headers)
 
-    if status == "success":
+    if response.status_code == 201:
         st.toast("Upload succeed", icon="✅")
+        return response.json()["id"]
     else:
         st.toast("Upload failed", icon="❌")
-    return data
 
 
-def delete_file(api_key: str, collection_name: str, file_id: str):
-    url = f"{BASE_URL}/files/{collection_name}/{file_id}"
+def delete_file(api_key: str, collection_id: str, file_id: str):
+    url = f"{BASE_URL}/files/{collection_id}/{file_id}"
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
@@ -125,3 +127,22 @@ def delete_file(api_key: str, collection_name: str, file_id: str):
         st.toast("Delete failed", icon="❌")
 
     return False
+
+
+def create_collection(api_key: str, collection_name: str, collection_model: str):
+    headers = {"Authorization": f"Bearer {api_key}"}
+    response = requests.post(f"{BASE_URL}/collections", json={"name": collection_name, "model": collection_model}, headers=headers)
+    if response.status_code == 201:
+        st.toast("Create succeed", icon="✅")
+    else:
+        st.toast("Create failed", icon="❌")
+
+
+def delete_collection(api_key: str, collection_id: str):
+    url = f"{BASE_URL}/collections/{collection_id}"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    response = requests.delete(url, headers=headers)
+    if response.status_code == 204:
+        st.toast("Delete succeed", icon="✅")
+    else:
+        st.toast("Delete failed", icon="❌")

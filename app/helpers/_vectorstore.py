@@ -16,8 +16,8 @@ from qdrant_client.http.models import (
 
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 from app.schemas.search import Search
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE, USER_ROLE
 
 
 class VectorStore:
@@ -41,6 +41,9 @@ class VectorStore:
         collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
         assert collection.model == model, "Wrong model collection"
 
+        if self.user.role == USER_ROLE:
+            assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
+
         for i in range(0, len(documents), self.BATCH_SIZE):
             batch = documents[i : i + self.BATCH_SIZE]
 
@@ -60,21 +63,20 @@ class VectorStore:
     def search(
         self,
         prompt: str,
-        model: str,
         collection_ids: List[str] = [],
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
         filter: Optional[Filter] = None,
     ) -> List[Search]:
         collections = self.get_collection_metadata(collection_ids=collection_ids)
+        assert len(set(collection.model for collection in collections)) == 1, "Different collections models."
 
+        model = collections[0].model
         response = self.models[model].embeddings.create(input=[prompt], model=model)
         vector = response.data[0].embedding
 
         chunks = []
         for collection in collections:
-            assert collection.model == model, "Wrong model collection"
-
             results = self.vectors.search(
                 collection_name=collection.id, query_vector=vector, limit=k, score_threshold=score_threshold, with_payload=True, query_filter=filter
             )
@@ -91,80 +93,55 @@ class VectorStore:
 
         return searches
 
-    def get_collection_metadata(self, collection_ids: List[str] = [], type: str = "all", errors: str = "raise") -> List[Collection]:
+    def get_collection_metadata(self, collection_ids: List[str] = [], errors: str = "raise") -> List[Collection]:
         """
         Get metadata of collections.
 
         Args:
             collection_ids (List[str]): List of collection ids to retrieve metadata for. If is an empty list, all collections will be considered.
-            type (str): The type of collections to get. "all" (default) will get all collections. "public" will get only public collections. "private" will get only private collections.
             errors (str): How to handle errors. "raise" (default) will raise an AssertionException if a collection is not found. "ignore" will skip collections that are not found.
 
         Returns:
             List[Collection]: A list of Collection objects containing the metadata for the specified collections.
         """
         assert errors in ["raise", "ignore"], "Errors argument must be 'raise' or 'ignore'"
-        assert type in ["all", PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE], "Type must be 'all', 'public' or 'private'."
 
-        metadata = []
+        # if no collection ids are provided, get all collections
+        must = [HasIdCondition(has_id=collection_ids)] if collection_ids else []
+        should = [
+            FieldCondition(key="user", match=MatchAny(any=[self.user.id])),
+            FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE])),
+        ]
+        filter = Filter(must=must, should=should)
+
+        records = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter, limit=1000, offset=None)
+        data, offset = records[0], records[1]
+        while offset is not None:
+            records = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter, limit=1000, offset=offset)
+            data.extend(records[0])
+            offset = records[1]
 
         # sanity check: remove collection that does not exist
         existing_collection_ids = [collection.name for collection in self.vectors.get_collections().collections]
+        data = [collection for collection in data if collection.id in existing_collection_ids]
+        existing_collection_ids = [collection.id for collection in data]
 
-        # if no collection ids are provided, get all collections
-        if not collection_ids:
-            if type == "all":
-                must = []
-                should = [
-                    FieldCondition(key="user", match=MatchAny(any=[self.user])),
-                    FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE])),
-                ]
-            elif type == PUBLIC_COLLECTION_TYPE:
-                must = [FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE]))]
-                should = []
-            elif type == PRIVATE_COLLECTION_TYPE:
-                must = [FieldCondition(key="user", match=MatchAny(any=[self.user]))]
-                should = []
+        for collection_id in collection_ids:
+            if collection_id not in existing_collection_ids:
+                assert errors == "ignore", "Collection not found"
 
-            filter = Filter(must=must, should=should)
-            data = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter)[0]
-            data = [collection for collection in data if collection.id in existing_collection_ids]
-            metadata.extend(data)
-
-        else:
-            for collection_id in collection_ids:
-                must = [HasIdCondition(has_id=[collection_id])]
-                should = []
-                if type == "all":
-                    should = [
-                        FieldCondition(key="user", match=MatchAny(any=[self.user])),
-                        FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE])),
-                    ]
-                elif type == PUBLIC_COLLECTION_TYPE:
-                    must.append(FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE])))
-
-                elif type == PRIVATE_COLLECTION_TYPE:
-                    must.append(FieldCondition(key="user", match=MatchAny(any=[self.user])))
-
-                filter = Filter(must=must, should=should)
-                data = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter)[0]
-                data = [collection for collection in data if collection.id in existing_collection_ids]
-                if not data:
-                    assert errors == "ignore", "Collection not found"
-                metadata.extend(data)
-
-        for i in range(len(metadata)):
-            metadata[i] = Collection(
-                id=metadata[i].id,
-                name=metadata[i].payload.get("name"),
-                type=metadata[i].payload.get("type"),
-                model=metadata[i].payload.get("model"),
-                user=metadata[i].payload.get("user"),
-                description=metadata[i].payload.get("description"),
-                created_at=metadata[i].payload.get("created_at"),
+        for i in range(len(data)):
+            data[i] = Collection(
+                id=data[i].id,
+                name=data[i].payload.get("name"),
+                type=data[i].payload.get("type"),
+                model=data[i].payload.get("model"),
+                user=data[i].payload.get("user"),
+                description=data[i].payload.get("description"),
+                created_at=data[i].payload.get("created_at"),
             )
 
-        return metadata
+        return data
 
     def create_collection(self, collection_id: str, collection_name: str, collection_model: str, collection_type: str) -> str:
         """
@@ -181,9 +158,11 @@ class VectorStore:
         """
         assert collection_name not in self.FORBIDDEN_COLLECTION_NAMES, "Forbidden collection name."
         assert self.models[collection_model].type == EMBEDDINGS_MODEL_TYPE, "Wrong model type."
-        assert collection_type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
-        collections = self.get_collection_metadata(collection_ids=[collection_id], type="all", errors="ignore")
+        if self.user.role == USER_ROLE:
+            assert collection_type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
+
+        collections = self.get_collection_metadata(collection_ids=[collection_id], errors="ignore")
         assert not collections, "Collection already exists."
 
         # create metadata
@@ -191,7 +170,7 @@ class VectorStore:
             "name": collection_name,
             "type": collection_type,
             "model": collection_model,
-            "user": self.user,
+            "user": self.user.id,
             "description": None,
             "created_at": round(time.time()),
         }
@@ -204,7 +183,9 @@ class VectorStore:
 
     def delete_collection(self, collection_id: str):
         collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
-        assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
+
+        if self.user.role == USER_ROLE:
+            assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
         self.vectors.delete_collection(collection_name=collection.id)
         self.vectors.delete(collection_name=METADATA_COLLECTION, points_selector=PointIdsList(points=[collection.id]))
@@ -218,6 +199,9 @@ class VectorStore:
             filter (Optional[Filter]): Optional filter to apply when deleting chunks. If no filter is provided, all chunks will be deleted.
         """
         collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
+        if self.user.role == USER_ROLE:
+            assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
+
         self.vectors.delete(collection_name=collection.id, points_selector=FilterSelector(filter=filter))
 
     def get_chunks(self, collection_id: str, filter: Optional[Filter] = None) -> List[Chunk]:
@@ -232,9 +216,18 @@ class VectorStore:
             List[Chunk]: A list of Chunk objects containing the retrieved chunks.
         """
         collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
-        chunks = self.vectors.scroll(collection_name=collection.id, with_payload=True, with_vectors=False, scroll_filter=filter)[0]
-        for chunk in chunks:
-            chunk.payload["metadata"]["collection"] = collection.id
-        chunks = [Chunk(id=chunk.id, metadata=chunk.payload["metadata"], content=chunk.payload["page_content"]) for chunk in chunks]
+
+        # @TODO: add pagination of avoid memory error
+        records = self.vectors.scroll(collection_name=collection.id, scroll_filter=filter, limit=1000, offset=None)
+        data, offset = records[0], records[1]
+        while offset is not None:
+            records = self.vectors.scroll(collection_name=collection.id, scroll_filter=filter, limit=1000, offset=offset)
+            data.extend(records[0])
+            offset = records[1]
+
+        chunks = [
+            Chunk(id=chunk.id, metadata=chunk.payload["metadata"] | {"collection": collection.id}, content=chunk.payload["page_content"])
+            for chunk in data
+        ]
 
         return chunks
