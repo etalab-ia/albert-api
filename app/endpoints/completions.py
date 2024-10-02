@@ -18,7 +18,7 @@ async def completions(request: CompletionRequest, user: User = Security(check_ap
     """
 
     request = dict(request)
-    client = clients["models"][request["model"]]
+    client = clients.models[request["model"]]
 
     if client.type != LANGUAGE_MODEL_TYPE:
         raise HTTPException(status_code=400, detail="Model is not a language model")

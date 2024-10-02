@@ -13,35 +13,29 @@ router = APIRouter()
 @router.post("/search")
 async def search(request: SearchRequest, user: User = Security(check_api_key)) -> Searches:
     """
-    Similarity search for chunks in the vector store.
+    Similarity search for chunks in the vector store or on the internet.
     """
 
     vectorstore = VectorStore(clients=clients, user=user)
-    search_on_internet = True
-    search_on_collections = True
-    if len(request.collections) > 0:
-        if INTERNET_COLLECTION_ID in request.collections:
-            request.collections.remove(INTERNET_COLLECTION_ID)
-            if len(request.collections) == 0:
-                search_on_collections = False
-        else:
-            search_on_internet = False
 
-    if search_on_collections:
+    data = []
+    if INTERNET_COLLECTION_ID in request.collections:
+        request.collections.remove(INTERNET_COLLECTION_ID)
+        internet = SearchOnInternet(clients=clients)
+        if len(request.collections) > 0:
+            collection_model = vectorstore.get_collection_metadata(collection_ids=request.collections)[0].model
+        else:
+            collection_model = None
+        data.extend(internet.search(prompt=request.prompt, n=4, model_id=collection_model, score_threshold=request.score_threshold))
+
+    if len(request.collections) > 0:
         try:
-            data = vectorstore.search(prompt=request.prompt, collection_ids=request.collections, k=request.k, score_threshold=request.score_threshold)
+            data.extend(
+                vectorstore.search(prompt=request.prompt, collection_ids=request.collections, k=request.k, score_threshold=request.score_threshold)
+            )
         except AssertionError as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    if search_on_internet:
-        internet = SearchOnInternet(clients=clients)
-        if search_on_collections:
-            collection_model = vectorstore.get_collection_metadata(collection_ids=request.collections)[0].model
-        else:
-            collection_model = internet.embeddings_model
-            data = []
-
-        data.extend(internet.search(prompt=request.prompt, n=4, model=collection_model, score_threshold=request.score_threshold))
-        data = sorted(data, key=lambda x: x.score, reverse=False)[: request.k]
+    data = sorted(data, key=lambda x: x.score, reverse=False)[: request.k]
 
     return Searches(data=data)

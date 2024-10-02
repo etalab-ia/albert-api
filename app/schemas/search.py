@@ -3,11 +3,12 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.chunks import Chunk
+from app.utils.variables import INTERNET_COLLECTION_ID
 
 
 class SearchRequest(BaseModel):
     prompt: str
-    collections: Optional[List[Union[UUID, Literal["internet"]]]] = None
+    collections: List[Union[UUID, Literal[INTERNET_COLLECTION_ID]]]
     k: int = Field(gt=0, description="Number of results to return")
     score_threshold: Optional[float] = None
 

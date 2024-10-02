@@ -1,6 +1,5 @@
 from io import BytesIO
 from typing import List, Optional
-import uuid
 
 from duckduckgo_search import DDGS
 import numpy as np
@@ -8,7 +7,6 @@ import requests
 
 from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.parsers import HTMLParser
-from app.schemas.chunks import Chunk
 from app.schemas.search import Search
 
 
@@ -50,16 +48,15 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
     def __init__(self, clients: dict):
         self.clients = clients
         self.parser = HTMLParser()
-        # TODO: change this after create client manager class
-        self.language_model = [model for model in self.clients["models"].keys() if self.clients["models"][model].search_internet][0]
 
-    def search(self, prompt: str, embeddings_model: str, n: int = 3, score_threshold: Optional[float] = None) -> List:
+    def search(self, prompt: str, model_id: Optional[str] = None, n: int = 3, score_threshold: Optional[float] = None) -> List:
         parser = HTMLParser()
+        model_id = model_id or self.clients.SEARCH_INTERNET_EMBEDDINGS_MODEL_ID
         chunker = LangchainRecursiveCharacterTextSplitter(
             chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
         )
-        query = self._get_web_query(prompt=prompt)
 
+        query = self._get_web_query(prompt=prompt)
         with DDGS() as ddgs:
             results = list(ddgs.text(query, region="fr-fr", safesearch="On", max_results=n))
 
@@ -75,41 +72,45 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
                 continue
 
             file = BytesIO(response.text.encode("utf-8"))
+            # TODO: parse pdf if url is a pdf or json if url is a json
             documents = parser.parse(file=file)
             for document in documents:
-                document.metadata["file_name"] = url
+                document_chunks = chunker.split(document=document)
+                for chunk in document_chunks:
+                    chunk.metadata["file_name"] = url
+                    chunk.content = chunk.content + f"\n Source: {url}"
 
-            document_chunks = chunker.split(documents)
-            chunks.extend(document_chunks)
+                chunks.extend(document_chunks)
 
         data = []
         if len(chunks) == 0:
             return data
 
-        response = self.clients["models"][embeddings_model].embeddings.create(input=[prompt], model=embeddings_model)
+        response = self.clients.models[model_id].embeddings.create(input=[prompt], model=model_id)
         vector = response.data[0].embedding
         vectors = []
-        for i in range(0, len(documents), self.BATCH_SIZE):
-            batch = documents[i : i + self.BATCH_SIZE]
+        for i in range(0, len(chunks), self.BATCH_SIZE):
+            batch = chunks[i : i + self.BATCH_SIZE]
 
-            texts = [document.page_content for document in batch]
-            response = self.clients["models"][embeddings_model].embeddings.create(input=texts, model=embeddings_model)
+            texts = [chunk.content for chunk in batch]
+            response = self.clients.models[model_id].embeddings.create(input=texts, model=model_id)
             vectors.extend([vector.embedding for vector in response.data])
 
         cosine = np.dot(vectors, vector) / (np.linalg.norm(vectors, axis=1) * np.linalg.norm(vector))
 
-        for chunk, score in zip(documents, cosine):
+        for chunk, score in zip(chunks, cosine):
             if score_threshold and score < score_threshold:
                 continue
-            search = Search(score=score, chunk=Chunk(id=str(uuid.uuid4()), content=chunk.page_content, metadata=chunk.metadata))
+            search = Search(score=score, chunk=chunk)
             data.append(search)
 
         return data
 
-    def _get_web_query(self, prompt: str, language_model: str) -> str:
+    def _get_web_query(self, prompt: str, language_model: Optional[str] = None) -> str:
+        language_model = language_model or self.clients.SEARCH_INTERNET_LANGUAGE_MODEL_ID
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        response = self.clients["models"][self.language_model].chat.completions.create(
-            messages=[{"role": "user", "content": prompt}], model=self.language_model, temperature=0.2, stream=False
+        response = self.clients.models[language_model].chat.completions.create(
+            messages=[{"role": "user", "content": prompt}], model=language_model, temperature=0.2, stream=False
         )
         query = response.choices[0].message.content
 

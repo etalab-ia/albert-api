@@ -4,7 +4,7 @@ import os
 import pytest
 
 from app.schemas.collections import Collection, Collections
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION_ID, PRIVATE_COLLECTION_TYPE
 from app.schemas.files import File, Files, Upload, Uploads
 from app.schemas.models import Model, Models
 from app.utils.security import encode_string
@@ -45,9 +45,9 @@ class TestFiles:
         response = session.delete(f"{args['base_url']}/collections", params={"collection": COLLECTION}, timeout=10)
         assert response.status_code == 204 or response.status_code == 404, f"error: delete collection ({response.status_code})"
 
-        assert METADATA_COLLECTION not in [
+        assert METADATA_COLLECTION_ID not in [
             collection.id for collection in collections.data
-        ], f"{METADATA_COLLECTION} metadata collection is displayed in collections"
+        ], f"{METADATA_COLLECTION_ID} metadata collection is displayed in collections"
 
     def test_upload_file(self, args, session, setup):
         COLLECTION, FILE_PATH, _, EMBEDDINGS_MODEL, _ = setup
@@ -156,7 +156,7 @@ class TestFiles:
         assert response.status_code == 404, f"error: collection should not exist ({response.status_code} - {response.text})"
 
     def test_delete_metadata_collection(self, args, session):
-        response = session.delete(f"{args['base_url']}/collections/{METADATA_COLLECTION}", timeout=10)
+        response = session.delete(f"{args['base_url']}/collections/{METADATA_COLLECTION_ID}", timeout=10)
         assert response.status_code == 404, f"error: delete metadata collection ({response.status_code} - {response.text})"
 
     def test_create_collection_with_empty_name(self, args, session):

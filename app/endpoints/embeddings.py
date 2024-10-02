@@ -18,7 +18,7 @@ async def embeddings(request: EmbeddingsRequest, user: User = Security(check_api
     """
 
     request = dict(request)
-    client = clients["models"][request["model"]]
+    client = clients.models[request["model"]]
     if client.type != EMBEDDINGS_MODEL_TYPE:
         raise HTTPException(status_code=400, detail=f"Model type must be {EMBEDDINGS_MODEL_TYPE}")
 

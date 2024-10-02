@@ -4,6 +4,8 @@ from typing import Optional
 from grist_api import GristDocAPI
 from redis import Redis
 
+from app.utils.variables import USER_ROLE
+
 
 class GristKeyManager(GristDocAPI):
     CACHE_EXPIRATION = 3600  # 1h
@@ -57,6 +59,6 @@ class GristKeyManager(GristDocAPI):
         keys = dict()
         for record in records:
             if record.EXPIRATION > dt.datetime.now().timestamp():
-                keys[record.KEY] = record.ROLE
+                keys[record.KEY] = record.ROLE or USER_ROLE
 
         return keys

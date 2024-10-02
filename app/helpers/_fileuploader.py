@@ -30,6 +30,9 @@ class FileUploader:
     def __init__(
         self, file: UploadFile, collection_id: str, clients: dict, user: User, file_name: Optional[str] = None, file_type: Optional[str] = None
     ):
+        self.vectorstore = VectorStore(clients=clients, user=user)
+        self.collection = self.vectorstore.get_collection_metadata(collection_ids=[collection_id])[0]
+
         self.clients = clients
         self.user = user
         self.collection_id = collection_id
@@ -41,10 +44,6 @@ class FileUploader:
 
         self.file_type = file_type if file_type else self.TYPE_DICT[file.filename.split(".")[-1]]
         assert self.file_type in SUPPORTED_FILE_TYPES, f"Unsupported file type: {self.file_type}"
-
-        self.vectorstore = VectorStore(clients=self.clients, user=self.user)
-        collection = self.vectorstore.get_collection_metadata(collection_ids=[self.collection_id])[0]
-        self.model = collection.model
         self.metadata = {
             "file_id": self.file_id,
             "file_name": self.file_name,
@@ -81,4 +80,4 @@ class FileUploader:
 
     def embed(self, chunks: List[Chunk]):
         documents = [LangchainDocument(id=chunk.id, page_content=chunk.content, metadata=self.metadata | chunk.metadata) for chunk in chunks]
-        self.vectorstore.from_documents(documents=documents, model=self.model, collection_id=self.collection_id)
+        self.vectorstore.from_documents(documents=documents, collection_id=self.collection_id)

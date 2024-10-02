@@ -18,11 +18,11 @@ async def models(model: Optional[str] = None, user: User = Security(check_api_ke
     See https://platform.openai.com/docs/api-reference/models/list for the API specification.
     """
     if model is not None:
-        client = clients["models"][model]
+        client = clients.models[model]
         response = [row for row in client.models.list().data if row.id == model][0]
     else:
         response = {"object": "list", "data": []}
-        for model_id, client in clients["models"].items():
+        for model_id, client in clients.models.items():
             for row in client.models.list().data:
                 row = dict(row)
                 row["type"] = client.type

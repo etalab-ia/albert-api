@@ -17,19 +17,26 @@ from qdrant_client.http.models import (
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
 from app.schemas.search import Search
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, METADATA_COLLECTION, PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE, USER_ROLE
+from app.utils.variables import (
+    EMBEDDINGS_MODEL_TYPE,
+    INTERNET_COLLECTION_ID,
+    METADATA_COLLECTION_ID,
+    PRIVATE_COLLECTION_TYPE,
+    PUBLIC_COLLECTION_TYPE,
+    USER_ROLE,
+)
 
 
 class VectorStore:
     BATCH_SIZE = 48
-    FORBIDDEN_COLLECTION_NAMES = ["internet", "collections"]
+    FORBIDDEN_COLLECTION_NAMES = [INTERNET_COLLECTION_ID, METADATA_COLLECTION_ID]
 
     def __init__(self, clients: dict, user: str):
-        self.vectors = clients["vectors"]
-        self.models = clients["models"]
+        self.vectors = clients.vectors
+        self.models = clients.models
         self.user = user
 
-    def from_documents(self, documents: List[LangchainDocument], model: str, collection_id: str) -> None:
+    def from_documents(self, documents: List[LangchainDocument], collection_id: str) -> None:
         """
         Add documents to a collection.
 
@@ -39,7 +46,6 @@ class VectorStore:
             collection_id (str): The id of the collection to add the documents to.
         """
         collection = self.get_collection_metadata(collection_ids=[collection_id])[0]
-        assert collection.model == model, "Wrong model collection"
 
         if self.user.role == USER_ROLE:
             assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
@@ -48,7 +54,7 @@ class VectorStore:
             batch = documents[i : i + self.BATCH_SIZE]
 
             texts = [document.page_content for document in batch]
-            response = self.models[model].embeddings.create(input=texts, model=model)
+            response = self.models[collection.model].embeddings.create(input=texts, model=collection.model)
             vectors = [vector.embedding for vector in response.data]
 
             # insert vectors
@@ -114,10 +120,10 @@ class VectorStore:
         ]
         filter = Filter(must=must, should=should)
 
-        records = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter, limit=1000, offset=None)
+        records = self.vectors.scroll(collection_name=METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=None)
         data, offset = records[0], records[1]
         while offset is not None:
-            records = self.vectors.scroll(collection_name=METADATA_COLLECTION, scroll_filter=filter, limit=1000, offset=offset)
+            records = self.vectors.scroll(collection_name=METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=offset)
             data.extend(records[0])
             offset = records[1]
 
@@ -174,7 +180,7 @@ class VectorStore:
             "description": None,
             "created_at": round(time.time()),
         }
-        self.vectors.upsert(collection_name=METADATA_COLLECTION, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
+        self.vectors.upsert(collection_name=METADATA_COLLECTION_ID, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
 
         # create collection
         self.vectors.create_collection(
@@ -188,7 +194,7 @@ class VectorStore:
             assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
         self.vectors.delete_collection(collection_name=collection.id)
-        self.vectors.delete(collection_name=METADATA_COLLECTION, points_selector=PointIdsList(points=[collection.id]))
+        self.vectors.delete(collection_name=METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
     def delete_chunks(self, collection_id: str, filter: Optional[Filter] = None):
         """

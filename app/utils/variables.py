@@ -1,4 +1,4 @@
-METADATA_COLLECTION = "collections"
+METADATA_COLLECTION_ID = "collections"
 PUBLIC_COLLECTION_TYPE = "public"
 PRIVATE_COLLECTION_TYPE = "private"
 INTERNET_COLLECTION_ID = "internet"
@@ -12,5 +12,4 @@ TXT_TYPE = "text/plain"
 HTML_TYPE = "text/html"
 SUPPORTED_FILE_TYPES = [PDF_TYPE, JSON_TYPE, HTML_TYPE]
 USER_ROLE = "user"
-ADMIN_ROLE = "admin"
 # @TODO : add DOCX_TYPE (application/vnd.openxmlformats-officedocument.wordprocessingml.document)

@@ -39,12 +39,11 @@ def check_api_key(
     Returns:
         str: User ID, corresponding to the encoded API key or "no-auth" if no authentication is set in the configuration file.
     """
-
-    if clients["auth"]:
+    if clients.auth:
         if api_key.scheme != "Bearer":
             raise HTTPException(status_code=403, detail="Invalid authentication scheme")
 
-        role = clients["auth"].check_api_key(api_key.credentials)
+        role = clients.auth.check_api_key(api_key.credentials)
 
         if role is None:
             raise HTTPException(status_code=403, detail="Invalid API key")
