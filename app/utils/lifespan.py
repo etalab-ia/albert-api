@@ -17,5 +17,4 @@ async def lifespan(app: FastAPI):
     clients.set_vectors()
     clients.set_auth()
 
-    yield  # release ressources when api shutdown
-    clients.clear()
+    yield

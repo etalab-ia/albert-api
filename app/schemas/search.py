@@ -10,7 +10,7 @@ class SearchRequest(BaseModel):
     prompt: str
     collections: List[Union[UUID, Literal[INTERNET_COLLECTION_ID]]]
     k: int = Field(gt=0, description="Number of results to return")
-    score_threshold: Optional[float] = None
+    score_threshold: Optional[float] = Field(0.0, ge=0.0, le=1.0, description="Score of cosine similarity threshold for filtering results")
 
     @field_validator("prompt")
     def blank_string(value):

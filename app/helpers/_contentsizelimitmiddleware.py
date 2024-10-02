@@ -12,7 +12,7 @@ class ContentSizeLimitMiddleware:
       max_content_size (optional): the maximum content size allowed in bytes, default is MAX_CONTENT_SIZE
     """
 
-    MAX_CONTENT_SIZE = 20 * 1024 * 1024  # 20MB
+    MAX_CONTENT_SIZE = 10 * 1024 * 1024  # 10MB
 
     def __init__(
         self,
@@ -32,7 +32,6 @@ class ContentSizeLimitMiddleware:
                 return message
             body_len = len(message.get("body", b""))
             received += body_len
-
             if received > self.max_content_size:
                 raise HTTPException(detail="File size limit exceeded", status_code=413)
 

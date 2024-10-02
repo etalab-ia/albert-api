@@ -42,6 +42,7 @@ class FileUploader:
         self.file_id = str(uuid.uuid4())
         self.file_type = file_type
 
+        # @ TODO: raise error if wrong file_type is specified
         self.file_type = file_type if file_type else self.TYPE_DICT[file.filename.split(".")[-1]]
         assert self.file_type in SUPPORTED_FILE_TYPES, f"Unsupported file type: {self.file_type}"
         self.metadata = {

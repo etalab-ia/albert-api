@@ -55,6 +55,7 @@ async def get_collections(
     try:
         data = vectorstore.get_collection_metadata(collection_ids=collection_ids)
     except AssertionError as e:
+        # TODO: return a 404 error if collection not found
         raise HTTPException(status_code=400, detail=str(e))
 
     if collection:

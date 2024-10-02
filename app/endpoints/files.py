@@ -27,7 +27,7 @@ async def upload_file(file: UploadFile = FastApiFile(...), request: FilesRequest
         Each document must have a "text" key and "metadata" key (optional) with dict type value.
     - html: Hypertext Markup Language file.
 
-    Max file size is 20MB.
+    Max file size is 10MB.
     """
 
     if request.chunker:
@@ -111,6 +111,8 @@ async def delete_file(collection: UUID, file: UUID, user: User = Security(check_
     """
     collection, file = str(collection), str(file)
     vectorstore = VectorStore(clients=clients, user=user)
+
+    # @TODO: raise 404 if file not found
     try:
         filter = Filter(must=[FieldCondition(key="metadata.file_id", match=MatchAny(any=[file]))])
         vectorstore.delete_chunks(collection_id=collection, filter=filter)
