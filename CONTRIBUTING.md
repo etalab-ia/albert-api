@@ -39,7 +39,7 @@ Merci avant chaque pull request, de vérifier le bon déploiement de votre API �
 2. Executez les tests unitaires
     
     ```bash
-    PYTHONPATH=. pytest -v --exitfirst app/tests --base-url http://localhost:8080/v1 --api-key API_KEY
+    PYTHONPATH=. pytest -v --exitfirst app/tests --base-url http://localhost:8080/v1 --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
     ```
 
 # Linter

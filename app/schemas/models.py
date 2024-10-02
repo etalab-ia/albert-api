@@ -3,7 +3,7 @@ from typing import List, Literal
 from openai.types import Model
 from pydantic import BaseModel
 
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 
 
 class Model(Model):

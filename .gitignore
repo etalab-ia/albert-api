@@ -201,3 +201,4 @@ terraform.rc
 .DS_Store
 .idea
 .vscode
+*.json

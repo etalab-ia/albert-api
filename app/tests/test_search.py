@@ -1,104 +1,101 @@
 import logging
 import os
+import uuid
 
 import pytest
 
-from app.schemas.config import EMBEDDINGS_MODEL_TYPE
 from app.schemas.search import Search, Searches
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_ID
 
 
-@pytest.fixture(scope="function")
-def setup(args, session):
-    COLLECTION = "pytest"
-    FILE_PATH = "app/tests/pytest.pdf"
-
-    # Delete the collection if it exists
-    response = session.delete(f"{args['base_url']}/collections/{COLLECTION}")
-    assert response.status_code == 204 or response.status_code == 404, f"error: delete collection ({response.status_code} - {response.text})"
+@pytest.fixture(scope="module")
+def setup(args, session_user):
+    COLLECTION_ID = "pytest"
 
     # Get a embedding model
-    response = session.get(f"{args['base_url']}/models")
+    response = session_user.get(f"{args["base_url"]}/models")
     response = response.json()["data"]
-    EMBEDDINGS_MODEL = [model["id"] for model in response if model["type"] == EMBEDDINGS_MODEL_TYPE][0]
-    logging.debug(f"model: {EMBEDDINGS_MODEL}")
+    EMBEDDINGS_MODEL_ID = [model["id"] for model in response if model["type"] == EMBEDDINGS_MODEL_TYPE][0]
+    logging.info(f"test model ID: {EMBEDDINGS_MODEL_ID}")
+
+    # Create a collection
+    response = session_user.post(f"{args["base_url"]}/collections", json={"name": "pytest-private", "model": EMBEDDINGS_MODEL_ID})
+    COLLECTION_ID = response.json()["id"]
 
     # Upload the file to the collection
-    params = {"embeddings_model": EMBEDDINGS_MODEL, "collection": COLLECTION}
-    files = {"files": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "application/pdf")}
-    response = session.post(f"{args['base_url']}/files", params=params, files=files, timeout=30)
-    assert response.status_code == 200, f"error: upload file ({response.status_code} - {response.text})"
-    assert response.json()["data"][0]["status"] == "success"
+    file_path = "app/tests/assets/pdf_small.pdf"
+    files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/pdf")}
+    data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % COLLECTION_ID}
+    response = session_user.post(f"{args["base_url"]}/files", data=data, files=files)
+    FILE_ID = response.json()["id"]
 
-    # Check if the file is uploaded
-    response = session.get(f"{args['base_url']}/files/{COLLECTION}", timeout=10)
-    assert response.status_code == 200, f"error: retrieve files ({response.status_code} - {response.text})"
-    files = response.json()
-    assert len(files["data"]) == 1
-    assert files["data"][0]["file_name"] == os.path.basename(FILE_PATH)
-    FILE_ID = files["data"][0]["id"]
+    # Get file name
+    response = session_user.get(f"{args["base_url"]}/files/{COLLECTION_ID}/{FILE_ID}")
+    FILE_NAME = response.json()["name"]
 
-    CHUNK_IDS = files["data"][0]["chunks"]
-
-    # Get chunks of the file
-    data = {"chunks": CHUNK_IDS}
-    response = session.post(f"{args['base_url']}/chunks/{COLLECTION}", json=data, timeout=10)
-    assert response.status_code == 200, f"error: retrieve chunks ({response.status_code} - {response.text})"
-    chunks = response.json()
-    MAX_K = len(chunks["data"])
-
-    yield EMBEDDINGS_MODEL, FILE_ID, MAX_K, COLLECTION
+    yield FILE_NAME, COLLECTION_ID
 
 
-@pytest.mark.usefixtures("args", "session")
+@pytest.mark.usefixtures("args", "session_user", "cleanup_collections", "setup")
 class TestSearch:
-    def test_search_response_status_code(self, args, session, setup):
+    def test_search(self, args, session_user, setup):
         """Test the POST /search response status code."""
 
-        EMBEDDINGS_MODEL, _, MAX_K, COLLECTION = setup
-        data = {"prompt": "test query", "model": EMBEDDINGS_MODEL, "collections": [COLLECTION], "k": MAX_K}
-        response = session.post(f"{args['base_url']}/search", json=data)
+        FILE_NAME, COLLECTION_ID = setup
+        data = {"prompt": "test query", "collections": [COLLECTION_ID], "k": 3}
+        response = session_user.post(f"{args["base_url"]}/search", json=data)
         assert response.status_code == 200, f"error: search request ({response.status_code} - {response.text})"
 
         searches = Searches(**response.json())
         assert isinstance(searches, Searches)
         assert all(isinstance(search, Search) for search in searches.data)
 
-    def test_search_with_score_threshold(self, args, session, setup):
+        search = searches.data[0]
+        assert search.chunk.metadata["file_name"] == FILE_NAME
+
+    def test_search_with_score_threshold(self, args, session_user, setup):
         """Test search with a score threshold."""
 
-        EMBEDDINGS_MODEL, _, MAX_K, COLLECTION = setup
-        data = {"prompt": "test query", "model": EMBEDDINGS_MODEL, "collections": [COLLECTION], "k": MAX_K, "score_threshold": 0.5}
-        response = session.post(f"{args['base_url']}/search", json=data)
+        _, COLLECTION_ID = setup
+        data = {"prompt": "test query", "collections": [COLLECTION_ID], "k": 3, "score_threshold": 0.5}
+        response = session_user.post(f"{args["base_url"]}/search", json=data)
         assert response.status_code == 200
 
-    def test_search_invalid_collection(self, args, session, setup):
+    def test_search_invalid_collection(self, args, session_user, setup):
         """Test search with an invalid collection."""
 
-        EMBEDDINGS_MODEL, _, MAX_K, _ = setup
-        data = {"prompt": "test query", "model": EMBEDDINGS_MODEL, "collections": ["non_existent_collection"], "k": MAX_K}
-        response = session.post(f"{args['base_url']}/search", json=data)
-        assert response.status_code == 404
+        _, _ = setup
+        data = {"prompt": "test query", "collections": [str(uuid.uuid4())], "k": 3}
+        response = session_user.post(f"{args["base_url"]}/search", json=data)
+        assert response.status_code == 400
 
-    def test_search_invalid_k(self, args, session, setup):
+    def test_search_invalid_k(self, args, session_user, setup):
         """Test search with an invalid k value."""
 
-        EMBEDDINGS_MODEL, _, _, COLLECTION = setup
-        data = {"prompt": "test query", "model": EMBEDDINGS_MODEL, "collections": [COLLECTION], "k": 0}
-        response = session.post(f"{args['base_url']}/search", json=data)
+        _, COLLECTION_ID = setup
+        data = {"prompt": "test query", "collections": [COLLECTION_ID], "k": 0}
+        response = session_user.post(f"{args["base_url"]}/search", json=data)
         assert response.status_code == 422
 
-    def test_search_empty_prompt(self, args, session, setup):
+    def test_search_empty_prompt(self, args, session_user, setup):
         """Test search with an empty prompt."""
 
-        EMBEDDINGS_MODEL, _, MAX_K, COLLECTION = setup
-        data = {"prompt": "", "model": EMBEDDINGS_MODEL, "collections": [COLLECTION], "k": MAX_K}
-        response = session.post(f"{args['base_url']}/search", json=data)
+        _, COLLECTION_ID = setup
+        data = {"prompt": "", "collections": [COLLECTION_ID], "k": 3}
+        response = session_user.post(f"{args["base_url"]}/search", json=data)
         assert response.status_code == 422
 
-    def test_search_invalid_model(self, args, session, setup):
-        """Test search with an invalid model."""
+    def test_search_internet_collection(self, args, session_user, setup):
+        """Test search with the internet collection."""
 
-        _, _, MAX_K, COLLECTION = setup
-        data = {"prompt": "test query", "model": "non_existent_model", "collections": [COLLECTION], "k": MAX_K}
-        response = session.post(f"{args['base_url']}/search", json=data)
-        assert response.status_code == 404
+        _, _ = setup
+        data = {"prompt": "Quelle est la capitale de la France ?", "collections": [INTERNET_COLLECTION_ID], "k": 3}
+        response = session_user.post(f"{args["base_url"]}/search", json=data)
+        assert response.status_code == 200
+
+        searches = Searches(**response.json())
+        assert isinstance(searches, Searches)
+        assert all(isinstance(search, Search) for search in searches.data)
+
+        search = searches.data[0]
+        assert search.chunk.metadata["file_name"].startswith("http")
