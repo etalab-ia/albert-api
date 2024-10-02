@@ -1,23 +1,11 @@
 from typing import Dict, List, Optional, Union, Literal, Tuple
 
-from pydantic import BaseModel, Field
-from fastapi import UploadFile, File
+from pydantic import BaseModel
 
-'''
-from openai.types.chat import (
-    ChatCompletionMessageParam,
-    ChatCompletion,
-    ChatCompletionToolChoiceOptionParam,
-    ChatCompletionToolParam,
-    ChatCompletionChunk,
-)
-'''
-
-from app.schemas.tools import ToolOutput
 
 #cf https://platform.openai.com/docs/api-reference/audio/createTranscription
 class AudioTranscriptionRequest(BaseModel):
-    model: Optional[str] = None
+    model: Optional[str] = "Systran/faster-distil-whisper-large-v3"
     language: Optional[str] = None
     prompt: Optional[str] = None
     response_format: Optional[str] = "json"
