@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 
 from utils import create_collection, delete_file, get_collections, get_files, get_models, header, set_config, upload_file, delete_collection
-from config import INTERNET_COLLECTION_ID
+from config import INTERNET_COLLECTION_ID, PRIVATE_COLLECTION_TYPE
 
 # Config
 set_config()
@@ -16,7 +16,9 @@ try:
     language_models, embeddings_models = get_models(api_key=API_KEY)
     collections = get_collections(api_key=API_KEY)
     collections = [collection for collection in collections if collection["id"] != INTERNET_COLLECTION_ID]
-    file_data = get_files(api_key=API_KEY, collection_ids=[collection["id"] for collection in collections])
+    file_data = get_files(
+        api_key=API_KEY, collection_ids=[collection["id"] for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE]
+    )
 except Exception as e:
     st.error("Error to fetch user data.")
     st.stop()
