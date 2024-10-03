@@ -33,6 +33,7 @@ auth: [optional]
 models:
     - url: [required]
       key: [optional]
+      search_internet: [optional]
     ...
 
 databases:
@@ -71,7 +72,6 @@ Voici les types de base de données supportées, à configurer dans le fichier d
 | --- | --- |
 | vectors | [qdrant](https://qdrant.tech/) | 
 | cache | [redis](https://redis.io/) |
-| files | [minio](https://min.io/) |
 
 ## Déploiement de l'interface Streamlit
 
