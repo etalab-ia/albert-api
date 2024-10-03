@@ -1,10 +1,10 @@
 # Albert API
 ![](https://img.shields.io/badge/python-3.12-green) ![](https://img.shields.io/badge/vLLM-v0.5.5-blue) ![](https://img.shields.io/badge/HuggingFace%20Text%20Embeddings%20Inference-1.5-red)
 
-Albert API est une API open source d'IA générative développée par Etalab. Elle permet d'être un proxy entre des modèles de langage et vos données. Elle aggrège les services suivants :
-- [vLLM](https://github.com/vllm-project/vllm) pour la gestion des modèles de langage
-- [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference) pour la génération d'embeddings
-- [Qdrant](https://qdrant.tech/) pour la recherche de similarité
+Albert API est une API open source d'IA générative développée par Etalab. Elle permet d'être un proxy entre des modèles de langage et vos données. Elle agrège les services suivants :
+- servir des modèles de langage avec [vLLM](https://github.com/vllm-project/vllm)
+- servir des modèles d'embeddings avec [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)
+- accès un *vector store* avec [Qdrant](https://qdrant.tech/) pour la recherche de similarité
 
 ### OpenAI conventions
 
@@ -30,7 +30,7 @@ L'API Albert permet d'accéder à un ensemble de modèles de langage et d'embedd
 
 ### Interroger vos documents (RAG)
 
-L'API Albert permet d'interroger des documents dans une base vectorielle. Ces documents sont classés dans des collections. Vous pouvez créer vos collections privées et utilisé les collections publiques déjà existantes. Enfin une collection "internet" permet d'effectuer une recherche sur internet pour compléter la réponse du modèle.
+L'API Albert permet d'interroger des documents dans une base vectorielle. Ces documents sont classés dans des collections. Vous pouvez créer vos collections privées et utiliser les collections publiques déjà existantes. Enfin, une collection "internet" permet d'effectuer une recherche sur internet pour compléter la réponse du modèle.
 
 <a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/retrival_augmented_generation.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
@@ -46,7 +46,7 @@ L'API Albert permet d'importer sa base de connaissances dans une base vectoriell
 
 ## 🧑‍💻 Contribuez au projet
 
-Albert API est un projet open source, vous pouvez contribuez au projet, veuillez lire notre [guide de contribution](./CONTRIBUTING.md).
+Albert API est un projet open source, vous pouvez contribuer au projet en lisant notre [guide de contribution](./CONTRIBUTING.md).
 
 ## Installation
 
