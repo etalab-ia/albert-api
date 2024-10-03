@@ -25,8 +25,7 @@ async def embeddings(request: EmbeddingsRequest, user: User = Security(check_api
     url = f"{client.base_url}embeddings"
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
-    if not client.check_context_length(model=request["model"], messages=request["messages"]):
-        raise HTTPException(status_code=400, detail="Context length too large")
+    # @TODO add check length ?
 
     async with httpx.AsyncClient(timeout=20) as async_client:
         response = await async_client.request(method="POST", url=url, headers=headers, json=request)
