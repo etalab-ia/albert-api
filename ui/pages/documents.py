@@ -4,8 +4,8 @@ import time
 import pandas as pd
 import streamlit as st
 
-from utils import create_collection, delete_file, get_collections, get_files, get_models, header, set_config, upload_file, delete_collection
 from config import INTERNET_COLLECTION_ID, PRIVATE_COLLECTION_TYPE
+from utils import create_collection, delete_collection, delete_document, get_collections, get_documents, get_models, header, set_config, upload_file
 
 # Config
 set_config()
@@ -16,7 +16,7 @@ try:
     language_models, embeddings_models = get_models(api_key=API_KEY)
     collections = get_collections(api_key=API_KEY)
     collections = [collection for collection in collections if collection["id"] != INTERNET_COLLECTION_ID]
-    file_data = get_files(
+    documents = get_documents(
         api_key=API_KEY, collection_ids=[collection["id"] for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE]
     )
 except Exception as e:
@@ -24,8 +24,18 @@ except Exception as e:
     st.stop()
 
 ## Collections
-data = [{"ID": collection["id"], "Name": collection["name"], "Type": collection["type"], "Model": collection["model"]} for collection in collections]
-df_collections = pd.DataFrame(data, columns=["ID", "Name", "Type", "Model"])
+data = [
+    {
+        "ID": collection["id"],
+        "Name": collection["name"],
+        "Type": collection["type"],
+        "Model": collection["model"],
+        "Documents": collection["documents"],
+    }
+    for collection in collections
+]
+columns = ["ID", "Name", "Type", "Model", "Documents"]
+df_collections = pd.DataFrame(data, columns=columns)
 
 st.subheader("Collections")
 st.dataframe(df_collections, hide_index=True, use_container_width=True)
@@ -61,24 +71,21 @@ if not collections:
     st.info("No collection found, create one to start.")
     st.stop()
 
-# Files
-table = []
-for collection_id, files in file_data.items():
-    for file in files:
-        table.append(
-            [
-                collection_id,
-                file["id"],
-                file["name"],
-                f"{file["bytes"] / (1024 * 1024):.2f} MB",
-                dt.datetime.fromtimestamp(file["created_at"]).strftime("%Y-%m-%d"),
-            ]
-        )
+# Documents
+data = [
+    {
+        "Collection": document["collection_id"],
+        "ID": document["id"],
+        "Name": document["name"],
+        "Created at": dt.datetime.fromtimestamp(document["created_at"]).strftime("%Y-%m-%d"),
+        "Chunks": document["chunks"],
+    }
+    for document in documents
+]
+columns = ["Collection", "ID", "Name", "Created at", "Chunks"]
+df_files = pd.DataFrame(data, columns=columns)
 
-columns = ["Collection", "ID", "Name", "Size", "Created at"]
-df_files = pd.DataFrame(table, columns=columns)
-
-st.subheader("Files")
+st.subheader("Documents")
 st.dataframe(df_files, hide_index=True, use_container_width=True)
 
 col1, col2 = st.columns(2)
@@ -98,12 +105,12 @@ with col1:
 
 ## Delete files
 with col2:
-    with st.expander("Delete a file", icon="🗑️"):
-        file_id = st.selectbox("Select file to delete", df_files["ID"])
-        if file_id:
-            file_collection = [collection_id for collection_id, file in file_data.items() if file_id in [f["id"] for f in file]][0]
-        submit_delete = st.button("Delete", disabled=not file_id, key="delete_file_button")
+    with st.expander("Delete a document", icon="🗑️"):
+        document = st.selectbox("Select document to delete", [f"{document["name"]} - {document["id"]}" for document in documents])
+        document_id = document.split(" - ")[-1] if document else None
+        submit_delete = st.button("Delete", disabled=not document_id, key="delete_document_button")
         if submit_delete:
-            delete_file(api_key=API_KEY, collection_id=file_collection, file_id=file_id)
+            document_collection = [document["collection_id"] for document in documents if document["id"] == document_id][0]
+            delete_document(api_key=API_KEY, collection_id=document_collection, document_id=document_id)
             time.sleep(0.5)
             st.rerun()

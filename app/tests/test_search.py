@@ -23,17 +23,16 @@ def setup(args, session_user):
     COLLECTION_ID = response.json()["id"]
 
     # Upload the file to the collection
-    file_path = "app/tests/assets/pdf_small.pdf"
+    file_path = "app/tests/assets/pdf.pdf"
     files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/pdf")}
     data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % COLLECTION_ID}
     response = session_user.post(f"{args["base_url"]}/files", data=data, files=files)
-    FILE_ID = response.json()["id"]
 
-    # Get file name
-    response = session_user.get(f"{args["base_url"]}/files/{COLLECTION_ID}/{FILE_ID}")
-    FILE_NAME = response.json()["name"]
+    # Get document ID
+    response = session_user.get(f"{args["base_url"]}/documents/{COLLECTION_ID}")
+    DOCUMENT_ID = response.json()["data"][0]["id"]
 
-    yield FILE_NAME, COLLECTION_ID
+    yield DOCUMENT_ID, COLLECTION_ID
 
 
 @pytest.mark.usefixtures("args", "session_user", "cleanup_collections", "setup")
@@ -41,7 +40,7 @@ class TestSearch:
     def test_search(self, args, session_user, setup):
         """Test the POST /search response status code."""
 
-        FILE_NAME, COLLECTION_ID = setup
+        DOCUMENT_ID, COLLECTION_ID = setup
         data = {"prompt": "test query", "collections": [COLLECTION_ID], "k": 3}
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         assert response.status_code == 200, f"error: search request ({response.status_code} - {response.text})"
@@ -51,7 +50,7 @@ class TestSearch:
         assert all(isinstance(search, Search) for search in searches.data)
 
         search = searches.data[0]
-        assert search.chunk.metadata["file_name"] == FILE_NAME
+        assert search.chunk.metadata.document_id == DOCUMENT_ID
 
     def test_search_with_score_threshold(self, args, session_user, setup):
         """Test search with a score threshold."""
@@ -98,4 +97,4 @@ class TestSearch:
         assert all(isinstance(search, Search) for search in searches.data)
 
         search = searches.data[0]
-        assert search.chunk.metadata["file_name"].startswith("http")
+        assert search.chunk.metadata.document_name.startswith("http")

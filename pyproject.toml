@@ -33,7 +33,7 @@ dev = [
     "pre-commit==3.6.2",
 ]
 test = [
-    "pytest==8.2.2",
+    "pytest==8.3.3",
 ]
 
 [tool.setuptools]
@@ -52,3 +52,8 @@ forced-separate = ["tests"]
 
 [tool.ruff.lint.isort.sections]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+[tool.pytest.ini_options]
+addopts = "--exitfirst --log-cli-level=INFO"
+testpaths = ["app/tests"]
+minversion = "8.2.2"

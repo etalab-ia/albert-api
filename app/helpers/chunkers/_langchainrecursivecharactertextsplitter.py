@@ -1,10 +1,10 @@
 from typing import List, Optional
 import uuid
 
-from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from app.schemas.chunks import Chunk
+from app.schemas.chunks import Chunk, ChunkMetadata
+from app.schemas.data import ParserOutput
 
 
 class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
@@ -12,13 +12,17 @@ class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
         super().__init__(*args, **kwargs)
         self.chunk_min_size = chunk_min_size
 
-    def split(self, document: Document) -> List[Chunk]:
-        data = list()
-        chunks = self.split_text(document.page_content)
+    def split(self, input: List[ParserOutput]) -> List[Chunk]:
+        chunks = list()
 
-        for chunk in chunks:
-            if self.chunk_min_size and len(chunk) < self.chunk_min_size:
-                continue
-            data.append(Chunk(content=chunk, id=str(uuid.uuid4()), metadata=document.metadata))
+        for document in input:
+            contents = self.split_text(document.content)
+            for i, content in enumerate(contents):
+                if self.chunk_min_size and len(content) < self.chunk_min_size:
+                    continue
 
-        return data
+                document.metadata.document_part = i + 1
+                metadata = ChunkMetadata(**document.metadata.model_dump())
+                chunks.append(Chunk(content=content, id=str(uuid.uuid4()), metadata=metadata))
+
+        return chunks

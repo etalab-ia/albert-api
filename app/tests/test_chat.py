@@ -7,7 +7,7 @@ from app.schemas.chat import ChatCompletion, ChatCompletionChunk
 from app.utils.variables import LANGUAGE_MODEL_TYPE
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def setup(args, session_user):
     # retrieve model
     response = session_user.get(f"{args['base_url']}/models")

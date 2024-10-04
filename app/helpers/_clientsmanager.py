@@ -11,7 +11,7 @@ import requests
 from app.schemas.config import Config
 from app.schemas.models import Model, Models
 from app.utils.config import CONFIG, LOGGER
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION_ID
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, METADATA_COLLECTION_ID, DOCUMENT_COLLECTION_ID
 
 from ._gristkeymanager import GristKeyManager
 
@@ -29,6 +29,7 @@ class ModelDict(dict):
 
 
 # @TODO: add cache
+# @TODO: create class to overide OpenAI
 def get_models_list(self, *args, **kwargs):
     """
     Custom method to overwrite OpenAI's list method (client.models.list()). This method support
@@ -138,8 +139,12 @@ class ClientsManager:
         vectors.url = CONFIG.databases.vectors.args["url"]
         vectors.api_key = CONFIG.databases.vectors.args["api_key"]
 
+        # @TODO: technical dependancy, remove this
         if not vectors.collection_exists(collection_name=METADATA_COLLECTION_ID):
             vectors.create_collection(collection_name=METADATA_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
+
+        if not vectors.collection_exists(collection_name=DOCUMENT_COLLECTION_ID):
+            vectors.create_collection(collection_name=DOCUMENT_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
 
         self.vectors = vectors
 

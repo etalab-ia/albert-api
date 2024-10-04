@@ -3,10 +3,11 @@ from typing import Optional
 
 from grist_api import GristDocAPI
 from redis import Redis
-
+import json
 from app.utils.variables import USER_ROLE
 
 
+# @TODO: change name of the class
 class GristKeyManager(GristDocAPI):
     CACHE_EXPIRATION = 3600  # 1h
 
@@ -40,16 +41,16 @@ class GristKeyManager(GristDocAPI):
             key = f"auth-{self.doc_id}-{self.table_id}"
             result = self.redis.get(key)
             if result:
-                result = result.decode("utf-8")
+                result = json.loads(result)
                 return result
             result = func(self)
-            self.redis.setex(key, self.CACHE_EXPIRATION, result)
+            self.redis.setex(key, self.CACHE_EXPIRATION, json.dumps(result))
 
             return result
 
         return wrapper
 
-    # @cache
+    @cache
     def _get_api_keys(self):
         """
         Get all keys from a table in the Grist document.

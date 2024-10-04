@@ -23,7 +23,7 @@ async def search(request: SearchRequest, user: User = Security(check_api_key)) -
         request.collections.remove(INTERNET_COLLECTION_ID)
         internet = SearchOnInternet(clients=clients)
         if len(request.collections) > 0:
-            collection_model = vectorstore.get_collection_metadata(collection_ids=request.collections)[0].model
+            collection_model = vectorstore.get_collections(collection_ids=request.collections)[0].model
         else:
             collection_model = None
         data.extend(internet.search(prompt=request.prompt, n=4, model_id=collection_model, score_threshold=request.score_threshold))

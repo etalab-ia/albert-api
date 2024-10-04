@@ -4,10 +4,11 @@ from typing import List, Optional
 from duckduckgo_search import DDGS
 import numpy as np
 import requests
-
+from fastapi import UploadFile
 from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.parsers import HTMLParser
 from app.schemas.search import Search
+from app.utils.variables import INTERNET_COLLECTION_ID
 
 
 class SearchOnInternet:
@@ -23,10 +24,32 @@ class SearchOnInternet:
         "vie-publique.fr",
         "wikipedia.org",
         "autoritedelaconcurrence.fr",
+        "assemblee-nationale.fr",
+        "amf.asso.fr",
+        "elysee.fr",
+        "conseil-etat.fr",
+        "departements.fr",
+        "courdecassation.fr",
+        "lcp.fr",
+        "archives.assemblee-nationale.fr",
+        "senat.fr",
+        "gouvernement.fr",
+        "vie-publique.fr",
+        "carrefourlocal.senat.fr",
+        "elections-legislatives.fr",
+        "ccomptes.fr",
+        "conseil-constitutionnel.fr",
+        "ladocumentationfrancaise.fr",
+        "franceinfo.fr",
+        "lefigaro.fr",
+        "ouest-france.fr",
+        "lemonde.fr",
+        "leparisien.fr",
     ]
 
     USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:10.0) Gecko/20100101 Firefox/10.0"
     PAGE_LOAD_TIMEOUT = 60
+    # TODO: make chunk size dynamic based on the model
     CHUNK_SIZE = 1000
     CHUNK_OVERLAP = 0
     CHUNK_MIN_SIZE = 20
@@ -47,10 +70,9 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
 
     def __init__(self, clients: dict):
         self.clients = clients
-        self.parser = HTMLParser()
+        self.parser = HTMLParser(collection_id=INTERNET_COLLECTION_ID)
 
     def search(self, prompt: str, model_id: Optional[str] = None, n: int = 3, score_threshold: Optional[float] = None) -> List:
-        parser = HTMLParser()
         model_id = model_id or self.clients.SEARCH_INTERNET_EMBEDDINGS_MODEL_ID
         chunker = LangchainRecursiveCharacterTextSplitter(
             chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
@@ -72,19 +94,18 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
                 continue
 
             file = BytesIO(response.text.encode("utf-8"))
+            file = UploadFile(filename=url, file=file)
             # TODO: parse pdf if url is a pdf or json if url is a json
-            documents = parser.parse(file=file)
-            for document in documents:
-                document_chunks = chunker.split(document=document)
-                for chunk in document_chunks:
-                    chunk.metadata["file_name"] = url
-                    chunk.content = chunk.content + f"\n Source: {url}"
-
-                chunks.extend(document_chunks)
+            output = self.parser.parse(file=file)
+            chunks.extend(chunker.split(input=output))
 
         data = []
         if len(chunks) == 0:
             return data
+        else:
+            # Add internet query to the metadata of each chunk
+            for chunk in chunks:
+                chunk.metadata.internet_query = query
 
         response = self.clients.models[model_id].embeddings.create(input=[prompt], model=model_id)
         vector = response.data[0].embedding

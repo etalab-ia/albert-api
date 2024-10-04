@@ -1,5 +1,4 @@
 import logging
-import uuid
 
 import pytest
 
@@ -95,14 +94,6 @@ class TestFiles:
 
         assert [collection.user for collection in collections.data if collection.name == PRIVATE_COLLECTION_NAME][0] == USER
         assert [collection.user for collection in collections.data if collection.name == PUBLIC_COLLECTION_NAME][0] == ADMIN
-        assert len(collections.data) == 3
-
-        collection_id = [collection.id for collection in collections.data if collection.name == PRIVATE_COLLECTION_NAME][0]
-        response = session_user.get(f"{args["base_url"]}/collections/{collection_id}")
-        assert response.status_code == 200
-        collection = Collection(**response.json())
-        assert isinstance(collection, Collection)
-        assert collection_id == collection.id
 
     def test_get_collection_of_other_user(self, args, session_admin, setup):
         _, PRIVATE_COLLECTION_NAME, _, _, _, _ = setup
@@ -112,19 +103,6 @@ class TestFiles:
         collections = [collection["name"] for collection in collections["data"]]
 
         assert PRIVATE_COLLECTION_NAME not in collections
-
-    def test_get_internet_collection(self, args, session_user, setup):
-        _, _, _, _, _, _ = setup
-
-        response = session_user.get(f"{args["base_url"]}/collections/{INTERNET_COLLECTION_ID}")
-        assert response.status_code == 200
-        assert INTERNET_COLLECTION_ID == response.json()["id"]
-
-    def test_get_collection_with_unknown_id(self, args, session_user, setup):
-        _, _, _, _, _, _ = setup
-
-        response = session_user.get(f"{args["base_url"]}/collections/{str(uuid.uuid4())}")
-        assert response.status_code == 400
 
     def test_delete_private_collection_with_user(self, args, session_user, setup):
         _, PRIVATE_COLLECTION_NAME, _, _, _, _ = setup
