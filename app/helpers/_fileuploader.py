@@ -2,7 +2,6 @@ from typing import List, Literal, Optional
 
 from fastapi import UploadFile
 
-from app.helpers import VectorStore
 from app.schemas.data import ParserOutput
 from app.helpers.chunkers import *
 from app.helpers.parsers import HTMLParser, JSONParser, PDFParser
@@ -25,16 +24,15 @@ class FileUploader:
     }
 
     def __init__(self, collection_id: str, clients: dict, user: User):
-        self.vectorstore = VectorStore(clients=clients, user=user)
-        self.collection = self.vectorstore.get_collections(collection_ids=[collection_id])[0]
-
-        self.clients = clients
         self.user = user
+        self.vectorstore = clients.vectorstore
+
+        self.collection = self.vectorstore.get_collections(collection_ids=[collection_id], user=self.user)[0]
         self.collection_id = collection_id
 
     def parse(self, file: UploadFile) -> List[ParserOutput]:
         file_type = file.filename.split(".")[-1]
-        assert file_type in self.TYPE_DICT.keys(), f"Unsupported file type: {file_type}"
+        assert file_type in self.TYPE_DICT.keys(), "Unsupported file type."
 
         file_type = self.TYPE_DICT[file.filename.split(".")[-1]]
         # try:
@@ -51,7 +49,6 @@ class FileUploader:
 
         return output
 
-    # @TODO: check if document is empty raise an error
     def split(self, input: List[ParserOutput], chunker_name: Optional[Literal[*CHUNKERS]] = None, chunker_args: dict = {}) -> List[Chunk]:
         chunker_name = chunker_name if chunker_name else DEFAULT_CHUNKER
         chunker = globals()[chunker_name](**chunker_args)
@@ -60,5 +57,6 @@ class FileUploader:
 
         return chunks
 
-    def upsert(self, chunks: List[Chunk]):
-        self.vectorstore.upsert(chunks=chunks, collection_id=self.collection_id)
+    def upsert(self, chunks: List[Chunk]) -> None:
+        assert chunks, "No chunks to upsert."
+        self.vectorstore.upsert(chunks=chunks, collection_id=self.collection_id, user=self.user)

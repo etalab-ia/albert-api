@@ -7,8 +7,7 @@ import json
 from app.utils.variables import USER_ROLE
 
 
-# @TODO: change name of the class
-class GristKeyManager(GristDocAPI):
+class AuthManager(GristDocAPI):
     CACHE_EXPIRATION = 3600  # 1h
 
     def __init__(self, table_id: str, redis: Redis, *args, **kwargs):

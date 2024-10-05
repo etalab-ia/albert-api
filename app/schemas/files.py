@@ -15,7 +15,10 @@ class ChunkerArgs(BaseModel):
     separators: List[str] = Field(["\n\n", "\n", ". ", " "])
 
     # additional arguments
-    chunk_min_size: Optional[int] = Field(0)
+    chunk_min_size: int = Field(0)
+
+    class Config:
+        extra = "allow"
 
 
 class Chunker(BaseModel):

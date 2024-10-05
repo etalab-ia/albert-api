@@ -21,7 +21,10 @@ async def completions(request: CompletionRequest, user: User = Security(check_ap
     client = clients.models[request["model"]]
 
     if client.type != LANGUAGE_MODEL_TYPE:
-        raise HTTPException(status_code=400, detail="Model is not a language model")
+        raise HTTPException(status_code=400, detail="Wrong model type.")
+
+    if not client.check_context_length(model=request["model"], messages=request["messages"]):
+        raise HTTPException(status_code=400, detail="Context length exceeded.")
 
     url = f"{client.base_url}completions"
     headers = {"Authorization": f"Bearer {client.api_key}"}
@@ -29,5 +32,6 @@ async def completions(request: CompletionRequest, user: User = Security(check_ap
     async with httpx.AsyncClient(timeout=20) as async_client:
         response = await async_client.request(method="POST", url=url, headers=headers, json=request)
         response.raise_for_status()
+
         data = response.json()
         return Completions(**data)

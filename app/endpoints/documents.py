@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Response, Security, Query
 
-from app.helpers import VectorStore
+
 from app.schemas.documents import Documents
 from app.schemas.security import User
 from app.utils.lifespan import clients
@@ -21,10 +21,9 @@ async def get_documents(
     """
     collection = str(collection)
     offset = str(offset) if offset else None
-    vectorstore = VectorStore(clients=clients, user=user)
 
     try:
-        data = vectorstore.get_documents(collection_id=collection, limit=limit, offset=offset)
+        data = clients.vectorstore.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -41,11 +40,9 @@ async def delete_document(
     Delete a document and relative collections.
     """
     collection, document = str(collection), str(document)
-    vectorstore = VectorStore(clients=clients, user=user)
 
-    # @TODO: raise 404 if file not found
     try:
-        vectorstore.delete_document(collection_id=collection, document_id=document)
+        clients.vectorstore.delete_document(collection_id=collection, document_id=document, user=user)
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

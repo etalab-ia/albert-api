@@ -1,6 +1,7 @@
 import time
 from typing import List, Optional
 
+from qdrant_client import QdrantClient
 from qdrant_client.http.models import (
     Distance,
     FieldCondition,
@@ -17,37 +18,44 @@ from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
+from app.schemas.security import User
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
-    INTERNET_COLLECTION_ID,
-    METADATA_COLLECTION_ID,
     PRIVATE_COLLECTION_TYPE,
     PUBLIC_COLLECTION_TYPE,
     USER_ROLE,
-    DOCUMENT_COLLECTION_ID,
 )
+
+# from ._clientsmanager import ModelDict
 
 
 class VectorStore:
     BATCH_SIZE = 48
-    FORBIDDEN_COLLECTION_NAMES = [INTERNET_COLLECTION_ID, METADATA_COLLECTION_ID]
+    METADATA_COLLECTION_ID = "collections"
+    DOCUMENT_COLLECTION_ID = "documents"
 
-    def __init__(self, clients: dict, user: str):
-        self.vectors = clients.vectors
-        self.models = clients.models
-        self.user = user
+    def __init__(self, vectors: QdrantClient, models: dict):
+        self.vectors = vectors
+        self.models = models
 
-    def upsert(self, chunks: List[Chunk], collection_id: str) -> None:
+        if not self.vectors.collection_exists(collection_name=self.METADATA_COLLECTION_ID):
+            self.vectors.create_collection(collection_name=self.METADATA_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
+
+        if not self.vectors.collection_exists(collection_name=self.DOCUMENT_COLLECTION_ID):
+            self.vectors.create_collection(collection_name=self.DOCUMENT_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
+
+    def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         """
         Add chunks to a collection.
 
         Args:
             chunks (List[Chunk]): A list of chunks to add to the collection.
             collection_id (str): The id of the collection to add the chunks to.
+            user (User): The user adding the chunks.
         """
-        collection = self.get_collections(collection_ids=[collection_id])[0]
+        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if self.user.role == USER_ROLE:
+        if user.role == USER_ROLE:
             assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
@@ -55,7 +63,7 @@ class VectorStore:
 
             # insert documents
             self.vectors.upsert(
-                collection_name=DOCUMENT_COLLECTION_ID,
+                collection_name=self.DOCUMENT_COLLECTION_ID,
                 points=[
                     PointStruct(
                         id=chunk.metadata.document_id,
@@ -87,12 +95,27 @@ class VectorStore:
     def search(
         self,
         prompt: str,
+        user: User,
         collection_ids: List[str] = [],
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
         filter: Optional[Filter] = None,
     ) -> List[Search]:
-        collections = self.get_collections(collection_ids=collection_ids)
+        """
+        Search for chunks in a collection.
+
+        Args:
+            prompt (str): The prompt to search for.
+            user (User): The user searching for the chunks.
+            collection_ids (List[str]): The ids of the collections to search in.
+            k (Optional[int]): The number of chunks to return.
+            score_threshold (Optional[float]): The score threshold for the chunks to return.
+            filter (Optional[Filter]): The filter to apply to the chunks to return.
+
+        Returns:
+            List[Search]: A list of Search objects containing the retrieved chunks.
+        """
+        collections = self.get_collections(collection_ids=collection_ids, user=user)
         assert len(set(collection.model for collection in collections)) == 1, "Different collections models."
 
         model = collections[0].model
@@ -117,12 +140,14 @@ class VectorStore:
 
         return searches
 
-    def get_collections(self, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
         """
         Get metadata of collections.
 
         Args:
+            user (User): The user retrieving the collections.
             collection_ids (List[str]): List of collection ids to retrieve metadata for. If is an empty list, all collections will be considered.
+
 
         Returns:
             List[Collection]: A list of Collection objects containing the metadata for the specified collections.
@@ -130,15 +155,15 @@ class VectorStore:
         # if no collection ids are provided, get all collections
         must = [HasIdCondition(has_id=collection_ids)] if collection_ids else []
         should = [
-            FieldCondition(key="user", match=MatchAny(any=[self.user.id])),
+            FieldCondition(key="user", match=MatchAny(any=[user.id])),
             FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE])),
         ]
         filter = Filter(must=must, should=should)
 
-        records = self.vectors.scroll(collection_name=METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=None)
+        records = self.vectors.scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=None)
         data, offset = records[0], records[1]
         while offset is not None:
-            records = self.vectors.scroll(collection_name=METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=offset)
+            records = self.vectors.scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=offset)
             data.extend(records[0])
             offset = records[1]
 
@@ -154,7 +179,7 @@ class VectorStore:
         collections = list()
         for collection in data:
             document_count = self.vectors.count(
-                collection_name=DOCUMENT_COLLECTION_ID,
+                collection_name=self.DOCUMENT_COLLECTION_ID,
                 count_filter=Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection.id]))]),
             ).count
             collections.append(
@@ -172,7 +197,7 @@ class VectorStore:
 
         return collections
 
-    def create_collection(self, collection_id: str, collection_name: str, collection_model: str, collection_type: str) -> None:
+    def create_collection(self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, user: User) -> None:
         """
         Create a collection, if collection already exists, return the collection id.
 
@@ -181,11 +206,11 @@ class VectorStore:
             collection_name (str): The name of the collection to create.
             collection_model (str): The model of the collection to create.
             collection_type (str): The type of the collection to create.
+            user (User): The user creating the collection.
         """
-        assert collection_name not in self.FORBIDDEN_COLLECTION_NAMES, "Forbidden collection name."
         assert self.models[collection_model].type == EMBEDDINGS_MODEL_TYPE, "Wrong model type."
 
-        if self.user.role == USER_ROLE:
+        if user.role == USER_ROLE:
             assert collection_type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
         # create metadata
@@ -193,59 +218,48 @@ class VectorStore:
             "name": collection_name,
             "type": collection_type,
             "model": collection_model,
-            "user": self.user.id,
+            "user": user.id,
             "description": None,
             "created_at": round(time.time()),
         }
-        self.vectors.upsert(collection_name=METADATA_COLLECTION_ID, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
+        self.vectors.upsert(collection_name=self.METADATA_COLLECTION_ID, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
 
         # create collection
         self.vectors.create_collection(
             collection_name=collection_id, vectors_config=VectorParams(size=self.models[collection_model].vector_size, distance=Distance.COSINE)
         )
 
-    def delete_collection(self, collection_id: str) -> None:
+    def delete_collection(self, collection_id: str, user: User) -> None:
         """
         Delete a collection and all its associated data.
 
         Args:
             collection_id (str): The id of the collection to delete.
+            user (User): The user deleting the collection.
         """
-        collection = self.get_collections(collection_ids=[collection_id])[0]
+        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if self.user.role == USER_ROLE:
+        if user.role == USER_ROLE:
             assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
         self.vectors.delete_collection(collection_name=collection.id)
-        self.vectors.delete(collection_name=METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
+        self.vectors.delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
-    def delete_chunks(self, collection_id: str, filter: Optional[Filter] = None) -> None:
-        """
-        Delete chunks from a collection.
-
-        Args:
-            collection_id (str): The id of the collection to delete chunks from.
-            filter (Optional[Filter]): Optional filter to apply when deleting chunks. If no filter is provided, all chunks will be deleted.
-        """
-        collection = self.get_collections(collection_ids=[collection_id])[0]
-
-        if self.user.role == USER_ROLE:
-            assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
-
-        self.vectors.delete(collection_name=collection.id, points_selector=FilterSelector(filter=filter))
-
-    def get_chunks(self, collection_id: str, document_id: str, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Chunk]:
         """
         Get chunks from a collection and a document.
 
         Args:
             collection_id (str): The id of the collection to get chunks from.
             document_id (str): The id of the document to get chunks from.
+            user (User): The user retrieving the chunks.
+            limit (Optional[int]): The number of chunks to return.
+            offset (Optional[int]): The offset of the chunks to return.
 
         Returns:
             List[Chunk]: A list of Chunk objects containing the retrieved chunks.
         """
-        collection = self.get_collections(collection_ids=[collection_id])[0]
+        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
         data = self.vectors.scroll(collection_name=collection.id, scroll_filter=filter, limit=limit, offset=offset)[0]
@@ -253,20 +267,23 @@ class VectorStore:
 
         return chunks
 
-    def get_documents(self, collection_id: str, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Document]:
         """
         Get documents from a collection.
 
         Args:
             collection_id (str): The id of the collection to get documents from.
+            user (User): The user retrieving the documents.
+            limit (Optional[int]): The number of documents to return.
+            offset (Optional[int]): The offset of the documents to return.
 
         Returns:
             List[Document]: A list of Document objects containing the retrieved documents.
         """
-        collection = self.get_collections(collection_ids=[collection_id])[0]
+        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         filter = Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection_id]))])
-        data = self.vectors.scroll(collection_name=DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
+        data = self.vectors.scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
         documents = list()
         for document in data:
             chunks_count = self.vectors.count(
@@ -277,20 +294,23 @@ class VectorStore:
 
         return documents
 
-    def delete_document(self, collection_id: str, document_id: str):
+    def delete_document(self, collection_id: str, document_id: str, user: User):
         """
         Delete a document from a collection.
 
         Args:
             collection_id (str): The id of the collection to delete the document from.
             document_id (str): The id of the document to delete.
+            user (User): The user deleting the document.
         """
-        collection = self.get_collections(collection_ids=[collection_id])[0]
+        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if self.user.role == USER_ROLE:
+        if user.role == USER_ROLE:
             assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
 
-        self.delete_chunks(
-            collection_id=collection.id, filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-        )
-        self.vectors.delete(collection_name=DOCUMENT_COLLECTION_ID, points_selector=PointIdsList(points=[document_id]))
+        # delete chunks
+        filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
+        self.vectors.delete(collection_name=collection.id, points_selector=FilterSelector(filter=filter))
+
+        # delete document
+        self.vectors.delete(collection_name=self.DOCUMENT_COLLECTION_ID, points_selector=PointIdsList(points=[document_id]))

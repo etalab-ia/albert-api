@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 import uuid
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -8,7 +8,7 @@ from app.schemas.data import ParserOutput
 
 
 class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
-    def __init__(self, chunk_min_size: Optional[int] = None, *args, **kwargs):
+    def __init__(self, chunk_min_size: int = 0, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.chunk_min_size = chunk_min_size
 
@@ -18,7 +18,7 @@ class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
         for document in input:
             contents = self.split_text(document.content)
             for i, content in enumerate(contents):
-                if self.chunk_min_size and len(content) < self.chunk_min_size:
+                if len(content) < self.chunk_min_size:
                     continue
 
                 document.metadata.document_part = i + 1

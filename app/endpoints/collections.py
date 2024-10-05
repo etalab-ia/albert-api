@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Response, Security
 from fastapi.responses import JSONResponse
 
-from app.helpers import VectorStore
+
 from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.security import User
 from app.utils.lifespan import clients
@@ -20,11 +20,10 @@ async def create_collection(request: CollectionRequest, user: User = Security(ch
     """
     Create a new collection.
     """
-    vectorstore = VectorStore(clients=clients, user=user)
     collection_id = str(uuid.uuid4())
     try:
-        vectorstore.create_collection(
-            collection_id=collection_id, collection_name=request.name, collection_model=request.model, collection_type=request.type
+        clients.vectorstore.create_collection(
+            collection_id=collection_id, collection_name=request.name, collection_model=request.model, collection_type=request.type, user=user
         )
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -44,11 +43,9 @@ async def get_collections(user: User = Security(check_api_key)) -> Union[Collect
         type=PUBLIC_COLLECTION_TYPE,
         description="Use this collection to search on the internet.",
     )
-    vectorstore = VectorStore(clients=clients, user=user)
     try:
-        data = vectorstore.get_collections()
+        data = clients.vectorstore.get_collections(user=user)
     except AssertionError as e:
-        # TODO: return a 404 error if collection not found
         raise HTTPException(status_code=400, detail=str(e))
 
     data.append(internet_collection)
@@ -62,9 +59,8 @@ async def delete_collections(collection: UUID, user: User = Security(check_api_k
     Delete a collection.
     """
     collection = str(collection)
-    vectorstore = VectorStore(clients=clients, user=user)
     try:
-        vectorstore.delete_collection(collection_id=collection)
+        clients.vectorstore.delete_collection(collection_id=collection, user=user)
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -22,19 +22,20 @@ async def chat_completions(request: ChatCompletionRequest, user: User = Security
     request = dict(request)
     client = clients.models[request["model"]]
     if client.type != LANGUAGE_MODEL_TYPE:
-        raise HTTPException(status_code=400, detail="Model is not a language model")
+        raise HTTPException(status_code=400, detail="Wrong model type.")
 
     url = f"{client.base_url}chat/completions"
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
     if not client.check_context_length(model=request["model"], messages=request["messages"]):
-        raise HTTPException(status_code=400, detail="Context length too large")
+        raise HTTPException(status_code=400, detail="Context length exceeded.")
 
     # non stream case
     if not request["stream"]:
         async with httpx.AsyncClient(timeout=20) as async_client:
             response = await async_client.request(method="POST", url=url, headers=headers, json=request)
             response.raise_for_status()
+
             data = response.json()
             return ChatCompletion(**data)
 

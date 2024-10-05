@@ -68,12 +68,12 @@ reponse : Renouvellement pièce identité France
 Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 
-    def __init__(self, clients: dict):
-        self.clients = clients
+    def __init__(self, models: dict):
+        self.models = models
         self.parser = HTMLParser(collection_id=INTERNET_COLLECTION_ID)
 
     def search(self, prompt: str, model_id: Optional[str] = None, n: int = 3, score_threshold: Optional[float] = None) -> List:
-        model_id = model_id or self.clients.SEARCH_INTERNET_EMBEDDINGS_MODEL_ID
+        model_id = model_id or self.models.SEARCH_INTERNET_EMBEDDINGS_MODEL_ID
         chunker = LangchainRecursiveCharacterTextSplitter(
             chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
         )
@@ -107,14 +107,14 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             for chunk in chunks:
                 chunk.metadata.internet_query = query
 
-        response = self.clients.models[model_id].embeddings.create(input=[prompt], model=model_id)
+        response = self.models[model_id].embeddings.create(input=[prompt], model=model_id)
         vector = response.data[0].embedding
         vectors = []
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
 
             texts = [chunk.content for chunk in batch]
-            response = self.clients.models[model_id].embeddings.create(input=texts, model=model_id)
+            response = self.models[model_id].embeddings.create(input=texts, model=model_id)
             vectors.extend([vector.embedding for vector in response.data])
 
         cosine = np.dot(vectors, vector) / (np.linalg.norm(vectors, axis=1) * np.linalg.norm(vector))
@@ -128,9 +128,9 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         return data
 
     def _get_web_query(self, prompt: str, language_model: Optional[str] = None) -> str:
-        language_model = language_model or self.clients.SEARCH_INTERNET_LANGUAGE_MODEL_ID
+        language_model = language_model or self.models.SEARCH_INTERNET_LANGUAGE_MODEL_ID
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        response = self.clients.models[language_model].chat.completions.create(
+        response = self.models[language_model].chat.completions.create(
             messages=[{"role": "user", "content": prompt}], model=language_model, temperature=0.2, stream=False
         )
         query = response.choices[0].message.content

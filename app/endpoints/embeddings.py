@@ -20,15 +20,19 @@ async def embeddings(request: EmbeddingsRequest, user: User = Security(check_api
     request = dict(request)
     client = clients.models[request["model"]]
     if client.type != EMBEDDINGS_MODEL_TYPE:
-        raise HTTPException(status_code=400, detail=f"Model type must be {EMBEDDINGS_MODEL_TYPE}")
+        raise HTTPException(status_code=400, detail="Wrong model type.")
 
     url = f"{client.base_url}embeddings"
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
-    # @TODO add check length ?
-
     async with httpx.AsyncClient(timeout=20) as async_client:
         response = await async_client.request(method="POST", url=url, headers=headers, json=request)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            if "`inputs` must have less than" in e.response.text:
+                raise HTTPException(status_code=400, detail="Max input length exceeded.")
+            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+
         data = response.json()
         return Embeddings(**data)
