@@ -15,11 +15,17 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope="session")
 def args(request):
-    return {
+    args = {
         "base_url": request.config.getoption("--base-url"),
         "api_key_user": request.config.getoption("--api-key-user"),
         "api_key_admin": request.config.getoption("--api-key-admin"),
     }
+
+    assert args["base_url"] != "EMPTY", "--base-url argument is required."
+    assert args["api_key_user"] != "EMPTY", "--api-key-user argument is required."
+    assert args["api_key_admin"] != "EMPTY", "--api-key-admin argument is required."
+
+    return args
 
 
 @pytest.fixture(scope="session")

@@ -81,8 +81,10 @@ if prompt := st.chat_input("Message to Albert"):
             response = requests.post(f"{BASE_URL}/search", json=data, headers={"Authorization": f"Bearer {API_KEY}"})
             assert response.status_code == 200
             prompt_template = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"
+            print(response.json()["data"])
             chunks = "\n".join([result["chunk"]["content"] for result in response.json()["data"]])
-            sources = list(set(result["chunk"]["metadata"]["file_name"] for result in response.json()["data"]))
+
+            sources = list(set(result["chunk"]["metadata"]["document_name"] for result in response.json()["data"]))
 
             prompt = prompt_template.format(prompt=prompt, chunks=chunks)
             messages = st.session_state.messages[:-1] + [{"role": "user", "content": prompt}]

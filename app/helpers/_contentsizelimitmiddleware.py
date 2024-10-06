@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import HTTPException
+from app.utils.exceptions import FileSizeLimitExceededException
 
 
 class ContentSizeLimitMiddleware:
@@ -33,7 +33,7 @@ class ContentSizeLimitMiddleware:
             body_len = len(message.get("body", b""))
             received += body_len
             if received > self.max_content_size:
-                raise HTTPException(detail="File size limit exceeded", status_code=413)
+                raise FileSizeLimitExceededException()
 
             return message
 

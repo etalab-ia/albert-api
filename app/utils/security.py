@@ -2,11 +2,12 @@ import base64
 import hashlib
 from typing import Annotated
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.utils.lifespan import clients
 from app.schemas.security import User
+from app.utils.exceptions import InvalidAuthenticationSchemeException, InvalidAPIKeyException
 
 
 def encode_string(input: str) -> str:
@@ -41,12 +42,12 @@ def check_api_key(
     """
     if clients.auth:
         if api_key.scheme != "Bearer":
-            raise HTTPException(status_code=403, detail="Invalid authentication scheme")
+            raise InvalidAuthenticationSchemeException()
 
         role = clients.auth.check_api_key(api_key.credentials)
 
         if role is None:
-            raise HTTPException(status_code=403, detail="Invalid API key")
+            raise InvalidAPIKeyException()
 
         user_id = encode_string(input=api_key.credentials)
 

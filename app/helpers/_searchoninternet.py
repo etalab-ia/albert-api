@@ -2,12 +2,15 @@ from io import BytesIO
 from typing import List, Optional
 
 from duckduckgo_search import DDGS
+from duckduckgo_search.exceptions import RatelimitException
 import numpy as np
 import requests
-
+from fastapi import UploadFile
 from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.parsers import HTMLParser
 from app.schemas.search import Search
+from app.utils.variables import INTERNET_COLLECTION_ID
+from app.utils.config import LOGGER
 
 
 class SearchOnInternet:
@@ -23,10 +26,32 @@ class SearchOnInternet:
         "vie-publique.fr",
         "wikipedia.org",
         "autoritedelaconcurrence.fr",
+        "assemblee-nationale.fr",
+        "amf.asso.fr",
+        "elysee.fr",
+        "conseil-etat.fr",
+        "departements.fr",
+        "courdecassation.fr",
+        "lcp.fr",
+        "archives.assemblee-nationale.fr",
+        "senat.fr",
+        "gouvernement.fr",
+        "vie-publique.fr",
+        "carrefourlocal.senat.fr",
+        "elections-legislatives.fr",
+        "ccomptes.fr",
+        "conseil-constitutionnel.fr",
+        "ladocumentationfrancaise.fr",
+        "franceinfo.fr",
+        "lefigaro.fr",
+        "ouest-france.fr",
+        "lemonde.fr",
+        "leparisien.fr",
     ]
 
-    USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:10.0) Gecko/20100101 Firefox/10.0"
+    USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
     PAGE_LOAD_TIMEOUT = 60
+    # TODO: make chunk size dynamic based on the model
     CHUNK_SIZE = 1000
     CHUNK_OVERLAP = 0
     CHUNK_MIN_SIZE = 20
@@ -45,20 +70,24 @@ reponse : Renouvellement pièce identité France
 Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 
-    def __init__(self, clients: dict):
-        self.clients = clients
-        self.parser = HTMLParser()
+    def __init__(self, models: dict):
+        self.models = models
+        self.parser = HTMLParser(collection_id=INTERNET_COLLECTION_ID)
 
     def search(self, prompt: str, model_id: Optional[str] = None, n: int = 3, score_threshold: Optional[float] = None) -> List:
-        parser = HTMLParser()
-        model_id = model_id or self.clients.SEARCH_INTERNET_EMBEDDINGS_MODEL_ID
+        model_id = model_id or self.models.SEARCH_INTERNET_EMBEDDINGS_MODEL_ID
         chunker = LangchainRecursiveCharacterTextSplitter(
             chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
         )
 
         query = self._get_web_query(prompt=prompt)
-        with DDGS() as ddgs:
-            results = list(ddgs.text(query, region="fr-fr", safesearch="On", max_results=n))
+        # TODO: replace duckduckgo to avoid rate limiting issues
+        try:
+            with DDGS() as ddgs:
+                results = list(ddgs.text(query, region="fr-fr", safesearch="On", max_results=n))
+        except RatelimitException:
+            LOGGER.warning("DuckDuckGo rate limit exceeded.")
+            results = []
 
         chunks = []
         for result in results:
@@ -72,28 +101,27 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
                 continue
 
             file = BytesIO(response.text.encode("utf-8"))
+            file = UploadFile(filename=url, file=file)
             # TODO: parse pdf if url is a pdf or json if url is a json
-            documents = parser.parse(file=file)
-            for document in documents:
-                document_chunks = chunker.split(document=document)
-                for chunk in document_chunks:
-                    chunk.metadata["file_name"] = url
-                    chunk.content = chunk.content + f"\n Source: {url}"
-
-                chunks.extend(document_chunks)
+            output = self.parser.parse(file=file)
+            chunks.extend(chunker.split(input=output))
 
         data = []
         if len(chunks) == 0:
             return data
+        else:
+            # Add internet query to the metadata of each chunk
+            for chunk in chunks:
+                chunk.metadata.internet_query = query
 
-        response = self.clients.models[model_id].embeddings.create(input=[prompt], model=model_id)
+        response = self.models[model_id].embeddings.create(input=[prompt], model=model_id)
         vector = response.data[0].embedding
         vectors = []
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
 
             texts = [chunk.content for chunk in batch]
-            response = self.clients.models[model_id].embeddings.create(input=texts, model=model_id)
+            response = self.models[model_id].embeddings.create(input=texts, model=model_id)
             vectors.extend([vector.embedding for vector in response.data])
 
         cosine = np.dot(vectors, vector) / (np.linalg.norm(vectors, axis=1) * np.linalg.norm(vector))
@@ -107,9 +135,9 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         return data
 
     def _get_web_query(self, prompt: str, language_model: Optional[str] = None) -> str:
-        language_model = language_model or self.clients.SEARCH_INTERNET_LANGUAGE_MODEL_ID
+        language_model = language_model or self.models.SEARCH_INTERNET_LANGUAGE_MODEL_ID
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        response = self.clients.models[language_model].chat.completions.create(
+        response = self.models[language_model].chat.completions.create(
             messages=[{"role": "user", "content": prompt}], model=language_model, temperature=0.2, stream=False
         )
         query = response.choices[0].message.content

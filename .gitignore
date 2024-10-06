@@ -6,9 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-# PDF Files
-*.pdf
-
 # Distribution / packaging
 .Python
 build/
@@ -201,4 +198,6 @@ terraform.rc
 .DS_Store
 .idea
 .vscode
-*.json
+.json
+/docs/tutorials/*.json
+/docs/tutorials/*.pdf

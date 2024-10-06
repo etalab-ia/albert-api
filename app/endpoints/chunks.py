@@ -1,44 +1,29 @@
+from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Security
-from qdrant_client.http.models import Filter, HasIdCondition
+from fastapi import APIRouter, Security, Query
 
-from app.helpers import VectorStore
-from app.schemas.chunks import Chunk, ChunkRequest, Chunks
+from app.schemas.chunks import Chunks
+from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
-from app.schemas.security import User
 
 router = APIRouter()
 
 
-@router.get("/chunks/{collection}/{chunk}")
-async def get_chunk(collection: UUID, chunk: str, user: User = Security(check_api_key)) -> Chunk:
+@router.get("/chunks/{collection}/{document}")
+async def get_chunks(
+    collection: UUID,
+    document: UUID,
+    limit: Optional[int] = Query(default=10, ge=1, le=10),
+    offset: Optional[UUID] = None,
+    user: User = Security(check_api_key),
+) -> Chunks:
     """
     Get a single chunk.
     """
-    collection = str(collection)
-    vectorstore = VectorStore(clients=clients, user=user)
-    ids = [chunk]
-    filter = Filter(must=[HasIdCondition(has_id=ids)])
-    try:
-        chunks = vectorstore.get_chunks(collection_id=collection, filter=filter)
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    return chunks[0]
+    collection, document = str(collection), str(document)
+    offset = str(offset) if offset else None
+    data = clients.vectors.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user)
 
-
-@router.post("/chunks/{collection}")
-async def get_chunks(collection: UUID, request: ChunkRequest, user: User = Security(check_api_key)) -> Chunks:
-    """
-    Get multiple chunks.
-    """
-    collection = str(collection)
-    vectorstore = VectorStore(clients=clients, user=user)
-    ids = request.chunks
-    filter = Filter(must=[HasIdCondition(has_id=ids)])
-    try:
-        chunks = vectorstore.get_chunks(collection_id=collection, filter=filter)
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    return Chunks(data=chunks)
+    return Chunks(data=data)

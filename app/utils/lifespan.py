@@ -8,13 +8,11 @@ from app.utils.config import CONFIG
 clients = ClientsManager(config=CONFIG)
 
 
+# @TODO: test to move into main.py
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
-    clients.set_models()
-    clients.set_cache()
-    clients.set_vectors()
-    clients.set_auth()
+    clients.set()
 
     yield

@@ -1,9 +1,12 @@
 from typing import List
-from io import BytesIO
+from fastapi import UploadFile
+import uuid
+import time
 
 from bs4 import BeautifulSoup
-from langchain.docstore.document import Document as LangchainDocument
 
+
+from app.schemas.data import ParserOutput, ParserOutputMetadata
 from ._baseparser import BaseParser
 
 
@@ -11,29 +14,29 @@ class HTMLParser(BaseParser):
     ALLOWED_TAGS = ["h1", "h2", "h3", "h4", "li", "p"]
     EXCLUDED_WORDS = []
 
-    def __init__(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def parse(self, file: BytesIO) -> List[LangchainDocument]:
+    def parse(self, file: UploadFile) -> List[ParserOutput]:
         """
-        Parse a HTML file and converts it into a list of Langchain documents.
+        Parse a HTML file and converts it into a list of chunk objects.
 
         Args:
-            file (BeautifulSoup): Parsed HTML content.
+            file (UploadFile): HTML file to parse.
 
         Returns:
-            List[LangchainDocument]: List of Langchain documents.
+            List[ParserOutput]: List of parsed outputs.
         """
 
-        file = file.read().decode("utf-8")
-        file = BeautifulSoup(file, "html.parser")
+        content = file.file.read().decode("utf-8")
+        content = BeautifulSoup(content, "html.parser")
 
         first_element = None
         li_consecutive_count = 0
         li_temp_storage = []
         extracted_text = []
         extracted_title = []
-        for element in file.descendants:
+        for element in content.descendants:
             if element.name in ["h1", "h2"]:
                 text = element.get_text(" ", strip=True)
                 if len(text.split()) > 1 and not any(word in text.lower() for word in self.EXCLUDED_WORDS):
@@ -61,8 +64,13 @@ class HTMLParser(BaseParser):
 
         title = " - ".join(extracted_title).strip()
         title = max([(text, len(text.split())) for text in title.split(" - ")], key=lambda x: x[1])[0]
-        text = "\n".join(extracted_text).strip()
 
-        documents = [LangchainDocument(page_content=self.clean(text), metadata={"title": title})]
+        content = self.clean("\n".join(extracted_text).strip())
+        name = file.filename.strip()
+        metadata = ParserOutputMetadata(
+            collection_id=self.collection_id, document_id=str(uuid.uuid4()), document_name=name, document_created_at=round(time.time()), title=title
+        )
 
-        return documents
+        output = [ParserOutput(content=content, metadata=metadata)]
+
+        return output

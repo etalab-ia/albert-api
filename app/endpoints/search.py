@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException, Security
+from fastapi import APIRouter, Security
 
-from app.helpers import SearchOnInternet, VectorStore
+from app.helpers import SearchOnInternet
 from app.schemas.search import Searches, SearchRequest
 from app.schemas.security import User
 from app.utils.lifespan import clients
@@ -16,25 +16,22 @@ async def search(request: SearchRequest, user: User = Security(check_api_key)) -
     Similarity search for chunks in the vector store or on the internet.
     """
 
-    vectorstore = VectorStore(clients=clients, user=user)
-
     data = []
     if INTERNET_COLLECTION_ID in request.collections:
         request.collections.remove(INTERNET_COLLECTION_ID)
-        internet = SearchOnInternet(clients=clients)
+        internet = SearchOnInternet(models=clients.models)
         if len(request.collections) > 0:
-            collection_model = vectorstore.get_collection_metadata(collection_ids=request.collections)[0].model
+            collection_model = clients.vectors.get_collections(collection_ids=request.collections, user=user)[0].model
         else:
             collection_model = None
         data.extend(internet.search(prompt=request.prompt, n=4, model_id=collection_model, score_threshold=request.score_threshold))
 
     if len(request.collections) > 0:
-        try:
-            data.extend(
-                vectorstore.search(prompt=request.prompt, collection_ids=request.collections, k=request.k, score_threshold=request.score_threshold)
+        data.extend(
+            clients.vectors.search(
+                prompt=request.prompt, collection_ids=request.collections, k=request.k, score_threshold=request.score_threshold, user=user
             )
-        except AssertionError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+        )
 
     data = sorted(data, key=lambda x: x.score, reverse=False)[: request.k]
 

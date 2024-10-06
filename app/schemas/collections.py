@@ -13,6 +13,7 @@ class Collection(BaseModel):
     user: Optional[str] = None
     description: Optional[str] = None
     created_at: Optional[int] = None
+    documents: Optional[int] = None
 
 
 class Collections(BaseModel):

@@ -4,21 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.utils.variables import CHUNKERS, SUPPORTED_FILE_TYPES
-
-
-class File(BaseModel):
-    object: Literal["file"] = "file"
-    id: str
-    bytes: int
-    name: str
-    chunks: list = []
-    created_at: int
-
-
-class Files(BaseModel):
-    object: Literal["list"] = "list"
-    data: List[str]
+from app.utils.variables import CHUNKERS
 
 
 class ChunkerArgs(BaseModel):
@@ -29,7 +15,10 @@ class ChunkerArgs(BaseModel):
     separators: List[str] = Field(["\n\n", "\n", ". ", " "])
 
     # additional arguments
-    chunk_min_size: Optional[int] = Field(0)
+    chunk_min_size: int = Field(0)
+
+    class Config:
+        extra = "allow"
 
 
 class Chunker(BaseModel):
@@ -40,7 +29,6 @@ class Chunker(BaseModel):
 class FilesRequest(BaseModel):
     collection: UUID = Field(...)
     chunker: Optional[Chunker] = Field(None)
-    file_type: Optional[Literal[*SUPPORTED_FILE_TYPES]] = None
 
     @model_validator(mode="before")
     @classmethod

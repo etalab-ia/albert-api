@@ -1,5 +1,5 @@
 import time
-from typing import List, Optional
+from typing import List
 
 import requests
 import streamlit as st
@@ -88,23 +88,7 @@ def get_collections(api_key: str):
     return collections
 
 
-def get_files(api_key: str, collection_ids: List[str]):
-    files = {}
-    headers = {"Authorization": f"Bearer {api_key}"}
-    for collection_id in collection_ids:
-        files[collection_id] = []
-        response = requests.get(f"{BASE_URL}/files/{collection_id}", headers=headers)
-        assert response.status_code == 200
-        data = response.json()["data"]
-        for file_id in data:
-            response = requests.get(f"{BASE_URL}/files/{collection_id}/{file_id}", headers=headers)
-            assert response.status_code == 200
-            files[collection_id].append(response.json())
-
-    return files
-
-
-def upload_file(api_key: str, file, collection_id: str) -> Optional[str]:
+def upload_file(api_key: str, file, collection_id: str) -> None:
     headers = {"Authorization": f"Bearer {api_key}"}
     files = {"file": (file.name, file.getvalue(), file.type)}
     data = {"request": '{"collection": "%s"}' % collection_id}
@@ -112,13 +96,26 @@ def upload_file(api_key: str, file, collection_id: str) -> Optional[str]:
 
     if response.status_code == 201:
         st.toast("Upload succeed", icon="✅")
-        return response.json()["id"]
     else:
         st.toast("Upload failed", icon="❌")
 
 
-def delete_file(api_key: str, collection_id: str, file_id: str):
-    url = f"{BASE_URL}/files/{collection_id}/{file_id}"
+def get_documents(api_key: str, collection_ids: List[str]) -> dict:
+    documents = list()
+    headers = {"Authorization": f"Bearer {api_key}"}
+    for collection_id in collection_ids:
+        response = requests.get(f"{BASE_URL}/documents/{collection_id}", headers=headers)
+        assert response.status_code == 200
+        data = response.json()["data"]
+        for document in data:
+            document["collection_id"] = collection_id
+            documents.append(document)
+
+    return documents
+
+
+def delete_document(api_key: str, collection_id: str, document_id: str) -> None:
+    url = f"{BASE_URL}/documents/{collection_id}/{document_id}"
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
@@ -126,10 +123,8 @@ def delete_file(api_key: str, collection_id: str, file_id: str):
     else:
         st.toast("Delete failed", icon="❌")
 
-    return False
 
-
-def create_collection(api_key: str, collection_name: str, collection_model: str):
+def create_collection(api_key: str, collection_name: str, collection_model: str) -> None:
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(f"{BASE_URL}/collections", json={"name": collection_name, "model": collection_model}, headers=headers)
     if response.status_code == 201:
@@ -138,7 +133,7 @@ def create_collection(api_key: str, collection_name: str, collection_model: str)
         st.toast("Create failed", icon="❌")
 
 
-def delete_collection(api_key: str, collection_id: str):
+def delete_collection(api_key: str, collection_id: str) -> None:
     url = f"{BASE_URL}/collections/{collection_id}"
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.delete(url, headers=headers)

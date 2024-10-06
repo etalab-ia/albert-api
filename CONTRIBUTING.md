@@ -28,23 +28,23 @@ feat(collections): collection name retriever
 
 # Tests
 
-Merci avant chaque pull request, de vérifier le bon déploiement de votre API à l'aide en exécutant des tests unitaires.
+Merci, avant chaque pull request, de vérifier le bon déploiement de votre API en exécutant des tests unitaires.
 
-1. Après avoir créer un fichier *config.yml*, lancez l'API en local
+1. Après avoir créé un fichier *config.yml*, lancez l'API en local
 
     ```bash
     uvicorn app.main:app --port 8080 --log-level debug --reload
     ```
 
-2. Executez les tests unitaires
+2. Exécutez les tests unitaires
     
     ```bash
-    PYTHONPATH=. pytest -v --exitfirst app/tests --base-url http://localhost:8080/v1 --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
+    PYTHONPATH=. pytest --config-file=pyproject.toml --base-url http://localhost:8080/v1 --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
     ```
 
 # Linter
 
-Le linter du projet est [Ruff](https://beta.ruff.rs/docs/configuration/). Les règles de formatages spécifiques au projet sont dans le fichier *[pyproject.toml](./pyproject.toml)*.
+Le linter du projet est [Ruff](https://beta.ruff.rs/docs/configuration/). Les règles de formatage spécifiques au projet sont dans le fichier *[pyproject.toml](./pyproject.toml)*.
 
 ## Configurer Ruff avec pre-commit
 
@@ -61,7 +61,7 @@ Le linter du projet est [Ruff](https://beta.ruff.rs/docs/configuration/). Les r�
 1. Installez l'extension *Ruff* (charliermarsh.ruff) dans VSCode
 2. Configurez le linter Ruff dans VSCode pour utiliser le fichier *[pyproject.toml](./pyproject.toml)*
 
-    A l'aide de la commande palette de VSCode (⇧⌘P), recherchez et sélectionnez *Preferences: Open User Settings (JSON)*.
+    À l'aide de la palette de commandes de VSCode (⇧⌘P), recherchez et sélectionnez *Preferences: Open User Settings (JSON)*.
 
     Dans le fichier JSON qui s'ouvre, ajoutez à la fin du fichier les lignes suivantes :
 
@@ -75,6 +75,6 @@ Le linter du projet est [Ruff](https://beta.ruff.rs/docs/configuration/). Les r�
     "ruff.nativeServer": "on"
     ```
 
-    ⚠️ **Attention** : Assurez vous que le fichier *[pyproject.toml](./app/pyproject.toml)* est bien spécifié dans la configuration.
+    ⚠️ **Attention** : Assurez-vous que le fichier *[pyproject.toml](./app/pyproject.toml)* est bien spécifié dans la configuration.
 
-3. **Pour exécuter le linter, utilisez la commande palette de VSCode (⇧⌘P) depuis le fichier sur lequel vous voulez l'exécuter, et recherchez et sélectionnez *Ruff: Format document* et *Ruff: Format imports*.**
+3. **Pour exécuter le linter, utilisez la palette de commandes de VSCode (⇧⌘P) depuis le fichier sur lequel vous voulez l'exécuter, puis recherchez et sélectionnez *Ruff: Format document* et *Ruff: Format imports*.**
