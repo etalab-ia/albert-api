@@ -10,12 +10,12 @@ from app.utils.variables import USER_ROLE
 class AuthManager(GristDocAPI):
     CACHE_EXPIRATION = 3600  # 1h
 
-    def __init__(self, table_id: str, redis: Redis, *args, **kwargs):
+    def __init__(self, cache: Redis, table_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = kwargs.get("user")
         self.doc_id = kwargs.get("doc_id")
         self.table_id = table_id
-        self.redis = redis
+        self.redis = cache
 
     def check_api_key(self, key: str) -> Optional[str]:
         """

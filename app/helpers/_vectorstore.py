@@ -19,14 +19,13 @@ from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
 from app.schemas.security import User
-from app.utils.variables import (
-    EMBEDDINGS_MODEL_TYPE,
-    PRIVATE_COLLECTION_TYPE,
-    PUBLIC_COLLECTION_TYPE,
-    USER_ROLE,
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PUBLIC_COLLECTION_TYPE, USER_ROLE
+from app.utils.exceptions import (
+    DifferentCollectionsModelsException,
+    WrongModelTypeException,
+    WrongCollectionTypeException,
+    CollectionNotFoundException,
 )
-
-# from ._clientsmanager import ModelDict
 
 
 class VectorStore:
@@ -34,15 +33,15 @@ class VectorStore:
     METADATA_COLLECTION_ID = "collections"
     DOCUMENT_COLLECTION_ID = "documents"
 
-    def __init__(self, vectors: QdrantClient, models: dict):
-        self.vectors = vectors
+    def __init__(self, models: dict, *args, **kwargs):
+        self.qdrant = QdrantClient(*args, **kwargs)
         self.models = models
 
-        if not self.vectors.collection_exists(collection_name=self.METADATA_COLLECTION_ID):
-            self.vectors.create_collection(collection_name=self.METADATA_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
+        if not self.qdrant.collection_exists(collection_name=self.METADATA_COLLECTION_ID):
+            self.qdrant.create_collection(collection_name=self.METADATA_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
 
-        if not self.vectors.collection_exists(collection_name=self.DOCUMENT_COLLECTION_ID):
-            self.vectors.create_collection(collection_name=self.DOCUMENT_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
+        if not self.qdrant.collection_exists(collection_name=self.DOCUMENT_COLLECTION_ID):
+            self.qdrant.create_collection(collection_name=self.DOCUMENT_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
 
     def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         """
@@ -55,14 +54,14 @@ class VectorStore:
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role == USER_ROLE:
-            assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
+        if user.role == USER_ROLE and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise WrongCollectionTypeException()
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
 
             # insert documents
-            self.vectors.upsert(
+            self.qdrant.upsert(
                 collection_name=self.DOCUMENT_COLLECTION_ID,
                 points=[
                     PointStruct(
@@ -84,7 +83,7 @@ class VectorStore:
             vectors = [vector.embedding for vector in response.data]
 
             # insert chunks and vectors
-            self.vectors.upsert(
+            self.qdrant.upsert(
                 collection_name=collection_id,
                 points=[
                     PointStruct(id=chunk.id, vector=vector, payload={"content": chunk.content, "metadata": chunk.metadata.model_dump()})
@@ -116,7 +115,8 @@ class VectorStore:
             List[Search]: A list of Search objects containing the retrieved chunks.
         """
         collections = self.get_collections(collection_ids=collection_ids, user=user)
-        assert len(set(collection.model for collection in collections)) == 1, "Different collections models."
+        if len(set(collection.model for collection in collections)) > 1:
+            raise DifferentCollectionsModelsException()
 
         model = collections[0].model
         response = self.models[model].embeddings.create(input=[prompt], model=model)
@@ -124,7 +124,7 @@ class VectorStore:
 
         chunks = []
         for collection in collections:
-            results = self.vectors.search(
+            results = self.qdrant.search(
                 collection_name=collection.id, query_vector=vector, limit=k, score_threshold=score_threshold, with_payload=True, query_filter=filter
             )
             for result in results:
@@ -160,25 +160,26 @@ class VectorStore:
         ]
         filter = Filter(must=must, should=should)
 
-        records = self.vectors.scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=None)
+        records = self.qdrant.scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=None)
         data, offset = records[0], records[1]
         while offset is not None:
-            records = self.vectors.scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=offset)
+            records = self.qdrant.scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=offset)
             data.extend(records[0])
             offset = records[1]
 
         # sanity check: remove collection that does not exist
-        existing_collection_ids = [collection.name for collection in self.vectors.get_collections().collections]
+        existing_collection_ids = [collection.name for collection in self.qdrant.get_collections().collections]
         data = [collection for collection in data if collection.id in existing_collection_ids]
 
         # check if collection ids are valid
         existing_collection_ids = [collection.id for collection in data]
         for collection_id in collection_ids:
-            assert collection_id in existing_collection_ids, "Collection not found"
+            if collection_id not in existing_collection_ids:
+                raise CollectionNotFoundException()
 
         collections = list()
         for collection in data:
-            document_count = self.vectors.count(
+            document_count = self.qdrant.count(
                 collection_name=self.DOCUMENT_COLLECTION_ID,
                 count_filter=Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection.id]))]),
             ).count
@@ -208,10 +209,11 @@ class VectorStore:
             collection_type (str): The type of the collection to create.
             user (User): The user creating the collection.
         """
-        assert self.models[collection_model].type == EMBEDDINGS_MODEL_TYPE, "Wrong model type."
+        if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
+            raise WrongModelTypeException()
 
-        if user.role == USER_ROLE:
-            assert collection_type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
+        if user.role == USER_ROLE and collection_type == PUBLIC_COLLECTION_TYPE:
+            raise WrongCollectionTypeException()
 
         # create metadata
         metadata = {
@@ -222,10 +224,10 @@ class VectorStore:
             "description": None,
             "created_at": round(time.time()),
         }
-        self.vectors.upsert(collection_name=self.METADATA_COLLECTION_ID, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
+        self.qdrant.upsert(collection_name=self.METADATA_COLLECTION_ID, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
 
         # create collection
-        self.vectors.create_collection(
+        self.qdrant.create_collection(
             collection_name=collection_id, vectors_config=VectorParams(size=self.models[collection_model].vector_size, distance=Distance.COSINE)
         )
 
@@ -239,11 +241,11 @@ class VectorStore:
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role == USER_ROLE:
-            assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
+        if user.role == USER_ROLE and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise WrongCollectionTypeException()
 
-        self.vectors.delete_collection(collection_name=collection.id)
-        self.vectors.delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
+        self.qdrant.delete_collection(collection_name=collection.id)
+        self.qdrant.delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
     def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Chunk]:
         """
@@ -262,7 +264,7 @@ class VectorStore:
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-        data = self.vectors.scroll(collection_name=collection.id, scroll_filter=filter, limit=limit, offset=offset)[0]
+        data = self.qdrant.scroll(collection_name=collection.id, scroll_filter=filter, limit=limit, offset=offset)[0]
         chunks = [Chunk(id=chunk.id, content=chunk.payload["content"], metadata=ChunkMetadata(**chunk.payload["metadata"])) for chunk in data]
 
         return chunks
@@ -283,10 +285,10 @@ class VectorStore:
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         filter = Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection_id]))])
-        data = self.vectors.scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
+        data = self.qdrant.scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
         documents = list()
         for document in data:
-            chunks_count = self.vectors.count(
+            chunks_count = self.qdrant.count(
                 collection_name=collection.id,
                 count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
             ).count
@@ -305,12 +307,12 @@ class VectorStore:
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role == USER_ROLE:
-            assert collection.type == PRIVATE_COLLECTION_TYPE, "Wrong collection type."
+        if user.role == USER_ROLE and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise WrongCollectionTypeException()
 
         # delete chunks
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-        self.vectors.delete(collection_name=collection.id, points_selector=FilterSelector(filter=filter))
+        self.qdrant.delete(collection_name=collection.id, points_selector=FilterSelector(filter=filter))
 
         # delete document
-        self.vectors.delete(collection_name=self.DOCUMENT_COLLECTION_ID, points_selector=PointIdsList(points=[document_id]))
+        self.qdrant.delete(collection_name=self.DOCUMENT_COLLECTION_ID, points_selector=PointIdsList(points=[document_id]))

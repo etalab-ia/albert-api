@@ -2,6 +2,7 @@ from io import BytesIO
 from typing import List, Optional
 
 from duckduckgo_search import DDGS
+from duckduckgo_search.exceptions import RatelimitException
 import numpy as np
 import requests
 from fastapi import UploadFile
@@ -9,6 +10,7 @@ from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.parsers import HTMLParser
 from app.schemas.search import Search
 from app.utils.variables import INTERNET_COLLECTION_ID
+from app.utils.config import LOGGER
 
 
 class SearchOnInternet:
@@ -47,7 +49,7 @@ class SearchOnInternet:
         "leparisien.fr",
     ]
 
-    USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:10.0) Gecko/20100101 Firefox/10.0"
+    USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
     PAGE_LOAD_TIMEOUT = 60
     # TODO: make chunk size dynamic based on the model
     CHUNK_SIZE = 1000
@@ -79,8 +81,13 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         )
 
         query = self._get_web_query(prompt=prompt)
-        with DDGS() as ddgs:
-            results = list(ddgs.text(query, region="fr-fr", safesearch="On", max_results=n))
+        # TODO: replace duckduckgo to avoid rate limiting issues
+        try:
+            with DDGS() as ddgs:
+                results = list(ddgs.text(query, region="fr-fr", safesearch="On", max_results=n))
+        except RatelimitException:
+            LOGGER.warning("DuckDuckGo rate limit exceeded.")
+            results = []
 
         chunks = []
         for result in results:

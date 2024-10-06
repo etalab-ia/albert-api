@@ -8,7 +8,6 @@ from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
     INTERNET_COLLECTION_ID,
     LANGUAGE_MODEL_TYPE,
-    METADATA_COLLECTION_ID,
     PRIVATE_COLLECTION_TYPE,
     PUBLIC_COLLECTION_TYPE,
 )
@@ -86,8 +85,8 @@ class TestFiles:
         assert isinstance(collections, Collections)
         assert all(isinstance(collection, Collection) for collection in collections.data)
 
-        assert METADATA_COLLECTION_ID not in [collection.id for collection in collections.data]
-        assert INTERNET_COLLECTION_ID in [collection.id for collection in collections.data]
+        assert "collections" not in [collection.id for collection in collections.data]
+        assert "documents" not in [collection.id for collection in collections.data]
 
         assert PRIVATE_COLLECTION_NAME in [collection.name for collection in collections.data]
         assert PUBLIC_COLLECTION_NAME in [collection.name for collection in collections.data]

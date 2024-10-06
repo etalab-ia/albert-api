@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Security, Query
+from fastapi import APIRouter, Security, Query
 
 from app.schemas.chunks import Chunks
 from app.schemas.security import User
@@ -24,9 +24,6 @@ async def get_chunks(
     """
     collection, document = str(collection), str(document)
     offset = str(offset) if offset else None
+    data = clients.vectors.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user)
 
-    try:
-        data = clients.vectorstore.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user)
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
     return Chunks(data=data)

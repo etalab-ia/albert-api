@@ -89,4 +89,4 @@ class TestChat:
             "max_tokens": 10,
         }
         response = session_user.post(f"{args['base_url']}/chat/completions", json=params)
-        assert response.status_code == 400, f"error: retrieve chat completions ({response.status_code})"
+        assert response.status_code == 413, f"error: retrieve chat completions ({response.status_code})"

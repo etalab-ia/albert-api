@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Response, Security, Query
+from fastapi import APIRouter, Response, Security, Query
 
 
 from app.schemas.documents import Documents
@@ -21,11 +21,7 @@ async def get_documents(
     """
     collection = str(collection)
     offset = str(offset) if offset else None
-
-    try:
-        data = clients.vectorstore.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    data = clients.vectors.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
 
     return Documents(data=data)
 
@@ -40,10 +36,6 @@ async def delete_document(
     Delete a document and relative collections.
     """
     collection, document = str(collection), str(document)
-
-    try:
-        clients.vectorstore.delete_document(collection_id=collection, document_id=document, user=user)
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    clients.vectors.delete_document(collection_id=collection, document_id=document, user=user)
 
     return Response(status_code=204)

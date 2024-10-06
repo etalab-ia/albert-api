@@ -6,9 +6,11 @@ Albert API est une API open source d'IA générative développée par Etalab. El
 - [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference) pour la génération d'embeddings
 - [Qdrant](https://qdrant.tech/) pour la recherche de similarité
 
-### OpenAI conventions
-
 En se basant sur les conventions définies par OpenAI, l'API Albert expose des endpoints qui peuvent être appelés avec le [client officiel python d'OpenAI](https://github.com/openai/openai-python/tree/main). Ce formalisme permet d'intégrer facilement l'API Albert avec des bibliothèques tierces comme [Langchain](https://www.langchain.com/) ou [LlamaIndex](https://www.llamaindex.ai/).
+
+## 🚀 Nouveautés
+
+Vous trouverez les changelogs des différentes versions d'Albert API dans le fichier [CHANGELOG.md](./CHANGELOG.md).
 
 ## ⚙️ Fonctionnalités
 

@@ -14,6 +14,8 @@ from app.utils.variables import (
     JSON_TYPE,
     PDF_TYPE,
 )
+from ._vectorstore import VectorStore
+from app.utils.exceptions import ParsingFileFailedException, UnsupportedFileTypeException, NoChunksToUpsertException
 
 
 class FileUploader:
@@ -23,19 +25,20 @@ class FileUploader:
         "pdf": PDF_TYPE,
     }
 
-    def __init__(self, collection_id: str, clients: dict, user: User):
+    def __init__(self, collection_id: str, vectors: VectorStore, user: User):
         self.user = user
-        self.vectorstore = clients.vectorstore
+        self.vectors = vectors
 
-        self.collection = self.vectorstore.get_collections(collection_ids=[collection_id], user=self.user)[0]
+        self.collection = self.vectors.get_collections(collection_ids=[collection_id], user=self.user)[0]
         self.collection_id = collection_id
 
     def parse(self, file: UploadFile) -> List[ParserOutput]:
         file_type = file.filename.split(".")[-1]
-        assert file_type in self.TYPE_DICT.keys(), "Unsupported file type."
+        if file_type not in self.TYPE_DICT.keys():
+            raise UnsupportedFileTypeException()
 
         file_type = self.TYPE_DICT[file.filename.split(".")[-1]]
-        # try:
+
         if file_type == PDF_TYPE:
             parser = PDFParser(collection_id=self.collection_id)
 
@@ -45,7 +48,10 @@ class FileUploader:
         elif file_type == HTML_TYPE:
             parser = HTMLParser(collection_id=self.collection_id)
 
-        output = parser.parse(file=file)
+        try:
+            output = parser.parse(file=file)
+        except Exception as e:
+            raise ParsingFileFailedException()
 
         return output
 
@@ -58,5 +64,7 @@ class FileUploader:
         return chunks
 
     def upsert(self, chunks: List[Chunk]) -> None:
-        assert chunks, "No chunks to upsert."
-        self.vectorstore.upsert(chunks=chunks, collection_id=self.collection_id, user=self.user)
+        if not chunks:
+            raise NoChunksToUpsertException()
+
+        self.vectors.upsert(chunks=chunks, collection_id=self.collection_id, user=self.user)

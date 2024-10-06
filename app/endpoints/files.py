@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, HTTPException, Response, Security, UploadFile, File
+from fastapi import APIRouter, Body, Response, Security, UploadFile, File
 
 from app.helpers._fileuploader import FileUploader
 from app.schemas.files import ChunkerArgs, FilesRequest
@@ -33,16 +33,9 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
 
     chunker_args["length_function"] = len if chunker_args["length_function"] == "len" else None
 
-    uploader = FileUploader(clients=clients, user=user, collection_id=request.collection)
-
-    try:
-        output = uploader.parse(file=file)
-        chunks = uploader.split(input=output, chunker_name=chunker_name, chunker_args=chunker_args)
-        uploader.upsert(chunks=chunks)
-    except Exception as e:
-        if type(e) is AssertionError:
-            raise HTTPException(status_code=400, detail=str(e))
-        else:
-            raise HTTPException(status_code=500, detail="Parsing file failed.")
+    uploader = FileUploader(vectors=clients.vectors, user=user, collection_id=request.collection)
+    output = uploader.parse(file=file)
+    chunks = uploader.split(input=output, chunker_name=chunker_name, chunker_args=chunker_args)
+    uploader.upsert(chunks=chunks)
 
     return Response(status_code=201)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Security
+from fastapi import APIRouter, Security
 import httpx
 
 from app.schemas.completions import CompletionRequest, Completions
@@ -6,6 +6,7 @@ from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 from app.utils.variables import LANGUAGE_MODEL_TYPE
+from app.utils.exceptions import WrongModelTypeException, ContextLengthExceededException
 
 router = APIRouter()
 
@@ -21,10 +22,10 @@ async def completions(request: CompletionRequest, user: User = Security(check_ap
     client = clients.models[request["model"]]
 
     if client.type != LANGUAGE_MODEL_TYPE:
-        raise HTTPException(status_code=400, detail="Wrong model type.")
+        raise WrongModelTypeException()
 
     if not client.check_context_length(model=request["model"], messages=request["messages"]):
-        raise HTTPException(status_code=400, detail="Context length exceeded.")
+        raise ContextLengthExceededException()
 
     url = f"{client.base_url}completions"
     headers = {"Authorization": f"Bearer {client.api_key}"}

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Security
+from fastapi import APIRouter, Security
 import httpx
 
 from app.schemas.embeddings import Embeddings, EmbeddingsRequest
@@ -6,6 +6,7 @@ from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
 from app.utils.variables import EMBEDDINGS_MODEL_TYPE
+from app.utils.exceptions import ContextLengthExceededException, WrongModelTypeException
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ async def embeddings(request: EmbeddingsRequest, user: User = Security(check_api
     request = dict(request)
     client = clients.models[request["model"]]
     if client.type != EMBEDDINGS_MODEL_TYPE:
-        raise HTTPException(status_code=400, detail="Wrong model type.")
+        raise WrongModelTypeException()
 
     url = f"{client.base_url}embeddings"
     headers = {"Authorization": f"Bearer {client.api_key}"}
@@ -31,8 +32,8 @@ async def embeddings(request: EmbeddingsRequest, user: User = Security(check_api
             response.raise_for_status()
         except httpx.HTTPStatusError as e:
             if "`inputs` must have less than" in e.response.text:
-                raise HTTPException(status_code=400, detail="Max input length exceeded.")
-            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+                raise ContextLengthExceededException()
+            raise e
 
         data = response.json()
         return Embeddings(**data)

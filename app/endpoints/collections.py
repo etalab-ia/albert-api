@@ -2,7 +2,7 @@ from typing import Union
 import uuid
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Response, Security
+from fastapi import APIRouter, Response, Security
 from fastapi.responses import JSONResponse
 
 
@@ -21,12 +21,9 @@ async def create_collection(request: CollectionRequest, user: User = Security(ch
     Create a new collection.
     """
     collection_id = str(uuid.uuid4())
-    try:
-        clients.vectorstore.create_collection(
-            collection_id=collection_id, collection_name=request.name, collection_model=request.model, collection_type=request.type, user=user
-        )
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    clients.vectors.create_collection(
+        collection_id=collection_id, collection_name=request.name, collection_model=request.model, collection_type=request.type, user=user
+    )
 
     return JSONResponse(status_code=201, content={"id": collection_id})
 
@@ -43,11 +40,7 @@ async def get_collections(user: User = Security(check_api_key)) -> Union[Collect
         type=PUBLIC_COLLECTION_TYPE,
         description="Use this collection to search on the internet.",
     )
-    try:
-        data = clients.vectorstore.get_collections(user=user)
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
+    data = clients.vectors.get_collections(user=user)
     data.append(internet_collection)
 
     return Collections(data=data)
@@ -59,9 +52,6 @@ async def delete_collections(collection: UUID, user: User = Security(check_api_k
     Delete a collection.
     """
     collection = str(collection)
-    try:
-        clients.vectorstore.delete_collection(collection_id=collection, user=user)
-    except AssertionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    clients.vectors.delete_collection(collection_id=collection, user=user)
 
     return Response(status_code=204)
