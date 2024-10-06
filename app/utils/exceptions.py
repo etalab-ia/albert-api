@@ -63,3 +63,9 @@ class ContextLengthExceededException(HTTPException):
 class FileSizeLimitExceededException(HTTPException):
     def __init__(self, detail: str = "File size limit exceeded."):
         super().__init__(status_code=413, detail=detail)
+
+
+# 422
+class InvalidJSONFormatException(HTTPException):
+    def __init__(self, detail: str = "Invalid JSON file format."):
+        super().__init__(status_code=422, detail=detail)

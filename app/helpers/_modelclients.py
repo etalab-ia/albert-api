@@ -9,8 +9,8 @@ from app.schemas.config import Config
 from app.schemas.embeddings import Embeddings
 from app.schemas.models import Model, Models
 from app.utils.config import LOGGER
+from app.utils.exceptions import ContextLengthExceededException, ModelNotFoundException
 from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
-from app.utils.exceptions import ModelNotFoundException
 
 
 def get_models_list(self, *args, **kwargs):
@@ -77,7 +77,7 @@ def create_embeddings(self, *args, **kwargs):
         return Embeddings(**data)
     except Exception as e:
         if "`inputs` must have less than" in e.response.text:
-            raise AssertionError("Max input length exceeded.")
+            raise ContextLengthExceededException()
         raise e
 
 

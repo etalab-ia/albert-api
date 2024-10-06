@@ -1,11 +1,14 @@
 import json
+import time
 from typing import List
 import uuid
 
+from fastapi import UploadFile
+
 from app.schemas.data import ParserOutput, ParserOutputMetadata
 from app.schemas.files import JsonFile
-from fastapi import UploadFile
-import time
+from app.utils.exceptions import InvalidJSONFormatException
+
 from ._baseparser import BaseParser
 
 
@@ -28,7 +31,7 @@ class JSONParser(BaseParser):
         try:
             file = JsonFile(documents=file)
         except Exception as e:
-            raise AssertionError("Invalid JSON file format.")
+            raise InvalidJSONFormatException()
 
         output = list()
         created_at = round(time.time())
