@@ -36,4 +36,5 @@ async def embeddings(request: EmbeddingsRequest, user: User = Security(check_api
             raise e
 
         data = response.json()
+
         return Embeddings(**data)

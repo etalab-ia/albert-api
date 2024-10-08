@@ -91,9 +91,11 @@ if prompt := st.chat_input("Message to Albert"):
         else:
             messages = st.session_state.messages
             sources = []
-
-        stream = openai_client.chat.completions.create(stream=True, messages=messages, **params["sampling_params"])
-        response = st.write_stream(stream)
+        try:
+            stream = openai_client.chat.completions.create(stream=True, messages=messages, **params["sampling_params"])
+            response = st.write_stream(stream)
+        except Exception as e:
+            st.error(e)
         if sources:
             st.multiselect(options=sources, label="Sources", key="sources_tmp", default=sources)
 

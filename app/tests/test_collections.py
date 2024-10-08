@@ -48,7 +48,7 @@ class TestFiles:
 
         params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": PUBLIC_COLLECTION_TYPE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     def test_create_public_collection_with_admin(self, args, session_admin, setup):
         PUBLIC_COLLECTION_NAME, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
@@ -63,7 +63,7 @@ class TestFiles:
 
         params = {"name": PRIVATE_COLLECTION_NAME, "model": LANGUAGE_MODEL_ID, "type": PRIVATE_COLLECTION_TYPE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     def test_create_private_collection_with_unknown_model_with_user(self, args, session_user, setup):
         _, PRIVATE_COLLECTION_NAME, _, _, _, _ = setup
@@ -117,7 +117,7 @@ class TestFiles:
         response = session_user.get(f"{args["base_url"]}/collections")
         collection_id = [collection["id"] for collection in response.json()["data"] if collection["name"] == PUBLIC_COLLECTION_NAME][0]
         response = session_user.delete(f"{args["base_url"]}/collections/{collection_id}")
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     def test_delete_public_collection_with_admin(self, args, session_admin, setup):
         PUBLIC_COLLECTION_NAME, _, _, _, _, _ = setup
@@ -132,7 +132,7 @@ class TestFiles:
 
         params = {"name": INTERNET_COLLECTION_ID, "model": EMBEDDINGS_MODEL_ID, "type": PUBLIC_COLLECTION_TYPE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     def test_create_collection_with_empty_name(self, args, session_user, setup):
         _, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup

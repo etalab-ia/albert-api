@@ -15,7 +15,7 @@ router = APIRouter()
 async def get_chunks(
     collection: UUID,
     document: UUID,
-    limit: Optional[int] = Query(default=10, ge=1, le=10),
+    limit: Optional[int] = Query(default=10, ge=1, le=100),
     offset: Optional[UUID] = None,
     user: User = Security(check_api_key),
 ) -> Chunks:

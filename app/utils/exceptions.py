@@ -7,26 +7,6 @@ class ParsingFileFailedException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
-class WrongModelTypeException(HTTPException):
-    def __init__(self, detail: str = "Wrong model type."):
-        super().__init__(status_code=400, detail=detail)
-
-
-class WrongCollectionTypeException(HTTPException):
-    def __init__(self, detail: str = "Wrong collection type."):
-        super().__init__(status_code=400, detail=detail)
-
-
-class DifferentCollectionsModelsException(HTTPException):
-    def __init__(self, detail: str = "Different collections models."):
-        super().__init__(status_code=400, detail=detail)
-
-
-class UnsupportedFileTypeException(HTTPException):
-    def __init__(self, detail: str = "Unsupported file type."):
-        super().__init__(status_code=400, detail=detail)
-
-
 class NoChunksToUpsertException(HTTPException):
     def __init__(self, detail: str = "No chunks to upsert."):
         super().__init__(status_code=400, detail=detail)
@@ -68,4 +48,29 @@ class FileSizeLimitExceededException(HTTPException):
 # 422
 class InvalidJSONFormatException(HTTPException):
     def __init__(self, detail: str = "Invalid JSON file format."):
+        super().__init__(status_code=422, detail=detail)
+
+
+class WrongModelTypeException(HTTPException):
+    def __init__(self, detail: str = "Wrong model type."):
+        super().__init__(status_code=422, detail=detail)
+
+
+class MaxTokensExceededException(HTTPException):
+    def __init__(self, detail: str = "Max tokens exceeded."):
+        super().__init__(status_code=422, detail=detail)
+
+
+class WrongCollectionTypeException(HTTPException):
+    def __init__(self, detail: str = "Wrong collection type."):
+        super().__init__(status_code=422, detail=detail)
+
+
+class DifferentCollectionsModelsException(HTTPException):
+    def __init__(self, detail: str = "Different collections models."):
+        super().__init__(status_code=422, detail=detail)
+
+
+class UnsupportedFileTypeException(HTTPException):
+    def __init__(self, detail: str = "Unsupported file type."):
         super().__init__(status_code=422, detail=detail)

@@ -8,8 +8,7 @@ from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletion
 from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
-from app.utils.variables import LANGUAGE_MODEL_TYPE
-from app.utils.exceptions import WrongModelTypeException, ContextLengthExceededException
+
 
 router = APIRouter()
 
@@ -22,14 +21,8 @@ async def chat_completions(request: ChatCompletionRequest, user: User = Security
 
     request = dict(request)
     client = clients.models[request["model"]]
-    if client.type != LANGUAGE_MODEL_TYPE:
-        raise WrongModelTypeException()
-
     url = f"{client.base_url}chat/completions"
     headers = {"Authorization": f"Bearer {client.api_key}"}
-
-    if not client.check_context_length(model=request["model"], messages=request["messages"]):
-        raise ContextLengthExceededException()
 
     # non stream case
     if not request["stream"]:

@@ -57,13 +57,14 @@ def get_models_list(self, *args, **kwargs):
     return Models(data=data)
 
 
-def check_context_length(self, model: str, messages: List[Dict[str, str]], add_special_tokens: bool = True):
+def check_context_length(self, messages: List[Dict[str, str]], add_special_tokens: bool = True):
     headers = {"Authorization": f"Bearer {self.api_key}"}
     prompt = "\n".join([message["role"] + ": " + message["content"] for message in messages])
-    data = {"model": model, "prompt": prompt, "add_special_tokens": add_special_tokens}
+    data = {"model": self.id, "prompt": prompt, "add_special_tokens": add_special_tokens}
 
     response = requests.post(str(self.base_url).replace("/v1/", "/tokenize"), json=data, headers=headers)
     response.raise_for_status()
+
     return response.json()["count"] <= response.json()["max_model_len"]
 
 
@@ -95,6 +96,7 @@ class ModelClient(OpenAI):
         response = self.models.list()
         model = response.data[0]
         self.id = model.id
+        self.max_context_length = model.max_model_len
 
         if self.type == EMBEDDINGS_MODEL_TYPE:
             response = self.embeddings.create(model=self.id, input="hello world")

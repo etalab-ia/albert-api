@@ -17,9 +17,6 @@ class ChunkerArgs(BaseModel):
     # additional arguments
     chunk_min_size: int = Field(0)
 
-    class Config:
-        extra = "allow"
-
 
 class Chunker(BaseModel):
     name: Optional[Literal[*CHUNKERS]] = Field(None)

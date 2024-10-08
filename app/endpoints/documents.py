@@ -14,7 +14,7 @@ router = APIRouter()
 
 @router.get("/documents/{collection}")
 async def get_documents(
-    collection: UUID, limit: Optional[int] = Query(default=10, ge=1, le=10), offset: Optional[UUID] = None, user: User = Security(check_api_key)
+    collection: UUID, limit: Optional[int] = Query(default=10, ge=1, le=100), offset: Optional[UUID] = None, user: User = Security(check_api_key)
 ) -> Documents:
     """
     Get all documents ID from a collection.

@@ -7,7 +7,11 @@ from openai.types.chat import (
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from app.utils.exceptions import ContextLengthExceededException, MaxTokensExceededException, WrongModelTypeException
+from app.utils.lifespan import clients
+from app.utils.variables import LANGUAGE_MODEL_TYPE
 
 
 class ChatCompletionRequest(BaseModel):
@@ -33,6 +37,18 @@ class ChatCompletionRequest(BaseModel):
 
     class ConfigDict:
         extra = "allow"
+
+    @model_validator(mode="before")
+    def validate_model(cls, value):
+        if clients.models[value["model"]].type != LANGUAGE_MODEL_TYPE:
+            raise WrongModelTypeException()
+
+        if not clients.models[value["model"]].check_context_length(messages=value["messages"]):
+            raise ContextLengthExceededException()
+
+        if value["max_tokens"] is not None and value["max_tokens"] > clients.models[value["model"]].max_context_length:
+            raise MaxTokensExceededException()
+        return value
 
 
 class ChatCompletion(ChatCompletion):

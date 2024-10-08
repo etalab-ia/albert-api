@@ -2,11 +2,12 @@ from typing import List, Literal, Optional
 
 from fastapi import UploadFile
 
-from app.schemas.data import ParserOutput
 from app.helpers.chunkers import *
 from app.helpers.parsers import HTMLParser, JSONParser, PDFParser
 from app.schemas.chunks import Chunk
+from app.schemas.data import ParserOutput
 from app.schemas.security import User
+from app.utils.exceptions import InvalidJSONFormatException, NoChunksToUpsertException, ParsingFileFailedException, UnsupportedFileTypeException
 from app.utils.variables import (
     CHUNKERS,
     DEFAULT_CHUNKER,
@@ -14,8 +15,8 @@ from app.utils.variables import (
     JSON_TYPE,
     PDF_TYPE,
 )
+
 from ._vectorstore import VectorStore
-from app.utils.exceptions import ParsingFileFailedException, UnsupportedFileTypeException, NoChunksToUpsertException
 
 
 class FileUploader:
@@ -37,7 +38,7 @@ class FileUploader:
         if file_type not in self.TYPE_DICT.keys():
             raise UnsupportedFileTypeException()
 
-        file_type = self.TYPE_DICT[file.filename.split(".")[-1]]
+        file_type = self.TYPE_DICT[file_type]
 
         if file_type == PDF_TYPE:
             parser = PDFParser(collection_id=self.collection_id)
@@ -51,7 +52,10 @@ class FileUploader:
         try:
             output = parser.parse(file=file)
         except Exception as e:
-            raise ParsingFileFailedException()
+            if isinstance(e, InvalidJSONFormatException):
+                raise e
+            else:
+                raise ParsingFileFailedException()
 
         return output
 
