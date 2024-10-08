@@ -8,7 +8,7 @@ class EmbeddingsRequest(BaseModel):
     input: Union[List[int], List[List[int]], str, List[str]]
     model: str
     dimensions: Optional[int] = None
-    encoding_format: Optional[Literal["float", "base64"]] = "float"
+    encoding_format: Optional[Literal["float"]] = "float"
     user: Optional[str] = None
 
 
