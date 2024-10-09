@@ -12,6 +12,10 @@ Tous les changements notables de l'application sont documentés dans ce fichier.
 - 🔄 Refactoring
 - ❌ Deprecated
 
+## [Alpha] - 2024-10-09
+
+- 🎉 Ajout d'un status du modèle dans le retour du endpoint GET `/v1/models`. Ce status permet de vérifier si le modèle est disponible ou non.
+
 ## [Alpha] - 2024-10-07
 
 - 💣 Création de la notion de Document, objet intermédiaire entre un fichier et une collection de chunks. Ajout des endpoints GET `/v1/documents` et DELETE `/v1/documents` pour solutionner le problème de limite de taille de requête.

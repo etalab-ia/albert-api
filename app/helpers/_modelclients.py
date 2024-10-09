@@ -9,7 +9,7 @@ from app.schemas.config import Config
 from app.schemas.embeddings import Embeddings
 from app.schemas.models import Model, Models
 from app.utils.config import LOGGER
-from app.utils.exceptions import ContextLengthExceededException, ModelNotFoundException
+from app.utils.exceptions import ContextLengthExceededException, ModelNotFoundException, ModelNotAvailableException
 from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 
 
@@ -21,40 +21,46 @@ def get_models_list(self, *args, **kwargs):
     headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else None
     data = list()
 
-    if self.type == LANGUAGE_MODEL_TYPE:
-        endpoint = f"{self.base_url}models"
-        response = requests.get(url=endpoint, headers=headers, timeout=self.DEFAULT_TIMEOUT).json()
+    try:
+        if self.type == LANGUAGE_MODEL_TYPE:
+            endpoint = f"{self.base_url}models"
+            response = requests.get(url=endpoint, headers=headers, timeout=self.DEFAULT_TIMEOUT).json()
 
-        # Multiple models from one vLLM provider are not supported for now
-        assert len(response["data"]) == 1, "Only one model per model API is supported."
+            # Multiple models from one vLLM provider are not supported for now
+            assert len(response["data"]) == 1, "Only one model per model API is supported."
 
-        response = response["data"][0]
-        data.append(
-            Model(
-                id=response["id"],
-                object="model",
-                owned_by=response.get("owned_by", ""),
-                created=response.get("created", round(time.time())),
-                max_model_len=response.get("max_model_len", None),
-                type=LANGUAGE_MODEL_TYPE,
-            )
-        )
+            response = response["data"][0]
 
-    elif self.type == EMBEDDINGS_MODEL_TYPE:
-        endpoint = str(self.base_url).replace("/v1/", "/info")
-        response = requests.get(url=endpoint, headers=headers, timeout=self.DEFAULT_TIMEOUT).json()
-        data.append(
-            Model(
-                id=response["model_id"],
-                object="model",
-                owned_by="huggingface-text-embeddings-inference",
-                max_model_len=response.get("max_input_length", None),
-                created=round(time.time()),
-                type=EMBEDDINGS_MODEL_TYPE,
-            )
-        )
+            self.id = response["id"]
+            self.owned_by = response.get("owned_by", "")
+            self.created = response.get("created", round(time.time()))
+            self.max_model_len = response.get("max_model_len", None)
 
-    return Models(data=data)
+        elif self.type == EMBEDDINGS_MODEL_TYPE:
+            endpoint = str(self.base_url).replace("/v1/", "/info")
+            response = requests.get(url=endpoint, headers=headers, timeout=self.DEFAULT_TIMEOUT).json()
+
+            self.id = response["model_id"]
+            self.owned_by = "huggingface-text-embeddings-inference"
+            self.created = round(time.time())
+            self.max_model_len = response.get("max_input_length", None)
+
+        self.status = "available"
+
+    except Exception:
+        self.status = "unavailable"
+
+    data = Model(
+        id=self.id,
+        object="model",
+        owned_by=self.owned_by,
+        created=self.created,
+        max_model_len=self.max_model_len,
+        type=self.type,
+        status=self.status,
+    )
+
+    return Models(data=[data])
 
 
 def check_context_length(self, messages: List[Dict[str, str]], add_special_tokens: bool = True):
@@ -91,12 +97,13 @@ class ModelClient(OpenAI):
         """
         super().__init__(timeout=self.DEFAULT_TIMEOUT, *args, **kwargs)
         self.type = type
+        self.id = None
+        self.owned_by = None
+        self.created = None
+        self.max_model_len = None
         self.search_internet = search_internet
         self.models.list = partial(get_models_list, self)
         response = self.models.list()
-        model = response.data[0]
-        self.id = model.id
-        self.max_context_length = model.max_model_len
 
         if self.type == EMBEDDINGS_MODEL_TYPE:
             response = self.embeddings.create(model=self.id, input="hello world")
@@ -115,21 +122,21 @@ class ModelClients(dict):
 
     def __init__(self, config: Config):
         for model in config.models:
-            try:
-                model = ModelClient(base_url=model.url, api_key=model.key, type=model.type, search_internet=model.search_internet)
-                self.__setitem__(model.id, model)
-
-            except Exception as e:
-                LOGGER.info(f"error to request the model API on {model.url}, skipping:\n{e}")
+            model = ModelClient(base_url=model.url, api_key=model.key, type=model.type, search_internet=model.search_internet)
+            if model.status == "unavailable":
+                LOGGER.info(f"error to request the model API on {model.url}, skipping.")
                 continue
+            self.__setitem__(model.id, model)
 
             if model.search_internet and model.type == EMBEDDINGS_MODEL_TYPE:
                 self.SEARCH_INTERNET_EMBEDDINGS_MODEL_ID = model.id
             if model.search_internet and model.type == LANGUAGE_MODEL_TYPE:
                 self.SEARCH_INTERNET_LANGUAGE_MODEL_ID = model.id
 
-        if len(self.keys()) == 0:
-            raise ValueError("No model can be reached.")
+        if "SEARCH_INTERNET_EMBEDDINGS_MODEL_ID" not in self.__dict__:
+            raise ValueError("No embeddings model with search internet enabled.")
+        if "SEARCH_INTERNET_LANGUAGE_MODEL_ID" not in self.__dict__:
+            raise ValueError("No language model with search internet enabled.")
 
     def __setitem__(self, key: str, value):
         if any(key == k for k in self.keys()):
@@ -138,6 +145,10 @@ class ModelClients(dict):
 
     def __getitem__(self, key: str):
         try:
-            return super().__getitem__(key)
+            item = super().__getitem__(key)
+            assert item.status == "available", "Model not available."
+            return item
         except KeyError:
             raise ModelNotFoundException()
+        except AssertionError as e:
+            raise ModelNotAvailableException()
