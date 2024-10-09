@@ -28,6 +28,7 @@ def health(user: User = Security(check_api_key)):
 
 app.add_middleware(ContentSizeLimitMiddleware)
 
+# Core
 app.include_router(models.router, tags=["Core"], prefix="/v1")
 app.include_router(chat.router, tags=["Core"], prefix="/v1")
 app.include_router(completions.router, tags=["Core"], prefix="/v1")

@@ -73,8 +73,8 @@ def get_models(api_key: str):
     assert response.status_code == 200
     models = response.json()["data"]
 
-    embeddings_models = [model["id"] for model in models if model["type"] == EMBEDDINGS_MODEL_TYPE]
-    language_models = [model["id"] for model in models if model["type"] == LANGUAGE_MODEL_TYPE]
+    embeddings_models = [model["id"] for model in models if model["type"] == EMBEDDINGS_MODEL_TYPE and model["status"] == "available"]
+    language_models = [model["id"] for model in models if model["type"] == LANGUAGE_MODEL_TYPE and model["status"] == "available"]
 
     return language_models, embeddings_models
 
