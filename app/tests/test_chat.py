@@ -15,11 +15,11 @@ def setup(args, session_user):
     response_json = response.json()
     model = [model for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE][0]
     MODEL_ID = model["id"]
-    MAX_MODEL_LEN = model["max_model_len"]
+    MAX_CONTEXT_LENGTH = model["max_context_length"]
     logging.info(f"test model ID: {MODEL_ID}")
-    logging.info(f"test max model len: {MAX_MODEL_LEN}")
+    logging.info(f"test max context length: {MAX_CONTEXT_LENGTH}")
 
-    yield MODEL_ID, MAX_MODEL_LEN
+    yield MODEL_ID, MAX_CONTEXT_LENGTH
 
 
 @pytest.mark.usefixtures("args", "session_user", "setup")
@@ -78,7 +78,7 @@ class TestChat:
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_max_tokens_too_large(self, args, session_user, setup):
-        MODEL_ID, MAX_MODEL_LEN = setup
+        MODEL_ID, MAX_CONTEXT_LENGTH = setup
 
         prompt = "test"
         params = {
@@ -86,21 +86,21 @@ class TestChat:
             "messages": [{"role": "user", "content": prompt}],
             "stream": True,
             "n": 1,
-            "max_tokens": 1000000,
+            "max_tokens": MAX_CONTEXT_LENGTH + 10,
         }
         response = session_user.post(f"{args['base_url']}/chat/completions", json=params)
         assert response.status_code == 422, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_context_too_large(self, args, session_user, setup):
-        MODEL_ID, MAX_MODEL_LEN = setup
+        MODEL_ID, MAX_CONTEXT_LENGTH = setup
 
-        prompt = "test" * (MAX_MODEL_LEN + 100)
+        prompt = "test" * (MAX_CONTEXT_LENGTH + 10)
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": prompt}],
             "stream": True,
             "n": 1,
-            "max_tokens": 1000000,
+            "max_tokens": 10,
         }
         response = session_user.post(f"{args['base_url']}/chat/completions", json=params)
         assert response.status_code == 413, f"error: retrieve chat completions ({response.status_code})"

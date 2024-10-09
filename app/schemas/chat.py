@@ -46,7 +46,7 @@ class ChatCompletionRequest(BaseModel):
         if not clients.models[value["model"]].check_context_length(messages=value["messages"]):
             raise ContextLengthExceededException()
 
-        if value["max_tokens"] is not None and value["max_tokens"] > clients.models[value["model"]].max_context_length:
+        if "max_tokens" in value and value["max_tokens"] is not None and value["max_tokens"] > clients.models[value["model"]].max_context_length:
             raise MaxTokensExceededException()
         return value
 

@@ -34,7 +34,7 @@ def get_models_list(self, *args, **kwargs):
             self.id = response["id"]
             self.owned_by = response.get("owned_by", "")
             self.created = response.get("created", round(time.time()))
-            self.max_model_len = response.get("max_model_len", None)
+            self.max_context_length = response.get("max_model_len", None)
 
         elif self.type == EMBEDDINGS_MODEL_TYPE:
             endpoint = str(self.base_url).replace("/v1/", "/info")
@@ -43,7 +43,7 @@ def get_models_list(self, *args, **kwargs):
             self.id = response["model_id"]
             self.owned_by = "huggingface-text-embeddings-inference"
             self.created = round(time.time())
-            self.max_model_len = response.get("max_input_length", None)
+            self.max_context_length = response.get("max_input_length", None)
 
         self.status = "available"
 
@@ -55,7 +55,7 @@ def get_models_list(self, *args, **kwargs):
         object="model",
         owned_by=self.owned_by,
         created=self.created,
-        max_model_len=self.max_model_len,
+        max_context_length=self.max_context_length,
         type=self.type,
         status=self.status,
     )
@@ -64,6 +64,7 @@ def get_models_list(self, *args, **kwargs):
 
 
 def check_context_length(self, messages: List[Dict[str, str]], add_special_tokens: bool = True):
+    # TODO: remove this methode and use better context length handling
     headers = {"Authorization": f"Bearer {self.api_key}"}
     prompt = "\n".join([message["role"] + ": " + message["content"] for message in messages])
 
@@ -77,9 +78,9 @@ def check_context_length(self, messages: List[Dict[str, str]], add_special_token
     response = response.json()
 
     if self.type == LANGUAGE_MODEL_TYPE:
-        return response["count"] <= response["max_model_len"]
+        return response["count"] <= self.max_context_length
     elif self.type == EMBEDDINGS_MODEL_TYPE:
-        return len(response[0]) <= self.max_model_len
+        return len(response[0]) <= self.max_context_length
 
 
 def create_embeddings(self, *args, **kwargs):
@@ -110,7 +111,7 @@ class ModelClient(OpenAI):
         self.id = ""
         self.owned_by = ""
         self.created = round(time.time())
-        self.max_model_len = None
+        self.max_context_length = None
 
         # set real attributes if model is available
         self.models.list = partial(get_models_list, self)
