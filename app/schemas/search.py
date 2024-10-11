@@ -3,13 +3,14 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.chunks import Chunk
-from app.utils.variables import INTERNET_COLLECTION_ID
+from app.utils.variables import INTERNET_COLLECTION_ID, HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
 
 
 class SearchRequest(BaseModel):
     prompt: str
     collections: List[Union[UUID, Literal[INTERNET_COLLECTION_ID]]]
     k: int = Field(gt=0, description="Number of results to return")
+    method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = Field(default=SEMANTIC_SEARCH_TYPE)
     score_threshold: Optional[float] = Field(0.0, ge=0.0, le=1.0, description="Score of cosine similarity threshold for filtering results")
 
     @field_validator("prompt")
@@ -33,3 +34,7 @@ class Search(BaseModel):
 class Searches(BaseModel):
     object: Literal["list"] = "list"
     data: List[Search]
+
+
+class Filter(BaseModel):
+    pass

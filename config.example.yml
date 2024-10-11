@@ -11,7 +11,7 @@ models:
       key: mysecretkey
 
 databases:
-  vectors:
+  search:
     type: qdrant
     args:
       url: qdrant
