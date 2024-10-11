@@ -1,3 +1,6 @@
+import logging
+import traceback
+
 from openai import OpenAI
 import requests
 import streamlit as st
@@ -13,8 +16,9 @@ API_KEY = header()
 try:
     language_models, embeddings_models = get_models(api_key=API_KEY)
     collections = get_collections(api_key=API_KEY)
-except Exception as e:
-    st.error(f"Error to fetch user data: {e}")
+except Exception:
+    st.error("Error to fetch user data.")
+    logging.error(traceback.format_exc())
     st.stop()
 
 openai_client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
@@ -71,30 +75,32 @@ if prompt := st.chat_input("Message to Albert"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        if rag:
-            data = {
-                "collections": params["rag"]["collections"],
-                "model": params["rag"]["embeddings_model"],
-                "k": params["rag"]["k"],
-                "prompt": prompt,
-            }
-            response = requests.post(f"{BASE_URL}/search", json=data, headers={"Authorization": f"Bearer {API_KEY}"})
-            assert response.status_code == 200
-            prompt_template = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"
-            chunks = "\n".join([result["chunk"]["content"] for result in response.json()["data"]])
-
-            sources = list(set(result["chunk"]["metadata"]["document_name"] for result in response.json()["data"]))
-
-            prompt = prompt_template.format(prompt=prompt, chunks=chunks)
-            messages = st.session_state.messages[:-1] + [{"role": "user", "content": prompt}]
-        else:
-            messages = st.session_state.messages
-            sources = []
         try:
+            if rag:
+                data = {
+                    "collections": params["rag"]["collections"],
+                    "model": params["rag"]["embeddings_model"],
+                    "k": params["rag"]["k"],
+                    "prompt": prompt,
+                }
+                response = requests.post(f"{BASE_URL}/search", json=data, headers={"Authorization": f"Bearer {API_KEY}"})
+                assert response.status_code == 200
+                prompt_template = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"
+                chunks = "\n".join([result["chunk"]["content"] for result in response.json()["data"]])
+
+                sources = list(set(result["chunk"]["metadata"]["document_name"] for result in response.json()["data"]))
+
+                prompt = prompt_template.format(prompt=prompt, chunks=chunks)
+                messages = st.session_state.messages[:-1] + [{"role": "user", "content": prompt}]
+            else:
+                messages = st.session_state.messages
+                sources = []
+
             stream = openai_client.chat.completions.create(stream=True, messages=messages, **params["sampling_params"])
             response = st.write_stream(stream)
-        except Exception as e:
-            st.error(e)
+        except Exception:
+            st.error("Error to generate response.")
+            logging.error(traceback.format_exc())
         if sources:
             st.multiselect(options=sources, label="Sources", key="sources_tmp", default=sources)
 
