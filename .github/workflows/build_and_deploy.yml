@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      - staging
-      - dev
 
 jobs:
   build-and-push:
@@ -13,7 +11,8 @@ jobs:
     name: Build and push from ${{ github.ref_name }}/${{ github.sha }}
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: ghcr.io/${{ github.repository }}
+      APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app
+      UI_IMAGE_NAME: ghcr.io/${{ github.repository }}/ui
       IMAGE_TAG: ${{ github.sha }}
     steps:
       - name: Checkout repository
@@ -35,7 +34,7 @@ jobs:
           context: .
           file: ./app/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}/app:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/app:latest
+          tags: ${{ env.APP_IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.APP_IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
       
@@ -45,7 +44,7 @@ jobs:
           context: .
           file: ./ui/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}/ui:${{ env.IMAGE_TAG }},${{ env.IMAGE_NAME }}/ui:latest
+          tags: ${{ env.UI_IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.UI_IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
