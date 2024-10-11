@@ -3,7 +3,7 @@ version: "3.8"
 services:
   fastapi:
     image: ghcr.io/etalab-ia/albert-api/app:latest
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     restart: always
     environment:
       - CONFIG_FILE=/home/albert/conf/config.yml
@@ -11,6 +11,7 @@ services:
       - 8000:8000
     volumes:
      - .:/home/albert/conf # a config.yml file should be in this folder
+     - ./app:/app
 
   streamlit:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
@@ -46,6 +47,20 @@ services:
         interval: 4s
         timeout: 10s
         retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elastic
+    ports:
+      - 9200:9200
+    volumes:
+      - /elasticsearch/data:/usr/share/elasticsearch/data
 
 volumes:
   qdrant:

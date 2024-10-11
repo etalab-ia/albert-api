@@ -25,8 +25,8 @@ class Model(ConfigBaseModel):
     key: Optional[str] = "EMPTY"
 
 
-class VectorDB(ConfigBaseModel):
-    type: Literal["qdrant"] = "qdrant"
+class SearchDB(BaseModel):
+    type: Literal["elasticsearch", "qdrant"] = "qdrant"
     args: dict
 
 
@@ -37,7 +37,7 @@ class CacheDB(ConfigBaseModel):
 
 class Databases(ConfigBaseModel):
     cache: CacheDB
-    vectors: VectorDB
+    search: SearchDB
 
 
 class Config(ConfigBaseModel):

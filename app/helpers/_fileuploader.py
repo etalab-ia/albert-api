@@ -16,7 +16,7 @@ from app.utils.variables import (
     PDF_TYPE,
 )
 
-from ._vectorstore import VectorStore
+from .searchclients._searchclient import SearchClient
 
 
 class FileUploader:
@@ -26,11 +26,11 @@ class FileUploader:
         "pdf": PDF_TYPE,
     }
 
-    def __init__(self, collection_id: str, vectors: VectorStore, user: User):
+    def __init__(self, collection_id: str, search_client: SearchClient, user: User):
         self.user = user
-        self.vectors = vectors
+        self.search_client = search_client
 
-        self.collection = self.vectors.get_collections(collection_ids=[collection_id], user=self.user)[0]
+        self.collection = self.search_client.get_collections(collection_ids=[collection_id], user=self.user)[0]
         self.collection_id = collection_id
 
     def parse(self, file: UploadFile) -> List[ParserOutput]:
@@ -71,4 +71,4 @@ class FileUploader:
         if not chunks:
             raise NoChunksToUpsertException()
 
-        self.vectors.upsert(chunks=chunks, collection_id=self.collection_id, user=self.user)
+        self.search_client.upsert(chunks=chunks, collection_id=self.collection_id, user=self.user)
