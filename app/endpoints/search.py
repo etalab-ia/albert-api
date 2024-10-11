@@ -7,7 +7,7 @@ from app.schemas.search import Search, Searches, SearchRequest
 from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
-from app.utils.variables import INTERNET_COLLECTION_ID
+from app.utils.variables import INTERNET_COLLECTION_ID, HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
 
 router = APIRouter()
 
@@ -23,10 +23,10 @@ async def search(request: SearchRequest, user: User = Security(check_api_key)) -
         data.extend(_get_internet_search_result(request, user))
 
     if len(request.collections) > 0:
-        if request.method in ["vectors", "hybrid"]:
-            data.extend(_get_vectors_search_result(request, user))
-        if request.method in ["keywords", "hybrid"]:
-            data.extend(_get_keywords_search_result(request, user))
+        if request.method in [SEMANTIC_SEARCH_TYPE, HYBRID_SEARCH_TYPE]:
+            data.extend(_get_semantic_search_result(request, user))
+        if request.method in [LEXICAL_SEARCH_TYPE, HYBRID_SEARCH_TYPE]:
+            data.extend(_get_lexical_search_result(request, user))
 
     data = sorted(data, key=lambda x: x.score, reverse=False)[: request.k]
 
@@ -43,12 +43,12 @@ def _get_internet_search_result(request: SearchRequest, user: User) -> List[Sear
     return internet.search(prompt=request.prompt, n=4, model_id=collection_model, score_threshold=request.score_threshold)
 
 
-def _get_vectors_search_result(request: SearchRequest, user: User) -> List[Search]:
+def _get_semantic_search_result(request: SearchRequest, user: User) -> List[Search]:
     return clients.vectors.search(
         prompt=request.prompt, collection_ids=request.collections, k=request.k, score_threshold=request.score_threshold, user=user
     )
 
 
-def _get_keywords_search_result(request: SearchRequest, user: User) -> List[Search]:
+def _get_lexical_search_result(request: SearchRequest, user: User) -> List[Search]:
     # TODO: Implement keywords search
     return []
