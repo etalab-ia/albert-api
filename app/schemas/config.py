@@ -5,38 +5,43 @@ from pydantic import BaseModel, Field, model_validator
 from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 
 
-class Key(BaseModel):
+class ConfigBaseModel(BaseModel):
+    class Config:
+        extra = "forbid"
+
+
+class Key(ConfigBaseModel):
     key: str
 
 
-class Auth(BaseModel):
+class Auth(ConfigBaseModel):
     type: Literal["grist"] = "grist"
     args: dict
 
 
-class Model(BaseModel):
+class Model(ConfigBaseModel):
     url: str
     type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE]
     key: Optional[str] = "EMPTY"
     search_internet: bool = False
 
 
-class VectorDB(BaseModel):
+class VectorDB(ConfigBaseModel):
     type: Literal["qdrant"] = "qdrant"
     args: dict
 
 
-class CacheDB(BaseModel):
+class CacheDB(ConfigBaseModel):
     type: Literal["redis"] = "redis"
     args: dict
 
 
-class Databases(BaseModel):
+class Databases(ConfigBaseModel):
     cache: CacheDB
     vectors: VectorDB
 
 
-class Config(BaseModel):
+class Config(ConfigBaseModel):
     auth: Optional[Auth] = None
     models: List[Model] = Field(..., min_length=1)
     databases: Databases
