@@ -1,13 +1,15 @@
 import base64
 import hashlib
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.utils.lifespan import clients
 from app.schemas.security import User
-from app.utils.exceptions import InvalidAuthenticationSchemeException, InvalidAPIKeyException
+from app.utils.config import CONFIG
+from app.utils.exceptions import InvalidAPIKeyException, InvalidAuthenticationSchemeException
+from app.utils.lifespan import clients
+from app.utils.variables import ROLE_LEVEL_0, ROLE_LEVEL_2
 
 
 def encode_string(input: str) -> str:
@@ -28,30 +30,53 @@ def encode_string(input: str) -> str:
     return hash
 
 
-def check_api_key(
-    api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key"))],
-) -> str:
-    """
-    Check if the API key is valid.
+if CONFIG.auth:
 
-    Args:
-        api_key (Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key")]): The API key to check.
+    def check_api_key(api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key"))]) -> str:
+        """
+        Check if the API key is valid.
 
-    Returns:
-        str: User ID, corresponding to the encoded API key or "no-auth" if no authentication is set in the configuration file.
-    """
-    if clients.auth:
+        Args:
+            api_key (Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key")]): The API key to check.
+
+        Returns:
+            str: User ID, corresponding to the encoded API key or "no-auth" if no authentication is set in the configuration file.
+        """
+
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
 
         role = clients.auth.check_api_key(api_key.credentials)
-
         if role is None:
             raise InvalidAPIKeyException()
 
         user_id = encode_string(input=api_key.credentials)
 
-    else:
-        user_id = "no-auth"
+        return User(id=user_id, role=role)
 
-    return User(id=user_id, role=role)
+else:
+
+    def check_api_key(api_key: Optional[str] = None) -> str:
+        return User(id="no-auth", role=ROLE_LEVEL_2)
+
+
+def check_rate_limit(request: Request) -> Optional[str]:
+    """
+    Check the rate limit for the user.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        Optional[str]: user_id if the access level is 0, None otherwise (no rate limit applied).
+    """
+
+    authorization = request.headers.get("Authorization")
+    scheme, credentials = authorization.split(" ") if authorization else ("", "")
+    api_key = HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
+    user = check_api_key(api_key=api_key)
+
+    if user.role > ROLE_LEVEL_0:
+        return None
+    else:
+        return user.id

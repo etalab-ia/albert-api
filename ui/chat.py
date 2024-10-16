@@ -35,11 +35,11 @@ with st.sidebar:
     st.title("RAG parameters")
     params["rag"]["embeddings_model"] = st.selectbox("Embeddings model", embeddings_models)
     model_collections = [
-        f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["model"] == params["rag"]["embeddings_model"]
+        f"{collection["id"]} - {collection["name"]}" for collection in collections if collection["model"] == params["rag"]["embeddings_model"]
     ] + ["internet"]
     if model_collections:
         selected_collections = st.multiselect(label="Collections", options=model_collections, default=[model_collections[0]])
-        params["rag"]["collections"] = [collection.split(" - ")[-1] for collection in selected_collections]
+        params["rag"]["collections"] = [collection.split(" - ")[0] for collection in selected_collections]
         params["rag"]["k"] = st.number_input("Top K", value=3)
 
 # Main

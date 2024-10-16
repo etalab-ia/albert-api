@@ -12,6 +12,13 @@ Tous les changements notables de l'application sont documentés dans ce fichier.
 - 🔄 Refactoring
 - ❌ Deprecated
 
+## [Alpha] - 2024-10-18
+
+- 🎉 Ajout de la limitation de débit (*rate limiting*) lorsque l'authentification est activée.
+- 📚 Ajout d'une documentation (./docs/security.md) sur l'authentification et la limitation de débit.
+- 🧪 Ajout de tests pour la limitation de débit.
+- 📚 Amélioration de la documentation [README.md](./README.md).
+
 ## [Alpha] - 2024-10-09
 
 - 🎉 Ajout d'un status du modèle dans le retour du endpoint GET `/v1/models`. Ce status permet de vérifier si le modèle est disponible ou non.
