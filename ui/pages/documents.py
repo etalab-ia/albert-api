@@ -92,7 +92,9 @@ col1, col2 = st.columns(2)
 with col1:
     with st.expander("Upload a file", icon="📑"):
         collection = st.selectbox(
-            "Select a collection", [f"{collection["name"]} - {collection["id"]}" for collection in collections], key="upload_file_selectbox"
+            "Select a collection",
+            [f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
+            key="upload_file_selectbox",
         )
         collection_id = collection.split(" - ")[-1]
         file_to_upload = st.file_uploader("File", type=["pdf", "html", "json"])

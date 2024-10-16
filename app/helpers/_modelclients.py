@@ -98,7 +98,7 @@ def create_embeddings(self, *args, **kwargs):
 
 
 class ModelClient(OpenAI):
-    DEFAULT_TIMEOUT = 10
+    DEFAULT_TIMEOUT = 60
 
     def __init__(self, type=Literal[EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE], *args, **kwargs):
         """

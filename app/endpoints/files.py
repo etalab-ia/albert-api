@@ -17,8 +17,8 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
     Supported files types:
     - pdf: Portable Document Format file.
     - json: JavaScript Object Notation file.
-        For JSON, file structure like a list of documents: [{"text": "hello world", "metadata": {"title": "my document"}}, ...]} or [{"text": "hello world"}, ...]}
-        Each document must have a "text" key and "metadata" key (optional) with dict type value.
+        For JSON, file structure like a list of documents: [{"text": "hello world", "title": "my document", "metadata": {"autor": "me"}}, ...]} or [{"text": "hello world", "title": "my document"}, ...]}
+        Each document must have a "text" and "title" keys and "metadata" key (optional) with dict type value.
     - html: Hypertext Markup Language file.
 
     Max file size is 10MB.
