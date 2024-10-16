@@ -3,13 +3,15 @@ import httpx
 
 from app.schemas.completions import CompletionRequest, Completions
 from app.schemas.security import User
-from app.utils.lifespan import clients
-from app.utils.security import check_api_key
+from app.utils.config import COMPLETIONS_RATE_LIMIT
+from app.utils.lifespan import clients, limiter
+from app.utils.security import check_api_key, check_rate_limit
 
 router = APIRouter()
 
 
 @router.post("/completions")
+@limiter.limit(COMPLETIONS_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
 async def completions(request: CompletionRequest, user: User = Security(check_api_key)) -> Completions:
     """
     Completion API similar to OpenAI's API.

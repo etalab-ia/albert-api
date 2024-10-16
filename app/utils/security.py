@@ -2,12 +2,13 @@ import base64
 import hashlib
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.utils.lifespan import clients
 from app.schemas.security import User
-from app.utils.exceptions import InvalidAuthenticationSchemeException, InvalidAPIKeyException
+from app.utils.exceptions import InvalidAPIKeyException, InvalidAuthenticationSchemeException
+from app.utils.lifespan import clients
+from app.utils.variables import ADMIN_ROLE
 
 
 def encode_string(input: str) -> str:
@@ -45,7 +46,6 @@ def check_api_key(
             raise InvalidAuthenticationSchemeException()
 
         role = clients.auth.check_api_key(api_key.credentials)
-
         if role is None:
             raise InvalidAPIKeyException()
 
@@ -53,5 +53,28 @@ def check_api_key(
 
     else:
         user_id = "no-auth"
+        role = ADMIN_ROLE
 
     return User(id=user_id, role=role)
+
+
+def check_rate_limit(request: Request) -> str | None:
+    """
+    Check the rate limit for the user.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        str | None: None if the user is admin (no rate limit), the user id otherwise.
+    """
+
+    authorization = request.headers.get("Authorization")
+    scheme, credentials = authorization.split(" ") if authorization else ("", "")
+    api_key = HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
+    user = check_api_key(api_key=api_key)
+
+    if user.role == ADMIN_ROLE:
+        return None
+    else:
+        return user.id
