@@ -6,14 +6,15 @@ import httpx
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.security import User
-from app.utils.lifespan import clients
-from app.utils.security import check_api_key
-
+from app.utils.config import CHAT_COMPLETIONS_RATE_LIMIT
+from app.utils.lifespan import clients, limiter
+from app.utils.security import check_api_key, check_rate_limit
 
 router = APIRouter()
 
 
 @router.post("/chat/completions")
+@limiter.limit(CHAT_COMPLETIONS_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
 async def chat_completions(request: ChatCompletionRequest, user: User = Security(check_api_key)) -> Union[ChatCompletion, ChatCompletionChunk]:
     """Completion API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/chat/create for the API specification.

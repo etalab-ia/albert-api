@@ -23,3 +23,10 @@ APP_DESCRIPTION = os.getenv(
     "APP_DESCRIPTION",
     "[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)",
 )
+
+# Rate limit
+DEFAULT_RATE_LIMIT = os.getenv("DEFAULT_RATE_LIMIT", "1000/minute")
+CHAT_COMPLETIONS_RATE_LIMIT = os.getenv("CHAT_COMPLETIONS_RATE_LIMIT", "10/minute")
+COMPLETIONS_RATE_LIMIT = os.getenv("COMPLETIONS_RATE_LIMIT", "10/minute")
+EMBEDDINGS_RATE_LIMIT = os.getenv("EMBEDDINGS_RATE_LIMIT", "100/minute")
+MODELS_RATE_LIMIT = os.getenv("MODELS_RATE_LIMIT", "10/minute")

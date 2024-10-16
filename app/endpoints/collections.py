@@ -5,7 +5,6 @@ from uuid import UUID
 from fastapi import APIRouter, Response, Security
 from fastapi.responses import JSONResponse
 
-
 from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.security import User
 from app.utils.lifespan import clients

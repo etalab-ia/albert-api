@@ -1,31 +1,40 @@
-## Déployer l'API Albert
+# Déployer l'API Albert
 
-### Quickstart
+## Quickstart
 
-1. Installez [libmagic](https://man7.org/linux/man-pages/man3/libmagic.3.html)
+1. Créez un fichier *config.yml* à la racine du dépot sur la base du fichier d'exemple *[config.example.yml](./config.example.yml)* Voir la section [Configuration](#configuration) pour plus d'informations.
 
-2. Installez les packages Python dans un environnement virtuel dédié
+2. Déployez l'API avec Docker à l'aide du fichier [compose.yml](../compose.yml) à la racine du dépot.
 
-  ```bash 
-  pip install ".[app]"
-  ```
-
-3. Créez un fichier *config.yml* à la racine du repository sur la base du fichier d'exemple *[config.example.yml](./config.example.yml)*
-
-  Si vous souhaitez configurer les accès aux modèles et aux bases de données, consultez la [Configuration](#configuration).
-
-  Pour lancer l'API : 
   ```bash
-  uvicorn app.main:app --reload --port 8080 --log-level debug
+  docker compose up -d
   ```
 
-### Configuration
+## Configuration
 
-Toute la configuration de l'API Albert se fait dans fichier de configuration qui doit respecter les  spécifications suivantes (voir *[config.example.yml](./config.example.yml)* pour un exemple) :
+### Variables d'environnements
+
+| Variable | Description |
+| --- | --- |
+| APP_CONTACT_URL | URL for app contact information (default: None) |
+| APP_CONTACT_EMAIL | Email for app contact (default: None) |
+| APP_VERSION | Version of the application (default: "0.0.0") |
+| APP_DESCRIPTION | Description of the application (default: None) |
+| DEFAULT_RATE_LIMIT | Default rate limit for API requests (default: "1000/minute") |
+| CHAT_COMPLETIONS_RATE_LIMIT | Rate limit for chat completions (default: "10/minute") |
+| COMPLETIONS_RATE_LIMIT | Rate limit for completions (default: "10/minute") |
+| EMBEDDINGS_RATE_LIMIT | Rate limit for embeddings (default: "100/minute") |
+| MODELS_RATE_LIMIT | Rate limit for models (default: "10/minute") |
+| CONFIG_FILE | Path to the configuration file (default: "config.yml") |
+| LOG_LEVEL | Logging level (default: DEBUG) |
+
+### Fichier de configuration
+
+Albert nécessite un fichier de configuration qui doit respecter les  spécifications suivantes (voir *[config.example.yml](./config.example.yml)* pour un exemple) :
 
 ```yaml
 auth: [optional]
-  type: [optional]
+  type: grist
   args: [optional] 
     [arg_name]: [value]
     ...
@@ -34,23 +43,29 @@ models:
     - url: [required]
       key: [optional]
       search_internet: [optional]
+      type: [required] # at least one of embedding model (text-embeddings-inference)
+
+    - url: [required] 
+      key: [optional]
+      search_internet: [optional]
+      type: [required] # at least one of language model (text-generation)
     ...
 
 databases:
   cache: [required]
-    type: [required] # see following Database section for the list of supported db type
+    type: redis
     args: [required] 
       [arg_name]: [value]
       ...
     
   vectors: [required]
-    type: [required] # see following Database section for the list of supported db type
+    type: qdrant
     args: [required] 
       [arg_name]: [value]
       ...
 ```
 
-**Par défaut, l'API va chercher un fichier nommé *config.yml* la racine du dépot.** Néanmoins, vous pouvez spécifier un autre fichier de config comme ceci :
+Ce fichier de configuration déclare les modèles et les bases de données nécessaires au fonctionnement de l'API. **Par défaut, l'API va chercher un fichier nommé *config.yml* la racine du dépot.** Néanmoins, vous pouvez spécifier un autre fichier de config comme ceci :
 
 ```bash
 CONFIG_FILE=<path_to_the_file> uvicorn main:app --reload --port 8080 --log-level debug
@@ -58,20 +73,11 @@ CONFIG_FILE=<path_to_the_file> uvicorn main:app --reload --port 8080 --log-level
 
 La configuration permet de spéficier le token d'accès à l'API, les API de modèles auquel à accès l'API d'Albert ainsi que les bases de données nécessaires à sont fonctionnement. 
 
-#### Auth
+#### Clients supportées
 
-Les IAM supportés, de nouveaux seront disponibles prochainement :
-
-* [Grist](https://www.getgrist.com/)
-
-#### Databases
-
-Voici les types de base de données supportées, à configurer dans le fichier de configuration (*[config.example.yml](./config.example.yml)*) : 
-
-| Database | Type |
-| --- | --- |
-| vectors | [qdrant](https://qdrant.tech/) | 
-| cache | [redis](https://redis.io/) |
+* Auth : [Grist](https://www.getgrist.com/)
+* Cache : [Redis](https://redis.io/)
+* Vectors : [Qdrant](https://qdrant.tech/)
 
 ## Déploiement de l'interface Streamlit
 
