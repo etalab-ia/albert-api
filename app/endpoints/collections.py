@@ -5,7 +5,6 @@ from uuid import UUID
 from fastapi import APIRouter, Response, Security
 from fastapi.responses import JSONResponse
 
-
 from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.security import User
 from app.utils.lifespan import clients
@@ -16,13 +15,13 @@ router = APIRouter()
 
 
 @router.post("/collections")
-async def create_collection(request: CollectionRequest, user: User = Security(check_api_key)) -> Response:
+async def create_collection(body: CollectionRequest, user: User = Security(check_api_key)) -> Response:
     """
     Create a new collection.
     """
     collection_id = str(uuid.uuid4())
     clients.vectors.create_collection(
-        collection_id=collection_id, collection_name=request.name, collection_model=request.model, collection_type=request.type, user=user
+        collection_id=collection_id, collection_name=body.name, collection_model=body.model, collection_type=body.type, user=user
     )
 
     return JSONResponse(status_code=201, content={"id": collection_id})
@@ -40,7 +39,7 @@ async def get_collections(user: User = Security(check_api_key)) -> Union[Collect
         type=PUBLIC_COLLECTION_TYPE,
         description="Use this collection to search on the internet.",
     )
-    data = clients.vectors.get_collections(user=user)
+    data = clients.vectors.get_collections(user=user, count_documents=True)
     data.append(internet_collection)
 
     return Collections(data=data)

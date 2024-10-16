@@ -19,7 +19,7 @@ from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
 from app.schemas.security import User
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PUBLIC_COLLECTION_TYPE, USER_ROLE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PUBLIC_COLLECTION_TYPE, ROLE_LEVEL_2
 from app.utils.exceptions import (
     DifferentCollectionsModelsException,
     WrongModelTypeException,
@@ -54,7 +54,7 @@ class VectorStore:
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role == USER_ROLE and collection.type == PUBLIC_COLLECTION_TYPE:
+        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
             raise WrongCollectionTypeException()
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
@@ -140,13 +140,14 @@ class VectorStore:
 
         return searches
 
-    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, user: User, collection_ids: List[str] = [], count_documents: bool = False) -> List[Collection]:
         """
         Get metadata of collections.
 
         Args:
             user (User): The user retrieving the collections.
             collection_ids (List[str]): List of collection ids to retrieve metadata for. If is an empty list, all collections will be considered.
+            count_documents (bool): Whether to count the documents in the collections. Special Qdrant optimization.
 
 
         Returns:
@@ -179,10 +180,15 @@ class VectorStore:
 
         collections = list()
         for collection in data:
-            document_count = self.qdrant.count(
-                collection_name=self.DOCUMENT_COLLECTION_ID,
-                count_filter=Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection.id]))]),
-            ).count
+            document_count = (
+                self.qdrant.count(
+                    collection_name=self.DOCUMENT_COLLECTION_ID,
+                    count_filter=Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection.id]))]),
+                ).count
+                if count_documents
+                else None
+            )
+
             collections.append(
                 Collection(
                     id=collection.id,
@@ -212,7 +218,7 @@ class VectorStore:
         if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
             raise WrongModelTypeException()
 
-        if user.role == USER_ROLE and collection_type == PUBLIC_COLLECTION_TYPE:
+        if user.role != ROLE_LEVEL_2 and collection_type == PUBLIC_COLLECTION_TYPE:
             raise WrongCollectionTypeException()
 
         # create metadata
@@ -241,7 +247,7 @@ class VectorStore:
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role == USER_ROLE and collection.type == PUBLIC_COLLECTION_TYPE:
+        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
             raise WrongCollectionTypeException()
 
         self.qdrant.delete_collection(collection_name=collection.id)
@@ -307,7 +313,7 @@ class VectorStore:
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role == USER_ROLE and collection.type == PUBLIC_COLLECTION_TYPE:
+        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
             raise WrongCollectionTypeException()
 
         # delete chunks

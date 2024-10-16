@@ -31,7 +31,7 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
         chunker_args = ChunkerArgs().model_dump()
         chunker_name = None
 
-    chunker_args["length_function"] = len if chunker_args["length_function"] == "len" else None
+    chunker_args["length_function"] = len if chunker_args["length_function"] == "len" else chunker_args["length_function"]
 
     uploader = FileUploader(vectors=clients.vectors, user=user, collection_id=request.collection)
     output = uploader.parse(file=file)

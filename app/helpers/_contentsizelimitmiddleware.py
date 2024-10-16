@@ -14,11 +14,7 @@ class ContentSizeLimitMiddleware:
 
     MAX_CONTENT_SIZE = 10 * 1024 * 1024  # 10MB
 
-    def __init__(
-        self,
-        app,
-        max_content_size: Optional[int] = None,
-    ):
+    def __init__(self, app, max_content_size: Optional[int] = None):
         self.app = app
         self.max_content_size = max_content_size or self.MAX_CONTENT_SIZE
 

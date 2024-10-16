@@ -11,28 +11,26 @@ router = APIRouter()
 
 
 @router.post("/search")
-async def search(request: SearchRequest, user: User = Security(check_api_key)) -> Searches:
+async def search(body: SearchRequest, user: User = Security(check_api_key)) -> Searches:
     """
     Similarity search for chunks in the vector store or on the internet.
     """
 
     data = []
-    if INTERNET_COLLECTION_ID in request.collections:
-        request.collections.remove(INTERNET_COLLECTION_ID)
+    if INTERNET_COLLECTION_ID in body.collections:
+        body.collections.remove(INTERNET_COLLECTION_ID)
         internet = SearchOnInternet(models=clients.models)
-        if len(request.collections) > 0:
-            collection_model = clients.vectors.get_collections(collection_ids=request.collections, user=user)[0].model
+        if len(body.collections) > 0:
+            collection_model = clients.vectors.get_collections(collection_ids=body.collections, user=user)[0].model
         else:
             collection_model = None
-        data.extend(internet.search(prompt=request.prompt, n=4, model_id=collection_model, score_threshold=request.score_threshold))
+        data.extend(internet.search(prompt=body.prompt, n=4, model_id=collection_model, score_threshold=body.score_threshold))
 
-    if len(request.collections) > 0:
+    if len(body.collections) > 0:
         data.extend(
-            clients.vectors.search(
-                prompt=request.prompt, collection_ids=request.collections, k=request.k, score_threshold=request.score_threshold, user=user
-            )
+            clients.vectors.search(prompt=body.prompt, collection_ids=body.collections, k=body.k, score_threshold=body.score_threshold, user=user)
         )
 
-    data = sorted(data, key=lambda x: x.score, reverse=False)[: request.k]
+    data = sorted(data, key=lambda x: x.score, reverse=False)[: body.k]
 
     return Searches(data=data)

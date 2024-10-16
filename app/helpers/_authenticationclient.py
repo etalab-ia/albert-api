@@ -4,11 +4,16 @@ from typing import Optional
 from grist_api import GristDocAPI
 from redis import Redis
 import json
-from app.utils.variables import USER_ROLE
+from app.utils.variables import ROLE_LEVEL_0, ROLE_LEVEL_1, ROLE_LEVEL_2
 
 
-class AuthManager(GristDocAPI):
+class AuthenticationClient(GristDocAPI):
     CACHE_EXPIRATION = 3600  # 1h
+    ROLE_DICT = {
+        "user": ROLE_LEVEL_0,
+        "client": ROLE_LEVEL_1,
+        "admin": ROLE_LEVEL_2,
+    }
 
     def __init__(self, cache: Redis, table_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -53,12 +58,15 @@ class AuthManager(GristDocAPI):
     def _get_api_keys(self):
         """
         Get all keys from a table in the Grist document.
+
+        Returns:
+            dict: dictionary of keys and their corresponding access level
         """
         records = self.fetch_table(self.table_id)
 
         keys = dict()
         for record in records:
             if record.EXPIRATION > dt.datetime.now().timestamp():
-                keys[record.KEY] = record.ROLE or USER_ROLE
+                keys[record.KEY] = self.ROLE_DICT.get(record.ROLE, ROLE_LEVEL_0)
 
         return keys
