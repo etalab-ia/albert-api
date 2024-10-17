@@ -53,7 +53,7 @@ Une fois la collection créée, vous pouvez importer des fichiers dans l'API ave
    3. *vectorization* : création d'un vecteur par *chunk*
    4. *indexation* : insertion des *chunks* et de leurs vecteurs dans le *vector store*
 
-![](./assets/collections_004.png)
+![](./assets/collections_003.png)
 
 Vous pouvez consulter les documents importés dans une collection à l'aide du endpoint `GET /v1/documents/{collection}` en spécifiant l'ID de la collection. De même, vous pouvez consulter les *chunks* d'un document à l'aide du endpoint `GET /v1/chunks/{collection}/{document}` en spécifiant l'ID du document.
 
@@ -61,4 +61,5 @@ Vous pouvez consulter les documents importés dans une collection à l'aide du e
 
 Le format JSON est adapté pour importer massivement de la donnée dans l'API Albert. En effet, contrairement aux autres types de fichiers, le JSON va être décomposé par l'API en plusieurs documents, chacun de ces documents sera alors converti en chunks. Ce JSON doit respecter une structure définie.
 
-![](./assets/collections_003.png)
+![](./assets/collections_004.png)
+
