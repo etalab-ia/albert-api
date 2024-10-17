@@ -92,8 +92,9 @@ def upload_file(api_key: str, file, collection_id: str) -> None:
     headers = {"Authorization": f"Bearer {api_key}"}
     files = {"file": (file.name, file.getvalue(), file.type)}
     data = {"request": '{"collection": "%s"}' % collection_id}
-    response = requests.post(f"{BASE_URL}/files", data=data, files=files, headers=headers)
 
+    response = requests.post(f"{BASE_URL}/files", data=data, files=files, headers=headers)
+    print(response.json(), flush=True)
     if response.status_code == 201:
         st.toast("Upload succeed", icon="✅")
     else:
