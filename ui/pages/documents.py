@@ -57,10 +57,10 @@ with col2:
     with st.expander("Delete a collection", icon="📦"):
         collection = st.selectbox(
             "Select collection to delete",
-            [f"{collection["name"]} - {collection["id"]}" for collection in collections],
+            [f"{collection["id"]} - {collection["name"]}" for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
             key="delete_collection_selectbox",
         )
-        collection_id = collection.split(" - ")[-1] if collection else None
+        collection_id = collection.split(" - ")[0] if collection else None
         submit_delete = st.button("Delete", disabled=not collection_id, key="delete_collection_button")
         if submit_delete:
             delete_collection(api_key=API_KEY, collection_id=collection_id)
@@ -93,10 +93,10 @@ with col1:
     with st.expander("Upload a file", icon="📑"):
         collection = st.selectbox(
             "Select a collection",
-            [f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
+            [f"{collection["id"]} - {collection["name"]}" for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
             key="upload_file_selectbox",
         )
-        collection_id = collection.split(" - ")[-1]
+        collection_id = collection.split(" - ")[0]
         file_to_upload = st.file_uploader("File", type=["pdf", "html", "json"])
         submit_upload = st.button("Upload", disabled=not collection_id or not file_to_upload)
         if file_to_upload and submit_upload and collection_id:
@@ -108,8 +108,8 @@ with col1:
 ## Delete files
 with col2:
     with st.expander("Delete a document", icon="🗑️"):
-        document = st.selectbox("Select document to delete", [f"{document["name"]} - {document["id"]}" for document in documents])
-        document_id = document.split(" - ")[-1] if document else None
+        document = st.selectbox("Select document to delete", [f"{document["id"]} - {document["name"]}" for document in documents])
+        document_id = document.split(" - ")[0] if document else None
         submit_delete = st.button("Delete", disabled=not document_id, key="delete_document_button")
         if submit_delete:
             document_collection = [document["collection_id"] for document in documents if document["id"] == document_id][0]
