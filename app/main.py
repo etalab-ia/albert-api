@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Response, Security
 
 
-from slowapi.middleware import SlowAPIMiddleware
+from slowapi.middleware import SlowAPIASGIMiddleware
 
 from app.endpoints import chat, chunks, collections, completions, documents, embeddings, files, models, search
 from app.helpers import ContentSizeLimitMiddleware
@@ -23,7 +23,7 @@ app = FastAPI(
 
 # Middlewares
 app.add_middleware(ContentSizeLimitMiddleware)
-app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(SlowAPIASGIMiddleware)
 
 
 # Monitoring

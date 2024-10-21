@@ -26,4 +26,4 @@ class ClientsManager:
         self.auth = AuthenticationClient(cache=self.cache, **self.config.auth.args) if self.config.auth else None
 
     def clear(self):
-        self.vectors.qdrant.close()
+        self.vectors.close()

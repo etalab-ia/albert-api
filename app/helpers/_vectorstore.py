@@ -19,29 +19,29 @@ from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
 from app.schemas.security import User
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PUBLIC_COLLECTION_TYPE, ROLE_LEVEL_2
 from app.utils.exceptions import (
-    DifferentCollectionsModelsException,
-    WrongModelTypeException,
-    WrongCollectionTypeException,
     CollectionNotFoundException,
+    DifferentCollectionsModelsException,
+    WrongCollectionTypeException,
+    WrongModelTypeException,
 )
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PUBLIC_COLLECTION_TYPE, ROLE_LEVEL_2
 
 
-class VectorStore:
+class VectorStore(QdrantClient):
     BATCH_SIZE = 48
     METADATA_COLLECTION_ID = "collections"
     DOCUMENT_COLLECTION_ID = "documents"
 
     def __init__(self, models: dict, *args, **kwargs):
-        self.qdrant = QdrantClient(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.models = models
 
-        if not self.qdrant.collection_exists(collection_name=self.METADATA_COLLECTION_ID):
-            self.qdrant.create_collection(collection_name=self.METADATA_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
+        if not super().collection_exists(collection_name=self.METADATA_COLLECTION_ID):
+            super().create_collection(collection_name=self.METADATA_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
 
-        if not self.qdrant.collection_exists(collection_name=self.DOCUMENT_COLLECTION_ID):
-            self.qdrant.create_collection(collection_name=self.DOCUMENT_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
+        if not super().collection_exists(collection_name=self.DOCUMENT_COLLECTION_ID):
+            super().create_collection(collection_name=self.DOCUMENT_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
 
     def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         """
@@ -61,7 +61,7 @@ class VectorStore:
             batch = chunks[i : i + self.BATCH_SIZE]
 
             # insert documents
-            self.qdrant.upsert(
+            super().upsert(
                 collection_name=self.DOCUMENT_COLLECTION_ID,
                 points=[
                     PointStruct(
@@ -83,13 +83,26 @@ class VectorStore:
             vectors = [vector.embedding for vector in response.data]
 
             # insert chunks and vectors
-            self.qdrant.upsert(
+            super().upsert(
                 collection_name=collection_id,
                 points=[
                     PointStruct(id=chunk.id, vector=vector, payload={"content": chunk.content, "metadata": chunk.metadata.model_dump()})
                     for chunk, vector in zip(batch, vectors)
                 ],
             )
+
+        # update collection documents count
+        payload = collection.model_dump()
+        payload["documents"] = (
+            super()
+            .count(
+                collection_name=self.DOCUMENT_COLLECTION_ID,
+                count_filter=Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection.id]))]),
+            )
+            .count
+        )
+        payload.pop("id")
+        super().upsert(collection_name=self.METADATA_COLLECTION_ID, points=[PointStruct(id=collection.id, payload=payload, vector={})])
 
     def search(
         self,
@@ -124,7 +137,7 @@ class VectorStore:
 
         chunks = []
         for collection in collections:
-            results = self.qdrant.search(
+            results = super().search(
                 collection_name=collection.id, query_vector=vector, limit=k, score_threshold=score_threshold, with_payload=True, query_filter=filter
             )
             for result in results:
@@ -140,15 +153,13 @@ class VectorStore:
 
         return searches
 
-    def get_collections(self, user: User, collection_ids: List[str] = [], count_documents: bool = False) -> List[Collection]:
+    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
         """
         Get metadata of collections.
 
         Args:
             user (User): The user retrieving the collections.
             collection_ids (List[str]): List of collection ids to retrieve metadata for. If is an empty list, all collections will be considered.
-            count_documents (bool): Whether to count the documents in the collections. Special Qdrant optimization.
-
 
         Returns:
             List[Collection]: A list of Collection objects containing the metadata for the specified collections.
@@ -161,15 +172,15 @@ class VectorStore:
         ]
         filter = Filter(must=must, should=should)
 
-        records = self.qdrant.scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=None)
+        records = super().scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=None)
         data, offset = records[0], records[1]
         while offset is not None:
-            records = self.qdrant.scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=offset)
+            records = super().scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=offset)
             data.extend(records[0])
             offset = records[1]
 
         # sanity check: remove collection that does not exist
-        existing_collection_ids = [collection.name for collection in self.qdrant.get_collections().collections]
+        existing_collection_ids = [collection.name for collection in super().get_collections().collections]
         data = [collection for collection in data if collection.id in existing_collection_ids]
 
         # check if collection ids are valid
@@ -180,15 +191,6 @@ class VectorStore:
 
         collections = list()
         for collection in data:
-            document_count = (
-                self.qdrant.count(
-                    collection_name=self.DOCUMENT_COLLECTION_ID,
-                    count_filter=Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection.id]))]),
-                ).count
-                if count_documents
-                else None
-            )
-
             collections.append(
                 Collection(
                     id=collection.id,
@@ -198,7 +200,7 @@ class VectorStore:
                     user=collection.payload.get("user"),
                     description=collection.payload.get("description"),
                     created_at=collection.payload.get("created_at"),
-                    documents=document_count,
+                    documents=collection.payload.get("documents"),
                 )
             )
 
@@ -229,11 +231,12 @@ class VectorStore:
             "user": user.id,
             "description": None,
             "created_at": round(time.time()),
+            "documents": 0,
         }
-        self.qdrant.upsert(collection_name=self.METADATA_COLLECTION_ID, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
+        super().upsert(collection_name=self.METADATA_COLLECTION_ID, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
 
         # create collection
-        self.qdrant.create_collection(
+        super().create_collection(
             collection_name=collection_id, vectors_config=VectorParams(size=self.models[collection_model].vector_size, distance=Distance.COSINE)
         )
 
@@ -250,8 +253,8 @@ class VectorStore:
         if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
             raise WrongCollectionTypeException()
 
-        self.qdrant.delete_collection(collection_name=collection.id)
-        self.qdrant.delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
+        super().delete_collection(collection_name=collection.id)
+        super().delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
     def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Chunk]:
         """
@@ -270,7 +273,7 @@ class VectorStore:
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-        data = self.qdrant.scroll(collection_name=collection.id, scroll_filter=filter, limit=limit, offset=offset)[0]
+        data = super().scroll(collection_name=collection.id, scroll_filter=filter, limit=limit, offset=offset)[0]
         chunks = [Chunk(id=chunk.id, content=chunk.payload["content"], metadata=ChunkMetadata(**chunk.payload["metadata"])) for chunk in data]
 
         return chunks
@@ -291,13 +294,17 @@ class VectorStore:
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         filter = Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection_id]))])
-        data = self.qdrant.scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
+        data = super().scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
         documents = list()
         for document in data:
-            chunks_count = self.qdrant.count(
-                collection_name=collection.id,
-                count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
-            ).count
+            chunks_count = (
+                super()
+                .count(
+                    collection_name=collection.id,
+                    count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
+                )
+                .count
+            )
             documents.append(Document(id=document.id, name=document.payload["name"], created_at=document.payload["created_at"], chunks=chunks_count))
 
         return documents
@@ -318,7 +325,7 @@ class VectorStore:
 
         # delete chunks
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-        self.qdrant.delete(collection_name=collection.id, points_selector=FilterSelector(filter=filter))
+        super().delete(collection_name=collection.id, points_selector=FilterSelector(filter=filter))
 
         # delete document
-        self.qdrant.delete(collection_name=self.DOCUMENT_COLLECTION_ID, points_selector=PointIdsList(points=[document_id]))
+        super().delete(collection_name=self.DOCUMENT_COLLECTION_ID, points_selector=PointIdsList(points=[document_id]))

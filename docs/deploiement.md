@@ -20,8 +20,8 @@
 | APP_CONTACT_EMAIL | Email for app contact (default: None) |
 | APP_VERSION | Version of the application (default: "0.0.0") |
 | APP_DESCRIPTION | Description of the application (default: None) |
-| DEFAULT_RATE_LIMIT | Default rate limit for API requests (default: "100/minute") |
-| CORE_RATE_LIMIT | Rate limit for users API (default: "10/minute") |
+| GLOBAL_RATE_LIMIT | Global rate limit for API requests per IP address (default: "100/minute") |
+| DEFAULT_RATE_LIMIT | Default rate limit for API requests per user (default: "10/minute") |
 | CONFIG_FILE | Path to the configuration file (default: "config.yml") |
 | LOG_LEVEL | Logging level (default: DEBUG) |
 

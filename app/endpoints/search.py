@@ -1,17 +1,19 @@
-from fastapi import APIRouter, Security
+from fastapi import APIRouter, Request, Security
 
 from app.helpers import SearchOnInternet
 from app.schemas.search import Searches, SearchRequest
 from app.schemas.security import User
-from app.utils.lifespan import clients
-from app.utils.security import check_api_key
+from app.utils.config import DEFAULT_RATE_LIMIT
+from app.utils.lifespan import clients, limiter
+from app.utils.security import check_api_key, check_rate_limit
 from app.utils.variables import INTERNET_COLLECTION_ID
 
 router = APIRouter()
 
 
 @router.post("/search")
-async def search(body: SearchRequest, user: User = Security(check_api_key)) -> Searches:
+@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+async def search(request: Request, body: SearchRequest, user: User = Security(check_api_key)) -> Searches:
     """
     Similarity search for chunks in the vector store or on the internet.
     """

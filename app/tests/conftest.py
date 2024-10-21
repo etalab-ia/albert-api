@@ -1,4 +1,5 @@
 import logging
+import time
 
 import pytest
 import requests
@@ -67,3 +68,10 @@ def cleanup_collections(args, session_user, session_admin):
 
     for collection_id in collection_ids:
         session_admin.delete(f"{args["base_url"]}/collections/{collection_id}")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def sleep_between_tests():
+    # Sleep between tests to avoid rate limit errors
+    yield
+    time.sleep(30)

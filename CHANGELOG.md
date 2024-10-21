@@ -12,12 +12,14 @@ Tous les changements notables de l'application sont documentés dans ce fichier.
 - 🔄 Refactoring
 - ❌ Deprecated
 
-## [Alpha] - 2024-10-18
+## [Alpha] - 2024-10-21
 
 - 🎉 Ajout de la limitation de débit (*rate limiting*) lorsque l'authentification est activée.
 - 📚 Ajout d'une documentation (./docs/security.md) sur l'authentification et la limitation de débit.
 - 🧪 Ajout de tests pour la limitation de débit.
 - 📚 Amélioration de la documentation [README.md](./README.md).
+- 📚 La documentation est maintenant accessible à l'URL `/documentation` et le swagger à l'URL `/swagger`.
+- 🔄 Optimisation du comptage des documents dans Qdrant.
 
 ## [Alpha] - 2024-10-09
 

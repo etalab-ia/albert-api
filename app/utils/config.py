@@ -25,5 +25,5 @@ APP_DESCRIPTION = os.getenv(
 )
 
 # Rate limit
-DEFAULT_RATE_LIMIT = os.getenv("DEFAULT_RATE_LIMIT", "100/minute")
-CORE_RATE_LIMIT = os.getenv("CORE_RATE_LIMIT", "10/minute")
+GLOBAL_RATE_LIMIT = os.getenv("GLOBAL_RATE_LIMIT", "100/minute")
+DEFAULT_RATE_LIMIT = os.getenv("DEFAULT_RATE_LIMIT", "10/minute")
