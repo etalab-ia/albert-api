@@ -58,4 +58,3 @@ Albert API est un projet open source, vous pouvez contribuer au projet en lisant
 ## 🚀 Installation
 
 Pour déployer l'API Albert sur votre propre infrastructure, suivez la [documentation](./docs/deployment.md).
-
