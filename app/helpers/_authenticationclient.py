@@ -1,9 +1,11 @@
 import datetime as dt
+import json
 from typing import Optional
+import uuid
 
 from grist_api import GristDocAPI
 from redis import Redis
-import json
+
 from app.utils.variables import ROLE_LEVEL_0, ROLE_LEVEL_1, ROLE_LEVEL_2
 
 
@@ -17,8 +19,7 @@ class AuthenticationClient(GristDocAPI):
 
     def __init__(self, cache: Redis, table_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = kwargs.get("user")
-        self.doc_id = kwargs.get("doc_id")
+        self.session_id = str(uuid.uuid4())
         self.table_id = table_id
         self.redis = cache
 
@@ -42,7 +43,7 @@ class AuthenticationClient(GristDocAPI):
         """
 
         def wrapper(self):
-            key = f"auth-{self.doc_id}-{self.table_id}"
+            key = f"auth-{self.session_id}"
             result = self.redis.get(key)
             if result:
                 result = json.loads(result)

@@ -17,6 +17,8 @@ app = FastAPI(
     contact={"url": APP_CONTACT_URL, "email": APP_CONTACT_EMAIL},
     licence_info={"name": "MIT License", "identifier": "MIT"},
     lifespan=lifespan,
+    docs_url="/swagger",
+    redoc_url="/documentation",
 )
 
 # Middlewares
