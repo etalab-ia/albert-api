@@ -12,13 +12,9 @@ class ContentSizeLimitMiddleware:
       max_content_size (optional): the maximum content size allowed in bytes, default is MAX_CONTENT_SIZE
     """
 
-    MAX_CONTENT_SIZE = 10 * 1024 * 1024  # 10MB
+    MAX_CONTENT_SIZE = 20 * 1024 * 1024  # 20MB
 
-    def __init__(
-        self,
-        app,
-        max_content_size: Optional[int] = None,
-    ):
+    def __init__(self, app, max_content_size: Optional[int] = None):
         self.app = app
         self.max_content_size = max_content_size or self.MAX_CONTENT_SIZE
 

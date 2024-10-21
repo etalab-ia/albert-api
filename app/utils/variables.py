@@ -9,5 +9,7 @@ PDF_TYPE = "application/pdf"
 JSON_TYPE = "application/json"
 TXT_TYPE = "text/plain"
 HTML_TYPE = "text/html"
-USER_ROLE = "user"
+ROLE_LEVEL_0 = 0
+ROLE_LEVEL_1 = 1
+ROLE_LEVEL_2 = 2
 # @TODO : add DOCX_TYPE (application/vnd.openxmlformats-officedocument.wordprocessingml.document)

@@ -1,9 +1,10 @@
 from redis import Redis as CacheManager
+from redis.connection import ConnectionPool
 
 from app.schemas.config import Config
 
 from ._modelclients import ModelClients
-from ._authmanager import AuthManager
+from ._authenticationclient import AuthenticationClient
 from ._vectorstore import VectorStore
 
 
@@ -16,10 +17,13 @@ class ClientsManager:
         self.models = ModelClients(config=self.config)
 
         # set cache
-        self.cache = CacheManager(**self.config.databases.cache.args)
+        self.cache = CacheManager(connection_pool=ConnectionPool(**self.config.databases.cache.args))
 
         # set vectors
         self.vectors = VectorStore(models=self.models, **self.config.databases.vectors.args)
 
         # set auth
-        self.auth = AuthManager(cache=self.cache, **self.config.auth.args) if self.config.auth else None
+        self.auth = AuthenticationClient(cache=self.cache, **self.config.auth.args) if self.config.auth else None
+
+    def clear(self):
+        self.vectors.close()

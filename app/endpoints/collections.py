@@ -2,34 +2,36 @@ from typing import Union
 import uuid
 from uuid import UUID
 
-from fastapi import APIRouter, Response, Security
+from fastapi import APIRouter, Request, Response, Security
 from fastapi.responses import JSONResponse
-
 
 from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.security import User
-from app.utils.lifespan import clients
-from app.utils.security import check_api_key
+from app.utils.lifespan import clients, limiter
+from app.utils.security import check_api_key, check_rate_limit
+from app.utils.config import DEFAULT_RATE_LIMIT
 from app.utils.variables import INTERNET_COLLECTION_ID, PUBLIC_COLLECTION_TYPE
 
 router = APIRouter()
 
 
 @router.post("/collections")
-async def create_collection(request: CollectionRequest, user: User = Security(check_api_key)) -> Response:
+@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+async def create_collection(request: Request, body: CollectionRequest, user: User = Security(check_api_key)) -> Response:
     """
     Create a new collection.
     """
     collection_id = str(uuid.uuid4())
     clients.vectors.create_collection(
-        collection_id=collection_id, collection_name=request.name, collection_model=request.model, collection_type=request.type, user=user
+        collection_id=collection_id, collection_name=body.name, collection_model=body.model, collection_type=body.type, user=user
     )
 
     return JSONResponse(status_code=201, content={"id": collection_id})
 
 
 @router.get("/collections")
-async def get_collections(user: User = Security(check_api_key)) -> Union[Collection, Collections]:
+@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+async def get_collections(request: Request, user: User = Security(check_api_key)) -> Union[Collection, Collections]:
     """
     Get list of collections.
     """
@@ -47,7 +49,8 @@ async def get_collections(user: User = Security(check_api_key)) -> Union[Collect
 
 
 @router.delete("/collections/{collection}")
-async def delete_collections(collection: UUID, user: User = Security(check_api_key)) -> Response:
+@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+async def delete_collections(request: Request, collection: UUID, user: User = Security(check_api_key)) -> Response:
     """
     Delete a collection.
     """

@@ -1,6 +1,9 @@
 from fastapi import FastAPI, Response, Security
 
-from app.endpoints import chat, chunks, collections, completions, embeddings, files, models, search, documents
+
+from slowapi.middleware import SlowAPIASGIMiddleware
+
+from app.endpoints import chat, chunks, collections, completions, documents, embeddings, files, models, search
 from app.helpers import ContentSizeLimitMiddleware
 from app.schemas.security import User
 from app.utils.config import APP_CONTACT_EMAIL, APP_CONTACT_URL, APP_DESCRIPTION, APP_VERSION
@@ -14,10 +17,17 @@ app = FastAPI(
     contact={"url": APP_CONTACT_URL, "email": APP_CONTACT_EMAIL},
     licence_info={"name": "MIT License", "identifier": "MIT"},
     lifespan=lifespan,
+    docs_url="/swagger",
+    redoc_url="/documentation",
 )
 
+# Middlewares
+app.add_middleware(ContentSizeLimitMiddleware)
+app.add_middleware(SlowAPIASGIMiddleware)
 
-@app.get("/health")
+
+# Monitoring
+@app.get("/health", tags=["Monitoring"])
 def health(user: User = Security(check_api_key)):
     """
     Health check.
@@ -25,8 +35,6 @@ def health(user: User = Security(check_api_key)):
 
     return Response(status_code=200)
 
-
-app.add_middleware(ContentSizeLimitMiddleware)
 
 # Core
 app.include_router(models.router, tags=["Core"], prefix="/v1")

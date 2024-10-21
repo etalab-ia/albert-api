@@ -23,3 +23,7 @@ APP_DESCRIPTION = os.getenv(
     "APP_DESCRIPTION",
     "[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)",
 )
+
+# Rate limit
+GLOBAL_RATE_LIMIT = os.getenv("GLOBAL_RATE_LIMIT", "100/minute")
+DEFAULT_RATE_LIMIT = os.getenv("DEFAULT_RATE_LIMIT", "10/minute")
