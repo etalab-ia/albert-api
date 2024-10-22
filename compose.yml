@@ -4,9 +4,6 @@ services:
   fastapi:
     image: ghcr.io/etalab-ia/albert-api/app:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
-    build:
-      context: ./app
-      dockerfile: Dockerfile
     restart: always
     environment:
       - CONFIG_FILE=/home/albert/conf/config.yml
@@ -17,7 +14,7 @@ services:
 
   streamlit:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
-    command: ["streamlit", "run", "chat.py", "--server.port=8501", "--browser.gatherUsageStats", "false", "--theme.base", "light", "--server.maxUploadSize=10"]
+    command: streamlit run ui/chat.py --server.port=8501 --browser.gatherUsageStats false --theme.base light --server.maxUploadSize=20
     restart: always
     environment:
       - BASE_URL=http://fastapi:8000/v1
@@ -25,7 +22,7 @@ services:
       - 8501:8501
 
   qdrant:
-    image: qdrant/qdrant:v1.9.7-unprivileged
+    image: qdrant/qdrant:v1.11.5-unprivileged
     restart: always
     environment:
       - QDRANT__SERVICE__API_KEY=changeme

@@ -8,7 +8,7 @@ import requests
 from app.schemas.config import Config
 from app.schemas.embeddings import Embeddings
 from app.schemas.models import Model, Models
-from app.utils.config import LOGGER
+from app.utils.config import logger, DEFAULT_INTERNET_EMBEDDINGS_MODEL_URL, DEFAULT_INTERNET_LANGUAGE_MODEL_URL
 from app.utils.exceptions import ContextLengthExceededException, ModelNotAvailableException, ModelNotFoundException
 from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 
@@ -134,19 +134,17 @@ class ModelClients(dict):
         for model_config in config.models:
             model = ModelClient(base_url=model_config.url, api_key=model_config.key, type=model_config.type)
             if model.status == "unavailable":
-                LOGGER.error(f"unavailable model API on {model_config.url}, skipping.")
+                logger.error(f"unavailable model API on {model_config.url}, skipping.")
                 continue
             self.__setitem__(model.id, model)
 
-            if model_config.search_internet and model_config.type == EMBEDDINGS_MODEL_TYPE:
-                self.SEARCH_INTERNET_EMBEDDINGS_MODEL_ID = model.id
-            if model_config.search_internet and model_config.type == LANGUAGE_MODEL_TYPE:
-                self.SEARCH_INTERNET_LANGUAGE_MODEL_ID = model.id
+            if model_config.url == DEFAULT_INTERNET_EMBEDDINGS_MODEL_URL:
+                self.DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID = model.id
+            elif model_config.url == DEFAULT_INTERNET_LANGUAGE_MODEL_URL:
+                self.DEFAULT_INTERNET_LANGUAGE_MODEL_ID = model.id
 
-        if "SEARCH_INTERNET_EMBEDDINGS_MODEL_ID" not in self.__dict__:
-            raise ValueError("No embeddings model with search internet enabled.")
-        if "SEARCH_INTERNET_LANGUAGE_MODEL_ID" not in self.__dict__:
-            raise ValueError("No language model with search internet enabled.")
+        assert "DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID" in self.__dict__, "Default internet embeddings model is unavailable."
+        assert "DEFAULT_INTERNET_LANGUAGE_MODEL_ID" in self.__dict__, "Default internet language model is unavailable."
 
     def __setitem__(self, key: str, value):
         if any(key == k for k in self.keys()):

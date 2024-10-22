@@ -2,7 +2,10 @@ models:
     - url: https://api.openai.com/v1
       type: text-generation
       key: mysecretkey1
-      search_internet: True
+
+    - url: https://api.openai.com/v1
+      type: text-embeddings-inference
+      key: mysecretkey2
 
 databases:
   vectors:
@@ -18,9 +21,3 @@ databases:
       host: redis
       password: changeme
 
-  files:
-    type: minio
-    args:
-      endpoint_url: minio
-      aws_access_key_id: minio
-      aws_secret_access_key: changeme

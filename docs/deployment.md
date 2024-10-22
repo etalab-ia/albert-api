@@ -16,14 +16,16 @@
 
 | Variable | Description |
 | --- | --- |
-| APP_CONTACT_URL | URL for app contact information (default: None) |
-| APP_CONTACT_EMAIL | Email for app contact (default: None) |
-| APP_VERSION | Version of the application (default: "0.0.0") |
-| APP_DESCRIPTION | Description of the application (default: None) |
-| GLOBAL_RATE_LIMIT | Global rate limit for API requests per IP address (default: "100/minute") |
-| DEFAULT_RATE_LIMIT | Default rate limit for API requests per user (default: "10/minute") |
-| CONFIG_FILE | Path to the configuration file (default: "config.yml") |
-| LOG_LEVEL | Logging level (default: DEBUG) |
+| APP_CONTACT_URL | URL pour les informations de contact de l'application (par défaut : None) |
+| APP_CONTACT_EMAIL | Email de contact pour l'application (par défaut : None) |
+| APP_VERSION | Version de l'application (par défaut : "0.0.0") |
+| APP_DESCRIPTION | Description de l'application (par défaut : None) |
+| GLOBAL_RATE_LIMIT | Limite de taux global pour les requêtes API par adresse IP (par défaut : "100/minute") |
+| DEFAULT_RATE_LIMIT | Limite de taux par défaut pour les requêtes API par utilisateur (par défaut : "10/minute") |
+| CONFIG_FILE | Chemin vers le fichier de configuration (par défaut : "config.yml") |
+| LOG_LEVEL | Niveau de journalisation (par défaut : DEBUG) |
+| DEFAULT_INTERNET_LANGUAGE_MODEL_URL | URL d'un modèle de langage pour RAG sur la recherche internet (par défaut : premier modèle de langage disponible) |
+| DEFAULT_INTERNET_EMBEDDINGS_MODEL_URL | URL d'un modèle d'embeddings pour RAG sur la recherche internet (par défaut : premier modèle d'embeddings disponible) |
 
 ### Clients tiers
 
@@ -47,12 +49,10 @@ auth: [optional]
 models:
     - url: [required]
       key: [optional]
-      search_internet: [optional]
       type: [required] # at least one of embedding model (text-embeddings-inference)
 
     - url: [required] 
       key: [optional]
-      search_internet: [optional]
       type: [required] # at least one of language model (text-generation)
     ...
 
@@ -74,7 +74,7 @@ databases:
 
 1. Installez les packages Python dans un environnement virtuel
 
-  ```bash 
+  ```bash
   pip install ".[ui]"
   ```
 

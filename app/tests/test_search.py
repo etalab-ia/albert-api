@@ -7,7 +7,7 @@ import pytest
 from app.schemas.search import Search, Searches
 from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_ID
 
-from app.utils.config import LOGGER
+from app.utils.config import logger
 
 
 @pytest.fixture(scope="module")
@@ -102,4 +102,4 @@ class TestSearch:
             search = searches.data[0]
             assert search.chunk.metadata.document_name.startswith("http")
         else:
-            LOGGER.info("No internet search results, the DuckDuckGo rate limit may have been exceeded.")
+            logger.info("No internet search results, the DuckDuckGo rate limit may have been exceeded.")

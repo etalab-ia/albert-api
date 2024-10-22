@@ -23,7 +23,6 @@ class Model(ConfigBaseModel):
     url: str
     type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE]
     key: Optional[str] = "EMPTY"
-    search_internet: bool = False
 
 
 class VectorDB(ConfigBaseModel):
@@ -51,19 +50,14 @@ class Config(ConfigBaseModel):
         language_model = False
         embeddings_model = False
         for model in values.models:
-            if model.search_internet:
-                if model.type == LANGUAGE_MODEL_TYPE:
-                    if language_model:
-                        raise ValueError("Only one language model can have search_internet=True")
-                    language_model = True
-                elif model.type == EMBEDDINGS_MODEL_TYPE:
-                    if embeddings_model:
-                        raise ValueError("Only one embeddings model can have search_internet=True")
-                    embeddings_model = True
+            if model.type == LANGUAGE_MODEL_TYPE:
+                language_model = True
+            elif model.type == EMBEDDINGS_MODEL_TYPE:
+                embeddings_model = True
 
         if not language_model:
-            raise ValueError("A language model with search_internet=True is required")
+            raise ValueError("At least one language model is required")
         if not embeddings_model:
-            raise ValueError("An embeddings model with search_internet=True is required")
+            raise ValueError("At least one embeddings model is required")
 
         return values
