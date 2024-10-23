@@ -3,14 +3,15 @@ from typing import List, Optional
 
 from duckduckgo_search import DDGS
 from duckduckgo_search.exceptions import RatelimitException
+from fastapi import UploadFile
 import numpy as np
 import requests
-from fastapi import UploadFile
+
 from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.parsers import HTMLParser
 from app.schemas.search import Search
+from app.utils.config import logger
 from app.utils.variables import INTERNET_COLLECTION_ID
-from app.utils.config import LOGGER
 
 
 class SearchOnInternet:
@@ -75,7 +76,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         self.parser = HTMLParser(collection_id=INTERNET_COLLECTION_ID)
 
     def search(self, prompt: str, model_id: Optional[str] = None, n: int = 3, score_threshold: Optional[float] = None) -> List:
-        model_id = model_id or self.models.SEARCH_INTERNET_EMBEDDINGS_MODEL_ID
+        model_id = model_id or self.models.DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID
         chunker = LangchainRecursiveCharacterTextSplitter(
             chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
         )
@@ -86,7 +87,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             with DDGS() as ddgs:
                 results = list(ddgs.text(query, region="fr-fr", safesearch="On", max_results=n))
         except RatelimitException:
-            LOGGER.warning("DuckDuckGo rate limit exceeded.")
+            logger.warning("DuckDuckGo rate limit exceeded.")
             results = []
 
         chunks = []
@@ -134,11 +135,10 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
 
         return data
 
-    def _get_web_query(self, prompt: str, language_model: Optional[str] = None) -> str:
-        language_model = language_model or self.models.SEARCH_INTERNET_LANGUAGE_MODEL_ID
+    def _get_web_query(self, prompt: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        response = self.models[language_model].chat.completions.create(
-            messages=[{"role": "user", "content": prompt}], model=language_model, temperature=0.2, stream=False
+        response = self.models[self.models.DEFAULT_INTERNET_LANGUAGE_MODEL_ID].chat.completions.create(
+            messages=[{"role": "user", "content": prompt}], model=self.models.DEFAULT_INTERNET_LANGUAGE_MODEL_ID, temperature=0.2, stream=False
         )
         query = response.choices[0].message.content
 

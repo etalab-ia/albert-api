@@ -1,10 +1,12 @@
 FROM python:3.12-slim
 
-# @TODO: non root image
-WORKDIR /app
+RUN groupadd --gid 1100 albert
+RUN useradd --home /home/albert --gid 1100 --uid 1100 albert 
+USER albert
+ENV PATH="/home/albert/.local/bin:${PATH}"
 
-
-COPY pyproject.toml .
+WORKDIR /home/albert
+ADD ./pyproject.toml ./pyproject.toml
 RUN pip install ".[ui]"
-
-COPY ./ui .
+ADD ./ui ./ui
+ENV PYTHONPATH="/home/albert/ui:${PYTHONPATH}"

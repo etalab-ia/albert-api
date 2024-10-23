@@ -12,6 +12,11 @@ Tous les changements notables de l'application sont documentés dans ce fichier.
 - 🔄 Refactoring
 - ❌ Deprecated
 
+
+## [Alpha] - 2024-10-23
+
+- 🔄 Les modèles par défaut pour la recherche sur internet sont maintenant définit en variable d'environnement et non plus dans le fichier `config.yml`
+
 ## [Alpha] - 2024-10-21
 
 - 🎉 Ajout de la limitation de débit (*rate limiting*) lorsque l'authentification est activée.
