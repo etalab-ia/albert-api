@@ -38,3 +38,20 @@ class Searches(BaseModel):
 
 class Filter(BaseModel):
     pass
+
+
+class MatchAny(BaseModel):
+    any: List[str]
+
+
+class FieldCondition(BaseModel):
+    key: str
+    match: MatchAny
+
+
+class FilterSelector(BaseModel):
+    filter: Filter
+
+
+class PointIdsList(BaseModel):
+    points: List[str]

@@ -22,13 +22,8 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     Create a new collection.
     """
     collection_id = str(uuid.uuid4())
-    clients.vectors.create_collection(
-        collection_id=collection_id,
-        collection_name=body.name,
-        collection_model=body.model,
-        collection_type=body.type,
-        collection_description=body.description,
-        user=user,
+    clients.search.create_collection(
+        collection_id=collection_id, collection_name=body.name, collection_model=body.model, collection_type=body.type, collection_description=body.description, user=user
     )
 
     return JSONResponse(status_code=201, content={"id": collection_id})
@@ -47,7 +42,7 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
         type=PUBLIC_COLLECTION_TYPE,
         description="Use this collection to search on the internet.",
     )
-    data = clients.vectors.get_collections(user=user)
+    data = clients.search.get_collections(user=user)
     data.append(internet_collection)
 
     return Collections(data=data)
@@ -60,6 +55,6 @@ async def delete_collections(request: Request, collection: UUID, user: User = Se
     Delete a collection.
     """
     collection = str(collection)
-    clients.vectors.delete_collection(collection_id=collection, user=user)
+    clients.search.delete_collection(collection_id=collection, user=user)
 
     return Response(status_code=204)

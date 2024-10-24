@@ -26,7 +26,7 @@ class Model(ConfigBaseModel):
 
 
 class SearchDB(BaseModel):
-    type: Literal["elasticsearch", "qdrant"] = "qdrant"
+    type: Literal["elastic", "qdrant"] = "qdrant"
     args: dict
 
 

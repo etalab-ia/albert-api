@@ -18,6 +18,8 @@ HTML_TYPE = "text/html"
 ROLE_LEVEL_0 = 0
 ROLE_LEVEL_1 = 1
 ROLE_LEVEL_2 = 2
+USER_ROLE = "user"
+
 SUPPORTED_LANGUAGES = {
     "afrikaans": "af",
     "albanian": "sq",
@@ -132,9 +134,6 @@ SUPPORTED_LANGUAGES = {
     "yiddish": "yi",
     "yoruba": "yo",
 }
-
-
-USER_ROLE = "user"
 
 HYBRID_SEARCH_TYPE = "hybrid"
 LEXICAL_SEARCH_TYPE = "lexical"

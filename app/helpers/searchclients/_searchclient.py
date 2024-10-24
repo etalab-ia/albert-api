@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import List, Optional, Type
 import importlib
 
@@ -21,6 +21,7 @@ class SearchClient(ABC):
         module = importlib.import_module(f"app.helpers.searchclients._{name}searchclient")
         return getattr(module, f"{to_camel_case(name)}SearchClient")
 
+    @abstractmethod
     def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         """
         Add chunks to a collection.
@@ -32,6 +33,7 @@ class SearchClient(ABC):
         """
         pass
 
+    @abstractmethod
     def query(
         self,
         prompt: str,
@@ -39,7 +41,7 @@ class SearchClient(ABC):
         collection_ids: List[str] = [],
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
-        filter: Optional[Filter] = None,
+        query_filter: Optional[Filter] = None,
     ) -> List[Search]:
         """
         Search for chunks in a collection.
@@ -57,6 +59,7 @@ class SearchClient(ABC):
         """
         pass
 
+    @abstractmethod
     def get_collections(self, collection_ids: List[str], user: User) -> List[Collection]:
         """
         Get metadata of collections.
@@ -70,6 +73,7 @@ class SearchClient(ABC):
         """
         pass
 
+    @abstractmethod
     def create_collection(self, collection: Collection) -> Collection:
         """
         Create a collection, if collection already exists, return the collection id.
@@ -82,6 +86,7 @@ class SearchClient(ABC):
         """
         pass
 
+    @abstractmethod
     def delete_collection(self, collection_id: str, user: User) -> None:
         """
         Delete a collection and all its associated data.
@@ -91,6 +96,7 @@ class SearchClient(ABC):
         """
         pass
 
+    @abstractmethod
     def get_chunks(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Chunk]:
         """
         Get chunks from a collection and a document.
@@ -105,6 +111,7 @@ class SearchClient(ABC):
         """
         pass
 
+    @abstractmethod
     def get_documents(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Document]:
         """
         Get documents from a collection.
@@ -120,7 +127,8 @@ class SearchClient(ABC):
         """
         pass
 
-    def delete_document(self, document_id: str, user: User) -> None:
+    @abstractmethod
+    def delete_document(self, collection_id: str, document_id: str, user: User):
         """
         Delete a document from a collection.
 

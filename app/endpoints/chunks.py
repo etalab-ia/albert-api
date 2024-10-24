@@ -28,6 +28,6 @@ async def get_chunks(
     """
     collection, document = str(collection), str(document)
     offset = str(offset) if offset else None
-    data = clients.vectors.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user)
+    data = clients.search.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user)
 
     return Chunks(data=data)

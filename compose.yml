@@ -1,7 +1,8 @@
-version: "3.8"
-
 services:
   fastapi:
+    build:
+      context: .
+      dockerfile: ./app/Dockerfile
     image: ghcr.io/etalab-ia/albert-api/app:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     restart: always
@@ -10,17 +11,20 @@ services:
     ports:
       - 8000:8000
     volumes:
-     - .:/home/albert/conf # a config.yml file should be in this folder
-     - ./app:/app
+     - .:/home/albert/conf
+     - ./app:/home/albert/app
+
 
   streamlit:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
-    command: streamlit run ui/chat.py --server.port=8501 --browser.gatherUsageStats false --theme.base light --server.maxUploadSize=20
+    command: streamlit run /ui/chat.py --server.port=8501 --browser.gatherUsageStats false --theme.base light --server.maxUploadSize=20
     restart: always
     environment:
       - BASE_URL=http://fastapi:8000/v1
     ports:
       - 8501:8501
+    volumes:
+      - ./ui:/ui
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
@@ -57,11 +61,14 @@ services:
       - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=elastic
+      - logger.level=WARN
+      - rootLogger.level=WARN
     ports:
       - 9200:9200
     volumes:
-      - /elasticsearch/data:/usr/share/elasticsearch/data
+      - elasticsearch:/usr/share/elasticsearch/data
 
 volumes:
+  elasticsearch:
   qdrant:
   redis:

@@ -34,7 +34,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
     METADATA_COLLECTION_ID = "collections"
     DOCUMENT_COLLECTION_ID = "documents"
 
-    def __init__(self, models: dict, *args, **kwargs):
+    def __init__(self, models, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.models = models
 
@@ -107,7 +107,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         collection_ids: List[str] = [],
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
-        filter: Optional[Filter] = None,
+        query_filter: Optional[Filter] = None,
     ) -> List[Search]:
         """
         See SearchClient.query
@@ -123,7 +123,12 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         chunks = []
         for collection in collections:
             results = super().search(
-                collection_name=collection.id, query_vector=vector, limit=k, score_threshold=score_threshold, with_payload=True, query_filter=filter
+                collection_name=collection.id,
+                query_vector=vector,
+                limit=k,
+                score_threshold=score_threshold,
+                with_payload=True,
+                query_filter=query_filter,
             )
             for result in results:
                 result.payload["metadata"]["collection"] = collection.id
