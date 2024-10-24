@@ -14,7 +14,7 @@ from app.utils.config import logger
 from app.utils.variables import INTERNET_COLLECTION_ID
 
 
-class SearchOnInternet:
+class InternetSearch:
     LIMITED_DOMAINS = [
         "service-public.fr",
         ".gouv.fr",
@@ -75,7 +75,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         self.models = models
         self.parser = HTMLParser(collection_id=INTERNET_COLLECTION_ID)
 
-    def search(self, prompt: str, model_id: Optional[str] = None, n: int = 3, score_threshold: Optional[float] = None) -> List:
+    def query(self, prompt: str, model_id: Optional[str] = None, n: int = 3, score_threshold: Optional[float] = None) -> List[Search]:
         model_id = model_id or self.models.DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID
         chunker = LangchainRecursiveCharacterTextSplitter(
             chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
@@ -107,9 +107,9 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             output = self.parser.parse(file=file)
             chunks.extend(chunker.split(input=output))
 
-        data = []
+        searches = []
         if len(chunks) == 0:
-            return data
+            return searches
         else:
             # Add internet query to the metadata of each chunk
             for chunk in chunks:
@@ -131,9 +131,9 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             if score_threshold and score < score_threshold:
                 continue
             search = Search(score=score, chunk=chunk)
-            data.append(search)
+            searches.append(search)
 
-        return data
+        return searches
 
     def _get_web_query(self, prompt: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)

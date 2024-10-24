@@ -8,7 +8,7 @@ models:
       key: mysecretkey2
 
 databases:
-  vectors:
+  search:
     type: qdrant
     args:
       url: qdrant
