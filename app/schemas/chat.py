@@ -4,8 +4,6 @@ from openai.types.chat import (
     ChatCompletion,
     ChatCompletionChunk,
     ChatCompletionMessageParam,
-    ChatCompletionToolChoiceOptionParam,
-    ChatCompletionToolParam,
 )
 from pydantic import BaseModel, Field, model_validator
 
@@ -28,8 +26,6 @@ class ChatCompletionRequest(BaseModel):
     user: Optional[str] = None
     seed: Optional[int] = None
     stop: Union[Optional[str], List[str]] = Field(default_factory=list)
-    tool_choice: Optional[Union[Literal["none"], ChatCompletionToolChoiceOptionParam]] = "none"
-    tools: List[ChatCompletionToolParam] = None
     user: Optional[str] = None
     best_of: Optional[int] = None
     top_k: int = -1
