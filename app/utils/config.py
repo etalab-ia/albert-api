@@ -10,8 +10,6 @@ logging.basicConfig(format="%(levelname)s:%(asctime)s:%(name)s: %(message)s", le
 logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("LOG_LEVEL", logging.DEBUG))
 
-print("kkk")
-
 # Configuration
 CONFIG_FILE = os.getenv("CONFIG_FILE", "config.yml")
 assert os.path.exists(CONFIG_FILE), f"error: configuration file {CONFIG_FILE} not found"

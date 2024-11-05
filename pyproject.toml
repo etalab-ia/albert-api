@@ -28,7 +28,7 @@ app = [
     "beautifulsoup4==4.12.3",
     "duckduckgo-search==6.2.13",
     "numpy==1.26.4",
-    "python-multipart==0.0.14",
+    "python-multipart==0.0.17",
     "slowapi==0.1.9",
     "six==1.16.0",
 ]

@@ -4,16 +4,16 @@ services:
       context: .
       dockerfile: ./app/Dockerfile
     image: ghcr.io/etalab-ia/albert-api/app:latest
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    restart: always
+    command: sh -c 'pip install ".[app]" && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload'
     environment:
       - CONFIG_FILE=/home/albert/conf/config.yml
+    restart: always
     ports:
       - 8000:8000
     volumes:
      - .:/home/albert/conf
      - ./app:/home/albert/app
-
+     - ./pyproject.toml:/home/albert/pyproject.toml
 
   streamlit:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
