@@ -46,8 +46,9 @@ def get_models_list(self, *args, **kwargs):
             self.max_context_length = response.get("max_input_length", None)
 
         elif self.type == AUDIO_MODEL_TYPE:
-            endpoint = f"{self.base_url}models/Systran/faster-whisper-large-v3"
+            endpoint = f"{self.base_url}models"
             response = requests.get(url=endpoint, headers=headers, timeout=self.DEFAULT_TIMEOUT).json()
+            response = response["data"][0]
 
             self.id = response["id"]
             self.owned_by = response.get("owned_by", "")
@@ -107,7 +108,7 @@ def create_embeddings(self, *args, **kwargs):
 
 
 class ModelClient(OpenAI):
-    DEFAULT_TIMEOUT = 60
+    DEFAULT_TIMEOUT = 120
 
     def __init__(self, type=Literal[EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE], *args, **kwargs):
         """
@@ -136,7 +137,7 @@ class ModelClient(OpenAI):
 
 # TODO merge with ModelClient for all models and adapt endpoint to not use anymore the httpx async client
 class AsyncModelClient(AsyncOpenAI):
-    DEFAULT_TIMEOUT = 10
+    DEFAULT_TIMEOUT = 120
 
     def __init__(self, type=Literal[AUDIO_MODEL_TYPE], *args, **kwargs):
         """

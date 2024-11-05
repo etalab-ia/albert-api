@@ -201,3 +201,5 @@ terraform.rc
 .json
 /docs/tutorials/*.json
 /docs/tutorials/*.pdf
+/docs/tutorials/*.wav
+/docs/tutorials/*.mp3

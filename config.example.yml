@@ -1,11 +1,14 @@
 models:
     - url: https://api.openai.com/v1
       type: text-generation
-      key: mysecretkey1
 
     - url: https://api.openai.com/v1
       type: text-embeddings-inference
-      key: mysecretkey2
+      key: mysecretkey
+
+    - url: https://api.openai.com/v1
+      type: automatic-speech-recognition
+      key: mysecretkey
 
 databases:
   vectors:

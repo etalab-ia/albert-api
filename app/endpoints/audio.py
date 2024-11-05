@@ -1,12 +1,13 @@
 from typing import List
 
-from fastapi import APIRouter, Form, Security, HTTPException, Request, UploadFile, File
+from fastapi import APIRouter, Form, Security, Request, UploadFile, File
 
 from app.schemas.audio import AudioTranscription, AudioTranscriptionVerbose
 from app.schemas.config import AUDIO_MODEL_TYPE
 from app.utils.config import DEFAULT_RATE_LIMIT
 from app.utils.security import check_api_key, check_rate_limit, User
 from app.utils.lifespan import clients, limiter
+from app.utils.exceptions import ModelNotFoundException
 
 
 router = APIRouter()
@@ -31,8 +32,9 @@ async def audio_transcriptions(
 
     client = clients.models[model]
 
+    # @TODO: check if the file is an audio file
     if client.type != AUDIO_MODEL_TYPE:
-        raise HTTPException(status_code=400, detail="Le modèle n'est pas un modèle audio.")
+        raise ModelNotFoundException()
 
     file_content = await file.read()
 
