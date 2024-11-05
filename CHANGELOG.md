@@ -12,6 +12,9 @@ Tous les changements notables de l'application sont documentés dans ce fichier.
 - 🔄 Refactoring
 - ❌ Deprecated
 
+## [Alpha] - 2024-11-05
+
+- 🎉 Ajout de l'endpoint POST `/audio/transcriptions` pour la transcription d'audio
 
 ## [Alpha] - 2024-10-23
 
