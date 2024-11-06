@@ -15,6 +15,7 @@ Tous les changements notables de l'application sont documentés dans ce fichier.
 ## [Alpha] - 2024-11-05
 
 - 🎉 Ajout de l'endpoint POST `/audio/transcriptions` pour la transcription d'audio
+- 🎉 Ajout d'une page de transcription d'audio dans l'UI
 
 ## [Alpha] - 2024-10-23
 

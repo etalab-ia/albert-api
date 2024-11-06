@@ -2,9 +2,11 @@
 
 Pour contribuer au projet, merci de suivre les instructions suivantes.
 
+> ⚠️ **Attention** : Vous devez disposer d'une API de modèle de language et d'embeddings pour lancer l'API en local.
+
 # Commit 
 
-Merci de respecter la convention suivante pour vos commits : 
+Merci de respecter la convention suivante pour vos commits :
 
 ```
 [doc|feat|fix](*) commit object (in english)
@@ -17,24 +19,40 @@ feat(collections): collection name retriever
 
 # Packages
 
-1. Installez [libmagic](https://man7.org/linux/man-pages/man3/libmagic.3.html)
-
-2. Dans un environnement virtuel Python, installez les packages Python présents dans le fichier *[pyproject.toml](./pyproject.toml)*
+1. Dans un environnement virtuel Python, installez les packages Python présents dans le fichier *[pyproject.toml](./pyproject.toml)*
 
   ```bash 
   pip install ".[ui,app,dev,test]"
   pre-commit install
   ```
 
-# Tests
+# Lancement des services
 
-Merci, avant chaque pull request, de vérifier le bon déploiement de votre API en exécutant des tests unitaires.
+Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
+
+## API (FastAPI)
 
 1. Après avoir créé un fichier *config.yml*, lancez l'API en local
 
     ```bash
     uvicorn app.main:app --port 8080 --log-level debug --reload
     ```
+
+## User interface (Streamlit)
+
+1. Lancez l'API en local (voir la section[Lancement de l'API](#lancement-de-l-api))
+
+2. Lancez l'UI en local
+
+    ```bash
+    python -m streamlit run ui/chat.py --server.port 8501 --browser.gatherUsageStats false --theme.base light
+    ```
+
+# Tests
+
+Merci, avant chaque pull request, de vérifier le bon déploiement de votre API en exécutant des tests unitaires.
+
+1. Lancez l'API en local (voir la section[Lancement de l'API](#lancement-de-l-api))
 
 2. Exécutez les tests unitaires
     
