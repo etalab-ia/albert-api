@@ -54,14 +54,24 @@ def retry(tries: int = 3, delay: int = 2):
 
 
 class ElasticSearchClient(SearchClient, Elasticsearch):
+    BATCH_SIZE = 48
+
     def __init__(self, models: List[str] = None, hybrid_limit_factor: float = 1.5, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.models = models
         self.hybrid_limit_factor = hybrid_limit_factor
 
     def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
-        index = self._build_index(collection_id, user)
-        helpers.bulk(self, chunks, index=index)
+        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+
+        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise WrongCollectionTypeException()
+
+        for i in range(0, len(chunks), self.BATCH_SIZE):
+            batch = chunks[i : i + self.BATCH_SIZE]
+            actions = [self._build_add_action(collection_id, chunk) for chunk in batch]
+            print(actions, flush=True)
+            helpers.bulk(self, actions, index=collection_id)
 
     def query(
         self,
@@ -73,22 +83,21 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         score_threshold: Optional[float] = None,  # TODO: implement score_threshold
         filter: Optional[Filter] = None,  # TODO: implement filter
     ) -> List[Search]:
-        index = self._build_index(collection_ids, user)
         if method == LEXICAL_SEARCH_TYPE:
-            return self._lexical_query(prompt, index, k)
+            return self._lexical_query(prompt, collection_ids, k)
         else:
             embedding = self._create_embedding(prompt, collection_ids, user)
             if method == SEMANTIC_SEARCH_TYPE:
-                return self._semantic_query(embedding, index, k)
+                return self._semantic_query(embedding, collection_ids, k)
             elif method == HYBRID_SEARCH_TYPE:
-                return self._hybrid_query(embedding, index, k)
+                return self._hybrid_query(embedding, collection_ids, k)
         raise ValueError(f"Invalid search method: {method}")
 
     def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
-        index_pattern = ",".join(collection_ids)
+        index_pattern = self._build_index_pattern(collection_ids)
 
         collections_by_id = {}
         results = self.indices.get_mapping(index=index_pattern)
@@ -115,7 +124,6 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         if user.role != ROLE_LEVEL_2 and collection_type == PUBLIC_COLLECTION_TYPE:
             raise WrongCollectionTypeException()
 
-        index = self._build_index(collection_id, user)
         settings = {
             "similarity": {"default": {"type": "BM25"}},
             "analysis": {
@@ -146,14 +154,13 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
             },
         }
 
-        self.indices.create(index=index, mappings=mappings, settings=settings, ignore=400)
+        self.indices.create(index=collection_id, mappings=mappings, settings=settings, ignore=400)
 
     def delete_collection(self, collection_id: str, user: User) -> None:
         """
         See SearchClient.delete_collection
         """
-        index = self._build_index(collection_id, user)
-        self.indices.delete(index=index, ignore_unavailable=True)
+        self.indices.delete(index=collection_id, ignore_unavailable=True)
 
     def get_chunks(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Chunk]:
         """
@@ -163,11 +170,13 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
     def get_documents(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Document]:
         """
-        See SearchClient.get_document
+        See SearchClient.get_documents
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         filter = Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection_id]))])
+
+        """
         data = super().scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
         documents = list()
         for document in data:
@@ -182,6 +191,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
             documents.append(Document(id=document.id, name=document.payload["name"], created_at=document.payload["created_at"], chunks=chunks_count))
 
         return documents
+        """
+        return []
 
     def delete_document(self, collection_id: str, document_id: str, user: User):
         """
@@ -199,10 +210,11 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         # delete document
         super().delete(collection_name=self.DOCUMENT_COLLECTION_ID, points_selector=PointIdsList(points=[document_id]))
 
-    def _build_index(self, collection_ids: List[str] | str, user: User) -> str:
-        if isinstance(collection_ids, str):
-            collection_ids = [collection_ids]
-        return "-".join(collection_ids + [user.id])
+    def _build_add_action(self, collection_id: str, chunk: Chunk) -> dict:
+        return {"_index": collection_id, "_source": {"body": chunk.content, "metadata": chunk.metadata.model_dump()}}
+
+    def _build_index_pattern(self, indexes: List[str]) -> str:
+        return ",".join(indexes)
 
     def _build_query_filter(self, prompt: str):
         fuzziness = {}
@@ -228,20 +240,20 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
             }
         }
 
-    def _lexical_query(self, prompt: str, index, size: int = 4) -> List[Search]:
+    def _lexical_query(self, prompt: str, collection_ids: List[str], size: int = 4) -> List[Search]:
         body = {"query": self._build_query_filter(prompt), "size": size}
-        results = self.search(index=index, body=body)
+        results = self.search(index=self._build_index_pattern(collection_ids), body=body)
         hits = [x.get("_source") for x in results["hits"]["hits"] if x]
         searches = hits
         return searches
 
-    def _hybrid_query(self, prompt: str, embedding: list[float], index: str, limit: int = 4) -> List[Search]:
+    def _hybrid_query(self, prompt: str, embedding: list[float], collection_ids: List[str], limit: int = 4) -> List[Search]:
         # See also: https://elasticsearch-py.readthedocs.io/en/v8.14.0/async.html
         with ThreadPoolExecutor(max_workers=2) as executor:
             lexical_query_body = self._build_lexical_query_body(prompt, limit)
             semantic_query_body = self._build_semantic_query_body(prompt, embedding, limit)
-            lexical_future = executor.submit(self.search, index, lexical_query_body)
-            semantic_future = executor.submit(self.search, index, semantic_query_body)
+            lexical_future = executor.submit(self.search, self._build_index_pattern(collection_ids), lexical_query_body)
+            semantic_future = executor.submit(self.search, self._build_index_pattern(collection_ids), semantic_query_body)
             lexical_hits = [x for x in lexical_future.result()["hits"]["hits"] if x]
             semantic_hits = [x for x in semantic_future.result()["hits"]["hits"] if x]
 
@@ -249,11 +261,11 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         hits = [x.get("_source") for x in results]
         return hits
 
-    def _semantic_query(self, prompt: str, embedding: list[float], index: str, limit: int) -> List[Search]:
+    def _semantic_query(self, prompt: str, embedding: list[float], collection_ids: List[str], limit: int) -> List[Search]:
         # See also: https://elasticsearch-py.readthedocs.io/en/v8.14.0/async.html
         with ThreadPoolExecutor(max_workers=2) as executor:
             semantic_query_body = self._build_semantic_query_body(prompt, embedding, limit)
-            semantic_future = executor.submit(self.search, index, semantic_query_body)
+            semantic_future = executor.submit(self.search, self._build_index_pattern(collection_ids), semantic_query_body)
             semantic_hits = [x for x in semantic_future.result()["hits"]["hits"] if x]
 
         results = self._rrf_ranker([semantic_hits], limit=limit)
