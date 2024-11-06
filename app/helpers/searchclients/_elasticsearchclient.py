@@ -11,8 +11,15 @@ from app.schemas.documents import Document
 from app.schemas.chunks import Chunk
 from app.schemas.security import User
 from app.schemas.search import Filter, FieldCondition, FilterSelector, PointIdsList, MatchAny, Search
-from app.utils.exceptions import DifferentCollectionsModelsException, WrongCollectionTypeException
-from app.utils.variables import HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, ROLE_LEVEL_2, PUBLIC_COLLECTION_TYPE
+from app.utils.exceptions import DifferentCollectionsModelsException, WrongCollectionTypeException, WrongModelTypeException
+from app.utils.variables import (
+    EMBEDDINGS_MODEL_TYPE,
+    HYBRID_SEARCH_TYPE,
+    LEXICAL_SEARCH_TYPE,
+    SEMANTIC_SEARCH_TYPE,
+    ROLE_LEVEL_2,
+    PUBLIC_COLLECTION_TYPE,
+)
 
 
 def retry(tries: int = 3, delay: int = 2):
@@ -46,14 +53,14 @@ def retry(tries: int = 3, delay: int = 2):
     return decorator_retry
 
 
-class ElasticSearchClient(Elasticsearch, SearchClient):
-    def __init__(self, models, hybrid_limit_factor: float = 1.5, *args, **kwargs):
+class ElasticSearchClient(SearchClient, Elasticsearch):
+    def __init__(self, models: List[str] = None, hybrid_limit_factor: float = 1.5, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.models = models
         self.hybrid_limit_factor = hybrid_limit_factor
 
     def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
-        index = self.build_index(collection_id, user)
+        index = self._build_index(collection_id, user)
         helpers.bulk(self, chunks, index=index)
 
     def query(
@@ -66,7 +73,7 @@ class ElasticSearchClient(Elasticsearch, SearchClient):
         score_threshold: Optional[float] = None,  # TODO: implement score_threshold
         filter: Optional[Filter] = None,  # TODO: implement filter
     ) -> List[Search]:
-        index = self.build_index(collection_ids, user)
+        index = self._build_index(collection_ids, user)
         if method == LEXICAL_SEARCH_TYPE:
             return self._lexical_query(prompt, index, k)
         else:
@@ -77,19 +84,38 @@ class ElasticSearchClient(Elasticsearch, SearchClient):
                 return self._hybrid_query(embedding, index, k)
         raise ValueError(f"Invalid search method: {method}")
 
-    def get_collections(self, collection_ids: List[str], user: User) -> List[Collection]:
+    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
         index_pattern = ",".join(collection_ids)
-        indices = self.cat.indices(index=index_pattern, format="json", v=True)
-        return [Collection(**index) for index in indices]
+
+        collections_by_id = {}
+        results = self.indices.get_mapping(index=index_pattern)
+        for index_id, result in results.items():
+            metadata = result["mappings"].get("_meta")
+            if metadata:
+                print(index_id, metadata, flush=True)
+                collections_by_id[index_id] = Collection(id=index_id, **metadata)
+
+        for indice in self.cat.indices(index=index_pattern, format="json", v=True):
+            index = indice["index"]
+            if index in collections_by_id:
+                collections_by_id[index].documents = int(indice["docs.count"])
+
+        return list(collections_by_id.values())
 
     def create_collection(self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, user: User) -> None:
         """
         See SearchClient.create_collection
         """
-        index = self.build_index(collection_id, user)
+        if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
+            raise WrongModelTypeException()
+
+        if user.role != ROLE_LEVEL_2 and collection_type == PUBLIC_COLLECTION_TYPE:
+            raise WrongCollectionTypeException()
+
+        index = self._build_index(collection_id, user)
         settings = {
             "similarity": {"default": {"type": "BM25"}},
             "analysis": {
@@ -108,15 +134,25 @@ class ElasticSearchClient(Elasticsearch, SearchClient):
         mappings = {
             "properties": {
                 "embedding": {"type": "dense_vector", "dims": 1536},
-            }
+            },
+            "_meta": {
+                "name": collection_name,
+                "type": collection_type,
+                "model": collection_model,
+                "user": user.id,
+                "description": None,
+                "created_at": round(time.time()),
+                "documents": 0,
+            },
         }
+
         self.indices.create(index=index, mappings=mappings, settings=settings, ignore=400)
 
     def delete_collection(self, collection_id: str, user: User) -> None:
         """
         See SearchClient.delete_collection
         """
-        index = self.build_index(collection_id, user)
+        index = self._build_index(collection_id, user)
         self.indices.delete(index=index, ignore_unavailable=True)
 
     def get_chunks(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Chunk]:
