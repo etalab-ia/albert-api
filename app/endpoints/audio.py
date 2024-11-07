@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 
 from fastapi import APIRouter, Form, Security, Request, UploadFile, File
 
@@ -8,9 +8,11 @@ from app.utils.config import DEFAULT_RATE_LIMIT
 from app.utils.security import check_api_key, check_rate_limit, User
 from app.utils.lifespan import clients, limiter
 from app.utils.exceptions import ModelNotFoundException
+from app.utils.variables import SUPPORTED_LANGUAGES
 
 
 router = APIRouter()
+SUPPORTED_LANGUAGES_VALUES = sorted(set(SUPPORTED_LANGUAGES.values())) + sorted(set(SUPPORTED_LANGUAGES.keys()))
 
 
 @router.post("/audio/transcriptions")
@@ -19,7 +21,7 @@ async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(...),
     model: str = Form(...),
-    language: str = Form(None),
+    language: Literal[*SUPPORTED_LANGUAGES_VALUES] = Form("fr"),
     prompt: str = Form(None),
     response_format: str = Form("json"),
     temperature: float = Form(0),

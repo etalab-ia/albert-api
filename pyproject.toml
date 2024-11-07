@@ -6,12 +6,13 @@ requires-python = ">=3.12"
 license = { text = "MIT" }
 dependencies = [
     "openai==1.43.0",
+    "requests==2.32.3",
 ]
 
 [project.optional-dependencies]
 ui = [
-    "requests==2.32.3",
-    "streamlit==1.38.0",
+    "streamlit==1.39.0",
+    "streamlit-extras==0.5.0", 
 ]
 app = [
     "langchain==0.2.15",

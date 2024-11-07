@@ -13,7 +13,7 @@ API_KEY = header()
 
 # Data
 try:
-    language_models, embeddings_models = get_models(api_key=API_KEY)
+    language_models, embeddings_models, _ = get_models(api_key=API_KEY)
     collections = get_collections(api_key=API_KEY)
     collections = [collection for collection in collections if collection["id"] != INTERNET_COLLECTION_ID]
     documents = get_documents(
@@ -96,7 +96,7 @@ with col1:
             [f"{collection["id"]} - {collection["name"]}" for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
             key="upload_file_selectbox",
         )
-        collection_id = collection.split(" - ")[0]
+        collection_id = collection.split(" - ")[0] if collection else None
         file_to_upload = st.file_uploader("File", type=["pdf", "html", "json"])
         submit_upload = st.button("Upload", disabled=not collection_id or not file_to_upload)
         if file_to_upload and submit_upload and collection_id:

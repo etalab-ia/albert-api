@@ -3,8 +3,9 @@ from typing import List
 
 import requests
 import streamlit as st
+from streamlit_extras.stylable_container import stylable_container
 
-from config import BASE_URL, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
+from config import BASE_URL, AUDIO_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 
 
 def set_config():
@@ -12,7 +13,7 @@ def set_config():
         page_title="Albert",
         page_icon="https://www.systeme-de-design.gouv.fr/uploads/apple_touch_icon_8ffa1fa80c.png",
         layout="wide",
-        initial_sidebar_state="collapsed",
+        initial_sidebar_state="expanded",
         menu_items={
             "Get Help": "mailto:etalab@modernisation.gouv.fr",
             "Report a bug": "https://github.com/etalab-ia/albert-api/issues",
@@ -22,18 +23,27 @@ def set_config():
 
 
 def header():
-    col1, col2 = st.columns([0.9, 0.1])
-    with col1:
-        st.subheader("Albert playground")
+    with stylable_container(
+        key="Header",
+        css_styles="""
+        button{
+            float: right;
+            
+        }
+    """,
+    ):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Albert playground")
 
-    # Authentication
-    API_KEY = authenticate()
-    with col2:
-        logout = st.button("Logout")
+        # Authentication
+        API_KEY = authenticate()
+        with col2:
+            logout = st.button("Logout")
         if logout:
             st.session_state.pop("API_KEY")
             st.rerun()
-    st.markdown("***")
+        st.markdown("***")
 
     return API_KEY
 
@@ -73,8 +83,8 @@ def get_models(api_key: str):
 
     embeddings_models = [model["id"] for model in models if model["type"] == EMBEDDINGS_MODEL_TYPE and model["status"] == "available"]
     language_models = [model["id"] for model in models if model["type"] == LANGUAGE_MODEL_TYPE and model["status"] == "available"]
-
-    return language_models, embeddings_models
+    audio_models = [model["id"] for model in models if model["type"] == AUDIO_MODEL_TYPE and model["status"] == "available"]
+    return language_models, embeddings_models, audio_models
 
 
 def get_collections(api_key: str):

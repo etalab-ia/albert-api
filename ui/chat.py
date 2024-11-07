@@ -4,6 +4,7 @@ import traceback
 from openai import OpenAI
 import requests
 import streamlit as st
+from streamlit_extras.stylable_container import stylable_container
 
 from config import BASE_URL
 from utils import get_collections, get_models, header, set_config
@@ -14,7 +15,7 @@ API_KEY = header()
 
 # Data
 try:
-    language_models, embeddings_models = get_models(api_key=API_KEY)
+    language_models, embeddings_models, _ = get_models(api_key=API_KEY)
     collections = get_collections(api_key=API_KEY)
 except Exception:
     st.error("Error to fetch user data.")
@@ -25,11 +26,10 @@ openai_client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
 
 # Sidebar
 with st.sidebar:
-    st.title("Model parameters")
     params = {"sampling_params": dict(), "rag": dict()}
-
+    st.title("Chat parameters")
     params["sampling_params"]["model"] = st.selectbox("Language model", language_models)
-    params["sampling_params"]["temperature"] = st.number_input("Temperature", value=0.1)
+    params["sampling_params"]["temperature"] = st.slider("Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
     params["sampling_params"]["max_tokens"] = st.number_input("Max tokens (optional)", value=400)
 
     st.title("RAG parameters")
@@ -43,18 +43,27 @@ with st.sidebar:
         params["rag"]["k"] = st.number_input("Top K", value=3)
 
 # Main
-col1, col2 = st.columns([0.85, 0.15])
-with col1:
-    new_chat = st.button("New chat")
-with col2:
-    if model_collections:
-        rag = st.toggle("Activated RAG", value=False, disabled=not bool(params["rag"]["collections"]))
-    else:
-        rag = st.toggle("Activated RAG", value=False, disabled=True)
-if new_chat:
-    st.session_state.pop("messages", None)
-    st.session_state.pop("sources", None)
-    st.rerun()
+with stylable_container(
+    key="Chat",
+    css_styles="""
+    button{
+        float: right;
+    }
+    """,
+):
+    col1, col2 = st.columns(2)
+    with col2:
+        new_chat = st.button("New chat")
+    with col1:
+        if model_collections:
+            rag = st.toggle("Activated RAG", value=True, disabled=not bool(params["rag"]["collections"]))
+        else:
+            rag = st.toggle("Activated RAG", value=False, disabled=True)
+
+    if new_chat:
+        st.session_state.pop("messages", None)
+        st.session_state.pop("sources", None)
+        st.rerun()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
