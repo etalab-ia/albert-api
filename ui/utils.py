@@ -3,9 +3,8 @@ from typing import List
 
 import requests
 import streamlit as st
-from streamlit_local_storage import LocalStorage
 
-from config import BASE_URL, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, LOCAL_STORAGE_KEY
+from config import BASE_URL, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 
 
 def set_config():
@@ -28,12 +27,11 @@ def header():
         st.subheader("Albert playground")
 
     # Authentication
-    local_storage = LocalStorage()
-    API_KEY = authenticate(local_storage=local_storage)
+    API_KEY = authenticate()
     with col2:
         logout = st.button("Logout")
         if logout:
-            local_storage.deleteItem(LOCAL_STORAGE_KEY)
+            st.session_state.pop("API_KEY")
             st.rerun()
     st.markdown("***")
 
@@ -46,15 +44,15 @@ def check_api_key(base_url: str, api_key: str):
     return response.status_code == 200
 
 
-def authenticate(local_storage: LocalStorage):
-    API_KEY = local_storage.getItem(LOCAL_STORAGE_KEY)
+def authenticate():
+    API_KEY = st.session_state.get("API_KEY")
     if API_KEY is None:
         with st.form(key="my_form"):
             API_KEY = st.text_input(label="Please enter your API key", type="password")
             submit = st.form_submit_button(label="Submit")
             if submit:
                 if check_api_key(base_url=BASE_URL, api_key=API_KEY):
-                    local_storage.setItem(LOCAL_STORAGE_KEY, API_KEY)
+                    st.session_state["API_KEY"] = API_KEY
                     st.toast("Authentication succeed", icon="✅")
                     time.sleep(0.5)
                     st.rerun()

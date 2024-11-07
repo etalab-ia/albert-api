@@ -52,7 +52,8 @@ with col2:
     else:
         rag = st.toggle("Activated RAG", value=False, disabled=True)
 if new_chat:
-    st.session_state.clear()
+    st.session_state.pop("messages", None)
+    st.session_state.pop("sources", None)
     st.rerun()
 
 if "messages" not in st.session_state:
