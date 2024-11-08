@@ -22,6 +22,7 @@ from app.schemas.documents import Document
 from app.schemas.search import Search
 from app.schemas.security import Role
 from app.schemas.security import User
+from app.helpers._modelclients import ModelClients
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
@@ -44,7 +45,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
     METADATA_COLLECTION_ID = "collections"
     DOCUMENT_COLLECTION_ID = "documents"
 
-    def __init__(self, models, *args, **kwargs):
+    def __init__(self, models: ModelClients, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.models = models
 
@@ -117,7 +118,6 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         collection_ids: List[str] = [],
         method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
-        rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
     ) -> List[Search]:
         """

@@ -55,10 +55,11 @@ class SearchClient(ABC):
             collection_ids (List[str]): The ids of the collections to search in.
             method (Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, HYBRID_SEARCH_TYPE]): The method to use for the search, default: SEMENTIC_SEARCH_TYPE.
             k (Optional[int]): The number of chunks to return.
+            rff_k (Optional[int]): The constant k in the RRF formula.
             score_threshold (Optional[float]): The score threshold for the chunks to return.
 
         Returns:
-            List[Search]: A list of search objects containing the retrieved chunks.
+            List[Search]: A list of Search objects containing the retrieved chunks.
         """
         pass
 

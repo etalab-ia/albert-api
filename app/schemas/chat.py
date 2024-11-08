@@ -9,7 +9,12 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.lifespan import clients
-from app.utils.variables import LANGUAGE_MODEL_TYPE
+from app.utils.variables import LANGUAGE_MODEL_TYPE, DEFAULT_RAG_TEMPLATE
+from app.schemas.search import RagParameters
+
+
+class ChatRagParameters(RagParameters):
+    template: str = Field(description="Template to use for the RAG query", default=DEFAULT_RAG_TEMPLATE)
 
 
 class ChatCompletionRequest(BaseModel):
@@ -30,6 +35,10 @@ class ChatCompletionRequest(BaseModel):
     best_of: Optional[int] = None
     top_k: int = -1
     min_p: float = 0.0
+
+    # Albert additionnal fields
+    rag: bool = False
+    rag_parameters: ChatRagParameters = Field(default_factory=ChatRagParameters)
 
     class ConfigDict:
         extra = "allow"

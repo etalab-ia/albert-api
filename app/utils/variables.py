@@ -26,7 +26,10 @@ INTERNET_BRAVE_TYPE = "brave"
 SEARCH_ELASTIC_TYPE = "elastic"
 SEARCH_QDRANT_TYPE = "qdrant"
 
+# RAG parameters
+DEFAULT_RAG_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"
 
+# Audio parameters
 SUPPORTED_LANGUAGES = {
     "afrikaans": "af",
     "albanian": "sq",
