@@ -28,6 +28,7 @@ app = [
     "duckduckgo-search==6.2.13",
     "numpy==1.26.4",
     "slowapi==0.1.9",
+    "six==1.16.0",
 ]
 dev = [
     "ruff==0.6.5",
