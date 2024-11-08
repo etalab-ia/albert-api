@@ -206,7 +206,15 @@ class VectorStore(QdrantClient):
 
         return collections
 
-    def create_collection(self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, user: User) -> None:
+    def create_collection(
+        self,
+        collection_id: str,
+        collection_name: str,
+        collection_model: str,
+        collection_type: str,
+        user: User,
+        collection_description: Optional[str] = None,
+    ) -> None:
         """
         Create a collection, if collection already exists, return the collection id.
 
@@ -215,6 +223,7 @@ class VectorStore(QdrantClient):
             collection_name (str): The name of the collection to create.
             collection_model (str): The model of the collection to create.
             collection_type (str): The type of the collection to create.
+            collection_description (Optional[str]): The description of the collection to create.
             user (User): The user creating the collection.
         """
         if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
@@ -229,7 +238,7 @@ class VectorStore(QdrantClient):
             "type": collection_type,
             "model": collection_model,
             "user": user.id,
-            "description": None,
+            "description": collection_description,
             "created_at": round(time.time()),
             "documents": 0,
         }

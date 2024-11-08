@@ -140,3 +140,16 @@ class TestFiles:
         params = {"name": " ", "model": EMBEDDINGS_MODEL_ID, "type": PRIVATE_COLLECTION_TYPE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
         assert response.status_code == 422
+
+    def test_create_collection_with_description(self, args, session_user, setup):
+        _, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
+
+        params = {"name": "pytest-description", "model": EMBEDDINGS_MODEL_ID, "type": PRIVATE_COLLECTION_TYPE, "description": "pytest-description"}
+        response = session_user.post(f"{args["base_url"]}/collections", json=params)
+        assert response.status_code == 201
+
+        # retrieve collection
+        response = session_user.get(f"{args["base_url"]}/collections")
+        assert response.status_code == 200
+        description = [collection["description"] for collection in response.json()["data"] if collection["name"] == "pytest-description"][0]
+        assert description == "pytest-description"
