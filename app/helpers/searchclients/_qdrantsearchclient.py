@@ -190,13 +190,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         return collections
 
     def create_collection(
-        self,
-        collection_id: str,
-        collection_name: str,
-        collection_model: str,
-        collection_type: str,
-        user: User,
-        collection_description: Optional[str] = None,
+        self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, collection_description: str, user: User
     ) -> None:
         """
         See SearchClient.create_collection

@@ -23,7 +23,12 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     """
     collection_id = str(uuid.uuid4())
     clients.search.create_collection(
-        collection_id=collection_id, collection_name=body.name, collection_model=body.model, collection_type=body.type, collection_description=body.description, user=user
+        collection_id=collection_id,
+        collection_name=body.name,
+        collection_model=body.model,
+        collection_type=body.type,
+        collection_description=body.description,
+        user=user,
     )
 
     return JSONResponse(status_code=201, content={"id": collection_id})

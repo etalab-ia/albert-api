@@ -22,6 +22,7 @@ class Collections(BaseModel):
 
 
 class CollectionRequest(BaseModel):
+    description: Optional[str] = None
     name: str = Field(..., min_length=1)
     model: str = Field(...)
     type: Literal[PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE] = Field(PRIVATE_COLLECTION_TYPE)

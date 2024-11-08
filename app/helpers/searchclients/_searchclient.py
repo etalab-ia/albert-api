@@ -74,7 +74,9 @@ class SearchClient(ABC):
         pass
 
     @abstractmethod
-    def create_collection(self, collection: Collection) -> Collection:
+    def create_collection(
+        self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, collection_description: str, user: User
+    ) -> Collection:
         """
         Create a collection, if collection already exists, return the collection id.
         Args:
@@ -82,6 +84,7 @@ class SearchClient(ABC):
             collection_name (str): The name of the collection to create.
             collection_model (str): The model of the collection to create.
             collection_type (str): The type of the collection to create.
+            collection_description (str): The description of the collection to create.
             user (User): The user creating the collection.
         """
         pass
@@ -97,7 +100,7 @@ class SearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_chunks(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Chunk]:
         """
         Get chunks from a collection and a document.
         Args:

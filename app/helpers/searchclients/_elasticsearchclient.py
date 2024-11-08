@@ -114,7 +114,9 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         return list(collections_by_id.values())
 
-    def create_collection(self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, user: User) -> None:
+    def create_collection(
+        self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, collection_description: str, user: User
+    ) -> None:
         """
         See SearchClient.create_collection
         """
@@ -139,16 +141,20 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
                 },
             },
         }
+
+        dims = self.models[collection_model].vector_size
+        print("dims", dims, flush=True)
+
         mappings = {
             "properties": {
-                "embedding": {"type": "dense_vector", "dims": 1536},
+                "embedding": {"type": "dense_vector", "dims": dims},
             },
             "_meta": {
                 "name": collection_name,
                 "type": collection_type,
                 "model": collection_model,
                 "user": user.id,
-                "description": None,
+                "description": collection_description,
                 "created_at": round(time.time()),
                 "documents": 0,
             },
@@ -162,37 +168,50 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
-    def get_chunks(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
-        pass
+        body = {
+            "query": {"match_all": {}},
+            "_source": ["body", "metadata"],
+            "from": offset if offset else 0,
+            "size": limit if limit else 10000,  # Default elasticsearch max results
+        }
+        results = self.search(index=collection_id, body=body)
+
+        chunks = []
+        for hit in results["hits"]["hits"]:
+            source = hit["_source"]
+            chunks.append(Chunk(content=source["body"], metadata=source["metadata"]))
+
+        return chunks
 
     def get_documents(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Document]:
         """
         See SearchClient.get_documents
         """
-        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+        body = {
+            "query": {"match_all": {}},
+            "_source": ["metadata"],
+            "from": offset if offset else 0,
+            "size": limit if limit else 10000,
+        }
+        results = self.search(index=collection_id, body=body)
 
-        filter = Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection_id]))])
-
-        """
-        data = super().scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
-        documents = list()
-        for document in data:
-            chunks_count = (
-                super()
-                .count(
-                    collection_name=collection.id,
-                    count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
-                )
-                .count
+        documents_by_id = {}
+        for hit in results["hits"]["hits"]:
+            metadata = hit["_source"]["metadata"]
+            print(metadata, flush=True)
+            document_id = metadata["document_id"]
+            documents_by_id[document_id] = Document(
+                id=document_id,
+                name=metadata.get("name"),
+                created_at=metadata.get("created_at"),
+                # @TODO: get chunks count
+                chunks=[],
             )
-            documents.append(Document(id=document.id, name=document.payload["name"], created_at=document.payload["created_at"], chunks=chunks_count))
-
-        return documents
-        """
-        return []
+        return list(documents_by_id.values())
 
     def delete_document(self, collection_id: str, document_id: str, user: User):
         """
