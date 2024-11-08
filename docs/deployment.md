@@ -34,6 +34,10 @@ Pour fonctionner, l'API Albert nécessite des clients tiers :
 * [Optionnel] Auth : [Grist](https://www.getgrist.com/)*
 * Cache : [Redis](https://redis.io/)
 * Vectors : [Qdrant](https://qdrant.tech/)
+* Models :
+  * [vLLM](https://github.com/vllm-project/vllm)
+  * [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)
+  * [Optionnel] [Whisper OpenAI API](https://github.com/etalab-ia/whisper-openai-api)
 
 \* *Pour plus d'information sur l'authentification Grist, voir la [documentation](./security.md).*
 
@@ -70,16 +74,4 @@ databases:
       ...
 ```
 
-## Déploiement de l'interface Streamlit
-
-1. Installez les packages Python dans un environnement virtuel
-
-  ```bash
-  pip install ".[ui]"
-  ```
-
-2. Exécutez l'application Streamlit
-
-  ```bash
-  streamlit run ui/chat.py --server.port 8501 --browser.gatherUsageStats false --theme.base light
-  ```
+Pour avoir un détail des arguments de configuration, vous pouvez consulter le schéma Pydantic de la configuration [ici](../app/schemas/config.py).

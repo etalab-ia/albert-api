@@ -2,7 +2,7 @@
 <summary><h1>Albert API</h1></summary>
 
 ![](https://img.shields.io/badge/version-alpha-yellow) ![](https://img.shields.io/badge/Python-3.12-green) ![](https://img.shields.io/badge/vLLM-v0.6.3.post1-blue) ![](https://img.shields.io/badge/HuggingFace%20Text%20Embeddings%20Inference-1.5-red)<br>
-<a href="https://github.com/etalab-ia/albert-api/blob/main/CHANGELOG.md"><b>Changelog</b></a> | <a href="https://albert.api.etalab.gouv.fr/documentation"><b>Documentation</b></a> | <a href="https://albert.api.etalab.gouv.fr/status"><b>Status</b></a> | <a href="https://albert.api.etalab.gouv.fr/swagger"><b>Swagger</b></a> <br><br>
+<a href="https://github.com/etalab-ia/albert-api/blob/main/CHANGELOG.md"><b>Changelog</b></a> | <a href="https://albert.api.etalab.gouv.fr/documentation"><b>Documentation</b></a> | <a href="https://albert.api.etalab.gouv.fr/playground"><b>Playground</b></a> | <a href="https://albert.api.etalab.gouv.fr/status"><b>Status</b></a> | <a href="https://albert.api.etalab.gouv.fr/swagger"><b>Swagger</b></a> <br><br>
 </ul></div>
 
 Albert API est une initiative d'[Etalab](https://www.etalab.gouv.fr/). Il s'agit d'une API open source d'IA générative développée par Etalab. Elle permet d'être un proxy entre des modèles de langage et vos données. Elle agrège les services suivants :
@@ -17,7 +17,7 @@ En se basant sur les conventions définies par OpenAI, l'API Albert expose des e
 
 ### Interface utilisateur (playground)
 
-L'API Albert expose une interface utilisateur permettant de tester les différentes fonctionnalités, consultable ici [ici](https://albert.api.etalab.gouv.fr).
+L'API Albert expose une interface utilisateur permettant de tester les différentes fonctionnalités, consultable ici [ici](https://albert.api.etalab.gouv.fr/playground).
 
 ### Converser avec un modèle de langage (chat memory)
 
@@ -58,6 +58,14 @@ L'API Albert permet de transcrire un fichier audio à l'aide d'un modèle Whispe
 <a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/audio_transcriptions.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
+
+## 📚 Documentation
+
+Vous trouverez ici des ressources de documentation : 
+- [Documentation de l'API](https://albert.api.etalab.gouv.fr/documentation)
+- [Documentation swagger de l'API](https://albert.api.etalab.gouv.fr/swagger)
+- [Documentation technique de l'API](./docs)
+- [Repository HuggingFace](https://huggingface.co/AgentPublic)
 
 ## 🧑‍💻 Contribuez au projet
 
