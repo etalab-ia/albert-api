@@ -18,14 +18,13 @@ async def get_documents(
     request: Request,
     collection: UUID,
     limit: Optional[int] = Query(default=10, ge=1, le=100),
-    offset: Optional[UUID] = None,
+    offset: Optional[int] = Query(default=0),
     user: User = Security(check_api_key),
 ) -> Documents:
     """
     Get all documents ID from a collection.
     """
     collection = str(collection)
-    offset = str(offset) if offset else None
     data = clients.search.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
 
     return Documents(data=data)

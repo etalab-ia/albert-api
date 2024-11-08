@@ -10,8 +10,13 @@ from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.chunks import Chunk
 from app.schemas.security import User
-from app.schemas.search import Filter, FieldCondition, FilterSelector, PointIdsList, MatchAny, Search
-from app.utils.exceptions import DifferentCollectionsModelsException, WrongCollectionTypeException, WrongModelTypeException
+from app.schemas.search import Filter, Search
+from app.utils.exceptions import (
+    DifferentCollectionsModelsException,
+    WrongCollectionTypeException,
+    WrongModelTypeException,
+    CollectionNotFoundException,
+)
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
     HYBRID_SEARCH_TYPE,
@@ -58,6 +63,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
     def __init__(self, models: List[str] = None, hybrid_limit_factor: float = 1.5, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        assert super().ping(), "Elasticsearch is not reachable"
         self.models = models
         self.hybrid_limit_factor = hybrid_limit_factor
 
@@ -69,8 +75,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
-            actions = [self._build_add_action(collection_id, chunk) for chunk in batch]
-            print(actions, flush=True)
+            # Create mapping for metadata fields to use keyword type
+            actions = [{"_index": collection_id, "_source": {"body": chunk.content, "metadata": chunk.metadata.model_dump()}} for chunk in batch]
             helpers.bulk(self, actions, index=collection_id)
 
     def query(
@@ -97,10 +103,14 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         See SearchClient.get_collections
         """
-        index_pattern = self._build_index_pattern(collection_ids)
-
+        index_pattern = ",".join(collection_ids)
         collections_by_id = {}
-        results = self.indices.get_mapping(index=index_pattern)
+
+        try:
+            results = self.indices.get_mapping(index=index_pattern)
+        except Exception as e:
+            raise CollectionNotFoundException()
+
         for index_id, result in results.items():
             metadata = result["mappings"].get("_meta")
             if metadata:
@@ -148,6 +158,16 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         mappings = {
             "properties": {
                 "embedding": {"type": "dense_vector", "dims": dims},
+                "body": {"type": "text"},
+                "metadata": {
+                    "dynamic": True,
+                    "properties": {
+                        "document_id": {"type": "keyword"},
+                        "document_name": {"type": "keyword"},
+                        "document_part": {"type": "integer"},
+                        "document_created_at": {"type": "date"},
+                    },
+                },
             },
             "_meta": {
                 "name": collection_name,
@@ -168,50 +188,48 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
-        body = {
-            "query": {"match_all": {}},
-            "_source": ["body", "metadata"],
-            "from": offset if offset else 0,
-            "size": limit if limit else 10000,  # Default elasticsearch max results
-        }
-        results = self.search(index=collection_id, body=body)
+        body = {"query": {"match": {"metadata.document_id": document_id}}, "_source": ["body", "metadata"]}
+        results = self.search(index=collection_id, body=body, from_=offset, size=limit)
 
         chunks = []
         for hit in results["hits"]["hits"]:
             source = hit["_source"]
-            chunks.append(Chunk(content=source["body"], metadata=source["metadata"]))
+            chunks.append(Chunk(id=hit["_id"], content=source["body"], metadata=source["metadata"] | {"collection_id": collection_id}))
 
         return chunks
 
-    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Document]:
+    # @TODO: pagination between qdrant and elasticsearch diverging
+    # @TODO: offset is not supported by elasticsearch
+    def get_documents(self, collection_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Document]:
         """
         See SearchClient.get_documents
         """
+        self.get_collections(collection_ids=[collection_id], user=user)  # check if collection exists
+
         body = {
             "query": {"match_all": {}},
             "_source": ["metadata"],
-            "from": offset if offset else 0,
-            "size": limit if limit else 10000,
+            "aggs": {"document_ids": {"terms": {"field": "metadata.document_id", "size": limit}}},
         }
-        results = self.search(index=collection_id, body=body)
+        results = self.search(index=collection_id, body=body, size=1, from_=0)
 
-        documents_by_id = {}
-        for hit in results["hits"]["hits"]:
-            metadata = hit["_source"]["metadata"]
-            print(metadata, flush=True)
-            document_id = metadata["document_id"]
-            documents_by_id[document_id] = Document(
-                id=document_id,
-                name=metadata.get("name"),
-                created_at=metadata.get("created_at"),
-                # @TODO: get chunks count
-                chunks=[],
+        documents = []
+
+        for bucket in results["aggregations"]["document_ids"]["buckets"]:
+            document_id = bucket["key"]
+            chunks = bucket["doc_count"]
+            # retrieve only one document by document_id metadata field
+            result = self.search(index=collection_id, body={"query": {"match": {"metadata.document_id": document_id}}}, size=1, from_=0)
+            metadata = result["hits"]["hits"][0]["_source"]["metadata"]
+            documents.append(
+                Document(id=document_id, name=metadata.get("document_name"), created_at=metadata.get("document_created_at"), chunks=chunks)
             )
-        return list(documents_by_id.values())
+
+        return documents
 
     def delete_document(self, collection_id: str, document_id: str, user: User):
         """
@@ -223,17 +241,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
             raise WrongCollectionTypeException()
 
         # delete chunks
-        filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-        super().delete(collection_name=collection.id, points_selector=FilterSelector(filter=filter))
-
-        # delete document
-        super().delete(collection_name=self.DOCUMENT_COLLECTION_ID, points_selector=PointIdsList(points=[document_id]))
-
-    def _build_add_action(self, collection_id: str, chunk: Chunk) -> dict:
-        return {"_index": collection_id, "_source": {"body": chunk.content, "metadata": chunk.metadata.model_dump()}}
-
-    def _build_index_pattern(self, indexes: List[str]) -> str:
-        return ",".join(indexes)
+        body = {"query": {"match": {"metadata.document_id": document_id}}}
+        self.delete_by_query(index=collection_id, body=body)
 
     def _build_query_filter(self, prompt: str):
         fuzziness = {}
@@ -261,7 +270,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
     def _lexical_query(self, prompt: str, collection_ids: List[str], size: int = 4) -> List[Search]:
         body = {"query": self._build_query_filter(prompt), "size": size}
-        results = self.search(index=self._build_index_pattern(collection_ids), body=body)
+        results = self.search(index=",".join(collection_ids), body=body)
         hits = [x.get("_source") for x in results["hits"]["hits"] if x]
         searches = hits
         return searches
@@ -271,8 +280,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         with ThreadPoolExecutor(max_workers=2) as executor:
             lexical_query_body = self._build_lexical_query_body(prompt, limit)
             semantic_query_body = self._build_semantic_query_body(prompt, embedding, limit)
-            lexical_future = executor.submit(self.search, self._build_index_pattern(collection_ids), lexical_query_body)
-            semantic_future = executor.submit(self.search, self._build_index_pattern(collection_ids), semantic_query_body)
+            lexical_future = executor.submit(self.search, ",".join(collection_ids), lexical_query_body)
+            semantic_future = executor.submit(self.search, ",".join(collection_ids), semantic_query_body)
             lexical_hits = [x for x in lexical_future.result()["hits"]["hits"] if x]
             semantic_hits = [x for x in semantic_future.result()["hits"]["hits"] if x]
 
@@ -284,13 +293,14 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         # See also: https://elasticsearch-py.readthedocs.io/en/v8.14.0/async.html
         with ThreadPoolExecutor(max_workers=2) as executor:
             semantic_query_body = self._build_semantic_query_body(prompt, embedding, limit)
-            semantic_future = executor.submit(self.search, self._build_index_pattern(collection_ids), semantic_query_body)
+            semantic_future = executor.submit(self.search, ",".join(collection_ids), semantic_query_body)
             semantic_hits = [x for x in semantic_future.result()["hits"]["hits"] if x]
 
         results = self._rrf_ranker([semantic_hits], limit=limit)
         hits = [x.get("_source") for x in results]
         return hits
 
+    # @TODO: support multiple input in same time
     @retry(tries=3, delay=2)
     def _create_embedding(
         self,
