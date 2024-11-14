@@ -2,6 +2,7 @@ import time
 from typing import List, Optional
 
 from qdrant_client import QdrantClient
+from qdrant_client.http.exceptions import ResponseHandlingException
 from qdrant_client.http.models import (
     Distance,
     FieldCondition,
@@ -143,16 +144,17 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
         return results
 
-    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, user: Optional[User] = None, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
         # if no collection ids are provided, get all collections
         must = [HasIdCondition(has_id=collection_ids)] if collection_ids else []
-        should = [
-            FieldCondition(key="user", match=MatchAny(any=[user.id])),
-            FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE])),
-        ]
+        should = []
+        if user:
+            should.append(FieldCondition(key="user", match=MatchAny(any=[user.id])))
+        should.append(FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE])))
+
         filter = Filter(must=must, should=should)
 
         records = super().scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=None)
@@ -230,7 +232,9 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         super().delete_collection(collection_name=collection.id)
         super().delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Chunk]:
+    def get_chunks(
+        self, collection_id: str, document_id: str, user: Optional[User] = None, limit: Optional[int] = 10, offset: Optional[int] = None
+    ) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
@@ -242,7 +246,9 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
         return chunks
 
-    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Document]:
+    def get_documents(
+        self, collection_id: str, user: Optional[User] = None, limit: Optional[int] = 10, offset: Optional[int] = None
+    ) -> List[Document]:
         """
         See SearchClient.get_documents
         """
@@ -252,14 +258,17 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         data = super().scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
         documents = list()
         for document in data:
-            chunks_count = (
-                super()
-                .count(
-                    collection_name=collection.id,
-                    count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
+            try:
+                chunks_count = (
+                    super()
+                    .count(
+                        collection_name=collection.id,
+                        count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
+                    )
+                    .count
                 )
-                .count
-            )
+            except ResponseHandlingException as e:
+                chunks_count = None
             documents.append(Document(id=document.id, name=document.payload["name"], created_at=document.payload["created_at"], chunks=chunks_count))
 
         return documents

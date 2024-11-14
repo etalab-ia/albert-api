@@ -67,7 +67,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         self.models = models
         self.hybrid_limit_factor = hybrid_limit_factor
 
-    def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
+    def upsert(self, chunks: List[Chunk], collection_id: str, user: Optional[User] = None) -> None:
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
@@ -99,7 +99,10 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
                 return self._hybrid_query(embedding, collection_ids, k)
         raise ValueError(f"Invalid search method: {method}")
 
-    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
+    def collection_exists(self, collection_id: str, user: Optional[User] = None) -> bool:
+        return self.get_collections(collection_ids=[collection_id], user=user) != []
+
+    def get_collections(self, user: Optional[User] = None, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
@@ -204,7 +207,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
     # @TODO: pagination between qdrant and elasticsearch diverging
     # @TODO: offset is not supported by elasticsearch
-    def get_documents(self, collection_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Document]:
+    def get_documents(self, collection_id: str, user: Optional[User] = None, limit: int = 10000, offset: int = 0) -> List[Document]:
         """
         See SearchClient.get_documents
         """
@@ -231,7 +234,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         return documents
 
-    def delete_document(self, collection_id: str, document_id: str, user: User):
+    def delete_document(self, collection_id: str, document_id: str, user: Optional[User] = None):
         """
         See SearchClient.delete_document
         """
