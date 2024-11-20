@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: ./app/Dockerfile
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     image: ghcr.io/etalab-ia/albert-api/app:latest
     command: sh -c 'pip install ".[app]" && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload'
     environment:
@@ -53,8 +56,13 @@ services:
         retries: 5
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.0
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow"]
+      interval: 10s
+      timeout: 20s
+      retries: 3
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
