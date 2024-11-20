@@ -3,7 +3,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.chunks import Chunk
-from app.utils.variables import INTERNET_COLLECTION_ID, HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
+from app.utils.variables import INTERNET_COLLECTION_ID, INTERNET_SEARCH_TYPE, HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
 
 
 class SearchRequest(BaseModel):
@@ -29,6 +29,7 @@ class SearchRequest(BaseModel):
 class Search(BaseModel):
     score: float
     chunk: Chunk
+    method: Literal[INTERNET_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] | None
 
 
 class Searches(BaseModel):

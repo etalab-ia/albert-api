@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Type
+from typing import List, Literal, Optional, Type
 import importlib
 
 from app.schemas.chunks import Chunk
@@ -7,6 +7,7 @@ from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Filter, Search
 from app.schemas.security import User
+from app.utils.variables import LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
 
 
 def to_camel_case(chaine):
@@ -39,6 +40,7 @@ class SearchClient(ABC):
         prompt: str,
         user: User,
         collection_ids: List[str] = [],
+        method: Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
         query_filter: Optional[Filter] = None,
@@ -50,6 +52,7 @@ class SearchClient(ABC):
             prompt (str): The prompt to search for.
             user (User): The user searching for the chunks.
             collection_ids (List[str]): The ids of the collections to search in.
+            method (Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE]): The method to use for the search.
             k (Optional[int]): The number of chunks to return.
             score_threshold (Optional[float]): The score threshold for the chunks to return.
             filter (Optional[Filter]): The filter to apply to the chunks to return.
@@ -141,3 +144,36 @@ class SearchClient(ABC):
             user (User): The user deleting the document.
         """
         pass
+
+    @staticmethod
+    def build_ranked_searches(searches_list: List[List[Search]], limit: int, rff_k: Optional[int] = 20):
+        """
+        Combine search results using Reciprocal Rank Fusion (RRF)
+        :param searches_list: A list of searches from different query
+        :param limit: The number of results to return
+        :param rff_k: The constant k in the RRF formula
+        :return: A combined list of searches with updated scores
+        """
+
+        combined_scores = {}
+        search_map = {}
+        for searches in searches_list:
+            for rank, search in enumerate(searches):
+                chunk_id = search.chunk.id
+                if chunk_id not in combined_scores:
+                    combined_scores[chunk_id] = 0
+                    search_map[chunk_id] = search
+                else:
+                    search_map[chunk_id].method = search_map[chunk_id].method + "/" + search.method
+                combined_scores[chunk_id] += 1 / (rff_k + rank + 1)
+
+        ranked_scores = sorted(combined_scores.items(), key=lambda item: item[1], reverse=True)
+        reranked_searches = []
+        for chunk_id, rrf_score in ranked_scores:
+            search = search_map[chunk_id]
+            search.score = rrf_score
+            reranked_searches.append(search)
+
+        if limit:
+            return reranked_searches[:limit]
+        return reranked_searches

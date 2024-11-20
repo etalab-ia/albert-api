@@ -11,7 +11,7 @@ from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.parsers import HTMLParser
 from app.schemas.search import Search
 from app.utils.config import logger
-from app.utils.variables import INTERNET_COLLECTION_ID
+from app.utils.variables import INTERNET_COLLECTION_ID, INTERNET_SEARCH_TYPE
 
 
 class InternetSearch:
@@ -130,7 +130,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         for chunk, score in zip(chunks, cosine):
             if score_threshold and score < score_threshold:
                 continue
-            search = Search(score=score, chunk=chunk)
+            search = Search(score=score, chunk=chunk, method=INTERNET_SEARCH_TYPE)
             searches.append(search)
 
         return searches

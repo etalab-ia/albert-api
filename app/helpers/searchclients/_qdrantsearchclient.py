@@ -1,5 +1,5 @@
 import time
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import ResponseHandlingException
@@ -27,7 +27,7 @@ from app.utils.exceptions import (
     WrongCollectionTypeException,
     WrongModelTypeException,
 )
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PUBLIC_COLLECTION_TYPE, ROLE_LEVEL_2
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PUBLIC_COLLECTION_TYPE, ROLE_LEVEL_2, SEMANTIC_SEARCH_TYPE
 
 
 class QdrantSearchClient(QdrantClient, SearchClient):
@@ -106,6 +106,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         prompt: str,
         user: User,
         collection_ids: List[str] = [],
+        method: Literal[SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
         score_threshold: Optional[float] = None,
         query_filter: Optional[Filter] = None,
@@ -144,7 +145,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
         return results
 
-    def get_collections(self, user: Optional[User] = None, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, collection_ids: List[str] = [], user: Optional[User] = None) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
