@@ -1,20 +1,24 @@
 from io import BytesIO
 from typing import List, Optional
+import uuid
 
 from duckduckgo_search import DDGS
 from duckduckgo_search.exceptions import RatelimitException
 from fastapi import UploadFile
-import numpy as np
 import requests
 
 from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.parsers import HTMLParser
-from app.schemas.search import Search
+from app.helpers.searchclients import SearchClient
+from app.helpers._modelclients import ModelClients
+from app.schemas.collections import Collection
+from app.schemas.chunks import Chunk
+from app.schemas.security import User
 from app.utils.config import logger
-from app.utils.variables import INTERNET_COLLECTION_ID, INTERNET_SEARCH_TYPE
+from app.utils.variables import INTERNET_COLLECTION_NAME_PASSED_AS_ID
 
 
-class InternetSearch:
+class InternetExplorer:
     LIMITED_DOMAINS = [
         "service-public.fr",
         ".gouv.fr",
@@ -71,12 +75,12 @@ reponse : Renouvellement pièce identité France
 Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 
-    def __init__(self, models: dict):
-        self.models = models
-        self.parser = HTMLParser(collection_id=INTERNET_COLLECTION_ID)
+    def __init__(self, model_clients: ModelClients, search_client: SearchClient):
+        self.model_clients = model_clients
+        self.search_client = search_client
+        self.parser = HTMLParser(collection_id=INTERNET_COLLECTION_NAME_PASSED_AS_ID)
 
-    def query(self, prompt: str, model_id: Optional[str] = None, n: int = 3, score_threshold: Optional[float] = None) -> List[Search]:
-        model_id = model_id or self.models.DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID
+    def get_chunks(self, prompt: str, n: int = 3) -> List[Chunk]:
         chunker = LangchainRecursiveCharacterTextSplitter(
             chunk_size=self.CHUNK_SIZE, chunk_overlap=self.CHUNK_OVERLAP, chunk_min_size=self.CHUNK_MIN_SIZE
         )
@@ -107,39 +111,49 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             output = self.parser.parse(file=file)
             chunks.extend(chunker.split(input=output))
 
-        searches = []
         if len(chunks) == 0:
-            return searches
+            return []
         else:
             # Add internet query to the metadata of each chunk
             for chunk in chunks:
                 chunk.metadata.internet_query = query
 
-        response = self.models[model_id].embeddings.create(input=[prompt], model=model_id)
-        vector = response.data[0].embedding
-        vectors = []
-        for i in range(0, len(chunks), self.BATCH_SIZE):
-            batch = chunks[i : i + self.BATCH_SIZE]
-
-            texts = [chunk.content for chunk in batch]
-            response = self.models[model_id].embeddings.create(input=texts, model=model_id)
-            vectors.extend([vector.embedding for vector in response.data])
-
-        cosine = np.dot(vectors, vector) / (np.linalg.norm(vectors, axis=1) * np.linalg.norm(vector))
-
-        for chunk, score in zip(chunks, cosine):
-            if score_threshold and score < score_threshold:
-                continue
-            search = Search(score=score, chunk=chunk, method=INTERNET_SEARCH_TYPE)
-            searches.append(search)
-
-        return searches
+        return chunks
 
     def _get_web_query(self, prompt: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        response = self.models[self.models.DEFAULT_INTERNET_LANGUAGE_MODEL_ID].chat.completions.create(
-            messages=[{"role": "user", "content": prompt}], model=self.models.DEFAULT_INTERNET_LANGUAGE_MODEL_ID, temperature=0.2, stream=False
+        response = self.model_clients[self.model_clients.DEFAULT_INTERNET_LANGUAGE_MODEL_ID].chat.completions.create(
+            messages=[{"role": "user", "content": prompt}], model=self.model_clients.DEFAULT_INTERNET_LANGUAGE_MODEL_ID, temperature=0.2, stream=False
         )
         query = response.choices[0].message.content
 
         return query
+
+    def _get_internet_embeddings_model_id(self, collections: List[str], user: User) -> str:
+        all_collections_with_internet_are_queried = not collections
+        if all_collections_with_internet_are_queried:
+            any_first_collection = self.search_client.get_collections([], user=user)[0]
+            return any_first_collection.model
+
+        collections_without_internet = [collection for collection in collections if collection != INTERNET_COLLECTION_NAME_PASSED_AS_ID]
+        only_internet_collection_queried = len(collections_without_internet) == 0
+        if only_internet_collection_queried:
+            return self.model_clients.DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID
+
+        any_first_collection_queried = self.search_client.get_collections(collections_without_internet, user=user)[0]
+        return any_first_collection_queried.model
+
+    def create_internet_collection(self, prompt: str, collections: List[str], user: User, limit: int = 3) -> Optional[Collection]:
+        chunks = self.get_chunks(prompt=prompt, n=limit)
+        if not chunks:
+            return None
+        stored_internet_collection_id = str(uuid.uuid4())
+        internet_embeddings_model_id = self._get_internet_embeddings_model_id(collections, user)
+        internet_collection = self.search_client.create_collection(
+            collection_id=stored_internet_collection_id,
+            collection_name=INTERNET_COLLECTION_NAME_PASSED_AS_ID,
+            collection_model=internet_embeddings_model_id,
+            user=user,
+        )
+        self.search_client.upsert(chunks, collection_id=stored_internet_collection_id)
+        return internet_collection

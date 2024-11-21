@@ -10,7 +10,7 @@ from app.schemas.security import User
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
 from app.utils.config import DEFAULT_RATE_LIMIT
-from app.utils.variables import INTERNET_COLLECTION_ID, PUBLIC_COLLECTION_TYPE
+from app.utils.variables import INTERNET_COLLECTION_NAME_PASSED_AS_ID, PUBLIC_COLLECTION_TYPE
 
 router = APIRouter()
 
@@ -41,8 +41,8 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
     Get list of collections.
     """
     internet_collection = Collection(
-        id=INTERNET_COLLECTION_ID,
-        name=INTERNET_COLLECTION_ID,
+        id=INTERNET_COLLECTION_NAME_PASSED_AS_ID,
+        name=INTERNET_COLLECTION_NAME_PASSED_AS_ID,
         model=None,
         type=PUBLIC_COLLECTION_TYPE,
         description="Use this collection to search on the internet.",

@@ -5,7 +5,7 @@ import uuid
 import pytest
 
 from app.schemas.search import Search, Searches
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_ID
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_NAME_PASSED_AS_ID
 
 from app.utils.config import logger
 
@@ -90,7 +90,7 @@ class TestSearch:
         """Test search with the internet collection."""
 
         _, _ = setup
-        data = {"prompt": "What is the largest planet in our solar system?", "collections": [INTERNET_COLLECTION_ID], "k": 3}
+        data = {"prompt": "What is the largest planet in our solar system?", "collections": [INTERNET_COLLECTION_NAME_PASSED_AS_ID], "k": 3}
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         assert response.status_code == 200
 

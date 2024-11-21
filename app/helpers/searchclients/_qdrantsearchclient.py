@@ -24,10 +24,18 @@ from app.schemas.security import User
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
+    SearchMethodNotAvailableException,
     WrongCollectionTypeException,
     WrongModelTypeException,
 )
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PUBLIC_COLLECTION_TYPE, ROLE_LEVEL_2, SEMANTIC_SEARCH_TYPE
+from app.utils.variables import (
+    EMBEDDINGS_MODEL_TYPE,
+    LEXICAL_SEARCH_TYPE,
+    HYBRID_SEARCH_TYPE,
+    PUBLIC_COLLECTION_TYPE,
+    ROLE_LEVEL_2,
+    SEMANTIC_SEARCH_TYPE,
+)
 
 
 class QdrantSearchClient(QdrantClient, SearchClient):
@@ -106,14 +114,19 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         prompt: str,
         user: User,
         collection_ids: List[str] = [],
-        method: Literal[SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
+        method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
+        rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
         query_filter: Optional[Filter] = None,
     ) -> List[Search]:
         """
         See SearchClient.query
         """
+
+        if method != SEMANTIC_SEARCH_TYPE:
+            raise SearchMethodNotAvailableException()
+
         collections = self.get_collections(collection_ids=collection_ids, user=user)
         if len(set(collection.model for collection in collections)) > 1:
             raise DifferentCollectionsModelsException()

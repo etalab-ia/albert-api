@@ -1,6 +1,7 @@
 from typing import List, Literal, Optional
 import functools
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from elasticsearch import Elasticsearch, helpers
 
@@ -15,13 +16,16 @@ from app.utils.exceptions import (
     WrongCollectionTypeException,
     WrongModelTypeException,
     CollectionNotFoundException,
+    SearchMethodNotAvailableException,
 )
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
+    HYBRID_SEARCH_TYPE,
     LEXICAL_SEARCH_TYPE,
     SEMANTIC_SEARCH_TYPE,
     ROLE_LEVEL_2,
     PUBLIC_COLLECTION_TYPE,
+    PRIVATE_COLLECTION_TYPE,
 )
 
 
@@ -91,47 +95,65 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         prompt: str,
         user: User,
         collection_ids: List[str] = [],
-        method: Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
+        method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
+        rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,  # TODO: implement score_threshold
         filter: Optional[Filter] = None,  # TODO: implement filter
     ) -> List[Search]:
+        collections = self.get_collections(collection_ids=collection_ids, user=user)
+        if len(set(collection.model for collection in collections)) > 1:
+            raise DifferentCollectionsModelsException()
+
         if method == LEXICAL_SEARCH_TYPE:
             return self._lexical_query(prompt, collection_ids, k)
         elif method == SEMANTIC_SEARCH_TYPE:
             embedding = self._create_embedding(prompt, collection_ids, user)
             return self._semantic_query(prompt, embedding, collection_ids, k)
-        raise ValueError(f"Invalid search method: {method}")
-
-    def collection_exists(self, collection_id: str, user: Optional[User] = None) -> bool:
-        return self.get_collections(collection_ids=[collection_id], user=user) != []
+        elif method == HYBRID_SEARCH_TYPE:
+            embedding = self._create_embedding(prompt, collection_ids, user)
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                lexical_searches = executor.submit(self._lexical_query, prompt, collection_ids, k).result()
+                semantic_searches = executor.submit(self._semantic_query, prompt, embedding, collection_ids, k).result()
+                return self.build_ranked_searches([lexical_searches, semantic_searches], k, rff_k)
+        raise SearchMethodNotAvailableException()
 
     def get_collections(self, collection_ids: List[str] = [], user: Optional[User] = None) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
-        index_pattern = ",".join(collection_ids)
-        collections_by_id = {}
+        index_pattern = ",".join(collection_ids) if collection_ids else "*"
 
-        try:
-            results = self.indices.get_mapping(index=index_pattern)
-        except Exception as e:
-            raise CollectionNotFoundException()
+        collections = [
+            Collection(id=collection_id, **metadata["mappings"]["_meta"])
+            for collection_id, metadata in self.indices.get(index=index_pattern, filter_path=["*.mappings._meta"]).items()
+            if metadata["mappings"]["_meta"]["user"] == user.id or metadata["mappings"]["_meta"]["type"] == PUBLIC_COLLECTION_TYPE
+        ]
 
-        for index_id, result in results.items():
-            metadata = result["mappings"].get("_meta")
-            if metadata:
-                collections_by_id[index_id] = Collection(id=index_id, **metadata)
+        if collection_ids:
+            for collection in collections:
+                if collection.id not in collection_ids:
+                    raise CollectionNotFoundException()
 
-        for indice in self.cat.indices(index=index_pattern, format="json", v=True):
-            index = indice["index"]
-            if index in collections_by_id:
-                collections_by_id[index].documents = int(indice["docs.count"])
+        for collection in collections:
+            body = {
+                "query": {"match": {"metadata.collection_id": collection.id}},
+                "_source": ["metadata"],
+                "aggs": {"document_ids": {"terms": {"field": "metadata.document_id"}}},
+            }
+            results = self.search(index=collection.id, body=body)
+            collection.documents = len(results["aggregations"]["document_ids"]["buckets"])
 
-        return list(collections_by_id.values())
+        return collections
 
     def create_collection(
-        self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, collection_description: str, user: User
+        self,
+        collection_id: str,
+        collection_name: str,
+        collection_model: str,
+        user: User,
+        collection_type: str = PRIVATE_COLLECTION_TYPE,
+        collection_description: Optional[str] = None,
     ) -> None:
         """
         See SearchClient.create_collection

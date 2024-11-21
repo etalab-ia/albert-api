@@ -1,5 +1,5 @@
 AUDIO_MODEL_TYPE = "automatic-speech-recognition"
-INTERNET_COLLECTION_ID = "internet"
+INTERNET_COLLECTION_NAME_PASSED_AS_ID = "internet"
 PUBLIC_COLLECTION_TYPE = "public"
 PRIVATE_COLLECTION_TYPE = "private"
 
@@ -136,6 +136,5 @@ SUPPORTED_LANGUAGES = {
 }
 
 HYBRID_SEARCH_TYPE = "hybrid"
-INTERNET_SEARCH_TYPE = "internet"
 LEXICAL_SEARCH_TYPE = "lexical"
 SEMANTIC_SEARCH_TYPE = "semantic"

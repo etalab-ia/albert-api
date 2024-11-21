@@ -7,7 +7,7 @@ from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Filter, Search
 from app.schemas.security import User
-from app.utils.variables import LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
+from app.utils.variables import HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
 
 
 def to_camel_case(chaine):
@@ -40,8 +40,9 @@ class SearchClient(ABC):
         prompt: str,
         user: User,
         collection_ids: List[str] = [],
-        method: Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
+        method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
+        rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
         query_filter: Optional[Filter] = None,
     ) -> List[Search]:
