@@ -9,14 +9,14 @@ from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.security import User
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
-from app.utils.config import DEFAULT_RATE_LIMIT
+from app.utils.config import settings
 from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID, PUBLIC_COLLECTION_TYPE
 
 router = APIRouter()
 
 
 @router.post("/collections")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def create_collection(request: Request, body: CollectionRequest, user: User = Security(check_api_key)) -> Response:
     """
     Create a new collection.
@@ -35,7 +35,7 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
 
 
 @router.get("/collections")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def get_collections(request: Request, user: User = Security(check_api_key)) -> Union[Collection, Collections]:
     """
     Get list of collections.
@@ -54,7 +54,7 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
 
 
 @router.delete("/collections/{collection}")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def delete_collections(request: Request, collection: UUID, user: User = Security(check_api_key)) -> Response:
     """
     Delete a collection.

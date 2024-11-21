@@ -15,16 +15,16 @@ class SearchRequest(BaseModel):
     score_threshold: Optional[float] = Field(0.0, ge=0.0, le=1.0, description="Score of cosine similarity threshold for filtering results")
 
     @field_validator("prompt")
-    def blank_string(value):
-        if value.strip() == "":
+    def blank_string(prompt):
+        if prompt.strip() == "":
             raise ValueError("Prompt cannot be empty")
-        return value
+        return prompt
 
     @field_validator("collections")
-    def convert_to_string(cls, v):
-        if v is None:
+    def convert_to_string(cls, collections):
+        if collections is None:
             return []
-        return list(set(str(collection) for collection in v))
+        return list(set(str(collection) for collection in collections))
 
 
 class Search(BaseModel):

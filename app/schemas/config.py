@@ -1,6 +1,9 @@
+import os
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic_settings import BaseSettings
+import yaml
 
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
@@ -73,5 +76,64 @@ class Config(ConfigBaseModel):
             raise ValueError("At least one language model is required")
         if not embeddings_model:
             raise ValueError("At least one embeddings model is required")
+
+        return values
+
+
+class Settings(BaseSettings):
+    # logging
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+
+    # config
+    config_file: str = "config.yml"
+
+    # app
+    app_name: str = "Albert API"
+    app_contact_url: Optional[str] = None
+    app_contact_email: Optional[str] = None
+    app_version: str = "0.0.0"
+    app_description: str = "[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"
+
+    # models
+    default_internet_language_model_url: Optional[str] = None
+    default_internet_embeddings_model_url: Optional[str] = None
+
+    # rate_limit
+    global_rate_limit: str = "100/minute"
+    default_rate_limit: str = "10/minute"
+
+    class Config:
+        extra = "allow"
+
+    @field_validator("config_file", mode="before")
+    def config_file_exists(cls, config_file):
+        assert os.path.exists(config_file), "Config file not found"
+        return config_file
+
+    @model_validator(mode="after")
+    def setup_config(cls, values):
+        config = Config(**yaml.safe_load(stream=open(file=values.config_file, mode="r")))
+        if not values.default_internet_language_model_url:
+            values.default_internet_language_model_url = [model.url for model in config.models if model.type == LANGUAGE_MODEL_TYPE][0]
+
+        else:
+            assert values.default_internet_language_model_url in [
+                model.url for model in config.models if model.type == LANGUAGE_MODEL_TYPE
+            ], "Wrong default internet language model url"
+
+        if not values.default_internet_embeddings_model_url:
+            values.default_internet_embeddings_model_url = [model.url for model in config.models if model.type == EMBEDDINGS_MODEL_TYPE][0]
+
+        else:
+            assert values.default_internet_embeddings_model_url in [
+                model.url for model in config.models if model.type == EMBEDDINGS_MODEL_TYPE
+            ], "Wrong default internet embeddings model url"
+
+
+        values.auth = config.auth
+        values.cache = config.databases.cache
+        values.internet = config.internet
+        values.models = config.models
+        values.search = config.databases.search
 
         return values

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Form, Security, Request, UploadFile, File
 
 from app.schemas.audio import AudioTranscription, AudioTranscriptionVerbose
 from app.schemas.config import AUDIO_MODEL_TYPE
-from app.utils.config import DEFAULT_RATE_LIMIT
+from app.utils.config import settings
 from app.utils.security import check_api_key, check_rate_limit, User
 from app.utils.lifespan import clients, limiter
 from app.utils.exceptions import ModelNotFoundException
@@ -16,7 +16,7 @@ SUPPORTED_LANGUAGES_VALUES = sorted(set(SUPPORTED_LANGUAGES.values())) + sorted(
 
 
 @router.post("/audio/transcriptions")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(...),

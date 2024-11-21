@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Security
 from app.helpers import InternetExplorer
 from app.schemas.search import Searches, SearchRequest
 from app.schemas.security import User
-from app.utils.config import DEFAULT_RATE_LIMIT, CONFIG
+from app.utils.config import settings
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
 from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID
@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post("/search")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def search(request: Request, body: SearchRequest, user: User = Security(check_api_key)) -> Searches:
     """
     Endpoint to search on the internet or with our engine client
@@ -26,8 +26,8 @@ async def search(request: Request, body: SearchRequest, user: User = Security(ch
         internet_explorer = InternetExplorer(
             model_clients=clients.models,
             search_client=clients.search,
-            method=CONFIG.internet.type,
-            api_key=CONFIG.internet.args.get("api_key"),
+            method=settings.internet.type,
+            api_key=settings.internet.args.get("api_key"),
         )
         internet_chunks = internet_explorer.get_chunks(prompt=body.prompt)
 

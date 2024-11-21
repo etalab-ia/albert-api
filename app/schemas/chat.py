@@ -34,17 +34,17 @@ class ChatCompletionRequest(BaseModel):
     class ConfigDict:
         extra = "allow"
 
-    @model_validator(mode="before")
-    def validate_model(cls, value):
-        if clients.models[value["model"]].type != LANGUAGE_MODEL_TYPE:
+    @model_validator(mode="after")
+    def validate_model(cls, values):
+        if clients.models[values["model"]].type != LANGUAGE_MODEL_TYPE:
             raise WrongModelTypeException()
 
-        if not clients.models[value["model"]].check_context_length(messages=value["messages"]):
+        if not clients.models[values["model"]].check_context_length(messages=values["messages"]):
             raise ContextLengthExceededException()
 
-        if "max_tokens" in value and value["max_tokens"] is not None and value["max_tokens"] > clients.models[value["model"]].max_context_length:
+        if "max_tokens" in values and values["max_tokens"] is not None and values["max_tokens"] > clients.models[values["model"]].max_context_length:
             raise MaxTokensExceededException()
-        return value
+        return values
 
 
 class ChatCompletion(ChatCompletion):

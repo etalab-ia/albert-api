@@ -3,7 +3,7 @@ import time
 import pytest
 
 from app.schemas.models import Model, Models
-from app.utils.config import DEFAULT_RATE_LIMIT
+from app.utils.config import settings
 
 
 @pytest.mark.usefixtures("args", "session_user", "session_admin")
@@ -32,7 +32,7 @@ class TestModels:
     def test_get_models_rate_limit(self, args, session_user):
         """Test the GET /models rate limiting."""
         start = time.time()
-        limit = int(DEFAULT_RATE_LIMIT.replace("/minute", ""))
+        limit = int(settings.default_rate_limit.replace("/minute", ""))
         i = 0
         check = False
         while time.time() - start < 60:

@@ -7,7 +7,7 @@ import pytest
 from app.schemas.search import Search, Searches
 from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_DISPLAY_ID
 
-from app.utils.config import logger
+from app.utils.logging import logger
 
 
 @pytest.fixture(scope="module")

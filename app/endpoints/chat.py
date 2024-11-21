@@ -6,7 +6,7 @@ import httpx
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.security import User
-from app.utils.config import DEFAULT_RATE_LIMIT
+from app.utils.config import settings
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
 
@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.post("/chat/completions")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def chat_completions(
     request: Request, body: ChatCompletionRequest, user: User = Security(check_api_key)
 ) -> Union[ChatCompletion, ChatCompletionChunk]:

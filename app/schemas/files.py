@@ -29,15 +29,15 @@ class FilesRequest(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_to_json(cls, value):
-        if isinstance(value, str):
-            return cls(**json.loads(value))
-        return value
+    def validate_to_json(cls, values):
+        if isinstance(values, str):
+            return cls(**json.loads(values))
+        return values
 
     @field_validator("collection", mode="after")
     @classmethod
-    def convert_to_string(cls, value):
-        return str(value)
+    def convert_to_string(cls, collection):
+        return str(collection)
 
 
 class Json(BaseModel):
