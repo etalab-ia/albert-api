@@ -60,6 +60,16 @@ Merci, avant chaque pull request, de vérifier le bon déploiement de votre API 
     PYTHONPATH=. pytest --config-file=pyproject.toml --base-url http://localhost:8080/v1 --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
     ```
 
+# Notebooks
+
+Il est important de tenir à jour les notebooks de docs/tutorials, afin de montrer des rapides exemples d'utilisation de l'API.
+
+Pour lancer les notebooks en local:
+
+```bash
+jupyter notebook docs/tutorials/
+```
+
 # Linter
 
 Le linter du projet est [Ruff](https://beta.ruff.rs/docs/configuration/). Les règles de formatage spécifiques au projet sont dans le fichier *[pyproject.toml](./pyproject.toml)*.
