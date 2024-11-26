@@ -5,6 +5,7 @@ from app.schemas.files import ChunkerArgs, FilesRequest
 from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
+from app.utils.exceptions import FileSizeLimitExceededException
 
 router = APIRouter()
 
@@ -20,9 +21,11 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
         For JSON, file structure like a list of documents: [{"text": "hello world", "title": "my document", "metadata": {"autor": "me"}}, ...]} or [{"text": "hello world", "title": "my document"}, ...]}
         Each document must have a "text" and "title" keys and "metadata" key (optional) with dict type value.
     - html: Hypertext Markup Language file.
-
-    Max file size is 10MB.
     """
+
+    file_size = len(file.file.read())
+    if file_size > FileSizeLimitExceededException.MAX_CONTENT_SIZE:
+        raise FileSizeLimitExceededException()
 
     if request.chunker:
         chunker_args = request.chunker.args.model_dump() if request.chunker.args else ChunkerArgs().model_dump()

@@ -9,13 +9,14 @@ from app.helpers.searchclients._searchclient import SearchClient
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.chunks import Chunk
+from app.schemas.security import Role
 from app.schemas.security import User
 from app.schemas.search import Filter, Search
 from app.utils.exceptions import (
     DifferentCollectionsModelsException,
-    WrongCollectionTypeException,
     WrongModelTypeException,
     CollectionNotFoundException,
+    InsufficientRightsException,
     SearchMethodNotAvailableException,
 )
 from app.utils.variables import (
@@ -23,7 +24,6 @@ from app.utils.variables import (
     HYBRID_SEARCH_TYPE,
     LEXICAL_SEARCH_TYPE,
     SEMANTIC_SEARCH_TYPE,
-    ROLE_LEVEL_2,
     PUBLIC_COLLECTION_TYPE,
     PRIVATE_COLLECTION_TYPE,
 )
@@ -71,8 +71,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
     def upsert(self, chunks: List[Chunk], collection_id: str, user: Optional[User] = None) -> None:
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
-            raise WrongCollectionTypeException()
+        if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise InsufficientRightsException()
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batched_chunks = chunks[i : i + self.BATCH_SIZE]
@@ -168,8 +168,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
             raise WrongModelTypeException()
 
-        if user.role != ROLE_LEVEL_2 and collection_type == PUBLIC_COLLECTION_TYPE:
-            raise WrongCollectionTypeException()
+        if user.role != Role.ADMIN and collection_type == PUBLIC_COLLECTION_TYPE:
+            raise InsufficientRightsException()
 
         settings = {
             "similarity": {"default": {"type": "BM25"}},
@@ -224,8 +224,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
-            raise WrongCollectionTypeException()
+        if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise InsufficientRightsException()
 
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
@@ -279,8 +279,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
-            raise WrongCollectionTypeException()
+        if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise InsufficientRightsException()
 
         # delete chunks
         body = {"query": {"match": {"metadata.document_id": document_id}}}

@@ -1,5 +1,3 @@
-import base64
-import hashlib
 from typing import Annotated, Optional
 
 from fastapi import Depends, Request
@@ -7,32 +5,30 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.schemas.security import User
 from app.utils.settings import settings
-from app.utils.exceptions import InvalidAPIKeyException, InvalidAuthenticationSchemeException
+from app.utils.exceptions import InvalidAPIKeyException, InvalidAuthenticationSchemeException, InsufficientRightsException
 from app.utils.lifespan import clients
-from app.utils.variables import ROLE_LEVEL_0, ROLE_LEVEL_2
-
-
-def encode_string(input: str) -> str:
-    """
-    Generate a 16 length unique code from an input string using salted SHA-256 hashing.
-
-    Args:
-        input_string (str): The input string to generate the code from.
-
-    Returns:
-        tuple[str, bytes]: A tuple containing the generated code and the salt used.
-    """
-    hash = hashlib.sha256((input).encode()).digest()
-    hash = base64.urlsafe_b64encode(hash).decode()
-    # remove special characters and limit length
-    hash = "".join(c for c in hash if c.isalnum())[:16].lower()
-
-    return hash
+from app.schemas.security import Role
 
 
 if settings.auth:
 
-    def check_api_key(api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key"))]) -> str:
+    def check_admin_api_key(api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key"))]) -> User:
+        """
+        Check if the API key is valid and if the user has admin rights.
+
+        Args:
+            api_key (Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key")]): The API key to check.
+
+        Returns:
+            User: User object, corresponding to the encoded API key or "no-auth" if no authentication is set in the configuration file.
+        """
+        user = check_api_key(api_key=api_key)
+        if user.role != Role.ADMIN:
+            raise InsufficientRightsException()
+
+        return user
+
+    def check_api_key(api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key"))]) -> User:
         """
         Check if the API key is valid.
 
@@ -40,24 +36,25 @@ if settings.auth:
             api_key (Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key")]): The API key to check.
 
         Returns:
-            str: User ID, corresponding to the encoded API key or "no-auth" if no authentication is set in the configuration file.
+            User: User object, corresponding to the encoded API key or "no-auth" if no authentication is set in the configuration file.
         """
 
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
 
-        role = clients.auth.check_api_key(api_key.credentials)
-        if role is None:
+        user = clients.auth.check_api_key(api_key.credentials)
+        if user is None:
             raise InvalidAPIKeyException()
 
-        user_id = encode_string(input=api_key.credentials)
-
-        return User(id=user_id, role=role)
+        return user
 
 else:
 
-    def check_api_key(api_key: Optional[str] = None) -> str:
-        return User(id="no-auth", role=ROLE_LEVEL_2)
+    def check_admin_api_key(api_key: Optional[str] = None) -> User:
+        return User(id="no-auth", role=Role.ADMIN)
+
+    def check_api_key(api_key: Optional[str] = None) -> User:
+        return User(id="no-auth", role=Role.ADMIN)
 
 
 def check_rate_limit(request: Request) -> Optional[str]:
@@ -76,7 +73,7 @@ def check_rate_limit(request: Request) -> Optional[str]:
     api_key = HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
     user = check_api_key(api_key=api_key)
 
-    if user.role > ROLE_LEVEL_0:
+    if user.role.value > Role.USER.value:
         return None
     else:
         return user.id

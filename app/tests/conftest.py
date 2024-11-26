@@ -4,7 +4,7 @@ import time
 import pytest
 import requests
 
-from app.utils.security import encode_string
+from app.helpers._authenticationclient import AuthenticationClient
 from app.utils.variables import PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 
 
@@ -45,8 +45,8 @@ def session_admin(args):
 
 @pytest.fixture(scope="session")
 def cleanup_collections(args, session_user, session_admin):
-    USER = encode_string(input=args["api_key_user"])
-    ADMIN = encode_string(input=args["api_key_admin"])
+    USER = AuthenticationClient._api_key_to_user_id(input=args["api_key_user"])
+    ADMIN = AuthenticationClient._api_key_to_user_id(input=args["api_key_admin"])
 
     yield USER, ADMIN
 

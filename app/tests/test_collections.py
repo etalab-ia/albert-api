@@ -3,7 +3,7 @@ import logging
 import pytest
 
 from app.schemas.collections import Collection, Collections
-from app.utils.security import encode_string
+from app.helpers._authenticationclient import AuthenticationClient
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
     INTERNET_COLLECTION_DISPLAY_ID,
@@ -15,8 +15,8 @@ from app.utils.variables import (
 
 @pytest.fixture(scope="module")
 def setup(args, session_user):
-    USER = encode_string(input=args["api_key_user"])
-    ADMIN = encode_string(input=args["api_key_admin"])
+    USER = AuthenticationClient._api_key_to_user_id(input=args["api_key_user"])
+    ADMIN = AuthenticationClient._api_key_to_user_id(input=args["api_key_admin"])
     logging.info(f"test user ID: {USER}")
     logging.info(f"test admin ID: {ADMIN}")
 

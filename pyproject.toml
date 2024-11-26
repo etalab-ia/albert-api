@@ -23,6 +23,7 @@ app = [
     "fastapi==0.111.0",
     "pydantic==2.10.2",
     "pydantic-settings==2.6.1",
+    "prometheus-fastapi-instrumentator==7.0.0",
     "pyyaml==6.0.1",
     "grist-api==0.1.0",
     "six==1.16.0",
