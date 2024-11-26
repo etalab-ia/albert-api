@@ -3,10 +3,10 @@ from fastapi import APIRouter, Request, Security
 from app.helpers import InternetExplorer
 from app.schemas.search import Searches, SearchRequest
 from app.schemas.security import User
-from app.utils.config import DEFAULT_RATE_LIMIT
+from app.utils.config import DEFAULT_RATE_LIMIT, CONFIG
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
-from app.utils.variables import INTERNET_COLLECTION_NAME_PASSED_AS_ID
+from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID
 
 
 router = APIRouter()
@@ -20,21 +20,26 @@ async def search(request: Request, body: SearchRequest, user: User = Security(ch
     """
 
     # TODO: to be handled by a service top to InternetExplorer
-    all_collections_with_also_a_new_internet_collection_queried = not body.collections
-    need_internet_search = all_collections_with_also_a_new_internet_collection_queried or INTERNET_COLLECTION_NAME_PASSED_AS_ID in body.collections
-    internet_collection = None
+    need_internet_search = not body.collections or INTERNET_COLLECTION_DISPLAY_ID in body.collections
+    internet_chunks = []
     if need_internet_search:
-        internet_collection = InternetExplorer(model_clients=clients.models, search_client=clients.search).create_internet_collection(
-            body.prompt, body.collections, user
+        internet_explorer = InternetExplorer(
+            model_clients=clients.models,
+            search_client=clients.search,
+            method=CONFIG.internet.method,
+            api_key=CONFIG.internet.api_key,
         )
-        internet_only_queried_but_no_data = len(body.collections) == 1 and not internet_collection
-        if internet_only_queried_but_no_data:
-            return Searches(data=[])
+        internet_chunks = internet_explorer.get_chunks(prompt=body.prompt)
 
-        if not all_collections_with_also_a_new_internet_collection_queried:
-            body.collections = [collection_id for collection_id in body.collections if collection_id != INTERNET_COLLECTION_NAME_PASSED_AS_ID] + (
-                [internet_collection.id] if internet_collection else []
-            )
+        if internet_chunks:
+            internet_collection = internet_explorer.create_temporary_internet_collection(internet_chunks, body.collections, user)
+
+        if INTERNET_COLLECTION_DISPLAY_ID in body.collections:
+            body.collections.remove(INTERNET_COLLECTION_DISPLAY_ID)
+            if not body.collections and not internet_chunks:
+                return Searches(data=[])
+            if internet_chunks:
+                body.collections.append(internet_collection.id)
 
     searches = clients.search.query(
         prompt=body.prompt,
@@ -46,7 +51,7 @@ async def search(request: Request, body: SearchRequest, user: User = Security(ch
         user=user,
     )
 
-    if internet_collection:
+    if internet_chunks:
         clients.search.delete_collection(internet_collection.id, user=user)
 
     return Searches(data=searches)

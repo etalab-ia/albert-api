@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Literal, Optional, Type
+from typing import List, Literal, Optional, Type, Union
+from uuid import UUID
 import importlib
 
 from app.schemas.chunks import Chunk
@@ -104,7 +105,9 @@ class SearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Chunk]:
+    def get_chunks(
+        self, collection_id: str, document_id: str, user: User, limit: Optional[int] = None, offset: Union[int, UUID] = None
+    ) -> List[Chunk]:
         """
         Get chunks from a collection and a document.
         Args:
@@ -112,14 +115,14 @@ class SearchClient(ABC):
             document_id (str): The id of the document to get chunks from.
             user (User): The user retrieving the chunks.
             limit (Optional[int]): The number of chunks to return.
-            offset (Optional[int]): The offset of the chunks to return.
+            offset (Optional[int, UUID]): The offset of the chunks to return (UUID is for qdrant and int for elasticsearch)
         Returns:
             List[Chunk]: A list of Chunk objects containing the retrieved chunks.
         """
         pass
 
     @abstractmethod
-    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Union[int, UUID] = None) -> List[Document]:
         """
         Get documents from a collection.
 

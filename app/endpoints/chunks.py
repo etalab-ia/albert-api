@@ -1,5 +1,5 @@
 from uuid import UUID
-
+from typing import Union
 from fastapi import APIRouter, Request, Security, Query
 
 from app.schemas.chunks import Chunks
@@ -19,7 +19,7 @@ async def get_chunks(
     collection: UUID,
     document: UUID,
     limit: int = Query(default=10, ge=1, le=100),
-    offset: int = Query(default=0),
+    offset: Union[int, UUID] = Query(default=0),
     user: User = Security(check_api_key),
 ) -> Chunks:
     """

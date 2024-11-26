@@ -40,10 +40,16 @@ class Databases(ConfigBaseModel):
     search: SearchDB
 
 
+class Internet(ConfigBaseModel):
+    method: Literal["duckduckgo", "brave"] = "brave"
+    api_key: str
+
+
 class Config(ConfigBaseModel):
     auth: Optional[Auth] = None
     models: List[Model] = Field(..., min_length=1)
     databases: Databases
+    internet: Optional[Internet] = None
 
     @model_validator(mode="after")
     def validate_models(cls, values):

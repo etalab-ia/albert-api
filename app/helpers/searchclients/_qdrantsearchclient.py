@@ -207,7 +207,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
     def create_collection(
         self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, collection_description: str, user: User
-    ) -> None:
+    ) -> Collection:
         """
         See SearchClient.create_collection
         """
@@ -229,10 +229,11 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         }
         super().upsert(collection_name=self.METADATA_COLLECTION_ID, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
 
-        # create collection
         super().create_collection(
             collection_name=collection_id, vectors_config=VectorParams(size=self.models[collection_model].vector_size, distance=Distance.COSINE)
         )
+
+        return Collection(id=collection_id, **metadata)
 
     def delete_collection(self, collection_id: str, user: User) -> None:
         """

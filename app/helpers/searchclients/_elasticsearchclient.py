@@ -3,7 +3,7 @@ import functools
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from elasticsearch import Elasticsearch, helpers
+from elasticsearch import Elasticsearch, helpers, NotFoundError
 
 from app.helpers.searchclients._searchclient import SearchClient
 from app.schemas.collections import Collection
@@ -89,6 +89,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
                 for chunk in batched_chunks
             ]
             helpers.bulk(self, actions, index=collection_id)
+        self.indices.refresh(index=collection_id)
 
     def query(
         self,
@@ -101,7 +102,11 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         score_threshold: Optional[float] = None,  # TODO: implement score_threshold
         filter: Optional[Filter] = None,  # TODO: implement filter
     ) -> List[Search]:
+        print("SEARCH", collection_ids, flush=True)
         collections = self.get_collections(collection_ids=collection_ids, user=user)
+
+        print("OOOO", flush=True)
+
         if len(set(collection.model for collection in collections)) > 1:
             raise DifferentCollectionsModelsException()
 
@@ -124,12 +129,18 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         index_pattern = ",".join(collection_ids) if collection_ids else "*"
 
-        collections = [
-            Collection(id=collection_id, **metadata["mappings"]["_meta"])
-            for collection_id, metadata in self.indices.get(index=index_pattern, filter_path=["*.mappings._meta"]).items()
-            if metadata["mappings"]["_meta"]["user"] == user.id or metadata["mappings"]["_meta"]["type"] == PUBLIC_COLLECTION_TYPE
-        ]
+        try:
+            collections = [
+                Collection(id=collection_id, **metadata["mappings"]["_meta"])
+                for collection_id, metadata in self.indices.get(index=index_pattern, filter_path=["*.mappings._meta"]).items()
+            ]
+        except NotFoundError as e:
+            raise CollectionNotFoundException()
 
+        if user:
+            collections = [collection for collection in collections if collection.user == user.id or collection.type == PUBLIC_COLLECTION_TYPE]
+
+        print(collection_ids, collections, flush=True)
         if collection_ids:
             for collection in collections:
                 if collection.id not in collection_ids:
@@ -137,11 +148,12 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         for collection in collections:
             body = {
-                "query": {"match": {"metadata.collection_id": collection.id}},
+                "query": {"match_all": {}},
                 "_source": ["metadata"],
-                "aggs": {"document_ids": {"terms": {"field": "metadata.document_id"}}},
+                "aggs": {"document_ids": {"terms": {"field": "metadata.document_id", "size": 100}}},
             }
-            results = self.search(index=collection.id, body=body)
+
+            results = self.search(index=collection.id, body=body, size=1, from_=0)
             collection.documents = len(results["aggregations"]["document_ids"]["buckets"])
 
         return collections
@@ -154,7 +166,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         user: User,
         collection_type: str = PRIVATE_COLLECTION_TYPE,
         collection_description: Optional[str] = None,
-    ) -> None:
+    ) -> Collection:
         """
         See SearchClient.create_collection
         """
@@ -209,6 +221,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         self.indices.create(index=collection_id, mappings=mappings, settings=settings, ignore=400)
 
+        return Collection(id=collection_id, **mappings["_meta"])
+
     def delete_collection(self, collection_id: str, user: User) -> None:
         """
         See SearchClient.delete_collection
@@ -235,7 +249,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         See SearchClient.get_documents
         """
-        self.get_collections(collection_ids=[collection_id], user=user)  # check if collection exists
+        c = self.get_collections(collection_ids=[collection_id], user=user)  # check if collection exists
 
         body = {
             "query": {"match_all": {}},

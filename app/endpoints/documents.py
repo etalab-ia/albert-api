@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request, Response, Security
@@ -18,7 +18,7 @@ async def get_documents(
     request: Request,
     collection: UUID,
     limit: Optional[int] = Query(default=10, ge=1, le=100),
-    offset: Optional[int] = Query(default=0),
+    offset: Union[int, UUID] = Query(default=0),
     user: User = Security(check_api_key),
 ) -> Documents:
     """

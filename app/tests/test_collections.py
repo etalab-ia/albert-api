@@ -6,7 +6,7 @@ from app.schemas.collections import Collection, Collections
 from app.utils.security import encode_string
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
-    INTERNET_COLLECTION_NAME_PASSED_AS_ID,
+    INTERNET_COLLECTION_DISPLAY_ID,
     LANGUAGE_MODEL_TYPE,
     PRIVATE_COLLECTION_TYPE,
     PUBLIC_COLLECTION_TYPE,
@@ -130,7 +130,7 @@ class TestFiles:
     def test_create_internet_collection_with_user(self, args, session_user, setup):
         _, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": INTERNET_COLLECTION_NAME_PASSED_AS_ID, "model": EMBEDDINGS_MODEL_ID, "type": PUBLIC_COLLECTION_TYPE}
+        params = {"name": INTERNET_COLLECTION_DISPLAY_ID, "model": EMBEDDINGS_MODEL_ID, "type": PUBLIC_COLLECTION_TYPE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
         assert response.status_code == 422
 

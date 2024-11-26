@@ -5,7 +5,7 @@ import uuid
 import pytest
 
 from app.schemas.search import Search, Searches
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_NAME_PASSED_AS_ID
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_DISPLAY_ID
 
 from app.utils.config import logger
 
@@ -90,7 +90,7 @@ class TestSearch:
         """Test search with the internet collection."""
 
         _, _ = setup
-        data = {"prompt": "What is the largest planet in our solar system?", "collections": [INTERNET_COLLECTION_NAME_PASSED_AS_ID], "k": 3}
+        data = {"prompt": "What is the largest planet in our solar system?", "collections": [INTERNET_COLLECTION_DISPLAY_ID], "k": 3}
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         assert response.status_code == 200
 
@@ -103,3 +103,27 @@ class TestSearch:
             assert search.chunk.metadata.document_name.startswith("http")
         else:
             logger.info("No internet search results, the DuckDuckGo rate limit may have been exceeded.")
+
+    def test_lexical_search(self, args, session_user, setup):
+        """Test lexical search."""
+
+        _, COLLECTION_ID = setup
+        data = {"prompt": "test query", "collections": [COLLECTION_ID], "k": 3, "method": "lexical"}
+        response = session_user.post(f"{args["base_url"]}/search", json=data)
+        assert response.status_code == 200
+
+    def test_semantic_search(self, args, session_user, setup):
+        """Test semantic search."""
+
+        _, COLLECTION_ID = setup
+        data = {"prompt": "test query", "collections": [COLLECTION_ID], "k": 3, "method": "semantic"}
+        response = session_user.post(f"{args["base_url"]}/search", json=data)
+        assert response.status_code == 200
+
+    def test_hybrid_search(self, args, session_user, setup):
+        """Test hybrid search."""
+
+        _, COLLECTION_ID = setup
+        data = {"prompt": "test query", "collections": [COLLECTION_ID], "k": 3, "method": "hybrid"}
+        response = session_user.post(f"{args["base_url"]}/search", json=data)
+        assert response.status_code == 200

@@ -4,7 +4,7 @@ import time
 import pandas as pd
 import streamlit as st
 
-from config import INTERNET_COLLECTION_NAME_PASSED_AS_ID, PRIVATE_COLLECTION_TYPE
+from config import INTERNET_COLLECTION_DISPLAY_ID, PRIVATE_COLLECTION_TYPE
 from utils import create_collection, delete_collection, delete_document, get_collections, get_documents, get_models, header, set_config, upload_file
 
 # Config
@@ -15,7 +15,7 @@ API_KEY = header()
 try:
     language_models, embeddings_models, _ = get_models(api_key=API_KEY)
     collections = get_collections(api_key=API_KEY)
-    collections = [collection for collection in collections if collection["id"] != INTERNET_COLLECTION_NAME_PASSED_AS_ID]
+    collections = [collection for collection in collections if collection["id"] != INTERNET_COLLECTION_DISPLAY_ID]
     documents = get_documents(
         api_key=API_KEY, collection_ids=[collection["id"] for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE]
     )
