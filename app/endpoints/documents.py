@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request, Response, Security
@@ -18,15 +18,14 @@ async def get_documents(
     request: Request,
     collection: UUID,
     limit: Optional[int] = Query(default=10, ge=1, le=100),
-    offset: Optional[UUID] = None,
+    offset: Union[int, UUID] = Query(default=0),
     user: User = Security(check_api_key),
 ) -> Documents:
     """
     Get all documents ID from a collection.
     """
     collection = str(collection)
-    offset = str(offset) if offset else None
-    data = clients.vectors.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
+    data = clients.search.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
 
     return Documents(data=data)
 
@@ -38,6 +37,6 @@ async def delete_document(request: Request, collection: UUID, document: UUID, us
     Delete a document and relative collections.
     """
     collection, document = str(collection), str(document)
-    clients.vectors.delete_document(collection_id=collection, document_id=document, user=user)
+    clients.search.delete_document(collection_id=collection, document_id=document, user=user)
 
     return Response(status_code=204)

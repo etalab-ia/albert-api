@@ -5,7 +5,7 @@ from app.schemas.config import Config
 
 from ._modelclients import ModelClients
 from ._authenticationclient import AuthenticationClient
-from ._vectorstore import VectorStore
+from .searchclients._searchclient import SearchClient
 
 
 class ClientsManager:
@@ -19,11 +19,11 @@ class ClientsManager:
         # set cache
         self.cache = CacheManager(connection_pool=ConnectionPool(**self.config.databases.cache.args))
 
-        # set vectors
-        self.vectors = VectorStore(models=self.models, **self.config.databases.vectors.args)
+        # set search
+        self.search = SearchClient.import_constructor(self.config.databases.search.type)(models=self.models, **self.config.databases.search.args)
 
         # set auth
         self.auth = AuthenticationClient(cache=self.cache, **self.config.auth.args) if self.config.auth else None
 
     def clear(self):
-        self.vectors.close()
+        self.search.close()

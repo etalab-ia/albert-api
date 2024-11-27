@@ -2,7 +2,15 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE
+from app.utils.variables import (
+    EMBEDDINGS_MODEL_TYPE,
+    LANGUAGE_MODEL_TYPE,
+    AUDIO_MODEL_TYPE,
+    INTERNET_DUCKDUCKGO_TYPE,
+    INTERNET_BRAVE_TYPE,
+    SEARCH_ELASTIC_TYPE,
+    SEARCH_QDRANT_TYPE,
+)
 
 
 class ConfigBaseModel(BaseModel):
@@ -25,8 +33,8 @@ class Model(ConfigBaseModel):
     key: Optional[str] = "EMPTY"
 
 
-class VectorDB(ConfigBaseModel):
-    type: Literal["qdrant"] = "qdrant"
+class SearchDB(BaseModel):
+    type: Literal[SEARCH_ELASTIC_TYPE, SEARCH_QDRANT_TYPE] = SEARCH_QDRANT_TYPE
     args: dict
 
 
@@ -37,13 +45,19 @@ class CacheDB(ConfigBaseModel):
 
 class Databases(ConfigBaseModel):
     cache: CacheDB
-    vectors: VectorDB
+    search: SearchDB
+
+
+class Internet(ConfigBaseModel):
+    type: Literal[INTERNET_DUCKDUCKGO_TYPE, INTERNET_BRAVE_TYPE] = INTERNET_DUCKDUCKGO_TYPE
+    args: Optional[dict] = {}
 
 
 class Config(ConfigBaseModel):
     auth: Optional[Auth] = None
     models: List[Model] = Field(..., min_length=1)
     databases: Databases
+    internet: Optional[Internet] = None
 
     @model_validator(mode="after")
     def validate_models(cls, values):

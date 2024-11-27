@@ -1,7 +1,8 @@
 import time
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from qdrant_client import QdrantClient
+from qdrant_client.http.exceptions import ResponseHandlingException
 from qdrant_client.http.models import (
     Distance,
     FieldCondition,
@@ -14,6 +15,7 @@ from qdrant_client.http.models import (
     VectorParams,
 )
 
+from app.helpers.searchclients._searchclient import SearchClient
 from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
@@ -22,18 +24,26 @@ from app.schemas.security import User
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
+    SearchMethodNotAvailableException,
     WrongCollectionTypeException,
     WrongModelTypeException,
 )
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PUBLIC_COLLECTION_TYPE, ROLE_LEVEL_2
+from app.utils.variables import (
+    EMBEDDINGS_MODEL_TYPE,
+    LEXICAL_SEARCH_TYPE,
+    HYBRID_SEARCH_TYPE,
+    PUBLIC_COLLECTION_TYPE,
+    ROLE_LEVEL_2,
+    SEMANTIC_SEARCH_TYPE,
+)
 
 
-class VectorStore(QdrantClient):
+class QdrantSearchClient(QdrantClient, SearchClient):
     BATCH_SIZE = 48
     METADATA_COLLECTION_ID = "collections"
     DOCUMENT_COLLECTION_ID = "documents"
 
-    def __init__(self, models: dict, *args, **kwargs):
+    def __init__(self, models, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.models = models
 
@@ -45,12 +55,7 @@ class VectorStore(QdrantClient):
 
     def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         """
-        Add chunks to a collection.
-
-        Args:
-            chunks (List[Chunk]): A list of chunks to add to the collection.
-            collection_id (str): The id of the collection to add the chunks to.
-            user (User): The user adding the chunks.
+        See SearchClient.upsert
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
@@ -104,29 +109,24 @@ class VectorStore(QdrantClient):
         payload.pop("id")
         super().upsert(collection_name=self.METADATA_COLLECTION_ID, points=[PointStruct(id=collection.id, payload=payload, vector={})])
 
-    def search(
+    def query(
         self,
         prompt: str,
         user: User,
         collection_ids: List[str] = [],
+        method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
+        rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
-        filter: Optional[Filter] = None,
+        query_filter: Optional[Filter] = None,
     ) -> List[Search]:
         """
-        Search for chunks in a collection.
-
-        Args:
-            prompt (str): The prompt to search for.
-            user (User): The user searching for the chunks.
-            collection_ids (List[str]): The ids of the collections to search in.
-            k (Optional[int]): The number of chunks to return.
-            score_threshold (Optional[float]): The score threshold for the chunks to return.
-            filter (Optional[Filter]): The filter to apply to the chunks to return.
-
-        Returns:
-            List[Search]: A list of Search objects containing the retrieved chunks.
+        See SearchClient.query
         """
+
+        if method != SEMANTIC_SEARCH_TYPE:
+            raise SearchMethodNotAvailableException()
+
         collections = self.get_collections(collection_ids=collection_ids, user=user)
         if len(set(collection.model for collection in collections)) > 1:
             raise DifferentCollectionsModelsException()
@@ -138,7 +138,12 @@ class VectorStore(QdrantClient):
         chunks = []
         for collection in collections:
             results = super().search(
-                collection_name=collection.id, query_vector=vector, limit=k, score_threshold=score_threshold, with_payload=True, query_filter=filter
+                collection_name=collection.id,
+                query_vector=vector,
+                limit=k,
+                score_threshold=score_threshold,
+                with_payload=True,
+                query_filter=query_filter,
             )
             for result in results:
                 result.payload["metadata"]["collection"] = collection.id
@@ -146,30 +151,24 @@ class VectorStore(QdrantClient):
 
         # sort by similarity score and get top k
         chunks = sorted(chunks, key=lambda x: x.score, reverse=True)[:k]
-        searches = [
+        results = [
             Search(score=chunk.score, chunk=Chunk(id=chunk.id, content=chunk.payload["content"], metadata=chunk.payload["metadata"]))
             for chunk in chunks
         ]
 
-        return searches
+        return results
 
-    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, collection_ids: List[str] = [], user: Optional[User] = None) -> List[Collection]:
         """
-        Get metadata of collections.
-
-        Args:
-            user (User): The user retrieving the collections.
-            collection_ids (List[str]): List of collection ids to retrieve metadata for. If is an empty list, all collections will be considered.
-
-        Returns:
-            List[Collection]: A list of Collection objects containing the metadata for the specified collections.
+        See SearchClient.get_collections
         """
         # if no collection ids are provided, get all collections
         must = [HasIdCondition(has_id=collection_ids)] if collection_ids else []
-        should = [
-            FieldCondition(key="user", match=MatchAny(any=[user.id])),
-            FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE])),
-        ]
+        should = []
+        if user:
+            should.append(FieldCondition(key="user", match=MatchAny(any=[user.id])))
+        should.append(FieldCondition(key="type", match=MatchAny(any=[PUBLIC_COLLECTION_TYPE])))
+
         filter = Filter(must=must, should=should)
 
         records = super().scroll(collection_name=self.METADATA_COLLECTION_ID, scroll_filter=filter, limit=1000, offset=None)
@@ -207,24 +206,10 @@ class VectorStore(QdrantClient):
         return collections
 
     def create_collection(
-        self,
-        collection_id: str,
-        collection_name: str,
-        collection_model: str,
-        collection_type: str,
-        user: User,
-        collection_description: Optional[str] = None,
-    ) -> None:
+        self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, collection_description: str, user: User
+    ) -> Collection:
         """
-        Create a collection, if collection already exists, return the collection id.
-
-        Args:
-            collection_id (str): The id of the collection to create.
-            collection_name (str): The name of the collection to create.
-            collection_model (str): The model of the collection to create.
-            collection_type (str): The type of the collection to create.
-            collection_description (Optional[str]): The description of the collection to create.
-            user (User): The user creating the collection.
+        See SearchClient.create_collection
         """
         if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
             raise WrongModelTypeException()
@@ -244,18 +229,15 @@ class VectorStore(QdrantClient):
         }
         super().upsert(collection_name=self.METADATA_COLLECTION_ID, points=[PointStruct(id=collection_id, payload=dict(metadata), vector={})])
 
-        # create collection
         super().create_collection(
             collection_name=collection_id, vectors_config=VectorParams(size=self.models[collection_model].vector_size, distance=Distance.COSINE)
         )
 
+        return Collection(id=collection_id, **metadata)
+
     def delete_collection(self, collection_id: str, user: User) -> None:
         """
-        Delete a collection and all its associated data.
-
-        Args:
-            collection_id (str): The id of the collection to delete.
-            user (User): The user deleting the collection.
+        See SearchClient.delete_collection
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
@@ -265,19 +247,11 @@ class VectorStore(QdrantClient):
         super().delete_collection(collection_name=collection.id)
         super().delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Chunk]:
+    def get_chunks(
+        self, collection_id: str, document_id: str, user: Optional[User] = None, limit: Optional[int] = 10, offset: Optional[int] = None
+    ) -> List[Chunk]:
         """
-        Get chunks from a collection and a document.
-
-        Args:
-            collection_id (str): The id of the collection to get chunks from.
-            document_id (str): The id of the document to get chunks from.
-            user (User): The user retrieving the chunks.
-            limit (Optional[int]): The number of chunks to return.
-            offset (Optional[int]): The offset of the chunks to return.
-
-        Returns:
-            List[Chunk]: A list of Chunk objects containing the retrieved chunks.
+        See SearchClient.get_chunks
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
@@ -287,18 +261,11 @@ class VectorStore(QdrantClient):
 
         return chunks
 
-    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Document]:
+    def get_documents(
+        self, collection_id: str, user: Optional[User] = None, limit: Optional[int] = 10, offset: Optional[int] = None
+    ) -> List[Document]:
         """
-        Get documents from a collection.
-
-        Args:
-            collection_id (str): The id of the collection to get documents from.
-            user (User): The user retrieving the documents.
-            limit (Optional[int]): The number of documents to return.
-            offset (Optional[int]): The offset of the documents to return.
-
-        Returns:
-            List[Document]: A list of Document objects containing the retrieved documents.
+        See SearchClient.get_documents
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
@@ -306,26 +273,24 @@ class VectorStore(QdrantClient):
         data = super().scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
         documents = list()
         for document in data:
-            chunks_count = (
-                super()
-                .count(
-                    collection_name=collection.id,
-                    count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
+            try:
+                chunks_count = (
+                    super()
+                    .count(
+                        collection_name=collection.id,
+                        count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
+                    )
+                    .count
                 )
-                .count
-            )
+            except ResponseHandlingException as e:
+                chunks_count = None
             documents.append(Document(id=document.id, name=document.payload["name"], created_at=document.payload["created_at"], chunks=chunks_count))
 
         return documents
 
     def delete_document(self, collection_id: str, document_id: str, user: User):
         """
-        Delete a document from a collection.
-
-        Args:
-            collection_id (str): The id of the collection to delete the document from.
-            document_id (str): The id of the document to delete.
-            user (User): The user deleting the document.
+        See SearchClient.delete_document
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 

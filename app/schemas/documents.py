@@ -1,4 +1,4 @@
-from typing import Literal, List
+from typing import Literal, List, Optional
 
 from pydantic import BaseModel
 
@@ -8,7 +8,7 @@ class Document(BaseModel):
     id: str
     name: str
     created_at: int
-    chunks: int
+    chunks: Optional[int] = None
 
 
 class Documents(BaseModel):

@@ -10,8 +10,12 @@ models:
       type: automatic-speech-recognition
       key: mysecretkey
 
+internet:
+  method: brave
+  api_key: changeme
+
 databases:
-  vectors:
+  search:
     type: qdrant
     args:
       url: qdrant

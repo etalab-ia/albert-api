@@ -8,6 +8,7 @@ class ChunkMetadata(BaseModel):
     document_id: str
     document_name: str
     document_part: int
+    internet_query: str | None = None
 
     class Config:
         extra = "allow"

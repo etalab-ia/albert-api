@@ -1,12 +1,12 @@
 [
     {
-        "title": "Lorem ipsum",
-        "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-        "metadata": {"source": "Lorem ipsum dolor sit amet"}
+        "title": "Qui est Albert ?",
+        "text": "Albert peut tout aussi bien être un scientifique que le modèle ia souverain de l'état français.",
+        "metadata": {"source": "Porum Lupsim"}
     },
     {
-        "title": "Lorem ipsum",
-        "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-        "metadata": {"source": "Lorem ipsum dolor sit amet"}
+        "title": "Qui est Erasmus ?",
+        "text": "Erasmus sous entend tout autant le nom d'un savant qu'une programme éducatif de la nation française.",
+        "metadata": {"source": "Lorem ipsum"}
     }
 ]

@@ -10,7 +10,7 @@ from app.schemas.security import User
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
 from app.utils.config import DEFAULT_RATE_LIMIT
-from app.utils.variables import INTERNET_COLLECTION_ID, PUBLIC_COLLECTION_TYPE
+from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID, PUBLIC_COLLECTION_TYPE
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     Create a new collection.
     """
     collection_id = str(uuid.uuid4())
-    clients.vectors.create_collection(
+    clients.search.create_collection(
         collection_id=collection_id,
         collection_name=body.name,
         collection_model=body.model,
@@ -41,13 +41,13 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
     Get list of collections.
     """
     internet_collection = Collection(
-        id=INTERNET_COLLECTION_ID,
-        name=INTERNET_COLLECTION_ID,
+        id=INTERNET_COLLECTION_DISPLAY_ID,
+        name=INTERNET_COLLECTION_DISPLAY_ID,
         model=None,
         type=PUBLIC_COLLECTION_TYPE,
         description="Use this collection to search on the internet.",
     )
-    data = clients.vectors.get_collections(user=user)
+    data = clients.search.get_collections(user=user)
     data.append(internet_collection)
 
     return Collections(data=data)
@@ -60,6 +60,6 @@ async def delete_collections(request: Request, collection: UUID, user: User = Se
     Delete a collection.
     """
     collection = str(collection)
-    clients.vectors.delete_collection(collection_id=collection, user=user)
+    clients.search.delete_collection(collection_id=collection, user=user)
 
     return Response(status_code=204)

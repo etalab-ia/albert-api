@@ -15,6 +15,7 @@ ui = [
     "streamlit-extras==0.5.0", 
 ]
 app = [
+    "elasticsearch==8.15.1",
     "langchain==0.2.15",
     "qdrant-client==1.10.1",
     "redis==5.0.7",
@@ -27,13 +28,14 @@ app = [
     "beautifulsoup4==4.12.3",
     "duckduckgo-search==6.2.13",
     "numpy==1.26.4",
+    "python-multipart==0.0.17",
     "slowapi==0.1.9",
     "six==1.16.0",
 ]
 dev = [
     "ruff==0.6.5",
     "pre-commit==3.6.2",
-    "jupyter==1.1.1", # to develop tutorials notebooks
+    "jupyter==1.1.1",
 ]
 test = [
     "pytest==8.3.3",

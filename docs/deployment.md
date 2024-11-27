@@ -67,8 +67,8 @@ databases:
       [arg_name]: [value]
       ...
     
-  vectors: [required]
-    type: qdrant
+  search: [required]
+    type: elastic|qdrant
     args: [required] 
       [arg_name]: [value]
       ...
