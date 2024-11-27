@@ -52,7 +52,10 @@ def cleanup_collections(args, session_user, session_admin):
 
     logging.info("cleanup collections")
     response = session_user.get(f"{args["base_url"]}/collections")
+    response.raise_for_status()
     collections = response.json()
+
+    # delete private collections
     collection_ids = [
         collection["id"] for collection in collections["data"] if collection["type"] == PRIVATE_COLLECTION_TYPE and collection["user"] == USER
     ]
@@ -60,8 +63,7 @@ def cleanup_collections(args, session_user, session_admin):
     for collection_id in collection_ids:
         session_user.delete(f"{args["base_url"]}/collections/{collection_id}")
 
-    response = session_admin.get(f"{args["base_url"]}/collections")
-    collections = response.json()
+    # delete public collections
     collection_ids = [
         collection["id"] for collection in collections["data"] if collection["type"] == PUBLIC_COLLECTION_TYPE and collection["user"] == ADMIN
     ]
@@ -74,4 +76,4 @@ def cleanup_collections(args, session_user, session_admin):
 def sleep_between_tests():
     # Sleep between tests to avoid rate limit errors
     yield
-    time.sleep(30)
+    time.sleep(10)

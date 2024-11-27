@@ -2,7 +2,15 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE
+from app.utils.variables import (
+    EMBEDDINGS_MODEL_TYPE,
+    LANGUAGE_MODEL_TYPE,
+    AUDIO_MODEL_TYPE,
+    INTERNET_DUCKDUCKGO_TYPE,
+    INTERNET_BRAVE_TYPE,
+    SEARCH_ELASTIC_TYPE,
+    SEARCH_QDRANT_TYPE,
+)
 
 
 class ConfigBaseModel(BaseModel):
@@ -26,7 +34,7 @@ class Model(ConfigBaseModel):
 
 
 class SearchDB(BaseModel):
-    type: Literal["elastic", "qdrant"] = "qdrant"
+    type: Literal[SEARCH_ELASTIC_TYPE, SEARCH_QDRANT_TYPE] = SEARCH_QDRANT_TYPE
     args: dict
 
 
@@ -41,8 +49,8 @@ class Databases(ConfigBaseModel):
 
 
 class Internet(ConfigBaseModel):
-    method: Literal["duckduckgo", "brave"] = "brave"
-    api_key: str
+    type: Literal[INTERNET_DUCKDUCKGO_TYPE, INTERNET_BRAVE_TYPE] = INTERNET_DUCKDUCKGO_TYPE
+    args: Optional[dict] = {}
 
 
 class Config(ConfigBaseModel):

@@ -26,8 +26,8 @@ async def search(request: Request, body: SearchRequest, user: User = Security(ch
         internet_explorer = InternetExplorer(
             model_clients=clients.models,
             search_client=clients.search,
-            method=CONFIG.internet.method,
-            api_key=CONFIG.internet.api_key,
+            method=CONFIG.internet.type,
+            api_key=CONFIG.internet.args.get("api_key"),
         )
         internet_chunks = internet_explorer.get_chunks(prompt=body.prompt)
 

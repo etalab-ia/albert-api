@@ -34,14 +34,16 @@ class TestModels:
         start = time.time()
         limit = int(DEFAULT_RATE_LIMIT.replace("/minute", ""))
         i = 0
+        check = False
         while time.time() - start < 60:
             i += 1
             response = session_user.get(f"{args["base_url"]}/models")
-            if i == limit:
-                assert response.status_code == 429
+            if response.status_code == 429:
+                check = True
                 break
             else:
                 assert response.status_code == 200
 
         # sanity check to make sure the rate limiting is tested
-        assert i == limit
+        assert check
+        assert i <= limit

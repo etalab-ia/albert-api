@@ -20,6 +20,12 @@ ROLE_LEVEL_1 = 1
 ROLE_LEVEL_2 = 2
 USER_ROLE = "user"
 
+INTERNET_DUCKDUCKGO_TYPE = "duckduckgo"
+INTERNET_BRAVE_TYPE = "brave"
+
+SEARCH_ELASTIC_TYPE = "elastic"
+SEARCH_QDRANT_TYPE = "qdrant"
+
 SUPPORTED_LANGUAGES = {
     "afrikaans": "af",
     "albanian": "sq",

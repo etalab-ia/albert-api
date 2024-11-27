@@ -49,7 +49,6 @@ def retry(tries: int = 3, delay: int = 2):
                 # @TODO: Catch network error.
                 # except (requests.exceptions.RequestException, httpx.RequestError) as e:
                 except Exception as e:
-                    print(f"Error: {e}, retrying in {delay} seconds...")
                     time.sleep(delay)
                     attempts -= 1
             # Final attempt without catching exceptions
@@ -102,10 +101,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         score_threshold: Optional[float] = None,  # TODO: implement score_threshold
         filter: Optional[Filter] = None,  # TODO: implement filter
     ) -> List[Search]:
-        print("SEARCH", collection_ids, flush=True)
         collections = self.get_collections(collection_ids=collection_ids, user=user)
-
-        print("OOOO", flush=True)
 
         if len(set(collection.model for collection in collections)) > 1:
             raise DifferentCollectionsModelsException()
@@ -140,7 +136,6 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         if user:
             collections = [collection for collection in collections if collection.user == user.id or collection.type == PUBLIC_COLLECTION_TYPE]
 
-        print(collection_ids, collections, flush=True)
         if collection_ids:
             for collection in collections:
                 if collection.id not in collection_ids:
@@ -227,6 +222,11 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         See SearchClient.delete_collection
         """
+        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+
+        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise WrongCollectionTypeException()
+
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
     def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Chunk]:
@@ -285,6 +285,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         # delete chunks
         body = {"query": {"match": {"metadata.document_id": document_id}}}
         self.delete_by_query(index=collection_id, body=body)
+        self.indices.refresh(index=collection_id)
 
     def _build_query_filter(self, prompt: str):
         fuzziness = {}

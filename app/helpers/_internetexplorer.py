@@ -15,7 +15,7 @@ from app.schemas.collections import Collection
 from app.schemas.chunks import Chunk
 from app.schemas.security import User
 from app.utils.config import logger
-from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID
+from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID, INTERNET_BRAVE_TYPE, INTERNET_DUCKDUCKGO_TYPE
 
 
 class InternetExplorer:
@@ -79,7 +79,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         self,
         model_clients: ModelClients,
         search_client: SearchClient,
-        method: Literal["duckduckgo", "brave"] = "brave",
+        method: Literal[INTERNET_DUCKDUCKGO_TYPE, INTERNET_BRAVE_TYPE] = INTERNET_BRAVE_TYPE,
         api_key: Optional[str] = None,
     ):
         self.model_clients = model_clients
@@ -98,7 +98,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         return query
 
     def _get_result_urls(self, query: str, n: int = 3) -> List[str]:
-        if self.method == "duckduckgo":
+        if self.method == INTERNET_DUCKDUCKGO_TYPE:
             try:
                 with DDGS() as ddgs:
                     results = list(ddgs.text(query, region="fr-fr", safesearch="On", max_results=n))
@@ -107,7 +107,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
                 results = []
             return [result["href"].lower() for result in results]
 
-        if self.method == "brave":
+        if self.method == INTERNET_BRAVE_TYPE:
             headers = {"Accept": "application/json", "X-Subscription-Token": self.api_key}
             params = {"q": query, "count": n, "country": "fr", "safesearch": "strict"}
 

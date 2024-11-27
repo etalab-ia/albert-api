@@ -11,11 +11,11 @@ from app.utils.config import logger
 
 
 @pytest.fixture(scope="module")
-def setup(args, session_user):
+def setup(args, session_user, session_admin):
     COLLECTION_ID = "pytest"
 
     # Get a embedding model
-    response = session_user.get(f"{args["base_url"]}/models")
+    response = session_admin.get(f"{args["base_url"]}/models")
     response = response.json()["data"]
     EMBEDDINGS_MODEL_ID = [model["id"] for model in response if model["type"] == EMBEDDINGS_MODEL_TYPE][0]
     logging.info(f"test model ID: {EMBEDDINGS_MODEL_ID}")
@@ -111,7 +111,7 @@ class TestSearch:
         data = {"prompt": "Qui est Albert ?", "collections": [COLLECTION_ID], "k": 3, "method": "lexical"}
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         result = response.json()
-        print("jjjj", result, flush=True)
+
         assert response.status_code == 200
         assert "Albert" in result["data"][0]["chunk"]["content"]
         assert result["data"][0]["method"] == "lexical"
