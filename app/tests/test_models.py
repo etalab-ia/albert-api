@@ -3,7 +3,7 @@ import time
 import pytest
 
 from app.schemas.models import Model, Models
-from app.utils.config import settings
+from app.utils.settings import settings
 
 
 @pytest.mark.usefixtures("args", "session_user", "session_admin")

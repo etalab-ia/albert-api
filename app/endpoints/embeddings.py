@@ -3,7 +3,7 @@ import httpx
 
 from app.schemas.embeddings import Embeddings, EmbeddingsRequest
 from app.schemas.security import User
-from app.utils.config import settings
+from app.utils.settings import settings
 from app.utils.exceptions import ContextLengthExceededException, WrongModelTypeException
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit

@@ -2,7 +2,7 @@ from typing import Optional, Union
 
 from fastapi import APIRouter, Request, Security
 
-from app.utils.config import settings
+from app.utils.settings import settings
 from app.schemas.models import Model, Models
 from app.schemas.security import User
 from app.utils.lifespan import clients, limiter

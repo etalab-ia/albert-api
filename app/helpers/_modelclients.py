@@ -5,7 +5,7 @@ from typing import Dict, List, Literal, Any
 from openai import OpenAI, AsyncOpenAI
 import requests
 
-from app.schemas.config import Settings
+from app.schemas.settings import Settings
 from app.schemas.embeddings import Embeddings
 from app.schemas.models import Model, Models
 from app.utils.logging import logger

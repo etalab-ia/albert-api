@@ -9,7 +9,7 @@ from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.security import User
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
-from app.utils.config import settings
+from app.utils.settings import settings
 from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID, PUBLIC_COLLECTION_TYPE
 
 router = APIRouter()

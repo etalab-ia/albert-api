@@ -3,8 +3,8 @@ from typing import List, Literal
 from fastapi import APIRouter, Form, Security, Request, UploadFile, File
 
 from app.schemas.audio import AudioTranscription, AudioTranscriptionVerbose
-from app.schemas.config import AUDIO_MODEL_TYPE
-from app.utils.config import settings
+from app.schemas.settings import AUDIO_MODEL_TYPE
+from app.utils.settings import settings
 from app.utils.security import check_api_key, check_rate_limit, User
 from app.utils.lifespan import clients, limiter
 from app.utils.exceptions import ModelNotFoundException

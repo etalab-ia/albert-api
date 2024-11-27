@@ -129,7 +129,6 @@ class Settings(BaseSettings):
                 model.url for model in config.models if model.type == EMBEDDINGS_MODEL_TYPE
             ], "Wrong default internet embeddings model url"
 
-
         values.auth = config.auth
         values.cache = config.databases.cache
         values.internet = config.internet

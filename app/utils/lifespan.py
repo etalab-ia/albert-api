@@ -5,7 +5,7 @@ from slowapi import Limiter
 from slowapi.util import get_ipaddr
 
 from app.helpers import ClientsManager
-from app.utils.config import settings
+from app.utils.settings import settings
 
 clients = ClientsManager(settings=settings)
 limiter = Limiter(

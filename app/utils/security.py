@@ -6,7 +6,7 @@ from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.schemas.security import User
-from app.utils.config import settings
+from app.utils.settings import settings
 from app.utils.exceptions import InvalidAPIKeyException, InvalidAuthenticationSchemeException
 from app.utils.lifespan import clients
 from app.utils.variables import ROLE_LEVEL_0, ROLE_LEVEL_2

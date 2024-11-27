@@ -6,7 +6,7 @@ from app.schemas.chunks import Chunks
 from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key, check_rate_limit
-from app.utils.config import settings
+from app.utils.settings import settings
 from app.utils.lifespan import limiter
 
 router = APIRouter()

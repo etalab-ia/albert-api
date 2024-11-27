@@ -7,7 +7,7 @@ services:
       elasticsearch:
         condition: service_healthy
     image: ghcr.io/etalab-ia/albert-api/app:latest
-    command: sh -c 'pip install ".[app]" && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload'
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     environment:
       - CONFIG_FILE=/home/albert/conf/config.yml
     restart: always

@@ -6,7 +6,7 @@ from slowapi.middleware import SlowAPIASGIMiddleware
 from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, search
 from app.helpers import ContentSizeLimitMiddleware
 from app.schemas.security import User
-from app.utils.config import settings
+from app.utils.settings import settings
 from app.utils.lifespan import lifespan
 from app.utils.security import check_api_key
 
