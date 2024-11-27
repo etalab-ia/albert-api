@@ -6,14 +6,14 @@ from app.schemas.chunks import Chunks
 from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key, check_rate_limit
-from app.utils.config import DEFAULT_RATE_LIMIT
+from app.utils.settings import settings
 from app.utils.lifespan import limiter
 
 router = APIRouter()
 
 
 @router.get("/chunks/{collection}/{document}")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def get_chunks(
     request: Request,
     collection: UUID,

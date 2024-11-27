@@ -3,7 +3,7 @@ import httpx
 
 from app.schemas.embeddings import Embeddings, EmbeddingsRequest
 from app.schemas.security import User
-from app.utils.config import DEFAULT_RATE_LIMIT
+from app.utils.settings import settings
 from app.utils.exceptions import ContextLengthExceededException, WrongModelTypeException
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post("/embeddings")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def embeddings(request: Request, body: EmbeddingsRequest, user: User = Security(check_api_key)) -> Embeddings:
     """
     Embedding API similar to OpenAI's API.

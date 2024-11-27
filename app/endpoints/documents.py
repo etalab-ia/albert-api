@@ -5,15 +5,15 @@ from fastapi import APIRouter, Query, Request, Response, Security
 
 from app.schemas.documents import Documents
 from app.schemas.security import User
-from app.utils.config import DEFAULT_RATE_LIMIT
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
+from app.utils.settings import settings
 
 router = APIRouter()
 
 
 @router.get("/documents/{collection}")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def get_documents(
     request: Request,
     collection: UUID,
@@ -31,7 +31,7 @@ async def get_documents(
 
 
 @router.delete("/documents/{collection}/{document}")
-@limiter.limit(DEFAULT_RATE_LIMIT, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def delete_document(request: Request, collection: UUID, document: UUID, user: User = Security(check_api_key)) -> Response:
     """
     Delete a document and relative collections.

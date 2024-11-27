@@ -29,7 +29,7 @@ class CollectionRequest(BaseModel):
     description: Optional[str] = Field(None)
 
     @field_validator("name", mode="before")
-    def strip(cls, v):
-        if isinstance(v, str):
-            v = v.strip()
-        return v
+    def strip(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+        return name

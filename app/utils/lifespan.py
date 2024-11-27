@@ -5,13 +5,13 @@ from slowapi import Limiter
 from slowapi.util import get_ipaddr
 
 from app.helpers import ClientsManager
-from app.utils.config import CONFIG, GLOBAL_RATE_LIMIT
+from app.utils.settings import settings
 
-clients = ClientsManager(config=CONFIG)
+clients = ClientsManager(settings=settings)
 limiter = Limiter(
     key_func=get_ipaddr,
-    storage_uri=f"redis://{CONFIG.databases.cache.args.get("username", "")}:{CONFIG.databases.cache.args.get("password", "")}@{CONFIG.databases.cache.args["host"]}:{CONFIG.databases.cache.args["port"]}",
-    default_limits=[GLOBAL_RATE_LIMIT],
+    storage_uri=f"redis://{settings.cache.args.get("username", "")}:{settings.cache.args.get("password", "")}@{settings.cache.args["host"]}:{settings.cache.args["port"]}",
+    default_limits=[settings.global_rate_limit],
 )
 
 
