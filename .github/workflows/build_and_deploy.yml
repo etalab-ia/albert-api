@@ -13,9 +13,14 @@ jobs:
       APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app
       UI_IMAGE_NAME: ghcr.io/${{ github.repository }}/ui
       IMAGE_TAG: ${{ github.sha }}
+    outputs:
+      commit_title: ${{ steps.get_head_commit_title.outputs.title }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - id: get_head_commit_title
+        run: echo "title=$(git log --format=%B -n 1 HEAD | head -n 1)" >> $GITHUB_OUTPUT
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -57,7 +62,7 @@ jobs:
           RESPONSE="$(curl --request POST \
             --form token=${{ secrets.GITLAB_CI_TOKEN }} \
             --form ref=main \
-            --form 'variables[pipeline_name]=${{ github.event.repository.name }} - ${{ github.event.head_commit.message }}' \
+            --form 'variables[pipeline_name]=${{ github.event.repository.name }} - ${{ needs.build-and-push.outputs.commit_title }}' \
             --form 'variables[docker_image_tag]=latest' \
             --form 'variables[application_to_deploy]=${{ github.event.repository.name }}' \
             --form 'variables[deployment_environment]=dev' \
