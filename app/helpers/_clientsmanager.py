@@ -23,7 +23,7 @@ class ClientsManager:
 
         self.internet = InternetClient(model_clients=self.models, search_client=self.search, **self.settings.internet.args)
 
-        self.auth = AuthenticationClient(cache=self.settings.cache, **self.settings.auth.args) if self.settings.auth else None
+        self.auth = AuthenticationClient(cache=self.cache, **self.settings.auth.args) if self.settings.auth else None
 
     def clear(self):
         self.search.close()

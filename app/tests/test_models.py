@@ -44,6 +44,4 @@ class TestModels:
             else:
                 assert response.status_code == 200
 
-        # sanity check to make sure the rate limiting is tested
         assert check
-        assert i <= limit

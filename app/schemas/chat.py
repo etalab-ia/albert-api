@@ -36,13 +36,13 @@ class ChatCompletionRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_model(cls, values):
-        if clients.models[values["model"]].type != LANGUAGE_MODEL_TYPE:
+        if clients.models[values.model].type != LANGUAGE_MODEL_TYPE:
             raise WrongModelTypeException()
 
-        if not clients.models[values["model"]].check_context_length(messages=values["messages"]):
+        if not clients.models[values.model].check_context_length(messages=values.messages):
             raise ContextLengthExceededException()
 
-        if "max_tokens" in values and values["max_tokens"] is not None and values["max_tokens"] > clients.models[values["model"]].max_context_length:
+        if values.max_tokens is not None and values.max_tokens > clients.models[values.model].max_context_length:
             raise MaxTokensExceededException()
         return values
 
