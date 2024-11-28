@@ -8,13 +8,13 @@ from openai.types.chat import (
 from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.chunks import Chunk
-from app.schemas.search import RagParameters
+from app.schemas.search import SearchParameters
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.lifespan import clients
 from app.utils.variables import DEFAULT_RAG_TEMPLATE, LANGUAGE_MODEL_TYPE
 
 
-class ChatRagParameters(RagParameters):
+class ChatSearchParameters(SearchParameters):
     template: str = Field(description="Template to use for the RAG query", default=DEFAULT_RAG_TEMPLATE)
 
 
@@ -41,8 +41,8 @@ class ChatCompletionRequest(BaseModel):
         extra = "allow"
 
     # albert additionnal fields
-    rag: bool = False
-    rag_parameters: ChatRagParameters = Field(default_factory=ChatRagParameters)
+    search: bool = False
+    search_parameters: ChatSearchParameters = Field(default_factory=ChatSearchParameters)
 
     @model_validator(mode="after")
     def validate_model(cls, values):
