@@ -24,8 +24,7 @@
 | DEFAULT_RATE_LIMIT | Limite de taux par défaut pour les requêtes API par utilisateur (par défaut : "10/minute") |
 | CONFIG_FILE | Chemin vers le fichier de configuration (par défaut : "config.yml") |
 | LOG_LEVEL | Niveau de journalisation (par défaut : DEBUG) |
-| DEFAULT_INTERNET_LANGUAGE_MODEL_URL | URL d'un modèle de langage pour RAG sur la recherche internet (par défaut : premier modèle de langage disponible) |
-| DEFAULT_INTERNET_EMBEDDINGS_MODEL_URL | URL d'un modèle d'embeddings pour RAG sur la recherche internet (par défaut : premier modèle d'embeddings disponible) |
+
 
 ### Clients tiers
 
@@ -33,7 +32,8 @@ Pour fonctionner, l'API Albert nécessite des clients tiers :
 
 * [Optionnel] Auth : [Grist](https://www.getgrist.com/)*
 * Cache : [Redis](https://redis.io/)
-* Vectors : [Qdrant](https://qdrant.tech/)
+* Internet : [DuckDuckGo](https://duckduckgo.com/) ou [Brave](https://search.brave.com/)
+* Vectors : [Qdrant](https://qdrant.tech/) ou [Elasticsearch](https://www.elastic.co/fr/products/elasticsearch)
 * Models :
   * [vLLM](https://github.com/vllm-project/vllm)
   * [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)
@@ -49,7 +49,15 @@ auth: [optional]
   args: [optional] 
     [arg_name]: [value]
     ...
-  
+
+internet:
+  type: duckduckgo|brave
+  args:
+    default_language_model: [required]
+    default_embeddings_model: [required]
+    [arg_name]: [value]
+    ...
+
 models:
     - url: [required]
       key: [optional]
@@ -67,7 +75,7 @@ databases:
       [arg_name]: [value]
       ...
     
-  search: [required]
+ search: [required]
     type: elastic|qdrant
     args: [required] 
       [arg_name]: [value]

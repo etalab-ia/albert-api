@@ -158,7 +158,11 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
         return results
 
-    def get_collections(self, collection_ids: List[str] = [], user: Optional[User] = None) -> List[Collection]:
+    def get_collections(
+        self,
+        user: User,
+        collection_ids: List[str] = [],
+    ) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
@@ -247,9 +251,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         super().delete_collection(collection_name=collection.id)
         super().delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
-    def get_chunks(
-        self, collection_id: str, document_id: str, user: Optional[User] = None, limit: Optional[int] = 10, offset: Optional[int] = None
-    ) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
@@ -261,9 +263,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
         return chunks
 
-    def get_documents(
-        self, collection_id: str, user: Optional[User] = None, limit: Optional[int] = 10, offset: Optional[int] = None
-    ) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Document]:
         """
         See SearchClient.get_documents
         """

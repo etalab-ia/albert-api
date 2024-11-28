@@ -21,7 +21,7 @@ class ClientsManager:
 
         self.search = SearchClient.import_constructor(self.settings.search.type)(models=self.models, **self.settings.search.args)
 
-        self.internet = InternetClient(model_clients=self.models, search_client=self.search, **self.settings.internet.args)
+        self.internet = InternetClient(model_clients=self.models, search_client=self.search, **self.settings.internet.args.model_dump())
 
         self.auth = AuthenticationClient(cache=self.cache, **self.settings.auth.args) if self.settings.auth else None
 

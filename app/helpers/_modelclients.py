@@ -179,14 +179,6 @@ class ModelClients(dict):
                 continue
             self.__setitem__(key=model.id, value=model)
 
-            if model_config.url == settings.default_internet_embeddings_model_url:
-                self.DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID = model.id
-            elif model_config.url == settings.default_internet_language_model_url:
-                self.DEFAULT_INTERNET_LANGUAGE_MODEL_ID = model.id
-
-        assert "DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID" in self.__dict__, "Default internet embeddings model is unavailable."
-        assert "DEFAULT_INTERNET_LANGUAGE_MODEL_ID" in self.__dict__, "Default internet language model is unavailable."
-
     def __setitem__(self, key: str, value) -> None:
         if any(key == k for k in self.keys()):
             raise KeyError(msg=f"Model id {key} is duplicated, not allowed.")

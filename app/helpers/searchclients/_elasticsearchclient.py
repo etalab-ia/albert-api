@@ -68,7 +68,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         self.models = models
         self.hybrid_limit_factor = hybrid_limit_factor
 
-    def upsert(self, chunks: List[Chunk], collection_id: str, user: Optional[User] = None) -> None:
+    def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
@@ -117,9 +117,10 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
                 lexical_searches = executor.submit(self._lexical_query, prompt, collection_ids, k).result()
                 semantic_searches = executor.submit(self._semantic_query, prompt, embedding, collection_ids, k).result()
                 return self.build_ranked_searches([lexical_searches, semantic_searches], k, rff_k)
+
         raise SearchMethodNotAvailableException()
 
-    def get_collections(self, collection_ids: List[str] = [], user: Optional[User] = None) -> List[Collection]:
+    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
@@ -133,8 +134,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         except NotFoundError as e:
             raise CollectionNotFoundException()
 
-        if user:
-            collections = [collection for collection in collections if collection.user == user.id or collection.type == PUBLIC_COLLECTION_TYPE]
+        collections = [collection for collection in collections if collection.user == user.id or collection.type == PUBLIC_COLLECTION_TYPE]
 
         if collection_ids:
             for collection in collections:
@@ -245,18 +245,18 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
     # @TODO: pagination between qdrant and elasticsearch diverging
     # @TODO: offset is not supported by elasticsearch
-    def get_documents(self, collection_id: str, user: Optional[User] = None, limit: int = 10000, offset: int = 0) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Document]:
         """
         See SearchClient.get_documents
         """
-        c = self.get_collections(collection_ids=[collection_id], user=user)  # check if collection exists
+        _ = self.get_collections(collection_ids=[collection_id], user=user)  # check if collection exists
 
         body = {
             "query": {"match_all": {}},
             "_source": ["metadata"],
             "aggs": {"document_ids": {"terms": {"field": "metadata.document_id", "size": limit}}},
         }
-        results = self.search(index=collection_id, body=body, size=1, from_=0)
+        results = self.search(index=collection_id, body=body, from_=0, size=limit)
 
         documents = []
 
@@ -273,7 +273,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         return documents
 
-    def delete_document(self, collection_id: str, document_id: str, user: Optional[User] = None):
+    def delete_document(self, collection_id: str, document_id: str, user: User):
         """
         See SearchClient.delete_document
         """
