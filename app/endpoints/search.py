@@ -57,11 +57,13 @@ async def search(request: Request, body: SearchRequest, user: User = Security(de
         method=body.method,
         k=body.k,
         rff_k=body.rff_k,
-        score_threshold=body.score_threshold,
         user=user,
     )
 
     if internet_chunks:
         clients.search.delete_collection(collection_id=internet_collection_id, user=user)
+
+    if body.score_threshold:
+        searches = [search for search in searches if search.score >= body.score_threshold]
 
     return Searches(data=searches)

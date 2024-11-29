@@ -22,6 +22,11 @@ class SearchMethodNotAvailableException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
+class WrongSearchMethodException(HTTPException):
+    def __init__(self, detail: str = "Wrong search method."):
+        super().__init__(status_code=400, detail=detail)
+
+
 # 403
 class InvalidAuthenticationSchemeException(HTTPException):
     def __init__(self, detail: str = "Invalid authentication scheme.") -> None:
