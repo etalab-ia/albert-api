@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.utils.lifespan import clients
 from app.utils.variables import LANGUAGE_MODEL_TYPE
-from app.utils.exceptions import WrongModelTypeException, ContextLengthExceededException, MaxTokensExceededException
+from app.utils.exceptions import WrongModelTypeException
 
 
 class CompletionRequest(BaseModel):
@@ -31,12 +31,6 @@ class CompletionRequest(BaseModel):
     def validate_model(cls, values):
         if clients.models[values.model].type != LANGUAGE_MODEL_TYPE:
             raise WrongModelTypeException()
-
-        if not clients.models[values.model].check_context_length(messages=values.messages):
-            raise ContextLengthExceededException()
-
-        if values.max_tokens is not None and values.max_tokens > clients.models[values.model].max_context_length:
-            raise MaxTokensExceededException()
 
 
 class Completions(Completion):

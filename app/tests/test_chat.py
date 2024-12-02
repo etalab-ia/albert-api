@@ -84,12 +84,12 @@ class TestChat:
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": prompt}],
-            "stream": True,
+            "stream": False,
             "n": 1,
             "max_tokens": MAX_CONTEXT_LENGTH + 100,
         }
         response = session_user.post(f"{args['base_url']}/chat/completions", json=params)
-        assert response.status_code == 422, f"error: retrieve chat completions ({response.status_code})"
+        assert response.status_code == 400, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_context_too_large(self, args, session_user, setup):
         MODEL_ID, MAX_CONTEXT_LENGTH = setup
@@ -98,9 +98,9 @@ class TestChat:
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": prompt}],
-            "stream": True,
+            "stream": False,
             "n": 1,
             "max_tokens": 10,
         }
         response = session_user.post(f"{args['base_url']}/chat/completions", json=params)
-        assert response.status_code == 413, f"error: retrieve chat completions ({response.status_code})"
+        assert response.status_code == 400, f"error: retrieve chat completions ({response.status_code})"

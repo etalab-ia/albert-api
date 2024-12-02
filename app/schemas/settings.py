@@ -18,7 +18,7 @@ from app.utils.variables import (
 
 class ConfigBaseModel(BaseModel):
     class Config:
-        extra = "forbid"
+        extra = "allow"
 
 
 class Key(ConfigBaseModel):

@@ -1,15 +1,16 @@
 from concurrent.futures import ThreadPoolExecutor
 import functools
 import time
-from typing import List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
 from elasticsearch import Elasticsearch, NotFoundError, helpers
+from openai import APITimeoutError
 
 from app.helpers.searchclients._searchclient import SearchClient
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
-from app.schemas.search import Filter, Search
+from app.schemas.search import Search
 from app.schemas.security import Role, User
 from app.utils.exceptions import (
     CollectionNotFoundException,
@@ -70,8 +71,10 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
         rff_k: Optional[int] = 20,
-        filter: Optional[Filter] = None,  # TODO: implement filter
     ) -> List[Search]:
+        """
+        See SearchClient.query
+        """
         collections = self.get_collections(collection_ids=collection_ids, user=user)
 
         if len(set(collection.model for collection in collections)) > 1:
@@ -205,12 +208,14 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
-    def get_chunks(self, collection_id: str, document_id: str, limit: int = 10000, offset: int = 0) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
+        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+
         body = {"query": {"match": {"metadata.document_id": document_id}}, "_source": ["body", "metadata"]}
-        results = self.search(index=collection_id, body=body, from_=offset, size=limit)
+        results = self.search(index=collection.id, body=body, from_=offset, size=limit)
 
         chunks = []
         for hit in results["hits"]["hits"]:
@@ -310,14 +315,13 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
 
         def decorator_retry(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
+            @functools.wraps(wrapped=func)
+            def wrapper(*args, **kwargs) -> Any:
                 attempts = tries
                 while attempts > 1:
                     try:
                         return func(*args, **kwargs)
-                    # @TODO: Catch network error. except (requests.exceptions.RequestException, httpx.RequestError) as e:
-                    except Exception as e:
+                    except APITimeoutError:
                         time.sleep(delay)
                         attempts -= 1
 

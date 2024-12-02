@@ -19,6 +19,9 @@ async def search(request: Request, body: SearchRequest, user: User = Security(de
     Endpoint to search on the internet or with our engine client
     """
 
+    body = await request.json()
+    body = SearchRequest(**body)
+
     # Internet search
     need_internet_search = not body.collections or INTERNET_COLLECTION_DISPLAY_ID in body.collections
     internet_chunks = []

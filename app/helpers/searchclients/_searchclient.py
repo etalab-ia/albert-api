@@ -6,7 +6,7 @@ import importlib
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
-from app.schemas.search import Filter, Search
+from app.schemas.search import Search
 from app.schemas.security import User
 from app.utils.variables import HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
 
@@ -45,7 +45,6 @@ class SearchClient(ABC):
         k: Optional[int] = 4,
         rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
-        query_filter: Optional[Filter] = None,
     ) -> List[Search]:
         """
         Search for chunks in a collection.
@@ -57,7 +56,6 @@ class SearchClient(ABC):
             method (Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, HYBRID_SEARCH_TYPE]): The method to use for the search, default: SEMENTIC_SEARCH_TYPE.
             k (Optional[int]): The number of chunks to return.
             score_threshold (Optional[float]): The score threshold for the chunks to return.
-            filter (Optional[Filter]): The filter to apply to the chunks to return.
 
         Returns:
             List[Search]: A list of search objects containing the retrieved chunks.

@@ -25,7 +25,7 @@ from app.schemas.security import User
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
-    SearchMethodNotAvailableException,
+    NotImplementedException,
     WrongModelTypeException,
     InsufficientRightsException,
 )
@@ -118,14 +118,13 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         k: Optional[int] = 4,
         rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
-        query_filter: Optional[Filter] = None,
     ) -> List[Search]:
         """
         See SearchClient.query
         """
 
         if method != SEMANTIC_SEARCH_TYPE:
-            raise SearchMethodNotAvailableException()
+            raise NotImplementedException("Lexical and hybrid search are not available for Qdrant database.")
 
         collections = self.get_collections(collection_ids=collection_ids, user=user)
         if len(set(collection.model for collection in collections)) > 1:
@@ -143,7 +142,6 @@ class QdrantSearchClient(QdrantClient, SearchClient):
                 limit=k,
                 score_threshold=score_threshold,
                 with_payload=True,
-                query_filter=query_filter,
             )
             for result in results:
                 result.payload["metadata"]["collection"] = collection.id
