@@ -3,18 +3,12 @@ from typing import List, Literal, Optional
 from fastapi import UploadFile
 
 from app.helpers.chunkers import *
-from app.helpers.parsers import HTMLParser, JSONParser, PDFParser
+from app.helpers.parsers import HTMLParser, JSONParser, PDFParser, MarkdownParser
 from app.schemas.chunks import Chunk
 from app.schemas.data import ParserOutput
 from app.schemas.security import User
 from app.utils.exceptions import InvalidJSONFormatException, NoChunksToUpsertException, ParsingFileFailedException, UnsupportedFileTypeException
-from app.utils.variables import (
-    CHUNKERS,
-    DEFAULT_CHUNKER,
-    HTML_TYPE,
-    JSON_TYPE,
-    PDF_TYPE,
-)
+from app.utils.variables import CHUNKERS, DEFAULT_CHUNKER, HTML_TYPE, JSON_TYPE, PDF_TYPE, MARKDOWN_TYPE
 
 from .searchclients._searchclient import SearchClient
 
@@ -24,6 +18,7 @@ class FileUploader:
         "json": JSON_TYPE,
         "html": HTML_TYPE,
         "pdf": PDF_TYPE,
+        "md": MARKDOWN_TYPE,
     }
 
     def __init__(self, collection_id: str, search_client: SearchClient, user: User):
@@ -48,6 +43,9 @@ class FileUploader:
 
         elif file_type == HTML_TYPE:
             parser = HTMLParser(collection_id=self.collection_id)
+
+        elif file_type == MARKDOWN_TYPE:
+            parser = MarkdownParser(collection_id=self.collection_id)
 
         try:
             output = parser.parse(file=file)
