@@ -21,6 +21,9 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
         For JSON, file structure like a list of documents: [{"text": "hello world", "title": "my document", "metadata": {"autor": "me"}}, ...]} or [{"text": "hello world", "title": "my document"}, ...]}
         Each document must have a "text" and "title" keys and "metadata" key (optional) with dict type value.
     - html: Hypertext Markup Language file.
+    - markdown: Markdown Language file.
+
+    Max file size is 20MB.
     """
 
     file_size = len(file.file.read())

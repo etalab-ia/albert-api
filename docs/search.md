@@ -42,7 +42,7 @@ Ainsi, la conception de l'API rend impossible de faire une recherche de similari
 
 ## Importer un fichier
 
-Une fois la collection créée, vous pouvez importer des fichiers dans l'API avec l'endpoint `POST /v1/files`. Plusieurs types de fichiers sont acceptés par l'API dont JSON, PDF ou encore HTML. Le endpoint va réaliser les étapes suivantes : 
+Une fois la collection créée, vous pouvez importer des fichiers dans l'API avec l'endpoint `POST /v1/files`. Plusieurs types de fichiers sont acceptés par l'API dont JSON, PDF, Markdown ou encore HTML. Le endpoint va réaliser les étapes suivantes :
 
 1. Détecter le type du fichier s'il n'est pas spécifié par l'utilisateur.
 2. Créer un ID unique (*document_id*).
