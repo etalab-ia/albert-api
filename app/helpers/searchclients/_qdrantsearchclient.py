@@ -214,6 +214,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
             raise WrongModelTypeException()
 
+        print("kkk", user.role, ROLE_LEVEL_2, collection_type, PUBLIC_COLLECTION_TYPE, flush=True)
         if user.role != ROLE_LEVEL_2 and collection_type == PUBLIC_COLLECTION_TYPE:
             raise WrongCollectionTypeException()
 

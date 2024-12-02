@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request, Security
 import httpx
+from asyncio import create_task
 
 from app.schemas.embeddings import Embeddings, EmbeddingsRequest
 from app.schemas.security import User
@@ -19,6 +20,14 @@ async def embeddings(request: Request, body: EmbeddingsRequest, user: User = Sec
     Embedding API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/embeddings/create for the API specification.
     """
+    if clients.tracker:
+        create_task(
+            clients.tracker.track_event(
+                user_id=user.id,
+                event_type="embeddings",
+                event_properties=body.model_dump(),
+            )
+        )
 
     client = clients.models[body.model]
     if client.type != EMBEDDINGS_MODEL_TYPE:

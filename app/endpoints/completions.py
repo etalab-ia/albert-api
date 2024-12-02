@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Security
 import httpx
-
+from asyncio import create_task
 from app.schemas.completions import CompletionRequest, Completions
 from app.schemas.security import User
 from app.utils.settings import settings
@@ -17,6 +17,20 @@ async def completions(request: Request, body: CompletionRequest, user: User = Se
     Completion API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/completions/create for the API specification.
     """
+
+    if clients.tracker:
+        create_task(
+            clients.tracker.track_event(
+                user_id=user.id,
+                event_type="chat_completion",
+                event_properties={
+                    "model": body.model,
+                    "stream": body.stream,
+                    "messages_count": len(body.messages),
+                },
+            )
+        )
+
     client = clients.models[body.model]
     url = f"{client.base_url}completions"
     headers = {"Authorization": f"Bearer {client.api_key}"}

@@ -56,11 +56,17 @@ class Internet(ConfigBaseModel):
     args: Optional[dict] = {}
 
 
+class Tracker(ConfigBaseModel):
+    type: Literal["amplitude"] = "amplitude"
+    args: dict
+
+
 class Config(ConfigBaseModel):
     auth: Optional[Auth] = None
     models: List[Model] = Field(..., min_length=1)
     databases: Databases
     internet: Optional[Internet] = None
+    tracker: Optional[Tracker] = None
 
     @model_validator(mode="after")
     def validate_models(cls, values):
@@ -134,5 +140,6 @@ class Settings(BaseSettings):
         values.internet = config.internet
         values.models = config.models
         values.search = config.databases.search
+        values.tracker = config.tracker
 
         return values

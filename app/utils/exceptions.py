@@ -44,6 +44,11 @@ class ModelNotFoundException(HTTPException):
         super().__init__(status_code=404, detail=detail)
 
 
+class AnalyticsException(HTTPException):
+    def __init__(self, detail: str = "Analytics error."):
+        super().__init__(status_code=404, detail=detail)
+
+
 # 413
 class ContextLengthExceededException(HTTPException):
     def __init__(self, detail: str = "Context length exceeded."):

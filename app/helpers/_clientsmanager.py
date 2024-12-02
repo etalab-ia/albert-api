@@ -8,6 +8,7 @@ from ._modelclients import ModelClients
 from ._authenticationclient import AuthenticationClient
 from ._internetclient import InternetClient
 from .searchclients._searchclient import SearchClient
+from .trackerclients import TrackerClient
 
 
 class ClientsManager:
@@ -25,5 +26,10 @@ class ClientsManager:
 
         self.auth = AuthenticationClient(cache=self.cache, **self.settings.auth.args) if self.settings.auth else None
 
+        self.tracker = TrackerClient.import_constructor(self.settings.tracker.type)(**self.settings.tracker.args) if self.settings.tracker else None
+
     def clear(self):
         self.search.close()
+
+        if self.tracker:
+            self.tracker.close()

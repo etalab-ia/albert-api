@@ -14,6 +14,12 @@ internet:
   method: brave
   api_key: changeme
 
+tracker:
+  type: amplitude
+  args:
+    url: https://api.eu.amplitude.com/2/httpapi
+    api_key: changeme
+
 databases:
   search:
     type: qdrant

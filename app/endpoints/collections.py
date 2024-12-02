@@ -1,6 +1,7 @@
 from typing import Union
 import uuid
 from uuid import UUID
+from asyncio import create_task
 
 from fastapi import APIRouter, Request, Response, Security
 from fastapi.responses import JSONResponse
@@ -21,7 +22,15 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     """
     Create a new collection.
     """
+    if clients.tracker:
+        await clients.tracker.track_event(
+            user_id=user.id,
+            event_type="create_collection",
+            event_properties=body.model_dump(),
+        )
+
     collection_id = str(uuid.uuid4())
+
     clients.search.create_collection(
         collection_id=collection_id,
         collection_name=body.name,
@@ -40,6 +49,14 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
     """
     Get list of collections.
     """
+    if clients.tracker:
+        create_task(
+            clients.tracker.track_event(
+                user_id=user.id,
+                event_type="get_collections",
+            )
+        )
+
     internet_collection = Collection(
         id=INTERNET_COLLECTION_DISPLAY_ID,
         name=INTERNET_COLLECTION_DISPLAY_ID,
@@ -59,6 +76,13 @@ async def delete_collections(request: Request, collection: UUID, user: User = Se
     """
     Delete a collection.
     """
+    if clients.tracker:
+        await clients.tracker.track_event(
+            user_id=user.id,
+            event_type="delete_collection",
+            event_properties={"collection": collection},
+        )
+
     collection = str(collection)
     clients.search.delete_collection(collection_id=collection, user=user)
 

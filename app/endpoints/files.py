@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Body, Response, Security, UploadFile, File
+from asyncio import create_task
 
 from app.helpers._fileuploader import FileUploader
 from app.schemas.files import ChunkerArgs, FilesRequest
@@ -23,6 +24,14 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
 
     Max file size is 10MB.
     """
+    if clients.tracker:
+        create_task(
+            clients.tracker.track_event(
+                user_id=user.id,
+                event_type="upload_file",
+                event_properties=request.model_dump(),
+            )
+        )
 
     if request.chunker:
         chunker_args = request.chunker.args.model_dump() if request.chunker.args else ChunkerArgs().model_dump()

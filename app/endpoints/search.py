@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request, Security
+from asyncio import create_task
 
 from app.schemas.search import Searches, SearchRequest
 from app.schemas.security import User
@@ -17,6 +18,14 @@ async def search(request: Request, body: SearchRequest, user: User = Security(ch
     """
     Endpoint to search on the internet or with our engine client
     """
+    if clients.tracker:
+        create_task(
+            clients.tracker.track_event(
+                user_id=user.id,
+                event_type="search",
+                event_properties=body.model_dump(),
+            )
+        )
 
     # TODO: to be handled by a service top to InternetExplorer
     need_internet_search = not body.collections or INTERNET_COLLECTION_DISPLAY_ID in body.collections

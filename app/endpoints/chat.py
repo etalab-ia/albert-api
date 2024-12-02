@@ -1,4 +1,5 @@
 from typing import Union
+from asyncio import create_task
 
 from fastapi import APIRouter, Request, Security
 from fastapi.responses import StreamingResponse
@@ -6,8 +7,8 @@ import httpx
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.security import User
-from app.utils.settings import settings
 from app.utils.lifespan import clients, limiter
+from app.utils.settings import settings
 from app.utils.security import check_api_key, check_rate_limit
 
 router = APIRouter()
@@ -21,6 +22,10 @@ async def chat_completions(
     """Completion API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/chat/create for the API specification.
     """
+
+    if clients.tracker:
+        create_task(clients.tracker.track_event(user_id=user.id, event_type="chat_completion", event_properties={**body.model_dump()}))
+
     client = clients.models[body.model]
     url = f"{client.base_url}chat/completions"
     headers = {"Authorization": f"Bearer {client.api_key}"}

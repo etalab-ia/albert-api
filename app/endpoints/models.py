@@ -1,4 +1,5 @@
 from typing import Optional, Union
+from asyncio import create_task
 
 from fastapi import APIRouter, Request, Security
 
@@ -19,6 +20,14 @@ async def models(request: Request, model: Optional[str] = None, user: User = Sec
     Model API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/models/list for the API specification.
     """
+    if clients.tracker:
+        create_task(
+            clients.tracker.track_event(
+                user_id=user.id,
+                event_type="models",
+            )
+        )
+
     if model is not None:
         client = clients.models[model]
         response = [row for row in client.models.list().data if row.id == model][0]

@@ -1,4 +1,5 @@
 from typing import List, Literal
+from asyncio import create_task
 
 from fastapi import APIRouter, Form, Security, Request, UploadFile, File
 
@@ -31,6 +32,21 @@ async def audio_transcriptions(
     """
     API de transcription similaire à l'API d'OpenAI.
     """
+    if clients.tracker:
+        create_task(
+            clients.tracker.track_event(
+                user_id=user.id,
+                event_type="audio_transcriptions",
+                event_properties={
+                    "model": model,
+                    "language": language,
+                    "prompt": prompt,
+                    "response_format": response_format,
+                    "temperature": temperature,
+                    "timestamp_granularities": timestamp_granularities,
+                },
+            )
+        )
 
     client = clients.models[model]
 

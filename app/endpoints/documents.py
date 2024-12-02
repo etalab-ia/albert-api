@@ -1,5 +1,6 @@
 from typing import Optional, Union
 from uuid import UUID
+from asyncio import create_task
 
 from fastapi import APIRouter, Query, Request, Response, Security
 
@@ -24,6 +25,20 @@ async def get_documents(
     """
     Get all documents ID from a collection.
     """
+
+    if clients.tracker:
+        create_task(
+            clients.tracker.track_event(
+                user_id=user.id,
+                event_type="get_documents",
+                event_properties={
+                    "collection": collection,
+                    "limit": limit,
+                    "offset": offset,
+                },
+            )
+        )
+
     collection = str(collection)
     data = clients.search.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
 
@@ -36,6 +51,13 @@ async def delete_document(request: Request, collection: UUID, document: UUID, us
     """
     Delete a document and relative collections.
     """
+    if clients.tracker:
+        await clients.tracker.track_event(
+            user_id=user.id,
+            event_type="delete_document",
+            event_properties={"collection": collection, "document": document},
+        )
+
     collection, document = str(collection), str(document)
     clients.search.delete_document(collection_id=collection, document_id=document, user=user)
 

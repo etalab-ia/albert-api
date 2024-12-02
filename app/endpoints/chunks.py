@@ -1,5 +1,6 @@
 from uuid import UUID
 from typing import Union
+from asyncio import create_task
 from fastapi import APIRouter, Request, Security, Query
 
 from app.schemas.chunks import Chunks
@@ -25,6 +26,21 @@ async def get_chunks(
     """
     Get a single chunk.
     """
+
+    if clients.tracker:
+        create_task(
+            clients.tracker.track_event(
+                user_id=user.id,
+                event_type="get_chunks",
+                event_properties={
+                    "collection": collection,
+                    "document": document,
+                    "limit": limit,
+                    "offset": offset,
+                },
+            )
+        )
+
     collection, document = str(collection), str(document)
     data = clients.search.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user)
 
