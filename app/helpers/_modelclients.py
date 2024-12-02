@@ -2,7 +2,7 @@ from functools import partial
 import time
 from typing import Dict, List, Literal, Any
 
-from openai import OpenAI, AsyncOpenAI
+from openai import AsyncOpenAI
 import requests
 
 from app.schemas.settings import Settings
@@ -107,43 +107,13 @@ def create_embeddings(self, *args, **kwargs):
         raise e
 
 
-class ModelClient(OpenAI):
+class ModelClient(AsyncOpenAI):
     DEFAULT_TIMEOUT = 120
 
-    def __init__(self, type=Literal[EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE], *args, **kwargs) -> None:
+    def __init__(self, type=Literal[EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE], *args, **kwargs) -> None:
         """
-        ModelClient class extends OpenAI class to support custom methods.
+        ModelClient class extends AsyncOpenAI class to support custom methods.
         """
-        super().__init__(timeout=self.DEFAULT_TIMEOUT, *args, **kwargs)
-        self.type = type
-
-        # set attributes for unavailable models
-        self.id = ""
-        self.owned_by = ""
-        self.created = round(number=time.time())
-        self.max_context_length = None
-
-        # set real attributes if model is available
-        self.models.list = partial(get_models_list, self)
-        response = self.models.list()
-
-        if self.type == EMBEDDINGS_MODEL_TYPE:
-            response = self.embeddings.create(model=self.id, input="hello world")
-            self.vector_size = len(response.data[0].embedding)
-            self.embeddings.create = partial(create_embeddings, self)
-
-        self.check_context_length = partial(check_context_length, self)
-
-
-# TODO merge with ModelClient for all models and adapt endpoint to not use anymore the httpx async client
-class AsyncModelClient(AsyncOpenAI):
-    DEFAULT_TIMEOUT = 120
-
-    def __init__(self, type=Literal[AUDIO_MODEL_TYPE], *args, **kwargs) -> None:
-        """
-        AsyncModelClient class extends AsyncOpenAI class to support custom methods.
-        """
-
         super().__init__(timeout=self.DEFAULT_TIMEOUT, *args, **kwargs)
         self.type = type
 
@@ -172,8 +142,7 @@ class ModelClients(dict):
 
     def __init__(self, settings: Settings) -> None:
         for model_config in settings.models:
-            model_client_class = ModelClient if model_config.type != AUDIO_MODEL_TYPE else AsyncModelClient
-            model = model_client_class(base_url=model_config.url, api_key=model_config.key, type=model_config.type)
+            model = ModelClient(base_url=model_config.url, api_key=model_config.key, type=model_config.type)
             if model.status == "unavailable":
                 logger.error(msg=f"unavailable model API on {model_config.url}, skipping.")
                 continue

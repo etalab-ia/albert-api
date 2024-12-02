@@ -54,7 +54,7 @@ class SearchClient(ABC):
             prompt (str): The prompt to search for.
             user (User): The user searching for the chunks.
             collection_ids (List[str]): The ids of the collections to search in.
-            method (Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE]): The method to use for the search.
+            method (Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, HYBRID_SEARCH_TYPE]): The method to use for the search, default: SEMENTIC_SEARCH_TYPE.
             k (Optional[int]): The number of chunks to return.
             score_threshold (Optional[float]): The score threshold for the chunks to return.
             filter (Optional[Filter]): The filter to apply to the chunks to return.
@@ -105,15 +105,12 @@ class SearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_chunks(
-        self, collection_id: str, document_id: str, user: User, limit: Optional[int] = None, offset: Union[int, UUID] = None
-    ) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, limit: Optional[int] = None, offset: Union[int, UUID] = None) -> List[Chunk]:
         """
         Get chunks from a collection and a document.
         Args:
             collection_id (str): The id of the collection to get chunks from.
             document_id (str): The id of the document to get chunks from.
-            user (User): The user retrieving the chunks.
             limit (Optional[int]): The number of chunks to return.
             offset (Optional[int, UUID]): The offset of the chunks to return (UUID is for qdrant and int for elasticsearch)
         Returns:

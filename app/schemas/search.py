@@ -2,7 +2,7 @@ from typing import List, Literal, Optional, Union
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.exceptions import WrongSearchMethodException
+from app.utils.exceptions import WrongSearchMethodException
 from app.schemas.chunks import Chunk
 from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID, HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
 
@@ -38,7 +38,6 @@ class SearchRequest(BaseModel):
 class Search(BaseModel):
     score: float
     chunk: Chunk
-    method: Optional[Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, f"{LEXICAL_SEARCH_TYPE}/{SEMANTIC_SEARCH_TYPE}"]] = None
 
 
 class Searches(BaseModel):

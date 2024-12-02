@@ -205,7 +205,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, limit: int = 10000, offset: int = 0) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
@@ -269,7 +269,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
             fuzziness = {"fuzziness": "AUTO"}
         return {"multi_match": {"query": prompt, **fuzziness}}
 
-    def _build_search(self, hit: dict, method: Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE]) -> Search:
+    def _build_search(self, hit: dict) -> Search:
         return Search(
             score=hit["_score"],
             chunk=Chunk(
@@ -277,18 +277,17 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
                 content=hit["_source"]["body"],
                 metadata=hit["_source"]["metadata"],
             ),
-            method=method,
         )
 
     def _lexical_query(self, prompt: str, collection_ids: List[str], size: int) -> List[Search]:
         body = {
-            "query": self._build_query_filter(prompt),
+            "query": self._build_query_filter(prompt=prompt),
             "size": size,
             "_source": {"excludes": ["embedding"]},
         }
         results = self.search(index=",".join(collection_ids), body=body)
         hits = [hit for hit in results["hits"]["hits"] if hit]
-        return [self._build_search(hit, method=LEXICAL_SEARCH_TYPE) for hit in hits]
+        return [self._build_search(hit=hit) for hit in hits]
 
     def _semantic_query(self, prompt: str, embedding: list[float], collection_ids: List[str], size: int) -> List[Search]:
         body = {
@@ -302,7 +301,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         }
         results = self.search(index=",".join(collection_ids), body=body)
         hits = [hit for hit in results["hits"]["hits"] if hit]
-        return [self._build_search(hit, method=SEMANTIC_SEARCH_TYPE) for hit in hits]
+        return [self._build_search(hit) for hit in hits]
 
     def _retry(tries: int = 3, delay: int = 2):
         """
@@ -329,11 +328,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         return decorator_retry
 
     @_retry(tries=3, delay=2)
-    def _create_embeddings(
-        self,
-        input: List[str],
-        model: str,
-    ) -> list[float] | list[list[float]] | dict:
+    def _create_embeddings(self, input: List[str], model: str) -> list[float] | list[list[float]] | dict:
         """
         Simple interface to create an embedding vector from a text input.
         """
