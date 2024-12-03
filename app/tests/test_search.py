@@ -5,9 +5,9 @@ import uuid
 import pytest
 
 from app.schemas.search import Search, Searches
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_DISPLAY_ID
-
 from app.utils.logging import logger
+from app.utils.settings import settings
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_DISPLAY_ID, SEARCH_ELASTIC_TYPE
 
 
 @pytest.fixture(scope="module")
@@ -30,11 +30,11 @@ def setup(args, session_user, session_admin):
     data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % COLLECTION_ID}
     response = session_user.post(f"{args["base_url"]}/files", data=data, files=files)
 
-    # Get document ID
+    # Get document IDS
     response = session_user.get(f"{args["base_url"]}/documents/{COLLECTION_ID}")
-    DOCUMENT_ID = response.json()["data"][0]["id"]
+    DOCUMENT_IDS = [response.json()["data"][0]["id"], response.json()["data"][1]["id"]]
 
-    yield DOCUMENT_ID, COLLECTION_ID
+    yield DOCUMENT_IDS, COLLECTION_ID
 
 
 @pytest.mark.usefixtures("args", "session_user", "cleanup_collections", "setup")
@@ -42,7 +42,7 @@ class TestSearch:
     def test_search(self, args, session_user, setup):
         """Test the POST /search response status code."""
 
-        DOCUMENT_ID, COLLECTION_ID = setup
+        DOCUMENT_IDS, COLLECTION_ID = setup
         data = {"prompt": "Qui est Albert ?", "collections": [COLLECTION_ID], "k": 3}
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         assert response.status_code == 200, f"error: search request ({response.status_code} - {response.text})"
@@ -52,7 +52,7 @@ class TestSearch:
         assert all(isinstance(search, Search) for search in searches.data)
 
         search = searches.data[0]
-        assert search.chunk.metadata.document_id == DOCUMENT_ID
+        assert search.chunk.metadata.document_id in DOCUMENT_IDS
 
     def test_search_with_score_threshold(self, args, session_user, setup):
         """Test search with a score threshold."""
@@ -112,9 +112,12 @@ class TestSearch:
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         result = response.json()
 
-        assert response.status_code == 200
-        assert "Albert" in result["data"][0]["chunk"]["content"]
-        assert result["data"][0]["method"] == "lexical"
+        if settings.search.type == SEARCH_ELASTIC_TYPE:
+            assert response.status_code == 200
+            assert "Albert" in result["data"][0]["chunk"]["content"]
+            assert result["data"][0]["method"] == "lexical"
+        else:
+            assert response.status_code == 400
 
     def test_semantic_search(self, args, session_user, setup):
         """Test semantic search."""
@@ -136,6 +139,9 @@ class TestSearch:
         data = {"prompt": "Erasmus", "collections": [COLLECTION_ID], "k": 3, "method": "hybrid"}
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         result = response.json()
-        assert response.status_code == 200
-        assert "Erasmus" in result["data"][0]["chunk"]["content"]
-        assert result["data"][0]["method"] == "lexical/semantic"
+        if settings.search.type == SEARCH_ELASTIC_TYPE:
+            assert response.status_code == 200
+            assert "Erasmus" in result["data"][0]["chunk"]["content"]
+            assert result["data"][0]["method"] == "lexical/semantic"
+        else:
+            assert response.status_code == 400

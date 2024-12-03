@@ -30,7 +30,7 @@ class SearchRequest(BaseModel):
 class Search(BaseModel):
     score: float
     chunk: Chunk
-    method: Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, f"{LEXICAL_SEARCH_TYPE}/{SEMANTIC_SEARCH_TYPE}"] | None
+    method: Optional[Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, f"{LEXICAL_SEARCH_TYPE}/{SEMANTIC_SEARCH_TYPE}"]] = None
 
 
 class Searches(BaseModel):
