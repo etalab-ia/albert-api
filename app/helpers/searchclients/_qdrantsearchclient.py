@@ -152,7 +152,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         # sort by similarity score and get top k
         chunks = sorted(chunks, key=lambda x: x.score, reverse=True)[:k]
         results = [
-            Search(score=chunk.score, chunk=Chunk(id=chunk.id, content=chunk.payload["content"], metadata=chunk.payload["metadata"]))
+            Search(method=method, score=chunk.score, chunk=Chunk(id=chunk.id, content=chunk.payload["content"], metadata=chunk.payload["metadata"]))
             for chunk in chunks
         ]
 
