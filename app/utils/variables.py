@@ -5,6 +5,7 @@ PRIVATE_COLLECTION_TYPE = "private"
 
 EMBEDDINGS_MODEL_TYPE = "text-embeddings-inference"
 LANGUAGE_MODEL_TYPE = "text-generation"
+RERANK_MODEL_TYPE = "text-classification"
 
 CHUNKERS = ["LangchainRecursiveCharacterTextSplitter", "NoChunker"]
 DEFAULT_CHUNKER = "LangchainRecursiveCharacterTextSplitter"

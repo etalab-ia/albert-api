@@ -5,7 +5,7 @@ description = "Albert API projects"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 dependencies = [
-    "openai==1.43.0",
+    "openai==1.56.0",
     "requests==2.32.3",
 ]
 

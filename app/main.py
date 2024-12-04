@@ -3,7 +3,7 @@ from fastapi import FastAPI, Response, Security
 
 from slowapi.middleware import SlowAPIASGIMiddleware
 
-from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, search
+from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, search, rerank
 from app.helpers import ContentSizeLimitMiddleware
 from app.schemas.security import User
 from app.utils.settings import settings
@@ -43,6 +43,7 @@ app.include_router(router=chat.router, tags=["Core"], prefix="/v1")
 app.include_router(router=completions.router, tags=["Core"], prefix="/v1")
 app.include_router(router=embeddings.router, tags=["Core"], prefix="/v1")
 app.include_router(router=audio.router, tags=["Core"], prefix="/v1")
+app.include_router(router=rerank.router, tags=["Core"], prefix="/v1")
 
 # RAG
 app.include_router(router=search.router, tags=["Retrieval Augmented Generation"], prefix="/v1")
