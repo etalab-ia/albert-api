@@ -6,7 +6,9 @@ from app.schemas.settings import Settings
 
 from ._modelclients import ModelClients
 from ._authenticationclient import AuthenticationClient
+from ._rerankclients import RerankClient
 from ._internetclient import InternetClient
+
 from .searchclients._searchclient import SearchClient
 
 
@@ -22,6 +24,8 @@ class ClientsManager:
         self.search = SearchClient.import_constructor(self.settings.search.type)(models=self.models, **self.settings.search.args)
 
         self.internet = InternetClient(model_clients=self.models, search_client=self.search, **self.settings.internet.args)
+
+        self.rerank = RerankClient(model_clients=self.models)  # , **self.settings.rerank.args)
 
         self.auth = AuthenticationClient(cache=self.cache, **self.settings.auth.args) if self.settings.auth else None
 

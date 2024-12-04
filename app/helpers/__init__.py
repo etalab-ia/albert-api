@@ -5,5 +5,15 @@ from ._fileuploader import FileUploader
 from ._internetclient import InternetClient
 from ._modelclients import ModelClients
 from .searchclients import SearchClient
+from ._rerankclients import RerankClient
 
-__all__ = ["AuthenticationClient", "ClientsManager", "ContentSizeLimitMiddleware", "FileUploader", "InternetClient", "ModelClients", "SearchClient"]
+__all__ = [
+    "AuthenticationClient",
+    "ClientsManager",
+    "ContentSizeLimitMiddleware",
+    "FileUploader",
+    "InternetClient",
+    "ModelClients",
+    "SearchClient",
+    "RerankClient",
+]
