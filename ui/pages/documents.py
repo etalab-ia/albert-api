@@ -97,7 +97,7 @@ with col1:
             key="upload_file_selectbox",
         )
         collection_id = collection.split(" - ")[0] if collection else None
-        file_to_upload = st.file_uploader("File", type=["pdf", "html", "json"])
+        file_to_upload = st.file_uploader("File", type=["pdf", "html", "json", "md"])
         submit_upload = st.button("Upload", disabled=not collection_id or not file_to_upload)
         if file_to_upload and submit_upload and collection_id:
             with st.spinner("Téléchargement et traitement du document en cours..."):
