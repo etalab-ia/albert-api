@@ -25,7 +25,7 @@ class ClientsManager:
 
         self.internet = InternetClient(model_clients=self.models, search_client=self.search, **self.settings.internet.args)
 
-        self.rerank = RerankClient(model_clients=self.models)  # , **self.settings.rerank.args)
+        self.rerank = RerankClient(model_clients=self.models)
 
         self.auth = AuthenticationClient(cache=self.cache, **self.settings.auth.args) if self.settings.auth else None
 
