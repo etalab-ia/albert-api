@@ -26,6 +26,7 @@ INTERNET_BRAVE_TYPE = "brave"
 SEARCH_ELASTIC_TYPE = "elastic"
 SEARCH_QDRANT_TYPE = "qdrant"
 
+
 SUPPORTED_LANGUAGES = {
     "afrikaans": "af",
     "albanian": "sq",

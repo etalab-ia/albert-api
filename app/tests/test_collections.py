@@ -3,10 +3,9 @@ import logging
 import pytest
 
 from app.schemas.collections import Collection, Collections
-from app.utils.security import encode_string
+from app.helpers._authenticationclient import AuthenticationClient
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
-    INTERNET_COLLECTION_DISPLAY_ID,
     LANGUAGE_MODEL_TYPE,
     PRIVATE_COLLECTION_TYPE,
     PUBLIC_COLLECTION_TYPE,
@@ -15,8 +14,8 @@ from app.utils.variables import (
 
 @pytest.fixture(scope="module")
 def setup(args, session_user):
-    USER = encode_string(input=args["api_key_user"])
-    ADMIN = encode_string(input=args["api_key_admin"])
+    USER = AuthenticationClient._api_key_to_user_id(input=args["api_key_user"])
+    ADMIN = AuthenticationClient._api_key_to_user_id(input=args["api_key_admin"])
     logging.info(f"test user ID: {USER}")
     logging.info(f"test admin ID: {ADMIN}")
 
@@ -48,7 +47,7 @@ class TestFiles:
 
         params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": PUBLIC_COLLECTION_TYPE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
-        assert response.status_code == 422
+        assert response.status_code == 403
 
     def test_create_public_collection_with_admin(self, args, session_admin, setup):
         PUBLIC_COLLECTION_NAME, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
@@ -117,7 +116,7 @@ class TestFiles:
         response = session_user.get(f"{args["base_url"]}/collections")
         collection_id = [collection["id"] for collection in response.json()["data"] if collection["name"] == PUBLIC_COLLECTION_NAME][0]
         response = session_user.delete(f"{args["base_url"]}/collections/{collection_id}")
-        assert response.status_code == 422
+        assert response.status_code == 403
 
     def test_delete_public_collection_with_admin(self, args, session_admin, setup):
         PUBLIC_COLLECTION_NAME, _, _, _, _, _ = setup
@@ -126,13 +125,6 @@ class TestFiles:
         collection_id = [collection["id"] for collection in response.json()["data"] if collection["name"] == PUBLIC_COLLECTION_NAME][0]
         response = session_admin.delete(f"{args["base_url"]}/collections/{collection_id}")
         assert response.status_code == 204
-
-    def test_create_internet_collection_with_user(self, args, session_user, setup):
-        _, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
-
-        params = {"name": INTERNET_COLLECTION_DISPLAY_ID, "model": EMBEDDINGS_MODEL_ID, "type": PUBLIC_COLLECTION_TYPE}
-        response = session_user.post(f"{args["base_url"]}/collections", json=params)
-        assert response.status_code == 422
 
     def test_create_collection_with_empty_name(self, args, session_user, setup):
         _, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup

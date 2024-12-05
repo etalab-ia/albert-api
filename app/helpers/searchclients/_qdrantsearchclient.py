@@ -20,20 +20,20 @@ from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
+from app.schemas.security import Role
 from app.schemas.security import User
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
     SearchMethodNotAvailableException,
-    WrongCollectionTypeException,
     WrongModelTypeException,
+    InsufficientRightsException,
 )
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
     LEXICAL_SEARCH_TYPE,
     HYBRID_SEARCH_TYPE,
     PUBLIC_COLLECTION_TYPE,
-    ROLE_LEVEL_2,
     SEMANTIC_SEARCH_TYPE,
 )
 
@@ -59,8 +59,8 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
-            raise WrongCollectionTypeException()
+        if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise InsufficientRightsException()
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
@@ -214,8 +214,8 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
             raise WrongModelTypeException()
 
-        if user.role != ROLE_LEVEL_2 and collection_type == PUBLIC_COLLECTION_TYPE:
-            raise WrongCollectionTypeException()
+        if user.role != Role.ADMIN and collection_type == PUBLIC_COLLECTION_TYPE:
+            raise InsufficientRightsException()
 
         # create metadata
         metadata = {
@@ -241,8 +241,8 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
-            raise WrongCollectionTypeException()
+        if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise InsufficientRightsException()
 
         super().delete_collection(collection_name=collection.id)
         super().delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
@@ -294,8 +294,8 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != ROLE_LEVEL_2 and collection.type == PUBLIC_COLLECTION_TYPE:
-            raise WrongCollectionTypeException()
+        if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
+            raise InsufficientRightsException()
 
         # delete chunks
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
