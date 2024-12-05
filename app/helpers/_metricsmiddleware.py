@@ -28,8 +28,6 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                 body = body.decode(encoding="utf-8")
                 model = json.loads(body).get("model") if body else None
 
-            user_id = AuthenticationClient._api_key_to_user_id(input=authorization.split(sep=" ")[1])
-
             if authorization and authorization.startswith("Bearer "):
                 user_id = AuthenticationClient._api_key_to_user_id(input=authorization.split(sep=" ")[1])
                 self.http_requests_by_user.labels(user=user_id, endpoint=endpoint[3:], model=model).inc()
