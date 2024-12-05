@@ -111,4 +111,4 @@ class TestFiles:
         files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/pdf")}
         data = {"request": '{"collection": "%s"}' % PUBLIC_COLLECTION_ID}
         response = session_user.post(f"{args["base_url"]}/files", data=data, files=files)
-        assert response.status_code == 422, f"error: upload file ({response.status_code} - {response.text})"
+        assert response.status_code == 403, f"error: upload file ({response.status_code} - {response.text})"

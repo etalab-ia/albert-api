@@ -26,6 +26,7 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
     file_size = len(file.file.read())
     if file_size > FileSizeLimitExceededException.MAX_CONTENT_SIZE:
         raise FileSizeLimitExceededException()
+    file.file.seek(0)  # reset file pointer to the beginning of the file
 
     if request.chunker:
         chunker_args = request.chunker.args.model_dump() if request.chunker.args else ChunkerArgs().model_dump()
