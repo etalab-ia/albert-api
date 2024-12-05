@@ -1,6 +1,5 @@
 import re
 
-
 from app.helpers._modelclients import ModelClients
 
 
@@ -13,10 +12,8 @@ class RerankClient:
     def __init__(
         self,
         model_clients: ModelClients,
-        # search_client: SearchClient,
     ):
         self.model_clients = model_clients
-        # self.search_client = search_client
 
     def get_rank(self, prompt: str, inputs: list, model: str, rerank_type: str) -> str:
         if rerank_type == "classic_rerank":
@@ -44,6 +41,6 @@ class RerankClient:
                 result = int(match.group(0)) if match else 0
                 results.append(result)
             return results
-
+        # TODO: choicer
         elif rerank_type == "choicer":
             return ["Ici la voix"]
