@@ -8,7 +8,7 @@ from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
 from app.schemas.security import User
-from app.utils.variables import HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
+from app.utils.variables import HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, PRIVATE_COLLECTION_TYPE
 
 
 def to_camel_case(chaine):
@@ -78,7 +78,13 @@ class SearchClient(ABC):
 
     @abstractmethod
     def create_collection(
-        self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, collection_description: str, user: User
+        self,
+        collection_id: str,
+        collection_name: str,
+        collection_model: str,
+        user: User,
+        collection_type: str = PRIVATE_COLLECTION_TYPE,
+        collection_description: Optional[str] = None,
     ) -> Collection:
         """
         Create a collection, if collection already exists, return the collection id.

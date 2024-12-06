@@ -35,6 +35,7 @@ from app.utils.variables import (
     HYBRID_SEARCH_TYPE,
     PUBLIC_COLLECTION_TYPE,
     SEMANTIC_SEARCH_TYPE,
+    PRIVATE_COLLECTION_TYPE,
 )
 
 
@@ -208,7 +209,13 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         return collections
 
     def create_collection(
-        self, collection_id: str, collection_name: str, collection_model: str, collection_type: str, collection_description: str, user: User
+        self,
+        collection_id: str,
+        collection_name: str,
+        collection_model: str,
+        user: User,
+        collection_type: str = PRIVATE_COLLECTION_TYPE,
+        collection_description: Optional[str] = None,
     ) -> Collection:
         """
         See SearchClient.create_collection

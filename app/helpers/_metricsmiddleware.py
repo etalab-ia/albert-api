@@ -26,7 +26,26 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             if not content_type.startswith("multipart/form-data"):
                 body = await request.body()
                 body = body.decode(encoding="utf-8")
-                model = json.loads(body).get("model") if body else None
+                try:
+                    model = json.loads(body).get("model")
+                except json.JSONDecodeError as e:
+                    return Response(
+                        status_code=422,
+                        content=json.dumps(
+                            {
+                                "detail": [
+                                    {
+                                        "type": "json_invalid",
+                                        "loc": ["body", e.pos],
+                                        "msg": "JSON decode error",
+                                        "input": {},
+                                        "ctx": {"error": str(e.msg)},
+                                    }
+                                ]
+                            }
+                        ),
+                        media_type="application/json",
+                    )
 
             if authorization and authorization.startswith("Bearer "):
                 user_id = AuthenticationClient._api_key_to_user_id(input=authorization.split(sep=" ")[1])
