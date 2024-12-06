@@ -9,7 +9,7 @@ Albert API est une initiative d'[Etalab](https://www.etalab.gouv.fr/). Il s'agit
 - servir des modèles de langage avec [vLLM](https://github.com/vllm-project/vllm)
 - servir des modèles d'embeddings avec [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)
 - servir des modèles de reconnaissance vocale avec [Whisper OpenAI API](https://github.com/etalab-ia/whisper-openai-api)
-- accès un *vector store* avec [Qdrant](https://qdrant.tech/) pour la recherche de similarité
+- accès un *vector store* avec [Elasticsearch](https://www.elastic.co/fr/products/elasticsearch) pour la recherche de similarité (lexicale, sémantique ou hybride) ou [Qdrant](https://qdrant.tech/) pour la recherche sémantique uniquement.
 
 En se basant sur les conventions définies par OpenAI, l'API Albert expose des endpoints qui peuvent être appelés avec le [client officiel python d'OpenAI](https://github.com/openai/openai-python/tree/main). Ce formalisme permet d'intégrer facilement l'API Albert avec des bibliothèques tierces comme [Langchain](https://www.langchain.com/) ou [LlamaIndex](https://www.llamaindex.ai/).
 

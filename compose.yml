@@ -3,9 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./app/Dockerfile
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
+
     image: ghcr.io/etalab-ia/albert-api/app:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     environment:
@@ -15,8 +13,11 @@ services:
       - 8000:8000
     volumes:
      - .:/home/albert/conf
-     - ./app:/home/albert/app
-     - ./pyproject.toml:/home/albert/pyproject.toml
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   streamlit:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
@@ -26,8 +27,19 @@ services:
       - BASE_URL=http://fastapi:8000/v1
     ports:
       - 8501:8501
+
+  redis:
+    image: redis/redis-stack-server:7.2.0-v11
+    restart: always
+    environment:
+      REDIS_ARGS: --dir /data --requirepass changeme --user username on >password ~* allcommands --save 60 1 --appendonly yes
     volumes:
-      - ./ui:/ui
+      - redis:/data
+    healthcheck:
+        test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+        interval: 4s
+        timeout: 10s
+        retries: 5
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
@@ -40,29 +52,9 @@ services:
     volumes:
       - qdrant:/qdrant/storage
 
-  redis:
-    image: redis/redis-stack-server:7.2.0-v11
-    restart: always
-    environment:
-      REDIS_ARGS: --dir /data --requirepass changeme --user username on >password ~* allcommands --save 60 1 --appendonly yes
-    ports:
-      - 6379:6379
-    volumes:
-      - redis:/data
-    healthcheck:
-        test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-        interval: 4s
-        timeout: 10s
-        retries: 5
-
-  elasticsearch:
+  elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.16.0
     restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow"]
-      interval: 10s
-      timeout: 20s
-      retries: 3
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -71,10 +63,13 @@ services:
       - ELASTIC_PASSWORD=elastic
       - logger.level=WARN
       - rootLogger.level=WARN
-    ports:
-      - 9200:9200
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
 
 volumes:
   elasticsearch:

@@ -25,7 +25,7 @@ from app.schemas.security import User
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
-    SearchMethodNotAvailableException,
+    NotImplementedException,
     WrongModelTypeException,
     InsufficientRightsException,
 )
@@ -118,14 +118,13 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         k: Optional[int] = 4,
         rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
-        query_filter: Optional[Filter] = None,
     ) -> List[Search]:
         """
         See SearchClient.query
         """
 
         if method != SEMANTIC_SEARCH_TYPE:
-            raise SearchMethodNotAvailableException()
+            raise NotImplementedException("Lexical and hybrid search are not available for Qdrant database.")
 
         collections = self.get_collections(collection_ids=collection_ids, user=user)
         if len(set(collection.model for collection in collections)) > 1:
@@ -143,7 +142,6 @@ class QdrantSearchClient(QdrantClient, SearchClient):
                 limit=k,
                 score_threshold=score_threshold,
                 with_payload=True,
-                query_filter=query_filter,
             )
             for result in results:
                 result.payload["metadata"]["collection"] = collection.id
@@ -158,7 +156,11 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
         return results
 
-    def get_collections(self, collection_ids: List[str] = [], user: Optional[User] = None) -> List[Collection]:
+    def get_collections(
+        self,
+        user: User,
+        collection_ids: List[str] = [],
+    ) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
@@ -247,9 +249,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         super().delete_collection(collection_name=collection.id)
         super().delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
-    def get_chunks(
-        self, collection_id: str, document_id: str, user: Optional[User] = None, limit: Optional[int] = 10, offset: Optional[int] = None
-    ) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
@@ -261,9 +261,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
         return chunks
 
-    def get_documents(
-        self, collection_id: str, user: Optional[User] = None, limit: Optional[int] = 10, offset: Optional[int] = None
-    ) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Document]:
         """
         See SearchClient.get_documents
         """

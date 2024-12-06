@@ -115,7 +115,6 @@ class TestSearch:
         if settings.search.type == SEARCH_ELASTIC_TYPE:
             assert response.status_code == 200
             assert "Albert" in result["data"][0]["chunk"]["content"]
-            assert result["data"][0]["method"] == "lexical"
         else:
             assert response.status_code == 400
 
@@ -129,8 +128,6 @@ class TestSearch:
         assert response.status_code == 200
         assert "Erasmus" in result["data"][0]["chunk"]["content"] or "Erasmus" in result["data"][1]["chunk"]["content"]
         assert "Albert" in result["data"][0]["chunk"]["content"] or "Albert" in result["data"][1]["chunk"]["content"]
-        assert result["data"][0]["method"] == "semantic"
-        assert result["data"][1]["method"] == "semantic"
 
     def test_hybrid_search(self, args, session_user, setup):
         """Test hybrid search."""
@@ -142,6 +139,5 @@ class TestSearch:
         if settings.search.type == SEARCH_ELASTIC_TYPE:
             assert response.status_code == 200
             assert "Erasmus" in result["data"][0]["chunk"]["content"]
-            assert result["data"][0]["method"] == "lexical/semantic"
         else:
             assert response.status_code == 400

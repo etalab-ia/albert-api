@@ -22,6 +22,11 @@ class SearchMethodNotAvailableException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
+class WrongSearchMethodException(HTTPException):
+    def __init__(self, detail: str = "Wrong search method."):
+        super().__init__(status_code=400, detail=detail)
+
+
 # 403
 class InvalidAuthenticationSchemeException(HTTPException):
     def __init__(self, detail: str = "Invalid authentication scheme.") -> None:
@@ -50,11 +55,6 @@ class ModelNotFoundException(HTTPException):
 
 
 # 413
-class ContextLengthExceededException(HTTPException):
-    def __init__(self, detail: str = "Context length exceeded.") -> None:
-        super().__init__(status_code=413, detail=detail)
-
-
 class FileSizeLimitExceededException(HTTPException):
     MAX_CONTENT_SIZE = 20 * 1024 * 1024  # 20MB
 
@@ -86,3 +86,8 @@ class DifferentCollectionsModelsException(HTTPException):
 class UnsupportedFileTypeException(HTTPException):
     def __init__(self, detail: str = "Unsupported file type.") -> None:
         super().__init__(status_code=422, detail=detail)
+
+
+class NotImplementedException(HTTPException):
+    def __init__(self, detail: str = "Not implemented.") -> None:
+        super().__init__(status_code=400, detail=detail)

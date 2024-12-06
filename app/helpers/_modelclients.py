@@ -1,16 +1,17 @@
 from functools import partial
 import time
-from typing import Dict, List, Literal, Any
+from typing import Literal, Any
 
-from openai import OpenAI, AsyncOpenAI
+from openai import OpenAI
 import requests
-
+from fastapi import HTTPException
+import json
 from app.schemas.settings import Settings
 from app.schemas.embeddings import Embeddings
 from app.schemas.models import Model, Models
 from app.utils.logging import logger
-from app.utils.exceptions import ContextLengthExceededException, ModelNotAvailableException, ModelNotFoundException
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE
+from app.utils.exceptions import ModelNotAvailableException, ModelNotFoundException
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE, DEFAULT_TIMEOUT
 
 
 def get_models_list(self, *args, **kwargs) -> Models:
@@ -24,7 +25,7 @@ def get_models_list(self, *args, **kwargs) -> Models:
     try:
         if self.type == LANGUAGE_MODEL_TYPE:
             endpoint = f"{self.base_url}models"
-            response = requests.get(url=endpoint, headers=headers, timeout=self.DEFAULT_TIMEOUT).json()
+            response = requests.get(url=endpoint, headers=headers, timeout=DEFAULT_TIMEOUT).json()
 
             # Multiple models from one vLLM provider are not supported for now
             assert len(response["data"]) == 1, "Only one model per model API is supported."
@@ -38,7 +39,7 @@ def get_models_list(self, *args, **kwargs) -> Models:
 
         elif self.type == EMBEDDINGS_MODEL_TYPE:
             endpoint = str(self.base_url).replace("/v1/", "/info")
-            response = requests.get(url=endpoint, headers=headers, timeout=self.DEFAULT_TIMEOUT).json()
+            response = requests.get(url=endpoint, headers=headers, timeout=DEFAULT_TIMEOUT).json()
 
             self.id = response["model_id"]
             self.owned_by = "huggingface-text-embeddings-inference"
@@ -47,7 +48,7 @@ def get_models_list(self, *args, **kwargs) -> Models:
 
         elif self.type == AUDIO_MODEL_TYPE:
             endpoint = f"{self.base_url}models"
-            response = requests.get(url=endpoint, headers=headers, timeout=self.DEFAULT_TIMEOUT).json()
+            response = requests.get(url=endpoint, headers=headers, timeout=DEFAULT_TIMEOUT).json()
             response = response["data"][0]
 
             self.id = response["id"]
@@ -73,26 +74,6 @@ def get_models_list(self, *args, **kwargs) -> Models:
     return Models(data=[data])
 
 
-def check_context_length(self, messages: List[Dict[str, str]], add_special_tokens: bool = True) -> bool:
-    # TODO: remove this methode and use better context length handling (by catch context length error model)
-    headers = {"Authorization": f"Bearer {self.api_key}"}
-    prompt = "\n".join([message["role"] + ": " + message["content"] for message in messages])
-
-    if self.type == LANGUAGE_MODEL_TYPE:
-        data = {"model": self.id, "prompt": prompt, "add_special_tokens": add_special_tokens}
-    elif self.type == EMBEDDINGS_MODEL_TYPE:
-        data = {"inputs": prompt, "add_special_tokens": add_special_tokens}
-
-    response = requests.post(url=str(self.base_url).replace("/v1/", "/tokenize"), json=data, headers=headers)
-    response.raise_for_status()
-    response = response.json()
-
-    if self.type == LANGUAGE_MODEL_TYPE:
-        return response["count"] <= self.max_context_length
-    elif self.type == EMBEDDINGS_MODEL_TYPE:
-        return len(response[0]) <= self.max_context_length
-
-
 def create_embeddings(self, *args, **kwargs):
     try:
         url = f"{self.base_url}embeddings"
@@ -102,19 +83,17 @@ def create_embeddings(self, *args, **kwargs):
         data = response.json()
         return Embeddings(**data)
     except Exception as e:
-        if "`inputs` must have less than" in e.response.text:
-            raise ContextLengthExceededException()
-        raise e
+        raise HTTPException(status_code=e.response.status_code, detail=json.loads(e.response.text)["message"])
 
 
 class ModelClient(OpenAI):
     DEFAULT_TIMEOUT = 120
 
-    def __init__(self, type=Literal[EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE], *args, **kwargs) -> None:
+    def __init__(self, type=Literal[EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE], *args, **kwargs) -> None:
         """
-        ModelClient class extends OpenAI class to support custom methods.
+        ModelClient class extends AsyncOpenAI class to support custom methods.
         """
-        super().__init__(timeout=self.DEFAULT_TIMEOUT, *args, **kwargs)
+        super().__init__(timeout=DEFAULT_TIMEOUT, *args, **kwargs)
         self.type = type
 
         # set attributes for unavailable models
@@ -131,38 +110,6 @@ class ModelClient(OpenAI):
             response = self.embeddings.create(model=self.id, input="hello world")
             self.vector_size = len(response.data[0].embedding)
             self.embeddings.create = partial(create_embeddings, self)
-
-        self.check_context_length = partial(check_context_length, self)
-
-
-# TODO merge with ModelClient for all models and adapt endpoint to not use anymore the httpx async client
-class AsyncModelClient(AsyncOpenAI):
-    DEFAULT_TIMEOUT = 120
-
-    def __init__(self, type=Literal[AUDIO_MODEL_TYPE], *args, **kwargs) -> None:
-        """
-        AsyncModelClient class extends AsyncOpenAI class to support custom methods.
-        """
-
-        super().__init__(timeout=self.DEFAULT_TIMEOUT, *args, **kwargs)
-        self.type = type
-
-        # set attributes for unavailable models
-        self.id = ""
-        self.owned_by = ""
-        self.created = round(number=time.time())
-        self.max_context_length = None
-
-        # set real attributes if model is available
-        self.models.list = partial(get_models_list, self)
-        response = self.models.list()
-
-        if self.type == EMBEDDINGS_MODEL_TYPE:
-            response = self.embeddings.create(model=self.id, input="hello world")
-            self.vector_size = len(response.data[0].embedding)
-            self.embeddings.create = partial(create_embeddings, self)
-
-        self.check_context_length = partial(check_context_length, self)
 
 
 class ModelClients(dict):
@@ -172,20 +119,11 @@ class ModelClients(dict):
 
     def __init__(self, settings: Settings) -> None:
         for model_config in settings.models:
-            model_client_class = ModelClient if model_config.type != AUDIO_MODEL_TYPE else AsyncModelClient
-            model = model_client_class(base_url=model_config.url, api_key=model_config.key, type=model_config.type)
+            model = ModelClient(base_url=model_config.url, api_key=model_config.key, type=model_config.type)
             if model.status == "unavailable":
                 logger.error(msg=f"unavailable model API on {model_config.url}, skipping.")
                 continue
             self.__setitem__(key=model.id, value=model)
-
-            if model_config.url == settings.default_internet_embeddings_model_url:
-                self.DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID = model.id
-            elif model_config.url == settings.default_internet_language_model_url:
-                self.DEFAULT_INTERNET_LANGUAGE_MODEL_ID = model.id
-
-        assert "DEFAULT_INTERNET_EMBEDDINGS_MODEL_ID" in self.__dict__, "Default internet embeddings model is unavailable."
-        assert "DEFAULT_INTERNET_LANGUAGE_MODEL_ID" in self.__dict__, "Default internet language model is unavailable."
 
     def __setitem__(self, key: str, value) -> None:
         if any(key == k for k in self.keys()):

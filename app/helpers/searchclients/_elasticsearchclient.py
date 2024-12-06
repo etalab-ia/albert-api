@@ -1,62 +1,31 @@
-from typing import List, Literal, Optional
+from concurrent.futures import ThreadPoolExecutor
 import functools
 import time
-from concurrent.futures import ThreadPoolExecutor
+from typing import Any, List, Literal, Optional
 
-from elasticsearch import Elasticsearch, helpers, NotFoundError
+from elasticsearch import Elasticsearch, NotFoundError, helpers
+from openai import APITimeoutError
 
 from app.helpers.searchclients._searchclient import SearchClient
+from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
-from app.schemas.chunks import Chunk
-from app.schemas.security import Role
-from app.schemas.security import User
-from app.schemas.search import Filter, Search
+from app.schemas.search import Search
+from app.schemas.security import Role, User
 from app.utils.exceptions import (
-    DifferentCollectionsModelsException,
-    WrongModelTypeException,
     CollectionNotFoundException,
+    DifferentCollectionsModelsException,
     InsufficientRightsException,
-    SearchMethodNotAvailableException,
+    WrongModelTypeException,
 )
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
     HYBRID_SEARCH_TYPE,
     LEXICAL_SEARCH_TYPE,
-    SEMANTIC_SEARCH_TYPE,
-    PUBLIC_COLLECTION_TYPE,
     PRIVATE_COLLECTION_TYPE,
+    PUBLIC_COLLECTION_TYPE,
+    SEMANTIC_SEARCH_TYPE,
 )
-
-
-def retry(tries: int = 3, delay: int = 2):
-    """
-    A simple retry decorator that catch exception to retry multiple times
-    @TODO: only catch only network error/timeout error.
-
-    Parameters:
-    - tries: Number of total attempts.
-    - delay: Delay between retries in seconds.
-    """
-
-    def decorator_retry(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            attempts = tries
-            while attempts > 1:
-                try:
-                    return func(*args, **kwargs)
-                # @TODO: Catch network error.
-                # except (requests.exceptions.RequestException, httpx.RequestError) as e:
-                except Exception as e:
-                    time.sleep(delay)
-                    attempts -= 1
-            # Final attempt without catching exceptions
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator_retry
 
 
 class ElasticSearchClient(SearchClient, Elasticsearch):
@@ -68,7 +37,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         self.models = models
         self.hybrid_limit_factor = hybrid_limit_factor
 
-    def upsert(self, chunks: List[Chunk], collection_id: str, user: Optional[User] = None) -> None:
+    def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
         if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
@@ -76,16 +45,20 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batched_chunks = chunks[i : i + self.BATCH_SIZE]
+
+            texts = [chunk.content for chunk in batched_chunks]
+            embeddings = self._create_embeddings(input=texts, model=collection.model)
+
             actions = [
                 {
                     "_index": collection_id,
                     "_source": {
                         "body": chunk.content,
-                        "embedding": self._create_embedding(chunk.content, [collection_id], user),
+                        "embedding": embedding,
                         "metadata": chunk.metadata.model_dump(),
                     },
                 }
-                for chunk in batched_chunks
+                for chunk, embedding in zip(batched_chunks, embeddings)
             ]
             helpers.bulk(self, actions, index=collection_id)
         self.indices.refresh(index=collection_id)
@@ -98,28 +71,35 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
         rff_k: Optional[int] = 20,
-        score_threshold: Optional[float] = None,  # TODO: implement score_threshold
-        filter: Optional[Filter] = None,  # TODO: implement filter
     ) -> List[Search]:
+        """
+        See SearchClient.query
+        """
         collections = self.get_collections(collection_ids=collection_ids, user=user)
 
         if len(set(collection.model for collection in collections)) > 1:
             raise DifferentCollectionsModelsException()
 
         if method == LEXICAL_SEARCH_TYPE:
-            return self._lexical_query(prompt, collection_ids, k)
-        elif method == SEMANTIC_SEARCH_TYPE:
-            embedding = self._create_embedding(prompt, collection_ids, user)
-            return self._semantic_query(prompt, embedding, collection_ids, k)
-        elif method == HYBRID_SEARCH_TYPE:
-            embedding = self._create_embedding(prompt, collection_ids, user)
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                lexical_searches = executor.submit(self._lexical_query, prompt, collection_ids, k).result()
-                semantic_searches = executor.submit(self._semantic_query, prompt, embedding, collection_ids, k).result()
-                return self.build_ranked_searches([lexical_searches, semantic_searches], k, rff_k)
-        raise SearchMethodNotAvailableException()
+            searches = self._lexical_query(prompt=prompt, collection_ids=collection_ids, k=k)
+        else:
+            if len(set(collection.model for collection in collections)) > 1:
+                raise DifferentCollectionsModelsException()
 
-    def get_collections(self, collection_ids: List[str] = [], user: Optional[User] = None) -> List[Collection]:
+            embedding = self._create_embeddings(input=[prompt], model=collections[0].model)[0]
+
+            if method == SEMANTIC_SEARCH_TYPE:
+                searches = self._semantic_query(prompt=prompt, embedding=embedding, collection_ids=collection_ids, size=k)
+
+            elif method == HYBRID_SEARCH_TYPE:
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    lexical_searches = executor.submit(self._lexical_query, prompt, collection_ids, k).result()
+                    semantic_searches = executor.submit(self._semantic_query, prompt, embedding, collection_ids, k).result()
+                    searches = self.build_ranked_searches(searches_list=[lexical_searches, semantic_searches], k=k, rff_k=rff_k)
+
+        return searches
+
+    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
@@ -133,8 +113,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         except NotFoundError as e:
             raise CollectionNotFoundException()
 
-        if user:
-            collections = [collection for collection in collections if collection.user == user.id or collection.type == PUBLIC_COLLECTION_TYPE]
+        collections = [collection for collection in collections if collection.user == user.id or collection.type == PUBLIC_COLLECTION_TYPE]
 
         if collection_ids:
             for collection in collections:
@@ -233,8 +212,10 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         See SearchClient.get_chunks
         """
+        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+
         body = {"query": {"match": {"metadata.document_id": document_id}}, "_source": ["body", "metadata"]}
-        results = self.search(index=collection_id, body=body, from_=offset, size=limit)
+        results = self.search(index=collection.id, body=body, from_=offset, size=limit)
 
         chunks = []
         for hit in results["hits"]["hits"]:
@@ -245,18 +226,18 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
     # @TODO: pagination between qdrant and elasticsearch diverging
     # @TODO: offset is not supported by elasticsearch
-    def get_documents(self, collection_id: str, user: Optional[User] = None, limit: int = 10000, offset: int = 0) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Document]:
         """
         See SearchClient.get_documents
         """
-        c = self.get_collections(collection_ids=[collection_id], user=user)  # check if collection exists
+        _ = self.get_collections(collection_ids=[collection_id], user=user)  # check if collection exists
 
         body = {
             "query": {"match_all": {}},
             "_source": ["metadata"],
             "aggs": {"document_ids": {"terms": {"field": "metadata.document_id", "size": limit}}},
         }
-        results = self.search(index=collection_id, body=body, size=1, from_=0)
+        results = self.search(index=collection_id, body=body, from_=0, size=limit)
 
         documents = []
 
@@ -273,7 +254,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         return documents
 
-    def delete_document(self, collection_id: str, document_id: str, user: Optional[User] = None):
+    def delete_document(self, collection_id: str, document_id: str, user: User):
         """
         See SearchClient.delete_document
         """
@@ -293,7 +274,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
             fuzziness = {"fuzziness": "AUTO"}
         return {"multi_match": {"query": prompt, **fuzziness}}
 
-    def _build_search(self, hit: dict, method: Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE]) -> Search:
+    def _build_search(self, hit: dict) -> Search:
         return Search(
             score=hit["_score"],
             chunk=Chunk(
@@ -301,18 +282,17 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
                 content=hit["_source"]["body"],
                 metadata=hit["_source"]["metadata"],
             ),
-            method=method,
         )
 
     def _lexical_query(self, prompt: str, collection_ids: List[str], size: int) -> List[Search]:
         body = {
-            "query": self._build_query_filter(prompt),
+            "query": self._build_query_filter(prompt=prompt),
             "size": size,
             "_source": {"excludes": ["embedding"]},
         }
         results = self.search(index=",".join(collection_ids), body=body)
         hits = [hit for hit in results["hits"]["hits"] if hit]
-        return [self._build_search(hit, method=LEXICAL_SEARCH_TYPE) for hit in hits]
+        return [self._build_search(hit=hit) for hit in hits]
 
     def _semantic_query(self, prompt: str, embedding: list[float], collection_ids: List[str], size: int) -> List[Search]:
         body = {
@@ -326,23 +306,73 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         }
         results = self.search(index=",".join(collection_ids), body=body)
         hits = [hit for hit in results["hits"]["hits"] if hit]
-        return [self._build_search(hit, method=SEMANTIC_SEARCH_TYPE) for hit in hits]
+        return [self._build_search(hit) for hit in hits]
 
-    # @TODO: support multiple input in same time
-    @retry(tries=3, delay=2)
-    def _create_embedding(
-        self,
-        prompt: str,
-        collection_ids: List[str],
-        user: User,
-    ) -> list[float] | list[list[float]] | dict:
+    def _retry(tries: int = 3, delay: int = 2):
+        """
+        A simple retry decorator that catch exception to retry multiple times
+
+        """
+
+        def decorator_retry(func):
+            @functools.wraps(wrapped=func)
+            def wrapper(*args, **kwargs) -> Any:
+                attempts = tries
+                while attempts > 1:
+                    try:
+                        return func(*args, **kwargs)
+                    except APITimeoutError:
+                        time.sleep(delay)
+                        attempts -= 1
+
+                return func(*args, **kwargs)
+
+            return wrapper
+
+        return decorator_retry
+
+    @_retry(tries=3, delay=2)
+    def _create_embeddings(self, input: List[str], model: str) -> list[float] | list[list[float]] | dict:
         """
         Simple interface to create an embedding vector from a text input.
         """
-        collections = self.get_collections(collection_ids=collection_ids, user=user)
-        if len(set(collection.model for collection in collections)) > 1:
-            raise DifferentCollectionsModelsException()
-        model_name = collections[0].model
-        model_client = self.models[model_name]
-        response = model_client.embeddings.create(input=[prompt], model=model_name)
-        return response.data[0].embedding
+
+        response = self.models[model].embeddings.create(input=input, model=model)
+        return [vector.embedding for vector in response.data]
+
+    @staticmethod
+    def build_ranked_searches(searches_list: List[List[Search]], k: int, rff_k: Optional[int] = 20) -> List[Search]:
+        """
+        Combine search results using Reciprocal Rank Fusion (RRF)
+
+        Args:
+            searches_list (List[List[Search]]): A list of searches from different query
+            k (int): The number of results to return
+            rff_k (Optional[int]): The constant k in the RRF formula
+
+        Returns:
+            A combined list of searches with updated scores
+        """
+
+        combined_scores = {}
+        search_map = {}
+        for searches in searches_list:
+            for rank, search in enumerate(searches):
+                chunk_id = search.chunk.id
+                if chunk_id not in combined_scores:
+                    combined_scores[chunk_id] = 0
+                    search_map[chunk_id] = search
+                else:
+                    search_map[chunk_id].method = search_map[chunk_id].method + "/" + search.method
+                combined_scores[chunk_id] += 1 / (rff_k + rank + 1)
+
+        ranked_scores = sorted(combined_scores.items(), key=lambda item: item[1], reverse=True)
+        reranked_searches = []
+        for chunk_id, rrf_score in ranked_scores:
+            search = search_map[chunk_id]
+            search.score = rrf_score
+            reranked_searches.append(search)
+
+        if k:
+            return reranked_searches[:k]
+        return reranked_searches
