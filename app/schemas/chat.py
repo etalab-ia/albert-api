@@ -7,14 +7,14 @@ from openai.types.chat import (
 )
 from pydantic import BaseModel, Field, model_validator
 
-from app.schemas.chunks import Chunk
-from app.schemas.search import SearchParameters
+from app.schemas.chunks import Search
+from app.schemas.search import SearchArgs
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.lifespan import clients
 from app.utils.variables import DEFAULT_RAG_TEMPLATE, LANGUAGE_MODEL_TYPE
 
 
-class ChatSearchParameters(SearchParameters):
+class ChatSearchArgs(SearchArgs):
     template: str = Field(description="Template to use for the RAG query", default=DEFAULT_RAG_TEMPLATE)
 
 
@@ -40,9 +40,9 @@ class ChatCompletionRequest(BaseModel):
     class ConfigDict:
         extra = "allow"
 
-    # albert additionnal fields
+    # search additionnal fields
     search: bool = False
-    search_parameters: ChatSearchParameters = Field(default_factory=ChatSearchParameters)
+    search_args: ChatSearchArgs = Field(default_factory=ChatSearchArgs)
 
     @model_validator(mode="after")
     def validate_model(cls, values):
@@ -53,8 +53,8 @@ class ChatCompletionRequest(BaseModel):
 
 
 class ChatCompletion(ChatCompletion):
-    chunks: List[Chunk] = []
+    search_results: List[Search] = []
 
 
 class ChatCompletionChunk(ChatCompletionChunk):
-    chunks: List[Chunk] = []
+    search_results: List[Search] = []

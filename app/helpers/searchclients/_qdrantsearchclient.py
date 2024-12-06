@@ -118,6 +118,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         collection_ids: List[str] = [],
         method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
         k: Optional[int] = 4,
+        rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
     ) -> List[Search]:
         """
