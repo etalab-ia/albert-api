@@ -1,19 +1,20 @@
 from typing import List, Literal, Optional, Union
 
-from openai.types.chat import (
-    ChatCompletion,
-    ChatCompletionChunk,
-    ChatCompletionMessageParam,
-)
+from openai.types.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionMessageParam
 from pydantic import BaseModel, Field, model_validator
 
+from app.schemas.search import SearchArgs, Search
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.lifespan import clients
-from app.utils.variables import LANGUAGE_MODEL_TYPE
+from app.utils.variables import DEFAULT_RAG_TEMPLATE, LANGUAGE_MODEL_TYPE
+
+
+class ChatSearchArgs(SearchArgs):
+    template: str = Field(description="Template to use for the RAG query", default=DEFAULT_RAG_TEMPLATE)
 
 
 class ChatCompletionRequest(BaseModel):
-    # See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py
+    # see https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py
     messages: List[ChatCompletionMessageParam]
     model: str
     stream: Optional[Literal[True, False]] = False
@@ -31,8 +32,12 @@ class ChatCompletionRequest(BaseModel):
     top_k: int = -1
     min_p: float = 0.0
 
-    class ConfigDict:
+    class Config:
         extra = "allow"
+
+    # search additionnal fields
+    search: bool = False
+    search_args: Optional[ChatSearchArgs] = None
 
     @model_validator(mode="after")
     def validate_model(cls, values):
@@ -43,8 +48,8 @@ class ChatCompletionRequest(BaseModel):
 
 
 class ChatCompletion(ChatCompletion):
-    pass
+    search_results: List[Search] = []
 
 
 class ChatCompletionChunk(ChatCompletionChunk):
-    pass
+    search_results: List[Search] = []

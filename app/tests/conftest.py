@@ -4,7 +4,7 @@ import time
 import pytest
 import requests
 
-from app.helpers._authenticationclient import AuthenticationClient
+from app.clients import AuthenticationClient
 from app.utils.variables import PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
 
 
