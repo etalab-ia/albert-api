@@ -1,14 +1,9 @@
 from typing import List, Literal, Optional, Union
 
-from openai.types.chat import (
-    ChatCompletion,
-    ChatCompletionChunk,
-    ChatCompletionMessageParam,
-)
+from openai.types.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionMessageParam
 from pydantic import BaseModel, Field, model_validator
 
-from app.schemas.chunks import Search
-from app.schemas.search import SearchArgs
+from app.schemas.search import SearchArgs, Search
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.lifespan import clients
 from app.utils.variables import DEFAULT_RAG_TEMPLATE, LANGUAGE_MODEL_TYPE

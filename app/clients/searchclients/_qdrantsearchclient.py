@@ -1,6 +1,6 @@
 import time
 from typing import List, Literal, Optional
-
+from uuid import UUID
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import ResponseHandlingException
 from qdrant_client.http.models import (
@@ -15,14 +15,14 @@ from qdrant_client.http.models import (
     VectorParams,
 )
 
-from app.helpers.searchclients._searchclient import SearchClient
+from app.clients import SearchClient
 from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
 from app.schemas.security import Role
 from app.schemas.security import User
-from app.helpers._modelclients import ModelClients
+from app.clients._modelclients import ModelClients
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
@@ -158,11 +158,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
         return results
 
-    def get_collections(
-        self,
-        user: User,
-        collection_ids: List[str] = [],
-    ) -> List[Collection]:
+    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
@@ -257,7 +253,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
         super().delete_collection(collection_name=collection.id)
         super().delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10, offset: Optional[UUID] = None) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
@@ -269,7 +265,7 @@ class QdrantSearchClient(QdrantClient, SearchClient):
 
         return chunks
 
-    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = 10, offset: Optional[int] = None) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: int = 10, offset: Optional[UUID] = None) -> List[Document]:
         """
         See SearchClient.get_documents
         """

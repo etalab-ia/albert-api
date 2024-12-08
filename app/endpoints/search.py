@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Security
 
-from app.helpers import Search
+from app.helpers import SearchManager
 from app.schemas.search import Searches, SearchRequest
 from app.schemas.security import User
 from app.utils.lifespan import clients, limiter
@@ -16,8 +16,9 @@ async def search(request: Request, body: SearchRequest, user: User = Security(de
     """
     Endpoint to search on the internet or with our search client.
     """
-    data = Search(search_client=clients.search, internet_client=clients.internet).query(
-        collections=body.collections, prompt=body.prompt, method=body.method, k=body.k, rff_k=body.rff_k, user=user
+    body = await request.json()
+    data = SearchManager(search_client=clients.search, internet_client=clients.internet).query(
+        collections=body["collections"], prompt=body["prompt"], method=body["method"], k=body["k"], rff_k=body["rff_k"], user=user
     )
 
     return Searches(data=data)

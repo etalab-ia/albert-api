@@ -6,7 +6,10 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 import httpx
 
-from app.helpers import InternetClient, Search, SearchClient
+from app.helpers import SearchManager
+from app.clients import SearchClient
+from app.clients._internetclient import InternetClient
+from app.schemas.search import Search
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.security import User
 from app.utils.lifespan import clients, limiter
@@ -34,7 +37,7 @@ async def chat_completions(
     ) -> Tuple[ChatCompletionRequest, List[Search]]:
         searches = []
         if body.search:
-            searches = Search(search_client=search_client, internet_client=internet_client).query(
+            searches = SearchManager(search_client=search_client, internet_client=internet_client).query(
                 collections=body.search_parameters.collections,
                 prompt=body.messages[-1]["content"],
                 k=body.search_parameters.k,

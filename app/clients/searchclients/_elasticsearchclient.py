@@ -6,8 +6,8 @@ from typing import Any, List, Literal, Optional
 from elasticsearch import Elasticsearch, NotFoundError, helpers
 from openai import APITimeoutError
 
-from app.helpers.searchclients._searchclient import SearchClient
-from app.helpers._modelclients import ModelClients
+from app.clients import SearchClient
+from app.clients import ModelClients
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
@@ -208,7 +208,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10, offset: int = 0) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
@@ -226,7 +226,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
     # @TODO: pagination between qdrant and elasticsearch diverging
     # @TODO: offset is not supported by elasticsearch
-    def get_documents(self, collection_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: int = 10, offset: int = 0) -> List[Document]:
         """
         See SearchClient.get_documents
         """

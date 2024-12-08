@@ -1,29 +1,29 @@
 from typing import List
 import uuid
 
-from app.helpers._internetclient import InternetClient
-from app.helpers.searchclients import SearchClient
+from app.clients import SearchClient
+from app.clients._internetclient import InternetClient
 from app.schemas.search import Search
 from app.schemas.security import User
 from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID
 
 
-class Search:
+class SearchManager:
     def __init__(self, search_client: SearchClient, internet_client: InternetClient):
         self.search_client = search_client
         self.internet_client = internet_client
 
-    def query(self, collections: List[str], prompt: str, method: str, k: int, rff_k: int, score_threshold: float, user: User) -> List[Search]:
-        
+    def query(self, collections: List[str], prompt: str, method: str, k: int, rff_k: int, user: User, score_threshold: float = 0.0) -> List[Search]:
         # internet search
         if INTERNET_COLLECTION_DISPLAY_ID in collections:
             internet_collection_id = str(uuid.uuid4())
             internet_chunks = self.internet_client.get_chunks(prompt=prompt, collection_id=internet_collection_id)
 
             if internet_chunks:
+                collections.remove(INTERNET_COLLECTION_DISPLAY_ID)
                 internet_embeddings_model_id = (
                     self.internet_client.default_embeddings_model_id
-                    if collections == [INTERNET_COLLECTION_DISPLAY_ID]
+                    if not collections
                     else self.search_client.get_collections(collection_ids=collections, user=user)[0].model
                 )
 
@@ -35,7 +35,6 @@ class Search:
                 )
                 self.search_client.upsert(chunks=internet_chunks, collection_id=internet_collection_id, user=user)
 
-                collections.remove(INTERNET_COLLECTION_DISPLAY_ID)
                 collections.append(internet_collection_id)
 
             # case: no other collections, only internet and no internet results

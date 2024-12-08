@@ -2,6 +2,7 @@ from typing import List, Literal, Optional
 
 from fastapi import UploadFile
 
+from app.clients import SearchClient
 from app.helpers.chunkers import *
 from app.helpers.parsers import HTMLParser, JSONParser, PDFParser
 from app.schemas.chunks import Chunk
@@ -15,8 +16,6 @@ from app.utils.variables import (
     JSON_TYPE,
     PDF_TYPE,
 )
-
-from .searchclients._searchclient import SearchClient
 
 
 class FileUploader:

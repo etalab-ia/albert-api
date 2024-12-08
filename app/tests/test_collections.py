@@ -3,7 +3,7 @@ import logging
 import pytest
 
 from app.schemas.collections import Collection, Collections
-from app.helpers._authenticationclient import AuthenticationClient
+from app.clients._authenticationclient import AuthenticationClient
 from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
     LANGUAGE_MODEL_TYPE,

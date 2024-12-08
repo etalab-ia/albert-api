@@ -6,13 +6,13 @@ from duckduckgo_search.exceptions import RatelimitException
 from fastapi import UploadFile
 import requests
 
-from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
-from app.helpers.parsers import HTMLParser
-from app.helpers.searchclients import SearchClient
-from app.helpers._modelclients import ModelClients
+from app.clients._modelclients import ModelClients
+from app.clients._searchclient import SearchClient
+from app.helpers.chunkers._langchainrecursivecharactertextsplitter import LangchainRecursiveCharacterTextSplitter
+from app.helpers.parsers._htmlparser import HTMLParser
 from app.schemas.chunks import Chunk
 from app.utils.logging import logger
-from app.utils.variables import INTERNET_BRAVE_TYPE, INTERNET_DUCKDUCKGO_TYPE, LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_BRAVE_TYPE, INTERNET_DUCKDUCKGO_TYPE, LANGUAGE_MODEL_TYPE
 
 
 class InternetClient:
