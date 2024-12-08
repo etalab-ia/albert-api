@@ -1,9 +1,7 @@
-from ._authenticationclient import AuthenticationClient
 from ._clientsmanager import ClientsManager
 from ._fileuploader import FileUploader
-from ._internetclient import InternetClient
 from ._metricsmiddleware import MetricsMiddleware
-from ._modelclients import ModelClients
-from ._search import Search
+from ._internetmanager import InternetManager
+from ._searchmanager import SearchManager
 
-__all__ = ["AuthenticationClient", "ClientsManager", "FileUploader", "InternetClient", "MetricsMiddleware", "ModelClients", "Search"]
+__all__ = ["ClientsManager", "FileUploader", "InternetManager", "MetricsMiddleware", "SearchManager"]

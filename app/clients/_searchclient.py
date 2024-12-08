@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Literal, Optional, Type, Union
+from typing import List, Literal, Optional, Union
 from uuid import UUID
-import importlib
 
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
@@ -11,18 +10,7 @@ from app.schemas.security import User
 from app.utils.variables import HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, PRIVATE_COLLECTION_TYPE
 
 
-def to_camel_case(chaine):
-    mots = chaine.replace("_", " ").split()
-    camel_case = "".join(mot.capitalize() for mot in mots)
-    return camel_case
-
-
 class SearchClient(ABC):
-    @staticmethod
-    def import_constructor(name: str) -> "Type[SearchClient]":
-        module = importlib.import_module(f"app.helpers.searchclients._{name}searchclient")
-        return getattr(module, f"{to_camel_case(name)}SearchClient")
-
     @abstractmethod
     def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         """
@@ -64,7 +52,7 @@ class SearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_collections(self, collection_ids: List[str], user: User) -> List[Collection]:
+    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
         """
         Get metadata of collections.
 
@@ -110,29 +98,30 @@ class SearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_chunks(self, collection_id: str, document_id: str, limit: Optional[int] = None, offset: Union[int, UUID] = None) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10, offset: Union[int, UUID] = None) -> List[Chunk]:
         """
         Get chunks from a collection and a document.
         Args:
             collection_id (str): The id of the collection to get chunks from.
             document_id (str): The id of the document to get chunks from.
+            user (User): The user retrieving the chunks.
             limit (Optional[int]): The number of chunks to return.
-            offset (Optional[int, UUID]): The offset of the chunks to return (UUID is for qdrant and int for elasticsearch)
+            offset (Optional[int, UUID]): The offset of the chunks to return (UUID is for qdrant and int for elasticsearch).
         Returns:
             List[Chunk]: A list of Chunk objects containing the retrieved chunks.
         """
         pass
 
     @abstractmethod
-    def get_documents(self, collection_id: str, user: User, limit: Optional[int] = None, offset: Union[int, UUID] = None) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: int = 10, offset: Union[int, UUID] = None) -> List[Document]:
         """
         Get documents from a collection.
 
         Args:
             collection_id (str): The id of the collection to get documents from.
             user (User): The user retrieving the documents.
-            limit (Optional[int]): The number of documents to return.
-            offset (Optional[int]): The offset of the documents to return.
+            limit (int): The number of documents to return.
+            offset (Optional[int]): The offset of the documents to return (UUID is for qdrant and int for elasticsearch).
 
         Returns:
             List[Document]: A list of Document objects containing the retrieved documents.

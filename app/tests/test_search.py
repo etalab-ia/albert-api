@@ -7,7 +7,7 @@ import pytest
 from app.schemas.search import Search, Searches
 from app.utils.logging import logger
 from app.utils.settings import settings
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_DISPLAY_ID, SEARCH_ELASTIC_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_DISPLAY_ID, SEARCH_CLIENT_ELASTIC_TYPE
 
 
 @pytest.fixture(scope="module")
@@ -112,7 +112,7 @@ class TestSearch:
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         result = response.json()
 
-        if settings.search.type == SEARCH_ELASTIC_TYPE:
+        if settings.search.type == SEARCH_CLIENT_ELASTIC_TYPE:
             assert response.status_code == 200
             assert "Albert" in result["data"][0]["chunk"]["content"]
         else:
@@ -136,7 +136,7 @@ class TestSearch:
         data = {"prompt": "Erasmus", "collections": [COLLECTION_ID], "k": 3, "method": "hybrid"}
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         result = response.json()
-        if settings.search.type == SEARCH_ELASTIC_TYPE:
+        if settings.search.type == SEARCH_CLIENT_ELASTIC_TYPE:
             assert response.status_code == 200
             assert "Erasmus" in result["data"][0]["chunk"]["content"]
         else:

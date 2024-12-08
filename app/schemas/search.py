@@ -19,7 +19,7 @@ class SearchArgs(BaseModel):
         description="Score of cosine similarity threshold for filtering results, only available for semantic search method.",
     )
 
-    @field_validator("collections", mode="before")
+    @field_validator("collections", mode="after")
     def convert_to_string(cls, collections) -> List[str]:
         return list(set(str(collection) for collection in collections))
 
@@ -27,6 +27,7 @@ class SearchArgs(BaseModel):
     def score_threshold_filter(cls, values):
         if values.score_threshold and values.method != SEMANTIC_SEARCH_TYPE:
             raise WrongSearchMethodException(detail="Score threshold is only available for semantic search method.")
+        return values
 
 
 class SearchRequest(SearchArgs):
