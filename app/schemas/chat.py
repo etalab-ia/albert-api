@@ -32,12 +32,12 @@ class ChatCompletionRequest(BaseModel):
     top_k: int = -1
     min_p: float = 0.0
 
-    class ConfigDict:
+    class Config:
         extra = "allow"
 
     # search additionnal fields
     search: bool = False
-    search_args: ChatSearchArgs = Field(default_factory=ChatSearchArgs)
+    search_args: Optional[ChatSearchArgs] = None
 
     @model_validator(mode="after")
     def validate_model(cls, values):
