@@ -9,6 +9,7 @@ from app.utils.variables import (
     EMBEDDINGS_MODEL_TYPE,
     LANGUAGE_MODEL_TYPE,
     AUDIO_MODEL_TYPE,
+    RERANK_MODEL_TYPE,
     INTERNET_CLIENT_DUCKDUCKGO_TYPE,
     INTERNET_CLIENT_BRAVE_TYPE,
     SEARCH_CLIENT_ELASTIC_TYPE,
@@ -32,7 +33,7 @@ class Auth(ConfigBaseModel):
 
 class Model(ConfigBaseModel):
     url: str
-    type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE, AUDIO_MODEL_TYPE]
+    type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE, AUDIO_MODEL_TYPE, RERANK_MODEL_TYPE]
     key: Optional[str] = "EMPTY"
 
 
