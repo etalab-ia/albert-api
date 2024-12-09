@@ -20,6 +20,7 @@ PDF_TYPE = "application/pdf"
 JSON_TYPE = "application/json"
 TXT_TYPE = "text/plain"
 HTML_TYPE = "text/html"
+MARKDOWN_TYPE = "text/markdown"
 # @TODO : add DOCX_TYPE (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
 
 # Clients
