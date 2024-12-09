@@ -1,4 +1,4 @@
-# Collections
+# Search
 
 L'API Albert propose d'interagir avec une base de données vectorielle (*vector store*) pour permettre de réaliser du [RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation). L'API propose de nourrir ce vector store en important des fichiers qui seront automatiquement traités et insérés dans le *vector store*.
 
@@ -48,7 +48,7 @@ Une fois la collection créée, vous pouvez importer des fichiers dans l'API ave
 2. Créer un ID unique (*document_id*).
 3. Créer une entrée dans une collection nommée *documents* qui va stocker les métadonnées du document. Cette entrée a le même ID que l'ID du document.
 4. Lancer la pipeline de traitement : 
-   1. *parsing* : extraction du texte dans le fichier (conversion en *document*), dépend du type de fichier
+   1. *parsing* : extraction du texte dans le fichier (conversion en *document*)
    2. *chunking* : découpage du fichier en paragraphes (conversion en *chunks*)
    3. *vectorization* : création d'un vecteur par *chunk*
    4. *indexation* : insertion des *chunks* et de leurs vecteurs dans le *vector store*
@@ -63,3 +63,29 @@ Le format JSON est adapté pour importer massivement de la donnée dans l'API Al
 
 ![](./assets/collections_004.png)
 
+
+### Métadonnées
+
+Le fichier JSON doit être structuré comme une liste de documents :
+
+```json
+[{"text": "hello world", "title": "my document"}, ...]
+```
+
+Il est possible d'ajouter des métadonnées à chaque document importé sous le format JSON. Ces métadonnées sont optionnelles et ne sont pour le moment disponibles que pour les fichiers JSON.
+
+Pour ce faire, vous pouvez les spécifiez comme ceci : 
+```json
+[{"text": "hello world", "title": "my document", "metadata": {"autor": "me"}}, ...]}
+```
+
+Ces métadonnées seront retournées avec le chunk associé au document lors d'une recherche avec l'endpoint `POST /search`.
+
+### Chunking
+
+Pour la stratégie de chunking est configurable en paramètre du endpoint `POST /v1/files`. Différentes chunker sont disponibles :
+
+- `NoChunker` : le fichier est considéré comme un seul chunk
+- `LangchainRecursiveCharacterTextSplitter` : voir [la documentation Langchain](https://python.langchain.com/v0.1/docs/modules/data_connection/document_transformers/recursive_text_splitter/) pour plus de détails
+
+Les paramètres du chunker (taille, séparateur, etc.) sont passés en paramètre du endpoint `POST /v1/files` dans le paramètre `chunker_args`, voir [la documentation](https://albert.api.etalab.gouv.fr/documentation#tag/Retrieval-Augmented-Generation/operation/upload_file_v1_files_post).

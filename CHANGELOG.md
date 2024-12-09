@@ -12,6 +12,14 @@ Tous les changements notables de l'application sont documentés dans ce fichier.
 - 🔄 Refactoring
 - ❌ Deprecated
 
+## [Alpha] - 2024-12-09
+
+- 🎉 Accès au endpoint `/search` par le biais de l'endpoint `/chat/completions` avec le paramètre `search=true`
+- 🎉 Ajout d'un endpoint GET `/metrics` pour récupérer les métriques de l'application via Prometheus
+- 🔄 Refactoring des classes de clients
+- 🎉 Ajout d'un modèle pydantic pour les settings de l'application
+- ❌ Suppression de la possibilité de passer une liste vide de collections dans l'endpoint `/search` pour rechercher dans l'intégralité des collections disponibles
+
 ## [Alpha] - 2024-11-05
 
 - 🎉 Ajout de l'endpoint POST `/audio/transcriptions` pour la transcription d'audio

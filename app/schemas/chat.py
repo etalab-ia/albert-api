@@ -1,19 +1,34 @@
 from typing import List, Literal, Optional, Union
 
-from openai.types.chat import (
-    ChatCompletion,
-    ChatCompletionChunk,
-    ChatCompletionMessageParam,
-)
-from pydantic import BaseModel, Field, model_validator
+from openai.types.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionMessageParam
+from pydantic import BaseModel, Field, model_validator, field_validator
 
+from app.schemas.search import SearchArgs, Search
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.lifespan import clients
 from app.utils.variables import LANGUAGE_MODEL_TYPE
 
+DEFAULT_RAG_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"
+
+
+class ChatSearchArgs(SearchArgs):
+    template: str = Field(
+        description='Template to use for the RAG query. The template must contain "{chunks}" and "{prompt}" placeholders.',
+        default=DEFAULT_RAG_TEMPLATE,
+    )
+
+    @field_validator("template")
+    def validate_template(cls, value):
+        if "{chunks}" not in value:
+            raise ValueError('template must contain "{chunks}" placeholder')
+        if "{prompt}" not in value:
+            raise ValueError('template must contain "{prompt}" placeholder')
+
+        return value
+
 
 class ChatCompletionRequest(BaseModel):
-    # See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py
+    # see https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py
     messages: List[ChatCompletionMessageParam]
     model: str
     stream: Optional[Literal[True, False]] = False
@@ -31,20 +46,28 @@ class ChatCompletionRequest(BaseModel):
     top_k: int = -1
     min_p: float = 0.0
 
-    class ConfigDict:
+    class Config:
         extra = "allow"
+
+    # search additionnal fields
+    search: bool = False
+    search_args: Optional[ChatSearchArgs] = None
 
     @model_validator(mode="after")
     def validate_model(cls, values):
         if clients.models[values.model].type != LANGUAGE_MODEL_TYPE:
             raise WrongModelTypeException()
 
+        if values.search:
+            if not values.search_args:
+                raise ValueError("search_args is required when search is true")
+
         return values
 
 
 class ChatCompletion(ChatCompletion):
-    pass
+    search_results: List[Search] = []
 
 
 class ChatCompletionChunk(ChatCompletionChunk):
-    pass
+    search_results: List[Search] = []

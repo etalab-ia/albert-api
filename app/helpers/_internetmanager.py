@@ -1,21 +1,18 @@
 from io import BytesIO
-from typing import List, Literal, Optional
+from typing import List, Optional
 
-from duckduckgo_search import DDGS
-from duckduckgo_search.exceptions import RatelimitException
 from fastapi import UploadFile
 import requests
 
-from app.helpers.chunkers import LangchainRecursiveCharacterTextSplitter
-from app.helpers.parsers import HTMLParser
-from app.helpers.searchclients import SearchClient
-from app.helpers._modelclients import ModelClients
+from app.clients import ModelClients
+from app.clients import InternetClient
+from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter
+from app.helpers.data.parsers import HTMLParser
 from app.schemas.chunks import Chunk
-from app.utils.logging import logger
-from app.utils.variables import INTERNET_BRAVE_TYPE, INTERNET_DUCKDUCKGO_TYPE, LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE
+from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 
 
-class InternetClient:
+class InternetManager:
     LIMITED_DOMAINS = [
         "service-public.fr",
         ".gouv.fr",
@@ -75,18 +72,17 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
     def __init__(
         self,
         model_clients: ModelClients,
-        search_client: SearchClient,
-        default_language_model: str,
-        default_embeddings_model: str,
-        type: Literal[INTERNET_DUCKDUCKGO_TYPE, INTERNET_BRAVE_TYPE] = INTERNET_BRAVE_TYPE,
+        internet_client: InternetClient,
+        default_language_model_id: str,
+        default_embeddings_model_id: str,
         api_key: Optional[str] = None,
     ) -> None:
         self.type = type
         self.api_key = api_key
         self.model_clients = model_clients
-        self.search_client = search_client
-        self.default_language_model_id = default_language_model
-        self.default_embeddings_model_id = default_embeddings_model
+        self.internet_client = internet_client
+        self.default_language_model_id = default_language_model_id
+        self.default_embeddings_model_id = default_embeddings_model_id
 
         assert self.default_language_model_id in self.model_clients, "Default internet language model is unavailable."
         assert (
@@ -99,7 +95,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
 
     def get_chunks(self, prompt: str, collection_id: str, n: int = 3) -> List[Chunk]:
         query = self._get_web_query(prompt=prompt)
-        urls = self._get_result_urls(query=query, n=n)
+        urls = self.internet_client.get_result_urls(query=query, n=n)
         chunks = self._build_chunks(urls=urls, query=query, collection_id=collection_id)
 
         return chunks
@@ -112,28 +108,6 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         query = response.choices[0].message.content
 
         return query
-
-    def _get_result_urls(self, query: str, n: int = 3) -> List[str]:
-        if self.type == INTERNET_DUCKDUCKGO_TYPE:
-            try:
-                with DDGS() as ddgs:
-                    results = list(ddgs.text(query, region="fr-fr", safesearch="On", max_results=n))
-            except RatelimitException:
-                logger.warning("DuckDuckGo rate limit exceeded.")
-                results = []
-            return [result["href"].lower() for result in results]
-
-        if self.type == INTERNET_BRAVE_TYPE:
-            headers = {"Accept": "application/json", "X-Subscription-Token": self.api_key}
-            params = {"q": query, "count": n, "country": "fr", "safesearch": "strict"}
-
-            try:
-                response = requests.get("https://api.search.brave.com/res/v1/web/search", headers=headers, params=params)
-                results = response.json().get("web", {}).get("results", [])
-            except Exception as e:
-                logger.warning(f"Brave Search API error: {str(e)}")
-                results = []
-            return [result["url"].lower() for result in results]
 
     def _build_chunks(self, urls: List[str], query: str, collection_id: str) -> List[Chunk]:
         chunker = LangchainRecursiveCharacterTextSplitter(

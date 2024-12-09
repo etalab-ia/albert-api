@@ -6,7 +6,8 @@ from typing import Any, List, Literal, Optional
 from elasticsearch import Elasticsearch, NotFoundError, helpers
 from openai import APITimeoutError
 
-from app.helpers.searchclients._searchclient import SearchClient
+from app.clients import SearchClient
+from app.clients import ModelClients
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
@@ -31,11 +32,10 @@ from app.utils.variables import (
 class ElasticSearchClient(SearchClient, Elasticsearch):
     BATCH_SIZE = 48
 
-    def __init__(self, models: List[str] = None, hybrid_limit_factor: float = 1.5, *args, **kwargs):
+    def __init__(self, models: ModelClients, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert super().ping(), "Elasticsearch is not reachable"
         self.models = models
-        self.hybrid_limit_factor = hybrid_limit_factor
 
     def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
@@ -208,7 +208,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10, offset: int = 0) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
@@ -226,7 +226,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
 
     # @TODO: pagination between qdrant and elasticsearch diverging
     # @TODO: offset is not supported by elasticsearch
-    def get_documents(self, collection_id: str, user: User, limit: int = 10000, offset: int = 0) -> List[Document]:
+    def get_documents(self, collection_id: str, user: User, limit: int = 10, offset: int = 0) -> List[Document]:
         """
         See SearchClient.get_documents
         """

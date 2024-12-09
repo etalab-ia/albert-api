@@ -1,10 +1,10 @@
 import json
 
-from prometheus_client import Counter
-
-from app.helpers._authenticationclient import AuthenticationClient
 from fastapi import Request, Response
+from prometheus_client import Counter
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from app.clients import AuthenticationClient
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):
@@ -27,7 +27,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                 body = await request.body()
                 body = body.decode(encoding="utf-8")
                 try:
-                    model = json.loads(body).get("model")
+                    model = json.loads(body).get("model") if body else None
                 except json.JSONDecodeError as e:
                     return Response(
                         status_code=422,
