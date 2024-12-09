@@ -1,9 +1,19 @@
-from typing import List
+from typing import List, Literal
+
 from pydantic import BaseModel
 
 
 class RerankRequest(BaseModel):
-    # See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py
     prompt: str
-    inputs: List[str]
+    input: List[str]
     model: str
+
+
+class Rerank(BaseModel):
+    score: float
+    index: int
+
+
+class Reranks(BaseModel):
+    object: Literal["list"] = "list"
+    data: List[Rerank]
