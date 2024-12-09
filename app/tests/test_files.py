@@ -71,7 +71,7 @@ class TestFiles:
     def test_upload_mardown_file(self, args, session_user, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/mardown.md"
+        file_path = "app/tests/assets/markdown.md"
         files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "text/mardown")}
         data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
         response = session_user.post(f"{args["base_url"]}/files", data=data, files=files)
@@ -80,8 +80,8 @@ class TestFiles:
     def test_upload_mardown_file_chunker_parameters(self, args, session_user, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/mardown.md"
-        files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "text/mardown")}
+        file_path = "app/tests/assets/markdown.md"
+        files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "text/markdown")}
         data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
         response = session_user.post(f"{args["base_url"]}/files", data=data, files=files)
         assert response.status_code == 201, f"error: upload file ({response.status_code} - {response.text})"

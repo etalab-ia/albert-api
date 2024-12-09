@@ -14,6 +14,7 @@ Tous les changements notables de l'application sont documentés dans ce fichier.
 
 ## [Alpha] - 2024-12-09
 
+- 🎉 Ajout de la possibilité d'uploader des fichiers markdown
 - 🎉 Accès au endpoint `/search` par le biais de l'endpoint `/chat/completions` avec le paramètre `search=true`
 - 🎉 Ajout d'un endpoint GET `/metrics` pour récupérer les métriques de l'application via Prometheus
 - 🔄 Refactoring des classes de clients
