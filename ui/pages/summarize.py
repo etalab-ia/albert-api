@@ -1,0 +1,164 @@
+import time
+
+from openai import OpenAI
+import streamlit as st
+from streamlit_extras.stylable_container import stylable_container
+
+from utils.common import get_collections, get_documents, header, settings
+from utils.summarize import generate_summary, generate_toc, get_chunks, summary_with_feedback
+from utils.variables import COLLECTION_TYPE_PRIVATE
+
+# Config
+API_KEY = header()
+
+openai_client = OpenAI(base_url=settings.base_url, api_key=API_KEY)
+
+# Data
+try:
+    collections = get_collections(api_key=API_KEY)
+    collections = [collection for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE]
+    documents = get_documents(api_key=API_KEY, collection_ids=[collection["id"] for collection in collections])
+except Exception as e:
+    st.error(body="Error to fetch user data.")
+    st.stop()
+
+# State
+if "selected_model" not in st.session_state:
+    st.session_state.selected_model = settings.summarize_summary_model
+
+# Sidebar
+with st.sidebar:
+    new_chat = st.button(label="**:material/refresh: New summarize**", key="new", use_container_width=True)
+    if new_chat:
+        st.session_state.pop("collection_id", None)
+        st.session_state.pop("document_id", None)
+        st.session_state.pop("validate_toc", None)
+        st.session_state.pop("toc", None)
+        st.session_state.pop("summary", None)
+        st.rerun()
+
+# Main
+## Document
+st.session_state.collection_id = None if "collection_id" not in st.session_state else st.session_state.collection_id
+st.session_state.document_id = None if "document_id" not in st.session_state else st.session_state.document_id
+
+st.subheader(body=":material/counter_1: Select a document")
+st.info(body="Please select a document to generate a summary.")
+document = st.selectbox(label="Document", options=[f"{document["id"]} - {document["name"]}" for document in documents])
+document_id = document.split(" - ")[0]
+collection_id = [document["collection_id"] for document in documents if document["id"] == document_id][0]
+
+with stylable_container(
+    key="Summarize",
+    css_styles="""
+    button{
+        float: right;
+    }
+    """,
+):
+    if st.button(label="Validate", key="validate_document"):
+        st.session_state.collection_id = collection_id
+        st.session_state.document_id = document_id
+        st.toast("Document validated !", icon="✅")
+        time.sleep(2)
+        st.rerun()
+
+## TOC
+st.session_state.toc = "" if "toc" not in st.session_state else st.session_state.toc
+st.session_state.validate_toc = False if "validate_toc" not in st.session_state else st.session_state.validate_toc
+
+st.markdown(body="***")
+st.subheader(body=":material/counter_2: Create a table of content")
+
+if not st.session_state.document_id:
+    st.stop()
+chunks = get_chunks(collection_id=collection_id, document_id=document_id, api_key=API_KEY)
+
+st.info(
+    body="For help the model to generate a summarize, you need to write a table of content of your document. Clic on *generate* button if you need an AI help."
+)
+
+toc = st.text_area(label="Table of content", value=st.session_state.toc, height=200)
+
+with stylable_container(
+    key="Toc",
+    css_styles="""
+    .left-button {
+        float: left;
+    }
+    .right-button {
+        float: right;
+    .stButton {
+        width: auto;
+    }
+    """,
+):
+    col1, col2, col3 = st.columns(spec=[2, 6, 2])
+    with col1:
+        if st.button(label="✨ Generate", key="generate_toc", use_container_width=True):
+            with st.spinner(text="✨ Generate..."):
+                st.session_state.toc = generate_toc(chunks=chunks, api_key=API_KEY, model=settings.summarize_toc_model)
+                st.toast(body="Table of content generated !", icon="✅")
+                time.sleep(2)
+                st.rerun()
+    with col3:
+        if st.button(label="Validate", use_container_width=True):
+            if toc:
+                st.session_state.toc = toc
+                st.session_state.validate_toc = True
+                st.toast(body="Table of content validated !", icon="✅")
+                time.sleep(2)
+                st.rerun()
+            else:
+                st.toast(body="You have to write a table of content before validate it.", icon="❌")
+
+
+## Summary
+st.session_state.summary = "" if "summary" not in st.session_state else st.session_state.summary
+
+st.markdown(body="***")
+st.subheader(body=":material/counter_3: Generate a summary")
+
+if not st.session_state.validate_toc:
+    st.stop()
+
+st.info(body="Here is the summary of your document.")
+
+st.write("**Summary**")
+st.code(body=st.session_state.summary, language="markdown", wrap_lines=True)
+
+with stylable_container(
+    key="Summarize",
+    css_styles="""
+    button{
+        float: right;
+    }
+    """,
+):
+    if st.button(label="✨ Generate", key="generate_summary"):
+        st.session_state.summary = generate_summary(toc=st.session_state.toc, chunks=chunks, api_key=API_KEY, model=settings.summarize_summary_model)
+        st.toast(body="Summary generated !", icon="✅")
+        time.sleep(2)
+        st.rerun()
+
+feedback = st.text_area(label="Feedback")
+
+with stylable_container(
+    key="Feedback",
+    css_styles="""
+    button{
+        float: right;
+    }
+    """,
+):
+    if st.button(label="Give feedback", key="give_feedback"):
+        if st.session_state.summary:
+            with st.spinner(text="✨ Generate..."):
+                st.session_state.summary = summary_with_feedback(
+                    feedback=feedback, summary=st.session_state.summary, api_key=API_KEY, model=settings.summarize_summary_model
+                )
+                st.toast(body="Summary generated with feedback !", icon="✅")
+                time.sleep(2)
+                st.rerun()
+        else:
+            st.toast(body="You have to generate a summary before give feedback.", icon="❌")

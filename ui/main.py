@@ -1,6 +1,6 @@
 import streamlit as st
 
-from config import BASE_URL
+from utils.common import settings
 
 st.set_page_config(
     page_title="Albert playground",
@@ -16,7 +16,7 @@ st.set_page_config(
 
 st.logo(
     image="https://upload.wikimedia.org/wikipedia/fr/thumb/5/50/Bloc_Marianne.svg/1200px-Bloc_Marianne.svg.png",
-    link=BASE_URL.replace("/v1", "/playground"),
+    link=settings.base_url.replace("/v1", "/playground"),
     size="large",
 )
 
@@ -25,6 +25,7 @@ pg = st.navigation(
         st.Page(page="pages/chat.py", title="Chat", icon=":material/chat:"),
         st.Page(page="pages/documents.py", title="Documents", icon=":material/file_copy:"),
         st.Page(page="pages/transcription.py", title="Transcription", icon=":material/graphic_eq:"),
+        st.Page(page="pages/summarize.py", title="Summarize", icon=":material/contract_edit:"),
     ]
 )
 pg.run()
