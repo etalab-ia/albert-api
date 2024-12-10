@@ -15,6 +15,8 @@ ADMIN_PERMISSIONS = [
     "update_user",
     "delete_user",
 ]
+COLLECTION_DISPLAY_ID_INTERNET = "internet"
+COLLECTION_TYPE_PRIVATE = "private"
 
 TRANSCRIPTION_SUPPORTED_LANGUAGES = [
     "afrikaans",
