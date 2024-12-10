@@ -1,17 +1,19 @@
 from functools import partial
+import json
 import time
-from typing import Literal, Any
+from typing import Any, List, Literal
 
+from fastapi import HTTPException
 from openai import OpenAI
 import requests
-from fastapi import HTTPException
-import json
-from app.schemas.settings import Settings
+
 from app.schemas.embeddings import Embeddings
 from app.schemas.models import Model, Models
-from app.utils.logging import logger
+from app.schemas.rerank import Rerank
+from app.schemas.settings import Settings
 from app.utils.exceptions import ModelNotAvailableException, ModelNotFoundException
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE, DEFAULT_TIMEOUT
+from app.utils.logging import logger
+from app.utils.variables import AUDIO_MODEL_TYPE, DEFAULT_TIMEOUT, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, RERANK_MODEL_TYPE
 
 
 def get_models_list(self, *args, **kwargs) -> Models:
@@ -37,7 +39,7 @@ def get_models_list(self, *args, **kwargs) -> Models:
             self.created = response.get("created", round(time.time()))
             self.max_context_length = response.get("max_model_len", None)
 
-        elif self.type == EMBEDDINGS_MODEL_TYPE:
+        elif self.type == EMBEDDINGS_MODEL_TYPE or self.type == RERANK_MODEL_TYPE:
             endpoint = str(self.base_url).replace("/v1/", "/info")
             response = requests.get(url=endpoint, headers=headers, timeout=DEFAULT_TIMEOUT).json()
 
@@ -74,6 +76,7 @@ def get_models_list(self, *args, **kwargs) -> Models:
     return Models(data=[data])
 
 
+# @TODO : useless ?
 def create_embeddings(self, *args, **kwargs):
     try:
         url = f"{self.base_url}embeddings"
@@ -81,7 +84,9 @@ def create_embeddings(self, *args, **kwargs):
         response = requests.post(url=url, headers=headers, json=kwargs)
         response.raise_for_status()
         data = response.json()
+
         return Embeddings(**data)
+
     except Exception as e:
         raise HTTPException(status_code=e.response.status_code, detail=json.loads(e.response.text)["message"])
 
@@ -89,7 +94,7 @@ def create_embeddings(self, *args, **kwargs):
 class ModelClient(OpenAI):
     DEFAULT_TIMEOUT = 120
 
-    def __init__(self, type=Literal[EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE], *args, **kwargs) -> None:
+    def __init__(self, type=Literal[EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE, RERANK_MODEL_TYPE], *args, **kwargs) -> None:
         """
         ModelClient class extends AsyncOpenAI class to support custom methods.
         """
@@ -111,6 +116,28 @@ class ModelClient(OpenAI):
             self.vector_size = len(response.data[0].embedding)
             self.embeddings.create = partial(create_embeddings, self)
 
+        if self.type == RERANK_MODEL_TYPE:
+
+            class RerankClient(OpenAI):
+                def __init__(self, model: str, *args, **kwargs) -> None:
+                    super().__init__(*args, **kwargs)
+                    self.model = model
+
+                def create(self, prompt: str, input: list[str], model: str) -> List[Rerank]:
+                    assert self.model == model, "Model not found."
+                    json = {"query": prompt, "texts": input}
+                    url = f"{str(self.base_url).replace("/v1/", "/rerank")}"
+                    headers = {"Authorization": f"Bearer {self.api_key}"}
+
+                    response = requests.post(url=url, headers=headers, json=json, timeout=self.timeout)
+                    response.raise_for_status()
+                    data = response.json()
+                    data = [Rerank(**item) for item in data]
+
+                    return data
+
+            self.rerank = RerankClient(model=self.id, base_url=self.base_url, api_key=self.api_key, timeout=self.DEFAULT_TIMEOUT)
+
 
 class ModelClients(dict):
     """
@@ -127,7 +154,7 @@ class ModelClients(dict):
 
     def __setitem__(self, key: str, value) -> None:
         if any(key == k for k in self.keys()):
-            raise KeyError(msg=f"Model id {key} is duplicated, not allowed.")
+            raise KeyError(f"Model id {key} is duplicated, not allowed.")
         super().__setitem__(key, value)
 
     def __getitem__(self, key: str) -> Any:
