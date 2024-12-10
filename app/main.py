@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi.middleware import SlowAPIASGIMiddleware
 
-from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, rerank, search
+from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, multiagents, rerank, search
 from app.helpers import MetricsMiddleware
 from app.schemas.security import User
 from app.utils.lifespan import lifespan
@@ -48,6 +48,8 @@ app.include_router(router=completions.router, tags=["Core"], prefix="/v1")
 app.include_router(router=embeddings.router, tags=["Core"], prefix="/v1")
 app.include_router(router=audio.router, tags=["Core"], prefix="/v1")
 app.include_router(router=rerank.router, tags=["Core"], prefix="/v1")
+app.include_router(router=multiagents.router, tags=["Core"], prefix="/v1")
+
 
 # RAG
 app.include_router(router=search.router, tags=["Retrieval Augmented Generation"], prefix="/v1")
