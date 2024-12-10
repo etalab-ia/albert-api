@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Security
 import asyncio
 
 from app.schemas.multiagents import MultiAgentsRequest
+from app.helpers import LanguageModelReranker
 from app.schemas.security import User
 from app.utils.settings import settings
 from app.utils.lifespan import clients, limiter
@@ -113,6 +114,8 @@ def remove_duplicates(lst):
 @limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
 async def multiagents(request: Request, body: MultiAgentsRequest, user: User = Security(check_api_key)):
     """Multi Agents researcher."""
+
+    reranker = LanguageModelReranker(model=clients.models[body.supervisor_model])
     client = clients.models[body.supervisor_model]
     print("YOOOOO")
     print(body)
@@ -133,12 +136,11 @@ async def multiagents(request: Request, body: MultiAgentsRequest, user: User = S
     initial_refs = [doc.chunk.metadata.document_name for doc in searches]
 
     async def go_multiagents(body, initial_docs, initial_refs, n_retry, max_retry=5, window=5):
-        rerank_type = "choicer"
         docs_tmp = initial_docs[n_retry * window : (n_retry + 1) * window]
         refs_tmp = initial_refs[n_retry * window : (n_retry + 1) * window]
-        context = "\n-------\n".join(["(Extrait : " + ref + ") " + doc[:250] + "..." for doc, ref in zip(docs_tmp, refs_tmp)])
 
-        choice = clients.rerank.get_rank(body.prompt, context, body.supervisor_model, rerank_type)
+        input = ["(Extrait : " + ref + ") " + doc[:250] + "..." for doc, ref in zip(docs_tmp, refs_tmp)]
+        choice = reranker.create(prompt=body.prompt, input=input, type="choicer")[0].score
 
         if choice in [0, 3] and n_retry < max_retry:
             print(f"retry ! {n_retry}")
