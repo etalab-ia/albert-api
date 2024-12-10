@@ -150,12 +150,18 @@ class ModelClients(dict):
             if model.status == "unavailable":
                 logger.error(msg=f"unavailable model API on {model_config.url}, skipping.")
                 continue
-            self.__setitem__(key=model.id, value=model)
+            try:
+                logger.info(msg=f"Adding model API {model_config.url} to the client...")
+                self.__setitem__(key=model.id, value=model)
+                logger.info(msg="done.")
+            except Exception as e:
+                logger.error(msg=e)
 
     def __setitem__(self, key: str, value) -> None:
         if any(key == k for k in self.keys()):
-            raise KeyError(f"Model id {key} is duplicated, not allowed.")
-        super().__setitem__(key, value)
+            raise ValueError(f"duplicated model ID {key}, skipping.")
+        else:
+            super().__setitem__(key, value)
 
     def __getitem__(self, key: str) -> Any:
         try:
