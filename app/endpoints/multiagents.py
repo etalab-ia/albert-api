@@ -119,7 +119,6 @@ async def multiagents(request: Request, body: MultiAgentsRequest, user: User = S
     url = f"{client.base_url}multiagents"
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
-    # body.collections.remove(INTERNET_COLLECTION_DISPLAY_ID)
     searches = clients.search.query(
         prompt=body.prompt,
         collection_ids=body.collections,
@@ -129,10 +128,7 @@ async def multiagents(request: Request, body: MultiAgentsRequest, user: User = S
         score_threshold=body.score_threshold,
         user=user,
     )
-    # docs_json = Searches(data=searches)
     initial_docs = [doc.chunk.content for doc in searches]
-    # print(initial_docs)
-    # print(len(initial_docs))
     print(searches)
     initial_refs = [doc.chunk.metadata.document_name for doc in searches]
 
@@ -144,18 +140,12 @@ async def multiagents(request: Request, body: MultiAgentsRequest, user: User = S
 
         choice = clients.rerank.get_rank(body.prompt, context, body.supervisor_model, rerank_type)
 
-        if choice in [0, 3] and n_retry <= max_retry:
+        if choice in [0, 3] and n_retry < max_retry:
             print(f"retry ! {n_retry}")
             return await go_multiagents(body, initial_docs, initial_refs, n_retry=n_retry + 1, max_retry=5, window=5)
         elif choice in [1, 2]:
             print("yay 1 or 2")
-            prompts = get_prompt_teller_multi(body.prompt, docs_tmp, choice)
-            answers = await ask_in_parallel(body.writers_model, prompts, body.user)
-            print(answers)
-            prompt = PROMPT_CONCAT.format(prompt=body.prompt, answers=answers)
-            answer = get_completion(body.supervisor_model, prompt, body.user, temperature=0.2, max_tokens=600)
-            return answer, docs_tmp, refs_tmp, choice, n_retry
-        elif choice == 4 or n_retry > max_retry:  # else ?
+        elif choice == 4 or n_retry >= max_retry:  # else ?
             print("Internet time")
             prep_net(body, user)
             print("should be internet:", body.collections)
@@ -170,11 +160,11 @@ async def multiagents(request: Request, body: MultiAgentsRequest, user: User = S
             )
             docs_tmp = [doc.chunk.content for doc in searches]
             refs_tmp = [doc.chunk.metadata.document_name for doc in searches]
-            prompts = get_prompt_teller_multi(body.prompt, docs_tmp, choice)
-            answers = await ask_in_parallel(body.writers_model, prompts, body.user)
-            prompt = PROMPT_CONCAT.format(prompt=body.prompt, answers=answers)
-            answer = get_completion(body.supervisor_model, prompt, body.user, temperature=0.2, max_tokens=600)
-            return answer, docs_tmp, refs_tmp, choice, n_retry
+        prompts = get_prompt_teller_multi(body.prompt, docs_tmp, choice)
+        answers = await ask_in_parallel(body.writers_model, prompts, body.user)
+        prompt = PROMPT_CONCAT.format(prompt=body.prompt, answers=answers)
+        answer = get_completion(body.supervisor_model, prompt, body.user, temperature=0.2, max_tokens=600)
+        return answer, docs_tmp, refs_tmp, choice, n_retry
 
     answer, docs_tmp, refs, choice, n_retry = await go_multiagents(body, initial_docs, initial_refs, n_retry=0, max_retry=5, window=5)
 
