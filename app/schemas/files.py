@@ -1,5 +1,5 @@
-from typing import List, Literal, Optional
 import json
+from typing import Dict, List, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -43,7 +43,7 @@ class FilesRequest(BaseModel):
 class Json(BaseModel):
     title: str
     text: str
-    metadata: dict = {}
+    metadata: Dict[str, str] = {}
 
 
 class JsonFile(BaseModel):

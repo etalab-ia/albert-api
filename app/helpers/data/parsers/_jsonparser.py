@@ -31,7 +31,7 @@ class JSONParser(BaseParser):
         try:
             file = JsonFile(documents=file)
         except Exception as e:
-            raise InvalidJSONFormatException()
+            raise InvalidJSONFormatException(detail=f"Invalid JSON file format: {e}")
 
         output = list()
         created_at = round(time.time())
