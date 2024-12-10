@@ -1,19 +1,18 @@
 <div id="toc"><ul align="center" style="list-style: none">
 <summary><h1>Albert API</h1></summary>
 
-![](https://img.shields.io/badge/version-alpha-yellow) ![](https://img.shields.io/badge/Python-3.12-green) ![](https://img.shields.io/badge/vLLM-v0.6.3.post1-blue) ![](https://img.shields.io/badge/HuggingFace%20Text%20Embeddings%20Inference-1.5-red)<br>
+![](https://img.shields.io/badge/version-0.0.1-yellow) ![](https://img.shields.io/badge/Python-3.12-green) ![](https://img.shields.io/badge/vLLM-v0.6.3.post1-blue) ![](https://img.shields.io/badge/HuggingFace%20Text%20Embeddings%20Inference-1.5-red)<br>
 <a href="https://github.com/etalab-ia/albert-api/blob/main/CHANGELOG.md"><b>Changelog</b></a> | <a href="https://albert.api.etalab.gouv.fr/documentation"><b>Documentation</b></a> | <a href="https://albert.api.etalab.gouv.fr/playground"><b>Playground</b></a> | <a href="https://albert.api.etalab.gouv.fr/status"><b>Status</b></a> | <a href="https://albert.api.etalab.gouv.fr/swagger"><b>Swagger</b></a> <br><br>
 </ul></div>
 
 Albert API est une initiative d'[Etalab](https://www.etalab.gouv.fr/). **Il s'agit d'une API open source d'IA générative optimisée pour des cas d'usages administratifs en langue française. Elle permet d'être un proxy entre des modèles de langage et vos données.** Elle agrège les services suivants :
 - servir des modèles de langage avec [vLLM](https://github.com/vllm-project/vllm)
 - servir des modèles d'embeddings avec [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)
+- servir des modèles de reranking avec [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)
 - servir des modèles de reconnaissance vocale avec [Whisper OpenAI API](https://github.com/etalab-ia/whisper-openai-api)
 - accès un *vector store* avec [Elasticsearch](https://www.elastic.co/fr/products/elasticsearch) pour la recherche de similarité (lexicale, sémantique ou hybride) ou [Qdrant](https://qdrant.tech/) pour la recherche sémantique uniquement.
 
 En se basant sur les conventions définies par OpenAI, l'API Albert expose des endpoints qui peuvent être appelés avec le [client officiel python d'OpenAI](https://github.com/openai/openai-python/tree/main). Ce formalisme permet d'intégrer facilement l'API Albert avec des bibliothèques tierces comme [Langchain](https://www.langchain.com/) ou [LlamaIndex](https://www.llamaindex.ai/).
-
-
 
 ## ⚙️ Fonctionnalités
 
