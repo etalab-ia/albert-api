@@ -5,39 +5,63 @@ import pandas as pd
 import streamlit as st
 
 from config import INTERNET_COLLECTION_DISPLAY_ID, PRIVATE_COLLECTION_TYPE
-from utils import create_collection, delete_collection, delete_document, get_collections, get_documents, get_models, header, set_config, upload_file
+from utils import (
+    create_collection,
+    delete_collection,
+    delete_document,
+    get_collections,
+    get_documents,
+    get_models,
+    header,
+    set_config,
+    upload_file,
+    authenticate,
+)
 
 # Config
 set_config()
-API_KEY = header()
+header()
+API_KEY = authenticate()
+st.session_state["count"] = 0
+
 
 # Data
-try:
-    language_models, embeddings_models, _ = get_models(api_key=API_KEY)
-    collections = get_collections(api_key=API_KEY)
-    collections = [collection for collection in collections if collection["id"] != INTERNET_COLLECTION_DISPLAY_ID]
-    documents = get_documents(
-        api_key=API_KEY, collection_ids=[collection["id"] for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE]
-    )
-except Exception as e:
-    st.error("Error to fetch user data.")
-    st.stop()
+def load_stuff():
+    try:
+        language_models, embeddings_models, _ = get_models(api_key=API_KEY)
+        collections = get_collections(api_key=API_KEY)
+        collections = [collection for collection in collections if collection["id"] != INTERNET_COLLECTION_DISPLAY_ID]
+        documents = get_documents(
+            api_key=API_KEY,
+            collection_ids=[collection["id"] for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
+            count=st.session_state["count"],
+        )
+    except Exception as e:
+        st.error("Error to fetch user data.")
+        st.stop()
 
-## Collections
-data = [
-    {
-        "ID": collection["id"],
-        "Name": collection["name"],
-        "Type": collection["type"],
-        "Model": collection["model"],
-        "Documents": collection["documents"],
-    }
-    for collection in collections
-]
-columns = ["ID", "Name", "Type", "Model", "Documents"]
-df_collections = pd.DataFrame(data, columns=columns)
+    ## Collections
+    data = [
+        {
+            "ID": collection["id"],
+            "Name": collection["name"],
+            "Type": collection["type"],
+            "Model": collection["model"],
+            "Documents": collection["documents"],
+        }
+        for collection in collections
+    ]
+    columns = ["ID", "Name", "Type", "Model", "Documents"]
+    df_collections = pd.DataFrame(data, columns=columns)
+    return language_models, embeddings_models, collections, documents, df_collections
+
 
 st.subheader("Collections")
+if st.button("⟳ Refresh collections and documents lists"):
+    st.cache_data.clear()
+    language_models, embeddings_models, collections, documents, df_collections = load_stuff()
+
+language_models, embeddings_models, collections, documents, df_collections = load_stuff()
 st.dataframe(df_collections, hide_index=True, use_container_width=True)
 
 col1, col2 = st.columns(2)

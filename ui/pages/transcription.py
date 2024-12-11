@@ -6,11 +6,12 @@ import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
 from config import BASE_URL, SUPPORTED_LANGUAGES
-from utils import get_models, header, set_config
+from utils import get_models, header, set_config, authenticate
 
 # Config
 set_config()
-API_KEY = header()
+header()
+API_KEY = authenticate()
 
 # Data
 try:
@@ -36,7 +37,7 @@ col1, col2 = st.columns(2)
 with col1:
     file = st.file_uploader("Upload an audio file", type=["mp3", "wav", "m4a"])
 with col2:
-    record = st.experimental_audio_input(label="Record a voice message")
+    record = st.audio_input(label="Record a voice message")
 
 if file and record:
     st.error("Please upload only one file at a time.")

@@ -3,7 +3,6 @@ from typing import List
 
 import requests
 import streamlit as st
-from streamlit_extras.stylable_container import stylable_container
 
 from config import BASE_URL, AUDIO_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 
@@ -22,30 +21,52 @@ def set_config():
     )
 
 
+# def header():
+#    with stylable_container(
+#        key="Header",
+#        css_styles="""
+#        button{
+#            float: right;
+#
+#        }
+#    """,
+#    ):
+#        col1, col2 = st.columns(2)
+#        #with col1:
+#        #    st.subheader("Albert playground")
+#
+#        # Authentication
+#        API_KEY = authenticate()
+#        with col2:
+#            logout = st.button("Logout")
+#        if logout:
+#            st.session_state.pop("API_KEY")
+#            st.rerun()
+#        st.markdown("***")
+#
+#    return API_KEY
 def header():
-    with stylable_container(
-        key="Header",
-        css_styles="""
-        button{
-            float: right;
-            
-        }
-    """,
-    ):
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("Albert playground")
+    gradient_text_html = """
+    <style>
+    .gradient-text {
+        font-weight: normal;
+        background: -webkit-linear-gradient(left, rgba(190, 190, 190, 0.8), rgba(235, 235, 235, 0.8));
+        background: linear-gradient(to right, rgba(190, 190, 190, 0.8), rgba(235, 235, 235, 0.8));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline;
+        font-size: 3em;
+    }
+    p {
+        all: unset; /* Réinitialiser les styles par défaut, si nécessaire */
+        display: block;
+        font-size: 16px;
+    }
+    </style>
+    <div class="gradient-text">Albert Playground</div>
 
-        # Authentication
-        API_KEY = authenticate()
-        with col2:
-            logout = st.button("Logout")
-        if logout:
-            st.session_state.pop("API_KEY")
-            st.rerun()
-        st.markdown("***")
-
-    return API_KEY
+    """
+    return st.markdown(gradient_text_html, unsafe_allow_html=True)
 
 
 def check_api_key(base_url: str, api_key: str):
@@ -87,6 +108,7 @@ def get_models(api_key: str):
     return language_models, embeddings_models, audio_models
 
 
+@st.cache_data(show_spinner="Getting the list of available collections...")
 def get_collections(api_key: str):
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(f"{BASE_URL}/collections", headers=headers)
@@ -108,7 +130,8 @@ def upload_file(api_key: str, file, collection_id: str) -> None:
         st.toast("Upload failed", icon="❌")
 
 
-def get_documents(api_key: str, collection_ids: List[str]) -> dict:
+@st.cache_data(show_spinner="Getting the list of available documents...")
+def get_documents(api_key: str, collection_ids: List[str], count=0) -> dict:
     documents = list()
     headers = {"Authorization": f"Bearer {api_key}"}
     for collection_id in collection_ids:
