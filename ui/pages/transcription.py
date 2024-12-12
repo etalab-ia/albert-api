@@ -69,13 +69,4 @@ if submit and audio:
             logging.error(traceback.format_exc())
 
 if result:
-    st.caption("Result")
-    with stylable_container(
-        "codeblock",
-        """
-    code {
-        white-space: pre-wrap !important;
-    }
-    """,
-    ):
-        st.code(result, language="markdown")
+    st.code(result, language="markdown", wrap_lines=True)
