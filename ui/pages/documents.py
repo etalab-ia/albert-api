@@ -12,7 +12,6 @@ from utils import (
     get_collections,
     get_documents,
     get_models,
-    header,
     set_config,
     upload_file,
     authenticate,
@@ -20,7 +19,6 @@ from utils import (
 
 # Config
 set_config()
-header()
 API_KEY = authenticate()
 st.session_state["count"] = 0
 

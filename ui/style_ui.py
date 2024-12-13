@@ -3,32 +3,66 @@ import re
 
 import streamlit as st
 from langchain.callbacks.base import BaseCallbackHandler
+from utils import pc
 
 
 def format_message(text):
     """
-    This function is used to format the messages in the chatbot UI.
+    Formats the messages in the chatbot UI, preserving code blocks, inline code, bold, italic, links, and newlines.
 
     Parameters:
     text (str): The text to be formatted.
-    """
-    text_blocks = re.split(r"```[\s\S]*?```", text)
-    code_blocks = re.findall(r"```([\s\S]*?)```", text)
-    url_blocks = re.findall(r":url_start:(.*?):url_end:", html.escape(text))
 
-    text_blocks = [html.escape(block) for block in text_blocks]
+    Returns:
+    str: The formatted HTML-safe text.
+    """
+    # Regex for capturing blocks of code and URLs
+    pattern = r"(```[\s\S]*?```|:url_start:.*?:url_end:|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)"
+    segments = re.split(pattern, text)
 
     formatted_text = ""
-    for i in range(len(text_blocks)):
-        formatted_text += text_blocks[i].replace("\n", "<br>")
-        if i < len(code_blocks):
-            formatted_text += f'<pre style="white-space: pre-wrap; word-wrap: break-word;"><code>{html.escape(code_blocks[i])}</code></pre>'
 
-    for url in url_blocks:
-        urls_couple = url.split(" ---- ")
-        formatted_text = formatted_text.replace(url, f'<a href="{html.escape(urls_couple[1])}">{urls_couple[0]}</a>')
+    for segment in segments:
+        if not segment:
+            continue
+        segment = segment.replace("\n\n", "\n")
 
-    return formatted_text.replace(":url_start:", "").replace(":url_end:", "")
+        if segment.startswith("```") and segment.endswith("```"):
+            # Code block
+            code_content = segment[3:-3].strip()  # Remove ``` delimiters
+            formatted_text += '<pre style="white-space: pre-wrap; word-wrap: break-word;">' f"<code>{html.escape(code_content)}</code>" "</pre>"
+        elif segment.startswith(":url_start:") and segment.endswith(":url_end:"):
+            # URL block
+            url_content = segment[11:-9]  # Remove :url_start: and :url_end:
+            urls_couple = url_content.split(" ---- ")
+            if len(urls_couple) == 2:
+                # Clickable text + URL
+                formatted_text += f'<a href="{html.escape(urls_couple[1])}">{html.escape(urls_couple[0])}</a>'
+            else:
+                # If format is invalid, escape the entire segment
+                formatted_text += html.escape(segment)
+        elif segment.startswith("`") and segment.endswith("`"):
+            # Inline code
+            inline_code = segment[1:-1]  # Remove ` delimiters
+            formatted_text += f'<code style="background: #f4f4f4; padding: 2px 4px; border-radius: 4px;">{html.escape(inline_code)}</code>'
+        elif (segment.startswith("**") and segment.endswith("**")) or (segment.startswith("__") and segment.endswith("__")):
+            # Bold text
+            bold_text = segment[2:-2]  # Remove ** or __ delimiters
+            formatted_text += f"<strong>{html.escape(bold_text)}</strong>"
+        elif (segment.startswith("*") and segment.endswith("*")) or (segment.startswith("_") and segment.endswith("_")):
+            # Italic text
+            italic_text = segment[1:-1]  # Remove * or _ delimiters
+            formatted_text += f"<em>{html.escape(italic_text)}</em>"
+        else:
+            # Plain text, replace newlines with <br>
+            formatted_text += html.escape(segment).replace("\n", "<br>")
+
+    return formatted_text
+
+
+## Simpler but weaker
+# def format_message(text):
+#    return markdown.markdown(text.replace("\n\n\n", "\n\n"))
 
 
 def message_func(text, is_user=False, is_df=False, model="gpt"):
@@ -46,7 +80,7 @@ def message_func(text, is_user=False, is_df=False, model="gpt"):
     if is_user:
         avatar_url = "https://icons.veryicon.com/png/o/miscellaneous/two-color-icon-library/user-286.png"
         message_alignment = "flex-end"
-        message_bg_color = "linear-gradient(135deg, #00B2FF 0%, #006AFF 100%)"
+        message_bg_color = f"linear-gradient(135deg, #00B2FF 0%, {pc} 20%)"
         avatar_class = "user-avatar"
         st.write(
             f"""
