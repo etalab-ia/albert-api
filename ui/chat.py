@@ -9,23 +9,12 @@ import streamlit_antd_components as sac
 
 
 from config import BASE_URL
-from utils import get_collections, get_models, set_config, authenticate, header
+from utils import get_collections, get_models, set_config, authenticate
 
 # Config
 set_config()
 API_KEY = authenticate()
-header()
 
-streamlit_style = """
-			<style>
-			@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap');
-
-			html, body, [class*="css"]  {
-			font-family: 'Roboto', sans-serif;
-			}
-			</style>
-			"""
-st.markdown(streamlit_style, unsafe_allow_html=True)
 # Data
 try:
     language_models, embeddings_models, _ = get_models(api_key=API_KEY)
@@ -37,6 +26,7 @@ except Exception:
 
 openai_client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
 
+# Hierarchy for models
 hierarchy = {}
 for item in language_models:
     parent, child = item.split("/")  # Parent/Child Separation
@@ -84,9 +74,9 @@ with st.sidebar:
             label="",
             align="center",
             size="sm",
+            index=2,
         )
     )
-    print(params["sampling_params"]["max_tokens"])
 
     st.title("RAG parameters")
     st.markdown("")
@@ -104,12 +94,14 @@ with st.sidebar:
         st.markdown("Number of chunks to retrieve")
         params["rag"]["k"] = st.number_input("Top K", value=3, label_visibility="collapsed")
 
-    if model_collections:
+    if selected_collections:
         rag = st.toggle("Activated RAG", value=True, disabled=not bool(params["rag"]["collections"]))
+        print(rag, selected_collections)
     else:
         rag = st.toggle("Activated RAG", value=False, disabled=True)
+        print(rag, selected_collections)
 
-    st.markdown("---")
+    sac.divider(align="center", color="gray")
     col1, col2 = st.columns(2)
     with col2:
         new_chat = st.button("New chat", use_container_width=True)
@@ -129,7 +121,6 @@ with open("ui/styles.md", "r") as styles_file:
 st.write(styles_content, unsafe_allow_html=True)
 
 # Main
-
 INITIAL_MESSAGE = [
     {"role": "user", "content": "Bonjour!"},
     {
@@ -219,7 +210,6 @@ if "messages" in st.session_state and st.session_state["messages"][-1]["role"] !
                     json=data,
                     headers={"Authorization": f"Bearer {API_KEY}"},
                 )
-                print(response.json())
                 assert response.status_code == 200
 
                 prompt_template = (
@@ -252,3 +242,17 @@ if "messages" in st.session_state and st.session_state["messages"][-1]["role"] !
                 align="left",
             )
         callback_handler.put_response(answer.strip())
+
+with st._bottom:
+    _, col1, col2 = st.columns([1, 15, 1], vertical_alignment="top")
+    with col1:
+        st.markdown(
+            """<p style="font-size: 12px; text-align: center;"><i>Je peux me tromper, en cas de doute pensez à toujours vérifier mes sources et mes réponses.</i></p>
+""",
+            unsafe_allow_html=True,
+        )
+    with col2:
+        st.image(
+            "https://upload.wikimedia.org/wikipedia/fr/thumb/5/50/Bloc_Marianne.svg/1200px-Bloc_Marianne.svg.png",
+            width=60,  # Manually Adjust the width of the image as per requirement
+        )

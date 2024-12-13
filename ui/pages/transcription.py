@@ -6,11 +6,10 @@ import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
 from config import BASE_URL, SUPPORTED_LANGUAGES
-from utils import get_models, header, set_config, authenticate
+from utils import get_models, set_config, authenticate
 
 # Config
 set_config()
-header()
 API_KEY = authenticate()
 
 # Data
