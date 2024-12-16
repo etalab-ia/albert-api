@@ -35,6 +35,9 @@ def header():
         display: block;
         font-size: 16px;
     }
+    [data-testid=stSidebarContent] {
+    margin-top: -30px;
+    }
     </style>
     <div class="gradient-text">Albert Playground</div>
 
