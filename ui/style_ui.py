@@ -80,7 +80,7 @@ def message_func(text, is_user=False, is_df=False, model="gpt"):
     if is_user:
         avatar_url = "https://icons.veryicon.com/png/o/miscellaneous/two-color-icon-library/user-286.png"
         message_alignment = "flex-end"
-        message_bg_color = f"linear-gradient(135deg, #00B2FF 0%, {pc} 20%)"
+        message_bg_color = f"linear-gradient(135deg, #8585f6 0%, {pc} 40%)"
         avatar_class = "user-avatar"
         st.write(
             f"""
