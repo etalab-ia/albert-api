@@ -7,6 +7,8 @@ from app.schemas.security import User
 from app.utils.settings import settings
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
+from app.helpers import SearchManager, InternetManager
+from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID
 
 
 router = APIRouter()
@@ -21,11 +23,25 @@ explain_choice = {
 
 
 def prep_net(body, user):
-    body.collections = []
-    internet_chunks = []
-    internet_chunks = clients.internet.get_chunks(prompt=body.prompt)
-    internet_collection = clients.internet.create_temporary_internet_collection(internet_chunks, body.collections, user)
-    body.collections.append(internet_collection.id)
+    body.collections = [INTERNET_COLLECTION_DISPLAY_ID]
+    # internet_chunks = []
+    # internet_chunks = clients.internet.get_chunks(prompt=body.prompt)
+    # internet_collection = clients.internet.create_temporary_internet_collection(internet_chunks, body.collections, user)
+    # body.collections.append(internet_collection.id)
+    search_manager = SearchManager(
+        model_clients=clients.models,
+        search_client=clients.search,
+        internet_manager=InternetManager(
+            model_clients=clients.models,
+            internet_client=clients.internet,
+            default_language_model_id=settings.internet.args.default_language_model,
+            default_embeddings_model_id=settings.internet.args.default_embeddings_model,
+        ),
+    )
+    searches = search_manager.query(
+        collections=body.collections, prompt=body.prompt, method=body.method, k=5, rff_k=5, user=user, score_threshold=body.score_threshold
+    )
+    return searches
 
 
 def get_prompt_teller_multi(question, docs_tmp, choice):
@@ -71,7 +87,7 @@ def get_completion(model, prompt, user, temperature=0.2, max_tokens=200):
         temperature=temperature,
         max_tokens=max_tokens,
         stream=False,
-        user=user,
+        user=user.name,
     )
     result = response.choices[0].message.content
     return result
@@ -81,13 +97,13 @@ async def get_completion_async(model, prompt, user, temperature, max_tokens):
     return get_completion(model, prompt, user, temperature, max_tokens)
 
 
-async def ask_in_parallel(model, prompts, user):
+async def ask_in_parallel(model, prompts, user, max_tokens):
     tasks = []
     for prompt in prompts:
         print("-" * 32)
         print(prompt)
         print("-" * 32)
-        task = asyncio.create_task(get_completion_async(model, prompt, user, temperature=0.2, max_tokens=200))
+        task = asyncio.create_task(get_completion_async(model, prompt, user, temperature=0.2, max_tokens=max_tokens))
         tasks.append(task)
     answers = await asyncio.gather(*tasks)
     return answers
@@ -117,8 +133,6 @@ async def multiagents(request: Request, body: MultiAgentsRequest, user: User = S
 
     reranker = LanguageModelReranker(model=clients.models[body.supervisor_model])
     client = clients.models[body.supervisor_model]
-    print("YOOOOO")
-    print(body)
     url = f"{client.base_url}multiagents"
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
@@ -126,13 +140,12 @@ async def multiagents(request: Request, body: MultiAgentsRequest, user: User = S
         prompt=body.prompt,
         collection_ids=body.collections,
         method=body.method,
-        k=25,  # body.k,
-        rff_k=25,  # body.rff_k,
+        k=body.k,
+        rff_k=body.rff_k,
         score_threshold=body.score_threshold,
         user=user,
     )
     initial_docs = [doc.chunk.content for doc in searches]
-    print(searches)
     initial_refs = [doc.chunk.metadata.document_name for doc in searches]
 
     async def go_multiagents(body, initial_docs, initial_refs, n_retry, max_retry=5, window=5):
@@ -143,29 +156,17 @@ async def multiagents(request: Request, body: MultiAgentsRequest, user: User = S
         choice = reranker.create(prompt=body.prompt, input=input, type="choicer")[0].score
 
         if choice in [0, 3] and n_retry < max_retry:
-            print(f"retry ! {n_retry}")
             return await go_multiagents(body, initial_docs, initial_refs, n_retry=n_retry + 1, max_retry=5, window=5)
         elif choice in [1, 2]:
-            print("yay 1 or 2")
+            pass
         elif choice == 4 or n_retry >= max_retry:  # else ?
-            print("Internet time")
-            prep_net(body, user)
-            print("should be internet:", body.collections)
-            searches = clients.search.query(
-                prompt=body.prompt,
-                collection_ids=body.collections,
-                method=body.method,
-                k=5,  # body.k,
-                rff_k=5,  # body.rff_k,
-                score_threshold=body.score_threshold,
-                user=user,
-            )
+            searches = prep_net(body, user)
             docs_tmp = [doc.chunk.content for doc in searches]
             refs_tmp = [doc.chunk.metadata.document_name for doc in searches]
         prompts = get_prompt_teller_multi(body.prompt, docs_tmp, choice)
-        answers = await ask_in_parallel(body.writers_model, prompts, body.user)
+        answers = await ask_in_parallel(body.writers_model, prompts, user, body.max_tokens_intermediate)
         prompt = PROMPT_CONCAT.format(prompt=body.prompt, answers=answers)
-        answer = get_completion(body.supervisor_model, prompt, body.user, temperature=0.2, max_tokens=600)
+        answer = get_completion(body.supervisor_model, prompt, user, temperature=0.2, max_tokens=body.max_tokens)
         return answer, docs_tmp, refs_tmp, choice, n_retry
 
     answer, docs_tmp, refs, choice, n_retry = await go_multiagents(body, initial_docs, initial_refs, n_retry=0, max_retry=5, window=5)
