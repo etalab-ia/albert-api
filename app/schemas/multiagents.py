@@ -6,12 +6,13 @@ from typing import Literal, Optional
 
 class MultiAgentsRequest(BaseModel):
     # See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py
-    user: str
     prompt: str
     collections: List
     rff_k: int = Field(default=20, description="k constant in RFF algorithm")
     k: int = Field(gt=0, description="Number of results to return")
     method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = Field(default=SEMANTIC_SEARCH_TYPE)
     score_threshold: Optional[float] = Field(0.0, ge=0.0, le=1.0, description="Score of cosine similarity threshold for filtering results")
+    max_tokens: int = Field(default=600, description="Max tokens for the final response")
+    max_tokens_intermediate: int = Field(default=400, description="Max tokens for intermediate responses")
     supervisor_model: str
     writers_model: str
