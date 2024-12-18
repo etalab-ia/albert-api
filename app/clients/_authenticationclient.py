@@ -1,78 +1,124 @@
 import base64
+from collections import namedtuple
 import datetime as dt
 import hashlib
 import json
-from typing import Optional
-import uuid
-from typing import Any, Callable
+from typing import List, Optional
 
-from grist_api import GristDocAPI
-from redis import Redis
+import aiohttp
+from pydantic import BaseModel
+from redis.asyncio import Redis
+import requests
 
 from app.schemas.security import Role, User
+from app.utils.logging import logger
 
 
-class AuthenticationClient(GristDocAPI):
-    CACHE_EXPIRATION = 3600  # 1h
+class AsyncGristDocAPI:
+    def __init__(self, doc_id: str, server: str, api_key: str):
+        self.doc_id = doc_id
+        self.server = server
+        self.api_key = api_key
+        self.base_url = f"{server}/api"
+
+    async def _request(self, method: str, endpoint: str, data: Optional[dict] = None):
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        async with aiohttp.ClientSession() as session:
+            if method in ["GET"]:
+                data = {"params": data}
+            else:
+                headers["Content-Type"] = "application/json"
+                data = {"json": data}
+
+            async with session.request(method, f"{self.base_url}{endpoint}", headers=headers, **data) as response:
+                response.raise_for_status()
+                return await response.json()
+
+    def ping(self):
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        endpoint = "/orgs"
+
+        try:
+            response = requests.get(f"{self.base_url}{endpoint}", headers=headers)
+            return response.status_code == 200
+        except Exception as e:
+            return False
+
+    async def fetch_table(self, table_name: str, filter: Optional[dict] = None, limit: int = 0) -> List[namedtuple]:
+        endpoint = f"/docs/{self.doc_id}/tables/{table_name}/records"
+        data = {"filter": json.dumps(filter), "limit": limit} if filter else {"limit": limit}
+        results = await self._request(method="GET", endpoint=endpoint, data=data)
+        results = [dict(id=result["id"], **result["fields"]) for result in results["records"]]
+        return [namedtuple(table_name, result.keys())(**result) for result in results]
+
+    async def update_records(self, table_name: str, record_dicts: List[dict]):
+        endpoint = f"/docs/{self.doc_id}/tables/{table_name}/records"
+        data = {"records": [{"id": record.pop("id"), "fields": record} for record in record_dicts]}
+        result = await self._request(method="PATCH", endpoint=endpoint, data=data)
+        return result
+
+
+class AuthenticationClient(AsyncGristDocAPI):
+    CACHE_EXPIRATION = 172800  # 48h
+
+    class GristRecord(BaseModel):
+        ID2: Optional[str] = None
+        ROLE: str = Role.USER
+        EXPIRATION: int = dt.datetime.now().timestamp()
+        KEY: Optional[str] = "EMPTY"
+
+        class Config:
+            extra = "allow"
 
     def __init__(self, cache: Redis, table_id: str, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.session_id = str(uuid.uuid4())
+        assert self.ping(), "Grist is not reachable"
         self.table_id = table_id
         self.redis = cache
 
-    def check_api_key(self, key: str) -> Optional[str]:
+    async def check_api_key(self, key: str) -> Optional[User]:
         """
-        Check if a key exists in a table of the Grist document.
+        Get API key details from cache or Grist and return a User object.
 
         Args:
-            key (str): key to check
+            key (str): API key to look up
 
         Returns:
-            Optional[str]: role of the key if it exists, None otherwise
+            Optional[User]: User object if found, None otherwise
         """
-        keys = self._get_api_keys()
-        if key in keys:
-            return User(id=self._api_key_to_user_id(input=key), role=Role[keys[key]["role"]], name=keys[key]["name"])
+        user_id = self._api_key_to_user_id(input=key)
+        ttl = -2
 
-    def cache(func) -> Callable[..., Any]:
-        """
-        Decorator to cache the result of a function in Redis.
-        """
+        # fetch from Redis
+        redis_key = f"{self.table_id}_{user_id}"
+        cache_user = await self.redis.get(redis_key)
 
-        def wrapper(self) -> Any:
-            key = f"auth-{self.session_id}"
-            result = self.redis.get(key)
-            if result:
-                result = json.loads(result)
-                return result
-            result = func(self)
-            self.redis.setex(key, self.CACHE_EXPIRATION, json.dumps(result))
+        if cache_user:
+            cache_user = json.loads(cache_user)
+            user = User(id=cache_user["id"], role=Role.get(cache_user["role"]))
+            ttl = await self.redis.ttl(redis_key)
+            if ttl > 300:
+                return user
 
-            return result
+        try:
+            # fetch from grist
+            records = await self.fetch_table(table_name=self.table_id, filter={"KEY": [key]}, limit=1)
+            record = self.GristRecord(**records[0]._asdict()) if records else self.GristRecord()
+            if record.ID2 != user_id:
+                record.ID2 = user_id
+                await self.update_records(table_name=self.table_id, record_dicts=[record.model_dump()])
 
-        return wrapper
+            if record.KEY == key and record.EXPIRATION > dt.datetime.now().timestamp():
+                cache_user = {"id": record.ID2, "role": Role.get(name=record.ROLE.upper(), default=Role.USER)._name_}
+                await self.redis.setex(redis_key, self.CACHE_EXPIRATION, json.dumps(cache_user))
+                user = User(id=cache_user["id"], role=Role.get(cache_user["role"]))
+                return user
 
-    @cache
-    def _get_api_keys(self) -> dict:
-        """
-        Get all keys from a table in the Grist document.
-
-        Returns:
-            dict: dictionary of keys and their corresponding access level
-        """
-        records = self.fetch_table(table_name=self.table_id)
-
-        keys = dict()
-        for record in records:
-            if record.EXPIRATION > dt.datetime.now().timestamp():
-                keys[record.KEY] = {
-                    "id": self._api_key_to_user_id(input=record.KEY),
-                    "role": Role.get(name=record.ROLE.upper(), default=Role.USER)._name_,
-                    "name": record.USER,
-                }
-
-        return keys
+        except Exception as e:
+            logger.error(f"Error fetching user from Grist: {e}")
+            if ttl > -2:
+                await self.redis.setex(redis_key, self.CACHE_EXPIRATION, json.dumps(cache_user))
+                return user
 
     @staticmethod
     def _api_key_to_user_id(input: str) -> str:
