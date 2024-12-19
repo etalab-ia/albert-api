@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -19,5 +19,4 @@ class Role(Enum):
 
 class User(BaseModel):
     id: str
-    name: Optional[str] = None
     role: Role

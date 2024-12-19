@@ -1,5 +1,5 @@
-from redis import Redis as CacheManager
-from redis.connection import ConnectionPool
+from redis.asyncio import Redis as CacheManager
+from redis.asyncio.connection import ConnectionPool
 
 from app.clients import AuthenticationClient, ModelClients
 from app.clients.internet import DuckDuckGoInternetClient, BraveInternetClient
