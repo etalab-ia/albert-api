@@ -55,13 +55,13 @@ Merci, avant chaque pull request, de vérifier le bon déploiement de votre API 
 1. Lancez l'API en local avec la commande suivante:
 
     ```bash
-    DEFAULT_RATE_LIMIT="30/minute" uvicorn app.main:app --port 8080 --log-level debug --reload
+    uvicorn app.main:app --port 8080 --log-level debug --reload
     ```
 
 2. Exécutez les tests unitaires à la racine du projet
     
     ```bash
-    DEFAULT_RATE_LIMIT="30/minute" PYTHONPATH=. pytest --config-file=pyproject.toml --base-url http://localhost:8080/v1 --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
+    PYTHONPATH=. pytest --config-file=pyproject.toml --base-url http://localhost:8080/v1 --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
     ```
 
 # Notebooks

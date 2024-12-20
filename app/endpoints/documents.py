@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.get("/documents/{collection}")
-@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def get_documents(
     request: Request,
     collection: UUID,
@@ -31,7 +31,7 @@ async def get_documents(
 
 
 @router.delete("/documents/{collection}/{document}")
-@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def delete_document(request: Request, collection: UUID, document: UUID, user: User = Security(check_api_key)) -> Response:
     """
     Delete a document and relative collections.

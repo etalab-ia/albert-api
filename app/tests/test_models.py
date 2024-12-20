@@ -29,10 +29,22 @@ class TestModels:
         response = session_admin.get(f"{args["base_url"]}/models/non-existing-model")
         assert response.status_code == 404, f"error: retrieve non-existing model ({response.status_code})"
 
+    def test_get_models_aliases(self, args, session_admin):
+        """Test the GET /models response status code for a non-existing model."""
+
+        model_id = list(settings.models.aliases.keys())[0]
+        aliases = settings.models.aliases[model_id]
+
+        response = session_admin.get(f"{args["base_url"]}/models/{model_id}")
+        assert response.json()["aliases"] == aliases
+
+        response = session_admin.get(f"{args["base_url"]}/models/{aliases[0]}")
+        assert response.json()["id"] == model_id
+
     def test_get_models_rate_limit(self, args, session_user):
         """Test the GET /models rate limiting."""
         start = time.time()
-        limit = int(settings.default_rate_limit.replace("/minute", ""))
+        limit = int(settings.rate_limit.by_key.replace("/minute", ""))
         i = 0
         check = False
         while time.time() - start < 60:

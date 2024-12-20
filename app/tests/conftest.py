@@ -76,4 +76,4 @@ def cleanup_collections(args, session_user, session_admin):
 def sleep_between_tests():
     # Sleep between tests to avoid rate limit errors
     yield
-    time.sleep(10)
+    time.sleep(20)

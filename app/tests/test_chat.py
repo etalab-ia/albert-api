@@ -7,6 +7,7 @@ import pytest
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk
 from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
+from app.utils.settings import settings
 
 
 @pytest.fixture(scope="module")
@@ -260,3 +261,21 @@ class TestChat:
         }
         response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
         assert response.status_code == 404, f"error: retrieve chat completions ({response.status_code})"
+
+    def test_chat_completions_model_alias(self, args, session_user, setup):
+        """Test the GET /chat/completions model alias."""
+        MODEL_ID, _, _, _ = setup
+
+        model_id = list(settings.models.aliases.keys())[0]
+        aliases = settings.models.aliases[model_id]
+
+        params = {
+            "model": aliases[0],
+            "messages": [{"role": "user", "content": "Hello, how are you?"}],
+            "stream": False,
+            "n": 1,
+            "max_tokens": 10,
+        }
+
+        response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
+        assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code}"

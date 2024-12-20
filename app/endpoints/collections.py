@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.post("/collections")
-@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def create_collection(request: Request, body: CollectionRequest, user: User = Security(check_api_key)) -> Response:
     """
     Create a new collection.
@@ -35,7 +35,7 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
 
 
 @router.get("/collections")
-@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def get_collections(request: Request, user: User = Security(check_api_key)) -> Union[Collection, Collections]:
     """
     Get list of collections.
@@ -54,7 +54,7 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
 
 
 @router.delete("/collections/{collection}")
-@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def delete_collections(request: Request, collection: UUID, user: User = Security(check_api_key)) -> Response:
     """
     Delete a collection.

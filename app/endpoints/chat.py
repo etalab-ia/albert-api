@@ -11,23 +11,28 @@ from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletion
 from app.schemas.search import Search
 from app.schemas.security import User
 from app.schemas.settings import Settings
+from app.utils.exceptions import WrongModelTypeException
 from app.utils.lifespan import clients, limiter
 from app.utils.security import check_api_key, check_rate_limit
 from app.utils.settings import settings
-from app.utils.variables import DEFAULT_TIMEOUT
+from app.utils.variables import DEFAULT_TIMEOUT, LANGUAGE_MODEL_TYPE
 
 router = APIRouter()
 
 
 @router.post(path="/chat/completions")
-@limiter.limit(limit_value=settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(limit_value=settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def chat_completions(
     request: Request, body: ChatCompletionRequest, user: User = Security(dependency=check_api_key)
 ) -> Union[ChatCompletion, ChatCompletionChunk]:
     """Completion API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/chat/create for the API specification.
     """
+
     client = clients.models[body.model]
+    if client.type != LANGUAGE_MODEL_TYPE:
+        raise WrongModelTypeException()
+    body.model = client.id  # replace alias by model id
     url = f"{client.base_url}chat/completions"
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
@@ -42,8 +47,8 @@ async def chat_completions(
                 internet_manager=InternetManager(
                     model_clients=clients.models,
                     internet_client=clients.internet,
-                    default_language_model_id=settings.internet.args.default_language_model,
-                    default_embeddings_model_id=settings.internet.args.default_embeddings_model,
+                    default_language_model_id=settings.internet.default_language_model,
+                    default_embeddings_model_id=settings.internet.default_embeddings_model,
                 ),
             )
             searches = search_manager.query(

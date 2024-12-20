@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.post(path="/search")
-@limiter.limit(limit_value=settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(limit_value=settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def search(request: Request, body: SearchRequest, user: User = Security(dependency=check_api_key)) -> Searches:
     """
     Endpoint to search on the internet or with our search client.
@@ -26,8 +26,8 @@ async def search(request: Request, body: SearchRequest, user: User = Security(de
         internet_manager=InternetManager(
             model_clients=clients.models,
             internet_client=clients.internet,
-            default_language_model_id=settings.internet.args.default_language_model,
-            default_embeddings_model_id=settings.internet.args.default_embeddings_model,
+            default_language_model_id=settings.internet.default_language_model,
+            default_embeddings_model_id=settings.internet.default_embeddings_model,
         ),
     )
 

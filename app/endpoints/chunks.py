@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.get("/chunks/{collection}/{document}")
-@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def get_chunks(
     request: Request,
     collection: UUID,
