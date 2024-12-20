@@ -8,6 +8,7 @@ from openai import OpenAI
 import requests
 
 from app.schemas.embeddings import Embeddings
+from app.schemas.chat import ChatCompletion
 from app.schemas.models import Model, Models
 from app.schemas.rerank import Rerank
 from app.schemas.settings import Settings
@@ -69,6 +70,7 @@ def get_models_list(self, *args, **kwargs) -> Models:
         owned_by=self.owned_by,
         created=self.created,
         max_context_length=self.max_context_length,
+        aliases=self.aliases,
         type=self.type,
         status=self.status,
     )
@@ -76,8 +78,28 @@ def get_models_list(self, *args, **kwargs) -> Models:
     return Models(data=[data])
 
 
+def create_chat_completions(self, *args, **kwargs):
+    """
+    Custom method to overwrite OpenAI's create method to raise HTTPException from model API.
+    """
+    try:
+        url = f"{self.base_url}chat/completions"
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        response = requests.post(url=url, headers=headers, json=kwargs)
+        response.raise_for_status()
+        data = response.json()
+
+        return ChatCompletion(**data)
+
+    except Exception as e:
+        raise HTTPException(status_code=e.response.status_code, detail=json.loads(e.response.text)["message"])
+
+
 # @TODO : useless ?
 def create_embeddings(self, *args, **kwargs):
+    """
+    Custom method to overwrite OpenAI's create method to raise HTTPException from model API.
+    """
     try:
         url = f"{self.base_url}embeddings"
         headers = {"Authorization": f"Bearer {self.api_key}"}
@@ -104,12 +126,16 @@ class ModelClient(OpenAI):
         # set attributes for unavailable models
         self.id = ""
         self.owned_by = ""
+        self.aliases = []
         self.created = round(number=time.time())
         self.max_context_length = None
 
         # set real attributes if model is available
         self.models.list = partial(get_models_list, self)
         response = self.models.list()
+
+        if self.type == LANGUAGE_MODEL_TYPE:
+            self.chat.completions.create = partial(create_chat_completions, self)
 
         if self.type == EMBEDDINGS_MODEL_TYPE:
             response = self.embeddings.create(model=self.id, input="hello world")
@@ -145,25 +171,40 @@ class ModelClients(dict):
     """
 
     def __init__(self, settings: Settings) -> None:
-        for model_config in settings.models:
-            model = ModelClient(base_url=model_config.url, api_key=model_config.key, type=model_config.type)
+        self.aliases = {alias: model_id for model_id, aliases in settings.models.aliases.items() for alias in aliases}
+
+        for model_settings in settings.clients.models:
+            model = ModelClient(
+                base_url=model_settings.url,
+                api_key=model_settings.key,
+                type=model_settings.type,
+            )
             if model.status == "unavailable":
-                logger.error(msg=f"unavailable model API on {model_config.url}, skipping.")
+                logger.error(msg=f"unavailable model API on {model_settings.url}, skipping.")
                 continue
             try:
-                logger.info(msg=f"Adding model API {model_config.url} to the client...")
+                logger.info(msg=f"Adding model API {model_settings.url} to the client...")
                 self.__setitem__(key=model.id, value=model)
                 logger.info(msg="done.")
             except Exception as e:
                 logger.error(msg=e)
 
+            model.aliases = settings.models.aliases.get(model.id, [])
+
+        for alias in self.aliases.keys():
+            assert alias not in self.keys(), "Alias is already used by another model."
+
+        assert settings.internet.default_language_model in self.keys(), "Default internet language model not found."
+        assert settings.internet.default_embeddings_model in self.keys(), "Default internet embeddings model not found."
+
     def __setitem__(self, key: str, value) -> None:
-        if any(key == k for k in self.keys()):
+        if key in self.keys():
             raise ValueError(f"duplicated model ID {key}, skipping.")
         else:
             super().__setitem__(key, value)
 
     def __getitem__(self, key: str) -> Any:
+        key = self.aliases.get(key, key)
         try:
             item = super().__getitem__(key)
             assert item.status == "available", "Model not available."

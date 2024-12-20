@@ -13,15 +13,15 @@ router = APIRouter()
 
 @router.get("/models/{model:path}")
 @router.get("/models")
-@limiter.limit(settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def models(request: Request, model: Optional[str] = None, user: User = Security(check_api_key)) -> Union[Models, Model]:
     """
     Model API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/models/list for the API specification.
     """
     if model is not None:
-        client = clients.models[model]
-        response = [row for row in client.models.list().data if row.id == model][0]
+        model = clients.models[model]
+        response = [row for row in model.models.list().data if row.id == model.id][0]
     else:
         response = {"object": "list", "data": []}
         for model_id, client in clients.models.items():

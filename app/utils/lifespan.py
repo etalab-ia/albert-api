@@ -10,8 +10,8 @@ from app.utils.settings import settings
 clients = ClientsManager(settings=settings)
 limiter = Limiter(
     key_func=get_ipaddr,
-    storage_uri=f"redis://{settings.cache.args.get("username", "")}:{settings.cache.args.get("password", "")}@{settings.cache.args["host"]}:{settings.cache.args["port"]}",
-    default_limits=[settings.global_rate_limit],
+    storage_uri=f"redis://{settings.clients.cache.args.get("username", "")}:{settings.clients.cache.args.get("password", "")}@{settings.clients.cache.args["host"]}:{settings.clients.cache.args["port"]}",
+    default_limits=[settings.rate_limit.by_ip],
 )
 
 

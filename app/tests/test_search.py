@@ -112,7 +112,7 @@ class TestSearch:
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         result = response.json()
 
-        if settings.search.type == SEARCH_CLIENT_ELASTIC_TYPE:
+        if settings.clients.search.type == SEARCH_CLIENT_ELASTIC_TYPE:
             assert response.status_code == 200
             assert "Albert" in result["data"][0]["chunk"]["content"]
         else:
@@ -136,7 +136,7 @@ class TestSearch:
         data = {"prompt": "Erasmus", "collections": [COLLECTION_ID], "k": 3, "method": "hybrid"}
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         result = response.json()
-        if settings.search.type == SEARCH_CLIENT_ELASTIC_TYPE:
+        if settings.clients.search.type == SEARCH_CLIENT_ELASTIC_TYPE:
             assert response.status_code == 200
             assert "Erasmus" in result["data"][0]["chunk"]["content"]
         else:

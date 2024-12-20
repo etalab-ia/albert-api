@@ -1,17 +1,17 @@
 import os
-from typing import List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 import yaml
 
 from app.utils.variables import (
-    EMBEDDINGS_MODEL_TYPE,
-    LANGUAGE_MODEL_TYPE,
     AUDIO_MODEL_TYPE,
-    RERANK_MODEL_TYPE,
-    INTERNET_CLIENT_DUCKDUCKGO_TYPE,
+    EMBEDDINGS_MODEL_TYPE,
     INTERNET_CLIENT_BRAVE_TYPE,
+    INTERNET_CLIENT_DUCKDUCKGO_TYPE,
+    LANGUAGE_MODEL_TYPE,
+    RERANK_MODEL_TYPE,
     SEARCH_CLIENT_ELASTIC_TYPE,
     SEARCH_CLIENT_QDRANT_TYPE,
 )
@@ -20,6 +20,29 @@ from app.utils.variables import (
 class ConfigBaseModel(BaseModel):
     class Config:
         extra = "allow"
+
+
+class RateLimit(ConfigBaseModel):
+    by_key: str = "10/minute"
+    by_ip: str = "100/minute"
+
+
+class Internet(ConfigBaseModel):
+    default_language_model: str
+    default_embeddings_model: str
+
+
+class Models(ConfigBaseModel):
+    aliases: Dict[str, List[str]] = {}
+
+    @field_validator("aliases", mode="before")
+    def validate_aliases(cls, aliases):
+        unique_aliases = list()
+        for key, values in aliases.items():
+            unique_aliases.extend(values)
+
+        assert len(unique_aliases) == len(set(unique_aliases)), "Duplicated aliases found."
+        return aliases
 
 
 class Key(ConfigBaseModel):
@@ -31,45 +54,37 @@ class Auth(ConfigBaseModel):
     args: dict
 
 
-class Model(ConfigBaseModel):
+class ModelClient(ConfigBaseModel):
     url: str
     type: Literal[LANGUAGE_MODEL_TYPE, EMBEDDINGS_MODEL_TYPE, AUDIO_MODEL_TYPE, RERANK_MODEL_TYPE]
     key: Optional[str] = "EMPTY"
 
 
-class SearchDB(BaseModel):
+class SearchDatabase(ConfigBaseModel):
     type: Literal[SEARCH_CLIENT_ELASTIC_TYPE, SEARCH_CLIENT_QDRANT_TYPE] = SEARCH_CLIENT_QDRANT_TYPE
     args: dict
 
 
-class CacheDB(ConfigBaseModel):
+class CacheDatabase(ConfigBaseModel):
     type: Literal["redis"] = "redis"
     args: dict
 
 
-class Databases(ConfigBaseModel):
-    cache: CacheDB
-    search: SearchDB
+class DatabasesClient(ConfigBaseModel):
+    cache: CacheDatabase
+    search: SearchDatabase
 
 
-class InternetArgs(ConfigBaseModel):
-    default_language_model: str
-    default_embeddings_model: str
-
-    class Config:
-        extra = "allow"
-
-
-class Internet(ConfigBaseModel):
+class InternetClient(ConfigBaseModel):
     type: Literal[INTERNET_CLIENT_DUCKDUCKGO_TYPE, INTERNET_CLIENT_BRAVE_TYPE] = INTERNET_CLIENT_DUCKDUCKGO_TYPE
-    args: InternetArgs
+    args: dict
 
 
-class Config(ConfigBaseModel):
+class Clients(ConfigBaseModel):
     auth: Optional[Auth] = None
-    models: List[Model] = Field(..., min_length=1)
-    databases: Databases
-    internet: Optional[Internet] = None
+    models: List[ModelClient] = Field(..., min_length=1)
+    databases: DatabasesClient
+    internet: InternetClient
 
     @model_validator(mode="after")
     def validate_models(cls, values):
@@ -89,6 +104,13 @@ class Config(ConfigBaseModel):
         return values
 
 
+class Config(ConfigBaseModel):
+    rate_limit: RateLimit = Field(default_factory=RateLimit)
+    internet: Internet
+    models: Models = Field(default_factory=Models)
+    clients: Clients
+
+
 class Settings(BaseSettings):
     # logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
@@ -103,10 +125,6 @@ class Settings(BaseSettings):
     app_version: str = "0.0.0"
     app_description: str = "[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"
 
-    # rate_limit
-    global_rate_limit: str = "100/minute"
-    default_rate_limit: str = "10/minute"
-
     class Config:
         extra = "allow"
 
@@ -119,10 +137,11 @@ class Settings(BaseSettings):
     def setup_config(cls, values):
         config = Config(**yaml.safe_load(stream=open(file=values.config_file, mode="r")))
 
-        values.auth = config.auth
-        values.cache = config.databases.cache
+        values.rate_limit = config.rate_limit
         values.internet = config.internet
         values.models = config.models
-        values.search = config.databases.search
+        values.clients = config.clients
+        values.clients.cache = config.clients.databases.cache
+        values.clients.search = config.clients.databases.search
 
         return values

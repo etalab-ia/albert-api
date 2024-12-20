@@ -4,9 +4,7 @@ from openai.types.chat import ChatCompletion, ChatCompletionChunk, ChatCompletio
 from pydantic import BaseModel, Field, model_validator, field_validator
 
 from app.schemas.search import SearchArgs, Search
-from app.utils.exceptions import WrongModelTypeException
-from app.utils.lifespan import clients
-from app.utils.variables import LANGUAGE_MODEL_TYPE
+
 
 DEFAULT_RAG_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"
 
@@ -55,9 +53,6 @@ class ChatCompletionRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_model(cls, values):
-        if clients.models[values.model].type != LANGUAGE_MODEL_TYPE:
-            raise WrongModelTypeException()
-
         if values.search:
             if not values.search_args:
                 raise ValueError("search_args is required when search is true")

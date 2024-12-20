@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.post(path="/embeddings")
-@limiter.limit(limit_value=settings.default_rate_limit, key_func=lambda request: check_rate_limit(request=request))
+@limiter.limit(limit_value=settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def embeddings(request: Request, body: EmbeddingsRequest, user: User = Security(dependency=check_api_key)) -> Embeddings:
     """
     Embedding API similar to OpenAI's API.
@@ -24,19 +24,14 @@ async def embeddings(request: Request, body: EmbeddingsRequest, user: User = Sec
     client = clients.models[body.model]
     if client.type != EMBEDDINGS_MODEL_TYPE:
         raise WrongModelTypeException()
-
+    body.model = client.id  # replace alias by model id
     url = f"{client.base_url}embeddings"
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
     try:
         async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as async_client:
             response = await async_client.request(method="POST", url=url, headers=headers, json=body.model_dump())
-            # try:
             response.raise_for_status()
-            # except httpx.HTTPStatusError as e:
-            #     if "`inputs` must have less than" in e.response.text:
-            #         raise ContextLengthExceededException()
-            #     raise e
             data = response.json()
             return Embeddings(**data)
     except Exception as e:

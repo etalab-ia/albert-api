@@ -10,7 +10,7 @@ from app.utils.lifespan import clients
 from app.schemas.security import Role
 
 
-if settings.auth:
+if settings.clients.auth:
 
     async def check_api_key(api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key"))]) -> User:
         """
