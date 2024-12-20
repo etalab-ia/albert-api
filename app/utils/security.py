@@ -3,12 +3,11 @@ from typing import Annotated, Optional
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.schemas.security import User
-from app.utils.settings import settings
-from app.utils.exceptions import InvalidAPIKeyException, InvalidAuthenticationSchemeException, InsufficientRightsException
+from app.clients import AuthenticationClient
+from app.schemas.security import Role, User
+from app.utils.exceptions import InsufficientRightsException, InvalidAPIKeyException, InvalidAuthenticationSchemeException
 from app.utils.lifespan import clients
-from app.schemas.security import Role
-
+from app.utils.settings import settings
 
 if settings.clients.auth:
 
@@ -57,7 +56,7 @@ else:
         return User(id="no-auth", role=Role.ADMIN)
 
 
-async def check_rate_limit(request: Request) -> Optional[str]:
+def check_rate_limit(request: Request) -> Optional[str]:
     """
     Check the rate limit for the user.
 
@@ -71,9 +70,6 @@ async def check_rate_limit(request: Request) -> Optional[str]:
     authorization = request.headers.get("Authorization")
     scheme, credentials = authorization.split(" ") if authorization else ("", "")
     api_key = HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
-    user = await check_api_key(api_key=api_key)
+    user_id = AuthenticationClient.api_key_to_user_id(input=api_key.credentials)
 
-    if user.role.value > Role.USER.value:
-        return None
-    else:
-        return user.id
+    return user_id

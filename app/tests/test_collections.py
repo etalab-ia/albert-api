@@ -14,8 +14,8 @@ from app.utils.variables import (
 
 @pytest.fixture(scope="module")
 def setup(args, session_user):
-    USER = AuthenticationClient._api_key_to_user_id(input=args["api_key_user"])
-    ADMIN = AuthenticationClient._api_key_to_user_id(input=args["api_key_admin"])
+    USER = AuthenticationClient.api_key_to_user_id(input=args["api_key_user"])
+    ADMIN = AuthenticationClient.api_key_to_user_id(input=args["api_key_admin"])
     logging.info(f"test user ID: {USER}")
     logging.info(f"test admin ID: {ADMIN}")
 

@@ -45,8 +45,8 @@ def session_admin(args):
 
 @pytest.fixture(scope="session")
 def cleanup_collections(args, session_user, session_admin):
-    USER = AuthenticationClient._api_key_to_user_id(input=args["api_key_user"])
-    ADMIN = AuthenticationClient._api_key_to_user_id(input=args["api_key_admin"])
+    USER = AuthenticationClient.api_key_to_user_id(input=args["api_key_user"])
+    ADMIN = AuthenticationClient.api_key_to_user_id(input=args["api_key_admin"])
 
     yield USER, ADMIN
 

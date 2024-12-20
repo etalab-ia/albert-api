@@ -86,7 +86,7 @@ class AuthenticationClient(AsyncGristDocAPI):
         Returns:
             Optional[User]: User object if found, None otherwise
         """
-        user_id = self._api_key_to_user_id(input=key)
+        user_id = self.api_key_to_user_id(input=key)
         ttl = -2
 
         # fetch from Redis
@@ -121,15 +121,15 @@ class AuthenticationClient(AsyncGristDocAPI):
                 return user
 
     @staticmethod
-    def _api_key_to_user_id(input: str) -> str:
+    def api_key_to_user_id(input: str) -> str:
         """
-        Generate a 16 length unique code from an input string using salted SHA-256 hashing.
+        Generate a 16 length unique user id from an input string using SHA-256 hashing.
 
         Args:
-            input_string (str): The input string to generate the code from.
+            input_string (str): The input string to generate the user id from.
 
         Returns:
-            tuple[str, bytes]: A tuple containing the generated code and the salt used.
+            str: The generated user id.
         """
         hash = hashlib.sha256((input).encode()).digest()
         hash = base64.urlsafe_b64encode(hash).decode()

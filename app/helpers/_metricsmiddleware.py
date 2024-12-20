@@ -48,7 +48,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                     )
 
             if authorization and authorization.startswith("Bearer "):
-                user_id = AuthenticationClient._api_key_to_user_id(input=authorization.split(sep=" ")[1])
+                user_id = AuthenticationClient.api_key_to_user_id(input=authorization.split(sep=" ")[1])
                 self.http_requests_by_user.labels(user=user_id, endpoint=endpoint[3:], model=model).inc()
 
         response = await call_next(request)
