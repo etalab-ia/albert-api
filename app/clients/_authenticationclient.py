@@ -76,6 +76,8 @@ class AuthenticationClient(AsyncGristDocAPI):
         self.table_id = table_id
         self.redis = cache
 
+        # @TODO: check columns exists in Grist
+
     async def check_api_key(self, key: str) -> Optional[User]:
         """
         Get API key details from cache or Grist and return a User object.

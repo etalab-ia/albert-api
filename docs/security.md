@@ -16,8 +16,8 @@ L'API implémente un système de rôle à 3 niveaux :
 
 | Niveau du rôle | Description |
 | --- | --- |
-| 0 (user) | Accès limité à l'API (rate limiting) et aucun droits d'édition sur les collections publiques |
-| 1 (client) | Accès illimité à l'API et aucun droits d'édition sur les collections publiques |
-| 2 (admin) | Accès illimité à l'API et droits d'édition sur toutes les collections |
+| 0 (user) | Aucun droits d'édition sur les collections publiques |
+| 1 (client) | Aucun droits d'édition sur les collections publiques |
+| 2 (admin) | Droits d'édition sur toutes les collections |
 
 Par défaut, le rate limiting est de 100 requêtes par minute pour tous les niveaux. Il est de 10 requêtes par minute pour le niveau 0 (user) pour les endpoints tagués *Core*.

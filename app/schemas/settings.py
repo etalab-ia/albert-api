@@ -38,7 +38,7 @@ class Models(ConfigBaseModel):
     @field_validator("aliases", mode="before")
     def validate_aliases(cls, aliases):
         unique_aliases = list()
-        for key, values in aliases.items():
+        for _, values in aliases.items():
             unique_aliases.extend(values)
 
         assert len(unique_aliases) == len(set(unique_aliases)), "Duplicated aliases found."

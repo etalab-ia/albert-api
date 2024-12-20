@@ -144,6 +144,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         See SearchClient.create_collection
         """
+
+        collection_model = self.models[collection_model].id  # replace alias by model id
         if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
             raise WrongModelTypeException()
 
