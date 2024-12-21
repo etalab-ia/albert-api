@@ -1,9 +1,5 @@
 services:
   fastapi:
-    build:
-      context: .
-      dockerfile: ./app/Dockerfile
-
     image: ghcr.io/etalab-ia/albert-api/app:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     environment:
@@ -21,7 +17,7 @@ services:
 
   streamlit:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
-    command: streamlit run /ui/chat.py --server.port=8501 --browser.gatherUsageStats false --theme.base light --server.maxUploadSize=20
+    command: streamlit run ui/main.py --server.port=8501 --browser.gatherUsageStats false --theme.base=light --theme.primaryColor=#6a6af4 --server.maxUploadSize=20
     restart: always
     environment:
       - BASE_URL=http://fastapi:8000/v1

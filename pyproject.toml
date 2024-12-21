@@ -11,7 +11,7 @@ dependencies = [
 
 [project.optional-dependencies]
 ui = [
-    "streamlit==1.39.0",
+    "streamlit==1.40.2",
     "streamlit-extras==0.5.0", 
 ]
 app = [
