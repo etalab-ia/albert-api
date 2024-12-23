@@ -25,6 +25,7 @@ pg = st.navigation(
         st.Page(page="pages/chat.py", title="Chat", icon=":material/chat:"),
         st.Page(page="pages/documents.py", title="Documents", icon=":material/file_copy:"),
         st.Page(page="pages/transcription.py", title="Transcription", icon=":material/graphic_eq:"),
+        st.Page(page="pages/summarize.py", title="Summarize", icon=":material/contract_edit:"),
     ]
 )
 pg.run()
