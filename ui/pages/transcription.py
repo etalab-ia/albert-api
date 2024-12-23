@@ -3,18 +3,15 @@ import traceback
 
 from openai import OpenAI
 import streamlit as st
-from streamlit_extras.stylable_container import stylable_container
 
 from config import BASE_URL, SUPPORTED_LANGUAGES
-from utils import get_models, header, set_config
+from utils import get_models, header
 
-# Config
-set_config()
 API_KEY = header()
 
 # Data
 try:
-    _, _, audio_models = get_models(api_key=API_KEY)
+    _, _, audio_models, _ = get_models(api_key=API_KEY)
 except Exception:
     st.error("Error to fetch user data.")
     logging.error(traceback.format_exc())
@@ -25,18 +22,15 @@ openai_client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
 # Sidebar
 with st.sidebar:
     params = {}
-
-    st.title("Audio parameters")
-    params["model"] = st.selectbox("Audio model", audio_models)
-    params["temperature"] = st.slider("Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
-    params["language"] = st.selectbox("Language", SUPPORTED_LANGUAGES, index=SUPPORTED_LANGUAGES.index("french"))
+    st.subheader("Audio parameters")
+    params["model"] = st.selectbox(label="Audio model", options=audio_models)
+    params["temperature"] = st.slider(label="Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
+    params["language"] = st.selectbox(label="Language", options=SUPPORTED_LANGUAGES, index=SUPPORTED_LANGUAGES.index("french"))
 
 # Main
 col1, col2 = st.columns(2)
-with col1:
-    file = st.file_uploader("Upload an audio file", type=["mp3", "wav", "m4a"])
-with col2:
-    record = st.experimental_audio_input(label="Record a voice message")
+file = st.file_uploader("Upload an audio file", type=["mp3", "wav", "m4a"])
+record = st.audio_input(label="Record a voice message")
 
 if file and record:
     st.error("Please upload only one file at a time.")
@@ -44,16 +38,9 @@ if file and record:
 
 audio = record or file
 result = None
-
-with stylable_container(
-    key="Transcribe",
-    css_styles="""
-    button{
-        float: right;
-    }
-    """,
-):
-    submit = st.button("Transcribe")
+_, center, _ = st.columns(spec=3)
+with center:
+    submit = st.button("**Transcribe**", use_container_width=True)
 
 if submit and audio:
     with st.spinner("Transcribing audio..."):
@@ -70,12 +57,4 @@ if submit and audio:
 
 if result:
     st.caption("Result")
-    with stylable_container(
-        "codeblock",
-        """
-    code {
-        white-space: pre-wrap !important;
-    }
-    """,
-    ):
-        st.code(result, language="markdown")
+    st.code(result, language="markdown", wrap_lines=True)
