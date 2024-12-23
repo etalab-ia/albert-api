@@ -3,7 +3,8 @@ import time
 import streamlit as st
 
 from config import PRIVATE_COLLECTION_TYPE
-from utils import create_collection, delete_collection, delete_document, header, load_data, upload_file
+from utils.common import header
+from utils.documents import create_collection, delete_collection, delete_document, load_data, upload_file
 
 API_KEY = header()
 

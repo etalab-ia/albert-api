@@ -5,7 +5,7 @@ from openai import OpenAI
 import streamlit as st
 
 from config import BASE_URL, SUPPORTED_LANGUAGES
-from utils import get_models, header
+from utils.common import get_models, header
 
 API_KEY = header()
 

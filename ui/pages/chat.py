@@ -1,11 +1,11 @@
 import logging
 import traceback
 
-
 import streamlit as st
 
 from config import INTERNET_COLLECTION_DISPLAY_ID
-from utils import generate_stream, get_collections, get_models, header
+from utils.chat import generate_stream
+from utils.common import get_collections, get_models, header
 
 API_KEY = header()
 
