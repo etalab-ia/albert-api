@@ -10,7 +10,6 @@ from app.utils.security import check_api_key, check_rate_limit
 from app.helpers import SearchManager, InternetManager
 from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID
 
-
 router = APIRouter()
 
 explain_choice = {
@@ -24,10 +23,6 @@ explain_choice = {
 
 def prep_net(body, user):
     body.collections = [INTERNET_COLLECTION_DISPLAY_ID]
-    # internet_chunks = []
-    # internet_chunks = clients.internet.get_chunks(prompt=body.prompt)
-    # internet_collection = clients.internet.create_temporary_internet_collection(internet_chunks, body.collections, user)
-    # body.collections.append(internet_collection.id)
     search_manager = SearchManager(
         model_clients=clients.models,
         search_client=clients.search,
@@ -83,7 +78,7 @@ Réponse :
 def get_completion(model, prompt, user, temperature=0.2, max_tokens=200):
     response = clients.models[model].chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model=model,  # self.model_clients[model],
+        model=model,
         temperature=temperature,
         max_tokens=max_tokens,
         stream=False,
@@ -100,9 +95,6 @@ async def get_completion_async(model, prompt, user, temperature, max_tokens):
 async def ask_in_parallel(model, prompts, user, max_tokens):
     tasks = []
     for prompt in prompts:
-        print("-" * 32)
-        print(prompt)
-        print("-" * 32)
         task = asyncio.create_task(get_completion_async(model, prompt, user, temperature=0.2, max_tokens=max_tokens))
         tasks.append(task)
     answers = await asyncio.gather(*tasks)
