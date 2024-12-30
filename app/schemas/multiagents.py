@@ -14,5 +14,5 @@ class MultiAgentsRequest(BaseModel):
     score_threshold: Optional[float] = Field(0.0, ge=0.0, le=1.0, description="Score of cosine similarity threshold for filtering results")
     max_tokens: int = Field(default=600, description="Max tokens for the final response")
     max_tokens_intermediate: int = Field(default=400, description="Max tokens for intermediate responses")
-    supervisor_model: str
-    writers_model: str
+    supervisor_model: str = Field(default="meta-llama/Llama-3.1-70B-Instruct", description="Model used for decision making and final answer")
+    writers_model: str = Field(default="meta-llama/Llama-3.1-8B-Instruct", description="Model used for intermediate answers crafting")
