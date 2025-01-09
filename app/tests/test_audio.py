@@ -45,6 +45,17 @@ class TestAudio:
                 transcription = AudioTranscription(**response_json)
                 assert isinstance(transcription, AudioTranscription)
 
+    def test_audio_transcriptions_text_output(self, args, session_user, setup):
+        """Test the POST /audio/transcriptions with text output"""
+        MODEL_ID = setup
+
+        with open("app/tests/assets/audio.mp3", "rb") as f:
+            files = {"file": ("test.mp3", f, "audio/mpeg")}
+            data = {"model": MODEL_ID, "language": "fr", "response_format": "text"}
+            response = session_user.post(f"{args['base_url']}/audio/transcriptions", files=files, data=data)
+            assert response.status_code == 200, f"error: audio transcription failed ({response.status_code})"
+            assert isinstance(response.text, str), f"error: expected text output ({response.text})"
+
     def test_audio_transcriptions_wav(self, args, session_user, setup):
         """Test the POST /audio/transcriptions endpoint with WAV file"""
         MODEL_ID = setup

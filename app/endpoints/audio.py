@@ -1,16 +1,15 @@
-import json
 from typing import List, Literal
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, Security, UploadFile
+from fastapi import APIRouter, File, Form, Request, Security, UploadFile
 from fastapi.responses import PlainTextResponse
-import httpx
 
 from app.schemas.audio import AudioTranscription
-from app.utils.exceptions import ModelNotFoundException
+from app.utils.exceptions import WrongModelTypeException
 from app.utils.lifespan import clients, limiter
+from app.utils.route import forward_request
 from app.utils.security import User, check_api_key, check_rate_limit
 from app.utils.settings import settings
-from app.utils.variables import DEFAULT_TIMEOUT, AUDIO_MODEL_TYPE
+from app.utils.variables import AUDIO_MODEL_TYPE, DEFAULT_TIMEOUT
 
 router = APIRouter()
 
@@ -152,7 +151,7 @@ async def audio_transcriptions(
     client = clients.models[model]
 
     if client.type != AUDIO_MODEL_TYPE:
-        raise ModelNotFoundException()
+        raise WrongModelTypeException()
 
     # @TODO: Implement prompt
     # @TODO: Implement timestamp_granularities
@@ -163,20 +162,16 @@ async def audio_transcriptions(
     url = f"{client.base_url}audio/transcriptions"
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
-    try:
-        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as async_client:
-            response = await async_client.post(
-                url=url,
-                headers=headers,
-                files={"file": (file.filename, file_content, file.content_type)},
-                data={"language": language, "response_format": response_format, "temperature": temperature},
-            )
-            response.raise_for_status()
-            if response_format == "text":
-                return PlainTextResponse(content=response.text)
+    response = await forward_request(
+        url=url,
+        method="POST",
+        headers=headers,
+        timeout=DEFAULT_TIMEOUT,
+        files={"file": (file.filename, file_content, file.content_type)},
+        data={"language": language, "response_format": response_format, "temperature": temperature},
+    )
 
-            data = response.json()
-            return AudioTranscription(**data)
+    if response_format == "text":
+        return PlainTextResponse(content=response.text)
 
-    except Exception as e:
-        raise HTTPException(status_code=e.response.status_code, detail=json.loads(s=e.response.text)["message"])
+    return AudioTranscription(**response.json())
