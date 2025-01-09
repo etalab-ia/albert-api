@@ -114,8 +114,6 @@ def create_embeddings(self, *args, **kwargs):
 
 
 class ModelClient(OpenAI):
-    DEFAULT_TIMEOUT = 120
-
     def __init__(self, type=Literal[EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, AUDIO_MODEL_TYPE, RERANK_MODEL_TYPE], *args, **kwargs) -> None:
         """
         ModelClient class extends AsyncOpenAI class to support custom methods.
@@ -162,7 +160,7 @@ class ModelClient(OpenAI):
 
                     return data
 
-            self.rerank = RerankClient(model=self.id, base_url=self.base_url, api_key=self.api_key, timeout=self.DEFAULT_TIMEOUT)
+            self.rerank = RerankClient(model=self.id, base_url=self.base_url, api_key=self.api_key, timeout=DEFAULT_TIMEOUT)
 
 
 class ModelClients(dict):

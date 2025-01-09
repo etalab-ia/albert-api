@@ -5,6 +5,8 @@ from prometheus_client import Counter
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.clients import AuthenticationClient
+from app.utils.logging import logger
+from app.utils.logging import client_ip
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):
@@ -16,9 +18,26 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         labelnames=["user", "endpoint", "model"],
     )
 
+    async def __call__(self, scope, receive, send):
+        try:
+            await super().__call__(scope, receive, send)
+        except RuntimeError as exc:
+            # ignore the error when the request is disconnected by the client
+            if str(exc) == "No response returned.":
+                logger.info(
+                    f'"{list(scope["route"].methods)[0]} {scope["route"].path} HTTP/{scope["http_version"]}" request disconnected by the client'
+                )
+                request = Request(scope, receive=receive)
+                if await request.is_disconnected():
+                    return
+            raise
+
     async def dispatch(self, request: Request, call_next) -> Response:
         endpoint = request.url.path
         content_type = request.headers.get("Content-Type", "")
+
+        client_addr = request.client.host
+        client_ip.set(client_addr)
 
         if endpoint.startswith("/v1"):
             authorization = request.headers.get("Authorization")
