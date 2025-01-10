@@ -1,0 +1,18 @@
+from typing import List
+from pydantic import BaseModel, Field
+from app.utils.variables import HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE
+from typing import Literal, Optional
+
+
+class MultiAgentsRequest(BaseModel):
+    # See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py
+    prompt: str
+    collections: List
+    rff_k: int = Field(default=20, description="k constant in RFF algorithm")
+    k: int = Field(gt=0, description="Number of results to return")
+    method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = Field(default=SEMANTIC_SEARCH_TYPE)
+    score_threshold: Optional[float] = Field(0.0, ge=0.0, le=1.0, description="Score of cosine similarity threshold for filtering results")
+    max_tokens: int = Field(default=600, description="Max tokens for the final response")
+    max_tokens_intermediate: int = Field(default=400, description="Max tokens for intermediate responses")
+    supervisor_model: str = Field(default="meta-llama/Llama-3.1-70B-Instruct", description="Model used for decision making and final answer")
+    writers_model: str = Field(default="meta-llama/Llama-3.1-8B-Instruct", description="Model used for intermediate answers crafting")
