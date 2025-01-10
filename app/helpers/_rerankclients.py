@@ -1,16 +1,12 @@
 import re
-from typing import List, Literal
 
-from app.clients._modelclients import ModelClient
-from app.schemas.rerank import Rerank
+from app.helpers._modelclients import ModelClients
 
 
-class LanguageModelReranker:
-    PROMPT_LLM_BASED = """Voilà un texte : {text}\n 
-En se basant uniquement sur ce texte, réponds 1 si ce texte peut donner des éléments de réponse à la question suivante ou 0 si aucun élément de réponse n'est présent dans le texte. Voila la question: {prompt}
-Le texte n'a pas besoin de répondre parfaitement à la question, juste d'apporter des éléments de réponses et/ou de parler du même thème. Réponds uniquement 0 ou 1.
-"""
-
+class RerankClient:
+    PROMPT_LLM_BASED = """Voila un texte : {doc}\n 
+        En se basant uniquement sur ce texte, réponds 1 si ce texte peut donner des éléments de réponse à la question suivante ou 0 si aucun élément de réponse n'est présent dans le texte. Voila la question: {prompt}
+        Le texte n'a pas besoin de répondre parfaitement à la question, juste d'apporter des éléments de réponses et/ou de parler du même thème. Réponds uniquement 0 ou 1."""
     PROMPT_CHOICER = """
 Tu es un expert en compréhension et en évaluation des besoins en information pour répondre à un message utilisateur. Ton travail est de juger la possibilité de répondre à un message utilisateur en fonction d'un contexte donné.
 Nous sommes en 2024 et ton savoir s'arrete en 2023.
@@ -59,37 +55,61 @@ reponse : 4
 
 Ne réponds pas à la question, réponds uniquement 0, 1, 2, 3 ou 4. Ne donnes jamais d'explication ou de phrase dans ta réponse, renvoies juste un chiffre. Ta réponse doit être sous ce format:<CHIFFRE>
 Bases toi également sur le reste des messages de la conversation pour répondre avec ton choix.
-context : {text}
+context : {docs}
 question : {prompt}
 reponse :
     """
 
-    def __init__(self, model: ModelClient):
-        self.model = model
+    def __init__(
+        self,
+        model_clients: ModelClients,
+    ):
+        self.model_clients = model_clients
 
-    def create(self, prompt: str, input: list, type: Literal["basic", "choicer"] = "basic") -> List[Rerank]:
-        data = list()
-        if type == "basic":
-            for index, text in enumerate(input):
-                content = self.PROMPT_LLM_BASED.format(prompt=prompt, text=text)
+    def get_rank(self, prompt: str, inputs: list, model: str, rerank_type: str) -> str:
+        if rerank_type == "classic_rerank":
+            # TODO: Add classic reranker
+            return []
 
-                response = self.model.chat.completions.create(
-                    messages=[{"role": "user", "content": content}], model=self.model.id, temperature=0.1, max_tokens=3, stream=False, n=1
+        elif rerank_type == "llm_rerank":
+            prompts = []
+            for doc in inputs:
+                prompt_ = self.PROMPT_LLM_BASED.format(prompt=prompt, doc=doc)
+                prompts.append(prompt_)
+
+            results = []
+            for prompt in prompts:
+                response = self.model_clients[model].chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model=self.model_clients[model],
+                    temperature=0.1,
+                    max_tokens=3,
+                    stream=False,
                 )
                 result = response.choices[0].message.content
+
                 match = re.search(r"[0-1]", result)
                 result = int(match.group(0)) if match else 0
-                data.append(Rerank(score=result, index=index))
+                results.append(result)
+            return results
+        # TODO: choicer
+        elif rerank_type == "choicer":
+            prompt = self.PROMPT_CHOICER.format(prompt=prompt, docs=inputs)
 
-        elif type == "choicer":
-            text = "\n-------\n".join(input)
-            prompt = self.PROMPT_CHOICER.format(prompt=prompt, text=text)
-            response = self.model.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}], model=self.model.id, temperature=0.1, max_tokens=3, stream=False
+            print("###################")
+            print(prompt)
+            print("###################")
+
+            response = self.model_clients[model].chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model=model,  # self.model_clients[model],
+                temperature=0.1,
+                max_tokens=3,
+                stream=False,
             )
             result = response.choices[0].message.content
-            match = re.search(r"[0-4]", result)
-            score = int(match.group(0)) if match else 0
-            data = [Rerank(score=score, index=0)]
+            print("YEEEE", result)
 
-        return data
+            match = re.search(r"[0-4]", result)
+            result = int(match.group(0)) if match else 0
+            return result
