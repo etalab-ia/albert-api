@@ -58,7 +58,7 @@ class MarkdownParser(BaseParser):
         if current_lines:
             markdown_tups.append((current_header, "\n".join(current_lines)))
 
-        extracted_text = [f"${title}:\n${content}".format({title, content}) for (title, content) in markdown_tups]
+        extracted_text = [f"{title}:\n{content}".format({title, content}) for (title, content) in markdown_tups]
 
         content = self.clean("\n".join(extracted_text).strip())
 
