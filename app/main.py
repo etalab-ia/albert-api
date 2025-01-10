@@ -6,6 +6,7 @@ from app.endpoints import audio, chat, chunks, collections, completions, documen
 from app.helpers import MetricsMiddleware
 from app.schemas.security import User
 from app.utils.lifespan import lifespan
+from app.utils.logging import logger
 from app.utils.security import check_admin_api_key, check_api_key
 from app.utils.settings import settings
 
@@ -19,6 +20,13 @@ app = FastAPI(
     docs_url="/swagger",
     redoc_url="/documentation",
 )
+
+
+@app.get("/")
+async def root():
+    logger.info("Accès à la route principale")
+    return {"message": "Hello World"}
+
 
 # Prometheus metrics
 # @TODO: env_var_name="ENABLE_METRICS"
