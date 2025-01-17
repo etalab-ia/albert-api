@@ -29,7 +29,6 @@ async def root():
 
 
 # Prometheus metrics
-# @TODO: env_var_name="ENABLE_METRICS"
 app.instrumentator = Instrumentator().instrument(app=app)
 
 # Middlewares

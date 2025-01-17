@@ -95,7 +95,6 @@ def create_chat_completions(self, *args, **kwargs):
         raise HTTPException(status_code=e.response.status_code, detail=json.loads(e.response.text)["message"])
 
 
-# @TODO : useless ?
 def create_embeddings(self, *args, **kwargs):
     """
     Custom method to overwrite OpenAI's create method to raise HTTPException from model API.

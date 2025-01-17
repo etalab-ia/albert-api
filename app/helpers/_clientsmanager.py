@@ -16,6 +16,7 @@ class ClientsManager:
         self.models = ModelClients(settings=self.settings)
 
         self.cache = CacheManager(connection_pool=ConnectionPool(**self.settings.clients.cache.args))
+        # @TODO: check if cache is reachable
 
         if self.settings.clients.search.type == SEARCH_CLIENT_ELASTIC_TYPE:
             self.search = ElasticSearchClient(models=self.models, **self.settings.clients.search.args)

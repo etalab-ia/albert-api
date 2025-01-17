@@ -2,18 +2,16 @@ from typing import Optional, Union
 
 from fastapi import APIRouter, Request, Security
 
-from app.utils.settings import settings
 from app.schemas.models import Model, Models
 from app.schemas.security import User
-from app.utils.lifespan import clients, limiter
-from app.utils.security import check_api_key, check_rate_limit
+from app.utils.lifespan import clients
+from app.utils.security import check_api_key
 
 router = APIRouter()
 
 
 @router.get("/models/{model:path}")
 @router.get("/models")
-@limiter.limit(settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def models(request: Request, model: Optional[str] = None, user: User = Security(check_api_key)) -> Union[Models, Model]:
     """
     Model API similar to OpenAI's API.
