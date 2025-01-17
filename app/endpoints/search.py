@@ -3,15 +3,14 @@ from fastapi import APIRouter, Request, Security
 from app.helpers import InternetManager, SearchManager
 from app.schemas.search import Searches, SearchRequest
 from app.schemas.security import User
-from app.utils.lifespan import clients, limiter
-from app.utils.security import check_api_key, check_rate_limit
+from app.utils.lifespan import clients
+from app.utils.security import check_api_key
 from app.utils.settings import settings
 
 router = APIRouter()
 
 
 @router.post(path="/search")
-@limiter.limit(limit_value=settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
 async def search(request: Request, body: SearchRequest, user: User = Security(dependency=check_api_key)) -> Searches:
     """
     Endpoint to search on the internet or with our search client.

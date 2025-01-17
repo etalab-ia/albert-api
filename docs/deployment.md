@@ -23,6 +23,7 @@ Les variables d'environnements sont celles propres à FastAPI.
 | APP_VERSION | Version de l'application (par défaut : "0.0.0") |
 | APP_DESCRIPTION | Description de l'application (par défaut : None) |
 | CONFIG_FILE | Chemin vers le fichier de configuration (par défaut : "config.yml") |
+| ENABLE_METRICS | Active ou désactive les métriques Prometheus (par défaut : True) |
 | LOG_LEVEL | Niveau de journalisation (par défaut : DEBUG) |
 
 ### Fichier de configuration (config.yml)

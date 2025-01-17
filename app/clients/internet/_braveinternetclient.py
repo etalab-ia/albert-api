@@ -20,7 +20,7 @@ class BraveInternetClient(InternetClient):
             response = requests.get(url=self.URL, headers=self.headers, params=params)
             results = response.json().get("web", {}).get("results", [])
         except Exception as e:
-            logger.warning(msq=f"Brave Search API error: {str(e)}")
+            logger.warning(msg=f"Brave Search API error: {str(e)}")
             results = []
 
         return [result["url"].lower() for result in results]

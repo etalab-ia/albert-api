@@ -114,6 +114,7 @@ class Config(ConfigBaseModel):
 class Settings(BaseSettings):
     # logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    enable_metrics: bool = True
 
     # config
     config_file: str = "config.yml"
