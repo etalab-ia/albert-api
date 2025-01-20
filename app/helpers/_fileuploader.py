@@ -8,7 +8,13 @@ from app.helpers.data.parsers import HTMLParser, JSONParser, PDFParser, Markdown
 from app.schemas.chunks import Chunk
 from app.schemas.data import ParserOutput
 from app.schemas.security import User
-from app.utils.exceptions import InvalidJSONFormatException, NoChunksToUpsertException, ParsingFileFailedException, UnsupportedFileTypeException
+from app.utils.exceptions import (
+    InvalidJSONFormatException,
+    NoChunksToUpsertException,
+    ParsingFileFailedException,
+    UnsupportedFileTypeException,
+    InvalidParserFileException,
+)
 from app.utils.variables import CHUNKERS, DEFAULT_CHUNKER, HTML_TYPE, JSON_TYPE, PDF_TYPE, MD_TYPE
 
 
@@ -47,7 +53,10 @@ class FileUploader:
             parser = MarkdownParser(collection_id=self.collection_id)
 
         try:
-            output = parser.parse(file=file, metadata=metadata)
+            if parser:
+                output = parser.parse(file=file, metadata=metadata)
+            else:
+                raise InvalidParserFileException()
         except Exception as e:
             if isinstance(e, InvalidJSONFormatException):
                 raise e
