@@ -39,6 +39,7 @@ class FileUploader:
             raise UnsupportedFileTypeException()
 
         file_type = self.TYPE_DICT[file_type]
+        parser = None
 
         if file_type == PDF_TYPE:
             parser = PDFParser(collection_id=self.collection_id)
