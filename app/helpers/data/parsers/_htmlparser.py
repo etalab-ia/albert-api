@@ -17,7 +17,7 @@ class HTMLParser(BaseParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def parse(self, file: UploadFile, metadata: Optional[Dict]) -> List[ParserOutput]:
+    def parse(self, file: UploadFile, metadata: Optional[Dict] = {}) -> List[ParserOutput]:
         """
         Parse a HTML file and converts it into a list of chunk objects.
 
