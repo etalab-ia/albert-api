@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List, Optional
 from fastapi import UploadFile
 import uuid
 import time
@@ -17,7 +17,7 @@ class HTMLParser(BaseParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def parse(self, file: UploadFile) -> List[ParserOutput]:
+    def parse(self, file: UploadFile, metadata: Optional[Dict]) -> List[ParserOutput]:
         """
         Parse a HTML file and converts it into a list of chunk objects.
 
@@ -67,10 +67,15 @@ class HTMLParser(BaseParser):
 
         content = self.clean("\n".join(extracted_text).strip())
         name = file.filename.strip()
-        metadata = ParserOutputMetadata(
-            collection_id=self.collection_id, document_id=str(uuid.uuid4()), document_name=name, document_created_at=round(time.time()), title=title
+        document_metadata = ParserOutputMetadata(
+            collection_id=self.collection_id,
+            document_id=str(uuid.uuid4()),
+            document_name=name,
+            document_created_at=round(time.time()),
+            title=title,
+            **metadata,
         )
 
-        output = [ParserOutput(content=content, metadata=metadata)]
+        output = [ParserOutput(content=content, metadata=document_metadata)]
 
         return output
