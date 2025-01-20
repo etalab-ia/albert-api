@@ -25,6 +25,7 @@ class Chunker(BaseModel):
 
 class FilesRequest(BaseModel):
     collection: UUID = Field(...)
+    metadata: Optional[Dict] = Field(None)
     chunker: Optional[Chunker] = Field(None)
 
     @model_validator(mode="before")

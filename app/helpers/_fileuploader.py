@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 from fastapi import UploadFile
 
@@ -27,7 +27,7 @@ class FileUploader:
         self.collection = self.search_client.get_collections(collection_ids=[collection_id], user=self.user)[0]
         self.collection_id = collection_id
 
-    def parse(self, file: UploadFile) -> List[ParserOutput]:
+    def parse(self, file: UploadFile, metadata: Optional[Dict]) -> List[ParserOutput]:
         file_type = file.filename.split(".")[-1]
         if file_type not in self.TYPE_DICT.keys():
             raise UnsupportedFileTypeException()
@@ -47,7 +47,7 @@ class FileUploader:
             parser = MarkdownParser(collection_id=self.collection_id)
 
         try:
-            output = parser.parse(file=file)
+            output = parser.parse(file=file, metadata=metadata)
         except Exception as e:
             if isinstance(e, InvalidJSONFormatException):
                 raise e

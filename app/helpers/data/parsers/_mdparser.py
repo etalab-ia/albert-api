@@ -1,6 +1,6 @@
 import re
 import time
-from typing import List, Optional, Tuple
+from typing import Dict, List, Tuple, Optional
 import uuid
 
 from bs4 import BeautifulSoup
@@ -16,7 +16,7 @@ class MarkdownParser(BaseParser):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def parse(self, file: UploadFile) -> List[ParserOutput]:
+    def parse(self, file: UploadFile, metadata: Optional[Dict]) -> List[ParserOutput]:
         """
         Parse a Markdown file and converts it into a list of chunk objects.
 
@@ -64,10 +64,17 @@ class MarkdownParser(BaseParser):
 
         name = file.filename.strip()
 
-        metadata = ParserOutputMetadata(
-            collection_id=self.collection_id, document_id=str(uuid.uuid4()), document_name=name, document_created_at=round(time.time()), title=title
+        document_metadata = ParserOutputMetadata(
+            collection_id=self.collection_id,
+            document_id=str(uuid.uuid4()),
+            document_name=name,
+            document_created_at=round(
+                time.time(),
+            ),
+            title=title,
+            **metadata,
         )
 
-        output = [ParserOutput(content=content, metadata=metadata)]
+        output = [ParserOutput(content=content, metadata=document_metadata)]
 
         return output

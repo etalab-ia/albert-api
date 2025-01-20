@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import List
+from typing import Dict, List, Optional
 import time
 import uuid
 
@@ -15,7 +15,7 @@ class PDFParser(BaseParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def parse(self, file: UploadFile) -> List[ParserOutput]:
+    def parse(self, file: UploadFile, metadata: Optional[Dict]) -> List[ParserOutput]:
         """
         Parse a PDF file and converts it into a list of parsed outputs.
 
@@ -31,13 +31,14 @@ class PDFParser(BaseParser):
         content = output.getvalue().decode("utf-8").strip()
 
         content = self.clean(content)
-        metadata = ParserOutputMetadata(
+        document_metadata = ParserOutputMetadata(
             collection_id=self.collection_id,
             document_id=str(uuid.uuid4()),
             document_name=file.filename,
             document_created_at=round(time.time()),
+            **metadata,
         )
 
-        output = [ParserOutput(content=content, metadata=metadata)]
+        output = [ParserOutput(content=content, metadata=document_metadata)]
 
         return output
