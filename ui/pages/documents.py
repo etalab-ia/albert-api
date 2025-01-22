@@ -8,7 +8,7 @@ from utils import create_collection, delete_collection, delete_document, header,
 API_KEY = header()
 
 with st.sidebar:
-    if st.button(label="**:material/refresh: Raffraîchir les données**", key="refresh", use_container_width=True):
+    if st.button(label="**:material/refresh: Rafraîchir les données**", key="refresh", use_container_width=True):
         refresh_all_data(api_key=API_KEY)
 
 # Data
