@@ -11,12 +11,12 @@ from streamlit_extras.stylable_container import stylable_container
 from config import (
     AUDIO_MODEL_TYPE,
     BASE_URL,
+    CACHE_DURATION_IN_SECONDS,
     EMBEDDINGS_MODEL_TYPE,
     INTERNET_COLLECTION_DISPLAY_ID,
     LANGUAGE_MODEL_TYPE,
     PRIVATE_COLLECTION_TYPE,
     RERANK_MODEL_TYPE,
-    DUREE_CACHE_EN_SECONDES,
 )
 
 
@@ -71,12 +71,14 @@ def header() -> str:
 
     return API_KEY
 
+
 def refresh_all_data(api_key: str) -> None:
     get_models.clear(api_key)
     get_collections.clear(api_key)
     get_documents.clear(api_key)
 
-@st.cache_data(show_spinner=False, ttl=DUREE_CACHE_EN_SECONDES)
+
+@st.cache_data(show_spinner=False, ttl=CACHE_DURATION_IN_SECONDS)
 def get_models(api_key: str) -> tuple[str, str, str]:
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(f"{BASE_URL}/models", headers=headers)
@@ -91,7 +93,8 @@ def get_models(api_key: str) -> tuple[str, str, str]:
 
 # Collections
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=DUREE_CACHE_EN_SECONDES)
+
+@st.cache_data(show_spinner="Retrieving data...", ttl=CACHE_DURATION_IN_SECONDS)
 def get_collections(api_key: str) -> list:
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(f"{BASE_URL}/collections", headers=headers)
@@ -104,15 +107,17 @@ def get_collections(api_key: str) -> list:
 
     return collections
 
+
 def create_collection(api_key: str, collection_name: str, collection_model: str) -> None:
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(f"{BASE_URL}/collections", json={"name": collection_name, "model": collection_model}, headers=headers)
     if response.status_code == 201:
         st.toast("Create succeed", icon="✅")
-        #clear cache
+        # clear cache
         get_collections.clear(api_key)
     else:
         st.toast("Create failed", icon="❌")
+
 
 def delete_collection(api_key: str, collection_id: str) -> None:
     url = f"{BASE_URL}/collections/{collection_id}"
@@ -120,12 +125,14 @@ def delete_collection(api_key: str, collection_id: str) -> None:
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
         st.toast("Delete succeed", icon="✅")
-        #clear cache
+        # clear cache
         get_collections.clear(api_key)
     else:
         st.toast("Delete failed", icon="❌")
 
+
 # Documents
+
 
 def upload_file(api_key: str, file, collection_id: str) -> None:
     headers = {"Authorization": f"Bearer {api_key}"}
@@ -135,15 +142,14 @@ def upload_file(api_key: str, file, collection_id: str) -> None:
 
     if response.status_code == 201:
         st.toast("Upload succeed", icon="✅")
-        #clear cache
-        get_collections.clear(api_key) #since the number of documents in the collection has changed
+        # clear cache
+        get_collections.clear(api_key)  # since the number of documents in the collection has changed
         get_documents.clear(api_key)
     else:
         st.toast("Upload failed", icon="❌")
 
 
-#ttl = x, persistence de x secondes
-@st.cache_data(show_spinner="Retrieving data...", ttl=DUREE_CACHE_EN_SECONDES)
+@st.cache_data(show_spinner="Retrieving data...", ttl=CACHE_DURATION_IN_SECONDS)
 def get_documents(api_key: str, collection_ids: List[str]) -> dict:
     documents = list()
     headers = {"Authorization": f"Bearer {api_key}"}
@@ -164,12 +170,14 @@ def delete_document(api_key: str, collection_id: str, document_id: str) -> None:
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
         st.toast("Delete succeed", icon="✅")
-        #clear cache
+        # clear cache
         get_documents.clear(api_key)
     else:
         st.toast("Delete failed", icon="❌")
 
+
 # Load everything
+
 
 def load_data(api_key: str):
     try:
@@ -214,7 +222,9 @@ def load_data(api_key: str):
 
     return embeddings_models, collections, documents, df_collections, df_files
 
+
 # Chat
+
 
 def generate_stream(messages: List[dict], params: dict, api_key: str, rag: bool, rerank: bool) -> Tuple[str, List[str]]:
     sources = []

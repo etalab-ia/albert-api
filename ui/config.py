@@ -7,7 +7,7 @@ AUDIO_MODEL_TYPE = "automatic-speech-recognition"
 RERANK_MODEL_TYPE = "text-classification"
 INTERNET_COLLECTION_DISPLAY_ID = "internet"
 PRIVATE_COLLECTION_TYPE = "private"
-DUREE_CACHE_EN_SECONDES = 1800 # 30 minutes
+CACHE_DURATION_IN_SECONDS = 1800  # 30 minutes
 SUPPORTED_LANGUAGES = [
     "afrikaans",
     "albanian",

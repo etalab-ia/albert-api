@@ -3,7 +3,7 @@ import time
 import streamlit as st
 
 from config import PRIVATE_COLLECTION_TYPE
-from utils import create_collection, delete_collection, delete_document, header, load_data, upload_file, refresh_all_data
+from utils import create_collection, delete_collection, delete_document, header, load_data, refresh_all_data, upload_file
 
 API_KEY = header()
 
@@ -35,7 +35,7 @@ with col2:
     with st.expander(label="Delete a collection", icon=":material/delete_forever:"):
         collection = st.selectbox(
             label="Select collection to delete",
-            options=[f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
+            options=[f"{collection['name']} - {collection['id']}" for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
             key="delete_collection_selectbox",
         )
         collection_id = collection.split(" - ")[1] if collection else None
