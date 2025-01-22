@@ -3,16 +3,16 @@ import time
 import streamlit as st
 
 from config import PRIVATE_COLLECTION_TYPE
-from utils import create_collection, delete_collection, delete_document, header, load_data, upload_file
+from utils import create_collection, delete_collection, delete_document, header, load_data, upload_file, refresh_all_data
 
 API_KEY = header()
 
+with st.sidebar:
+    if st.button(label="**:material/refresh: Raffraîchir les données**", key="refresh", use_container_width=True):
+        refresh_all_data(api_key=API_KEY)
+
 # Data
 embeddings_models, collections, documents, df_collections, df_files = load_data(api_key=API_KEY)
-
-with st.sidebar:
-    if st.button(label="**:material/refresh: Refresh data**", key="refresh", use_container_width=True):
-        embeddings_models, collections, documents, df_collections, df_files = load_data(api_key=API_KEY)
 
 # Collections
 st.subheader(body="Collections")
