@@ -3,16 +3,16 @@ import time
 import streamlit as st
 
 from config import PRIVATE_COLLECTION_TYPE
-from utils import create_collection, delete_collection, delete_document, header, load_data, upload_file
+from utils import create_collection, delete_collection, delete_document, header, load_data, refresh_all_data, upload_file
 
 API_KEY = header()
 
+with st.sidebar:
+    if st.button(label="**:material/refresh: Rafraîchir les données**", key="refresh", use_container_width=True):
+        refresh_all_data(api_key=API_KEY)
+
 # Data
 embeddings_models, collections, documents, df_collections, df_files = load_data(api_key=API_KEY)
-
-with st.sidebar:
-    if st.button(label="**:material/refresh: Refresh data**", key="refresh", use_container_width=True):
-        embeddings_models, collections, documents, df_collections, df_files = load_data(api_key=API_KEY)
 
 # Collections
 st.subheader(body="Collections")
@@ -35,7 +35,7 @@ with col2:
     with st.expander(label="Delete a collection", icon=":material/delete_forever:"):
         collection = st.selectbox(
             label="Select collection to delete",
-            options=[f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
+            options=[f"{collection['name']} - {collection['id']}" for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
             key="delete_collection_selectbox",
         )
         collection_id = collection.split(" - ")[1] if collection else None
