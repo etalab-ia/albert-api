@@ -11,6 +11,7 @@ from streamlit_extras.stylable_container import stylable_container
 from config import (
     AUDIO_MODEL_TYPE,
     BASE_URL,
+    CACHE_DURATION_IN_SECONDS,
     EMBEDDINGS_MODEL_TYPE,
     INTERNET_COLLECTION_DISPLAY_ID,
     LANGUAGE_MODEL_TYPE,
@@ -71,7 +72,13 @@ def header() -> str:
     return API_KEY
 
 
-@st.cache_data(show_spinner=False)
+def refresh_all_data(api_key: str) -> None:
+    get_models.clear(api_key)
+    get_collections.clear(api_key)
+    get_documents.clear(api_key)
+
+
+@st.cache_data(show_spinner=False, ttl=CACHE_DURATION_IN_SECONDS)
 def get_models(api_key: str) -> tuple[str, str, str]:
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(f"{BASE_URL}/models", headers=headers)
@@ -84,7 +91,10 @@ def get_models(api_key: str) -> tuple[str, str, str]:
     return language_models, embeddings_models, audio_models, rerank_models
 
 
-@st.cache_data(show_spinner="Retrieving data...")
+# Collections
+
+
+@st.cache_data(show_spinner="Retrieving data...", ttl=CACHE_DURATION_IN_SECONDS)
 def get_collections(api_key: str) -> list:
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(f"{BASE_URL}/collections", headers=headers)
@@ -98,56 +108,13 @@ def get_collections(api_key: str) -> list:
     return collections
 
 
-# Chat
-
-
-def generate_stream(messages: List[dict], params: dict, api_key: str, rag: bool, rerank: bool) -> Tuple[str, List[str]]:
-    sources = []
-    if rag:
-        prompt = messages[-1]["content"]
-        k = params["rag"]["k"] * 2 if rerank else params["rag"]["k"]
-        data = {"collections": params["rag"]["collections"], "k": k, "prompt": messages[-1]["content"], "score_threshold": None}
-        response = requests.post(f"{BASE_URL}/search", json=data, headers={"Authorization": f"Bearer {api_key}"})
-        assert response.status_code == 200, f"{response.status_code} - {response.json()}"
-
-        prompt_template = """Réponds à la question suivante de manière claire en te basant sur les extraits de documents ci-dessous. Si les documents ne sont pas pertinents pour répondre à la question, réponds que tu ne sais pas ou réponds directement la question à l'aide de tes connaissances. Réponds en français.
-La question de l'utilisateur est : {prompt}
-
-Les documents sont :
-
-{chunks}
-"""
-        chunks = [chunk["chunk"] for chunk in response.json()["data"]]
-
-        if rerank:
-            data = {
-                "model": params["rag"]["rerank_model"],
-                "prompt": prompt,
-                "input": [chunk["content"] for chunk in chunks],
-            }
-            response = requests.post(f"{BASE_URL}/rerank", json=data, headers={"Authorization": f"Bearer {api_key}"})
-            assert response.status_code == 200, f"{response.status_code} - {response.json()}"
-
-            rerank_scores = sorted(response.json()["data"], key=lambda x: x["score"])
-            chunks = [chunks[result["index"]] for result in rerank_scores[: params["rag"]["k"]]]
-
-        sources = [chunk["metadata"]["document_name"] for chunk in chunks]
-        chunks = [chunk["content"] for chunk in chunks]
-        prompt = prompt_template.format(prompt=prompt, chunks="\n\n".join(chunks))
-        messages = messages[:-1] + [{"role": "user", "content": prompt}]
-
-    client = OpenAI(base_url=BASE_URL, api_key=api_key)
-    stream = client.chat.completions.create(stream=True, messages=messages, **params["sampling_params"])
-
-    return stream, sources
-
-
-# Documents
 def create_collection(api_key: str, collection_name: str, collection_model: str) -> None:
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(f"{BASE_URL}/collections", json={"name": collection_name, "model": collection_model}, headers=headers)
     if response.status_code == 201:
         st.toast("Create succeed", icon="✅")
+        # clear cache
+        get_collections.clear(api_key)
     else:
         st.toast("Create failed", icon="❌")
 
@@ -158,8 +125,13 @@ def delete_collection(api_key: str, collection_id: str) -> None:
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
         st.toast("Delete succeed", icon="✅")
+        # clear cache
+        get_collections.clear(api_key)
     else:
         st.toast("Delete failed", icon="❌")
+
+
+# Documents
 
 
 def upload_file(api_key: str, file, collection_id: str) -> None:
@@ -170,11 +142,14 @@ def upload_file(api_key: str, file, collection_id: str) -> None:
 
     if response.status_code == 201:
         st.toast("Upload succeed", icon="✅")
+        # clear cache
+        get_collections.clear(api_key)  # since the number of documents in the collection has changed
+        get_documents.clear(api_key)
     else:
         st.toast("Upload failed", icon="❌")
 
 
-@st.cache_data(show_spinner="Retrieving data...")
+@st.cache_data(show_spinner="Retrieving data...", ttl=CACHE_DURATION_IN_SECONDS)
 def get_documents(api_key: str, collection_ids: List[str]) -> dict:
     documents = list()
     headers = {"Authorization": f"Bearer {api_key}"}
@@ -195,8 +170,13 @@ def delete_document(api_key: str, collection_id: str, document_id: str) -> None:
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
         st.toast("Delete succeed", icon="✅")
+        # clear cache
+        get_documents.clear(api_key)
     else:
         st.toast("Delete failed", icon="❌")
+
+
+# Load everything
 
 
 def load_data(api_key: str):
@@ -241,3 +221,47 @@ def load_data(api_key: str):
     df_files = pd.DataFrame(data, columns=columns)
 
     return embeddings_models, collections, documents, df_collections, df_files
+
+
+# Chat
+
+
+def generate_stream(messages: List[dict], params: dict, api_key: str, rag: bool, rerank: bool) -> Tuple[str, List[str]]:
+    sources = []
+    if rag:
+        prompt = messages[-1]["content"]
+        k = params["rag"]["k"] * 2 if rerank else params["rag"]["k"]
+        data = {"collections": params["rag"]["collections"], "k": k, "prompt": messages[-1]["content"], "score_threshold": None}
+        response = requests.post(f"{BASE_URL}/search", json=data, headers={"Authorization": f"Bearer {api_key}"})
+        assert response.status_code == 200, f"{response.status_code} - {response.json()}"
+
+        prompt_template = """Réponds à la question suivante de manière claire en te basant sur les extraits de documents ci-dessous. Si les documents ne sont pas pertinents pour répondre à la question, réponds que tu ne sais pas ou réponds directement la question à l'aide de tes connaissances. Réponds en français.
+La question de l'utilisateur est : {prompt}
+
+Les documents sont :
+
+{chunks}
+"""
+        chunks = [chunk["chunk"] for chunk in response.json()["data"]]
+
+        if rerank:
+            data = {
+                "model": params["rag"]["rerank_model"],
+                "prompt": prompt,
+                "input": [chunk["content"] for chunk in chunks],
+            }
+            response = requests.post(f"{BASE_URL}/rerank", json=data, headers={"Authorization": f"Bearer {api_key}"})
+            assert response.status_code == 200, f"{response.status_code} - {response.json()}"
+
+            rerank_scores = sorted(response.json()["data"], key=lambda x: x["score"])
+            chunks = [chunks[result["index"]] for result in rerank_scores[: params["rag"]["k"]]]
+
+        sources = [chunk["metadata"]["document_name"] for chunk in chunks]
+        chunks = [chunk["content"] for chunk in chunks]
+        prompt = prompt_template.format(prompt=prompt, chunks="\n\n".join(chunks))
+        messages = messages[:-1] + [{"role": "user", "content": prompt}]
+
+    client = OpenAI(base_url=BASE_URL, api_key=api_key)
+    stream = client.chat.completions.create(stream=True, messages=messages, **params["sampling_params"])
+
+    return stream, sources

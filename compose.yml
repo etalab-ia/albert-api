@@ -10,7 +10,7 @@ services:
     volumes:
      - .:/home/albert/conf
     depends_on:
-      elasticsearch:
+      elastic:
         condition: service_healthy
       redis:
         condition: service_healthy
