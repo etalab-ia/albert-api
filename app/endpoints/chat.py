@@ -19,8 +19,11 @@ router = APIRouter()
 async def chat_completions(
     request: Request, body: ChatCompletionRequest, user: User = Security(dependency=check_api_key)
 ) -> Union[ChatCompletion, ChatCompletionChunk]:
-    """Completion API similar to OpenAI's API.
-    See https://platform.openai.com/docs/api-reference/chat/create for the API specification.
+    """Creates a model response for the given chat conversation.
+
+    **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional
+    fields are available (see https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py#L209). Similarly, some defined fields
+    may be ignored depending on the backend used and the model support.
     """
 
     # retrieval augmentation generation

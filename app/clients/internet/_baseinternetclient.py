@@ -7,7 +7,10 @@ from app.utils.variables import INTERNET_TYPE__BRAVE, INTERNET_TYPE__DUCKDUCKGO
 
 class BaseInternetClient(ABC):
     @staticmethod
-    def import_constructor(type: Literal[INTERNET_TYPE__BRAVE, INTERNET_TYPE__DUCKDUCKGO]) -> "Type[BaseInternetClient]":
+    def import_module(type: Literal[INTERNET_TYPE__BRAVE, INTERNET_TYPE__DUCKDUCKGO]) -> "Type[BaseInternetClient]":
+        """
+        Import the module for the given internet type.
+        """
         module = importlib.import_module(f"app.clients.internet._{type}internetclient")
         return getattr(module, f"{type.capitalize()}InternetClient")
 

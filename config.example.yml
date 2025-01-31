@@ -1,6 +1,7 @@
 models:
   - id: turbo
     type: text-generation
+    default_internet: True
     clients:
       - model: gpt-3.5-turbo
         type: openai
@@ -11,6 +12,7 @@ models:
 
   - id: embeddings-small
     type: text-embeddings-inference
+    default_internet: True
     clients:
       - model: text-embedding-3-small
         type: openai
@@ -29,5 +31,5 @@ databases:
 
   - type: redis
     args:
-      host: http://redis
+      host: redis
       password: changeme

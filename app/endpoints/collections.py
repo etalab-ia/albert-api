@@ -2,7 +2,7 @@ from typing import Union
 import uuid
 from uuid import UUID
 
-from fastapi import APIRouter, Request, Response, Security
+from fastapi import APIRouter, Path, Request, Response, Security
 from fastapi.responses import JSONResponse
 
 from app.schemas.collections import Collection, CollectionRequest, Collections
@@ -14,7 +14,7 @@ from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE
 router = APIRouter()
 
 
-@router.post("/collections")
+@router.post(path="/collections")
 async def create_collection(request: Request, body: CollectionRequest, user: User = Security(check_api_key)) -> Response:
     """
     Create a new collection.
@@ -32,7 +32,7 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     return JSONResponse(status_code=201, content={"id": collection_id})
 
 
-@router.get("/collections")
+@router.get(path="/collections")
 async def get_collections(request: Request, user: User = Security(check_api_key)) -> Union[Collection, Collections]:
     """
     Get list of collections.
@@ -50,8 +50,10 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
     return Collections(data=data)
 
 
-@router.delete("/collections/{collection}")
-async def delete_collections(request: Request, collection: UUID, user: User = Security(check_api_key)) -> Response:
+@router.delete(path="/collections/{collection}")
+async def delete_collections(
+    request: Request, collection: UUID = Path(..., description="The collection ID"), user: User = Security(check_api_key)
+) -> Response:
     """
     Delete a collection.
     """

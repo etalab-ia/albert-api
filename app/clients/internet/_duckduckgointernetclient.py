@@ -16,6 +16,9 @@ class DuckduckgoInternetClient(BaseInternetClient):
         self.headers = {"User-Agent": self.USER_AGENT}
 
     async def get_result_urls(self, query: str, n: int = 3) -> List[str]:
+        """
+        See BaseInternetClient.get_result_urls for more information.
+        """
         params = {
             "q": query,
             "format": "json",

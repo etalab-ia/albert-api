@@ -36,7 +36,9 @@ class ModelRouter:
 
         for client in model.clients:
             try:
-                client = ModelClient.import_constructor(type=client.type)(settings=client)
+                client = ModelClient.import_module(type=client.type)(settings=client)
+                max_context_length = client.models.list().data[0].max_context_length
+                max_context_lengths.append(max_context_length)
             except Exception:
                 logger.error(msg=f"client of {model.id} is unavailable: skipping.")
                 logger.debug(msg=traceback.format_exc())
@@ -65,8 +67,8 @@ class ModelRouter:
         assert len(set(vector_sizes)) < 2, "All embeddings models in the same model group must have the same vector size."
 
         ## if there are several models with different max_context_length, it will return the minimal value for consistency of /v1/models response
-        max_context_lengths = set([client.max_context_length for client in clients if client.max_context_length])
-        max_context_length = min(max_context_lengths) if len(max_context_lengths) >= 1 else None
+        max_context_lengths = [value for value in max_context_lengths if value is not None]
+        max_context_length = min(max_context_lengths) if max_context_lengths else None
 
         # set attributes of the model (return by /v1/models endpoint)
         self.id = model.id

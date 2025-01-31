@@ -31,7 +31,6 @@ class VllmModelClient(AsyncOpenAI, BaseModelClient):
         self.rerank = LanguageModelRerank(client=self)
 
         self.model = settings.model
-        self.max_context_length = self.models.list().data[0].max_context_length
 
 
 ########### Overwrite OpenAI methods ############
@@ -41,10 +40,10 @@ def _get_models_list(self, *args, **kwargs) -> Models:
     """
     Custom method to overwrite OpenAI's list method (self.models.list()) and make it synchronous for initialization.
     """
-    endpoint = urljoin(base=str(self.base_url), url="models")
+    url = urljoin(base=str(self.base_url), url=self.ENDPOINT_TABLE["models"])
     headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else None
 
-    response = requests.get(url=endpoint, headers=headers, timeout=self.timeout)
+    response = requests.get(url=url, headers=headers, timeout=self.timeout)
     assert response.status_code == 200, f"Failed to get models list ({response.status_code})."
 
     response = response.json()["data"]

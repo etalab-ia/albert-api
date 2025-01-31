@@ -133,17 +133,27 @@ SUPPORTED_LANGUAGES_VALUES = sorted(set(SUPPORTED_LANGUAGES.values())) + sorted(
 @limiter.limit(limit_value=settings.rate_limit.by_user, key_func=lambda request: check_rate_limit(request=request))
 async def audio_transcriptions(
     request: Request,
-    file: UploadFile = File(...),
-    model: str = Form(...),
-    language: Literal[*SUPPORTED_LANGUAGES_VALUES] = Form(default="fr"),
-    prompt: str = Form(None),
-    response_format: Literal["json", "text"] = Form(default="json"),
-    temperature: float = Form(0),
-    timestamp_granularities: List[str] = Form(alias="timestamp_granularities[]", default=["segment"]),
+    file: UploadFile = File(description="The audio file object (not file name) to transcribe, in one of these formats: mp3 or wav."),
+    model: str = Form(
+        description="ID of the model to use. Call `/v1/models` endpoint to get the list of available models, only `automatic-speech-recognition` model type is supported."
+    ),
+    language: Literal[*SUPPORTED_LANGUAGES_VALUES] = Form(
+        default="fr",
+        description="The language of the input audio. Supplying the input language in ISO-639-1 (e.g. en) format will improve accuracy and latency.",
+    ),
+    prompt: str = Form(default=None, description="Not implemented."),
+    response_format: Literal["json", "text"] = Form(
+        default="json", description="The format of the transcript output, in one of these formats: `json` or `text`."
+    ),
+    temperature: float = Form(
+        default=0,
+        description="The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. If set to 0, the model will use log probability to automatically increase the temperature until certain thresholds are hit.",
+    ),
+    timestamp_granularities: List[str] = Form(alias="timestamp_granularities[]", default=["segment"], description="Not implemented."),
     user: User = Security(dependency=check_api_key),
 ) -> AudioTranscription:
     """
-    API de transcription similaire à l'API d'OpenAI.
+    Transcribes audio into the input language.
     """
 
     # @TODO: Implement prompt

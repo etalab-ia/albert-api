@@ -66,6 +66,7 @@ def check_rate_limit(request: Request) -> Optional[str]:
     Returns:
         Optional[str]: user_id if the access level is 0, None otherwise (no rate limit applied).
     """
+
     # @TODO: add a middleware to check the key and forward user role to the request
     authorization = request.headers.get("Authorization")
     scheme, credentials = authorization.split(" ") if authorization else ("", "")

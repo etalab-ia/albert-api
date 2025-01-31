@@ -40,17 +40,14 @@ def health(user: User = Security(dependency=check_api_key)) -> Response:
 
 app.instrumentator.expose(app=app, should_gzip=True, tags=["Monitoring"], dependencies=[Depends(dependency=check_admin_api_key)])
 
-# Core
-app.include_router(router=models.router, tags=["Core"], prefix="/v1")
-app.include_router(router=chat.router, tags=["Core"], prefix="/v1")
-app.include_router(router=completions.router, tags=["Core"], prefix="/v1")
-app.include_router(router=embeddings.router, tags=["Core"], prefix="/v1")
-app.include_router(router=audio.router, tags=["Core"], prefix="/v1")
-app.include_router(router=rerank.router, tags=["Core"], prefix="/v1")
-
-# RAG
-app.include_router(router=search.router, tags=["Retrieval Augmented Generation"], prefix="/v1")
-app.include_router(router=collections.router, tags=["Retrieval Augmented Generation"], prefix="/v1")
-app.include_router(router=files.router, tags=["Retrieval Augmented Generation"], prefix="/v1")
-app.include_router(router=documents.router, tags=["Retrieval Augmented Generation"], prefix="/v1")
-app.include_router(router=chunks.router, tags=["Retrieval Augmented Generation"], prefix="/v1")
+app.include_router(router=models.router, tags=["Models"], prefix="/v1")
+app.include_router(router=chat.router, tags=["Chat"], prefix="/v1")
+app.include_router(router=completions.router, tags=["Completions"], prefix="/v1")
+app.include_router(router=embeddings.router, tags=["Embeddings"], prefix="/v1")
+app.include_router(router=audio.router, tags=["Audio"], prefix="/v1")
+app.include_router(router=rerank.router, tags=["Reranking"], prefix="/v1")
+app.include_router(router=search.router, tags=["Search"], prefix="/v1")
+app.include_router(router=collections.router, tags=["Collections"], prefix="/v1")
+app.include_router(router=files.router, tags=["Files"], prefix="/v1")
+app.include_router(router=documents.router, tags=["Documents"], prefix="/v1")
+app.include_router(router=chunks.router, tags=["Chunks"], prefix="/v1")

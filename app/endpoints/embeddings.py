@@ -11,8 +11,7 @@ router = APIRouter()
 @router.post(path="/embeddings")
 async def embeddings(request: Request, body: EmbeddingsRequest, user: User = Security(dependency=check_api_key)) -> Embeddings:
     """
-    Embedding API similar to OpenAI's API.
-    See https://platform.openai.com/docs/api-reference/embeddings/create for the API specification.
+    Creates an embedding vector representing the input text.
     """
 
     model = clients.models[body.model]

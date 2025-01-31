@@ -27,7 +27,16 @@ from app.utils.variables import (
 
 class BaseSearchClient(ABC):
     @staticmethod
-    def import_constructor(type: Literal[DATABASE_TYPE__ELASTIC, DATABASE_TYPE__QDRANT]) -> "Type[BaseSearchClient]":
+    def import_module(type: Literal[DATABASE_TYPE__ELASTIC, DATABASE_TYPE__QDRANT]) -> "Type[BaseSearchClient]":
+        """
+        Static method to import a subclass of BaseSearchClient.
+
+        Args:
+            type(str): The type of search client to import.
+
+        Returns:
+            Type[BaseSearchClient]: The subclass of BaseSearchClient.
+        """
         module = importlib.import_module(f"app.clients.search._{type}searchclient")
         return getattr(module, f"{type.capitalize()}SearchClient")
 

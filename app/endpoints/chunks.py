@@ -1,6 +1,7 @@
-from uuid import UUID
 from typing import Union
-from fastapi import APIRouter, Request, Security, Query
+from uuid import UUID
+
+from fastapi import APIRouter, Path, Query, Request, Security
 
 from app.schemas.chunks import Chunks
 from app.schemas.security import User
@@ -10,17 +11,17 @@ from app.utils.security import check_api_key
 router = APIRouter()
 
 
-@router.get("/chunks/{collection}/{document}")
+@router.get(path="/chunks/{collection}/{document}")
 async def get_chunks(
     request: Request,
-    collection: UUID,
-    document: UUID,
-    limit: int = Query(default=10, ge=1, le=100),
-    offset: Union[int, UUID] = Query(default=0),
+    collection: UUID = Path(description="The collection ID"),
+    document: UUID = Path(description="The document ID"),
+    limit: int = Query(default=10, ge=1, le=100, description="The number of documents to return"),
+    offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
     user: User = Security(check_api_key),
 ) -> Chunks:
     """
-    Get a single chunk.
+    Get chunks of a document.
     """
     collection, document = str(collection), str(document)
     data = clients.search.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user)

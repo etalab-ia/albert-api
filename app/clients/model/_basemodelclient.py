@@ -17,11 +17,32 @@ from app.utils.variables import (
 
 class BaseModelClient(ABC):
     @staticmethod
-    def import_constructor(type: Literal[MODEL_CLIENT_TYPE__OPENAI, MODEL_CLIENT_TYPE__VLLM, MODEL_CLIENT_TYPE__TEI]) -> "Type[BaseModelClient]":
+    def import_module(type: Literal[MODEL_CLIENT_TYPE__OPENAI, MODEL_CLIENT_TYPE__VLLM, MODEL_CLIENT_TYPE__TEI]) -> "Type[BaseModelClient]":
+        """
+        Static method to import a subclass of BaseModelClient.
+
+        Args:
+            type(str): The type of model client to import.
+
+        Returns:
+            Type[BaseModelClient]: The subclass of BaseModelClient.
+        """
         module = importlib.import_module(f"app.clients.model._{type}modelclient")
         return getattr(module, f"{type.capitalize()}ModelClient")
 
     def _format_request(self, endpoint: str, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+        """
+        Format a request to a client model. This method can be overridden by a subclass to add additional headers or parameters.
+
+        Args:
+            endpoint(str): The endpoint to forward the request to.
+            json(dict): The JSON body to use for the request.
+            files(dict): The files to use for the request.
+            data(dict): The data to use for the request.
+
+        Returns:
+            tuple: The formatted request composed of the url, headers, json, files and data.
+        """
         url = urljoin(base=str(self.base_url), url=self.ENDPOINT_TABLE[endpoint])
         headers = {"Authorization": f"Bearer {self.api_key}"}
         if json and "model" in json:
@@ -137,6 +158,6 @@ class BaseModelClient(ABC):
                         yield chunk, response.status_code
 
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
-                yield dumps({"detail": "Request timed out, model is not available."}).encode(), 504
+                yield dumps({"detail": "Request timed out, model is too busy."}).encode(), 504
             except Exception as e:
                 yield dumps({"detail": type(e).__name__}).encode(), 500

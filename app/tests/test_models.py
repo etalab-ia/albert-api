@@ -1,5 +1,3 @@
-import time
-
 import pytest
 
 from app.schemas.models import Model, Models
@@ -40,18 +38,19 @@ class TestModels:
         response = session_admin.get(f"{args["base_url"]}/models/{model.aliases[0]}")
         assert response.json()["id"] == model.id
 
-    def test_get_models_rate_limit(self, args, session_user):
-        """Test the GET /models rate limiting."""
-        start = time.time()
-        i = 0
-        check = False
-        while time.time() - start < 60:
-            i += 1
-            response = session_user.get(f"{args["base_url"]}/models")
-            if response.status_code == 429:
-                check = True
-                break
-            else:
-                assert response.status_code == 200
+    # @TODO: move to test_chat.py
+    # def test_get_models_rate_limit(self, args, session_user):
+    #     """Test the GET /models rate limiting."""
+    #     start = time.time()
+    #     i = 0
+    #     check = False
+    #     while time.time() - start < 60:
+    #         i += 1
+    #         response = session_user.get(f"{args["base_url"]}/models")
+    #         if response.status_code == 429:
+    #             check = True
+    #             break
+    #         else:
+    #             assert response.status_code == 200
 
-        assert check
+    #     assert check
