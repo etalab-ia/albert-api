@@ -1,13 +1,13 @@
 import os
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8080/v1")
-EMBEDDINGS_MODEL_TYPE = "text-embeddings-inference"
-LANGUAGE_MODEL_TYPE = "text-generation"
-AUDIO_MODEL_TYPE = "automatic-speech-recognition"
-RERANK_MODEL_TYPE = "text-classification"
-INTERNET_COLLECTION_DISPLAY_ID = "internet"
-PRIVATE_COLLECTION_TYPE = "private"
-CACHE_DURATION_IN_SECONDS = 1800  # 30 minutes
+MODEL_TYPE__EMBEDDINGS = "text-embeddings-inference"
+MODEL_TYPE__LANGUAGE = "text-generation"
+MODEL_TYPE__AUDIO = "automatic-speech-recognition"
+MODEL_TYPE__RERANK = "text-classification"
+COLLECTION_DISPLAY_ID__INTERNET = "internet"
+COLLECTION_TYPE__PRIVATE = "private"
+CACHE_TTL = 1800  # 30 minutes
 SUPPORTED_LANGUAGES = [
     "afrikaans",
     "albanian",

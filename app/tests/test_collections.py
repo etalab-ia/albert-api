@@ -5,10 +5,10 @@ import pytest
 from app.schemas.collections import Collection, Collections
 from app.clients._authenticationclient import AuthenticationClient
 from app.utils.variables import (
-    EMBEDDINGS_MODEL_TYPE,
-    LANGUAGE_MODEL_TYPE,
-    PRIVATE_COLLECTION_TYPE,
-    PUBLIC_COLLECTION_TYPE,
+    MODEL_TYPE__EMBEDDINGS,
+    MODEL_TYPE__LANGUAGE,
+    COLLECTION_TYPE__PRIVATE,
+    COLLECTION_TYPE__PUBLIC,
 )
 
 
@@ -21,8 +21,8 @@ def setup(args, session_user):
 
     response = session_user.get(f"{args["base_url"]}/models", timeout=10)
     models = response.json()
-    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == EMBEDDINGS_MODEL_TYPE][0]["id"]
-    LANGUAGE_MODEL_ID = [model for model in models["data"] if model["type"] == LANGUAGE_MODEL_TYPE][0]["id"]
+    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
+    LANGUAGE_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]["id"]
     logging.info(f"test embedings model ID: {EMBEDDINGS_MODEL_ID}")
     logging.info(f"test language model ID: {LANGUAGE_MODEL_ID}")
 
@@ -37,7 +37,7 @@ class TestFiles:
     def test_create_private_collection_with_user(self, args, session_user, setup):
         _, PRIVATE_COLLECTION_NAME, _, _, EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": PRIVATE_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": PRIVATE_COLLECTION_TYPE}
+        params = {"name": PRIVATE_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
         assert response.status_code == 201
         assert "id" in response.json().keys()
@@ -45,14 +45,14 @@ class TestFiles:
     def test_create_public_collection_with_user(self, args, session_user, setup):
         PUBLIC_COLLECTION_NAME, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": PUBLIC_COLLECTION_TYPE}
+        params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
         assert response.status_code == 403
 
     def test_create_public_collection_with_admin(self, args, session_admin, setup):
         PUBLIC_COLLECTION_NAME, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": PUBLIC_COLLECTION_TYPE}
+        params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC}
         response = session_admin.post(f"{args["base_url"]}/collections", json=params)
         assert response.status_code == 201
         assert "id" in response.json().keys()
@@ -60,14 +60,14 @@ class TestFiles:
     def test_create_private_collection_with_language_model_with_user(self, args, session_user, setup):
         _, PRIVATE_COLLECTION_NAME, _, _, _, LANGUAGE_MODEL_ID = setup
 
-        params = {"name": PRIVATE_COLLECTION_NAME, "model": LANGUAGE_MODEL_ID, "type": PRIVATE_COLLECTION_TYPE}
+        params = {"name": PRIVATE_COLLECTION_NAME, "model": LANGUAGE_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
         assert response.status_code == 422
 
     def test_create_private_collection_with_unknown_model_with_user(self, args, session_user, setup):
         _, PRIVATE_COLLECTION_NAME, _, _, _, _ = setup
 
-        params = {"name": PRIVATE_COLLECTION_NAME, "model": "unknown-model", "type": PRIVATE_COLLECTION_TYPE}
+        params = {"name": PRIVATE_COLLECTION_NAME, "model": "unknown-model", "type": COLLECTION_TYPE__PRIVATE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
         assert response.status_code == 404
 
@@ -129,14 +129,14 @@ class TestFiles:
     def test_create_collection_with_empty_name(self, args, session_user, setup):
         _, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": " ", "model": EMBEDDINGS_MODEL_ID, "type": PRIVATE_COLLECTION_TYPE}
+        params = {"name": " ", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
         assert response.status_code == 422
 
     def test_create_collection_with_description(self, args, session_user, setup):
         _, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": "pytest-description", "model": EMBEDDINGS_MODEL_ID, "type": PRIVATE_COLLECTION_TYPE, "description": "pytest-description"}
+        params = {"name": "pytest-description", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE, "description": "pytest-description"}
         response = session_user.post(f"{args["base_url"]}/collections", json=params)
         assert response.status_code == 201
 

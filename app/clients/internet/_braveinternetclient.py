@@ -3,11 +3,11 @@ from typing import List
 
 import httpx
 
-from app.clients import InternetClient
+from app.clients.internet._baseinternetclient import BaseInternetClient
 from app.utils.logging import logger
 
 
-class BraveInternetClient(InternetClient):
+class BraveInternetClient(BaseInternetClient):
     URL = "https://api.search.brave.com/res/v1/web/search"
     DEFAULT_TIMEOUT = 5
 
@@ -22,7 +22,7 @@ class BraveInternetClient(InternetClient):
             async with httpx.AsyncClient(timeout=self.DEFAULT_TIMEOUT) as client:
                 response = await client.get(url=self.URL, headers=self.headers, params=params)
                 results = response.json().get("web", {}).get("results", [])
-        except Exception as e:
+        except Exception:
             logger.error(msg="Brave Search API unreachable.")
             logger.debug(msg=traceback.format_exc())
             results = []

@@ -9,14 +9,14 @@ import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
 from config import (
-    AUDIO_MODEL_TYPE,
     BASE_URL,
-    CACHE_DURATION_IN_SECONDS,
-    EMBEDDINGS_MODEL_TYPE,
-    INTERNET_COLLECTION_DISPLAY_ID,
-    LANGUAGE_MODEL_TYPE,
-    PRIVATE_COLLECTION_TYPE,
-    RERANK_MODEL_TYPE,
+    CACHE_TTL,
+    COLLECTION_DISPLAY_ID__INTERNET,
+    COLLECTION_TYPE__PRIVATE,
+    MODEL_TYPE__AUDIO,
+    MODEL_TYPE__EMBEDDINGS,
+    MODEL_TYPE__LANGUAGE,
+    MODEL_TYPE__RERANK,
 )
 
 
@@ -78,23 +78,23 @@ def refresh_all_data(api_key: str) -> None:
     get_documents.clear(api_key)
 
 
-@st.cache_data(show_spinner=False, ttl=CACHE_DURATION_IN_SECONDS)
+@st.cache_data(show_spinner=False, ttl=CACHE_TTL)
 def get_models(api_key: str) -> tuple[str, str, str]:
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(f"{BASE_URL}/models", headers=headers)
     assert response.status_code == 200, f"{response.status_code} - {response.json()}"
     models = response.json()["data"]
-    embeddings_models = sorted([model["id"] for model in models if model["type"] == EMBEDDINGS_MODEL_TYPE and model["status"] == "available"])
-    language_models = sorted([model["id"] for model in models if model["type"] == LANGUAGE_MODEL_TYPE and model["status"] == "available"])
-    audio_models = sorted([model["id"] for model in models if model["type"] == AUDIO_MODEL_TYPE and model["status"] == "available"])
-    rerank_models = sorted([model["id"] for model in models if model["type"] == RERANK_MODEL_TYPE and model["status"] == "available"])
+    embeddings_models = sorted([model["id"] for model in models if model["type"] == MODEL_TYPE__EMBEDDINGS and model["status"] == "available"])
+    language_models = sorted([model["id"] for model in models if model["type"] == MODEL_TYPE__LANGUAGE and model["status"] == "available"])
+    audio_models = sorted([model["id"] for model in models if model["type"] == MODEL_TYPE__AUDIO and model["status"] == "available"])
+    rerank_models = sorted([model["id"] for model in models if model["type"] == MODEL_TYPE__RERANK and model["status"] == "available"])
     return language_models, embeddings_models, audio_models, rerank_models
 
 
 # Collections
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=CACHE_DURATION_IN_SECONDS)
+@st.cache_data(show_spinner="Retrieving data...", ttl=CACHE_TTL)
 def get_collections(api_key: str) -> list:
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(f"{BASE_URL}/collections", headers=headers)
@@ -102,7 +102,7 @@ def get_collections(api_key: str) -> list:
     collections = response.json()["data"]
 
     for collection in collections:
-        if collection["id"] == INTERNET_COLLECTION_DISPLAY_ID:
+        if collection["id"] == COLLECTION_DISPLAY_ID__INTERNET:
             collection["name"] = "Internet"
 
     return collections
@@ -149,7 +149,7 @@ def upload_file(api_key: str, file, collection_id: str) -> None:
         st.toast("Upload failed", icon="❌")
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=CACHE_DURATION_IN_SECONDS)
+@st.cache_data(show_spinner="Retrieving data...", ttl=CACHE_TTL)
 def get_documents(api_key: str, collection_ids: List[str]) -> dict:
     documents = list()
     headers = {"Authorization": f"Bearer {api_key}"}
@@ -183,10 +183,10 @@ def load_data(api_key: str):
     try:
         _, embeddings_models, _, _ = get_models(api_key=api_key)
         collections = get_collections(api_key=api_key)
-        collections = [collection for collection in collections if collection["id"] != INTERNET_COLLECTION_DISPLAY_ID]
+        collections = [collection for collection in collections if collection["id"] != COLLECTION_DISPLAY_ID__INTERNET]
         documents = get_documents(
             api_key=api_key,
-            collection_ids=[collection["id"] for collection in collections if collection["type"] == PRIVATE_COLLECTION_TYPE],
+            collection_ids=[collection["id"] for collection in collections if collection["type"] == COLLECTION_TYPE__PRIVATE],
         )
     except Exception as e:
         st.error("Error to fetch user data.")

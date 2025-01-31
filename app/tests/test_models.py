@@ -32,19 +32,17 @@ class TestModels:
     def test_get_models_aliases(self, args, session_admin):
         """Test the GET /models response status code for a non-existing model."""
 
-        model_id = list(settings.models.aliases.keys())[0]
-        aliases = settings.models.aliases[model_id]
+        model = settings.models[0]
 
-        response = session_admin.get(f"{args["base_url"]}/models/{model_id}")
-        assert response.json()["aliases"] == aliases
+        response = session_admin.get(f"{args["base_url"]}/models/{model.id}")
+        assert response.json()["aliases"] == model.aliases
 
-        response = session_admin.get(f"{args["base_url"]}/models/{aliases[0]}")
-        assert response.json()["id"] == model_id
+        response = session_admin.get(f"{args["base_url"]}/models/{model.aliases[0]}")
+        assert response.json()["id"] == model.id
 
     def test_get_models_rate_limit(self, args, session_user):
         """Test the GET /models rate limiting."""
         start = time.time()
-        limit = int(settings.rate_limit.by_key.replace("/minute", ""))
         i = 0
         check = False
         while time.time() - start < 60:

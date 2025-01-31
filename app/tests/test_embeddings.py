@@ -1,7 +1,7 @@
 import pytest
 
 from app.utils.settings import settings
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS
 
 
 @pytest.fixture(scope="module")
@@ -10,7 +10,7 @@ def setup(args, session_user):
     response = session_user.get(f"{args['base_url']}/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
-    model = [model for model in response_json["data"] if model["type"] == EMBEDDINGS_MODEL_TYPE][0]
+    model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
     MODEL_ID = model["id"]
     yield MODEL_ID
 
@@ -81,7 +81,7 @@ class TestEmbeddings:
         # Get a non-embeddings model (e.g., language model)
         response = session_user.get(f"{args['base_url']}/models")
         models = response.json()["data"]
-        non_embeddings_model = [m for m in models if m["type"] != EMBEDDINGS_MODEL_TYPE][0]
+        non_embeddings_model = [m for m in models if m["type"] != MODEL_TYPE__EMBEDDINGS][0]
 
         params = {
             "model": non_embeddings_model["id"],
@@ -116,7 +116,7 @@ class TestEmbeddings:
             "input": "",
         }
         response = session_user.post(f"{args['base_url']}/embeddings", json=params)
-        assert response.status_code == 413, f"error: empty input should return 422 ({response.status_code})"
+        assert response.status_code == 422, f"error: empty input should return 422 ({response.status_code})"
 
     def test_embeddings_invalid_model(self, args, session_user):
         """Test the POST /embeddings endpoint with invalid model."""
@@ -139,7 +139,9 @@ class TestEmbeddings:
     def test_embeddings_model_alias(self, args, session_user, setup):
         """Test the POST /embeddings endpoint with a model alias."""
         MODEL_ID = setup
-        aliases = settings.models.aliases[MODEL_ID]
+
+        aliases = {model.id: model.aliases for model in settings.models}
+        aliases = aliases[MODEL_ID]
 
         params = {
             "model": aliases[0],

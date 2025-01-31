@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import streamlit as st
 
-from config import INTERNET_COLLECTION_DISPLAY_ID
+from config import COLLECTION_DISPLAY_ID__INTERNET
 from utils import generate_stream, get_collections, get_models, header
 
 API_KEY = header()
@@ -55,7 +55,7 @@ with st.sidebar:
     params["rag"]["embeddings_model"] = st.selectbox(label="Embeddings model", options=embeddings_models)
     model_collections = [
         f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["model"] == params["rag"]["embeddings_model"]
-    ] + [f"Internet - {INTERNET_COLLECTION_DISPLAY_ID}"]
+    ] + [f"Internet - {COLLECTION_DISPLAY_ID__INTERNET}"]
 
     if model_collections:
 

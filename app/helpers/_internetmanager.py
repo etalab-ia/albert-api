@@ -1,15 +1,13 @@
 from io import BytesIO
-from typing import List, Optional
+from types import SimpleNamespace
+from typing import List
 
 from fastapi import UploadFile
 import requests
 
-from app.clients import ModelClients
-from app.clients import InternetClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.data.parsers import HTMLParser
 from app.schemas.chunks import Chunk
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
 
 
 class InternetManager:
@@ -70,41 +68,28 @@ reponse : Renouvellement pièce identité France
 Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 
-    def __init__(
-        self,
-        model_clients: ModelClients,
-        internet_client: InternetClient,
-        default_language_model_id: str,
-        default_embeddings_model_id: str,
-        api_key: Optional[str] = None,
-    ) -> None:
+    def __init__(self, clients: SimpleNamespace) -> None:
         self.type = type
-        self.api_key = api_key
-        self.model_clients = model_clients
-        self.internet_client = internet_client
-        self.default_language_model_id = default_language_model_id
-        self.default_embeddings_model_id = default_embeddings_model_id
-
-        assert self.default_language_model_id in self.model_clients, "Default internet language model is unavailable."
-        assert (
-            self.model_clients[self.default_language_model_id].type == LANGUAGE_MODEL_TYPE
-        ), "Default internet language model is not a language model."
-        assert self.default_embeddings_model_id in self.model_clients, "Default internet embeddings model is unavailable."
-        assert (
-            self.model_clients[self.default_embeddings_model_id].type == EMBEDDINGS_MODEL_TYPE
-        ), "Default internet embeddings model is not an embeddings model."
+        self.models = clients.models
+        self.internet_client = clients.internet
 
     async def get_chunks(self, prompt: str, collection_id: str, n: int = 3) -> List[Chunk]:
-        query = self._get_web_query(prompt=prompt)
+        query = await self._get_web_query(prompt=prompt)
         urls = await self.internet_client.get_result_urls(query=query, n=n)
         chunks = self._build_chunks(urls=urls, query=query, collection_id=collection_id)
 
         return chunks
 
-    def _get_web_query(self, prompt: str) -> str:
+    async def _get_web_query(self, prompt: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        response = self.model_clients[self.default_language_model_id].chat.completions.create(
-            messages=[{"role": "user", "content": prompt}], model=self.default_language_model_id, temperature=0.2, stream=False
+        model = self.models[self.models.internet_default_language_model]
+        client = model.get_client()
+
+        response = await client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model=client.model,
+            temperature=0.2,
+            stream=False,
         )
         query = response.choices[0].message.content
 

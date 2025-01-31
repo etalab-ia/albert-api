@@ -9,7 +9,7 @@ from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.security import User
 from app.utils.lifespan import clients
 from app.utils.security import check_api_key
-from app.utils.variables import INTERNET_COLLECTION_DISPLAY_ID, PUBLIC_COLLECTION_TYPE
+from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PUBLIC
 
 router = APIRouter()
 
@@ -38,10 +38,10 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
     Get list of collections.
     """
     internet_collection = Collection(
-        id=INTERNET_COLLECTION_DISPLAY_ID,
-        name=INTERNET_COLLECTION_DISPLAY_ID,
+        id=COLLECTION_DISPLAY_ID__INTERNET,
+        name=COLLECTION_DISPLAY_ID__INTERNET,
         model=None,
-        type=PUBLIC_COLLECTION_TYPE,
+        type=COLLECTION_TYPE__PUBLIC,
         description="Use this collection to search on the internet.",
     )
     data = clients.search.get_collections(user=user)
