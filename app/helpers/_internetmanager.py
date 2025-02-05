@@ -94,9 +94,9 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             self.model_clients[self.default_embeddings_model_id].type == EMBEDDINGS_MODEL_TYPE
         ), "Default internet embeddings model is not an embeddings model."
 
-    def get_chunks(self, prompt: str, collection_id: str, n: int = 3) -> List[Chunk]:
+    async def get_chunks(self, prompt: str, collection_id: str, n: int = 3) -> List[Chunk]:
         query = self._get_web_query(prompt=prompt)
-        urls = self.internet_client.get_result_urls(query=query, n=n)
+        urls = await self.internet_client.get_result_urls(query=query, n=n)
         chunks = self._build_chunks(urls=urls, query=query, collection_id=collection_id)
 
         return chunks

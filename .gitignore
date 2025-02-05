@@ -195,6 +195,7 @@ override.tf.json
 terraform.rc
 
 **/config.yml
+**/config**.yml
 .DS_Store
 .idea
 .vscode

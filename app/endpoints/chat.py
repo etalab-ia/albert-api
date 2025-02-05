@@ -1,7 +1,6 @@
 from typing import List, Tuple, Union
 
 from fastapi import APIRouter, Request, Security
-from fastapi.concurrency import run_in_threadpool
 
 from app.helpers import ClientsManager, InternetManager, SearchManager, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
@@ -36,7 +35,7 @@ async def chat_completions(
     headers = {"Authorization": f"Bearer {client.api_key}"}
 
     # retrieval augmentation generation
-    def retrieval_augmentation_generation(
+    async def retrieval_augmentation_generation(
         body: ChatCompletionRequest, clients: ClientsManager, settings: Settings
     ) -> Tuple[ChatCompletionRequest, List[Search]]:
         searches = []
@@ -51,7 +50,7 @@ async def chat_completions(
                     default_embeddings_model_id=settings.internet.default_embeddings_model,
                 ),
             )
-            searches = search_manager.query(
+            searches = await search_manager.query(
                 collections=body.search_args.collections,
                 prompt=body.messages[-1]["content"],
                 method=body.search_args.method,
@@ -71,7 +70,7 @@ async def chat_completions(
         searches = [search.model_dump() for search in searches]
         return body, searches
 
-    body, searches = await run_in_threadpool(retrieval_augmentation_generation, body, clients, settings)
+    body, searches = await retrieval_augmentation_generation(body, clients, settings)
 
     # not stream case
     if not body["stream"]:

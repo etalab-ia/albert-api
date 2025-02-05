@@ -1,14 +1,14 @@
 models:
-    - url: https://api.openai.com/v1
-      type: text-generation
+  - url: https://api.openai.com/v1
+    type: text-generation
 
-    - url: https://api.openai.com/v1
-      type: text-embeddings-inference
-      key: mysecretkey
+  - url: https://api.openai.com/v1
+    type: text-embeddings-inference
+    key: mysecretkey
 
-    - url: https://api.openai.com/v1
-      type: automatic-speech-recognition
-      key: mysecretkey
+  - url: https://api.openai.com/v1
+    type: automatic-speech-recognition
+    key: mysecretkey
 
 internet:
   method: brave
@@ -21,10 +21,11 @@ databases:
       url: qdrant
       api_key: changeme
       prefer_grpc: True
+      timeout: 10
 
   cache:
     type: redis
     args:
-      host: redis
+      host: http://redis
       password: changeme
 
