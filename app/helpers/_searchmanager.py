@@ -14,12 +14,14 @@ class SearchManager:
         self.search_client = search_client
         self.internet_manager = internet_manager
 
-    def query(self, collections: List[str], prompt: str, method: str, k: int, rff_k: int, user: User, score_threshold: float = 0.0) -> List[Search]:
+    async def query(
+        self, collections: List[str], prompt: str, method: str, k: int, rff_k: int, user: User, score_threshold: float = 0.0
+    ) -> List[Search]:
         # internet search
         internet_chunks = []
         if INTERNET_COLLECTION_DISPLAY_ID in collections:
             internet_collection_id = str(uuid.uuid4())
-            internet_chunks = self.internet_manager.get_chunks(prompt=prompt, collection_id=internet_collection_id)
+            internet_chunks = await self.internet_manager.get_chunks(prompt=prompt, collection_id=internet_collection_id)
 
             if internet_chunks:
                 collections.remove(INTERNET_COLLECTION_DISPLAY_ID)

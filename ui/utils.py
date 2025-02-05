@@ -256,7 +256,7 @@ Les documents sont :
             rerank_scores = sorted(response.json()["data"], key=lambda x: x["score"])
             chunks = [chunks[result["index"]] for result in rerank_scores[: params["rag"]["k"]]]
 
-        sources = [chunk["metadata"]["document_name"] for chunk in chunks]
+        sources = list(set([chunk["metadata"]["document_name"] for chunk in chunks]))
         chunks = [chunk["content"] for chunk in chunks]
         prompt = prompt_template.format(prompt=prompt, chunks="\n\n".join(chunks))
         messages = messages[:-1] + [{"role": "user", "content": prompt}]

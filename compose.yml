@@ -1,8 +1,9 @@
 services:
   fastapi:
     image: ghcr.io/etalab-ia/albert-api/app:latest
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    command: gunicorn app.main:app --workers 1 --worker-connections 1000 --timeout 30 --worker-class uvicorn.workers.UvicornWorker
     environment:
+      - PORT:8000
       - CONFIG_FILE=/home/albert/conf/config.yml
     restart: always
     ports:

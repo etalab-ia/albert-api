@@ -30,6 +30,6 @@ async def search(request: Request, body: SearchRequest, user: User = Security(de
         ),
     )
 
-    data = search_manager.query(collections=body.collections, prompt=body.prompt, method=body.method, k=body.k, rff_k=body.rff_k, user=user)
+    data = await search_manager.query(collections=body.collections, prompt=body.prompt, method=body.method, k=body.k, rff_k=body.rff_k, user=user)
 
     return Searches(data=data)

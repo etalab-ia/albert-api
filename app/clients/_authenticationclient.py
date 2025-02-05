@@ -3,6 +3,7 @@ from collections import namedtuple
 import datetime as dt
 import hashlib
 import json
+import traceback
 from typing import List, Optional
 
 import aiohttp
@@ -105,7 +106,10 @@ class AuthenticationClient(AsyncGristDocAPI):
         try:
             # fetch from grist
             records = await self.fetch_table(table_name=self.table_id, filter={"KEY": [key]}, limit=1)
-            record = self.GristRecord(**records[0]._asdict()) if records else self.GristRecord()
+            if not records:  # invalid api key
+                return
+
+            record = self.GristRecord(**records[0]._asdict())
             if record.ID2 != user_id:
                 record.ID2 = user_id
                 await self.update_records(table_name=self.table_id, record_dicts=[record.model_dump()])
@@ -117,8 +121,10 @@ class AuthenticationClient(AsyncGristDocAPI):
                 return user
 
         except Exception as e:
-            logger.error(f"Error fetching user from Grist: {e}")
+            logger.error(msg="Error fetching user from Grist")
+            logger.debug(msg=traceback.format_exc())
             if ttl > -2:
+                logger.info(msg="Recovery user auth from cache.")
                 await self.redis.setex(redis_key, self.CACHE_EXPIRATION, json.dumps(cache_user))
                 return user
 

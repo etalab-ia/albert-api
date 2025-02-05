@@ -1,6 +1,6 @@
 import logging
 import traceback
-
+from uuid import uuid4
 
 import streamlit as st
 
@@ -132,7 +132,7 @@ for i, message in enumerate(st.session_state.messages):
     with st.chat_message(message["role"], avatar=":material/face:" if message["role"] == "user" else None):
         st.markdown(message["content"])
         if st.session_state.sources[i]:
-            st.pills(label="Sources", options=st.session_state.sources[i], label_visibility="hidden")
+            st.pills(key=str(uuid4()), label="Sources", options=st.session_state.sources[i], label_visibility="hidden")
 
 sources = []
 if prompt := st.chat_input(placeholder="Message to Albert"):
