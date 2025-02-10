@@ -1,4 +1,5 @@
+from ._baseinternetclient import BaseInternetClient
 from ._braveinternetclient import BraveInternetClient
-from ._duckduckgointernetclient import DuckDuckGoInternetClient
+from ._duckduckgointernetclient import DuckduckgoInternetClient
 
-__all__ = ["BraveInternetClient", "DuckDuckGoInternetClient"]
+__all__ = ["BaseInternetClient", "BraveInternetClient", "DuckduckgoInternetClient"]

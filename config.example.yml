@@ -1,31 +1,33 @@
 models:
-  - url: https://api.openai.com/v1
+  - id: turbo
     type: text-generation
+    clients:
+      - model: gpt-3.5-turbo
+        type: openai
+        args:
+          base_url: https://api.openai.com/v1
+          api_key: sk-...aB
+          timeout: 60
 
-  - url: https://api.openai.com/v1
+  - id: embeddings-small
     type: text-embeddings-inference
-    key: mysecretkey
-
-  - url: https://api.openai.com/v1
-    type: automatic-speech-recognition
-    key: mysecretkey
-
-internet:
-  method: brave
-  api_key: changeme
+    clients:
+      - model: text-embedding-3-small
+        type: openai
+        args:
+          base_url: https://api.openai.com/v1
+          api_key: sk-...aB
+          timeout: 60
 
 databases:
-  search:
-    type: qdrant
+  - type: qdrant
     args:
-      url: qdrant
+      url: http://qdrant
       api_key: changeme
       prefer_grpc: True
       timeout: 10
 
-  cache:
-    type: redis
+  - type: redis
     args:
       host: http://redis
       password: changeme
-

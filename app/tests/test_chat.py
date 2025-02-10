@@ -6,7 +6,7 @@ import uuid
 import pytest
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE
 
 
 @pytest.fixture(scope="module")
@@ -15,15 +15,17 @@ def setup(args, session_user):
     response = session_user.get(f"{args["base_url"]}/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
-    model = [model for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE][0]
+    model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]
     MODEL_ID = model["id"]
     MAX_CONTEXT_LENGTH = model["max_context_length"]
     logging.info(f"test model ID: {MODEL_ID}")
     logging.info(f"test max context length: {MAX_CONTEXT_LENGTH}")
 
     # create a collection
-    embeddings_model_id = [model["id"] for model in response_json["data"] if model["type"] == EMBEDDINGS_MODEL_TYPE][0]
+    embeddings_model_id = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
+    logging.info(f"test embeddings model ID: {embeddings_model_id}")
     response = session_user.post(f"{args["base_url"]}/collections", json={"name": "pytest-private", "model": embeddings_model_id})
+    assert response.status_code == 201, f"error: create collection ({response.status_code})"
     COLLECTION_ID = response.json()["id"]
 
     # Upload the file to the collection
@@ -92,6 +94,7 @@ class TestChat:
             "min_tokens": 3,  # unknown param in ChatCompletionRequest schema
         }
         response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
+
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_context_too_large(self, args, session_user, setup):
@@ -139,7 +142,8 @@ class TestChat:
             },
         }
         response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
-        assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
+
+        assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code}, {response.json()})"
 
         response_json = response.json()
         chat_completion = ChatCompletion(**response_json)

@@ -9,7 +9,7 @@ from app.utils.exceptions import InsufficientRightsException, InvalidAPIKeyExcep
 from app.utils.lifespan import clients
 from app.utils.settings import settings
 
-if settings.clients.auth:
+if settings.databases.grist:
 
     async def check_api_key(api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer(scheme_name="API key"))]) -> User:
         """

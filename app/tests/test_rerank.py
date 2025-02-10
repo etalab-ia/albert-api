@@ -3,7 +3,7 @@ import logging
 import pytest
 
 from app.schemas.rerank import Reranks
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE, RERANK_MODEL_TYPE
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE, MODEL_TYPE__RERANK
 
 
 @pytest.fixture(scope="module")
@@ -12,13 +12,13 @@ def setup(args, session_user):
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
 
-    LANGUAGE_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE][0]
+    LANGUAGE_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]
     logging.info(f"test model ID: {LANGUAGE_MODEL_ID}")
 
-    RERANK_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == RERANK_MODEL_TYPE][0]
+    RERANK_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__RERANK][0]
     logging.info(f"test model ID: {RERANK_MODEL_ID}")
 
-    EMBEDDINGS_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == EMBEDDINGS_MODEL_TYPE][0]
+    EMBEDDINGS_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
     logging.info(f"test model ID: {EMBEDDINGS_MODEL_ID}")
 
     yield LANGUAGE_MODEL_ID, RERANK_MODEL_ID, EMBEDDINGS_MODEL_ID

@@ -5,7 +5,7 @@ import pytest
 import requests
 
 from app.clients import AuthenticationClient
-from app.utils.variables import PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
+from app.utils.variables import COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC
 
 
 def pytest_addoption(parser):
@@ -57,7 +57,7 @@ def cleanup_collections(args, session_user, session_admin):
 
     # delete private collections
     collection_ids = [
-        collection["id"] for collection in collections["data"] if collection["type"] == PRIVATE_COLLECTION_TYPE and collection["user"] == USER
+        collection["id"] for collection in collections["data"] if collection["type"] == COLLECTION_TYPE__PRIVATE and collection["user"] == USER
     ]
 
     for collection_id in collection_ids:
@@ -65,7 +65,7 @@ def cleanup_collections(args, session_user, session_admin):
 
     # delete public collections
     collection_ids = [
-        collection["id"] for collection in collections["data"] if collection["type"] == PUBLIC_COLLECTION_TYPE and collection["user"] == ADMIN
+        collection["id"] for collection in collections["data"] if collection["type"] == COLLECTION_TYPE__PUBLIC and collection["user"] == ADMIN
     ]
 
     for collection_id in collection_ids:
@@ -76,4 +76,4 @@ def cleanup_collections(args, session_user, session_admin):
 def sleep_between_tests():
     # Sleep between tests to avoid rate limit errors
     yield
-    time.sleep(20)
+    time.sleep(10)

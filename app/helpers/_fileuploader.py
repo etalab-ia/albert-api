@@ -1,26 +1,28 @@
+import traceback
 from typing import List, Literal, Optional
 
 from fastapi import UploadFile
 
-from app.clients import SearchClient
+from app.clients.search import BaseSearchClient
 from app.helpers.data.chunkers import *
-from app.helpers.data.parsers import HTMLParser, JSONParser, PDFParser, MarkdownParser
+from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
 from app.schemas.chunks import Chunk
 from app.schemas.data import ParserOutput
 from app.schemas.security import User
 from app.utils.exceptions import InvalidJSONFormatException, NoChunksToUpsertException, ParsingFileFailedException, UnsupportedFileTypeException
-from app.utils.variables import CHUNKERS, DEFAULT_CHUNKER, HTML_TYPE, JSON_TYPE, PDF_TYPE, MD_TYPE
+from app.utils.logging import logger
+from app.utils.variables import CHUNKERS, DEFAULT_CHUNKER, FILE_TYPE__HTML, FILE_TYPE__JSON, FILE_TYPE__MD, FILE_TYPE__PDF
 
 
 class FileUploader:
     TYPE_DICT = {
-        "json": JSON_TYPE,
-        "html": HTML_TYPE,
-        "pdf": PDF_TYPE,
-        "md": MD_TYPE,
+        "json": FILE_TYPE__JSON,
+        "html": FILE_TYPE__HTML,
+        "pdf": FILE_TYPE__PDF,
+        "md": FILE_TYPE__MD,
     }
 
-    def __init__(self, collection_id: str, search_client: SearchClient, user: User):
+    def __init__(self, collection_id: str, search_client: BaseSearchClient, user: User):
         self.user = user
         self.search_client = search_client
 
@@ -34,21 +36,22 @@ class FileUploader:
 
         file_type = self.TYPE_DICT[file_type]
 
-        if file_type == PDF_TYPE:
+        if file_type == FILE_TYPE__PDF:
             parser = PDFParser(collection_id=self.collection_id)
 
-        elif file_type == JSON_TYPE:
+        elif file_type == FILE_TYPE__JSON:
             parser = JSONParser(collection_id=self.collection_id)
 
-        elif file_type == HTML_TYPE:
+        elif file_type == FILE_TYPE__HTML:
             parser = HTMLParser(collection_id=self.collection_id)
 
-        elif file_type == MD_TYPE:
+        elif file_type == FILE_TYPE__MD:
             parser = MarkdownParser(collection_id=self.collection_id)
 
         try:
             output = parser.parse(file=file)
         except Exception as e:
+            logger.debug(traceback.format_exc())
             if isinstance(e, InvalidJSONFormatException):
                 raise e
             else:
@@ -64,8 +67,8 @@ class FileUploader:
 
         return chunks
 
-    def upsert(self, chunks: List[Chunk]) -> None:
+    async def upsert(self, chunks: List[Chunk]) -> None:
         if not chunks:
             raise NoChunksToUpsertException()
 
-        self.search_client.upsert(chunks=chunks, collection_id=self.collection_id, user=self.user)
+        await self.search_client.upsert(chunks=chunks, collection_id=self.collection_id, user=self.user)

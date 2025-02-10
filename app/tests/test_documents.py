@@ -5,18 +5,18 @@ import pytest
 
 
 from app.schemas.documents import Documents
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, PRIVATE_COLLECTION_TYPE
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS, COLLECTION_TYPE__PRIVATE
 
 
 @pytest.fixture(scope="module")
 def setup(args, session_user):
     response = session_user.get(f"{args["base_url"]}/models", timeout=10)
     models = response.json()
-    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == EMBEDDINGS_MODEL_TYPE][0]["id"]
+    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
     logging.info(f"test embedings model ID: {EMBEDDINGS_MODEL_ID}")
 
     response = session_user.post(
-        f"{args["base_url"]}/collections", json={"name": "pytest-private", "model": EMBEDDINGS_MODEL_ID, "type": PRIVATE_COLLECTION_TYPE}
+        f"{args["base_url"]}/collections", json={"name": "pytest-private", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
     )
     assert response.status_code == 201
     PRIVATE_COLLECTION_ID = response.json()["id"]

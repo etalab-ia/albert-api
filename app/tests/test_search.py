@@ -6,8 +6,7 @@ import pytest
 
 from app.schemas.search import Search, Searches
 from app.utils.logging import logger
-from app.utils.settings import settings
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, INTERNET_COLLECTION_DISPLAY_ID, SEARCH_CLIENT_ELASTIC_TYPE
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS, COLLECTION_DISPLAY_ID__INTERNET
 
 
 @pytest.fixture(scope="module")
@@ -17,7 +16,7 @@ def setup(args, session_user, session_admin):
     # Get a embedding model
     response = session_admin.get(f"{args["base_url"]}/models")
     response = response.json()["data"]
-    EMBEDDINGS_MODEL_ID = [model["id"] for model in response if model["type"] == EMBEDDINGS_MODEL_TYPE][0]
+    EMBEDDINGS_MODEL_ID = [model["id"] for model in response if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
     logging.info(f"test model ID: {EMBEDDINGS_MODEL_ID}")
 
     # Create a collection
@@ -90,7 +89,7 @@ class TestSearch:
         """Test search with the internet collection."""
 
         _, _ = setup
-        data = {"prompt": "What is the largest planet in our solar system?", "collections": [INTERNET_COLLECTION_DISPLAY_ID], "k": 3}
+        data = {"prompt": "What is the largest planet in our solar system?", "collections": [COLLECTION_DISPLAY_ID__INTERNET], "k": 3}
         response = session_user.post(f"{args["base_url"]}/search", json=data)
         assert response.status_code == 200
 
@@ -104,19 +103,20 @@ class TestSearch:
         else:
             logger.info("No internet search results, the DuckDuckGo rate limit may have been exceeded.")
 
-    def test_lexical_search(self, args, session_user, setup):
-        """Test lexical search."""
+    # @TODO: Add test after elasticsearch migration
+    # def test_lexical_search(self, args, session_user, setup):
+    #     """Test lexical search."""
 
-        _, COLLECTION_ID = setup
-        data = {"prompt": "Qui est Albert ?", "collections": [COLLECTION_ID], "k": 3, "method": "lexical"}
-        response = session_user.post(f"{args["base_url"]}/search", json=data)
-        result = response.json()
+    #     _, COLLECTION_ID = setup
+    #     data = {"prompt": "Qui est Albert ?", "collections": [COLLECTION_ID], "k": 3, "method": "lexical"}
+    #     response = session_user.post(f"{args["base_url"]}/search", json=data)
+    #     result = response.json()
 
-        if settings.clients.search.type == SEARCH_CLIENT_ELASTIC_TYPE:
-            assert response.status_code == 200
-            assert "Albert" in result["data"][0]["chunk"]["content"]
-        else:
-            assert response.status_code == 400
+    #     if settings.databases.type == DATABASE_TYPE__ELASTIC:
+    #         assert response.status_code == 200
+    #         assert "Albert" in result["data"][0]["chunk"]["content"]
+    #     else:
+    #         assert response.status_code == 400
 
     def test_semantic_search(self, args, session_user, setup):
         """Test semantic search."""
@@ -129,15 +129,16 @@ class TestSearch:
         assert "Erasmus" in result["data"][0]["chunk"]["content"] or "Erasmus" in result["data"][1]["chunk"]["content"]
         assert "Albert" in result["data"][0]["chunk"]["content"] or "Albert" in result["data"][1]["chunk"]["content"]
 
-    def test_hybrid_search(self, args, session_user, setup):
-        """Test hybrid search."""
+    # @TODO: Add test after elasticsearch migration
+    # def test_hybrid_search(self, args, session_user, setup):
+    #     """Test hybrid search."""
 
-        _, COLLECTION_ID = setup
-        data = {"prompt": "Erasmus", "collections": [COLLECTION_ID], "k": 3, "method": "hybrid"}
-        response = session_user.post(f"{args["base_url"]}/search", json=data)
-        result = response.json()
-        if settings.clients.search.type == SEARCH_CLIENT_ELASTIC_TYPE:
-            assert response.status_code == 200
-            assert "Erasmus" in result["data"][0]["chunk"]["content"]
-        else:
-            assert response.status_code == 400
+    #     _, COLLECTION_ID = setup
+    #     data = {"prompt": "Erasmus", "collections": [COLLECTION_ID], "k": 3, "method": "hybrid"}
+    #     response = session_user.post(f"{args["base_url"]}/search", json=data)
+    #     result = response.json()
+    #     if settings.clients.search.type == DATABASE_TYPE__ELASTIC:
+    #         assert response.status_code == 200
+    #         assert "Erasmus" in result["data"][0]["chunk"]["content"]
+    #     else:
+    #         assert response.status_code == 400

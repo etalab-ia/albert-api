@@ -1,14 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor
-import functools
 import time
-from typing import Any, List, Literal, Optional
+from typing import List, Literal, Optional
 
 from elasticsearch import Elasticsearch, NotFoundError, helpers
-from openai import APITimeoutError
 
-from app.clients import SearchClient
-from app.clients import ModelClients
-from app.schemas.chunks import Chunk
+from app.clients.search import BaseSearchClient
+from app.helpers import ModelRegistry
+from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
@@ -20,35 +18,40 @@ from app.utils.exceptions import (
     WrongModelTypeException,
 )
 from app.utils.variables import (
-    EMBEDDINGS_MODEL_TYPE,
-    HYBRID_SEARCH_TYPE,
-    LEXICAL_SEARCH_TYPE,
-    PRIVATE_COLLECTION_TYPE,
-    PUBLIC_COLLECTION_TYPE,
-    SEMANTIC_SEARCH_TYPE,
+    COLLECTION_TYPE__PRIVATE,
+    COLLECTION_TYPE__PUBLIC,
+    MODEL_TYPE__EMBEDDINGS,
+    SEARCH_TYPE__HYBRID,
+    SEARCH_TYPE__LEXICAL,
+    SEARCH_TYPE__SEMANTIC,
 )
 
 
-class ElasticSearchClient(SearchClient, Elasticsearch):
+class ElasticSearchClient(Elasticsearch, BaseSearchClient):
     BATCH_SIZE = 48
 
-    def __init__(self, models: ModelClients, *args, **kwargs):
+    def __init__(self, models: ModelRegistry, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert super().ping(), "Elasticsearch is not reachable"
         self.models = models
 
-    def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
+    async def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
+        """
+        See SearchClient.upsert
+        """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
+        if user.role != Role.ADMIN and collection.type == COLLECTION_TYPE__PUBLIC:
             raise InsufficientRightsException()
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
-            batched_chunks = chunks[i : i + self.BATCH_SIZE]
+            batch = chunks[i : i + self.BATCH_SIZE]
 
-            texts = [chunk.content for chunk in batched_chunks]
-            embeddings = self._create_embeddings(input=texts, model=collection.model)
+            # create embeddings
+            texts = [chunk.content for chunk in batch]
+            embeddings = await self._create_embeddings(input=texts, model=collection.model)
 
+            # insert chunks and vectors
             actions = [
                 {
                     "_index": collection_id,
@@ -58,17 +61,18 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
                         "metadata": chunk.metadata.model_dump(),
                     },
                 }
-                for chunk, embedding in zip(batched_chunks, embeddings)
+                for chunk, embedding in zip(batch, embeddings)
             ]
             helpers.bulk(self, actions, index=collection_id)
+        # update collection documents count
         self.indices.refresh(index=collection_id)
 
-    def query(
+    async def query(
         self,
         prompt: str,
         user: User,
         collection_ids: List[str] = [],
-        method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
+        method: Literal[SEARCH_TYPE__HYBRID, SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC] = SEARCH_TYPE__SEMANTIC,
         k: Optional[int] = 4,
         rff_k: Optional[int] = 20,
     ) -> List[Search]:
@@ -77,25 +81,26 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         collections = self.get_collections(collection_ids=collection_ids, user=user)
 
+        if method == SEARCH_TYPE__LEXICAL:
+            searches = self._lexical_query(prompt=prompt, collection_ids=collection_ids, k=k)
+
+            return searches
+
         if len(set(collection.model for collection in collections)) > 1:
             raise DifferentCollectionsModelsException()
 
-        if method == LEXICAL_SEARCH_TYPE:
-            searches = self._lexical_query(prompt=prompt, collection_ids=collection_ids, k=k)
-        else:
-            if len(set(collection.model for collection in collections)) > 1:
-                raise DifferentCollectionsModelsException()
+        embedding = await self._create_embeddings(input=[prompt], model=collections[0].model)[0]
 
-            embedding = self._create_embeddings(input=[prompt], model=collections[0].model)[0]
+        if method == SEARCH_TYPE__SEMANTIC:
+            searches = self._semantic_query(prompt=prompt, embedding=embedding, collection_ids=collection_ids, size=k)
 
-            if method == SEMANTIC_SEARCH_TYPE:
-                searches = self._semantic_query(prompt=prompt, embedding=embedding, collection_ids=collection_ids, size=k)
+            return searches
 
-            elif method == HYBRID_SEARCH_TYPE:
-                with ThreadPoolExecutor(max_workers=2) as executor:
-                    lexical_searches = executor.submit(self._lexical_query, prompt, collection_ids, k).result()
-                    semantic_searches = executor.submit(self._semantic_query, prompt, embedding, collection_ids, k).result()
-                    searches = self.build_ranked_searches(searches_list=[lexical_searches, semantic_searches], k=k, rff_k=rff_k)
+        if method == SEARCH_TYPE__HYBRID:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                lexical_searches = executor.submit(self._lexical_query, prompt, collection_ids, k).result()
+                semantic_searches = executor.submit(self._semantic_query, prompt, embedding, collection_ids, k).result()
+                searches = self.build_ranked_searches(searches_list=[lexical_searches, semantic_searches], k=k, rff_k=rff_k)
 
         return searches
 
@@ -103,6 +108,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         See SearchClient.get_collections
         """
+        # if no collection ids are provided, get all collections
         index_pattern = ",".join(collection_ids) if collection_ids else "*"
 
         try:
@@ -113,7 +119,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         except NotFoundError as e:
             raise CollectionNotFoundException()
 
-        collections = [collection for collection in collections if collection.user == user.id or collection.type == PUBLIC_COLLECTION_TYPE]
+        collections = [collection for collection in collections if collection.user == user.id or collection.type == COLLECTION_TYPE__PUBLIC]
 
         if collection_ids:
             for collection in collections:
@@ -138,18 +144,17 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         collection_name: str,
         collection_model: str,
         user: User,
-        collection_type: str = PRIVATE_COLLECTION_TYPE,
+        collection_type: str = COLLECTION_TYPE__PRIVATE,
         collection_description: Optional[str] = None,
     ) -> Collection:
         """
         See SearchClient.create_collection
         """
-
-        collection_model = self.models[collection_model].id  # replace alias by model id
-        if self.models[collection_model].type != EMBEDDINGS_MODEL_TYPE:
+        model = self.models[collection_model]
+        if model.type != MODEL_TYPE__EMBEDDINGS:
             raise WrongModelTypeException()
 
-        if user.role != Role.ADMIN and collection_type == PUBLIC_COLLECTION_TYPE:
+        if user.role != Role.ADMIN and collection_type == COLLECTION_TYPE__PUBLIC:
             raise InsufficientRightsException()
 
         settings = {
@@ -168,11 +173,9 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
             },
         }
 
-        dims = self.models[collection_model].vector_size
-
         mappings = {
             "properties": {
-                "embedding": {"type": "dense_vector", "dims": dims},
+                "embedding": {"type": "dense_vector", "dims": model._vector_size},
                 "body": {"type": "text"},
                 "metadata": {
                     "dynamic": True,
@@ -205,7 +208,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
+        if user.role != Role.ADMIN and collection.type == COLLECTION_TYPE__PUBLIC:
             raise InsufficientRightsException()
 
         self.indices.delete(index=collection_id, ignore_unavailable=True)
@@ -222,7 +225,8 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         chunks = []
         for hit in results["hits"]["hits"]:
             source = hit["_source"]
-            chunks.append(Chunk(id=hit["_id"], content=source["body"], metadata=source["metadata"] | {"collection_id": collection_id}))
+            metadata = source["metadata"] | {"collection_id": collection_id}
+            chunks.append(Chunk(id=hit["_id"], content=source["body"], metadata=ChunkMetadata(**metadata)))
 
         return chunks
 
@@ -262,7 +266,7 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != Role.ADMIN and collection.type == PUBLIC_COLLECTION_TYPE:
+        if user.role != Role.ADMIN and collection.type == COLLECTION_TYPE__PUBLIC:
             raise InsufficientRightsException()
 
         # delete chunks
@@ -309,38 +313,6 @@ class ElasticSearchClient(SearchClient, Elasticsearch):
         results = self.search(index=",".join(collection_ids), body=body)
         hits = [hit for hit in results["hits"]["hits"] if hit]
         return [self._build_search(hit) for hit in hits]
-
-    def _retry(tries: int = 3, delay: int = 2):
-        """
-        A simple retry decorator that catch exception to retry multiple times
-
-        """
-
-        def decorator_retry(func):
-            @functools.wraps(wrapped=func)
-            def wrapper(*args, **kwargs) -> Any:
-                attempts = tries
-                while attempts > 1:
-                    try:
-                        return func(*args, **kwargs)
-                    except APITimeoutError:
-                        time.sleep(delay)
-                        attempts -= 1
-
-                return func(*args, **kwargs)
-
-            return wrapper
-
-        return decorator_retry
-
-    @_retry(tries=3, delay=2)
-    def _create_embeddings(self, input: List[str], model: str) -> list[float] | list[list[float]] | dict:
-        """
-        Simple interface to create an embedding vector from a text input.
-        """
-
-        response = self.models[model].embeddings.create(input=input, model=model)
-        return [vector.embedding for vector in response.data]
 
     @staticmethod
     def build_ranked_searches(searches_list: List[List[Search]], k: int, rff_k: Optional[int] = 20) -> List[Search]:

@@ -40,9 +40,6 @@ class ChatCompletionRequest(BaseModel):
     seed: Optional[int] = None
     stop: Union[Optional[str], List[str]] = Field(default_factory=list)
     user: Optional[str] = None
-    best_of: Optional[int] = None
-    top_k: int = -1
-    min_p: float = 0.0
 
     class Config:
         extra = "allow"

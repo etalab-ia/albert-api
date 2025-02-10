@@ -2,13 +2,13 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.utils.variables import PRIVATE_COLLECTION_TYPE, PUBLIC_COLLECTION_TYPE
+from app.utils.variables import COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC
 
 
 class Collection(BaseModel):
     id: str
     name: Optional[str] = None
-    type: Optional[Literal[PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE]] = None
+    type: Optional[Literal[COLLECTION_TYPE__PUBLIC, COLLECTION_TYPE__PRIVATE]] = None
     model: Optional[str] = None
     user: Optional[str] = None
     description: Optional[str] = None
@@ -25,7 +25,7 @@ class CollectionRequest(BaseModel):
     description: Optional[str] = None
     name: str = Field(..., min_length=1)
     model: str = Field(...)
-    type: Literal[PUBLIC_COLLECTION_TYPE, PRIVATE_COLLECTION_TYPE] = Field(PRIVATE_COLLECTION_TYPE)
+    type: Literal[COLLECTION_TYPE__PUBLIC, COLLECTION_TYPE__PRIVATE] = Field(COLLECTION_TYPE__PRIVATE)
     description: Optional[str] = Field(None)
 
     @field_validator("name", mode="before")
