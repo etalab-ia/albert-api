@@ -4,12 +4,9 @@ from fastapi import APIRouter, File, Form, Request, Security, UploadFile
 from fastapi.responses import PlainTextResponse
 
 from app.schemas.audio import AudioTranscription
-from app.utils.exceptions import WrongModelTypeException
 from app.utils.lifespan import clients, limiter
-from app.utils.route import forward_request
 from app.utils.security import User, check_api_key, check_rate_limit
 from app.utils.settings import settings
-from app.utils.variables import AUDIO_MODEL_TYPE, DEFAULT_TIMEOUT
 
 router = APIRouter()
 
@@ -132,8 +129,8 @@ SUPPORTED_LANGUAGES = {
 SUPPORTED_LANGUAGES_VALUES = sorted(set(SUPPORTED_LANGUAGES.values())) + sorted(set(SUPPORTED_LANGUAGES.keys()))
 
 
-@router.post("/audio/transcriptions")
-@limiter.limit(settings.rate_limit.by_key, key_func=lambda request: check_rate_limit(request=request))
+@router.post(path="/audio/transcriptions")
+@limiter.limit(limit_value=settings.rate_limit.by_user, key_func=lambda request: check_rate_limit(request=request))
 async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(...),
@@ -148,27 +145,19 @@ async def audio_transcriptions(
     """
     API de transcription similaire à l'API d'OpenAI.
     """
-    client = clients.models[model]
-
-    if client.type != AUDIO_MODEL_TYPE:
-        raise WrongModelTypeException()
 
     # @TODO: Implement prompt
     # @TODO: Implement timestamp_granularities
     # @TODO: Implement verbose response format
 
     file_content = await file.read()
+    data = {"language": language, "response_format": response_format, "temperature": temperature, "timestamp_granularities": timestamp_granularities}
 
-    url = f"{client.base_url}audio/transcriptions"
-    headers = {"Authorization": f"Bearer {client.api_key}"}
+    model = clients.models[model]
+    client = model.get_client(endpoint="audio/transcriptions")
 
-    response = await forward_request(
-        url=url,
-        method="POST",
-        headers=headers,
-        timeout=DEFAULT_TIMEOUT,
-        files={"file": (file.filename, file_content, file.content_type)},
-        data={"language": language, "response_format": response_format, "temperature": temperature},
+    response = await client.forward_request(
+        endpoint="audio/transcriptions", method="POST", files={"file": (file.filename, file_content, file.content_type)}, data=data
     )
 
     if response_format == "text":

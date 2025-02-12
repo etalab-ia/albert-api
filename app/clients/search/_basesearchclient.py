@@ -1,18 +1,38 @@
 from abc import ABC, abstractmethod
-from typing import List, Literal, Optional, Union
+import functools
+import importlib
+import time
+import traceback
+from typing import Any, List, Literal, Optional, Type, Union
 from uuid import UUID
+
+from fastapi import HTTPException
+from openai import APITimeoutError
 
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
 from app.schemas.security import User
-from app.utils.variables import HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, PRIVATE_COLLECTION_TYPE
+from app.utils.logging import logger
+from app.utils.variables import (
+    COLLECTION_TYPE__PRIVATE,
+    DATABASE_TYPE__ELASTIC,
+    DATABASE_TYPE__QDRANT,
+    SEARCH_TYPE__HYBRID,
+    SEARCH_TYPE__LEXICAL,
+    SEARCH_TYPE__SEMANTIC,
+)
 
 
-class SearchClient(ABC):
+class BaseSearchClient(ABC):
+    @staticmethod
+    def import_constructor(type: Literal[DATABASE_TYPE__ELASTIC, DATABASE_TYPE__QDRANT]) -> "Type[BaseSearchClient]":
+        module = importlib.import_module(f"app.clients.search._{type}searchclient")
+        return getattr(module, f"{type.capitalize()}SearchClient")
+
     @abstractmethod
-    def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
+    async def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         """
         Add chunks to a collection.
 
@@ -24,12 +44,12 @@ class SearchClient(ABC):
         pass
 
     @abstractmethod
-    def query(
+    async def query(
         self,
         prompt: str,
         user: User,
         collection_ids: List[str] = [],
-        method: Literal[HYBRID_SEARCH_TYPE, LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE] = SEMANTIC_SEARCH_TYPE,
+        method: Literal[SEARCH_TYPE__HYBRID, SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC] = SEARCH_TYPE__SEMANTIC,
         k: Optional[int] = 4,
         rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
@@ -41,7 +61,7 @@ class SearchClient(ABC):
             prompt (str): The prompt to search for.
             user (User): The user searching for the chunks.
             collection_ids (List[str]): The ids of the collections to search in.
-            method (Literal[LEXICAL_SEARCH_TYPE, SEMANTIC_SEARCH_TYPE, HYBRID_SEARCH_TYPE]): The method to use for the search, default: SEMENTIC_SEARCH_TYPE.
+            method (Literal[SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC, SEARCH_TYPE__HYBRID]): The method to use for the search, default: SEMENTIC_SEARCH_TYPE.
             k (Optional[int]): The number of chunks to return.
             rff_k (Optional[int]): The constant k in the RRF formula.
             score_threshold (Optional[float]): The score threshold for the chunks to return.
@@ -72,7 +92,7 @@ class SearchClient(ABC):
         collection_name: str,
         collection_model: str,
         user: User,
-        collection_type: str = PRIVATE_COLLECTION_TYPE,
+        collection_type: str = COLLECTION_TYPE__PRIVATE,
         collection_description: Optional[str] = None,
     ) -> Collection:
         """
@@ -139,3 +159,41 @@ class SearchClient(ABC):
             user (User): The user deleting the document.
         """
         pass
+
+    def _retry(tries: int = 3, delay: int = 2):
+        """
+        A simple retry decorator that catch exception to retry multiple times
+        """
+
+        def decorator_retry(func):
+            @functools.wraps(wrapped=func)
+            def wrapper(*args, **kwargs) -> Any:
+                attempts = tries
+                while attempts > 1:
+                    try:
+                        return func(*args, **kwargs)
+                    except APITimeoutError:
+                        time.sleep(delay)
+                        attempts -= 1
+
+                return func(*args, **kwargs)
+
+            return wrapper
+
+        return decorator_retry
+
+    @_retry(tries=3, delay=2)
+    async def _create_embeddings(self, input: List[str], model: str) -> list[float] | list[list[float]] | dict:
+        """
+        Simple interface to create an embedding vector from a text input.
+        """
+
+        model = self.models[model]
+        client = model.get_client()
+        try:
+            response = await client.embeddings.create(input=input, model=client.model)
+        except Exception as e:
+            logger.debug(traceback.format_exc())
+            raise HTTPException(status_code=500, detail=e)
+
+        return [vector.embedding for vector in response.data]

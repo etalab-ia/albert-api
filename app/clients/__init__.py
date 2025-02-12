@@ -1,6 +1,4 @@
 from ._authenticationclient import AuthenticationClient
-from ._internetclient import InternetClient
-from ._modelclients import ModelClients
-from ._searchclient import SearchClient
+from ._cacheclient import CacheClient
 
-__all__ = ["AuthenticationClient", "InternetClient", "ModelClients", "SearchClient"]
+__all__ = ["AuthenticationClient", "CacheClient"]

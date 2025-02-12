@@ -17,11 +17,6 @@ class NoChunksToUpsertException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
-class ModelNotAvailableException(HTTPException):
-    def __init__(self, detail: str = "Model not available.") -> None:
-        super().__init__(status_code=400, detail=detail)
-
-
 class SearchMethodNotAvailableException(HTTPException):
     def __init__(self, detail: str = "Method not available."):
         super().__init__(status_code=400, detail=detail)

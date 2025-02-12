@@ -20,14 +20,14 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
     async def __call__(self, scope, receive, send):
         try:
-            await super().__call__(scope, receive, send)
+            await super().__call__(scope=scope, receive=receive, send=send)
         except RuntimeError as exc:
             # ignore the error when the request is disconnected by the client
             if str(exc) == "No response returned.":
                 logger.info(
                     f'"{list(scope["route"].methods)[0]} {scope["route"].path} HTTP/{scope["http_version"]}" request disconnected by the client'
                 )
-                request = Request(scope, receive=receive)
+                request = Request(scope=scope, receive=receive)
                 if await request.is_disconnected():
                     return
             raise

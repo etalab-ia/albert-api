@@ -2,7 +2,7 @@ import logging
 import pytest
 
 from app.schemas.audio import AudioTranscription, AudioTranscriptionVerbose
-from app.utils.variables import AUDIO_MODEL_TYPE
+from app.utils.variables import MODEL_TYPE__AUDIO
 
 
 @pytest.fixture(scope="module")
@@ -11,7 +11,7 @@ def setup(args, session_user):
     response = session_user.get(f"{args['base_url']}/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
-    model = [model for model in response_json["data"] if model["type"] == AUDIO_MODEL_TYPE][0]
+    model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__AUDIO][0]
     MODEL_ID = model["id"]
     logging.info(f"test model ID: {MODEL_ID}")
 

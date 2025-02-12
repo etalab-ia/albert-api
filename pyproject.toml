@@ -11,7 +11,7 @@ dependencies = [
 
 [project.optional-dependencies]
 ui = [
-    "streamlit==1.40.2",
+    "streamlit==1.42.0",
     "streamlit-extras==0.5.0", 
 ]
 app = [
@@ -19,7 +19,7 @@ app = [
     "langchain==0.2.15",
     "qdrant-client==1.10.1",
     "redis==5.0.7",
-    "uvicorn==0.30.1",
+    "gunicorn==23.0.0",
     "fastapi==0.111.0",
     "pydantic==2.10.2",
     "pydantic-settings==2.6.1",
@@ -34,6 +34,7 @@ app = [
     "slowapi==0.1.9",
 ]
 dev = [
+    "uvicorn==0.30.1",
     "ruff==0.6.5",
     "pre-commit==3.6.2",
     "jupyter==1.1.1",

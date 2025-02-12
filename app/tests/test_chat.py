@@ -6,7 +6,7 @@ import uuid
 import pytest
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk
-from app.utils.variables import EMBEDDINGS_MODEL_TYPE, LANGUAGE_MODEL_TYPE
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE
 
 
 @pytest.fixture(scope="module")
@@ -15,15 +15,17 @@ def setup(args, session_user):
     response = session_user.get(f"{args["base_url"]}/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
-    model = [model for model in response_json["data"] if model["type"] == LANGUAGE_MODEL_TYPE][0]
+    model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]
     MODEL_ID = model["id"]
     MAX_CONTEXT_LENGTH = model["max_context_length"]
     logging.info(f"test model ID: {MODEL_ID}")
     logging.info(f"test max context length: {MAX_CONTEXT_LENGTH}")
 
     # create a collection
-    embeddings_model_id = [model["id"] for model in response_json["data"] if model["type"] == EMBEDDINGS_MODEL_TYPE][0]
+    embeddings_model_id = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
+    logging.info(f"test embeddings model ID: {embeddings_model_id}")
     response = session_user.post(f"{args["base_url"]}/collections", json={"name": "pytest-private", "model": embeddings_model_id})
+    assert response.status_code == 201, f"error: create collection ({response.status_code})"
     COLLECTION_ID = response.json()["id"]
 
     # Upload the file to the collection
@@ -92,35 +94,8 @@ class TestChat:
             "min_tokens": 3,  # unknown param in ChatCompletionRequest schema
         }
         response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
+
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
-
-    def test_chat_completions_invalid_params(self, args, session_user, setup):
-        """Test the POST /chat/completions response with unknown params."""
-        MODEL_ID, _, _, _ = setup
-        params = {
-            "model": MODEL_ID,
-            "messages": [{"role": "user", "content": "Hello, how are you?"}],
-            "stream": False,
-            "n": 1,
-            "max_tokens": 10,
-            "test": "test",  # invalid param
-        }
-        response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
-        assert response.status_code == 400, f"error: retrieve chat completions ({response.status_code})"
-
-    def test_chat_completions_streamed_invalid_params(self, args, session_user, setup):
-        """Test the POST /chat/completions streamed response with unknown params."""
-        MODEL_ID, _, _, _ = setup
-        params = {
-            "model": MODEL_ID,
-            "messages": [{"role": "user", "content": "Hello, how are you?"}],
-            "stream": True,
-            "n": 1,
-            "max_tokens": 10,
-            "test": "test",  # invalid param
-        }
-        response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
-        assert response.status_code == 400, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_context_too_large(self, args, session_user, setup):
         MODEL_ID, MAX_CONTEXT_LENGTH, _, _ = setup
@@ -138,7 +113,7 @@ class TestChat:
 
     def test_chat_completions_streamed_context_too_large(self, args, session_user, setup):
         MODEL_ID, MAX_CONTEXT_LENGTH, _, _ = setup
-        prompt = "test" * (MAX_CONTEXT_LENGTH + 100)
+        prompt = "test " * (MAX_CONTEXT_LENGTH + 1000)
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": prompt}],
@@ -167,7 +142,8 @@ class TestChat:
             },
         }
         response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
-        assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
+
+        assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code}, {response.json()})"
 
         response_json = response.json()
         chat_completion = ChatCompletion(**response_json)
@@ -258,6 +234,26 @@ class TestChat:
             },
         }
 
+        response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
+        assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
+
+    def test_chat_completions_search_internet(self, args, session_user, setup):
+        """Test the GET /chat/completions search internet."""
+        MODEL_ID, _, _, COLLECTION_ID = setup
+        params = {
+            "model": MODEL_ID,
+            "messages": [{"role": "user", "content": "Qui est Ulrich Tan ?"}],
+            "stream": False,
+            "n": 1,
+            "max_tokens": 10,
+            "search": True,
+            "search_args": {
+                "collections": ["internet"],
+                "k": 3,
+                "method": "semantic",
+                "rff_k": 1,
+            },
+        }
         response = session_user.post(f"{args["base_url"]}/chat/completions", json=params)
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 

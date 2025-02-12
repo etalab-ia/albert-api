@@ -10,23 +10,15 @@ from app.utils.security import check_api_key
 router = APIRouter()
 
 
-@router.get("/models/{model:path}")
-@router.get("/models")
+@router.get(path="/models/{model:path}")
+@router.get(path="/models")
 async def models(request: Request, model: Optional[str] = None, user: User = Security(check_api_key)) -> Union[Models, Model]:
     """
     Model API similar to OpenAI's API.
     See https://platform.openai.com/docs/api-reference/models/list for the API specification.
     """
-    if model is not None:
-        model = clients.models[model]
-        response = [row for row in model.models.list().data if row.id == model.id][0]
-    else:
-        response = {"object": "list", "data": []}
-        for model_id, client in clients.models.items():
-            for row in client.models.list().data:
-                row = dict(row)
-                row["type"] = client.type
-                response["data"].append(dict(row))
-        response = Models(**response)
+
+    data = clients.models.list(model=model)
+    response = data[0] if model else Models(data=data)
 
     return response

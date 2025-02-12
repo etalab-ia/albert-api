@@ -43,6 +43,8 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
     uploader = FileUploader(search_client=clients.search, user=user, collection_id=request.collection)
     output = uploader.parse(file=file, metadata=request.metadata)
     chunks = uploader.split(input=output, chunker_name=chunker_name, chunker_args=chunker_args)
-    uploader.upsert(chunks=chunks)
+    await uploader.upsert(chunks=chunks)
+
+    file.file.close()
 
     return Response(status_code=201)
