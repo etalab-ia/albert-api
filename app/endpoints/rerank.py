@@ -11,7 +11,7 @@ router = APIRouter()
 @router.post(path="/rerank")
 async def rerank(request: Request, body: RerankRequest, user: User = Security(check_api_key)) -> Reranks:
     """
-    Rerank a list of inputs with a language model or reranker model.
+    Creates an ordered array with each text assigned a relevance score, based on the query.
     """
     model = clients.models[body.model]
     client = model.get_client(endpoint="rerank")

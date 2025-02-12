@@ -10,7 +10,7 @@ from app.utils.exceptions import FileSizeLimitExceededException
 router = APIRouter()
 
 
-@router.post("/files")
+@router.post(path="/files")
 async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body(...), user: User = Security(check_api_key)) -> Response:
     """
     Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.

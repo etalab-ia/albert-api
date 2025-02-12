@@ -16,6 +16,9 @@ class BraveInternetClient(BaseInternetClient):
         self.headers = {"Accept": "application/json", "X-Subscription-Token": self.api_key}
 
     async def get_result_urls(self, query: str, n: int = 3) -> List[str]:
+        """
+        See BaseInternetClient.get_result_urls for more information.
+        """
         params = {"q": query, "count": n, "country": "fr", "safesearch": "strict"}
 
         try:

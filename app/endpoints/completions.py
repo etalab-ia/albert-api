@@ -14,7 +14,6 @@ router = APIRouter()
 async def completions(request: Request, body: CompletionRequest, user: User = Security(dependency=check_api_key)) -> Completions:
     """
     Completion API similar to OpenAI's API.
-    See https://platform.openai.com/docs/api-reference/completions/create for the API specification.
     """
 
     model = clients.models[body.model]

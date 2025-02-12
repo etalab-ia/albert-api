@@ -12,7 +12,7 @@ router = APIRouter()
 @router.post(path="/search")
 async def search(request: Request, body: SearchRequest, user: User = Security(dependency=check_api_key)) -> Searches:
     """
-    Endpoint to search on the internet or with our search client.
+    Get relevant chunks from the collections and a query.
     """
 
     body = await request.json()

@@ -1,12 +1,12 @@
 import json
+import traceback
 
 from fastapi import Request, Response
 from prometheus_client import Counter
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.clients import AuthenticationClient
-from app.utils.logging import logger
-from app.utils.logging import client_ip
+from app.utils.logging import client_ip, logger
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):
@@ -21,11 +21,12 @@ class MetricsMiddleware(BaseHTTPMiddleware):
     async def __call__(self, scope, receive, send):
         try:
             await super().__call__(scope=scope, receive=receive, send=send)
-        except RuntimeError as exc:
+        except RuntimeError as e:
+            logger.debug(traceback.format_exc())
             # ignore the error when the request is disconnected by the client
-            if str(exc) == "No response returned.":
+            if str(e) == "No response returned.":
                 logger.info(
-                    f'"{list(scope["route"].methods)[0]} {scope["route"].path} HTTP/{scope["http_version"]}" request disconnected by the client'
+                    msg=f'"{list(scope["route"].methods)[0]} {scope["route"].path} HTTP/{scope["http_version"]}" request disconnected by the client'
                 )
                 request = Request(scope=scope, receive=receive)
                 if await request.is_disconnected():

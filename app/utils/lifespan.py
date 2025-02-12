@@ -29,12 +29,12 @@ async def lifespan(app: FastAPI):
 
     clients.models = ModelRegistry(settings=settings.models)
     clients.cache = CacheClient(connection_pool=ConnectionPool(**settings.databases.redis.args))
-    clients.internet = InternetClient.import_constructor(type=settings.internet.type)(**settings.internet.args)
+    clients.internet = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
     clients.auth = AuthenticationClient(cache=clients.cache, **settings.databases.grist.args) if settings.databases.grist else None
 
     type = settings.databases.qdrant.type if settings.databases.qdrant else settings.databases.elastic.type
     args = settings.databases.qdrant.args if settings.databases.qdrant else settings.databases.elastic.args
-    clients.search = SearchClient.import_constructor(type=type)(models=clients.models, **args)
+    clients.search = SearchClient.import_module(type=type)(models=clients.models, **args)
 
     yield
 

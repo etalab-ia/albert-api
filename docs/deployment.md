@@ -1,17 +1,5 @@
 # Déploiement
 
-## Quickstart
-
-1. Créez un fichier *config.yml* à la racine du dépot sur la base du fichier d'exemple *[config.example.yml](./config.example.yml)* Voir la section [Configuration](#configuration) pour plus d'informations.
-
-2. Déployez l'API avec Docker à l'aide du fichier [compose.yml](../compose.yml) à la racine du dépot.
-
-  ```bash
-  docker compose up --detach
-  ```
-
-## Configuration
-
 ### Variables d'environnements
 
 | Variable | Description |
@@ -25,7 +13,7 @@
 | ENABLE_METRICS | Active ou désactive les métriques Prometheus (par défaut : True) |
 | LOG_LEVEL | Niveau de journalisation (par défaut : INFO) |
 
-### Fichier de configuration (config.yml)
+### Configuration
 
 Pour fonctionner, l'API Albert nécessite configurer le fichier de configuration (config.yml). Celui-ci définit les clients tiers et des paramètres de configuration.
 

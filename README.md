@@ -1,24 +1,46 @@
 <div id="toc"><ul align="center" style="list-style: none">
 <summary><h1>Albert API</h1></summary>
 
-![](https://img.shields.io/badge/version-0.0.1-yellow) ![](https://img.shields.io/badge/Python-3.12-green) ![](https://img.shields.io/badge/vLLM-v0.6.3.post1-blue) ![](https://img.shields.io/badge/HuggingFace%20Text%20Embeddings%20Inference-1.5-red)<br>
+![](https://img.shields.io/badge/version-0.0.3-yellow) ![](https://img.shields.io/badge/Python-3.12-green)<br>
 <a href="https://github.com/etalab-ia/albert-api/blob/main/CHANGELOG.md"><b>Changelog</b></a> | <a href="https://albert.api.etalab.gouv.fr/documentation"><b>Documentation</b></a> | <a href="https://albert.api.etalab.gouv.fr/playground"><b>Playground</b></a> | <a href="https://albert.api.etalab.gouv.fr/status"><b>Status</b></a> | <a href="https://albert.api.etalab.gouv.fr/swagger"><b>Swagger</b></a> <br><br>
 </ul></div>
 
-Albert API est une initiative d'[Etalab](https://www.etalab.gouv.fr/). **Il s'agit d'une API open source d'IA générative optimisée pour des cas d'usages administratifs en langue française. Elle permet d'être un proxy entre des modèles de langage et vos données.** Elle agrège les services suivants :
-- servir des modèles de langage avec [vLLM](https://github.com/vllm-project/vllm)
-- servir des modèles d'embeddings avec [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)
-- servir des modèles de reranking avec [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference)
-- servir des modèles de reconnaissance vocale avec [Whisper OpenAI API](https://github.com/etalab-ia/whisper-openai-api)
-- accès un *vector store* avec [Elasticsearch](https://www.elastic.co/fr/products/elasticsearch) pour la recherche de similarité (lexicale, sémantique ou hybride) ou [Qdrant](https://qdrant.tech/) pour la recherche sémantique uniquement.
+## 👋 Présentation
 
-En se basant sur les conventions définies par OpenAI, l'API Albert expose des endpoints qui peuvent être appelés avec le [client officiel python d'OpenAI](https://github.com/openai/openai-python/tree/main). Ce formalisme permet d'intégrer facilement l'API Albert avec des bibliothèques tierces comme [Langchain](https://www.langchain.com/) ou [LlamaIndex](https://www.llamaindex.ai/).
+Albert API, initiative d'**[Etalab](https://www.etalab.gouv.fr/)** dans le cadre du programme **[ALLiaNCE](https://alliance.numerique.gouv.fr/)**, est un framework open source d'IA générative comprenant : 
 
-## ⚙️ Fonctionnalités
+- une API gateway vers des clients API d'IA générative
+- des fonctionnalités avancées comme du RAG (Retrieval Augmented Generation)
+
+Ce framework, destiné à un environnement de production soumis à des contraintes de performance, a pour objectif d'être simple, léger et rapide tout en couvrant les fonctionnalités essentielles de l'état de l'art en la matière.
+
+En se basant sur les conventions définies par OpenAI, Albert API expose des endpoints qui peuvent être appelés avec le [client officiel python d'OpenAI](https://github.com/openai/openai-python/tree/main). Ce formalisme permet une intégration aisée avec des bibliothèques tierces comme [Langchain](https://www.langchain.com/) ou [LlamaIndex](https://www.llamaindex.ai/).
+
+## 🔑 Accès
+
+Si vous êtes un organisme public, vous pouvez demander une clé d'accès à Albert API en remplissant le [formulaire sur le site ALLiaNCE](https://alliance.numerique.gouv.fr/albert/).
+
+## 📫 API Gateway
+
+L'API Albert permet d'être un proxy entre des clients API d'IA générative et d'assurer du load balancing entre les différents clients :
+
+| Client | Supported version | Supported model types |
+|--- | --- | --- |
+| [OpenAI](https://platform.openai.com/docs/api-reference) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
+| [vLLM](https://github.com/vllm-project/vllm) | v0.6.6.post1 | • language |
+| [HuggingFace Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) | v1.5 | • embeddings<br>• reranking |
+
+
+## ⚙️ Fonctionnalités avancées
+
+- accès à un *vector store* avec [Elasticsearch](https://www.elastic.co/fr/products/elasticsearch) pour la recherche de similarité (lexicale, sémantique ou hybride) ou [Qdrant](https://qdrant.tech/) pour la recherche sémantique uniquement.
+- authentification par clé API
+
+## 🧩 Tutoriels
 
 ### Interface utilisateur (playground)
 
-L'API Albert expose une interface utilisateur permettant de tester les différentes fonctionnalités, consultable ici [ici](https://albert.api.etalab.gouv.fr/playground).
+L'API Albert expose une interface utilisateur permettant de tester les différentes fonctionnalités, consultable [ici](https://albert.api.etalab.gouv.fr/playground).
 
 ### Converser avec un modèle de langage (chat memory)
 
@@ -75,3 +97,13 @@ Albert API est un projet open source, vous pouvez contribuer au projet en lisant
 ## 🚀 Installation
 
 Pour déployer l'API Albert sur votre propre infrastructure, suivez la [documentation](./docs/deployment.md).
+
+### Quickstart
+
+1. Complétez le fichier *[config.example.yml](./config.example.yml)* à la racine du dépot la configuration de vos API de modèles (voir la [documentation déploiement](./docs/deployment.md) pour plus d'informations).
+
+2. Déployez l'API avec Docker à l'aide du fichier [compose.yml](../compose.yml) à la racine du dépot.
+
+  ```bash
+  docker compose up --detach
+  ```

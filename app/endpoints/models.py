@@ -14,8 +14,7 @@ router = APIRouter()
 @router.get(path="/models")
 async def models(request: Request, model: Optional[str] = None, user: User = Security(check_api_key)) -> Union[Models, Model]:
     """
-    Model API similar to OpenAI's API.
-    See https://platform.openai.com/docs/api-reference/models/list for the API specification.
+    Lists the currently available models, and provides basic information about each one such as the owner and availability.
     """
 
     data = clients.models.list(model=model)
