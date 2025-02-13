@@ -4,7 +4,7 @@ from fastapi import APIRouter, File, Form, Request, Security, UploadFile
 from fastapi.responses import PlainTextResponse
 
 from app.schemas.audio import AudioTranscription
-from app.utils.lifespan import clients, limiter
+from app.utils.lifespan import models, limiter
 from app.utils.security import User, check_api_key, check_rate_limit
 from app.utils.settings import settings
 
@@ -163,7 +163,7 @@ async def audio_transcriptions(
     file_content = await file.read()
     data = {"language": language, "response_format": response_format, "temperature": temperature, "timestamp_granularities": timestamp_granularities}
 
-    model = clients.models[model]
+    model = models.registry[model]
     client = model.get_client(endpoint="audio/transcriptions")
 
     response = await client.forward_request(

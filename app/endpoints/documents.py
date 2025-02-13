@@ -5,7 +5,7 @@ from fastapi import APIRouter, Path, Query, Request, Response, Security
 
 from app.schemas.documents import Documents
 from app.schemas.security import User
-from app.utils.lifespan import clients
+from app.utils.lifespan import databases
 from app.utils.security import check_api_key
 
 router = APIRouter()
@@ -23,7 +23,7 @@ async def get_documents(
     Get all documents ID from a collection.
     """
     collection = str(collection)
-    data = clients.search.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
+    data = databases.search.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
 
     return Documents(data=data)
 
@@ -39,6 +39,6 @@ async def delete_document(
     Delete a document and relative collections.
     """
     collection, document = str(collection), str(document)
-    clients.search.delete_document(collection_id=collection, document_id=document, user=user)
+    databases.search.delete_document(collection_id=collection, document_id=document, user=user)
 
     return Response(status_code=204)

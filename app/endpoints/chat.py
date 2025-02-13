@@ -1,13 +1,14 @@
-from types import SimpleNamespace
 from typing import List, Tuple, Union
 
 from fastapi import APIRouter, Request, Security
 
-from app.helpers import SearchManager, StreamingResponseWithStatusCode
+from app.clients.internet import BaseInternetClient as InternetClient
+from app.clients.search import BaseSearchClient as SearchClient
+from app.helpers import ModelRegistry, SearchManager, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search
 from app.schemas.security import User
-from app.utils.lifespan import clients, limiter
+from app.utils.lifespan import databases, internet, limiter, models
 from app.utils.security import check_api_key, check_rate_limit
 from app.utils.settings import settings
 
@@ -27,10 +28,12 @@ async def chat_completions(
     """
 
     # retrieval augmentation generation
-    async def retrieval_augmentation_generation(body: ChatCompletionRequest, clients: SimpleNamespace) -> Tuple[ChatCompletionRequest, List[Search]]:
+    async def retrieval_augmentation_generation(
+        body: ChatCompletionRequest, models: ModelRegistry, search: SearchClient, internet: InternetClient
+    ) -> Tuple[ChatCompletionRequest, List[Search]]:
         searches = []
         if body.search:
-            search_manager = SearchManager(clients=clients)
+            search_manager = SearchManager(models=models, search=search, internet=internet)
             searches = await search_manager.query(
                 collections=body.search_args.collections,
                 prompt=body.messages[-1]["content"],
@@ -51,10 +54,10 @@ async def chat_completions(
         searches = [search.model_dump() for search in searches]
         return body, searches
 
-    body, searches = await retrieval_augmentation_generation(body=body, clients=clients)
+    body, searches = await retrieval_augmentation_generation(body=body, models=models.registry, search=databases.search, internet=internet.search)
 
     # select client
-    model = clients.models[body["model"]]
+    model = models.registry[body["model"]]
     client = model.get_client(endpoint="chat/completions")
 
     # not stream case

@@ -1,13 +1,15 @@
 from io import BytesIO
-from types import SimpleNamespace
 from typing import List
 
 from fastapi import UploadFile
 import requests
 
+from app.clients.internet import BaseInternetClient as InternetClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.data.parsers import HTMLParser
 from app.schemas.chunks import Chunk
+
+from ._modelregistry import ModelRegistry
 
 
 class InternetManager:
@@ -68,14 +70,13 @@ reponse : Renouvellement pièce identité France
 Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 
-    def __init__(self, clients: SimpleNamespace) -> None:
-        self.type = type
-        self.models = clients.models
-        self.internet_client = clients.internet
+    def __init__(self, models: ModelRegistry, internet: InternetClient) -> None:
+        self.models = models
+        self.internet = internet
 
     async def get_chunks(self, prompt: str, collection_id: str, n: int = 3) -> List[Chunk]:
         query = await self._get_web_query(prompt=prompt)
-        urls = await self.internet_client.get_result_urls(query=query, n=n)
+        urls = await self.internet.get_result_urls(query=query, n=n)
         chunks = self._build_chunks(urls=urls, query=query, collection_id=collection_id)
 
         return chunks
@@ -83,7 +84,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
     async def _get_web_query(self, prompt: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
         model = self.models[self.models.internet_default_language_model]
-        client = model.get_client()
+        client = model.get_client(endpoint="chat/completions")
 
         response = await client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
