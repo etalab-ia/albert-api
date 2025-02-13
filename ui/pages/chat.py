@@ -4,24 +4,25 @@ from uuid import uuid4
 
 import streamlit as st
 
-from config import COLLECTION_DISPLAY_ID__INTERNET
-from utils import generate_stream, get_collections, get_models, header
+from utils.chat import generate_stream
+from utils.common import get_collections, get_models, header, settings
+from utils.variables import MODEL_TYPE_LANGUAGE
 
 API_KEY = header()
 
 # Data
 try:
-    language_models, embeddings_models, _, rerank_models = get_models(api_key=API_KEY)
+    models = get_models(api_key=API_KEY, type=MODEL_TYPE_LANGUAGE)
     collections = get_collections(api_key=API_KEY)
 except Exception:
     st.error("Error to fetch user data.")
-    logging.error(traceback.format_exc())
+    logging.debug(traceback.format_exc())
     st.stop()
 
 # State
 
 if "selected_model" not in st.session_state:
-    st.session_state["selected_model"] = language_models[0]
+    st.session_state["selected_model"] = models[0] if settings.default_chat_model not in models else settings.default_chat_model
 
 if "selected_collections" not in st.session_state:
     st.session_state.selected_collections = []
@@ -40,9 +41,7 @@ with st.sidebar:
     params = {"sampling_params": dict(), "rag": dict()}
 
     st.subheader(body="Chat parameters")
-    st.session_state["selected_model"] = st.selectbox(
-        label="Language model", options=language_models, index=language_models.index(st.session_state.selected_model)
-    )
+    st.session_state["selected_model"] = st.selectbox(label="Language model", options=models, index=models.index(st.session_state.selected_model))
 
     params["sampling_params"]["model"] = st.session_state["selected_model"]
     params["sampling_params"]["temperature"] = st.slider(label="Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
@@ -52,14 +51,11 @@ with st.sidebar:
         params["sampling_params"]["max_tokens"] = max_tokens
 
     st.subheader(body="RAG parameters")
-    params["rag"]["embeddings_model"] = st.selectbox(label="Embeddings model", options=embeddings_models)
-    model_collections = [
-        f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["model"] == params["rag"]["embeddings_model"]
-    ] + [f"Internet - {COLLECTION_DISPLAY_ID__INTERNET}"]
+    model_collections = [f"{collection["name"]} - {collection["id"]}" for collection in collections]
 
     if model_collections:
 
-        @st.dialog("Select collections")
+        @st.dialog(title="Select collections")
         def add_collection(collections: list) -> None:
             selected_collections = st.session_state.selected_collections
             col1, col2 = st.columns(spec=2)
@@ -103,20 +99,6 @@ with st.sidebar:
     else:
         rag = st.toggle(label="Activated RAG", value=False, disabled=True, help="You need to select at least one collection to activate RAG.")
 
-    if st.session_state.selected_collections and rag:
-        rerank = st.toggle(
-            label="Add rerank",
-            value=False,
-            disabled=not bool(params["rag"]["collections"]),
-            help="When activated, that retrieve the double number of chunks (k*2) and keep the best k chunks after reranking.",
-        )
-        if rerank:
-            params["rag"]["rerank_model"] = st.selectbox(label="Rerank model", options=rerank_models)
-    else:
-        rerank = st.toggle(
-            label="Add rerank", value=False, disabled=True, help="You need to select at least one collection to activate rerank and activate RAG."
-        )
-
 # Main
 with st.chat_message(name="assistant"):
     st.markdown(
@@ -150,12 +132,12 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
                 params=params,
                 api_key=API_KEY,
                 rag=rag,
-                rerank=rerank,
+                rerank=False,
             )
             response = st.write_stream(stream=stream)
         except Exception:
             st.error(body="Error to generate response.")
-            logging.error(traceback.format_exc())
+            logging.debug(traceback.format_exc())
             st.stop()
 
         formatted_sources = []

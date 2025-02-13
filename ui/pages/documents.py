@@ -2,8 +2,9 @@ import time
 
 import streamlit as st
 
-from config import COLLECTION_TYPE__PRIVATE
-from utils import create_collection, delete_collection, delete_document, header, load_data, refresh_all_data, upload_file
+from utils.common import header, refresh_all_data, settings
+from utils.documents import create_collection, delete_collection, delete_document, load_data, upload_file
+from utils.variables import COLLECTION_TYPE_PRIVATE
 
 API_KEY = header()
 
@@ -12,7 +13,7 @@ with st.sidebar:
         refresh_all_data(api_key=API_KEY)
 
 # Data
-embeddings_models, collections, documents, df_collections, df_files = load_data(api_key=API_KEY)
+collections, documents, df_collections, df_files = load_data(api_key=API_KEY)
 
 # Collections
 st.subheader(body="Collections")
@@ -24,10 +25,9 @@ with col1:
         collection_name = st.text_input(
             label="Collection name", placeholder="Mes documents", help="Create a private collection with the embeddings model of your choice."
         )
-        collection_model = st.selectbox(label="Embeddings model", options=embeddings_models)
-        submit_create = st.button(label="Create", disabled=not collection_name or not collection_model)
+        submit_create = st.button(label="Create", disabled=not collection_name)
         if submit_create:
-            create_collection(api_key=API_KEY, collection_name=collection_name, collection_model=collection_model)
+            create_collection(api_key=API_KEY, collection_name=collection_name, collection_model=settings.documents_embeddings_model)
             time.sleep(0.5)
             st.rerun()
 
@@ -35,7 +35,7 @@ with col2:
     with st.expander(label="Delete a collection", icon=":material/delete_forever:"):
         collection = st.selectbox(
             label="Select collection to delete",
-            options=[f"{collection['name']} - {collection['id']}" for collection in collections if collection["type"] == COLLECTION_TYPE__PRIVATE],
+            options=[f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE],
             key="delete_collection_selectbox",
         )
         collection_id = collection.split(" - ")[1] if collection else None
@@ -58,7 +58,7 @@ with col1:
     with st.expander(label="Upload a file", icon=":material/upload_file:"):
         collection = st.selectbox(
             label="Select a collection",
-            options=[f"{collection['name']} - {collection['id']}" for collection in collections if collection["type"] == COLLECTION_TYPE__PRIVATE],
+            options=[f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE],
             key="upload_file_selectbox",
         )
         collection_id = collection.split(" - ")[1] if collection else None
@@ -73,7 +73,7 @@ with col1:
 ## Delete files
 with col2:
     with st.expander(label="Delete a document", icon=":material/delete_forever:"):
-        document = st.selectbox(label="Select document to delete", options=[f"{document['name']} - {document['id']}" for document in documents])
+        document = st.selectbox(label="Select document to delete", options=[f"{document["name"]} - {document["id"]}" for document in documents])
         document_id = document.split(" - ")[1] if document else None
         submit_delete = st.button(label="Delete", disabled=not document_id, key="delete_document_button")
         if submit_delete:

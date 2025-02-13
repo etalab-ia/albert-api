@@ -2,16 +2,33 @@
 
 ### Variables d'environnements
 
-| Variable | Description |
-| --- | --- |
-| APP_NAME | Nom de l'application (par défaut : "Albert API"). Ce nom sera utilisé la réponse du endpoint `/v1/models` pour la clef `owned_by` des modèles. |
-| APP_CONTACT_URL | URL pour les informations de contact de l'application (par défaut : None) |
-| APP_CONTACT_EMAIL | Email de contact pour l'application (par défaut : None) |
-| APP_VERSION | Version de l'application (par défaut : "0.0.0") |
-| APP_DESCRIPTION | Description de l'application (par défaut : None) |
-| CONFIG_FILE | Chemin vers le fichier de configuration (par défaut : "config.yml") |
-| ENABLE_METRICS | Active ou désactive les métriques Prometheus (par défaut : True) |
-| LOG_LEVEL | Niveau de journalisation (par défaut : INFO) |
+#### API
+
+| Variable | Requis | Description |
+| --- | --- | --- |
+| APP_NAME | Optionnel | Nom de l'application (défaut : "Albert API"). Ce nom sera utilisé la réponse du endpoint `/v1/models` pour la clef `owned_by` des modèles. |
+| APP_CONTACT_URL | Optionnel | URL pour les informations de contact de l'application (défaut : None) |
+| APP_CONTACT_EMAIL | Optionnel | Email de contact pour l'application (défaut : None) |
+| APP_VERSION | Optionnel | Version de l'application (défaut : "0.0.0") |
+| APP_DESCRIPTION | Optionnel | Description de l'application (défaut : None) |
+| CONFIG_FILE | Optionnel | Chemin vers le fichier de configuration (défaut : "config.yml") |
+| ENABLE_METRICS | Optionnel | Active ou désactive les métriques Prometheus (défaut : True) |
+| LOG_LEVEL | Optionnel | Niveau de journalisation (défaut : INFO) |
+
+
+#### UI
+
+| Variable | Requis | Description |
+| --- | --- | --- |
+| BASE_URL | Requis | URL de l'API (défaut : "http://localhost:8080/v1") |
+| EXCLUDE_MODELS | Optionnel | Liste des modèles à exclure de l'UI (défaut : None) |
+| DOCUMENTS_EMBEDDINGS_MODEL | Requis | Modèle de documents embeddings |
+| SUMMARIZE_TOC_MODEL | Requis | Modèle de résumé de table des matières |
+| SUMMARIZE_SUMMARY_MODEL | Requis | Modèle de résumé de sommaire |
+| DEFAULT_CHAT_MODEL | Optionnel | Modèle de chat par défaut (défaut : None) |
+
+
+
 
 ### Configuration
 

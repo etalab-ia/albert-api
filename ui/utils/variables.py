@@ -1,14 +1,12 @@
-import os
+MODEL_TYPE_EMBEDDINGS = "text-embeddings-inference"
+MODEL_TYPE_LANGUAGE = "text-generation"
+MODEL_TYPE_AUDIO = "automatic-speech-recognition"
+MODEL_TYPE_RERANK = "text-classification"
 
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8080/v1")
-MODEL_TYPE__EMBEDDINGS = "text-embeddings-inference"
-MODEL_TYPE__LANGUAGE = "text-generation"
-MODEL_TYPE__AUDIO = "automatic-speech-recognition"
-MODEL_TYPE__RERANK = "text-classification"
-COLLECTION_DISPLAY_ID__INTERNET = "internet"
-COLLECTION_TYPE__PRIVATE = "private"
-CACHE_TTL = 1800  # 30 minutes
-SUPPORTED_LANGUAGES = [
+COLLECTION_DISPLAY_ID_INTERNET = "internet"
+COLLECTION_TYPE_PRIVATE = "private"
+
+TRANSCRIPTION_SUPPORTED_LANGUAGES = [
     "afrikaans",
     "albanian",
     "amharic",

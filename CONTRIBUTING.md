@@ -40,9 +40,21 @@ Pour plus d'information sur le déploiement des services, veuillez consulter la 
 
 ## User interface (Streamlit)
 
-1. Lancez l'API en local (voir la section[Lancement de l'API](#lancement-de-l-api))
+1. Exportez les variables d'environnement nécessaires
 
-2. Lancez l'UI en local
+    ```bash
+    export BASE_URL=http://localhost:8080/v1
+    export DOCUMENTS_EMBEDDINGS_MODEL=
+    export SUMMARIZE_TOC_MODEL=
+    export SUMMARIZE_SUMMARY_MODEL=
+
+2. Lancez l'API en local
+
+    ```bash
+    uvicorn app.main:app --port 8080 --log-level debug --reload
+    ``` 
+
+3. Lancez l'UI en local
 
     ```bash
     python -m streamlit run ui/chat.py --server.port 8501 --browser.gatherUsageStats false --theme.base light
