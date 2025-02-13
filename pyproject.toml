@@ -7,6 +7,7 @@ license = { text = "MIT" }
 dependencies = [
     "openai==1.56.0",
     "requests==2.32.3",
+    "pydantic-settings==2.6.1",
 ]
 
 [project.optional-dependencies]
@@ -22,7 +23,6 @@ app = [
     "gunicorn==23.0.0",
     "fastapi==0.111.0",
     "pydantic==2.10.2",
-    "pydantic-settings==2.6.1",
     "prometheus-fastapi-instrumentator==7.0.0",
     "pyyaml==6.0.1",
     "six==1.16.0",
