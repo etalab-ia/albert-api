@@ -1,5 +1,5 @@
 services:
-  fastapi:
+  api:
     image: ghcr.io/etalab-ia/albert-api/app:latest
     command: gunicorn app.main:app --workers 1 --worker-connections 1000 --timeout 30 --worker-class uvicorn.workers.UvicornWorker
     environment:
@@ -14,12 +14,13 @@ services:
       redis:
         condition: service_healthy
 
-  streamlit:
+  ui:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
     command: streamlit run ui/main.py --server.port=8501 --browser.gatherUsageStats false --theme.base=light --theme.primaryColor=#6a6af4 --server.maxUploadSize=20
     restart: always
     environment:
-      - BASE_URL=http://fastapi:8000/v1
+      - BASE_URL=http://api:8000/v1
+      - DOCUMENTS_EMBEDDINGS_MODEL=
     ports:
       - 8501:8501
 
