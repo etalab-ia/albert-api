@@ -3,7 +3,7 @@ from typing import List, Literal, Optional
 
 from fastapi import UploadFile
 
-from app.clients.search import BaseSearchClient
+from app.clients.search import BaseSearchClient as SearchClient
 from app.helpers.data.chunkers import *
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
 from app.schemas.chunks import Chunk
@@ -22,11 +22,11 @@ class FileUploader:
         "md": FILE_TYPE__MD,
     }
 
-    def __init__(self, collection_id: str, search_client: BaseSearchClient, user: User):
+    def __init__(self, collection_id: str, search: SearchClient, user: User):
         self.user = user
-        self.search_client = search_client
+        self.search = search
 
-        self.collection = self.search_client.get_collections(collection_ids=[collection_id], user=self.user)[0]
+        self.collection = self.search.get_collections(collection_ids=[collection_id], user=self.user)[0]
         self.collection_id = collection_id
 
     def parse(self, file: UploadFile) -> List[ParserOutput]:
@@ -71,4 +71,4 @@ class FileUploader:
         if not chunks:
             raise NoChunksToUpsertException()
 
-        await self.search_client.upsert(chunks=chunks, collection_id=self.collection_id, user=self.user)
+        await self.search.upsert(chunks=chunks, collection_id=self.collection_id, user=self.user)

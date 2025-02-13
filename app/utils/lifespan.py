@@ -12,7 +12,9 @@ from app.clients.search import BaseSearchClient as SearchClient
 from app.helpers import ModelRegistry
 from app.utils.settings import settings
 
-clients = SimpleNamespace()
+models = SimpleNamespace()
+databases = SimpleNamespace()
+internet = SimpleNamespace()
 
 limiter = Limiter(
     key_func=get_ipaddr,
@@ -27,15 +29,17 @@ async def lifespan(app: FastAPI):
 
     app.state.limiter = limiter
 
-    clients.models = ModelRegistry(settings=settings.models)
-    clients.cache = CacheClient(connection_pool=ConnectionPool(**settings.databases.redis.args))
-    clients.internet = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
-    clients.auth = AuthenticationClient(cache=clients.cache, **settings.databases.grist.args) if settings.databases.grist else None
+    models.registry = ModelRegistry(settings=settings.models)
+    internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
 
+    # databases
     type = settings.databases.qdrant.type if settings.databases.qdrant else settings.databases.elastic.type
     args = settings.databases.qdrant.args if settings.databases.qdrant else settings.databases.elastic.args
-    clients.search = SearchClient.import_module(type=type)(models=clients.models, **args)
+
+    databases.search = SearchClient.import_module(type=type)(models=models.registry, **args)
+    databases.cache = CacheClient(connection_pool=ConnectionPool(**settings.databases.redis.args))
+    databases.auth = AuthenticationClient(cache=databases.cache, **settings.databases.grist.args) if settings.databases.grist else None
 
     yield
 
-    clients.search.close()
+    databases.search.close()

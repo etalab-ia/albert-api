@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.clients import AuthenticationClient
 from app.schemas.security import Role, User
 from app.utils.exceptions import InsufficientRightsException, InvalidAPIKeyException, InvalidAuthenticationSchemeException
-from app.utils.lifespan import clients
+from app.utils.lifespan import databases
 from app.utils.settings import settings
 
 if settings.databases.grist:
@@ -25,7 +25,7 @@ if settings.databases.grist:
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
 
-        user = await clients.auth.check_api_key(api_key.credentials)
+        user = await databases.auth.check_api_key(api_key.credentials)
         if user is None:
             raise InvalidAPIKeyException()
 

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Body, Response, Security, UploadFile, File
 from app.helpers._fileuploader import FileUploader
 from app.schemas.files import ChunkerArgs, FilesRequest
 from app.schemas.security import User
-from app.utils.lifespan import clients
+from app.utils.lifespan import databases
 from app.utils.security import check_api_key
 from app.utils.exceptions import FileSizeLimitExceededException
 
@@ -40,7 +40,7 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
 
     chunker_args["length_function"] = len if chunker_args["length_function"] == "len" else chunker_args["length_function"]
 
-    uploader = FileUploader(search_client=clients.search, user=user, collection_id=request.collection)
+    uploader = FileUploader(search=databases.search, user=user, collection_id=request.collection)
     output = uploader.parse(file=file)
     chunks = uploader.split(input=output, chunker_name=chunker_name, chunker_args=chunker_args)
     await uploader.upsert(chunks=chunks)
