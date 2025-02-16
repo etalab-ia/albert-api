@@ -25,6 +25,7 @@ class Chunker(BaseModel):
 
 class FilesRequest(BaseModel):
     collection: UUID = Field(default=..., description="The collection ID to use for the file upload. The file will be vectorized with model defined by the collection.")  # fmt: off
+    metadata: Optional[Dict] = Field(default=None, description="The metadata of file (only used for non json files).")  # fmt: off
     chunker: Optional[Chunker] = Field(default=None, description="The chunker to use for the file upload.")  # fmt: off
 
     @model_validator(mode="before")
