@@ -1,5 +1,6 @@
 from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
+from slowapi.middleware import SlowAPIASGIMiddleware
 
 from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, rerank, search
 from app.helpers import MetricsMiddleware
@@ -7,6 +8,7 @@ from app.schemas.security import User
 from app.utils.lifespan import lifespan
 from app.utils.security import check_admin_api_key, check_api_key
 from app.utils.settings import settings
+
 
 app = FastAPI(
     title=settings.app_name,
@@ -20,11 +22,11 @@ app = FastAPI(
 )
 
 # Prometheus metrics
-app.instrumentator = Instrumentator().instrument(app=app)
+#app.instrumentator = Instrumentator().instrument(app=app)
 
 # Middlewares
-# app.add_middleware(middleware_class=SlowAPIASGIMiddleware)
-app.add_middleware(middleware_class=MetricsMiddleware)
+app.add_middleware(middleware_class=SlowAPIASGIMiddleware)
+#app.add_middleware(middleware_class=MetricsMiddleware)
 
 
 # Monitoring
@@ -37,7 +39,7 @@ def health(user: User = Security(dependency=check_api_key)) -> Response:
     return Response(status_code=200)
 
 
-app.instrumentator.expose(app=app, should_gzip=True, tags=["Monitoring"], dependencies=[Depends(dependency=check_admin_api_key)])
+#app.instrumentator.expose(app=app, should_gzip=True, tags=["Monitoring"], dependencies=[Depends(dependency=check_admin_api_key)])
 
 app.include_router(router=models.router, tags=["Models"], prefix="/v1")
 app.include_router(router=chat.router, tags=["Chat"], prefix="/v1")
