@@ -1,6 +1,5 @@
 from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
-from slowapi.middleware import SlowAPIASGIMiddleware
 
 from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, rerank, search
 from app.helpers import MetricsMiddleware
@@ -24,7 +23,7 @@ app = FastAPI(
 app.instrumentator = Instrumentator().instrument(app=app)
 
 # Middlewares
-app.add_middleware(middleware_class=SlowAPIASGIMiddleware)
+# app.add_middleware(middleware_class=SlowAPIASGIMiddleware)
 app.add_middleware(middleware_class=MetricsMiddleware)
 
 

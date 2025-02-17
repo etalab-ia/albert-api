@@ -1,6 +1,7 @@
 services:
   api:
     image: ghcr.io/etalab-ia/albert-api/app:latest
+    platform: linux/x86_64
     command: gunicorn app.main:app --workers 1 --worker-connections 1000 --timeout 30 --worker-class uvicorn.workers.UvicornWorker
     environment:
       - PORT=8000
@@ -16,6 +17,7 @@ services:
 
   ui:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
+    platform: linux/x86_64
     command: streamlit run ui/main.py --server.port=8501 --browser.gatherUsageStats false --theme.base=light --theme.primaryColor=#6a6af4 --server.maxUploadSize=20
     restart: always
     environment:

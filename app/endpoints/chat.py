@@ -8,15 +8,14 @@ from app.helpers import ModelRegistry, SearchManager, StreamingResponseWithStatu
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search
 from app.schemas.security import User
-from app.utils.lifespan import databases, internet, limiter, models
-from app.utils.security import check_api_key, check_rate_limit
-from app.utils.settings import settings
+from app.utils.lifespan import databases, internet, models
+from app.utils.security import check_api_key
 
 router = APIRouter()
 
 
+# @limiter.limit(limit_value=settings.rate_limit.by_user, key_func=lambda request: check_rate_limit(request=request))
 @router.post(path="/chat/completions")
-@limiter.limit(limit_value=settings.rate_limit.by_user, key_func=lambda request: check_rate_limit(request=request))
 async def chat_completions(
     request: Request, body: ChatCompletionRequest, user: User = Security(dependency=check_api_key)
 ) -> Union[ChatCompletion, ChatCompletionChunk]:

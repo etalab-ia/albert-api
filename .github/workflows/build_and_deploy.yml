@@ -3,7 +3,7 @@ name: Build and deploy when pushing on staging or main
 on:
   push:
     branches:
-      - main
+      - fix-middleware
 
 jobs:
   build-and-push:
