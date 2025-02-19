@@ -4,7 +4,7 @@ import os
 import pytest
 
 
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS, COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS, COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC, COLLECTION_DISPLAY_ID__INTERNET
 
 
 @pytest.fixture(scope="module")
@@ -40,6 +40,17 @@ class TestFiles:
         data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
         response = session_user.post(f"{args["base_url"]}/files", data=data, files=files)
         assert response.status_code == 201, f"error: upload file ({response.status_code} - {response.text})"
+
+    def test_upload_internet_collection(self, args, session_user, setup, snapshot):
+        PRIVATE_COLLECTION_ID, _ = setup
+
+        file_path = "app/tests/assets/pdf.pdf"
+
+        files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/pdf")}
+        data = {"request": '{"collection": "%s"}' % COLLECTION_DISPLAY_ID__INTERNET}
+        response = session_user.post(f"{args["base_url"]}/files", data=data, files=files)
+        assert response.status_code == 422
+        snapshot.assert_match(str(response.json()), "upload_internet_collection")
 
     def test_upload_pdf_file_chunker_parameters(self, args, session_user, setup):
         PRIVATE_COLLECTION_ID, _ = setup
