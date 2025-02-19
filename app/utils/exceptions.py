@@ -86,3 +86,8 @@ class UnsupportedFileTypeException(HTTPException):
 class NotImplementedException(HTTPException):
     def __init__(self, detail: str = "Not implemented.") -> None:
         super().__init__(status_code=400, detail=detail)
+
+
+class UnsupportedFileUploadException(HTTPException):
+    def __init__(self, detail: str = "Unsupported collection name for upload file.") -> None:
+        super().__init__(status_code=422, detail=detail)
