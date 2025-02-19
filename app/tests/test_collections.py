@@ -33,7 +33,7 @@ def setup(args, session_user):
 
 
 @pytest.mark.usefixtures("args", "session_user", "session_admin", "setup", "cleanup_collections")
-class TestFiles:
+class TestCollections:
     def test_create_private_collection_with_user(self, args, session_user, setup):
         _, PRIVATE_COLLECTION_NAME, _, _, EMBEDDINGS_MODEL_ID, _ = setup
 
