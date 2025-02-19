@@ -1,10 +1,10 @@
 import logging
-import time
 
 import pytest
-import requests
+from fastapi.testclient import TestClient
 
 from app.clients import AuthenticationClient
+from app.main import create_application
 from app.utils.variables import COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC
 
 
@@ -30,17 +30,27 @@ def args(request):
 
 
 @pytest.fixture(scope="session")
-def session_user(args):
-    session = requests.session()
-    session.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
-    return session
+def test_app():
+    app = create_application(middleware=False)
+    return app
 
 
 @pytest.fixture(scope="session")
-def session_admin(args):
-    session = requests.session()
-    session.headers = {"Authorization": f"Bearer {args["api_key_admin"]}"}
-    return session
+def test_client(test_app):
+    with TestClient(test_app) as client:
+        yield client
+
+
+@pytest.fixture(scope="session")
+def session_user(args, test_client):
+    test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+    return test_client
+
+
+@pytest.fixture(scope="session")
+def session_admin(args, test_client):
+    test_client.headers = {"Authorization": f"Bearer {args["api_key_admin"]}"}
+    return test_client
 
 
 @pytest.fixture(scope="session")
@@ -69,11 +79,4 @@ def cleanup_collections(args, session_user, session_admin):
     ]
 
     for collection_id in collection_ids:
-        session_admin.delete(f"{args["base_url"]}/collections/{collection_id}")
-
-
-@pytest.fixture(scope="module", autouse=True)
-def sleep_between_tests():
-    # Sleep between tests to avoid rate limit errors
-    yield
-    time.sleep(60)
+        session_user.delete(f"{args["base_url"]}/collections/{collection_id}")
