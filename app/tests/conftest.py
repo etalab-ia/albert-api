@@ -42,26 +42,15 @@ def test_client(test_app):
 
 
 @pytest.fixture(scope="session")
-def session_user(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
-    return test_client
-
-
-@pytest.fixture(scope="session")
-def session_admin(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args["api_key_admin"]}"}
-    return test_client
-
-
-@pytest.fixture(scope="session")
-def cleanup_collections(args, session_user, session_admin):
+def cleanup_collections(args, test_client):
     USER = AuthenticationClient.api_key_to_user_id(input=args["api_key_user"])
     ADMIN = AuthenticationClient.api_key_to_user_id(input=args["api_key_admin"])
 
     yield USER, ADMIN
 
     logging.info("cleanup collections")
-    response = session_user.get(f"{args["base_url"]}/collections")
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+    response = test_client.get(f"{args['base_url']}/collections")
     response.raise_for_status()
     collections = response.json()
 
@@ -71,12 +60,13 @@ def cleanup_collections(args, session_user, session_admin):
     ]
 
     for collection_id in collection_ids:
-        session_user.delete(f"{args["base_url"]}/collections/{collection_id}")
+        test_client.delete(f"{args['base_url']}/collections/{collection_id}")
 
     # delete public collections
     collection_ids = [
         collection["id"] for collection in collections["data"] if collection["type"] == COLLECTION_TYPE__PUBLIC and collection["user"] == ADMIN
     ]
 
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
     for collection_id in collection_ids:
-        session_user.delete(f"{args["base_url"]}/collections/{collection_id}")
+        test_client.delete(f"{args['base_url']}/collections/{collection_id}")
