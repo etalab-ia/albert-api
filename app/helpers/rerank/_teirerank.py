@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 import httpx
 
 from app.schemas.rerank import Rerank
+from app.utils.variables import ENDPOINT__RERANK
 
 
 class TEIRerank:
@@ -12,7 +13,7 @@ class TEIRerank:
 
     async def create(self, prompt: str, input: list[str], model: str) -> List[Rerank]:
         json = {"query": prompt, "texts": input}
-        url = urljoin(base=str(self.client.base_url), url=self.client.ENDPOINT_TABLE["rerank"])
+        url = urljoin(base=str(self.client.api_url), url=self.client.ENDPOINT_TABLE[ENDPOINT__RERANK])
         headers = {"Authorization": f"Bearer {self.client.api_key}"}
 
         async with httpx.AsyncClient() as async_client:
