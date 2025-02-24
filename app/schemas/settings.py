@@ -37,14 +37,14 @@ class ConfigBaseModel(BaseModel):
 
 
 class ModelClientArgs(ConfigBaseModel):
-    base_url: str
+    api_url: str
     api_key: str = "EMPTY"
     timeout: int = DEFAULT_TIMEOUT
 
-    @field_validator("base_url", mode="before")
-    def validate_base_url(cls, base_url):
-        base_url = base_url.rstrip("/") + "/"
-        return base_url
+    @field_validator("api_url", mode="before")
+    def validate_api_url(cls, api_url):
+        api_url = api_url.rstrip("/") + "/"
+        return api_url
 
 
 class ModelClient(ConfigBaseModel):
