@@ -22,13 +22,13 @@ models:
       - model: gpt-3.5-turbo 
         type: openai
         args:
-          base_url: https://api.openai.com/v1
+          api_url: https://api.openai.com
           api_key: sk-...sA
           timeout: 60
       - model: meta-llama/Llama-3.1-8B-Instruct
         type: vllm
         args:
-          base_url: http://.../v1
+          api_url: http://localhost:8000
           api_key: sf...Df
           timeout: 60
 ```
@@ -76,7 +76,7 @@ Le paramètre `endpoint` est optionnel. Si ce paramètre n'est pas renseigné, l
 ### ModelClient
 
 L'objet `ModelClient` est un objet de type `AsyncOpenAI` qui permet d'appeler l'API externe grâce à 3 attributs :
-- `base_url` : l'URL de l'API externe
+- `api_url` : l'URL de l'API externe
 - `api_key` : la clé API de l'API externe
 - `model` : le modèle ID de l'API externe
 
