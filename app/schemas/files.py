@@ -4,7 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.utils.variables import CHUNKERS
+from app.utils.variables import CHUNKERS, COLLECTION_DISPLAY_ID__INTERNET
+from app.utils.exceptions import UnsupportedFileUploadException
 
 
 class ChunkerArgs(BaseModel):
@@ -38,6 +39,13 @@ class FilesRequest(BaseModel):
     @classmethod
     def convert_to_string(cls, collection):
         return str(collection)
+
+    @field_validator("collection", mode="before")
+    @classmethod
+    def check_collection_name(cls, collection):
+        if str(collection) == COLLECTION_DISPLAY_ID__INTERNET:
+            raise UnsupportedFileUploadException()
+        return collection
 
 
 class Json(BaseModel):

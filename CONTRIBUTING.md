@@ -75,6 +75,22 @@ Merci, avant chaque pull request, de vérifier le bon déploiement de votre API 
     PYTHONPATH=. pytest --config-file=pyproject.toml --base-url http://localhost:8080/v1 --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
     ```
 
+    Pour utiliser le module testing de VSCode, ajouter ceci dans .vscode/settings.json :
+
+    ```json
+    {
+        "python.testing.pytestArgs": [
+            "app/tests",
+            "-v",
+            "--api-key-user=API_KEY_USER",
+            "--api-key-admin=API_KEY_ADMIN"
+        ],
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestEnabled": true
+    }
+    ```
+    
+
 # Notebooks
 
 Il est important de tenir à jour les notebooks de docs/tutorials, afin de montrer des rapides exemples d'utilisation de l'API.
