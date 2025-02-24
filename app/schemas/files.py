@@ -45,6 +45,7 @@ class FilesRequest(BaseModel):
     def check_collection_name(cls, collection):
         if str(collection) == COLLECTION_DISPLAY_ID__INTERNET:
             raise UnsupportedFileUploadException()
+        return collection
 
 
 class Json(BaseModel):
