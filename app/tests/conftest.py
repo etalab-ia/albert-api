@@ -49,8 +49,8 @@ def cleanup_collections(args, test_client):
     yield USER, ADMIN
 
     logging.info("cleanup collections")
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
-    response = test_client.get(f"{args['base_url']}/collections")
+    test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+    response = test_client.get(f"{args["base_url"]}/collections")
     response.raise_for_status()
     collections = response.json()
 
@@ -60,13 +60,16 @@ def cleanup_collections(args, test_client):
     ]
 
     for collection_id in collection_ids:
-        test_client.delete(f"{args['base_url']}/collections/{collection_id}")
+        test_client.delete(f"{args["base_url"]}/collections/{collection_id}")
 
     # delete public collections
+    test_client.headers = {"Authorization": f"Bearer {args["api_key_admin"]}"}
+    response = test_client.get(f"{args["base_url"]}/collections")
     collection_ids = [
-        collection["id"] for collection in collections["data"] if collection["type"] == COLLECTION_TYPE__PUBLIC and collection["user"] == ADMIN
+        collection["id"]
+        for collection in collections["data"]
+        if collection["type"] in [COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC] and collection["user"] == ADMIN
     ]
 
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
     for collection_id in collection_ids:
-        test_client.delete(f"{args['base_url']}/collections/{collection_id}")
+        test_client.delete(f"{args["base_url"]}/collections/{collection_id}")
