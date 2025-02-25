@@ -63,33 +63,26 @@ Pour plus d'information sur le déploiement des services, veuillez consulter la 
 
 Merci, avant chaque pull request, de vérifier le bon déploiement de votre API en exécutant des tests unitaires.
 
-1. Lancez l'API en local avec la commande suivante:
-
-    ```bash
-    uvicorn app.main:app --port 8080 --log-level debug --reload
-    ```
-
-2. Exécutez les tests unitaires à la racine du projet
+Pour exécuter les tests unitaires à la racine du projet, veuillez suivre les instructions suivantes :
     
-    ```bash
-    PYTHONPATH=. pytest --config-file=pyproject.toml --base-url http://localhost:8080/v1 --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
-    ```
+```bash
+PYTHONPATH=. pytest -v --config-file=pyproject.toml --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
+```
 
-    Pour utiliser le module testing de VSCode, ajouter ceci dans .vscode/settings.json :
+Pour utiliser le module testing de VSCode, veuillez ajouter ceci dans .vscode/settings.json :
 
-    ```json
-    {
-        "python.testing.pytestArgs": [
-            "app/tests",
-            "-v",
-            "--api-key-user=API_KEY_USER",
-            "--api-key-admin=API_KEY_ADMIN"
-        ],
-        "python.testing.unittestEnabled": false,
-        "python.testing.pytestEnabled": true
-    }
-    ```
-    
+```json
+{
+    "python.testing.pytestArgs": [
+        "app/tests",
+        "-v",
+        "--api-key-user=API_KEY_USER",
+        "--api-key-admin=API_KEY_ADMIN"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
+```
 
 # Notebooks
 

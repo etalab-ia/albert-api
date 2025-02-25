@@ -20,7 +20,7 @@ def setup(args, test_client):
     logging.info(f"test admin ID: {ADMIN}")
 
     test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
-    response = test_client.get(f"{args['base_url']}/models", timeout=10)
+    response = test_client.get("/v1/models", timeout=10)
     models = response.json()
     EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
     LANGUAGE_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]["id"]
@@ -40,7 +40,7 @@ class TestCollections:
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
         params = {"name": PRIVATE_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
-        response = test_client.post(f"{args['base_url']}/collections", json=params)
+        response = test_client.post("/v1/collections", json=params)
         assert response.status_code == 201
         assert "id" in response.json().keys()
 
@@ -49,7 +49,7 @@ class TestCollections:
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
         params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC}
-        response = test_client.post(f"{args['base_url']}/collections", json=params)
+        response = test_client.post("/v1/collections", json=params)
         assert response.status_code == 403
 
     def test_create_public_collection_with_admin(self, args, test_client, setup):
@@ -57,7 +57,7 @@ class TestCollections:
         test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
 
         params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC}
-        response = test_client.post(f"{args['base_url']}/collections", json=params)
+        response = test_client.post("/v1/collections", json=params)
         assert response.status_code == 201
         assert "id" in response.json().keys()
 
@@ -66,7 +66,7 @@ class TestCollections:
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
         params = {"name": PRIVATE_COLLECTION_NAME, "model": LANGUAGE_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
-        response = test_client.post(f"{args['base_url']}/collections", json=params)
+        response = test_client.post("/v1/collections", json=params)
         assert response.status_code == 422
 
     def test_create_private_collection_with_unknown_model_with_user(self, args, test_client, setup):
@@ -74,14 +74,14 @@ class TestCollections:
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
         params = {"name": PRIVATE_COLLECTION_NAME, "model": "unknown-model", "type": COLLECTION_TYPE__PRIVATE}
-        response = test_client.post(f"{args['base_url']}/collections", json=params)
+        response = test_client.post("/v1/collections", json=params)
         assert response.status_code == 404
 
     def test_get_collections(self, args, test_client, setup):
         PUBLIC_COLLECTION_NAME, PRIVATE_COLLECTION_NAME, ADMIN, USER, _, _ = setup
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        response = test_client.get(f"{args['base_url']}/collections")
+        response = test_client.get("/v1/collections")
         assert response.status_code == 200
 
         collections = response.json()
@@ -104,7 +104,7 @@ class TestCollections:
         _, PRIVATE_COLLECTION_NAME, _, _, _, _ = setup
         test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
 
-        response = test_client.get(f"{args['base_url']}/collections")
+        response = test_client.get("/v1/collections")
         collections = response.json()
         collections = [collection["name"] for collection in collections["data"]]
 
@@ -114,27 +114,27 @@ class TestCollections:
         _, PRIVATE_COLLECTION_NAME, _, _, _, _ = setup
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        response = test_client.get(f"{args['base_url']}/collections")
+        response = test_client.get("/v1/collections")
         collection_id = [collection["id"] for collection in response.json()["data"] if collection["name"] == PRIVATE_COLLECTION_NAME][0]
-        response = test_client.delete(f"{args['base_url']}/collections/{collection_id}")
+        response = test_client.delete(f"/v1/collections/{collection_id}")
         assert response.status_code == 204
 
     def test_delete_public_collection_with_user(self, args, test_client, setup):
         PUBLIC_COLLECTION_NAME, _, _, _, _, _ = setup
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        response = test_client.get(f"{args['base_url']}/collections")
+        response = test_client.get("/v1/collections")
         collection_id = [collection["id"] for collection in response.json()["data"] if collection["name"] == PUBLIC_COLLECTION_NAME][0]
-        response = test_client.delete(f"{args['base_url']}/collections/{collection_id}")
+        response = test_client.delete(f"/v1/collections/{collection_id}")
         assert response.status_code == 403
 
     def test_delete_public_collection_with_admin(self, args, test_client, setup):
         PUBLIC_COLLECTION_NAME, _, _, _, _, _ = setup
         test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
 
-        response = test_client.get(f"{args['base_url']}/collections")
+        response = test_client.get("/v1/collections")
         collection_id = [collection["id"] for collection in response.json()["data"] if collection["name"] == PUBLIC_COLLECTION_NAME][0]
-        response = test_client.delete(f"{args['base_url']}/collections/{collection_id}")
+        response = test_client.delete(f"/v1/collections/{collection_id}")
         assert response.status_code == 204
 
     def test_create_collection_with_empty_name(self, args, test_client, setup):
@@ -142,7 +142,7 @@ class TestCollections:
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
         params = {"name": " ", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
-        response = test_client.post(f"{args['base_url']}/collections", json=params)
+        response = test_client.post("/v1/collections", json=params)
         assert response.status_code == 422
 
     def test_create_collection_with_description(self, args, test_client, setup):
@@ -150,11 +150,11 @@ class TestCollections:
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
         params = {"name": "pytest-description", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE, "description": "pytest-description"}
-        response = test_client.post(f"{args['base_url']}/collections", json=params)
+        response = test_client.post("/v1/collections", json=params)
         assert response.status_code == 201
 
         # retrieve collection
-        response = test_client.get(f"{args['base_url']}/collections")
+        response = test_client.get("/v1/collections")
         assert response.status_code == 200
         description = [collection["description"] for collection in response.json()["data"] if collection["name"] == "pytest-description"][0]
         assert description == "pytest-description"

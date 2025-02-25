@@ -9,7 +9,7 @@ from app.utils.variables import MODEL_TYPE__AUDIO
 def setup(args, test_client):
     test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
     # retrieve model
-    response = test_client.get(f"{args["base_url"]}/models")
+    response = test_client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
     model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__AUDIO][0]
@@ -36,7 +36,7 @@ class TestAudio:
                 "temperature": 0,
                 "timestamp_granularities[]": ["segment"],
             }
-            response = test_client.post(f"{args["base_url"]}/audio/transcriptions", files=files, data=data)
+            response = test_client.post("/v1/audio/transcriptions", files=files, data=data)
             assert response.status_code == 200, f"error: audio transcription failed ({response.status_code})"
 
             response_json = response.json()
@@ -55,7 +55,7 @@ class TestAudio:
         with open("app/tests/assets/audio.mp3", "rb") as f:
             files = {"file": ("test.mp3", f, "audio/mpeg")}
             data = {"model": MODEL_ID, "language": "fr", "response_format": "text"}
-            response = test_client.post(f"{args["base_url"]}/audio/transcriptions", files=files, data=data)
+            response = test_client.post("/v1/audio/transcriptions", files=files, data=data)
             assert response.status_code == 200, f"error: audio transcription failed ({response.status_code})"
             assert isinstance(response.text, str), f"error: expected text output ({response.text})"
 
@@ -74,7 +74,7 @@ class TestAudio:
                 "temperature": 0,
                 "timestamp_granularities[]": ["segment"],
             }
-            response = test_client.post(f"{args["base_url"]}/audio/transcriptions", files=files, data=data)
+            response = test_client.post("/v1/audio/transcriptions", files=files, data=data)
             assert response.status_code == 200, f"error: audio transcription failed ({response.status_code})"
 
             response_json = response.json()
@@ -92,5 +92,5 @@ class TestAudio:
         with open("app/tests/assets/audio.mp3", "rb") as f:
             files = {"file": ("test.mp3", f, "audio/mpeg")}
             data = {"model": "invalid-model", "language": "fr"}
-            response = test_client.post(f"{args["base_url"]}/audio/transcriptions", files=files, data=data)
+            response = test_client.post("/v1/audio/transcriptions", files=files, data=data)
             assert response.status_code == 404, f"error: expected 404 for invalid model ({response.status_code})"
