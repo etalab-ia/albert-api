@@ -1,31 +1,25 @@
 import logging
 import os
 from pathlib import Path
+from typing import Generator
 
 from fastapi.testclient import TestClient
 import pytest
 import vcr
 
 from app.clients import AuthenticationClient
-from app.main import create_application
-from app.utils.variables import COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC
+from app.main import app
+from app.utils.variables import COLLECTION_TYPE__PRIVATE
 
 
 def pytest_addoption(parser):
-    parser.addoption("--base-url", action="store", default="http://localhost:8080/v1")
     parser.addoption("--api-key-user", action="store", default="EMPTY")
     parser.addoption("--api-key-admin", action="store", default="EMPTY")
 
 
 @pytest.fixture(scope="session")
 def args(request):
-    args = {
-        "base_url": request.config.getoption("--base-url"),
-        "api_key_user": request.config.getoption("--api-key-user"),
-        "api_key_admin": request.config.getoption("--api-key-admin"),
-    }
-
-    assert args["base_url"] != "EMPTY", "--base-url argument is required."
+    args = {"api_key_user": request.config.getoption("--api-key-user"), "api_key_admin": request.config.getoption("--api-key-admin")}
     assert args["api_key_user"] != "EMPTY", "--api-key-user argument is required."
     assert args["api_key_admin"] != "EMPTY", "--api-key-admin argument is required."
 
@@ -33,14 +27,8 @@ def args(request):
 
 
 @pytest.fixture(scope="session")
-def test_app():
-    app = create_application(middleware=False)
-    return app
-
-
-@pytest.fixture(scope="session")
-def test_client(test_app):
-    with TestClient(test_app) as client:
+def test_client() -> Generator[TestClient, None, None]:
+    with TestClient(app=app) as client:
         yield client
 
 
@@ -53,7 +41,7 @@ def cleanup_collections(args, test_client):
 
     logging.info("cleanup collections")
     test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
-    response = test_client.get(f"{args["base_url"]}/collections")
+    response = test_client.get("/v1/collections")
     response.raise_for_status()
     collections = response.json()
 
@@ -63,19 +51,15 @@ def cleanup_collections(args, test_client):
     ]
 
     for collection_id in collection_ids:
-        test_client.delete(f"{args["base_url"]}/collections/{collection_id}")
+        test_client.delete(f"/v1/collections/{collection_id}")
 
     # delete public collections
     test_client.headers = {"Authorization": f"Bearer {args["api_key_admin"]}"}
-    response = test_client.get(f"{args["base_url"]}/collections")
-    collection_ids = [
-        collection["id"]
-        for collection in collections["data"]
-        if collection["type"] in [COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC] and collection["user"] == ADMIN
-    ]
+    response = test_client.get("/v1/collections")
+    collection_ids = [collection["id"] for collection in collections["data"] if collection["user"] == ADMIN]
 
     for collection_id in collection_ids:
-        test_client.delete(f"{args["base_url"]}/collections/{collection_id}")
+        test_client.delete(f"/v1/collections/{collection_id}")
 
 
 @pytest.fixture(autouse=True)
@@ -89,7 +73,7 @@ def vcr_config():
         record_mode="once",
         match_on=["method", "scheme", "host", "port", "path", "query"],
         filter_headers=["authorization"],
-        before_record_request=lambda request: None if "localhost" in request.host or "127.0.0.1" in request.host else request,
+        before_record_request=lambda request: None if request.host == "testserver" else request,
         decode_compressed_response=True,
     )
 
@@ -99,6 +83,17 @@ def vcr_config():
 @pytest.fixture(autouse=True)
 def vcr_cassette(request, vcr_config):
     """Automatically use VCR for each test"""
+
+    # Skip VCR for tests that does not support it
+    def module_to_skip(request):
+        for module in ["test_audio", "test_documents", "test_files"]:
+            if request.module.__name__.endswith(module):
+                return True
+
+    if module_to_skip(request):
+        yield
+        return
+
     test_name = request.node.name.replace("[", "_").replace("]", "_")
     cassette_path = f"{request.module.__name__}.{test_name}"
 
