@@ -10,9 +10,9 @@ class Log(Base):
 
     id = Column(Integer, primary_key=True)
     datetime = Column(DateTime, nullable=False, default=datetime.utcnow)
-    user = Column(String, nullable=False)
+    user = Column(String, nullable=True)
     endpoint = Column(String, nullable=False)
-    model = Column(String, nullable=False)
+    model = Column(String, nullable=True)
     token_per_sec = Column(Integer)
     inter_token_latency = Column(Float)
     req_tokens_nb = Column(Integer)

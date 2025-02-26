@@ -1,7 +1,10 @@
 import logging
+import os
+from pathlib import Path
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
+import vcr
 
 from app.clients import AuthenticationClient
 from app.main import create_application
@@ -73,3 +76,31 @@ def cleanup_collections(args, test_client):
 
     for collection_id in collection_ids:
         test_client.delete(f"{args["base_url"]}/collections/{collection_id}")
+
+
+@pytest.fixture(autouse=True)
+def vcr_config():
+    """Global VCR configuration"""
+    cassette_library_dir = Path(__file__).parent / "cassettes"
+    os.makedirs(cassette_library_dir, exist_ok=True)
+
+    custom_vcr = vcr.VCR(
+        cassette_library_dir=str(cassette_library_dir),
+        record_mode="once",
+        match_on=["method", "scheme", "host", "port", "path", "query"],
+        filter_headers=["authorization"],
+        before_record_request=lambda request: None if "localhost" in request.host or "127.0.0.1" in request.host else request,
+        decode_compressed_response=True,
+    )
+
+    return custom_vcr
+
+
+@pytest.fixture(autouse=True)
+def vcr_cassette(request, vcr_config):
+    """Automatically use VCR for each test"""
+    test_name = request.node.name.replace("[", "_").replace("]", "_")
+    cassette_path = f"{request.module.__name__}.{test_name}"
+
+    with vcr_config.use_cassette(cassette_path + ".yaml"):
+        yield

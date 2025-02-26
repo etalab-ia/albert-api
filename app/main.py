@@ -2,8 +2,9 @@ from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi.middleware import SlowAPIASGIMiddleware
 
+from app.db.session import get_db
 from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, rerank, search
-from app.helpers import MetricsMiddleware
+from app.helpers import MetricsMiddleware, UsagesMiddleware
 from app.schemas.security import User
 from app.utils.lifespan import lifespan
 from app.utils.security import check_admin_api_key, check_api_key
@@ -29,6 +30,7 @@ def create_application(middleware=True) -> FastAPI:
         # Middlewares
         app.add_middleware(middleware_class=SlowAPIASGIMiddleware)
         app.add_middleware(middleware_class=MetricsMiddleware)
+        app.add_middleware(middleware_class=UsagesMiddleware, db_func=get_db)
 
     # Monitoring
     @app.get(path="/health", tags=["Monitoring"])

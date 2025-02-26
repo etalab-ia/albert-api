@@ -55,7 +55,7 @@ class TestLogModel:
 
     def test_non_nullable_fields(self, db_session):
         """Test that required fields cannot be null"""
-        log = Log(endpoint="/test/endpoint", model="test_model")
+        log = Log(model="test_model")
         with pytest.raises(Exception):
             db_session.add(log)
             db_session.commit()
