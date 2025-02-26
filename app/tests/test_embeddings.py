@@ -5,9 +5,10 @@ from app.utils.variables import MODEL_TYPE__EMBEDDINGS
 
 
 @pytest.fixture(scope="module")
-def setup(args, session_user):
+def setup(args, test_client):
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
     # Get an embeddings model
-    response = session_user.get(f"{args['base_url']}/models")
+    response = test_client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
     model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
@@ -15,16 +16,17 @@ def setup(args, session_user):
     yield MODEL_ID
 
 
-@pytest.mark.usefixtures("args", "session_user", "setup")
+@pytest.mark.usefixtures("args", "setup", "test_client")
 class TestEmbeddings:
-    def test_embeddings_single_input(self, args, session_user, setup):
+    def test_embeddings_single_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with a single input."""
         MODEL_ID = setup
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         params = {
             "model": MODEL_ID,
             "input": "Hello, this is a test.",
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
         response_json = response.json()
@@ -34,52 +36,57 @@ class TestEmbeddings:
         assert isinstance(response_json["data"][0]["embedding"], list)
         assert all(isinstance(x, float) for x in response_json["data"][0]["embedding"])
 
-    def test_embeddings_token_integers_input(self, args, session_user, setup):
+    def test_embeddings_token_integers_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with token integers input."""
         MODEL_ID = setup
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         params = {
             "model": MODEL_ID,
             "input": [1, 2, 3, 4, 5],  # List[int]
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
-    def test_embeddings_token_integers_batch_input(self, args, session_user, setup):
+    def test_embeddings_token_integers_batch_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with batch of token integers input."""
         MODEL_ID = setup
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         params = {
             "model": MODEL_ID,
             "input": [[1, 2, 3], [4, 5, 6]],  # List[List[int]]
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
-    def test_embeddings_with_encoding_format(self, args, session_user, setup):
+    def test_embeddings_with_encoding_format(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with encoding format."""
         MODEL_ID = setup
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         params = {
             "model": MODEL_ID,
             "input": "Test text",
             "encoding_format": "float",
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
-    def test_embeddings_invalid_encoding_format(self, args, session_user, setup):
+    def test_embeddings_invalid_encoding_format(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with invalid encoding format."""
         MODEL_ID = setup
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         params = {
             "model": MODEL_ID,
             "input": "Test text",
             "encoding_format": "invalid_format",
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 422, f"error: invalid encoding format should return 422 ({response.status_code})"
 
-    def test_embeddings_wrong_model_type(self, args, session_user):
+    def test_embeddings_wrong_model_type(self, args, test_client):
         """Test the POST /embeddings endpoint with wrong model type."""
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         # Get a non-embeddings model (e.g., language model)
-        response = session_user.get(f"{args['base_url']}/models")
+        response = test_client.get("/v1/models")
         models = response.json()["data"]
         non_embeddings_model = [m for m in models if m["type"] != MODEL_TYPE__EMBEDDINGS][0]
 
@@ -87,17 +94,18 @@ class TestEmbeddings:
             "model": non_embeddings_model["id"],
             "input": "Test text",
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 422, f"error: wrong model type should return 400 ({response.status_code})"
 
-    def test_embeddings_batch_input(self, args, session_user, setup):
+    def test_embeddings_batch_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with batch input."""
         MODEL_ID = setup
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         params = {
             "model": MODEL_ID,
             "input": ["Hello, this is a test.", "This is another test."],
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
         response_json = response.json()
@@ -108,37 +116,41 @@ class TestEmbeddings:
             assert isinstance(item["embedding"], list)
             assert all(isinstance(x, float) for x in item["embedding"])
 
-    def test_embeddings_empty_input(self, args, session_user, setup):
+    def test_embeddings_empty_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with empty input."""
         MODEL_ID = setup
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         params = {
             "model": MODEL_ID,
             "input": "",
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 422, f"error: empty input should return 422 ({response.status_code})"
 
-    def test_embeddings_invalid_model(self, args, session_user):
+    def test_embeddings_invalid_model(self, args, test_client):
         """Test the POST /embeddings endpoint with invalid model."""
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         params = {
             "model": "invalid_model_id",
             "input": "Hello, this is a test.",
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 404, f"error: invalid model should return 404 ({response.status_code})"
 
-    def test_embeddings_missing_input(self, args, session_user, setup):
+    def test_embeddings_missing_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with missing input."""
         MODEL_ID = setup
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         params = {
             "model": MODEL_ID,
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 422, f"error: missing input should return 422 ({response.status_code})"
 
-    def test_embeddings_model_alias(self, args, session_user, setup):
+    def test_embeddings_model_alias(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with a model alias."""
         MODEL_ID = setup
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
         aliases = {model.id: model.aliases for model in settings.models}
         aliases = aliases[MODEL_ID]
@@ -147,5 +159,5 @@ class TestEmbeddings:
             "model": aliases[0],
             "input": "Hello, this is a test.",
         }
-        response = session_user.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
