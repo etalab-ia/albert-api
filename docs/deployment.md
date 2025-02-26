@@ -12,9 +12,8 @@
 | APP_VERSION | Optionnel | Version de l'application (défaut : "0.0.0") |
 | APP_DESCRIPTION | Optionnel | Description de l'application (défaut : None) |
 | CONFIG_FILE | Optionnel | Chemin vers le fichier de configuration (défaut : "config.yml") |
-| ENABLE_METRICS | Optionnel | Active ou désactive les métriques Prometheus (défaut : True) |
+| MIDDLEWARES | Optionnel | Activer ou désactiver les middlewares (défaut : "True") |
 | LOG_LEVEL | Optionnel | Niveau de journalisation (défaut : INFO) |
-
 
 #### UI
 
@@ -26,9 +25,6 @@
 | SUMMARIZE_TOC_MODEL | Requis | Modèle de résumé de table des matières |
 | SUMMARIZE_SUMMARY_MODEL | Requis | Modèle de résumé de sommaire |
 | DEFAULT_CHAT_MODEL | Optionnel | Modèle de chat par défaut (défaut : None) |
-
-
-
 
 ### Configuration
 
