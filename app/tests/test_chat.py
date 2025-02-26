@@ -13,7 +13,7 @@ from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE
 def setup(args, test_client):
     test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
     # get a language model
-    response = test_client.get(f"{args['base_url']}/models")
+    response = test_client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
     model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]
@@ -25,7 +25,7 @@ def setup(args, test_client):
     # create a collection
     embeddings_model_id = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
     logging.info(f"test embeddings model ID: {embeddings_model_id}")
-    response = test_client.post(f"{args['base_url']}/collections", json={"name": "pytest-private", "model": embeddings_model_id})
+    response = test_client.post("/v1/collections", json={"name": "pytest-private", "model": embeddings_model_id})
     assert response.status_code == 201, f"error: create collection ({response.status_code})"
     COLLECTION_ID = response.json()["id"]
 
@@ -33,10 +33,10 @@ def setup(args, test_client):
     file_path = "app/tests/assets/json.json"
     files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
     data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % COLLECTION_ID}
-    response = test_client.post(f"{args['base_url']}/files", data=data, files=files)
+    response = test_client.post("/v1/files", data=data, files=files)
 
     # Get document IDS
-    response = test_client.get(f"{args['base_url']}/documents/{COLLECTION_ID}")
+    response = test_client.get(f"/v1/documents/{COLLECTION_ID}")
     DOCUMENT_IDS = [response.json()["data"][0]["id"], response.json()["data"][1]["id"]]
 
     yield MODEL_ID, MAX_CONTEXT_LENGTH, DOCUMENT_IDS, COLLECTION_ID
@@ -55,7 +55,7 @@ class TestChat:
             "n": 1,
             "max_tokens": 10,
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
         response_json = response.json()
@@ -73,7 +73,7 @@ class TestChat:
             "n": 1,
             "max_tokens": 10,
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
         for line in response.iter_lines():
@@ -97,7 +97,7 @@ class TestChat:
             "max_tokens": 10,
             "min_tokens": 3,  # unknown param in ChatCompletionRequest schema
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
 
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
@@ -112,7 +112,7 @@ class TestChat:
             "n": 1,
             "max_tokens": 10,
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 400, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_streamed_context_too_large(self, args, test_client, setup):
@@ -126,7 +126,7 @@ class TestChat:
             "n": 1,
             "max_tokens": 10,
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 400, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_search_unstreamed_response(self, args, test_client, setup):
@@ -147,7 +147,7 @@ class TestChat:
                 "rff_k": 1,
             },
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
 
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code}, {response.json()})"
 
@@ -174,7 +174,7 @@ class TestChat:
             },
         }
 
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
         i = 0
@@ -201,7 +201,7 @@ class TestChat:
             "max_tokens": 10,
             "search": True,
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 422, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_search_no_collections(self, args, test_client, setup):
@@ -221,7 +221,7 @@ class TestChat:
                 "rff_k": 1,
             },
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 422, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_search_template(self, args, test_client, setup):
@@ -244,7 +244,7 @@ class TestChat:
             },
         }
 
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_search_internet(self, args, test_client, setup):
@@ -265,7 +265,7 @@ class TestChat:
                 "rff_k": 1,
             },
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 200, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_search_template_missing_placeholders(self, args, test_client, setup):
@@ -287,7 +287,7 @@ class TestChat:
                 "template": "Ne réponds pas à la question {prompt}.",
             },
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 422, f"error: retrieve chat completions ({response.status_code})"
 
     def test_chat_completions_search_wrong_collection(self, args, test_client, setup):
@@ -308,5 +308,5 @@ class TestChat:
                 "rff_k": 1,
             },
         }
-        response = test_client.post(f"{args['base_url']}/chat/completions", json=params)
+        response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 404, f"error: retrieve chat completions ({response.status_code})"

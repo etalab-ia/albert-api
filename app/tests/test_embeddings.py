@@ -8,7 +8,7 @@ from app.utils.variables import MODEL_TYPE__EMBEDDINGS
 def setup(args, test_client):
     test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
     # Get an embeddings model
-    response = test_client.get(f"{args['base_url']}/models")
+    response = test_client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
     model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
@@ -26,7 +26,7 @@ class TestEmbeddings:
             "model": MODEL_ID,
             "input": "Hello, this is a test.",
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
         response_json = response.json()
@@ -44,7 +44,7 @@ class TestEmbeddings:
             "model": MODEL_ID,
             "input": [1, 2, 3, 4, 5],  # List[int]
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
     def test_embeddings_token_integers_batch_input(self, args, test_client, setup):
@@ -55,7 +55,7 @@ class TestEmbeddings:
             "model": MODEL_ID,
             "input": [[1, 2, 3], [4, 5, 6]],  # List[List[int]]
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
     def test_embeddings_with_encoding_format(self, args, test_client, setup):
@@ -67,7 +67,7 @@ class TestEmbeddings:
             "input": "Test text",
             "encoding_format": "float",
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
     def test_embeddings_invalid_encoding_format(self, args, test_client, setup):
@@ -79,14 +79,14 @@ class TestEmbeddings:
             "input": "Test text",
             "encoding_format": "invalid_format",
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 422, f"error: invalid encoding format should return 422 ({response.status_code})"
 
     def test_embeddings_wrong_model_type(self, args, test_client):
         """Test the POST /embeddings endpoint with wrong model type."""
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         # Get a non-embeddings model (e.g., language model)
-        response = test_client.get(f"{args['base_url']}/models")
+        response = test_client.get("/v1/models")
         models = response.json()["data"]
         non_embeddings_model = [m for m in models if m["type"] != MODEL_TYPE__EMBEDDINGS][0]
 
@@ -94,7 +94,7 @@ class TestEmbeddings:
             "model": non_embeddings_model["id"],
             "input": "Test text",
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 422, f"error: wrong model type should return 400 ({response.status_code})"
 
     def test_embeddings_batch_input(self, args, test_client, setup):
@@ -105,7 +105,7 @@ class TestEmbeddings:
             "model": MODEL_ID,
             "input": ["Hello, this is a test.", "This is another test."],
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
 
         response_json = response.json()
@@ -124,7 +124,7 @@ class TestEmbeddings:
             "model": MODEL_ID,
             "input": "",
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 422, f"error: empty input should return 422 ({response.status_code})"
 
     def test_embeddings_invalid_model(self, args, test_client):
@@ -134,7 +134,7 @@ class TestEmbeddings:
             "model": "invalid_model_id",
             "input": "Hello, this is a test.",
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 404, f"error: invalid model should return 404 ({response.status_code})"
 
     def test_embeddings_missing_input(self, args, test_client, setup):
@@ -144,7 +144,7 @@ class TestEmbeddings:
         params = {
             "model": MODEL_ID,
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 422, f"error: missing input should return 422 ({response.status_code})"
 
     def test_embeddings_model_alias(self, args, test_client, setup):
@@ -159,5 +159,5 @@ class TestEmbeddings:
             "model": aliases[0],
             "input": "Hello, this is a test.",
         }
-        response = test_client.post(f"{args['base_url']}/embeddings", json=params)
+        response = test_client.post("/v1/embeddings", json=params)
         assert response.status_code == 200, f"error: create embeddings ({response.status_code})"
