@@ -7,6 +7,11 @@ class ParsingFileFailedException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
+class InvalidParserFileException(HTTPException):
+    def __init__(self, detail: str = "Parser is not available.") -> None:
+        super().__init__(status_code=400, detail=detail)
+
+
 class NoChunksToUpsertException(HTTPException):
     def __init__(self, detail: str = "No chunks to upsert.") -> None:
         super().__init__(status_code=400, detail=detail)

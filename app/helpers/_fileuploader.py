@@ -1,5 +1,5 @@
 import traceback
-from typing import List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 from fastapi import UploadFile
 
@@ -9,7 +9,13 @@ from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDF
 from app.schemas.chunks import Chunk
 from app.schemas.data import ParserOutput
 from app.schemas.security import User
-from app.utils.exceptions import InvalidJSONFormatException, NoChunksToUpsertException, ParsingFileFailedException, UnsupportedFileTypeException
+from app.utils.exceptions import (
+    InvalidJSONFormatException,
+    InvalidParserFileException,
+    NoChunksToUpsertException,
+    ParsingFileFailedException,
+    UnsupportedFileTypeException,
+)
 from app.utils.logging import logger
 from app.utils.variables import CHUNKERS, DEFAULT_CHUNKER, FILE_TYPE__HTML, FILE_TYPE__JSON, FILE_TYPE__MD, FILE_TYPE__PDF
 
@@ -29,12 +35,13 @@ class FileUploader:
         self.collection = self.search.get_collections(collection_ids=[collection_id], user=self.user)[0]
         self.collection_id = collection_id
 
-    def parse(self, file: UploadFile) -> List[ParserOutput]:
+    def parse(self, file: UploadFile, metadata: Optional[Dict]) -> List[ParserOutput]:
         file_type = file.filename.split(".")[-1]
         if file_type not in self.TYPE_DICT.keys():
             raise UnsupportedFileTypeException()
 
         file_type = self.TYPE_DICT[file_type]
+        parser = None
 
         if file_type == FILE_TYPE__PDF:
             parser = PDFParser(collection_id=self.collection_id)
@@ -49,7 +56,10 @@ class FileUploader:
             parser = MarkdownParser(collection_id=self.collection_id)
 
         try:
-            output = parser.parse(file=file)
+            if parser:
+                output = parser.parse(file=file, metadata=metadata)
+            else:
+                raise InvalidParserFileException()
         except Exception as e:
             logger.debug(traceback.format_exc())
             if isinstance(e, InvalidJSONFormatException):
