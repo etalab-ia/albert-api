@@ -95,6 +95,7 @@ class Config(ConfigBaseModel):
     models: List[Model]
     databases: List[Database]
     internet: List[Internet] = Field(default=[Internet()], max_length=1)
+    disabled_endpoints: List[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
@@ -134,6 +135,9 @@ class Settings(BaseSettings):
     # config
     config_file: str = "config.yml"
 
+    # disabled endpoints
+    disabled_endpoints: List[str] = Field(default_factory=list)
+
     # app
     app_name: str = DEFAULT_APP_NAME
     app_contact_url: Optional[str] = None
@@ -158,6 +162,7 @@ class Settings(BaseSettings):
         values.rate_limit = config.rate_limit
         values.internet = config.internet[0]
         values.models = config.models
+        values.disabled_endpoints = values.disabled_endpoints or config.disabled_endpoints
 
         values.databases = SimpleNamespace()
         values.databases.redis = next((database for database in config.databases if database.type == DATABASE_TYPE__REDIS), None)
