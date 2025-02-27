@@ -41,14 +41,27 @@ def health(user: User = Security(dependency=check_api_key)) -> Response:
     return Response(status_code=200)
 
 
-app.include_router(router=models.router, tags=["Models"], prefix="/v1")
-app.include_router(router=chat.router, tags=["Chat"], prefix="/v1")
-app.include_router(router=completions.router, tags=["Completions"], prefix="/v1")
-app.include_router(router=embeddings.router, tags=["Embeddings"], prefix="/v1")
-app.include_router(router=audio.router, tags=["Audio"], prefix="/v1")
-app.include_router(router=rerank.router, tags=["Reranking"], prefix="/v1")
-app.include_router(router=search.router, tags=["Search"], prefix="/v1")
-app.include_router(router=collections.router, tags=["Collections"], prefix="/v1")
-app.include_router(router=files.router, tags=["Files"], prefix="/v1")
-app.include_router(router=documents.router, tags=["Documents"], prefix="/v1")
-app.include_router(router=chunks.router, tags=["Chunks"], prefix="/v1")
+disabled_endpoints = set(settings.disabled_endpoints)
+
+if "models" not in disabled_endpoints:
+    app.include_router(models.router, tags=["Models"], prefix="/v1")
+if "chat" not in disabled_endpoints:
+    app.include_router(chat.router, tags=["Chat"], prefix="/v1")
+if "completions" not in disabled_endpoints:
+    app.include_router(completions.router, tags=["Completions"], prefix="/v1")
+if "embeddings" not in disabled_endpoints:
+    app.include_router(embeddings.router, tags=["Embeddings"], prefix="/v1")
+if "audio" not in disabled_endpoints:
+    app.include_router(audio.router, tags=["Audio"], prefix="/v1")
+if "rerank" not in disabled_endpoints:
+    app.include_router(rerank.router, tags=["Reranking"], prefix="/v1")
+if "search" not in disabled_endpoints:
+    app.include_router(search.router, tags=["Search"], prefix="/v1")
+if "collections" not in disabled_endpoints:
+    app.include_router(collections.router, tags=["Collections"], prefix="/v1")
+if "files" not in disabled_endpoints:
+    app.include_router(files.router, tags=["Files"], prefix="/v1")
+if "documents" not in disabled_endpoints:
+    app.include_router(documents.router, tags=["Documents"], prefix="/v1")
+if "chunks" not in disabled_endpoints:
+    app.include_router(chunks.router, tags=["Chunks"], prefix="/v1")

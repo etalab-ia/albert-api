@@ -14,6 +14,7 @@
 | CONFIG_FILE | Optionnel | Chemin vers le fichier de configuration (défaut : "config.yml") |
 | MIDDLEWARES | Optionnel | Activer ou désactiver les middlewares (défaut : "True") |
 | LOG_LEVEL | Optionnel | Niveau de journalisation (défaut : INFO) |
+| DISABLED_ENDPOINTS | Optionnel | Liste des endpoints de l'API désactivés (défaut : []). A entrer sous forme de liste, exemple `DISABLED_ENDPOINTS='["embeddings", "audio"]'` |
 
 #### UI
 
@@ -39,6 +40,7 @@ Les sections du fichier de configuration sont les suivantes :
 | Section | Requis | Description |
 | --- | --- | --- |
 | rate_limit | Optionnel | Définit les limites de fréquence d'accès à l'API. |
+| disabled_endpoints | Optionnel | Définit les endpoints de l'API désactivés. |
 | models | Requis | Définit les modèles. |
 | internet | Optionel | Définit l'API de moteur de recherche internet. |
 | databases | Requis | Définit les bases de données. |
@@ -55,6 +57,18 @@ Les sections du fichier de configuration sont les suivantes :
 rate_limit:
   by_ip: "100/minute"
   by_user: "1000/minute"
+```
+
+#### disabled_endpoints
+
+Liste de chaînes de caractères, sans arguments. Les valeurs possibles correspondent aux noms de fichiers dans app.endpoints.
+
+**Exemple**
+```yaml
+disabled_endpoints:
+  - models
+  - chat
+  - completions
 ```
 
 #### models
