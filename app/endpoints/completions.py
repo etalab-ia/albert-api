@@ -18,7 +18,7 @@ async def completions(request: Request, body: CompletionRequest, user: User = Se
     """
 
     model = models.registry[body.model]
-    client = model.get_client(endpoint=request.url.path)
+    client = model.get_client(endpoint=ENDPOINT__COMPLETIONS)
     response = await client.forward_request(method="POST", json=body.model_dump())
 
     return Completions(**response.json())

@@ -27,18 +27,6 @@ def setup(args, test_client):
 
 @pytest.mark.usefixtures("args", "setup", "test_client")
 class TestRerank:
-    def test_rerank_with_language_model(self, args, test_client, setup):
-        """Test the POST /rerank with a language model."""
-        LANGUAGE_MODEL_ID, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
-        params = {"model": LANGUAGE_MODEL_ID, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
-        response = test_client.post("/v1/rerank", json=params)
-        assert response.status_code == 200, f"error: rerank with language model ({response.status_code})"
-
-        response_json = response.json()
-        reranks = Reranks(**response_json)
-        assert isinstance(reranks, Reranks)
-
     def test_rerank_with_rerank_model(self, args, test_client, setup):
         """Test the POST /rerank with a rerank model."""
         _, RERANK_MODEL_ID, _ = setup

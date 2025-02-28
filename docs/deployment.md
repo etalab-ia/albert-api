@@ -48,7 +48,7 @@ Les sections du fichier de configuration sont les suivantes :
 | Argument | Requis | Description | Type | Valeurs |
 | --- | --- | --- | --- | --- |
 | by_ip | Optionnel | Définit la limite de fréquence d'accès à l'API par adresse IP. | str |  | 
-| by_user | Optionnel | Définit la limite de fréquence d'accès à l'API par utilisateur. | str | |
+| by_user | Optionnel | Définit la limite de fréquence d'accès à l'API par utilisateur. | str |
 
 **Exemple**
 ```yaml
@@ -63,16 +63,17 @@ rate_limit:
 | --- | --- | --- | --- | --- |
 | id | Requis | ID du modèle affiché par l'API. | str | | 
 | type | Requis | Type de modèle. | str | `text-generation`,`text-embeddings-inference`,`automatic-speech-recognition`,`text-classification` (1) |
-| default_internet | Optionnel | Indique si le modèle sera le modèle utilisé pour la recherche sur internet (default : False). | bool | (2) |
+| default_internet | Optionnel | Indique si le modèle sera le modèle utilisé pour la recherche sur internet (défaut : False). | bool | (2) |
 | aliases | Optionnel | Alias du modèle. | list[str] |  |
-| routing_strategy | Optionnel | Stratégie de routage du modèle (default : `suffle`). | str | (3) |
+| routing_strategy | Optionnel | Stratégie de routage du modèle (défaut : `suffle`). | str | (3) |
 | clients | Requis | Définit les clients tiers nécessaires pour le modèle. | list[dict] | |
 | clients.model | Requis | ID du modèle tiers. | str | (4) |
 | clients.type | Requis | Type du client tiers. | str | `openai`,`vllm`,`tei` (5) |
+| clients.owned_by | Optionnel | Propriétaire du modèle (défaut : "Albert API"). | str | |
 | clients.args | Requis | Arguments du client tiers. | dict | |
 | clients.args.api_url | Requis | URL de l'API du client tiers. | str | (6) |
 | clients.args.api_key | Requis | Clé API du client tiers. | str | |
-| clients.args.timeout | Optionnel | Timeout (en secoundes) de la requête au client tiers (default : 120). | int | |
+| clients.args.timeout | Optionnel | Timeout (en secoundes) de la requête au client tiers (défaut : 120). | int | |
 
 **Exemple**
 

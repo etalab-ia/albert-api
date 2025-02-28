@@ -15,6 +15,7 @@ from app.utils.variables import (
     DEFAULT_TIMEOUT,
     INTERNET_TYPE__BRAVE,
     INTERNET_TYPE__DUCKDUCKGO,
+    MODEL_CLIENT_TYPE__ALBERT,
     MODEL_CLIENT_TYPE__OPENAI,
     MODEL_CLIENT_TYPE__TEI,
     MODEL_CLIENT_TYPE__VLLM,
@@ -49,7 +50,7 @@ class ModelClientArgs(ConfigBaseModel):
 
 class ModelClient(ConfigBaseModel):
     model: str
-    type: Literal[MODEL_CLIENT_TYPE__OPENAI, MODEL_CLIENT_TYPE__TEI, MODEL_CLIENT_TYPE__VLLM]
+    type: Literal[MODEL_CLIENT_TYPE__ALBERT, MODEL_CLIENT_TYPE__OPENAI, MODEL_CLIENT_TYPE__TEI, MODEL_CLIENT_TYPE__VLLM]
     args: ModelClientArgs
 
 
@@ -57,6 +58,7 @@ class Model(ConfigBaseModel):
     id: str
     type: Literal[MODEL_TYPE__LANGUAGE, MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__AUDIO, MODEL_TYPE__RERANK]
     aliases: List[str] = []
+    owned_by: str = DEFAULT_APP_NAME
     default_internet: bool = False
     routing_strategy: Literal[ROUTER_STRATEGY__ROUND_ROBIN, ROUTER_STRATEGY__SHUFFLE] = ROUTER_STRATEGY__SHUFFLE
     clients: List[ModelClient]
