@@ -15,7 +15,7 @@ async def rerank(request: Request, body: RerankRequest, user: User = Security(ch
     Creates an ordered array with each text assigned a relevance score, based on the query.
     """
     model = models.registry[body.model]
-    client = model.get_client(endpoint=request.url.path)
-    data = await client.rerank.create(prompt=body.prompt, input=body.input, model=client.model)
+    client = model.get_client(endpoint=ENDPOINT__RERANK)
+    response = await client.forward_request(method="POST", json=body.model_dump())
 
-    return Reranks(data=data)
+    return Reranks(**response.json())

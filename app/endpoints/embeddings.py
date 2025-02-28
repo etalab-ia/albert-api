@@ -16,7 +16,7 @@ async def embeddings(request: Request, body: EmbeddingsRequest, user: User = Sec
     """
 
     model = models.registry[body.model]
-    client = model.get_client(endpoint=request.url.path)
+    client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
     response = await client.forward_request(method="POST", json=body.model_dump())
 
     return Embeddings(**response.json())

@@ -14,7 +14,7 @@ router = APIRouter()
 @router.get(path="/models")
 async def get_models(request: Request, model: Optional[str] = None, user: User = Security(check_api_key)) -> Union[Models, Model]:
     """
-    Lists the currently available models, and provides basic information about each one such as the owner and availability.
+    Lists the currently available models, and provides basic informations.
     """
 
     data = models.registry.list(model=model)

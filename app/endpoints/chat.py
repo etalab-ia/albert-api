@@ -59,7 +59,7 @@ async def chat_completions(
 
     # select client
     model = models.registry[body["model"]]
-    client = model.get_client(endpoint=request.url.path)
+    client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case
     if not body["stream"]:

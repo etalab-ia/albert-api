@@ -14,19 +14,19 @@ from app.utils.variables import (
 )
 
 
-class OpenaiModelClient(AsyncOpenAI, BaseModelClient):
+class AlbertModelClient(AsyncOpenAI, BaseModelClient):
     ENDPOINT_TABLE = {
         ENDPOINT__AUDIO_TRANSCRIPTIONS: "/v1/audio/transcriptions",
         ENDPOINT__CHAT_COMPLETIONS: "/v1/chat/completions",
         ENDPOINT__COMPLETIONS: "/v1/completions",
         ENDPOINT__EMBEDDINGS: "/v1/embeddings",
         ENDPOINT__MODELS: "/v1/models",
-        ENDPOINT__RERANK: None,
+        ENDPOINT__RERANK: "/v1/rerank",
     }
 
     def __init__(self, model: str, api_url: str, api_key: str, timeout: int) -> None:
         """
-        Initialize the OpenAI model client and check if the model is available.
+        Initialize the Albert model client and check if the model is available.
         """
         self.model = model
         self.api_url = api_url
