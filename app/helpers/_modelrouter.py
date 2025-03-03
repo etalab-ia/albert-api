@@ -2,7 +2,6 @@ from itertools import cycle
 import random
 import time
 import traceback
-from typing import Optional
 from urllib.parse import urljoin
 
 import requests
@@ -11,8 +10,11 @@ from app.clients.model import BaseModelClient as ModelClient
 from app.schemas.settings import Model as ModelSettings
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.logging import logger
-from app.utils.settings import settings as app_settings
 from app.utils.variables import (
+    ENDPOINT__AUDIO_TRANSCRIPTIONS,
+    ENDPOINT__CHAT_COMPLETIONS,
+    ENDPOINT__EMBEDDINGS,
+    ENDPOINT__RERANK,
     MODEL_TYPE__AUDIO,
     MODEL_TYPE__EMBEDDINGS,
     MODEL_TYPE__LANGUAGE,
@@ -24,10 +26,10 @@ from app.utils.variables import (
 
 class ModelRouter:
     ENDPOINT_MODEL_TYPE_TABLE = {
-        "chat/completions": [MODEL_TYPE__LANGUAGE],
-        "embeddings": [MODEL_TYPE__EMBEDDINGS],
-        "audio/transcriptions": [MODEL_TYPE__AUDIO],
-        "rerank": [MODEL_TYPE__LANGUAGE, MODEL_TYPE__RERANK],
+        ENDPOINT__CHAT_COMPLETIONS: [MODEL_TYPE__LANGUAGE],
+        ENDPOINT__EMBEDDINGS: [MODEL_TYPE__EMBEDDINGS],
+        ENDPOINT__AUDIO_TRANSCRIPTIONS: [MODEL_TYPE__AUDIO],
+        ENDPOINT__RERANK: [MODEL_TYPE__RERANK],
     }
 
     def __init__(self, model: ModelSettings):
@@ -36,9 +38,13 @@ class ModelRouter:
 
         for client in model.clients:
             try:
-                client = ModelClient.import_module(type=client.type)(settings=client)
-                max_context_length = client.models.list().data[0].max_context_length
-                max_context_lengths.append(max_context_length)
+                client = ModelClient.import_module(type=client.type)(
+                    model=client.model,
+                    api_url=client.args.api_url,
+                    api_key=client.args.api_key,
+                    timeout=client.args.timeout,
+                )
+                max_context_lengths.append(client.max_context_length)
             except Exception:
                 logger.error(msg=f"client of {model.id} is unavailable: skipping.")
                 logger.debug(msg=traceback.format_exc())
@@ -47,7 +53,7 @@ class ModelRouter:
             vector_size = None
             if model.type == MODEL_TYPE__EMBEDDINGS:
                 response = requests.post(
-                    url=urljoin(base=str(client.base_url), url=client.ENDPOINT_TABLE["embeddings"]),
+                    url=urljoin(base=client.api_url, url=client.ENDPOINT_TABLE[ENDPOINT__EMBEDDINGS]),
                     headers={"Authorization": f"Bearer {client.api_key}"},
                     json={"model": client.model, "input": "hello world"},
                     timeout=client.timeout,
@@ -73,7 +79,7 @@ class ModelRouter:
         # set attributes of the model (return by /v1/models endpoint)
         self.id = model.id
         self.type = model.type
-        self.owned_by = app_settings.app_name
+        self.owned_by = model.owned_by
         self.created = round(time.time())
         self.aliases = model.aliases
         self.max_context_length = max_context_length
@@ -86,14 +92,18 @@ class ModelRouter:
 
         logger.info(msg=f"adding {model.id}: done.")
 
-    def get_client(self, endpoint: Optional[str] = None) -> ModelClient:
+    def get_client(self, endpoint: str) -> ModelClient:
         if endpoint and self.type not in self.ENDPOINT_MODEL_TYPE_TABLE[endpoint]:
             raise WrongModelTypeException()
 
         if self._routing_strategy == ROUTER_STRATEGY__ROUND_ROBIN:
-            return next(self._cycle)
+            client = self._routing_strategy_round_robin()
         elif self._routing_strategy == ROUTER_STRATEGY__SHUFFLE:
-            return random.choice(self._clients)
+            client = self._routing_strategy_shuffle()
+
+        client.endpoint = endpoint
+
+        return client
 
     def _routing_strategy_shuffle(self) -> ModelClient:
         return random.choice(self._clients)

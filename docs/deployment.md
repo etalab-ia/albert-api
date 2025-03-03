@@ -48,7 +48,7 @@ Les sections du fichier de configuration sont les suivantes :
 | Argument | Requis | Description | Type | Valeurs |
 | --- | --- | --- | --- | --- |
 | by_ip | Optionnel | Définit la limite de fréquence d'accès à l'API par adresse IP. | str |  | 
-| by_user | Optionnel | Définit la limite de fréquence d'accès à l'API par utilisateur. | str | |
+| by_user | Optionnel | Définit la limite de fréquence d'accès à l'API par utilisateur. | str |
 
 **Exemple**
 ```yaml
@@ -63,16 +63,17 @@ rate_limit:
 | --- | --- | --- | --- | --- |
 | id | Requis | ID du modèle affiché par l'API. | str | | 
 | type | Requis | Type de modèle. | str | `text-generation`,`text-embeddings-inference`,`automatic-speech-recognition`,`text-classification` (1) |
-| default_internet | Optionnel | Indique si le modèle sera le modèle utilisé pour la recherche sur internet (default : False). | bool | (2) |
+| default_internet | Optionnel | Indique si le modèle sera le modèle utilisé pour la recherche sur internet (défaut : False). | bool | (2) |
 | aliases | Optionnel | Alias du modèle. | list[str] |  |
-| routing_strategy | Optionnel | Stratégie de routage du modèle (default : `suffle`). | str | (3) |
+| routing_strategy | Optionnel | Stratégie de routage du modèle (défaut : `suffle`). | str | (3) |
 | clients | Requis | Définit les clients tiers nécessaires pour le modèle. | list[dict] | |
 | clients.model | Requis | ID du modèle tiers. | str | (4) |
 | clients.type | Requis | Type du client tiers. | str | `openai`,`vllm`,`tei` (5) |
-| clients.args | Requis | Arguments du client tiers. | dict | (6) |
-| clients.args.base_url | Requis | URL de l'API du client tiers. | str | (7) |
+| clients.owned_by | Optionnel | Propriétaire du modèle (défaut : "Albert API"). | str | |
+| clients.args | Requis | Arguments du client tiers. | dict | |
+| clients.args.api_url | Requis | URL de l'API du client tiers. | str | (6) |
 | clients.args.api_key | Requis | Clé API du client tiers. | str | |
-| clients.args.timeout | Optionnel | Timeout (en secoundes) de la requête au client tiers (default : 120). | int | |
+| clients.args.timeout | Optionnel | Timeout (en secoundes) de la requête au client tiers (défaut : 120). | int | |
 
 **Exemple**
 
@@ -87,13 +88,13 @@ models:
       - model: gpt-3.5-turbo 
         type: openai
         args:
-          base_url: https://api.openai.com/v1
+          api_url: https://api.openai.com
           api_key: sk-...sA
           timeout: 60
       - model: meta-llama/Llama-3.1-8B-Instruct
         type: vllm
         args:
-          base_url: http://.../v1
+          api_url: http://localhost:8000
           api_key: sf...Df
           timeout: 60
 
@@ -104,8 +105,14 @@ models:
       - model: text-embedding-ada-003
         type: openai
         args:
-          base_url: https://api.openai.com/v1
+          api_url: https://api.openai.com
           api_key: sk-...sA
+          timeout: 60
+      - model: bge-m3
+        type: tei
+        args:
+          api_url: http://localhost:8001
+          api_key: sf...Df
           timeout: 60
 ```
 
@@ -124,19 +131,15 @@ Les types de modèles correspondent à la convention proposé par HuggingFace Hu
 
 Voir section [internet](#internet).
 
-**(3) Argument acceptées par le client de modèle**
+**(3) Stratégie de routage**
 
-En plus de `base_url`, `api_key`, `timeout`, les clients de modèle acceptent tous les arguments du client python OpenAI ([voir les arguments](https://github.com/openai/openai-python/blob/7193688e364bd726594fe369032e813ced1bdfe2/src/openai/_client.py#L74)).
+Voir [routing - Les stratégies-de-routage](routing.md#stratégies-de-routage).
 
 **(4) Model**
 
 Voir [routing - Exemple de configuration](routing.md#exemple-de-configuration).
 
-**(5) Stratégie de routage**
-
-Voir [routing - Les stratégies-de-routage](routing.md#stratégies-de-routage).
-
-**(6) Types de client de modèle**
+**(5) Types de client de modèle**
 
 | Type | Documentation |
 | --- | --- |
@@ -146,13 +149,15 @@ Voir [routing - Les stratégies-de-routage](routing.md#stratégies-de-routage).
 
 Pour plus d'informations, voir [models](./models.md).
 
-**(7) Format de `base_url` par type de client**
+**(6) Format de `api_url` par type de client**
 
 | Client | Format |
 | --- | --- |
-| OpenAI | `http(s)://.../v1` |
-| vLLM | `http(s)://.../v1` |
-| TEI | `http(s)://...` |
+| OpenAI | `https://api.openai.com` |
+| vLLM | `http://host:port` |
+| TEI | `http://host:port` |
+
+> ❗️ Uniquement la racine de l'URL doit être renseignée, ne pas inclure `/v1` dans l'URL.
 
 #### databases
 

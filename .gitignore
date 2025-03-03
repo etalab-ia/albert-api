@@ -204,3 +204,4 @@ terraform.rc
 /docs/tutorials/*.wav
 /docs/tutorials/*.mp3
 app/tests/cassettes/
+uv.lock

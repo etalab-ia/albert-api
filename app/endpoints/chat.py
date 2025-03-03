@@ -11,11 +11,12 @@ from app.schemas.security import User
 from app.utils.lifespan import databases, internet, limiter, models
 from app.utils.security import check_api_key, check_rate_limit
 from app.utils.settings import settings
+from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 router = APIRouter()
 
 
-@router.post(path="/chat/completions")
+@router.post(path=ENDPOINT__CHAT_COMPLETIONS)
 @limiter.limit(limit_value=settings.rate_limit.by_user, key_func=lambda request: check_rate_limit(request=request))
 async def chat_completions(
     request: Request, body: ChatCompletionRequest, user: User = Security(dependency=check_api_key)
@@ -58,12 +59,11 @@ async def chat_completions(
 
     # select client
     model = models.registry[body["model"]]
-    client = model.get_client(endpoint="chat/completions")
+    client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case
     if not body["stream"]:
         response = await client.forward_request(
-            endpoint="chat/completions",
             method="POST",
             json=body,
             additional_data_value=searches,
@@ -74,7 +74,6 @@ async def chat_completions(
     # stream case
     return StreamingResponseWithStatusCode(
         content=client.forward_stream(
-            endpoint="chat/completions",
             method="POST",
             json=body,
             additional_data_value=searches,

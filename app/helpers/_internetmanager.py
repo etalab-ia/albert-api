@@ -8,6 +8,7 @@ from app.clients.internet import BaseInternetClient as InternetClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.data.parsers import HTMLParser
 from app.schemas.chunks import Chunk
+from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 from ._modelregistry import ModelRegistry
 
@@ -84,7 +85,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
     async def _get_web_query(self, prompt: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
         model = self.models[self.models.internet_default_language_model]
-        client = model.get_client(endpoint="chat/completions")
+        client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
         response = await client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
