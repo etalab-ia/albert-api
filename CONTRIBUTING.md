@@ -63,24 +63,58 @@ Pour plus d'information sur le déploiement des services, veuillez consulter la 
 
 Merci, avant chaque pull request, de vérifier le bon déploiement de votre API en exécutant des tests unitaires.
 
-Pour exécuter les tests unitaires à la racine du projet, veuillez suivre les instructions suivantes :
+Pour exécuter les tests unitaires à la racine du projet, exécutez la commande suivante :
     
 ```bash
-PYTHONPATH=. pytest -v --config-file=pyproject.toml --api-key-user API_KEY_USER --api-key-admin API_KEY_ADMIN --log-cli-level=INFO
+CONFIG_FILE=<path to config file> PYTHONPATH=. pytest --config-file=pyproject.toml --api-key-user <api key user> --api-key-admin <api key admin>
 ```
 
-Pour utiliser le module testing de VSCode, veuillez ajouter ceci dans .vscode/settings.json :
+Pour n'exécuter qu'une partie des tests, par exemple les test *audio*, exécutez la commande suivante :
+
+```bash
+CONFIG_FILE=<path to config file> PYTHONPATH=. pytest app/tests/test_audio.py --config-file=pyproject.toml --api-key-user <api key user> --api-key-admin <api key admin>
+```
+
+Pour mettre à jour les snapshots, exécutez la commande suivante :
+
+```bash
+CONFIG_FILE=<path to config file> PYTHONPATH=. pytest --config-file=pyproject.toml --api-key-user <api key user> --api-key-admin <api key admin> --update-snapshots
+```
+
+## Configurer les tests dans VSCode
+
+Pour utiliser le module testing de VSCode, veuillez la configuration suivante dans votre fichier *.vscode/settings.json* :
 
 ```json
 {
     "python.testing.pytestArgs": [
         "app/tests",
-        "-v",
-        "--api-key-user=API_KEY_USER",
-        "--api-key-admin=API_KEY_ADMIN"
+        "--config-file=pyproject.toml",
+        "--api-key-user=<api key user>",
+        "--api-key-admin=<api key admin>"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true
+}
+```
+
+Afin de spéficier les variables d'environnement nécessaires pour les tests, vous devez également créer un fichier *.vscode/launch.json* avec la configuration suivante ou l'ajouter à votre fichier existant :
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Test",
+            "purpose": ["debug-test"],
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "args": ["--color=yes"],
+            "env": {"CONFIG_FILE": "<path to config file>"},
+            "console": "integratedTerminal",
+        }
+    ]
 }
 ```
 

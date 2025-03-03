@@ -136,7 +136,8 @@ async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(description="The audio file object (not file name) to transcribe, in one of these formats: mp3 or wav."),
     model: str = Form(
-        description="ID of the model to use. Call `/v1/models` endpoint to get the list of available models, only `automatic-speech-recognition` model type is supported."
+        ...,
+        description="ID of the model to use. Call `/v1/models` endpoint to get the list of available models, only `automatic-speech-recognition` model type is supported.",
     ),
     language: Literal[*SUPPORTED_LANGUAGES_VALUES] = Form(
         default="fr",
@@ -162,7 +163,13 @@ async def audio_transcriptions(
     # @TODO: Implement verbose response format
 
     file_content = await file.read()
-    data = {"language": language, "response_format": response_format, "temperature": temperature, "timestamp_granularities": timestamp_granularities}
+    data = {
+        "model": model,
+        "language": language,
+        "response_format": response_format,
+        "temperature": temperature,
+        "timestamp_granularities": timestamp_granularities,
+    }
 
     model = models.registry[model]
     client = model.get_client(endpoint=ENDPOINT__AUDIO_TRANSCRIPTIONS)

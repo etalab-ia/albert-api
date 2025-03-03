@@ -68,7 +68,7 @@ rate_limit:
 | routing_strategy | Optionnel | Stratégie de routage du modèle (défaut : `suffle`). | str | (3) |
 | clients | Requis | Définit les clients tiers nécessaires pour le modèle. | list[dict] | |
 | clients.model | Requis | ID du modèle tiers. | str | (4) |
-| clients.type | Requis | Type du client tiers. | str | `openai`,`vllm`,`tei` (5) |
+| clients.type | Requis | Type du client tiers. | str | `openai`,`vllm`,`tei`,`albert` (5) |
 | clients.owned_by | Optionnel | Propriétaire du modèle (défaut : "Albert API"). | str | |
 | clients.args | Requis | Arguments du client tiers. | dict | |
 | clients.args.api_url | Requis | URL de l'API du client tiers. | str | (6) |
@@ -151,13 +151,7 @@ Pour plus d'informations, voir [models](./models.md).
 
 **(6) Format de `api_url` par type de client**
 
-| Client | Format |
-| --- | --- |
-| OpenAI | `https://api.openai.com` |
-| vLLM | `http://host:port` |
-| TEI | `http://host:port` |
-
-> ❗️ Uniquement la racine de l'URL doit être renseignée, ne pas inclure `/v1` dans l'URL.
+Uniquement la racine de l'URL doit être renseignée, ne pas inclure `/v1` dans l'URL.
 
 #### databases
 
