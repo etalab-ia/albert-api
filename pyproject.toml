@@ -31,6 +31,7 @@ app = [
     "python-multipart==0.0.20",
     "uvicorn==0.34.0",
     "slowapi==0.1.9",
+    "psycopg2==2.9.10",
 ]
 dev = [
     "ruff==0.6.5",
