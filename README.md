@@ -29,6 +29,7 @@ L'API Albert permet d'être un proxy entre des clients API d'IA générative et 
 | [OpenAI](https://platform.openai.com/docs/api-reference) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
 | [vLLM](https://github.com/vllm-project/vllm) | v0.6.6.post1 | • language |
 | [HuggingFace Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) | v1.5 | • embeddings<br>• reranking |
+| [Albert](https://github.com/etalab-ia/albert-api) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
 
 
 ## ⚙️ Fonctionnalités avancées

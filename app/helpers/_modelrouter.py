@@ -20,7 +20,6 @@ from app.utils.variables import (
     MODEL_TYPE__LANGUAGE,
     MODEL_TYPE__RERANK,
     ROUTER_STRATEGY__ROUND_ROBIN,
-    ROUTER_STRATEGY__SHUFFLE,
 )
 
 
@@ -98,7 +97,7 @@ class ModelRouter:
 
         if self._routing_strategy == ROUTER_STRATEGY__ROUND_ROBIN:
             client = self._routing_strategy_round_robin()
-        elif self._routing_strategy == ROUTER_STRATEGY__SHUFFLE:
+        else:  # ROUTER_STRATEGY__SHUFFLE
             client = self._routing_strategy_shuffle()
 
         client.endpoint = endpoint
