@@ -203,3 +203,4 @@ terraform.rc
 /docs/tutorials/*.pdf
 /docs/tutorials/*.wav
 /docs/tutorials/*.mp3
+uv.lock

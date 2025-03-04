@@ -6,7 +6,7 @@ models:
       - model: gpt-3.5-turbo
         type: openai
         args:
-          base_url: https://api.openai.com/v1
+          api_url: https://api.openai.com
           api_key: sk-...aB
           timeout: 60
 
@@ -17,7 +17,7 @@ models:
       - model: text-embedding-3-small
         type: openai
         args:
-          base_url: https://api.openai.com/v1
+          api_url: https://api.openai.com
           api_key: sk-...aB
           timeout: 60
 

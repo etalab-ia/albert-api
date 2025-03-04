@@ -1,7 +1,8 @@
 import logging
+import os
 import pytest
 
-from app.schemas.audio import AudioTranscription, AudioTranscriptionVerbose
+from app.schemas.audio import AudioTranscription
 from app.utils.variables import MODEL_TYPE__AUDIO
 
 
@@ -21,76 +22,66 @@ def setup(args, test_client):
 
 @pytest.mark.usefixtures("args", "setup", "test_client")
 class TestAudio:
-    def test_audio_transcriptions_mp3(self, args, test_client, setup):
+    def test_audio_transcriptions_mp3(self, args, test_client, setup, snapshot):
         """Test the POST /audio/transcriptions endpoint with MP3 file"""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
-        with open("app/tests/assets/audio.mp3", "rb") as f:
-            files = {"file": ("test.mp3", f, "audio/mpeg")}
-            data = {
-                "model": MODEL_ID,
-                "language": "fr",
-                "prompt": "This is a test audio file",
-                "response_format": "json",
-                "temperature": 0,
-                "timestamp_granularities[]": ["segment"],
-            }
-            response = test_client.post("/v1/audio/transcriptions", files=files, data=data)
-            assert response.status_code == 200, f"error: audio transcription failed ({response.status_code})"
+        file_path = "app/tests/assets/audio.mp3"
+        with open(file_path, "rb") as file:
+            files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
+            data = {"model": MODEL_ID, "language": "fr", "response_format": "json", "temperature": 0}
+            response = test_client.post(
+                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args["api_key_user"]}"}
+            )
 
-            response_json = response.json()
-            if data["response_format"] == "verbose_json":
-                transcription = AudioTranscriptionVerbose(**response_json)
-                assert isinstance(transcription, AudioTranscriptionVerbose)
-            else:
-                transcription = AudioTranscription(**response_json)
-                assert isinstance(transcription, AudioTranscription)
+        assert response.status_code == 200, response.text
+        snapshot.assert_match(str(response.json()), "audio_transcriptions_mp3")
+        AudioTranscription(**response.json())  # test output format
 
-    def test_audio_transcriptions_text_output(self, args, test_client, setup):
+    def test_audio_transcriptions_text_output(self, args, test_client, setup, snapshot):
         """Test the POST /audio/transcriptions with text output"""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
-        with open("app/tests/assets/audio.mp3", "rb") as f:
-            files = {"file": ("test.mp3", f, "audio/mpeg")}
+        file_path = "app/tests/assets/audio.mp3"
+        with open(file_path, "rb") as file:
+            files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
             data = {"model": MODEL_ID, "language": "fr", "response_format": "text"}
-            response = test_client.post("/v1/audio/transcriptions", files=files, data=data)
-            assert response.status_code == 200, f"error: audio transcription failed ({response.status_code})"
-            assert isinstance(response.text, str), f"error: expected text output ({response.text})"
+            response = test_client.post(
+                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args["api_key_user"]}"}
+            )
 
-    def test_audio_transcriptions_wav(self, args, test_client, setup):
+        assert response.status_code == 200, response.text
+        snapshot.assert_match(str(response.text), "audio_transcriptions_text_output")
+        assert isinstance(response.text, str)
+
+    def test_audio_transcriptions_wav(self, args, test_client, setup, snapshot):
         """Test the POST /audio/transcriptions endpoint with WAV file"""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
-        with open("app/tests/assets/audio.wav", "rb") as f:
-            files = {"file": ("test.wav", f, "audio/wav")}
-            data = {
-                "model": MODEL_ID,
-                "language": "fr",
-                "prompt": "This is a test audio file",
-                "response_format": "json",
-                "temperature": 0,
-                "timestamp_granularities[]": ["segment"],
-            }
-            response = test_client.post("/v1/audio/transcriptions", files=files, data=data)
-            assert response.status_code == 200, f"error: audio transcription failed ({response.status_code})"
+        file_path = "app/tests/assets/audio.wav"
+        with open(file_path, "rb") as file:
+            files = {"file": (os.path.basename(file_path), file, "audio/wav")}
+            data = {"model": MODEL_ID, "language": "fr", "response_format": "json", "temperature": 0}
+            response = test_client.post(
+                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args["api_key_user"]}"}
+            )
 
-            response_json = response.json()
-            if data["response_format"] == "verbose_json":
-                transcription = AudioTranscriptionVerbose(**response_json)
-                assert isinstance(transcription, AudioTranscriptionVerbose)
-            else:
-                transcription = AudioTranscription(**response_json)
-                assert isinstance(transcription, AudioTranscription)
+        assert response.status_code == 200, response.text
+        snapshot.assert_match(str(response.json()), "audio_transcriptions_wav")
+        AudioTranscription(**response.json())  # test output format
 
-    def test_audio_transcriptions_invalid_model(self, args, test_client):
+    def test_audio_transcriptions_invalid_model(self, args, test_client, snapshot):
         """Test the POST /audio/transcriptions with invalid model"""
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        MODEL_ID = "invalid-model"
 
-        with open("app/tests/assets/audio.mp3", "rb") as f:
-            files = {"file": ("test.mp3", f, "audio/mpeg")}
-            data = {"model": "invalid-model", "language": "fr"}
-            response = test_client.post("/v1/audio/transcriptions", files=files, data=data)
-            assert response.status_code == 404, f"error: expected 404 for invalid model ({response.status_code})"
+        file_path = "app/tests/assets/audio.mp3"
+
+        with open(file_path, "rb") as file:
+            files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
+            data = {"model": MODEL_ID, "language": "fr"}
+            response = test_client.post(
+                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args["api_key_user"]}"}
+            )
+
+        assert response.status_code == 404, response.text
+        snapshot.assert_match(str(response.text), "audio_transcriptions_invalid_model")

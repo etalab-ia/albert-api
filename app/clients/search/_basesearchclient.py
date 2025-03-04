@@ -16,6 +16,7 @@ from app.schemas.search import Search
 from app.schemas.security import User
 from app.utils.logging import logger
 from app.utils.variables import (
+    ENDPOINT__EMBEDDINGS,
     COLLECTION_TYPE__PRIVATE,
     DATABASE_TYPE__ELASTIC,
     DATABASE_TYPE__QDRANT,
@@ -198,9 +199,9 @@ class BaseSearchClient(ABC):
         """
 
         model = self.models[model]
-        client = model.get_client()
+        client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         try:
-            response = await client.embeddings.create(input=input, model=client.model)
+            response = await client.embeddings.create(input=input, model=client.model, encoding_format="float")
         except Exception as e:
             logger.debug(traceback.format_exc())
             raise HTTPException(status_code=500, detail=e)

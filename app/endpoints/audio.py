@@ -7,6 +7,7 @@ from app.schemas.audio import AudioTranscription
 from app.utils.lifespan import models, limiter
 from app.utils.security import User, check_api_key, check_rate_limit
 from app.utils.settings import settings
+from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS
 
 router = APIRouter()
 
@@ -129,13 +130,14 @@ SUPPORTED_LANGUAGES = {
 SUPPORTED_LANGUAGES_VALUES = sorted(set(SUPPORTED_LANGUAGES.values())) + sorted(set(SUPPORTED_LANGUAGES.keys()))
 
 
-@router.post(path="/audio/transcriptions")
+@router.post(path=ENDPOINT__AUDIO_TRANSCRIPTIONS)
 @limiter.limit(limit_value=settings.rate_limit.by_user, key_func=lambda request: check_rate_limit(request=request))
 async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(description="The audio file object (not file name) to transcribe, in one of these formats: mp3 or wav."),
     model: str = Form(
-        description="ID of the model to use. Call `/v1/models` endpoint to get the list of available models, only `automatic-speech-recognition` model type is supported."
+        ...,
+        description="ID of the model to use. Call `/v1/models` endpoint to get the list of available models, only `automatic-speech-recognition` model type is supported.",
     ),
     language: Literal[*SUPPORTED_LANGUAGES_VALUES] = Form(
         default="fr",
@@ -161,14 +163,17 @@ async def audio_transcriptions(
     # @TODO: Implement verbose response format
 
     file_content = await file.read()
-    data = {"language": language, "response_format": response_format, "temperature": temperature, "timestamp_granularities": timestamp_granularities}
+    data = {
+        "model": model,
+        "language": language,
+        "response_format": response_format,
+        "temperature": temperature,
+        "timestamp_granularities": timestamp_granularities,
+    }
 
     model = models.registry[model]
-    client = model.get_client(endpoint="audio/transcriptions")
-
-    response = await client.forward_request(
-        endpoint="audio/transcriptions", method="POST", files={"file": (file.filename, file_content, file.content_type)}, data=data
-    )
+    client = model.get_client(endpoint=ENDPOINT__AUDIO_TRANSCRIPTIONS)
+    response = await client.forward_request(method="POST", files={"file": (file.filename, file_content, file.content_type)}, data=data)
 
     if response_format == "text":
         return PlainTextResponse(content=response.text)
