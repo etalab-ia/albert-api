@@ -6,7 +6,7 @@ from app.utils.variables import MODEL_TYPE__EMBEDDINGS
 
 @pytest.fixture(scope="module")
 def setup(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
     # Get an embeddings model
     response = test_client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
@@ -21,7 +21,7 @@ class TestEmbeddings:
     def test_embeddings_single_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with a single input."""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "input": "Hello, this is a test.",
@@ -39,7 +39,7 @@ class TestEmbeddings:
     def test_embeddings_token_integers_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with token integers input."""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "input": [1, 2, 3, 4, 5],  # List[int]
@@ -50,7 +50,7 @@ class TestEmbeddings:
     def test_embeddings_token_integers_batch_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with batch of token integers input."""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "input": [[1, 2, 3], [4, 5, 6]],  # List[List[int]]
@@ -61,7 +61,7 @@ class TestEmbeddings:
     def test_embeddings_with_encoding_format(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with encoding format."""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "input": "Test text",
@@ -73,7 +73,7 @@ class TestEmbeddings:
     def test_embeddings_invalid_encoding_format(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with invalid encoding format."""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "input": "Test text",
@@ -84,7 +84,7 @@ class TestEmbeddings:
 
     def test_embeddings_wrong_model_type(self, args, test_client):
         """Test the POST /embeddings endpoint with wrong model type."""
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         # Get a non-embeddings model (e.g., language model)
         response = test_client.get("/v1/models")
         models = response.json()["data"]
@@ -100,7 +100,7 @@ class TestEmbeddings:
     def test_embeddings_batch_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with batch input."""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "input": ["Hello, this is a test.", "This is another test."],
@@ -119,7 +119,7 @@ class TestEmbeddings:
     def test_embeddings_empty_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with empty input."""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "input": "",
@@ -129,7 +129,7 @@ class TestEmbeddings:
 
     def test_embeddings_invalid_model(self, args, test_client):
         """Test the POST /embeddings endpoint with invalid model."""
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": "invalid_model_id",
             "input": "Hello, this is a test.",
@@ -140,7 +140,7 @@ class TestEmbeddings:
     def test_embeddings_missing_input(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with missing input."""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
         }
@@ -150,7 +150,7 @@ class TestEmbeddings:
     def test_embeddings_model_alias(self, args, test_client, setup):
         """Test the POST /embeddings endpoint with a model alias."""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
 
         aliases = {model.id: model.aliases for model in settings.models}
         aliases = aliases[MODEL_ID]

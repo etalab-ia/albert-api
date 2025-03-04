@@ -12,7 +12,7 @@ from app.utils.variables import MODEL_TYPE__EMBEDDINGS, COLLECTION_DISPLAY_ID__I
 @pytest.fixture(scope="module")
 def setup(args, test_client):
     COLLECTION_ID = "pytest"
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"} if args else {}
 
     # Get a embedding model
     response = test_client.get("/v1/models")
@@ -20,7 +20,7 @@ def setup(args, test_client):
     EMBEDDINGS_MODEL_ID = [model["id"] for model in response if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
     logging.info(f"test model ID: {EMBEDDINGS_MODEL_ID}")
 
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
     # Create a collection
     response = test_client.post("/v1/collections", json={"name": "pytest-private", "model": EMBEDDINGS_MODEL_ID})
     COLLECTION_ID = response.json()["id"]
@@ -43,7 +43,7 @@ class TestSearch:
     def test_search(self, args, test_client, setup):
         """Test the POST /search response status code."""
         DOCUMENT_IDS, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         data = {"prompt": "Qui est Albert ?", "collections": [COLLECTION_ID], "k": 3}
         response = test_client.post("/v1/search", json=data)
         assert response.status_code == 200, f"error: search request ({response.status_code} - {response.text})"
@@ -58,7 +58,7 @@ class TestSearch:
     def test_search_with_score_threshold(self, args, test_client, setup):
         """Test search with a score threshold."""
         _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         data = {"prompt": "Erasmus", "collections": [COLLECTION_ID], "k": 3, "score_threshold": 0.5}
         response = test_client.post("/v1/search", json=data)
         assert response.status_code == 200
@@ -66,7 +66,7 @@ class TestSearch:
     def test_search_invalid_collection(self, args, test_client, setup):
         """Test search with an invalid collection."""
         _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         data = {"prompt": "Erasmus", "collections": [str(uuid.uuid4())], "k": 3}
         response = test_client.post("/v1/search", json=data)
         assert response.status_code == 404
@@ -74,7 +74,7 @@ class TestSearch:
     def test_search_invalid_k(self, args, test_client, setup):
         """Test search with an invalid k value."""
         _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         data = {"prompt": "Erasmus", "collections": [COLLECTION_ID], "k": 0}
         response = test_client.post("/v1/search", json=data)
         assert response.status_code == 422
@@ -82,7 +82,7 @@ class TestSearch:
     def test_search_empty_prompt(self, args, test_client, setup):
         """Test search with an empty prompt."""
         _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         data = {"prompt": "", "collections": [COLLECTION_ID], "k": 3}
         response = test_client.post("/v1/search", json=data)
         assert response.status_code == 422
@@ -90,7 +90,7 @@ class TestSearch:
     def test_search_internet_collection(self, args, test_client, setup):
         """Test search with the internet collection."""
         _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         data = {"prompt": "What is the largest planet in our solar system?", "collections": [COLLECTION_DISPLAY_ID__INTERNET], "k": 3}
         response = test_client.post("/v1/search", json=data)
         assert response.status_code == 200
@@ -123,7 +123,7 @@ class TestSearch:
     def test_semantic_search(self, args, test_client, setup):
         """Test semantic search."""
         _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         data = {"prompt": "Qui sont les érudits ? ", "collections": [COLLECTION_ID], "k": 3, "method": "semantic"}
         response = test_client.post("/v1/search", json=data)
         result = response.json()

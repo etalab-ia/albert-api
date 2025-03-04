@@ -8,7 +8,7 @@ from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE, MO
 
 @pytest.fixture(scope="module")
 def setup(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
     response = test_client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
@@ -30,7 +30,7 @@ class TestRerank:
     def test_rerank_with_rerank_model(self, args, test_client, setup):
         """Test the POST /rerank with a rerank model."""
         _, RERANK_MODEL_ID, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {"model": RERANK_MODEL_ID, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
         response = test_client.post("/v1/rerank", json=params)
         assert response.status_code == 200, f"error: rerank with rerank model ({response.status_code})"
@@ -42,7 +42,7 @@ class TestRerank:
     def test_rerank_with_wrong_model_type(self, args, test_client, setup):
         """Test the POST /rerank with a wrong model type."""
         _, _, EMBEDDINGS_MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {"model": EMBEDDINGS_MODEL_ID, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
         response = test_client.post("/v1/rerank", json=params)
         assert response.status_code == 422, f"error: rerank with wrong model type ({response.status_code})"
@@ -50,7 +50,7 @@ class TestRerank:
     def test_rerank_with_unknown_model(self, args, test_client, setup):
         """Test the POST /rerank with an unknown model."""
         _, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {"model": "unknown", "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
         response = test_client.post("/v1/rerank", json=params)
         assert response.status_code == 404, f"error: rerank with unknown model ({response.status_code})"

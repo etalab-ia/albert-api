@@ -8,7 +8,7 @@ from app.utils.settings import settings
 class TestModels:
     def test_get_models_response_status_code(self, args, test_client):
         """Test the GET /models response status code."""
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"} if args else {}
         response = test_client.get("/v1/models")
         assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
 
@@ -25,13 +25,13 @@ class TestModels:
 
     def test_get_models_non_existing_model(self, args, test_client):
         """Test the GET /models response status code for a non-existing model."""
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"} if args else {}
         response = test_client.get("/v1/models/non-existing-model")
         assert response.status_code == 404, f"error: retrieve non-existing model ({response.status_code})"
 
     def test_get_models_aliases(self, args, test_client):
         """Test the GET /models response status code for a non-existing model."""
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"} if args else {}
         model = settings.models[0]
 
         response = test_client.get(f"/v1/models/{model.id}")
