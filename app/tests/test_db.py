@@ -1,21 +1,8 @@
 from datetime import datetime
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
-from app.db.models import Base, Log
-
-
-@pytest.fixture(scope="function")
-def db_session():
-    """Create a test database session"""
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    yield session
-    session.close()
-    Base.metadata.drop_all(engine)
+from app.db.models import Log
+from sqlalchemy import desc
 
 
 class TestLogModel:
@@ -25,7 +12,7 @@ class TestLogModel:
         db_session.add(log)
         db_session.commit()
 
-        saved_log = db_session.query(Log).first()
+        saved_log = db_session.query(Log).order_by(desc(Log.id)).first()
         assert saved_log.user == "test_user"
         assert saved_log.endpoint == "/test/endpoint"
         assert saved_log.model == "test_model"
@@ -48,7 +35,7 @@ class TestLogModel:
         db_session.add(log)
         db_session.commit()
 
-        saved_log = db_session.query(Log).first()
+        saved_log = db_session.query(Log).order_by(desc(Log.id)).first()
         assert saved_log.token_per_sec is None
         assert saved_log.inter_token_latency is None
         assert saved_log.req_tokens_nb is None
