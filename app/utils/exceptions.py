@@ -22,6 +22,66 @@ class WrongSearchMethodException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
+class InvalidPasswordException(HTTPException):
+    def __init__(self, detail: str = "Invalid password."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class RoleAlreadyExistsException(HTTPException):
+    def __init__(self, detail: str = "Role already exists."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class DeleteRoleWithUsersException(HTTPException):
+    def __init__(self, detail: str = "Delete role with users is not allowed."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class DeleteMasterRoleException(HTTPException):
+    def __init__(self, detail: str = "Delete master role is not allowed."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class UpdateMasterRoleException(HTTPException):
+    def __init__(self, detail: str = "Update master role is not allowed."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class UserAlreadyExistsException(HTTPException):
+    def __init__(self, detail: str = "User already exists."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class DeleteMasterUserException(HTTPException):
+    def __init__(self, detail: str = "Delete master user is not allowed."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class UpdateMasterUserException(HTTPException):
+    def __init__(self, detail: str = "Update master user is not allowed."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class AddUserToMasterRoleException(HTTPException):
+    def __init__(self, detail: str = "Add user to master role is not allowed."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class TokenAlreadyExistsException(HTTPException):
+    def __init__(self, detail: str = "Token already exists."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class DeleteMasterTokenException(HTTPException):
+    def __init__(self, detail: str = "Delete master token is not allowed."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class CreateTokenForMasterUserException(HTTPException):
+    def __init__(self, detail: str = "Create token for master user is not allowed."):
+        super().__init__(status_code=400, detail=detail)
+
+
 # 403
 class InvalidAuthenticationSchemeException(HTTPException):
     def __init__(self, detail: str = "Invalid authentication scheme.") -> None:
@@ -46,6 +106,21 @@ class CollectionNotFoundException(HTTPException):
 
 class ModelNotFoundException(HTTPException):
     def __init__(self, detail: str = "Model not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
+class RoleNotFoundException(HTTPException):
+    def __init__(self, detail: str = "Role not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
+class TokenNotFoundException(HTTPException):
+    def __init__(self, detail: str = "Token not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
+class UserNotFoundException(HTTPException):
+    def __init__(self, detail: str = "User not found.") -> None:
         super().__init__(status_code=404, detail=detail)
 
 

@@ -10,3 +10,5 @@ ADD ./pyproject.toml ./pyproject.toml
 RUN pip install ".[app]"
 ADD ./app /home/albert/app
 ENV PYTHONPATH="/home/albert/app:${PYTHONPATH}"
+
+RUN alembic upgrade head

@@ -24,7 +24,6 @@ class ModelRegistry:
                 continue
 
             self.__dict__[model.id] = model
-
             self.models.append(model.id)
 
             for alias in model.aliases:

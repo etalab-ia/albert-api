@@ -2,98 +2,91 @@ import logging
 import os
 import uuid
 
+from fastapi.testclient import TestClient
 import pytest
 
 from app.schemas.search import Search, Searches
 from app.utils.logging import logger
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS, COLLECTION_DISPLAY_ID__INTERNET
+from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, MODEL_TYPE__EMBEDDINGS
 
 
 @pytest.fixture(scope="module")
-def setup(args, test_client):
+def setup(args, client: TestClient):
     COLLECTION_ID = "pytest"
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"}
+    client.headers = {"Authorization": f"Bearer {args["api_key_admin"]}"}
 
     # Get a embedding model
-    response = test_client.get("/v1/models")
+    response = client.get_user(url="/v1/models")
     response = response.json()["data"]
     EMBEDDINGS_MODEL_ID = [model["id"] for model in response if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
     logging.info(f"test model ID: {EMBEDDINGS_MODEL_ID}")
 
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
     # Create a collection
-    response = test_client.post("/v1/collections", json={"name": "pytest-private", "model": EMBEDDINGS_MODEL_ID})
+    response = client.post_user(url="/v1/collections", json={"name": "test-collection-private", "model": EMBEDDINGS_MODEL_ID})
     COLLECTION_ID = response.json()["id"]
 
     # Upload the file to the collection
     file_path = "app/tests/assets/json.json"
     files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
     data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % COLLECTION_ID}
-    response = test_client.post("/v1/files", data=data, files=files)
+    response = client.post_user(url="/v1/files", data=data, files=files)
 
     # Get document IDS
-    response = test_client.get(f"/v1/documents/{COLLECTION_ID}")
+    response = client.get_user(url=f"/v1/documents/{COLLECTION_ID}")
     DOCUMENT_IDS = [response.json()["data"][0]["id"], response.json()["data"][1]["id"]]
 
     yield DOCUMENT_IDS, COLLECTION_ID
 
 
-@pytest.mark.usefixtures("args", "cleanup_collections", "setup", "test_client")
+@pytest.mark.usefixtures("client", "setup", "cleanup")
 class TestSearch:
-    def test_search(self, args, test_client, setup):
+    def test_search(self, client: TestClient, setup):
         """Test the POST /search response status code."""
         DOCUMENT_IDS, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
-        data = {"prompt": "Qui est Albert ?", "collections": [COLLECTION_ID], "k": 3}
-        response = test_client.post("/v1/search", json=data)
-        assert response.status_code == 200, f"error: search request ({response.status_code} - {response.text})"
 
-        searches = Searches(**response.json())
-        assert isinstance(searches, Searches)
-        assert all(isinstance(search, Search) for search in searches.data)
+        data = {"prompt": "Qui est Albert ?", "collections": [COLLECTION_ID], "k": 3}
+        response = client.post_user(url="/v1/search", json=data)
+        assert response.status_code == 200, response.text
+
+        searches = Searches(**response.json())  # test output format
 
         search = searches.data[0]
         assert search.chunk.metadata.document_id in DOCUMENT_IDS
 
-    def test_search_with_score_threshold(self, args, test_client, setup):
+    def test_search_with_score_threshold(self, client: TestClient, setup):
         """Test search with a score threshold."""
         _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         data = {"prompt": "Erasmus", "collections": [COLLECTION_ID], "k": 3, "score_threshold": 0.5}
-        response = test_client.post("/v1/search", json=data)
-        assert response.status_code == 200
+        response = client.post_user(url="/v1/search", json=data)
+        assert response.status_code == 200, response.text
 
-    def test_search_invalid_collection(self, args, test_client, setup):
+    def test_search_invalid_collection(self, client: TestClient, setup):
         """Test search with an invalid collection."""
         _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         data = {"prompt": "Erasmus", "collections": [str(uuid.uuid4())], "k": 3}
-        response = test_client.post("/v1/search", json=data)
-        assert response.status_code == 404
+        response = client.post_user(url="/v1/search", json=data)
+        assert response.status_code == 404, response.text
 
-    def test_search_invalid_k(self, args, test_client, setup):
+    def test_search_invalid_k(self, client: TestClient, setup):
         """Test search with an invalid k value."""
         _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         data = {"prompt": "Erasmus", "collections": [COLLECTION_ID], "k": 0}
-        response = test_client.post("/v1/search", json=data)
-        assert response.status_code == 422
+        response = client.post_user(url="/v1/search", json=data)
+        assert response.status_code == 422, response.text
 
-    def test_search_empty_prompt(self, args, test_client, setup):
+    def test_search_empty_prompt(self, client: TestClient, setup):
         """Test search with an empty prompt."""
         _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         data = {"prompt": "", "collections": [COLLECTION_ID], "k": 3}
-        response = test_client.post("/v1/search", json=data)
-        assert response.status_code == 422
+        response = client.post_user(url="/v1/search", json=data)
+        assert response.status_code == 422, response.text
 
-    def test_search_internet_collection(self, args, test_client, setup):
+    def test_search_internet_collection(self, client: TestClient, setup):
         """Test search with the internet collection."""
         _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         data = {"prompt": "What is the largest planet in our solar system?", "collections": [COLLECTION_DISPLAY_ID__INTERNET], "k": 3}
-        response = test_client.post("/v1/search", json=data)
-        assert response.status_code == 200
+        response = client.post_user(url="/v1/search", json=data)
+        assert response.status_code == 200, response.text
 
         searches = Searches(**response.json())
         assert isinstance(searches, Searches)
@@ -106,7 +99,7 @@ class TestSearch:
             logger.info("No internet search results, the DuckDuckGo rate limit may have been exceeded.")
 
     # @TODO: Add test after elasticsearch migration
-    # def test_lexical_search(self, args, test_client, setup):
+    # def test_lexical_search(self, client, setup):
     #     """Test lexical search."""
 
     #     _, COLLECTION_ID = setup
@@ -120,14 +113,14 @@ class TestSearch:
     #     else:
     #         assert response.status_code == 400
 
-    def test_semantic_search(self, args, test_client, setup):
+    def test_semantic_search(self, client: TestClient, setup):
         """Test semantic search."""
         _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
         data = {"prompt": "Qui sont les érudits ? ", "collections": [COLLECTION_ID], "k": 3, "method": "semantic"}
-        response = test_client.post("/v1/search", json=data)
+        response = client.post_user(url="/v1/search", json=data)
+        assert response.status_code == 200, response.text
+
         result = response.json()
-        assert response.status_code == 200
         assert "Erasmus" in result["data"][0]["chunk"]["content"] or "Erasmus" in result["data"][1]["chunk"]["content"]
         assert "Albert" in result["data"][0]["chunk"]["content"] or "Albert" in result["data"][1]["chunk"]["content"]
 

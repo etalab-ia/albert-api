@@ -37,6 +37,24 @@ services:
         timeout: 10s
         retries: 5
 
+  sql:
+    image: postgres:16.5
+    restart: always
+    user: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_DB=postgres
+    volumes:
+      - sql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 4s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
     restart: always
@@ -48,3 +66,4 @@ services:
 volumes:
   qdrant:
   redis:
+  sql:

@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Request, Security
 
-from app.helpers import SearchManager
+from app.helpers import RateLimit, SearchManager
 from app.schemas.search import Searches, SearchRequest
 from app.schemas.security import User
-from app.utils.lifespan import databases, models, internet
-from app.utils.security import check_api_key
+from app.utils.lifespan import databases, internet, models
 
 router = APIRouter()
 
 
 @router.post(path="/search")
-async def search(request: Request, body: SearchRequest, user: User = Security(dependency=check_api_key)) -> Searches:
+async def search(request: Request, body: SearchRequest, user: User = Security(dependency=RateLimit())) -> Searches:
     """
     Get relevant chunks from the collections and a query.
     """

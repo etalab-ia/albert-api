@@ -5,22 +5,22 @@ from uuid import UUID
 from fastapi import APIRouter, Path, Request, Response, Security
 from fastapi.responses import JSONResponse
 
+from app.helpers import RateLimit
 from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.security import User
 from app.utils.lifespan import databases
-from app.utils.security import check_api_key
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PUBLIC
 
 router = APIRouter()
 
 
 @router.post(path="/collections")
-async def create_collection(request: Request, body: CollectionRequest, user: User = Security(check_api_key)) -> Response:
+async def create_collection(request: Request, body: CollectionRequest, user: User = Security(RateLimit())) -> Response:
     """
     Create a new collection.
     """
     collection_id = str(uuid.uuid4())
-    databases.search.create_collection(
+    await databases.search.create_collection(
         collection_id=collection_id,
         collection_name=body.name,
         collection_model=body.model,
@@ -33,7 +33,7 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
 
 
 @router.get(path="/collections")
-async def get_collections(request: Request, user: User = Security(check_api_key)) -> Union[Collection, Collections]:
+async def get_collections(request: Request, user: User = Security(RateLimit())) -> Union[Collection, Collections]:
     """
     Get list of collections.
     """
@@ -52,12 +52,12 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
 
 @router.delete(path="/collections/{collection}")
 async def delete_collections(
-    request: Request, collection: UUID = Path(..., description="The collection ID"), user: User = Security(check_api_key)
+    request: Request, collection: UUID = Path(..., description="The collection ID"), user: User = Security(RateLimit())
 ) -> Response:
     """
     Delete a collection.
     """
     collection = str(collection)
-    databases.search.delete_collection(collection_id=collection, user=user)
+    await databases.search.delete_collection(collection_id=collection, user=user)
 
     return Response(status_code=204)
