@@ -1,26 +1,58 @@
-from typing import Any, Literal, Optional
+from functools import lru_cache
+import os
+from typing import Any, Literal
 
-from pydantic import model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
+import yaml
+
+
+class ConfigBaseModel(BaseModel):
+    class Config:
+        extra = "allow"
+
+
+class Database(ConfigBaseModel):
+    url: str = "postgresql+asyncpg://postgres:changeme@postgres:5432/ui"
+
+
+class Config(ConfigBaseModel):
+    cache_ttl: int = 1800  # 30 minutes
+    api_url: str = "http://localhost:8080"
+    max_token_expiration_days: int = 60  # days
+    database: Database = Field(default_factory=Database)
+    master_username: str = "master"
 
 
 class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
-    cache_ttl: int = 1800  # 30 minutes
-    base_url: str = "http://localhost:8080/v1"
+    config_file: str = "config.yml"
 
-    # models
-    exclude_models: str
-    documents_embeddings_model: str
-    default_chat_model: Optional[str] = None
+    class Config:
+        extra = "allow"
+
+    @field_validator("config_file", mode="before")
+    def config_file_exists(cls, config_file):
+        assert os.path.exists(path=config_file), "Config file not found."
+        return config_file
 
     @model_validator(mode="after")
-    def validate_models(cls, values) -> Any:
-        values.exclude_models = values.exclude_models.split(",")
+    def setup_config(cls, values) -> Any:
+        stream = open(file=values.config_file, mode="r")
+        config = Config(**yaml.safe_load(stream=stream)["ui"])
+        stream.close()
 
-        if values.default_chat_model:
-            assert values.default_chat_model not in values.exclude_models, "Default chat model is in the exclude models"
-
-        assert values.documents_embeddings_model not in values.exclude_models, "Documents embeddings model is in the exclude models"
+        # Merge config values with existing values
+        for key, value in config.__dict__.items():
+            if key not in values.__dict__.keys():
+                setattr(values, key, value)
 
         return values
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

@@ -1,27 +1,36 @@
 from fastapi import APIRouter, Request, Security
 
-from app.helpers import SearchManager
+from app.helpers import Authorization
 from app.schemas.search import Searches, SearchRequest
-from app.schemas.security import User
-from app.utils.lifespan import databases, models, internet
-from app.utils.security import check_api_key
-from app.utils.exceptions import NoVectorStoreAvailableException
+from app.utils.exceptions import CollectionNotFoundException
+from app.utils.lifespan import context
+from app.utils.settings import settings
+from app.utils.variables import ENDPOINT__EMBEDDINGS, ENDPOINT__SEARCH
 
 router = APIRouter()
 
 
-@router.post(path="/search")
-async def search(request: Request, body: SearchRequest, user: User = Security(dependency=check_api_key)) -> Searches:
+@router.post(path=ENDPOINT__SEARCH)
+async def search(request: Request, body: SearchRequest, user: str = Security(dependency=Authorization())) -> Searches:
     """
     Get relevant chunks from the collections and a query.
     """
-    if not databases.search:
-        raise NoVectorStoreAvailableException()
 
-    body = await request.json()
-    body = SearchRequest(**body)
+    if not context.documents:  # no vector store available
+        raise CollectionNotFoundException()
 
-    search_manager = SearchManager(models=models.registry, search=databases.search, internet=internet.search)
-    data = await search_manager.query(collections=body.collections, prompt=body.prompt, method=body.method, k=body.k, rff_k=body.rff_k, user=user)
+    model = context.models(model=settings.general.documents_model)
+    client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
+
+    data = await context.documents.search(
+        model_client=client,
+        collection_ids=body.collections,
+        prompt=body.prompt,
+        method=body.method,
+        k=body.k,
+        rff_k=body.rff_k,
+        user_id=user.user_id,
+        web_search=body.web_search,
+    )
 
     return Searches(data=data)

@@ -1,13 +1,9 @@
 import json
-import time
 from typing import List
-import uuid
 
 from fastapi import UploadFile
 
-from app.schemas.data import ParserOutput, ParserOutputMetadata
-from app.schemas.files import JsonFile
-from app.utils.exceptions import InvalidJSONFormatException
+from app.schemas.core.documents import ParserOutput
 
 from ._baseparser import BaseParser
 
@@ -27,23 +23,9 @@ class JSONParser(BaseParser):
             List[ParserOutput]: List of parsed outputs.
         """
 
-        file = json.loads(file.file.read())
-        try:
-            file = JsonFile(documents=file)
-        except Exception as e:
-            raise InvalidJSONFormatException(detail=f"Invalid JSON file format: {e}")
-
-        output = list()
-        created_at = round(time.time())
-        for document in file.documents:
-            content = self.clean(document.text)
-            metadata = ParserOutputMetadata(
-                collection_id=self.collection_id,
-                document_id=str(uuid.uuid4()),
-                document_name=document.title,
-                document_created_at=created_at,
-                **document.metadata,
-            )
-            output.append(ParserOutput(content=content, metadata=metadata))
+        document = json.loads(file.file.read())
+        content = self.clean(text=document["text"])
+        metadata = document["metadata"]
+        output = ParserOutput(contents=[content], metadata=metadata)
 
         return output

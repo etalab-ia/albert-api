@@ -15,10 +15,9 @@ from app.utils.variables import (
     ENDPOINT__EMBEDDINGS,
     ENDPOINT__MODELS,
     ENDPOINT__RERANK,
-    MODEL_CLIENT_TYPE__OPENAI,
-    MODEL_CLIENT_TYPE__TEI,
-    MODEL_CLIENT_TYPE__VLLM,
 )
+
+from app.schemas.core.settings import ModelClientType
 
 
 class BaseModelClient(ABC):
@@ -32,7 +31,7 @@ class BaseModelClient(ABC):
     }
 
     @staticmethod
-    def import_module(type: Literal[MODEL_CLIENT_TYPE__OPENAI, MODEL_CLIENT_TYPE__VLLM, MODEL_CLIENT_TYPE__TEI]) -> "Type[BaseModelClient]":
+    def import_module(type: Literal[ModelClientType.OPENAI, ModelClientType.VLLM, ModelClientType.TEI]) -> "Type[BaseModelClient]":
         """
         Static method to import a subclass of BaseModelClient.
 
@@ -42,7 +41,7 @@ class BaseModelClient(ABC):
         Returns:
             Type[BaseModelClient]: The subclass of BaseModelClient.
         """
-        module = importlib.import_module(f"app.clients.model._{type}modelclient")
+        module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
         return getattr(module, f"{type.capitalize()}ModelClient")
 
     def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
