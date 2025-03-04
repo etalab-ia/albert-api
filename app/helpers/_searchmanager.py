@@ -32,8 +32,8 @@ class SearchManager:
             internet_collection_id = str(uuid.uuid4())
             internet_chunks = await self.internet_manager.get_chunks(prompt=prompt, collection_id=internet_collection_id)
 
+            collections.remove(COLLECTION_DISPLAY_ID__INTERNET)
             if internet_chunks:
-                collections.remove(COLLECTION_DISPLAY_ID__INTERNET)
                 internet_model_id = (
                     self.models.internet_default_embeddings_model
                     if not collections
@@ -47,12 +47,10 @@ class SearchManager:
                     user=user,
                 )
                 await self.search.upsert(chunks=internet_chunks, collection_id=internet_collection_id, user=user)
-
                 collections.append(internet_collection_id)
 
-            # case: no other collections, only internet and no internet results
-            elif collections == [COLLECTION_DISPLAY_ID__INTERNET]:
-                return []
+        if not collections:  # case: no other collections no internet results
+            return []
 
         searches = await self.search.query(
             prompt=prompt, collection_ids=collections, method=method, k=k, rff_k=rff_k, score_threshold=score_threshold, user=user
