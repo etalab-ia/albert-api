@@ -22,37 +22,52 @@ class UsagesMiddleware(BaseHTTPMiddleware):
         endpoint = request.url.path
         content_type = request.headers.get("Content-Type", "")
         start_time = datetime.utcnow()
+        model = None
+
+        # Store request body if needed
+        if endpoint in self.MODELS_ENDPOINTS and not content_type.startswith("multipart/form-data"):
+            body = await request.body()
+
+            async def receive():
+                return {"type": "http.request", "body": body}
+
+            request._receive = receive
+
+            try:
+                json_body = json.loads(body.decode("utf-8"))
+                model = json_body.get("model")
+            except json.JSONDecodeError:
+                logger.warning(f"Failed to parse request body for endpoint {endpoint}")
 
         # Get response from next middleware/endpoint
         response = await call_next(request)
 
+        if not model:
+            # Do not log if model is not specified or if json in request was invalid
+            return response
         try:
             if endpoint in self.MODELS_ENDPOINTS:
                 authorization = request.headers.get("Authorization")
-                model = None
 
-                # Extract model from request body if not multipart
-                if not content_type.startswith("multipart/form-data"):
-                    body = await request.body()
-                    body = body.decode(encoding="utf-8")
-                    try:
-                        model = json.loads(body).get("model") if body else None
-                    except json.JSONDecodeError:
-                        logger.warning(f"Failed to parse request body for endpoint {endpoint}")
-                        return response
-
-                if authorization:  # Changed this part to match authentication client pattern
+                if authorization:
                     user_id = AuthenticationClient.api_key_to_user_id(input=authorization)
-
-                    # Extract usage data from response if available
                     usage_data = {}
-                    if response.status_code == 200:
-                        response_body = await response.body()
-                        try:
-                            response_json = json.loads(response_body)
-                            usage_data = response_json.get("usage", {})
-                        except json.JSONDecodeError:
-                            logger.warning(f"Failed to parse response body for endpoint {endpoint}")
+
+                    # Handle streaming response
+                    if hasattr(response, "body_iterator"):
+                        collected_data = b""
+                        async for chunk in response.body_iterator:
+                            collected_data += chunk
+                            try:
+                                # Look for the last complete JSON object in the stream
+                                if b"data: " in chunk:
+                                    json_str = chunk.split(b"data: ")[-1].strip()
+                                    if json_str and json_str != b"[DONE]":
+                                        chunk_data = json.loads(json_str)
+                                        if "usage" in chunk_data:
+                                            usage_data = chunk_data["usage"]
+                            except json.JSONDecodeError:
+                                continue
 
                     # Use database session from dependency
                     db = next(self.db_func())
