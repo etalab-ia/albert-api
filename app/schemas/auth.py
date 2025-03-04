@@ -1,0 +1,202 @@
+import datetime as dt
+from datetime import datetime
+from typing import List, Literal, Optional
+from enum import Enum
+from pydantic import BaseModel, Field, field_validator
+
+
+class PermissionType(str, Enum):
+    CREATE_ROLE = "create_role"
+    READ_ROLE = "read_role"
+    UPDATE_ROLE = "update_role"
+    DELETE_ROLE = "delete_role"
+    CREATE_USER = "create_user"
+    READ_USER = "read_user"
+    UPDATE_USER = "update_user"
+    DELETE_USER = "delete_user"
+    CREATE_PUBLIC_COLLECTION = "create_public_collection"
+    READ_METRIC = "read_metric"
+
+
+class LimitType(str, Enum):
+    TPM = "tpm"
+    TPD = "tpd"
+    RPM = "rpm"
+    RPD = "rpd"
+
+
+class Limit(BaseModel):
+    model: str = Field(description="Model ID")
+    type: LimitType
+    value: Optional[int] = Field(default=None, ge=0)
+
+
+class RoleUpdateRequest(BaseModel):
+    name: Optional[str] = Field(default=None, description="The new role name.")
+    default: Optional[bool] = Field(default=None, description="Whether this role is the default role.")
+    permissions: Optional[List[PermissionType]] = Field(default=None, description="The new permissions.")
+    limits: Optional[List[Limit]] = Field(default=None, description="The new limits.")
+
+    @field_validator("name", mode="after")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            if name == "":
+                raise ValueError("Name cannot be empty")
+        return name
+
+    @field_validator("limits", mode="before")
+    def check_duplicate_limits(cls, limits):
+        keys = []
+        if limits is not None:
+            for limit in limits:
+                key = (limit["model"], limit["type"])
+                if key not in keys:
+                    keys.append(key)
+                else:
+                    raise ValueError(f"Duplicate limit found: ({limit["model"]}, {limit["type"]})")
+
+        return limits
+
+
+class RoleRequest(BaseModel):
+    name: str
+    default: bool = False
+    permissions: Optional[List[PermissionType]] = []
+    limits: List[Limit] = []
+
+    @field_validator("name", mode="after")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty")
+        return name
+
+    @field_validator("limits", mode="before")
+    def check_duplicate_limits(cls, limits):
+        keys = []
+        for limit in limits:
+            key = (limit["model"], limit["type"])
+            if key not in keys:
+                keys.append(key)
+            else:
+                raise ValueError(f"Duplicate limit found: ({limit["model"]}, {limit["type"]})")
+
+        return limits
+
+
+class Role(BaseModel):
+    object: Literal["role"] = "role"
+    id: int
+    name: str
+    default: bool
+    permissions: List[PermissionType]
+    limits: List[Limit]
+    users: int = 0
+    created_at: int = Field(default_factory=lambda: int(datetime.now().timestamp()))
+    updated_at: int = Field(default_factory=lambda: int(datetime.now().timestamp()))
+
+
+class Roles(BaseModel):
+    object: Literal["list"] = "list"
+    data: List[Role]
+
+
+class UserUpdateRequest(BaseModel):
+    name: Optional[str] = Field(default=None, description="The new user name.")
+    role: Optional[int] = Field(default=None, description="The new role ID.")
+    # password: Optional[str] = Field(default=None, description="The new password.")
+    expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp.")
+
+    @field_validator("expires_at", mode="before")
+    def must_be_future(cls, expires_at):
+        if isinstance(expires_at, int):
+            if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
+                raise ValueError("Wrong timestamp, must be in the future.")
+
+        return expires_at
+
+    @field_validator("name", mode="after")
+    def strip_name(cls, name):
+        if name is not None:
+            name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty.")
+
+        return name
+
+
+class UserRequest(BaseModel):
+    name: str = Field(description="The user name.")
+    role: int = Field(description="The role ID.")
+    expires_at: Optional[int] = Field(default=None, description="The expiration timestamp.")
+
+    @field_validator("expires_at", mode="before")
+    def must_be_future(cls, expires_at):
+        if isinstance(expires_at, int):
+            if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
+                raise ValueError("Wrong timestamp, must be in the future.")
+
+        return expires_at
+
+    @field_validator("name", mode="after")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty.")
+
+        return name
+
+
+class User(BaseModel):
+    object: Literal["user"] = "user"
+    id: int
+    name: str
+    role: int
+    expires_at: Optional[int] = None
+    created_at: int
+    updated_at: int
+
+
+class Users(BaseModel):
+    object: Literal["list"] = "list"
+    data: List[User]
+
+
+class TokenRequest(BaseModel):
+    name: str
+    user: Optional[int] = Field(default=None, description="User ID to create the token for another user (by default, the current user). Required CREATE_USER permission.")  # fmt: off
+    expires_at: Optional[int] = Field(None, description="Timestamp in seconds")
+
+    @field_validator("name", mode="after")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty.")
+
+        return name
+
+    @field_validator("expires_at", mode="before")
+    def must_be_future(cls, expires_at):
+        if isinstance(expires_at, int):
+            if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
+                raise ValueError("Wrong timestamp, must be in the future.")
+
+        return expires_at
+
+
+class Token(BaseModel):
+    object: Literal["token"] = "token"
+    id: int
+    name: str
+    token: str
+    user: int
+    expires_at: Optional[int] = None
+    created_at: int
+
+
+class Tokens(BaseModel):
+    object: Literal["list"] = "list"
+    data: List[Token]

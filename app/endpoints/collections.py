@@ -1,70 +1,78 @@
 from typing import Union
-import uuid
-from uuid import UUID
 
-from fastapi import APIRouter, Path, Request, Response, Security
+from fastapi import APIRouter, Path, Query, Request, Response, Security
 from fastapi.responses import JSONResponse
 
+from app.helpers import Authorization
 from app.schemas.collections import Collection, CollectionRequest, Collections
+<<<<<<< HEAD
 from app.schemas.security import User
 from app.utils.lifespan import databases
 from app.utils.security import check_api_key
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PUBLIC
 from app.utils.exceptions import NoVectorStoreAvailableException
+=======
+from app.schemas.core.auth import UserInfo
+from app.utils.exceptions import CollectionNotFoundException
+from app.utils.lifespan import context
+from app.utils.settings import settings
+from app.utils.variables import ENDPOINT__COLLECTIONS, ENDPOINT__EMBEDDINGS
+>>>>>>> e317108 (feat: refacto auth)
 
 router = APIRouter()
 
 
-@router.post(path="/collections")
-async def create_collection(request: Request, body: CollectionRequest, user: User = Security(check_api_key)) -> Response:
+@router.post(path=ENDPOINT__COLLECTIONS)
+async def create_collection(request: Request, body: CollectionRequest, user: UserInfo = Security(dependency=Authorization())) -> JSONResponse:
     """
     Create a new collection.
     """
-    if not databases.search:
-        raise NoVectorStoreAvailableException()
-    collection_id = str(uuid.uuid4())
-    databases.search.create_collection(
-        collection_id=collection_id,
-        collection_name=body.name,
-        collection_model=body.model,
-        collection_type=body.type,
-        collection_description=body.description,
-        user=user,
+    if not context.documents:  # no vector store available
+        raise CollectionNotFoundException()
+
+    model = context.models(model=settings.general.documents_model)
+    client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
+    vector_size = client.vector_size
+    collection_id = await context.documents.create_collection(
+        name=body.name,
+        vector_size=vector_size,
+        visibility=body.visibility,
+        description=body.description,
+        user_id=user.user_id,
     )
 
     return JSONResponse(status_code=201, content={"id": collection_id})
 
 
-@router.get(path="/collections")
-async def get_collections(request: Request, user: User = Security(check_api_key)) -> Union[Collection, Collections]:
+@router.get(path=ENDPOINT__COLLECTIONS)
+async def get_collections(
+    request: Request,
+    offset: int = Query(default=0, ge=0, description="The offset of the collections to get."),
+    limit: int = Query(default=10, ge=1, le=100, description="The limit of the collections to get."),
+    user: UserInfo = Security(dependency=Authorization()),
+) -> Union[Collection, Collections]:
     """
     Get list of collections.
     """
-    if not databases.search:
-        raise NoVectorStoreAvailableException()
-    internet_collection = Collection(
-        id=COLLECTION_DISPLAY_ID__INTERNET,
-        name=COLLECTION_DISPLAY_ID__INTERNET,
-        model=None,
-        type=COLLECTION_TYPE__PUBLIC,
-        description="Use this collection to search on the internet.",
-    )
-    data = databases.search.get_collections(user=user)
-    data.append(internet_collection)
+
+    if not context.documents:  # no vector store available
+        data = []
+    else:
+        data = await context.documents.get_collections(user_id=user.user_id, include_public=True, offset=offset, limit=limit)
 
     return Collections(data=data)
 
 
-@router.delete(path="/collections/{collection}")
+@router.delete(path=ENDPOINT__COLLECTIONS + "/{collection}")
 async def delete_collections(
-    request: Request, collection: UUID = Path(..., description="The collection ID"), user: User = Security(check_api_key)
+    request: Request, collection: int = Path(..., description="The collection ID"), user: UserInfo = Security(dependency=Authorization())
 ) -> Response:
     """
     Delete a collection.
     """
-    if not databases.search:
-        raise NoVectorStoreAvailableException()
-    collection = str(collection)
-    databases.search.delete_collection(collection_id=collection, user=user)
+    if not context.documents:  # no vector store available
+        raise CollectionNotFoundException()
+
+    await context.documents.delete_collection(user_id=user.user_id, collection_id=collection)
 
     return Response(status_code=204)

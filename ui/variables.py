@@ -4,7 +4,18 @@ MODEL_TYPE_AUDIO = "automatic-speech-recognition"
 MODEL_TYPE_RERANK = "text-classification"
 
 COLLECTION_DISPLAY_ID_INTERNET = "internet"
-COLLECTION_TYPE_PRIVATE = "private"
+COLLECTION_VISIBILITY_PRIVATE = "private"
+
+ADMIN_PERMISSIONS = [
+    "create_role",
+    "read_role",
+    "update_role",
+    "delete_role",
+    "create_user",
+    "read_user",
+    "update_user",
+    "delete_user",
+]
 
 TRANSCRIPTION_SUPPORTED_LANGUAGES = [
     "afrikaans",

@@ -1,29 +1,22 @@
-import logging
-import traceback
 from uuid import uuid4
 
 import streamlit as st
 
-from utils.chat import generate_stream
-from utils.common import get_collections, get_models, header, settings
-from utils.variables import MODEL_TYPE_LANGUAGE
+from ui.backend.chat import generate_stream
+from ui.backend.common import get_collections, get_limits, get_models
+from ui.frontend.header import header
+from ui.variables import MODEL_TYPE_LANGUAGE
 
-API_KEY = header()
+header()
 
 # Data
-try:
-    models = get_models(api_key=API_KEY, type=MODEL_TYPE_LANGUAGE)
-    collections = get_collections(api_key=API_KEY)
-except Exception:
-    st.error("Error to fetch user data.")
-    logging.debug(traceback.format_exc())
-    st.stop()
+models = get_models(type=MODEL_TYPE_LANGUAGE)
+limits = get_limits(models=models, role=st.session_state["user"].role)
+limits = [model for model, values in limits.items() if (values["rpd"] is None or values["rpd"] > 0) and (values["rpm"] is None or values["rpm"] > 0)]
+models = [model for model in models if model in limits]
+collections = get_collections()
 
 # State
-
-if "selected_model" not in st.session_state:
-    st.session_state["selected_model"] = models[0] if settings.default_chat_model not in models else settings.default_chat_model
-
 if "selected_collections" not in st.session_state:
     st.session_state.selected_collections = []
 
@@ -41,19 +34,17 @@ with st.sidebar:
     params = {"sampling_params": dict(), "rag": dict()}
 
     st.subheader(body="Chat parameters")
-    st.session_state["selected_model"] = st.selectbox(label="Language model", options=models, index=models.index(st.session_state.selected_model))
+    st.session_state["selected_model"] = st.selectbox(label="Language model", options=models)
 
     params["sampling_params"]["model"] = st.session_state["selected_model"]
     params["sampling_params"]["temperature"] = st.slider(label="Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
 
-    if st.toggle(label="Max tokens", value=False):
-        max_tokens = st.number_input(label="Max tokens", value=100, min_value=0, step=100)
-        params["sampling_params"]["max_tokens"] = max_tokens
+    max_tokens_active = st.toggle(label="Max tokens", value=None)
+    max_tokens = st.number_input(label="Max tokens", value=100, min_value=0, step=100, disabled=not max_tokens_active)
+    params["sampling_params"]["max_tokens"] = max_tokens if max_tokens_active else None
 
     st.subheader(body="RAG parameters")
-    model_collections = [f"{collection["name"]} - {collection["id"]}" for collection in collections]
-
-    if model_collections:
+    if collections:
 
         @st.dialog(title="Select collections")
         def add_collection(collections: list) -> None:
@@ -61,14 +52,10 @@ with st.sidebar:
             col1, col2 = st.columns(spec=2)
 
             for collection in collections:
-                collection_id = collection.split(" - ")[1]
-                if st.checkbox(
-                    label=f"{collection.split(" - ")[0]} (*{collection_id[:8]}*)",
-                    value=False if collection_id not in st.session_state.selected_collections else True,
-                ):
-                    selected_collections.append(collection_id)
-                elif collection_id in selected_collections:
-                    selected_collections.remove(collection_id)
+                if st.checkbox(label=collection["name"], value=False if collection["id"] not in st.session_state.selected_collections else True):
+                    selected_collections.append(collection["id"])
+                elif collection["id"] in selected_collections:
+                    selected_collections.remove(collection["id"])
 
             with col1:
                 if st.button(label="**Submit :material/check_circle:**", use_container_width=True):
@@ -89,7 +76,7 @@ with st.sidebar:
             key="add_collections",
         )
         if pill == 0:
-            add_collection(collections=model_collections)
+            add_collection(collections=collections)
 
         params["rag"]["collections"] = st.session_state.selected_collections
         params["rag"]["k"] = st.number_input(label="Number of chunks to retrieve (k)", value=3)
@@ -130,14 +117,12 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
             stream, sources = generate_stream(
                 messages=st.session_state.messages,
                 params=params,
-                api_key=API_KEY,
                 rag=rag,
                 rerank=False,
             )
             response = st.write_stream(stream=stream)
-        except Exception:
-            st.error(body="Error to generate response.")
-            logging.debug(traceback.format_exc())
+        except Exception as e:
+            st.error(body=e)
             st.stop()
 
         formatted_sources = []

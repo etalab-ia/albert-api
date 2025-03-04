@@ -5,8 +5,9 @@ from pydantic import BaseModel
 
 class Document(BaseModel):
     object: Literal["document"] = "document"
-    id: str
+    id: int
     name: str
+    collection_id: int
     created_at: int
     chunks: Optional[int] = None
 

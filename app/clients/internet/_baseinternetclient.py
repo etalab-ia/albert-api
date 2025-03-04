@@ -1,17 +1,17 @@
 from abc import ABC, abstractmethod
 import importlib
-from typing import List, Literal, Type
+from typing import List, Type
 
-from app.utils.variables import INTERNET_TYPE__BRAVE, INTERNET_TYPE__DUCKDUCKGO
+from app.schemas.core.settings import InternetType
 
 
 class BaseInternetClient(ABC):
     @staticmethod
-    def import_module(type: Literal[INTERNET_TYPE__BRAVE, INTERNET_TYPE__DUCKDUCKGO]) -> "Type[BaseInternetClient]":
+    def import_module(type: InternetType) -> "Type[BaseInternetClient]":
         """
         Import the module for the given internet type.
         """
-        module = importlib.import_module(f"app.clients.internet._{type}internetclient")
+        module = importlib.import_module(f"app.clients.internet._{type.value}internetclient")
         return getattr(module, f"{type.capitalize()}InternetClient")
 
     @abstractmethod

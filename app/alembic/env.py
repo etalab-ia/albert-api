@@ -1,19 +1,19 @@
 from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+import os
+import sys
 
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
-from app.utils.settings import settings
+sys.path.append("..")
+os.environ["CONFIG_FILE"] = os.path.join("..", os.environ.get("CONFIG_FILE", "config.yml"))
+
 from app.sql.models import Base
+from app.utils.settings import settings
 
-# Get DB URL from app settings
 config = context.config
 config.set_main_option(name="sqlalchemy.url", value=settings.databases.sql.args.get("url").replace("+asyncpg", ""))
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

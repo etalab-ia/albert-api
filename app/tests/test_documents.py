@@ -3,61 +3,60 @@ import os
 
 import pytest
 
+from app.schemas.collections import CollectionVisibility
 from app.schemas.documents import Documents
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS, COLLECTION_TYPE__PRIVATE
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS
 
 
 @pytest.fixture(scope="module")
-def setup(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
-    response = test_client.get("/v1/models", timeout=10)
+def setup(client):
+    response = client.get_user(url="/v1/models", timeout=10)
     models = response.json()
     EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
     logging.info(f"test embedings model ID: {EMBEDDINGS_MODEL_ID}")
 
-    response = test_client.post("/v1/collections", json={"name": "pytest-private", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE})
+    response = client.post_user(
+        url="/v1/collections",
+        json={"name": "test-collection-private", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PRIVATE},
+    )
     assert response.status_code == 201
     PRIVATE_COLLECTION_ID = response.json()["id"]
 
     file_path = "app/tests/assets/json.json"
     files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
     data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
-    test_client.post("/v1/files", data=data, files=files)
+    response = client.post_user(url="/v1/files", data=data, files=files)
+    assert response.status_code == 201
 
     yield PRIVATE_COLLECTION_ID
 
 
-@pytest.mark.usefixtures("args", "setup", "cleanup_collections", "test_client")
+@pytest.mark.usefixtures("client", "setup", "cleanup")
 class TestDocuments:
-    def test_get_documents(self, args, test_client, setup):
+    def test_get_documents(self, client, setup):
         PRIVATE_COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        response = test_client.get(f"/v1/documents/{PRIVATE_COLLECTION_ID}")
-        assert response.status_code == 200, f"error: upload file ({response.status_code} - {response.text})"
+        response = client.get_user(url=f"/v1/documents/{PRIVATE_COLLECTION_ID}")
+        assert response.status_code == 200, response.text
 
-        response_json = response.json()
-        documents = Documents(**response_json)
-        assert isinstance(documents, Documents)
+        Documents(**response.json())  # test output format
 
-    def test_collection_document_count(self, args, test_client, setup):
+    def test_collection_document_count(self, client, setup):
         PRIVATE_COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        response = test_client.get("/v1/collections")
+        response = client.get_user(url="/v1/collections")
         collection = [collection for collection in response.json()["data"] if collection["id"] == PRIVATE_COLLECTION_ID][0]
         assert collection["documents"] == 2
 
-    def test_delete_document(self, args, test_client, setup):
+    def test_delete_document(self, client, setup):
         PRIVATE_COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        response = test_client.get(f"/v1/documents/{PRIVATE_COLLECTION_ID}")
+        response = client.get_user(url=f"/v1/documents/{PRIVATE_COLLECTION_ID}")
         document_id = response.json()["data"][0]["id"]
 
-        response = test_client.delete(f"/v1/documents/{PRIVATE_COLLECTION_ID}/{document_id}")
-        assert response.status_code == 204, f"error: delete file ({response.status_code} - {response.text})"
+        response = client.delete_user(url=f"/v1/documents/{PRIVATE_COLLECTION_ID}/{document_id}")
+        assert response.status_code == 204, response.text
 
-        response = test_client.get(f"/v1/documents/{PRIVATE_COLLECTION_ID}")
+        response = client.get_user(url=f"/v1/documents/{PRIVATE_COLLECTION_ID}")
         documents = response.json()["data"]
         assert document_id not in [document["id"] for document in documents]

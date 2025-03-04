@@ -1,6 +1,11 @@
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import streamlit as st
 
-from utils.common import settings
+from ui.settings import settings
 
 st.set_page_config(
     page_title="Albert playground",
@@ -16,15 +21,17 @@ st.set_page_config(
 
 st.logo(
     image="https://upload.wikimedia.org/wikipedia/fr/thumb/5/50/Bloc_Marianne.svg/1200px-Bloc_Marianne.svg.png",
-    link=settings.base_url.replace("/v1", "/playground"),
+    link=f"{settings.api_url}/playground",
     size="large",
 )
 
 pg = st.navigation(
     pages=[
-        st.Page(page="pages/chat.py", title="Chat", icon=":material/chat:"),
-        st.Page(page="pages/documents.py", title="Documents", icon=":material/file_copy:"),
-        st.Page(page="pages/transcription.py", title="Transcription", icon=":material/graphic_eq:"),
+        st.Page(page="frontend/account.py", title="My account", icon=":material/account_circle:"),
+        st.Page(page="frontend/chat.py", title="Chat", icon=":material/chat:"),
+        st.Page(page="frontend/documents.py", title="Documents", icon=":material/file_copy:"),
+        st.Page(page="frontend/transcription.py", title="Transcription", icon=":material/graphic_eq:"),
+        st.Page(page="frontend/admin.py", title="Admin", icon=":material/admin_panel_settings:"),
     ]
 )
 pg.run()

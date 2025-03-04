@@ -1,34 +1,41 @@
+from enum import Enum
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.utils.variables import COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC
+
+class CollectionVisibility(str, Enum):
+    PRIVATE = "private"
+    PUBLIC = "public"
+
+
+class CollectionRequest(BaseModel):
+    name: str = Field(min_length=1, description="The name of the collection.")
+    description: Optional[str] = Field(default=None, description="The description of the collection.")
+    visibility: CollectionVisibility = Field(default=CollectionVisibility.PRIVATE, description="The type of the collection. Public collections are available to all users, private collections are only available to the user who created them.")  # fmt: off
+
+    @field_validator("name", mode="after")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+            if not name:  # empty string
+                raise ValueError("Name cannot be empty.")
+
+        return name
 
 
 class Collection(BaseModel):
-    id: str
-    name: Optional[str] = None
-    type: Optional[Literal[COLLECTION_TYPE__PUBLIC, COLLECTION_TYPE__PRIVATE]] = None
-    model: Optional[str] = None
-    user: Optional[str] = None
+    object: Literal["collection"] = "collection"
+    id: int
+    name: str
+    owner: str
     description: Optional[str] = None
-    created_at: Optional[int] = None
-    documents: Optional[int] = None
+    visibility: Optional[CollectionVisibility] = None
+    created_at: int
+    updated_at: int
+    documents: int = 0
 
 
 class Collections(BaseModel):
     object: Literal["list"] = "list"
     data: List[Collection]
-
-
-class CollectionRequest(BaseModel):
-    description: Optional[str] = Field(default=None, description="The description of the collection.")  # fmt: off
-    name: str = Field(default=..., min_length=1, description="The name of the collection.")  # fmt: off
-    model: str = Field(default=..., description="The model to use for the collection. Call `/v1/models` endpoint to get the list of available models, only `text-embeddings-inference` model type is supported.")  # fmt: off
-    type: Literal[COLLECTION_TYPE__PUBLIC, COLLECTION_TYPE__PRIVATE] = Field(default=COLLECTION_TYPE__PRIVATE, description="The type of the collection. Public collections are available to all users, private collections are only available to the user who created them.")  # fmt: off
-
-    @field_validator("name", mode="before")
-    def strip(cls, name):
-        if isinstance(name, str):
-            name = name.strip()
-        return name

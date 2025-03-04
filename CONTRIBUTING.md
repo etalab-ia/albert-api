@@ -38,9 +38,31 @@ L'API et l'UI seront disponibles respectivement sur les ports 8000 et 8501.
 
 1. Dans un environnement virtuel Python, installez les packages Python présents dans le fichier *[pyproject.toml](./pyproject.toml)*
 
-    ```bash 
-    pip install ".[ui,app,dev,test]"
-    pre-commit install
+  ```bash 
+  pip install ".[ui,app,dev,test]"
+  pre-commit install
+  ```
+
+# Lancement des services
+
+Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
+
+## Base de données (Alembic)
+
+## API (FastAPI)
+
+1. Créez les tables de la base de données
+
+    L'API nécessite une base de données SQL. Vous devez préalablement exécuter les migrations pour créer les tables avec la commande suivante :
+
+    ```bash
+    cd alembic upgrade head
+    ```
+
+2. Après avoir créé un fichier *config.yml*, lancez l'API en local
+
+    ```bash
+    uvicorn app.main:app --port 8080 --log-level debug --reload
     ```
 
 2. Créez un fichier *config.yml* à partir du fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* avec vos modèles de langage et d'embeddings.
@@ -84,7 +106,7 @@ CONFIG_FILE=<path to config file> PYTHONPATH=. pytest app/tests/test_audio.py --
 Pour mettre à jour les snapshots, exécutez la commande suivante :
 
 ```bash
-CONFIG_FILE=<path to config file> PYTHONPATH=. pytest --config-file=pyproject.toml --api-key-user <api key user> --api-key-admin <api key admin> --update-snapshots
+CONFIG_FILE=<path to config file> PYTHONPATH=. pytest --config-file=pyproject.toml --api-key-user <api key user> --api-key-admin <api key admin> --snapshot-update
 ```
 
 ## Configurer les tests dans VSCode
@@ -93,14 +115,13 @@ Pour utiliser le module testing de VSCode, veuillez la configuration suivante da
 
 ```json
 {
+    "python.terminal.activateEnvironment": false,
     "python.testing.pytestArgs": [
         "app/tests",
-        "--config-file=pyproject.toml",
-        "--api-key-user=<api key user>",
-        "--api-key-admin=<api key admin>"
+        "--config-file=pyproject.toml"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
 }
 ```
 

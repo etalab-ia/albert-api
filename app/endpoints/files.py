@@ -1,17 +1,23 @@
-from fastapi import APIRouter, Body, Response, Security, UploadFile, File
+from io import BytesIO
+import json
 
-from app.helpers._fileuploader import FileUploader
+from fastapi import APIRouter, Body, File, Security, UploadFile
+from fastapi.responses import JSONResponse
+
+from app.helpers import Authorization
+from app.schemas.core.auth import UserInfo
+from app.schemas.core.documents import JsonFile
 from app.schemas.files import ChunkerArgs, FilesRequest
-from app.schemas.security import User
-from app.utils.lifespan import databases
-from app.utils.security import check_api_key
-from app.utils.exceptions import FileSizeLimitExceededException, NoVectorStoreAvailableException
+from app.utils.exceptions import CollectionNotFoundException, FileSizeLimitExceededException, InvalidJSONFileFormatException
+from app.utils.lifespan import context
+from app.utils.settings import settings
+from app.utils.variables import ENDPOINT__EMBEDDINGS, ENDPOINT__FILES
 
 router = APIRouter()
 
 
-@router.post(path="/files")
-async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body(...), user: User = Security(check_api_key)) -> Response:
+@router.post(path=ENDPOINT__FILES)
+async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body(...), user: UserInfo = Security(dependency=Authorization())) -> JSONResponse:  # fmt: off
     """
     Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.
 
@@ -25,9 +31,8 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
 
     Max file size is 20MB.
     """
-
-    if not databases.search:
-        raise NoVectorStoreAvailableException()
+    if not context.documents:  # no vector store available
+        raise CollectionNotFoundException()
 
     file_size = len(file.file.read())
     if file_size > FileSizeLimitExceededException.MAX_CONTENT_SIZE:
@@ -43,11 +48,35 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
 
     chunker_args["length_function"] = len if chunker_args["length_function"] == "len" else chunker_args["length_function"]
 
-    uploader = FileUploader(search=databases.search, user=user, collection_id=request.collection)
-    output = uploader.parse(file=file)
-    chunks = uploader.split(input=output, chunker_name=chunker_name, chunker_args=chunker_args)
-    await uploader.upsert(chunks=chunks)
+    if file.content_type == "application/json":
+        try:
+            file = JsonFile(documents=json.loads(file.file.read())).documents
+        except json.JSONDecodeError as e:
+            raise InvalidJSONFileFormatException(detail=e)
 
-    file.file.close()
+        files = [
+            UploadFile(
+                filename=f"{document.title}.json",
+                file=BytesIO(json.dumps(document.model_dump()).encode("utf-8")),
+            )
+            for document in file
+        ]
+    else:
+        files = [file]
 
-    return Response(status_code=201)
+    for file in files:
+        model = context.models(model=settings.general.documents_model)
+        client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
+
+        document_id = await context.documents.create_document(
+            user_id=user.user_id,
+            model_client=client,
+            collection_id=request.collection,
+            file=file,
+            chunker_name=chunker_name,
+            chunker_args=chunker_args,
+        )
+
+        file.file.close()
+
+    return JSONResponse(status_code=201, content={"id": document_id})

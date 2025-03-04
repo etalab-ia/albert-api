@@ -3,13 +3,13 @@ from typing import List, Literal, Optional
 from openai.types import Model
 from pydantic import BaseModel
 
-from app.utils.variables import MODEL_TYPE__AUDIO, MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE, MODEL_TYPE__RERANK
+from app.schemas.core.models import ModelType
 
 
 class Model(Model):
     object: Literal["model"] = "model"
     max_context_length: Optional[int] = None
-    type: Optional[Literal[MODEL_TYPE__LANGUAGE, MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__AUDIO, MODEL_TYPE__RERANK]] = None
+    type: ModelType
     aliases: Optional[List[str]] = []
 
 

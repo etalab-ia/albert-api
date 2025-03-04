@@ -1,17 +1,9 @@
+from typing import Optional
+
 from fastapi import HTTPException
 
 
 # 400
-class ParsingFileFailedException(HTTPException):
-    def __init__(self, detail: str = "Parsing file failed.") -> None:
-        super().__init__(status_code=400, detail=detail)
-
-
-class NoChunksToUpsertException(HTTPException):
-    def __init__(self, detail: str = "No chunks to upsert.") -> None:
-        super().__init__(status_code=400, detail=detail)
-
-
 class SearchMethodNotAvailableException(HTTPException):
     def __init__(self, detail: str = "Method not available."):
         super().__init__(status_code=400, detail=detail)
@@ -22,12 +14,42 @@ class WrongSearchMethodException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
-class NoVectorStoreAvailableException(HTTPException):
-    def __init__(self, detail: str = "No vector store available."):
+class WebSearchNotAvailableException(HTTPException):
+    def __init__(self, detail: str = "Web search is not available."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class CollectionAlreadyExistsException(HTTPException):
+    def __init__(self, detail: str = "Collection already exists."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class RoleAlreadyExistsException(HTTPException):
+    def __init__(self, detail: str = "Role already exists."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class DeleteRoleWithUsersException(HTTPException):
+    def __init__(self, detail: str = "Delete role with users is not allowed."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class UserAlreadyExistsException(HTTPException):
+    def __init__(self, detail: str = "User already exists."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class TokenAlreadyExistsException(HTTPException):
+    def __init__(self, detail: str = "Token already exists."):
         super().__init__(status_code=400, detail=detail)
 
 
 # 403
+class InvalidPasswordException(HTTPException):
+    def __init__(self, detail: str = "Invalid password."):
+        super().__init__(status_code=403, detail=detail)
+
+
 class InvalidAuthenticationSchemeException(HTTPException):
     def __init__(self, detail: str = "Invalid authentication scheme.") -> None:
         super().__init__(status_code=403, detail=detail)
@@ -38,7 +60,7 @@ class InvalidAPIKeyException(HTTPException):
         super().__init__(status_code=403, detail=detail)
 
 
-class InsufficientRightsException(HTTPException):
+class InsufficientPermissionException(HTTPException):
     def __init__(self, detail: str = "Insufficient rights.") -> None:
         super().__init__(status_code=403, detail=detail)
 
@@ -49,8 +71,33 @@ class CollectionNotFoundException(HTTPException):
         super().__init__(status_code=404, detail=detail)
 
 
+class DocumentNotFoundException(HTTPException):
+    def __init__(self, detail: str = "Document not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
+class ChunkNotFoundException(HTTPException):
+    def __init__(self, detail: str = "Chunk not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
 class ModelNotFoundException(HTTPException):
     def __init__(self, detail: str = "Model not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
+class RoleNotFoundException(HTTPException):
+    def __init__(self, detail: str = "Role not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
+class TokenNotFoundException(HTTPException):
+    def __init__(self, detail: str = "Token not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
+class UserNotFoundException(HTTPException):
+    def __init__(self, detail: str = "User not found.") -> None:
         super().__init__(status_code=404, detail=detail)
 
 
@@ -63,7 +110,22 @@ class FileSizeLimitExceededException(HTTPException):
 
 
 # 422
-class InvalidJSONFormatException(HTTPException):
+class ParsingDocumentFailedException(HTTPException):
+    def __init__(self, detail: str = "Parsing document failed.") -> None:
+        super().__init__(status_code=422, detail=detail)
+
+
+class ChunkingFailedException(HTTPException):
+    def __init__(self, detail: str = "Chunking failed.") -> None:
+        super().__init__(status_code=422, detail=detail)
+
+
+class VectorizationFailedException(HTTPException):
+    def __init__(self, detail: str = "Vectorization failed.") -> None:
+        super().__init__(status_code=422, detail=detail)
+
+
+class InvalidJSONFileFormatException(HTTPException):
     def __init__(self, detail: str = "Invalid JSON file format.") -> None:
         super().__init__(status_code=422, detail=detail)
 
@@ -96,3 +158,16 @@ class NotImplementedException(HTTPException):
 class UnsupportedFileUploadException(HTTPException):
     def __init__(self, detail: str = "Unsupported collection name for upload file.") -> None:
         super().__init__(status_code=422, detail=detail)
+
+
+# 429
+class RateLimitExceeded(HTTPException):
+    """
+    exception raised when a rate limit is hit.
+    """
+
+    limit = None
+
+    def __init__(self, detail: Optional[str] = None) -> None:
+        detail = f"Rate limit exceeded: {detail}" if detail else "Rate limit exceeded."
+        super(RateLimitExceeded, self).__init__(status_code=429, detail=detail)
