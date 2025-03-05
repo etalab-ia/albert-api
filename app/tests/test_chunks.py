@@ -9,7 +9,7 @@ from app.schemas.chunks import Chunks, Chunk
 
 @pytest.fixture(scope="module")
 def setup(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
     # Get embedding model
     response = test_client.get("/v1/models", timeout=10)
     models = response.json()
@@ -40,7 +40,7 @@ def setup(args, test_client):
 class TestChunks:
     def test_get_chunks(self, args, test_client, setup):
         COLLECTION_ID, DOCUMENT_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         response = test_client.get(f"/v1/chunks/{COLLECTION_ID}/{DOCUMENT_ID}")
         assert response.status_code == 200
 
@@ -53,7 +53,7 @@ class TestChunks:
 
     def test_delete_chunks(self, args, test_client, setup):
         COLLECTION_ID, DOCUMENT_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         response = test_client.delete(f"/v1/documents/{COLLECTION_ID}/{DOCUMENT_ID}")
         assert response.status_code == 204
         response = test_client.get(f"/v1/chunks/{COLLECTION_ID}/{DOCUMENT_ID}")

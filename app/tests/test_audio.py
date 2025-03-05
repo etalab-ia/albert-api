@@ -8,7 +8,7 @@ from app.utils.variables import MODEL_TYPE__AUDIO
 
 @pytest.fixture(scope="module")
 def setup(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
     # retrieve model
     response = test_client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
@@ -31,7 +31,7 @@ class TestAudio:
             files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
             data = {"model": MODEL_ID, "language": "fr", "response_format": "json", "temperature": 0}
             response = test_client.post(
-                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args["api_key_user"]}"}
+                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
             )
 
         assert response.status_code == 200, response.text
@@ -47,7 +47,7 @@ class TestAudio:
             files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
             data = {"model": MODEL_ID, "language": "fr", "response_format": "text"}
             response = test_client.post(
-                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args["api_key_user"]}"}
+                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
             )
 
         assert response.status_code == 200, response.text
@@ -63,7 +63,7 @@ class TestAudio:
             files = {"file": (os.path.basename(file_path), file, "audio/wav")}
             data = {"model": MODEL_ID, "language": "fr", "response_format": "json", "temperature": 0}
             response = test_client.post(
-                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args["api_key_user"]}"}
+                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
             )
 
         assert response.status_code == 200, response.text
@@ -80,7 +80,7 @@ class TestAudio:
             files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
             data = {"model": MODEL_ID, "language": "fr"}
             response = test_client.post(
-                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args["api_key_user"]}"}
+                "/v1/audio/transcriptions", files=files, data=data, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
             )
 
         assert response.status_code == 404, response.text
