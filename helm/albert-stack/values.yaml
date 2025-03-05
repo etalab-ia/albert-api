@@ -24,7 +24,7 @@ albertApi:
     clients:
       models:
         textGeneration:
-          url: "http://mistral-7b.default.svc.cluster.local/v1"
+          url: "http://llama-3-8b.default.svc.cluster.local/v1"
           key: "changeme"
         embeddings:
           url: "http://bge-embeddings.default.svc.cluster.local/v1"
@@ -87,7 +87,7 @@ vllm:
     tag: latest
     pullPolicy: IfNotPresent
   service:
-    name: mistral-7b
+    name: llama-3-8b
     type: ClusterIP
     port: 80
     targetPort: 8000
