@@ -5,7 +5,7 @@ from app.schemas.files import ChunkerArgs, FilesRequest
 from app.schemas.security import User
 from app.utils.lifespan import databases
 from app.utils.security import check_api_key
-from app.utils.exceptions import FileSizeLimitExceededException
+from app.utils.exceptions import FileSizeLimitExceededException, NoVectorStoreAvailableException
 
 router = APIRouter()
 
@@ -25,6 +25,9 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
 
     Max file size is 20MB.
     """
+
+    if not databases.search:
+        raise NoVectorStoreAvailableException()
 
     file_size = len(file.file.read())
     if file_size > FileSizeLimitExceededException.MAX_CONTENT_SIZE:
