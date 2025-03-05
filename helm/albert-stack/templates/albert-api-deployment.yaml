@@ -30,18 +30,22 @@ spec:
           - name: albert-config-vol
             mountPath: /home/albert/conf
             readOnly: true
+        {{- if .Values.albertApi.probes.readiness.enabled }}
         readinessProbe:
           httpGet:
             path: {{ .Values.albertApi.probes.readiness.path }}
             port: {{ .Values.albertApi.service.targetPort }}
           initialDelaySeconds: {{ .Values.albertApi.probes.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.albertApi.probes.readiness.periodSeconds }}
+        {{- end }}
+        {{- if .Values.albertApi.probes.liveness.enabled }}
         livenessProbe:
           httpGet:
             path: {{ .Values.albertApi.probes.liveness.path }}
             port: {{ .Values.albertApi.service.targetPort }}
           initialDelaySeconds: {{ .Values.albertApi.probes.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.albertApi.probes.liveness.periodSeconds }}
+        {{- end }}
       volumes:
       - name: albert-config-vol
         configMap:

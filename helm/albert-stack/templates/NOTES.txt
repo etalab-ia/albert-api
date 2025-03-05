@@ -8,11 +8,16 @@ To learn more about the release, try:
   $ helm status {{ .Release.Name }}
   $ helm get all {{ .Release.Name }}
 
-Albert API:
-  You can access the Albert API at: http://albert-api:{{ .Values.albertApi.service.port }}
+Access URLs:
+  NOTE: It may take a few minutes for all services to be in "Running" state.
 
-Streamlit UI:
-  You can access the Streamlit UI at: http://streamlit:{{ .Values.streamlit.service.port }}
+  To find the public IP addresses:
+    $ kubectl describe svc -n {{ .Values.global.namespace | default "default" }} albert-api
+    $ kubectl describe svc -n {{ .Values.global.namespace | default "default" }} streamlit
+
+  Use the "LoadBalancer Ingress" value to access each service:
+  - Albert API: http://<LoadBalancer Ingress IP>:{{ .Values.albertApi.service.port }}
+  - Streamlit UI: http://<LoadBalancer Ingress IP>:{{ .Values.streamlit.service.port }}
 
 Components in this deployment:
 - Albert API

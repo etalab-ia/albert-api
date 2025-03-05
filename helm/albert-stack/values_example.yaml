@@ -51,10 +51,12 @@ albertApi:
         apiKey: "changeme"
   probes:
     readiness:
+      enabled: false
       path: /health
       initialDelaySeconds: 10
       periodSeconds: 30
     liveness:
+      enabled: false
       path: /health
       initialDelaySeconds: 60
       periodSeconds: 30
@@ -68,6 +70,7 @@ streamlit:
   service:
     type: LoadBalancer
     port: 8501
+    targetPort: 8501
   config:
     baseUrl: "http://albert-api.default.svc.cluster.local:80/v1"
   probes:
