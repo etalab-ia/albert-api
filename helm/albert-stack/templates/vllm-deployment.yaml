@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+  namespace: {{ .Values.global.namespace | default "default" }}
+  labels:
+    app: vllm
+    {{- include "albert-stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vllm
+spec:
+  replicas: {{ .Values.vllm.replicas }}
+  selector:
+    matchLabels:
+      app: vllm
+  template:
+    metadata:
+      labels:
+        app: vllm
+    spec:
+      volumes:
+      - name: cache-volume
+        persistentVolumeClaim:
+          claimName: vllm
+      # vLLM needs to access the host's shared memory for tensor parallel inference.
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: {{ .Values.vllm.shm.sizeLimit | quote }}
+      containers:
+      - name: vllm
+        image: {{ .Values.vllm.image.repository }}:{{ .Values.vllm.image.tag }}
+        imagePullPolicy: {{ .Values.vllm.image.pullPolicy }}
+        command: ["/bin/sh", "-c"]
+        args: [
+          "vllm serve {{ .Values.vllm.config.model }} --trust-remote-code --enable-chunked-prefill --max_num_batched_tokens {{ .Values.vllm.config.maxNumBatchedTokens }}"
+        ]
+        env:
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.vllm.secrets.huggingfaceToken.name }}
+              key: {{ .Values.vllm.secrets.huggingfaceToken.key }}
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            cpu: {{ .Values.vllm.resources.limits.cpu | quote }}
+            memory: {{ .Values.vllm.resources.limits.memory }}
+            nvidia.com/gpu: {{ .Values.vllm.resources.limits.gpu }}
+          requests:
+            cpu: {{ .Values.vllm.resources.requests.cpu | quote }}
+            memory: {{ .Values.vllm.resources.requests.memory }}
+            nvidia.com/gpu: {{ .Values.vllm.resources.requests.gpu }}
+        volumeMounts:
+        - mountPath: /root/.cache/huggingface
+          name: cache-volume
+        - name: shm
+          mountPath: /dev/shm
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.vllm.probes.readiness.path }}
+            port: 8000
+          initialDelaySeconds: {{ .Values.vllm.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.vllm.probes.readiness.periodSeconds }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.vllm.probes.liveness.path }}
+            port: 8000
+          initialDelaySeconds: {{ .Values.vllm.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.vllm.probes.liveness.periodSeconds }}

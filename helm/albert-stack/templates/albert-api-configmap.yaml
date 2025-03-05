@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: albert-config
+  namespace: {{ .Values.global.namespace | default "default" }}
+  labels:
+    {{- include "albert-stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: albert-api
+data:
+  config.yml: |
+    # Albert config.yml
+    
+    rate_limit: 
+      by_key: {{ .Values.albertApi.config.rateLimits.byKey }}
+      by_ip: {{ .Values.albertApi.config.rateLimits.byIp }}
+
+    internet:
+      default_language_model: {{ .Values.albertApi.config.internet.defaultLanguageModel }}
+      default_embeddings_model: {{ .Values.albertApi.config.internet.defaultEmbeddingsModel }}
+
+    clients:
+      models:
+        - url: {{ .Values.albertApi.config.clients.models.textGeneration.url }}
+          type: text-generation  
+          key: {{ .Values.albertApi.config.clients.models.textGeneration.key }}
+        - url: {{ .Values.albertApi.config.clients.models.embeddings.url }}
+          type: text-embeddings-inference 
+          key: {{ .Values.albertApi.config.clients.models.embeddings.key }}
+    
+      auth:
+        type: {{ .Values.albertApi.config.clients.auth.type }}
+        args:
+          api_key: {{ .Values.albertApi.config.clients.auth.apiKey }}
+          server: {{ .Values.albertApi.config.clients.auth.server }}
+          doc_id: {{ .Values.albertApi.config.clients.auth.docId }}
+          table_id: {{ .Values.albertApi.config.clients.auth.tableId }}
+
+      databases:
+        search:
+          type: qdrant
+          args:
+            url: {{ .Values.albertApi.config.clients.databases.qdrant.url }}
+            api_key: {{ .Values.albertApi.config.clients.databases.qdrant.apiKey }}
+            prefer_grpc: {{ .Values.albertApi.config.clients.databases.qdrant.preferGrpc }}
+            grpc_port: {{ .Values.albertApi.config.clients.databases.qdrant.grpcPort }}
+
+        cache:
+          type: redis
+          args:
+            host: {{ .Values.albertApi.config.clients.databases.redis.host }}
+            port: {{ .Values.albertApi.config.clients.databases.redis.port }}
+            username: {{ .Values.albertApi.config.clients.databases.redis.username }}
+            password: {{ .Values.albertApi.config.clients.databases.redis.password }}
+
+      internet:
+        type: {{ .Values.albertApi.config.clients.internet.type }}
+        args:
+          api_key: {{ .Values.albertApi.config.clients.internet.apiKey }}

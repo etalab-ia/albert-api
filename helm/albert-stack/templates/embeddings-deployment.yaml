@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bge-embeddings
+  namespace: {{ .Values.global.namespace | default "default" }}
+  labels:
+    app: bge-embeddings
+    {{- include "albert-stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: embeddings
+spec:
+  replicas: {{ .Values.embeddings.replicas }}
+  selector:
+    matchLabels:
+      app: bge-embeddings
+  template:
+    metadata:
+      labels:
+        app: bge-embeddings
+    spec:
+      containers:
+      - name: bge-embeddings
+        image: {{ .Values.embeddings.image.repository }}:{{ .Values.embeddings.image.tag }}
+        imagePullPolicy: {{ .Values.embeddings.image.pullPolicy }}
+        command: [ "text-embeddings-router" ]
+        args: [ "--model-id", "{{ .Values.embeddings.config.model }}" ]
+        env:
+          - name: PORT
+            value: {{ .Values.embeddings.config.port | quote }}
+        resources:
+          limits:
+            cpu: {{ .Values.embeddings.resources.limits.cpu | quote }}
+            memory: {{ .Values.embeddings.resources.limits.memory }}
+            nvidia.com/gpu: {{ .Values.embeddings.resources.limits.gpu }}
+          requests:
+            cpu: {{ .Values.embeddings.resources.requests.cpu | quote }}
+            memory: {{ .Values.embeddings.resources.requests.memory }}
+            nvidia.com/gpu: {{ .Values.embeddings.resources.requests.gpu }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.embeddings.probes.liveness.path }}
+            port: {{ .Values.embeddings.config.port }}
+          initialDelaySeconds: {{ .Values.embeddings.probes.liveness.initialDelaySeconds }}
+          timeoutSeconds: 30
+          periodSeconds: {{ .Values.embeddings.probes.liveness.periodSeconds }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.embeddings.probes.readiness.path }}
+            port: {{ .Values.embeddings.config.port }}
+          initialDelaySeconds: {{ .Values.embeddings.probes.readiness.initialDelaySeconds }}
+          timeoutSeconds: 30
+          periodSeconds: {{ .Values.embeddings.probes.readiness.periodSeconds }}

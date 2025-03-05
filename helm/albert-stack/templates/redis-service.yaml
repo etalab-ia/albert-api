@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: {{ .Values.global.namespace | default "default" }}
+  labels:
+    {{- include "albert-stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: {{ .Values.redis.service.port }}
+      targetPort: 6379
+  type: {{ .Values.redis.service.type }}

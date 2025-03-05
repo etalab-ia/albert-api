@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: albert-api
+  namespace: {{ .Values.global.namespace | default "default" }}
+  labels:
+    {{- include "albert-stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: albert-api
+spec:
+  replicas: {{ .Values.albertApi.replicas }}
+  selector:
+    matchLabels:
+      app: albert-api
+  template:
+    metadata:
+      labels:
+        app: albert-api
+    spec:
+      containers:
+      - name: api
+        image: {{ .Values.albertApi.image.repository }}:{{ .Values.albertApi.image.tag }}
+        imagePullPolicy: {{ .Values.albertApi.image.pullPolicy }}
+        command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+        ports:
+          - containerPort: 8000
+        env:
+          - name: CONFIG_FILE
+            value: "/home/albert/conf/config.yml"
+        volumeMounts:
+          - name: albert-config-vol
+            mountPath: /home/albert/conf
+            readOnly: true
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.albertApi.probes.readiness.path }}
+            port: 8000
+          initialDelaySeconds: {{ .Values.albertApi.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.albertApi.probes.readiness.periodSeconds }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.albertApi.probes.liveness.path }}
+            port: 8000
+          initialDelaySeconds: {{ .Values.albertApi.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.albertApi.probes.liveness.periodSeconds }}
+      volumes:
+      - name: albert-config-vol
+        configMap:
+          name: albert-config

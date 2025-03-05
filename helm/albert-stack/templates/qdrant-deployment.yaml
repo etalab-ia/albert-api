@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qdrant
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qdrant
+  template:
+    metadata:
+      labels:
+        app: qdrant
+    spec:
+      containers:
+      - name: qdrant
+        image: qdrant/qdrant:latest
+        env:
+        - name: QDRANT_API_KEY
+          value: "changeme"
+        ports:
+        - containerPort: 6333  # HTTP
+        - containerPort: 6334  # gRPC
+        volumeMounts:
+        - name: qdrant-storage
+          mountPath: /qdrant/storage
+      volumes:
+      - name: qdrant-storage
+        persistentVolumeClaim:
+          claimName: qdrant-pvc

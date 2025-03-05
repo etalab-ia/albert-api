@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit
+  namespace: {{ .Values.global.namespace | default "default" }}
+  labels:
+    {{- include "albert-stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: streamlit
+spec:
+  replicas: {{ .Values.streamlit.replicas }}
+  selector:
+    matchLabels:
+      app: streamlit
+  template:
+    metadata:
+      labels:
+        app: streamlit
+    spec:
+      containers:
+      - name: streamlit
+        image: {{ .Values.streamlit.image.repository }}:{{ .Values.streamlit.image.tag }}
+        imagePullPolicy: {{ .Values.streamlit.image.pullPolicy }}
+        command: ["streamlit", "run", "ui/main.py",
+                  "--server.port=8501",
+                  "--browser.gatherUsageStats=false",
+                  "--theme.base=light",
+                  "--theme.primaryColor=#6a6af4",
+                  "--server.maxUploadSize=20"]
+        env:
+          - name: BASE_URL
+            value: {{ .Values.streamlit.config.baseUrl | quote }}
+        ports:
+          - containerPort: 8501
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.streamlit.probes.readiness.path }}
+            port: 8501
+          initialDelaySeconds: {{ .Values.streamlit.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.streamlit.probes.readiness.periodSeconds }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.streamlit.probes.liveness.path }}
+            port: 8501
+          initialDelaySeconds: {{ .Values.streamlit.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.streamlit.probes.liveness.periodSeconds }}

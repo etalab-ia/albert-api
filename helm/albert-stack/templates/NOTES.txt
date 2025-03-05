@@ -1,0 +1,24 @@
+# File: albert-stack/templates/NOTES.txt
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+Albert API:
+  You can access the Albert API at: http://albert-api:{{ .Values.albertApi.service.port }}
+
+Streamlit UI:
+  You can access the Streamlit UI at: http://streamlit:{{ .Values.streamlit.service.port }}
+
+Components in this deployment:
+- Albert API
+- Streamlit UI
+- vLLM ({{ .Values.vllm.config.model }})
+- Embeddings ({{ .Values.embeddings.config.model }})
+- Qdrant Vector Database
+- Redis
+- Elasticsearch

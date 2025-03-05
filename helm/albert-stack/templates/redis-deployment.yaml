@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: {{ .Values.global.namespace | default "default" }}
+  labels:
+    {{- include "albert-stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  replicas: {{ .Values.redis.replicas }}
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: {{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}
+        imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+        ports:
+          - containerPort: 6379
+        env:
+          - name: REDIS_ARGS
+            value: {{ .Values.redis.config.args | quote }}
+        volumeMounts:
+          - name: redis-data
+            mountPath: /data
+        readinessProbe:
+          exec:
+            command: ["redis-cli", "-a", "{{ .Values.redis.config.password }}", "ping"]
+          initialDelaySeconds: {{ .Values.redis.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.redis.probes.readiness.periodSeconds }}
+          timeoutSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          exec:
+            command: ["redis-cli", "-a", "{{ .Values.redis.config.password }}", "ping"]
+          initialDelaySeconds: {{ .Values.redis.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.redis.probes.liveness.periodSeconds }}
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc

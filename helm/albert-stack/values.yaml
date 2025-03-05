@@ -1,0 +1,257 @@
+# Global settings
+global:
+  namespace: default
+  storage:
+    storageClassName: default
+
+albertApi:
+  enabled: true
+  replicas: 1
+  image:
+    repository: ghcr.io/etalab-ia/albert-api/app
+    tag: 23ba1251f0f3a1a9d3012872d026e5906ebb07c8
+    pullPolicy: IfNotPresent
+  service:
+    type: LoadBalancer
+    port: 80
+    targetPort: 8000
+  config:
+    rateLimits:
+      byKey: "300/minute"
+      byIp: "1000/minute"
+    internet:
+      defaultLanguageModel: "meta-llama/Meta-Llama-3-8B-Instruct"
+      defaultEmbeddingsModel: "BAAI/bge-m3"
+    clients:
+      models:
+        textGeneration:
+          url: "http://mistral-7b.default.svc.cluster.local/v1"
+          key: "changeme"
+        embeddings:
+          url: "http://bge-embeddings.default.svc.cluster.local/v1"
+          key: "changeme"
+      auth:
+        type: "grist"
+        apiKey: "YOUR_GRIST_API_KEY"
+        server: "https://grist.numerique.gouv.fr"
+        docId: "YOUR_GRIST_DOC_ID"
+        tableId: "DEV"
+      databases:
+        qdrant:
+          url: "http://qdrant.default.svc.cluster.local:6333"
+          apiKey: "changeme"
+          preferGrpc: true
+          grpcPort: 6334
+        redis:
+          host: "redis.default.svc.cluster.local"
+          port: 6379
+          username: "username"
+          password: "password"
+      internet:
+        type: "brave"
+        apiKey: "changeme"
+  probes:
+    readiness:
+      enabled: false
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    liveness:
+      enabled: false
+      path: /health
+      initialDelaySeconds: 60
+      periodSeconds: 30
+
+streamlit:
+  enabled: true
+  replicas: 1
+  image:
+    repository: ghcr.io/etalab-ia/albert-api/ui
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: LoadBalancer
+    port: 8501
+  config:
+    baseUrl: "http://albert-api.default.svc.cluster.local:80/v1"
+  probes:
+    readiness:
+      enabled: true
+      path: /
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    liveness:
+      enabled: true
+      path: /
+      initialDelaySeconds: 10
+      periodSeconds: 10
+
+vllm:
+  enabled: true
+  replicas: 1
+  image:
+    repository: vllm/vllm-openai
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    name: mistral-7b
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  config:
+    model: meta-llama/Meta-Llama-3-8B-Instruct
+    trustRemoteCode: true
+    enableChunkedPrefill: true
+    maxNumBatchedTokens: 1024
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClassName: sbs-default
+  resources:
+    limits:
+      cpu: "8"
+      memory: 50G
+      gpu: 1
+    requests:
+      cpu: "4"
+      memory: 20G
+      gpu: 1
+  shm:
+    sizeLimit: 2Gi
+  secrets:
+    huggingfaceToken:
+      name: huggingface-token
+      key: token
+  probes:
+    readiness:
+      enabled: true
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    liveness:
+      enabled: true
+      path: /health
+      initialDelaySeconds: 60
+      periodSeconds: 30
+
+# BGE Embeddings configuration
+embeddings:
+  enabled: true
+  replicas: 1
+  image:
+    repository: ghcr.io/huggingface/text-embeddings-inference
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  config:
+    model: BAAI/bge-m3
+    port: 8000
+  resources:
+    limits:
+      cpu: "4"
+      memory: 32Gi
+      gpu: 1
+    requests:
+      cpu: "2"
+      memory: 16Gi
+      gpu: 1
+  probes:
+    readiness:
+      enabled: true
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    liveness:
+      enabled: true
+      path: /health
+      initialDelaySeconds: 60
+      periodSeconds: 30
+
+# Qdrant configuration
+qdrant:
+  enabled: true
+  replicas: 1
+  image:
+    repository: qdrant/qdrant
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    httpPort: 6333
+    grpcPort: 6334
+  config:
+    apiKey: "changeme"
+  persistence:
+    enabled: true
+    size: 30Gi
+
+# Redis configuration
+redis:
+  enabled: true
+  replicas: 1
+  image:
+    repository: redis/redis-stack-server
+    tag: 7.2.0-v11
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 6379
+  config:
+    args: "--dir /data --requirepass changeme --user username on >password ~* allcommands --save 60 1 --appendonly yes"
+    password: "changeme"
+    username: "username"
+  persistence:
+    size: 10Gi
+  probes:
+    readiness:
+      enabled: true
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    liveness:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 30
+
+# Elasticsearch configuration
+elasticsearch:
+  replicas: 1
+  image:
+    repository: docker.elastic.co/elasticsearch/elasticsearch
+    tag: 8.16.0
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 9200
+    transportPort: 9300
+  config:
+    javaOpts: "-Xms1g -Xmx1g"
+    username: "elastic"
+    password: "elastic"
+    loggerLevel: "WARN"
+    rootLoggerLevel: "WARN"
+    xpackSecurityEnabled: "false"
+  persistence:
+    enabled: true
+    size: 30Gi
+  resources:
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+  probes:
+    readiness:
+      path: /_cluster/health?wait_for_status=yellow
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    liveness:
+      path: /_cluster/health
+      initialDelaySeconds: 60
+      periodSeconds: 30
+
+huggingface:
+  token: "YOUR_HF_API_KEY"
