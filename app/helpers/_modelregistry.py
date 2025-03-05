@@ -36,7 +36,7 @@ class ModelRegistry:
                 self.internet_default_embeddings_model = model.id
 
         # check if the internet models are available
-        if not self.internet_default_language_model or not self.internet_default_embeddings_model:
+        if not self.internet_default_language_model:
             raise ValueError("Internet models are not setup.")
 
     def __getitem__(self, key: str) -> ModelRouter:
