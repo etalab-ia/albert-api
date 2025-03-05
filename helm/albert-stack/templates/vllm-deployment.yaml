@@ -41,7 +41,7 @@ spec:
               name: {{ .Values.vllm.secrets.huggingfaceToken.name }}
               key: {{ .Values.vllm.secrets.huggingfaceToken.key }}
         ports:
-        - containerPort: 8000
+        - containerPort: {{ .Values.vllm.service.targetPort }}
         resources:
           limits:
             cpu: {{ .Values.vllm.resources.limits.cpu | quote }}
@@ -59,12 +59,12 @@ spec:
         readinessProbe:
           httpGet:
             path: {{ .Values.vllm.probes.readiness.path }}
-            port: 8000
+            port: {{ .Values.vllm.service.targetPort }}
           initialDelaySeconds: {{ .Values.vllm.probes.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.vllm.probes.readiness.periodSeconds }}
         livenessProbe:
           httpGet:
             path: {{ .Values.vllm.probes.liveness.path }}
-            port: 8000
+            port: {{ .Values.vllm.service.targetPort }}
           initialDelaySeconds: {{ .Values.vllm.probes.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.vllm.probes.liveness.periodSeconds }}

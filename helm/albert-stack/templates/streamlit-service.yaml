@@ -11,6 +11,6 @@ spec:
     app: streamlit
   ports:
     - port: {{ .Values.streamlit.service.port }}
-      targetPort: 8501
+      targetPort: {{ .Values.streamlit.service.port }}
       name: http
   type: {{ .Values.streamlit.service.type }}

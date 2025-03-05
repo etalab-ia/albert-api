@@ -11,5 +11,5 @@ spec:
     app: redis
   ports:
     - port: {{ .Values.redis.service.port }}
-      targetPort: 6379
+      targetPort: {{ .Values.redis.service.port }}
   type: {{ .Values.redis.service.type }}

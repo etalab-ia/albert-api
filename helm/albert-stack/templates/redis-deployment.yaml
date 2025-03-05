@@ -21,7 +21,7 @@ spec:
         image: {{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}
         imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
         ports:
-          - containerPort: 6379
+          - containerPort: {{ .Values.redis.service.port }}
         env:
           - name: REDIS_ARGS
             value: {{ .Values.redis.config.args | quote }}

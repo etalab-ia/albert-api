@@ -21,7 +21,7 @@ spec:
         image: {{ .Values.streamlit.image.repository }}:{{ .Values.streamlit.image.tag }}
         imagePullPolicy: {{ .Values.streamlit.image.pullPolicy }}
         command: ["streamlit", "run", "ui/main.py",
-                  "--server.port=8501",
+                  "--server.port={{ .Values.streamlit.service.port }}",
                   "--browser.gatherUsageStats=false",
                   "--theme.base=light",
                   "--theme.primaryColor=#6a6af4",
@@ -30,16 +30,16 @@ spec:
           - name: BASE_URL
             value: {{ .Values.streamlit.config.baseUrl | quote }}
         ports:
-          - containerPort: 8501
+          - containerPort: {{ .Values.streamlit.service.port }}
         readinessProbe:
           httpGet:
             path: {{ .Values.streamlit.probes.readiness.path }}
-            port: 8501
+            port: {{ .Values.streamlit.service.port }}
           initialDelaySeconds: {{ .Values.streamlit.probes.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.streamlit.probes.readiness.periodSeconds }}
         livenessProbe:
           httpGet:
             path: {{ .Values.streamlit.probes.liveness.path }}
-            port: 8501
+            port: {{ .Values.streamlit.service.port }}
           initialDelaySeconds: {{ .Values.streamlit.probes.liveness.initialDelaySeconds }}
           periodSeconds: {{ .Values.streamlit.probes.liveness.periodSeconds }}
