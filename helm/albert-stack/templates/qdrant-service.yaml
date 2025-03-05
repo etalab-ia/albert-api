@@ -8,9 +8,9 @@ spec:
     app: qdrant
   ports:
     - name: grpc
-      port: 6334
-      targetPort: 6334  # gRPC port
+      port: {{ .Values.qdrant.service.grpcPort }}
+      targetPort: {{ .Values.qdrant.service.grpcPort }}
     - name: http
-      port: 6333
-      targetPort: 6333  # HTTP port
-  type: ClusterIP
+      port: {{ .Values.qdrant.service.httpPort }}
+      targetPort: {{ .Values.qdrant.service.httpPort }}
+  type: {{ .Values.qdrant.service.type }}

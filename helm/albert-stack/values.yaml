@@ -5,7 +5,6 @@ global:
     storageClassName: default
 
 albertApi:
-  enabled: true
   replicas: 1
   image:
     repository: ghcr.io/etalab-ia/albert-api/app
@@ -52,18 +51,15 @@ albertApi:
         apiKey: "changeme"
   probes:
     readiness:
-      enabled: false
       path: /health
       initialDelaySeconds: 10
       periodSeconds: 30
     liveness:
-      enabled: false
       path: /health
       initialDelaySeconds: 60
       periodSeconds: 30
 
 streamlit:
-  enabled: true
   replicas: 1
   image:
     repository: ghcr.io/etalab-ia/albert-api/ui
@@ -76,18 +72,15 @@ streamlit:
     baseUrl: "http://albert-api.default.svc.cluster.local:80/v1"
   probes:
     readiness:
-      enabled: true
       path: /
       initialDelaySeconds: 5
       periodSeconds: 10
     liveness:
-      enabled: true
       path: /
       initialDelaySeconds: 10
       periodSeconds: 10
 
 vllm:
-  enabled: true
   replicas: 1
   image:
     repository: vllm/vllm-openai
@@ -104,7 +97,6 @@ vllm:
     enableChunkedPrefill: true
     maxNumBatchedTokens: 1024
   persistence:
-    enabled: true
     size: 50Gi
     storageClassName: sbs-default
   resources:
@@ -124,19 +116,16 @@ vllm:
       key: token
   probes:
     readiness:
-      enabled: true
       path: /health
       initialDelaySeconds: 10
       periodSeconds: 30
     liveness:
-      enabled: true
       path: /health
       initialDelaySeconds: 60
       periodSeconds: 30
 
 # BGE Embeddings configuration
 embeddings:
-  enabled: true
   replicas: 1
   image:
     repository: ghcr.io/huggingface/text-embeddings-inference
@@ -160,19 +149,16 @@ embeddings:
       gpu: 1
   probes:
     readiness:
-      enabled: true
       path: /health
       initialDelaySeconds: 10
       periodSeconds: 30
     liveness:
-      enabled: true
       path: /health
       initialDelaySeconds: 60
       periodSeconds: 30
 
 # Qdrant configuration
 qdrant:
-  enabled: true
   replicas: 1
   image:
     repository: qdrant/qdrant
@@ -185,12 +171,10 @@ qdrant:
   config:
     apiKey: "changeme"
   persistence:
-    enabled: true
     size: 30Gi
 
 # Redis configuration
 redis:
-  enabled: true
   replicas: 1
   image:
     repository: redis/redis-stack-server
@@ -207,11 +191,9 @@ redis:
     size: 10Gi
   probes:
     readiness:
-      enabled: true
       initialDelaySeconds: 10
       periodSeconds: 30
     liveness:
-      enabled: true
       initialDelaySeconds: 60
       periodSeconds: 30
 
@@ -234,7 +216,6 @@ elasticsearch:
     rootLoggerLevel: "WARN"
     xpackSecurityEnabled: "false"
   persistence:
-    enabled: true
     size: 30Gi
   resources:
     limits:

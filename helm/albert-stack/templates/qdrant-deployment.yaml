@@ -4,7 +4,7 @@ metadata:
   name: qdrant
   namespace: default
 spec:
-  replicas: 1
+  replicas: {{ .Values.qdrant.replicas }}
   selector:
     matchLabels:
       app: qdrant
@@ -15,13 +15,14 @@ spec:
     spec:
       containers:
       - name: qdrant
-        image: qdrant/qdrant:latest
+        image: {{ .Values.qdrant.image.repository }}:{{ .Values.qdrant.image.tag }}
+        imagePullPolicy: {{ .Values.qdrant.image.pullPolicy }}
         env:
         - name: QDRANT_API_KEY
-          value: "changeme"
+          value: {{ .Values.qdrant.config.apiKey }}
         ports:
-        - containerPort: 6333  # HTTP
-        - containerPort: 6334  # gRPC
+        - containerPort: {{ .Values.qdrant.service.httpPort }}
+        - containerPort: {{ .Values.qdrant.service.grpcPort }}
         volumeMounts:
         - name: qdrant-storage
           mountPath: /qdrant/storage

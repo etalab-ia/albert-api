@@ -8,4 +8,4 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 30Gi
+      storage: {{ .Values.elasticsearch.persistence.size }}
