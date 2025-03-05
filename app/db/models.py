@@ -13,9 +13,9 @@ class Log(Base):
     user = Column(String, nullable=True)
     endpoint = Column(String, nullable=False)
     model = Column(String, nullable=True)
-    token_per_sec = Column(Integer)
-    inter_token_latency = Column(Float)
-    req_tokens_nb = Column(Integer)
+    prompt_tokens = Column(Integer)
+    completion_tokens = Column(Float)
+    total_tokens = Column(Integer)
 
     def __repr__(self):
         return f"<Log(datetime={self.datetime}, user={self.user}, endpoint={self.endpoint})>"

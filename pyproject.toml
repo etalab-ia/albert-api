@@ -62,5 +62,4 @@ forced-separate = ["tests"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.pytest.ini_options]
-addopts = "--exitfirst --log-cli-level=INFO"
 testpaths = ["app/tests"]

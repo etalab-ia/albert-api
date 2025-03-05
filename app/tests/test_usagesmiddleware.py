@@ -39,8 +39,8 @@ class TestUsagesMiddleware:
         assert log.model == MODEL_ID
         assert isinstance(log.datetime, datetime)
         assert log.user is not None
-        # assert log.token_per_sec is not None
-        # assert log.req_tokens_nb is not None
+        # assert log.prompt_tokens is not None
+        # assert log.total_tokens is not None
 
     def test_log_embeddings(self, args, test_client, db_session):
         """Test logging of embeddings request"""

@@ -77,9 +77,9 @@ class UsagesMiddleware(BaseHTTPMiddleware):
                             user=user_id,
                             endpoint=endpoint,
                             model=model,
-                            token_per_sec=usage_data.get("tokens_per_second"),
-                            inter_token_latency=usage_data.get("inter_token_latency"),
-                            req_tokens_nb=usage_data.get("total_tokens"),
+                            prompt_tokens=usage_data.get("prompt_tokens"),
+                            completion_tokens=usage_data.get("completion_tokens"),
+                            total_tokens=usage_data.get("total_tokens"),
                         )
                         db.add(log)
                         db.commit()

@@ -24,9 +24,9 @@ def upgrade():
         sa.Column("user", sa.String(), nullable=False),
         sa.Column("endpoint", sa.String(), nullable=False),
         sa.Column("model", sa.String(), nullable=False),
-        sa.Column("token_per_sec", sa.Integer(), nullable=True),
-        sa.Column("inter_token_latency", sa.Float(), nullable=True),
-        sa.Column("req_tokens_nb", sa.Integer(), nullable=True),
+        sa.Column("prompt_tokens", sa.Integer(), nullable=True),
+        sa.Column("completion_tokens", sa.Float(), nullable=True),
+        sa.Column("total_tokens", sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
 
