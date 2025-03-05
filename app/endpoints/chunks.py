@@ -7,6 +7,7 @@ from app.schemas.chunks import Chunks
 from app.schemas.security import User
 from app.utils.lifespan import databases
 from app.utils.security import check_api_key
+from app.utils.exceptions import NoVectorStoreAvailableException
 
 router = APIRouter()
 
@@ -23,6 +24,8 @@ async def get_chunks(
     """
     Get chunks of a document.
     """
+    if not databases.search:
+        raise NoVectorStoreAvailableException()
     collection, document = str(collection), str(document)
     data = databases.search.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user)
 
