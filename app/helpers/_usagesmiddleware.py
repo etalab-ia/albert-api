@@ -55,17 +55,11 @@ class UsagesMiddleware(BaseHTTPMiddleware):
 
                     # Handle streaming response
                     if hasattr(response, "body_iterator"):
-                        collected_data = b""
                         async for chunk in response.body_iterator:
-                            collected_data += chunk
                             try:
-                                # Look for the last complete JSON object in the stream
-                                if b"data: " in chunk:
-                                    json_str = chunk.split(b"data: ")[-1].strip()
-                                    if json_str and json_str != b"[DONE]":
-                                        chunk_data = json.loads(json_str)
-                                        if "usage" in chunk_data:
-                                            usage_data = chunk_data["usage"]
+                                chunk_data = json.loads(chunk)
+                                if "usage" in chunk_data:
+                                    usage_data = chunk_data["usage"]
                             except json.JSONDecodeError:
                                 continue
 

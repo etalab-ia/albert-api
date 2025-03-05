@@ -1,5 +1,7 @@
 from datetime import datetime
+from typing import Generator
 
+from fastapi.testclient import TestClient
 import pytest
 
 from app.db.models import Log
@@ -14,6 +16,26 @@ def setup(args, test_client):
     models = response.json()
     MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]["id"]
     yield MODEL_ID
+
+
+@pytest.fixture(scope="session")
+def app_with_middlewares(engine, db_session):
+    """Create FastAPI app with test database"""
+    from app.main import create_app
+
+    def get_test_db():
+        yield db_session
+
+    # Create app with test config
+    app = create_app(db_func=get_test_db, enable_middlewares=True)
+
+    return app
+
+
+@pytest.fixture(scope="session")
+def test_client(app_with_middlewares) -> Generator[TestClient, None, None]:
+    with TestClient(app=app_with_middlewares) as client:
+        yield client
 
 
 @pytest.mark.usefixtures("args", "setup", "test_client")
@@ -31,16 +53,15 @@ class TestUsagesMiddleware:
         response = test_client.post("/v1/chat/completions", json=params)
         assert response.status_code == 200
 
-        logs = db_session.query(Log).all()
-        assert len(logs) == 1
-        log = logs[0]
+        log = db_session.query(Log).order_by(Log.id.desc()).first()
 
         assert log.endpoint == "/v1/chat/completions"
         assert log.model == MODEL_ID
         assert isinstance(log.datetime, datetime)
         assert log.user is not None
-        # assert log.prompt_tokens is not None
-        # assert log.total_tokens is not None
+        assert log.prompt_tokens is not None
+        assert log.total_tokens is not None
+        assert log.completion_tokens is not None
 
     def test_log_embeddings(self, args, test_client, db_session):
         """Test logging of embeddings request"""

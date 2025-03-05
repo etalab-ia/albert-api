@@ -11,7 +11,7 @@ from app.utils.security import check_admin_api_key, check_api_key
 from app.utils.settings import settings
 
 
-def create_app(*, db_func=get_db, enable_middleware=True) -> FastAPI:
+def create_app(*, db_func=get_db, enable_middlewares=True) -> FastAPI:
     """Create FastAPI application."""
     app = FastAPI(
         title=settings.app_name,
@@ -24,16 +24,15 @@ def create_app(*, db_func=get_db, enable_middleware=True) -> FastAPI:
         redoc_url="/documentation",
     )
 
-    if enable_middleware:
+    if enable_middlewares:
         # Prometheus metrics
         app.instrumentator = Instrumentator().instrument(app=app)
         # Middlewares
         app.add_middleware(middleware_class=SlowAPIASGIMiddleware)
         app.add_middleware(middleware_class=MetricsMiddleware)
         app.instrumentator.expose(app=app, should_gzip=True, tags=["Monitoring"], dependencies=[Depends(dependency=check_admin_api_key)])
-
-    # Usage middleware (always enabled)
-    app.add_middleware(middleware_class=UsagesMiddleware, db_func=db_func)
+        # Usage middleware
+        app.add_middleware(middleware_class=UsagesMiddleware, db_func=db_func)
 
     # Add routers
     app.include_router(router=models.router, tags=["Models"], prefix="/v1")
@@ -58,4 +57,4 @@ def create_app(*, db_func=get_db, enable_middleware=True) -> FastAPI:
 
 
 # Create the main application instance
-app = create_app(db_func=get_db, enable_middleware=settings.middleware)
+app = create_app(db_func=get_db, enable_middlewares=settings.middleware)

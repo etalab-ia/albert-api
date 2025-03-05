@@ -46,3 +46,4 @@ class TestLogModel:
         with pytest.raises(Exception):
             db_session.add(log)
             db_session.commit()
+        db_session.rollback()
