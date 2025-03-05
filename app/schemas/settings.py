@@ -121,9 +121,9 @@ class Config(ConfigBaseModel):
         cache_databases = [database for database in values.databases if database.type == DATABASE_TYPE__REDIS]
         assert len(cache_databases) == 1, "There must be only one cache database."  # fmt: off
 
-        # check if there is only one search database
+        # check if there is at most one search database
         databases = [database for database in values.databases if database.type == DATABASE_TYPE__QDRANT or database.type == DATABASE_TYPE__ELASTIC]
-        assert len(databases) == 1, f"There must be only one search database ({DATABASE_TYPE__QDRANT} or {DATABASE_TYPE__ELASTIC})."  # fmt: off
+        assert len(databases) <= 1, f"There must be at most one search database ({DATABASE_TYPE__QDRANT} or {DATABASE_TYPE__ELASTIC})."  # fmt: off
 
         return values
 

@@ -10,6 +10,7 @@ from app.schemas.security import User
 from app.utils.lifespan import databases
 from app.utils.security import check_api_key
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PUBLIC
+from app.utils.exceptions import NoVectorStoreAvailableException
 
 router = APIRouter()
 
@@ -19,6 +20,8 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     """
     Create a new collection.
     """
+    if not databases.search:
+        raise NoVectorStoreAvailableException()
     collection_id = str(uuid.uuid4())
     databases.search.create_collection(
         collection_id=collection_id,
@@ -37,6 +40,8 @@ async def get_collections(request: Request, user: User = Security(check_api_key)
     """
     Get list of collections.
     """
+    if not databases.search:
+        raise NoVectorStoreAvailableException()
     internet_collection = Collection(
         id=COLLECTION_DISPLAY_ID__INTERNET,
         name=COLLECTION_DISPLAY_ID__INTERNET,
@@ -57,6 +62,8 @@ async def delete_collections(
     """
     Delete a collection.
     """
+    if not databases.search:
+        raise NoVectorStoreAvailableException()
     collection = str(collection)
     databases.search.delete_collection(collection_id=collection, user=user)
 
