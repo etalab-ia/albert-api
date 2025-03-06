@@ -66,6 +66,7 @@ class TestUsagesMiddleware:
     def test_log_embeddings(self, args, test_client, db_session):
         """Test logging of embeddings request"""
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        before = db_session.query(Log).filter_by(endpoint="/v1/embeddings").count()
 
         # Get embeddings model
         response = test_client.get("/v1/models")
@@ -80,9 +81,9 @@ class TestUsagesMiddleware:
         assert response.status_code == 200
 
         # Check if log was created
-        logs = db_session.query(Log).filter_by(endpoint="/v1/embeddings").all()
-        assert len(logs) == 1
-        log = logs[0]
+        after = db_session.query(Log).filter_by(endpoint="/v1/embeddings").count()
+        assert after - before == 1
+        log = db_session.query(Log).filter_by(endpoint="/v1/embeddings").order_by(Log.id.desc()).first()
 
         assert log.endpoint == "/v1/embeddings"
         assert log.model == model_id
