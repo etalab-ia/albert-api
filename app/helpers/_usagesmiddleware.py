@@ -21,15 +21,22 @@ class UsagesMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         endpoint = request.url.path
         content_type = request.headers.get("Content-Type", "")
+
+        # Skip middleware processing for multipart form data (file uploads)
+        if content_type.startswith("multipart/form-data"):
+            return await call_next(request)
+
         start_time = datetime.utcnow()
         model = None
 
         # Store request body if needed
-        if endpoint in self.MODELS_ENDPOINTS and not content_type.startswith("multipart/form-data"):
+        if endpoint in self.MODELS_ENDPOINTS:
             body = await request.body()
+            original_receive = request._receive
 
             async def receive():
-                return {"type": "http.request", "body": body}
+                original = await original_receive()
+                return {**original, "body": body}
 
             request._receive = receive
 
@@ -55,13 +62,21 @@ class UsagesMiddleware(BaseHTTPMiddleware):
 
                     # Handle streaming response
                     if hasattr(response, "body_iterator"):
+                        chunks = []
                         async for chunk in response.body_iterator:
+                            chunks.append(chunk)
                             try:
                                 chunk_data = json.loads(chunk)
                                 if "usage" in chunk_data:
                                     usage_data = chunk_data["usage"]
                             except json.JSONDecodeError:
                                 continue
+
+                        async def new_body_iterator():
+                            for chunk in chunks:
+                                yield chunk
+
+                        response.body_iterator = new_body_iterator()
 
                     # Use database session from dependency
                     db = next(self.db_func())
