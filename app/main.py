@@ -29,10 +29,9 @@ def create_app(*, db_func=get_db, enable_middlewares=True) -> FastAPI:
         app.instrumentator = Instrumentator().instrument(app=app)
         # Middlewares
         app.add_middleware(middleware_class=SlowAPIASGIMiddleware)
+        app.add_middleware(middleware_class=UsagesMiddleware, db_func=db_func)
         app.add_middleware(middleware_class=MetricsMiddleware)
         app.instrumentator.expose(app=app, should_gzip=True, tags=["Monitoring"], dependencies=[Depends(dependency=check_admin_api_key)])
-        # Usage middleware
-        app.add_middleware(middleware_class=UsagesMiddleware, db_func=db_func)
 
     # Add routers
     app.include_router(router=models.router, tags=["Models"], prefix="/v1")
