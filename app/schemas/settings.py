@@ -29,6 +29,7 @@ from app.utils.variables import (
     SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS,
     SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE,
     SUPPORTED_MODEL_CLIENT_TYPES__RERANK,
+    ROUTERS,
 )
 
 
@@ -128,13 +129,21 @@ class Config(ConfigBaseModel):
         return values
 
 
+Routers = Literal[*ROUTERS]
+
+
 class Settings(BaseSettings):
     # logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
-    middleware: bool = True
+
+    # middleware on/off
+    disabled_middleware: bool = False
 
     # config
     config_file: str = "config.yml"
+
+    # disabled endpoints
+    disabled_routers: List[Routers] = Field(default_factory=list)
 
     # app
     app_name: str = DEFAULT_APP_NAME
