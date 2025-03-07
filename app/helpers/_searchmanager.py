@@ -33,6 +33,7 @@ class SearchManager:
             internet_chunks = await self.internet_manager.get_chunks(prompt=prompt, collection_id=internet_collection_id)
 
             collections.remove(COLLECTION_DISPLAY_ID__INTERNET)
+
             if internet_chunks:
                 internet_model_id = (
                     self.models.internet_default_embeddings_model
@@ -40,7 +41,7 @@ class SearchManager:
                     else self.search.get_collections(collection_ids=collections, user=user)[0].model
                 )
 
-                self.search.create_collection(
+                await self.search.create_collection(
                     collection_id=internet_collection_id,
                     collection_name=internet_collection_id,
                     collection_model=internet_model_id,

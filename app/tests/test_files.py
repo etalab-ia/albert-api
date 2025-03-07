@@ -8,7 +8,7 @@ from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE
 
 
 @pytest.fixture(scope="module")
-def setup(args, client: TestClient):
+def setup(client: TestClient):
     response = client.get_user(url="/v1/models", timeout=10)
     models = response.json()
     EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]

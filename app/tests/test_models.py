@@ -5,7 +5,7 @@ from app.utils.settings import settings
 from fastapi.testclient import TestClient
 
 
-@pytest.mark.usefixtures("client", "setup", "cleanup")
+@pytest.mark.usefixtures("client", "cleanup")
 class TestModels:
     def test_get_models_response_status_code(self, client: TestClient):
         """Test the GET /models response status code."""

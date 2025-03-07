@@ -11,9 +11,8 @@ from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, MODEL_TYPE__EMB
 
 
 @pytest.fixture(scope="module")
-def setup(args, client: TestClient):
+def setup(client: TestClient):
     COLLECTION_ID = "pytest"
-    client.headers = {"Authorization": f"Bearer {args["api_key_admin"]}"}
 
     # Get a embedding model
     response = client.get_user(url="/v1/models")
