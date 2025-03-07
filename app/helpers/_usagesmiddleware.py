@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.clients import AuthenticationClient
-from app.db.models import Log
+from app.db.models import Usage
 from app.db.session import get_db
 from app.utils.logging import logger
 
@@ -59,16 +59,20 @@ class UsagesMiddleware(BaseHTTPMiddleware):
             response.body_iterator = new_body_iterator()
         return usage_data, response
 
-    async def _log_usage(self, db: Session, start_time: datetime, user_id: str, endpoint: str, model: str, usage_data: dict):
+    async def _log_usage(
+        self, db: Session, start_time: datetime, duration: int, user_id: str, endpoint: str, model: str, usage_data: dict, status: int
+    ):
         try:
-            log = Log(
+            log = Usage(
                 datetime=start_time,
+                duration=duration,
                 user=user_id,
                 endpoint=endpoint,
                 model=model,
                 prompt_tokens=usage_data.get("prompt_tokens"),
                 completion_tokens=usage_data.get("completion_tokens"),
                 total_tokens=usage_data.get("total_tokens"),
+                status=status,
             )
             db.add(log)
             db.commit()
@@ -84,7 +88,6 @@ class UsagesMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         content_type = request.headers.get("Content-Type", "")
-        start_time = datetime.utcnow()
         body = await request.body()
 
         # Extract model from request
@@ -103,8 +106,10 @@ class UsagesMiddleware(BaseHTTPMiddleware):
 
         request._receive = receive
 
+        start_time = datetime.now()
         # Get response
         response = await call_next(request)
+        duration = int((datetime.now() - start_time).total_seconds() * 1000)
         if not model:
             return response
 
@@ -116,7 +121,7 @@ class UsagesMiddleware(BaseHTTPMiddleware):
 
                 # Log usage
                 db = next(self.db_func())
-                await self._log_usage(db, start_time, user_id, endpoint, model, usage_data)
+                await self._log_usage(db, start_time, duration, user_id, endpoint, model, usage_data, response.status_code)
 
         except Exception as e:
             logger.error(f"Error in UsagesMiddleware: {str(e)}")
