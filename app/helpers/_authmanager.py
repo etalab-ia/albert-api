@@ -42,12 +42,6 @@ class AuthManager:
     MASTER_USER_ID = "master"
     MASTER_TOKEN = "master"
 
-    # TODO: change user to user_id, etc
-    # TODO: fix check_token
-    # TODO: add cache to check_token
-    # TODO: raise an error if database is not reachable
-    # TODO: add docstrings
-
     def __init__(self, client: SQLDatabaseClient) -> None:
         """
         Initialize the authentication client: create the master user and role if they don't exist and check if the master password is correct and update it if needed
@@ -483,8 +477,7 @@ class AuthManager:
             token = self._encode_token(user_id=user.id, token_id=token.id, expires_at=expires_at)
 
             # update the token
-            # TODO: [:8]
-            await session.execute(statement=update(table=TokenTable).values(token=token).where(TokenTable.display_id == token_id))
+            await session.execute(statement=update(table=TokenTable).values(token=token[:8]).where(TokenTable.display_id == token_id))
             await session.commit()
 
         return token
