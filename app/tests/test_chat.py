@@ -216,6 +216,7 @@ class TestChat:
             "search": True,
             "search_args": {"collections": ["internet"], "k": 3, "method": "semantic"},
         }
+        logging.info(params)
         response = client.post_user(url="/v1/chat/completions", json=params)
         assert response.status_code == 200, response.text
 

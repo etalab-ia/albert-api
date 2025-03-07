@@ -7,7 +7,7 @@ from fastapi import UploadFile
 from pdfminer.high_level import extract_text_to_fp
 from pdfminer.layout import LAParams
 
-from app.schemas.data import ParserOutput, ParserOutputMetadata
+from app.schemas.core.data import ParserOutput, ParserOutputMetadata
 from ._baseparser import BaseParser
 
 

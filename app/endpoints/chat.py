@@ -4,20 +4,18 @@ from fastapi import APIRouter, Request, Security
 
 from app.clients.internet import BaseInternetClient as InternetClient
 from app.clients.search import BaseSearchClient as SearchClient
-from app.helpers import ModelRegistry, RateLimit, SearchManager, StreamingResponseWithStatusCode
+from app.helpers import Authorization, ModelRegistry, SearchManager, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search
-from app.schemas.security import User
-from app.utils.lifespan import databases, internet, models
+from app.utils.lifespan import context, databases, internet
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
+from app.schemas.core.auth import AuthenticatedUser
 
 router = APIRouter()
 
 
 @router.post(path=ENDPOINT__CHAT_COMPLETIONS)
-async def chat_completions(
-    request: Request, body: ChatCompletionRequest, user: User = Security(dependency=RateLimit())
-) -> Union[ChatCompletion, ChatCompletionChunk]:
+async def chat_completions(request: Request, body: ChatCompletionRequest, user: AuthenticatedUser = Security(dependency=Authorization())) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
     """Creates a model response for the given chat conversation.
 
     **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional
@@ -52,10 +50,10 @@ async def chat_completions(
         searches = [search.model_dump() for search in searches]
         return body, searches
 
-    body, searches = await retrieval_augmentation_generation(body=body, models=models.registry, search=databases.search, internet=internet.search)
+    body, searches = await retrieval_augmentation_generation(body=body, models=context.models, search=databases.search, internet=internet.search)
 
     # select client
-    model = models.registry[body["model"]]
+    model = context.models(model=body["model"])
     client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case

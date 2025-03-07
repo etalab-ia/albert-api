@@ -5,16 +5,15 @@ from typing import List, Literal, Optional
 from elasticsearch import Elasticsearch, NotFoundError, helpers
 
 from app.clients.search import BaseSearchClient
-from app.helpers import ModelRegistry, AuthManager
+from app.helpers import AuthManager, ModelRegistry
 from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
+from app.schemas.core.auth import AuthenticatedUser
 from app.schemas.documents import Document
 from app.schemas.search import Search
-from app.schemas.security import User
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
-    InsufficientRightsException,
     WrongModelTypeException,
 )
 from app.utils.variables import (
@@ -36,16 +35,11 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         self.models = models
         self.auth = auth
 
-    async def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
+    async def upsert(self, chunks: List[Chunk], collection_id: str, user: AuthenticatedUser) -> None:
         """
         See SearchClient.upsert
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
-
-        if collection.type == COLLECTION_TYPE__PUBLIC:
-            result = await self.auth.get_roles(role_id=user.role)
-            if not result[0].admin:
-                raise InsufficientRightsException()
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
@@ -73,7 +67,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
     async def query(
         self,
         prompt: str,
-        user: User,
+        user: AuthenticatedUser,
         collection_ids: List[str] = [],
         method: Literal[SEARCH_TYPE__HYBRID, SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC] = SEARCH_TYPE__SEMANTIC,
         k: Optional[int] = 4,
@@ -107,7 +101,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
         return searches
 
-    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, user: AuthenticatedUser, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
@@ -146,21 +140,16 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         collection_id: str,
         collection_name: str,
         collection_model: str,
-        user: User,
+        user: AuthenticatedUser,
         collection_type: str = COLLECTION_TYPE__PRIVATE,
         collection_description: Optional[str] = None,
     ) -> Collection:
         """
         See SearchClient.create_collection
         """
-        model = self.models[collection_model]
+        model = self.models(model=collection_model)
         if model.type != MODEL_TYPE__EMBEDDINGS:
             raise WrongModelTypeException()
-
-        if collection_type == COLLECTION_TYPE__PUBLIC:
-            result = await self.auth.get_roles(role_id=user.role)
-            if not result[0].admin:
-                raise InsufficientRightsException()
 
         settings = {
             "similarity": {"default": {"type": "BM25"}},
@@ -207,20 +196,14 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
         return Collection(id=collection_id, **mappings["_meta"])
 
-    async def delete_collection(self, collection_id: str, user: User) -> None:
+    async def delete_collection(self, collection_id: str, user: AuthenticatedUser) -> None:
         """
         See SearchClient.delete_collection
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
-
-        if collection.type == COLLECTION_TYPE__PUBLIC:
-            result = await self.auth.get_roles(role_id=user.role)
-            if not result[0].admin:
-                raise InsufficientRightsException()
-
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10, offset: int = 0) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: AuthenticatedUser, limit: int = 10, offset: int = 0) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
@@ -239,7 +222,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
     # @TODO: pagination between qdrant and elasticsearch diverging
     # @TODO: offset is not supported by elasticsearch
-    def get_documents(self, collection_id: str, user: User, limit: int = 10, offset: int = 0) -> List[Document]:
+    def get_documents(self, collection_id: str, user: AuthenticatedUser, limit: int = 10, offset: int = 0) -> List[Document]:
         """
         See SearchClient.get_documents
         """
@@ -267,16 +250,11 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
         return documents
 
-    async def delete_document(self, collection_id: str, document_id: str, user: User):
+    async def delete_document(self, collection_id: str, document_id: str, user: AuthenticatedUser):
         """
         See SearchClient.delete_document
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
-
-        if collection.type == COLLECTION_TYPE__PUBLIC:
-            result = await self.auth.get_roles(role_id=user.role)
-            if not result[0].admin:
-                raise InsufficientRightsException()
 
         # delete chunks
         body = {"query": {"match": {"metadata.document_id": document_id}}}

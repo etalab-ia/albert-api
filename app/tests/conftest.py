@@ -10,36 +10,74 @@ import pytest
 from app.main import app
 from app.utils.settings import settings
 from app.utils.variables import COLLECTION_TYPE__PRIVATE
+from app.schemas.auth import LimitType, PermissionType
+
+ROLE_ADMIN = "test-role-admin"
+ROLE_USER = "test-role-user"
+USER_ADMIN = "test-user-admin"
+USER_USER = "test-user-user"
+TOKEN_ADMIN = "test-token-admin"
+TOKEN_USER = "test-token-user"
 
 
 @pytest.fixture(scope="session")
 def test_client() -> Generator[TestClient, None, None]:
     with TestClient(app=app) as client:
-        client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+        client.headers = {"Authorization": f"Bearer {settings.auth.root_key}"}
         yield client
 
 
 @pytest.fixture(scope="session")
 def test_roles(test_client: TestClient) -> tuple[str, str]:
     # delete tests users
-    response = test_client.delete(url="/users/test-user-admin")
-    response = test_client.delete(url="/users/test-user-user")
+    response = test_client.delete(url=f"/users/{USER_USER}")
+    response = test_client.delete(url=f"/users/{USER_ADMIN}")
 
     # delete tests roles
-    response = test_client.delete(url="/roles/test-role-admin")
-    response = test_client.delete(url="/roles/test-role-user")
+    response = test_client.delete(url=f"/roles/{ROLE_ADMIN}")
+    response = test_client.delete(url=f"/roles/{ROLE_USER}")
+
+    # get models
+    response = test_client.get(url="/v1/models")
+    response.raise_for_status()
+    models = response.json()["data"]
+    models = [model["id"] for model in models]
+
+    # get permissions
+    admin_permissions = [permission.value for permission in PermissionType]
+    user_permissions = [
+        PermissionType.CREATE_PRIVATE_COLLECTION.value,
+        PermissionType.READ_PRIVATE_COLLECTION.value,
+        PermissionType.UPDATE_PRIVATE_COLLECTION.value,
+        PermissionType.DELETE_PRIVATE_COLLECTION.value,
+        PermissionType.READ_PUBLIC_COLLECTION.value,
+    ]
 
     # create role admin
-    response = test_client.post(url="/roles", json={"role": "test-role-admin", "default": False, "admin": True})
+    response = test_client.post(
+        url="/roles",
+        json={
+            "role": ROLE_ADMIN,
+            "default": False,
+            "permissions": admin_permissions,
+            "limits": [{"model": model, "type": LimitType.TPM.value, "value": None} for model in models],
+        },
+    )
     response.raise_for_status()
-    role_id_admin = response.text
 
     # create role user
-    response = test_client.post(url="/roles", json={"role": "test-role-user", "default": False, "admin": False})
+    response = test_client.post(
+        url="/roles",
+        json={
+            "role": ROLE_USER,
+            "default": False,
+            "permissions": user_permissions,
+            "limits": [{"model": model, "type": LimitType.TPM.value, "value": None} for model in models],
+        },
+    )
     response.raise_for_status()
-    role_id_user = response.text
 
-    return role_id_admin, role_id_user
+    return ROLE_ADMIN, ROLE_USER
 
 
 @pytest.fixture(scope="session")
@@ -47,22 +85,14 @@ def test_users(test_client: TestClient, test_roles: tuple[str, str]) -> tuple[st
     role_id_admin, role_id_user = test_roles
 
     # create user admin
-    response = test_client.post(
-        url="/users",
-        json={"user": "test-user-admin", "password": str(uuid.uuid4()), "role": role_id_admin},
-    )
+    response = test_client.post(url="/users", json={"user": USER_ADMIN, "password": str(uuid.uuid4()), "role": role_id_admin})
     response.raise_for_status()
-    user_id_admin = response.text
 
     # create user user
-    response = test_client.post(
-        url="/users",
-        json={"user": "test-user-user", "password": str(uuid.uuid4()), "role": role_id_user},
-    )
+    response = test_client.post(url="/users", json={"user": USER_USER, "password": str(uuid.uuid4()), "role": role_id_user})
     response.raise_for_status()
-    user_id_user = response.text
 
-    return user_id_admin, user_id_user
+    return USER_ADMIN, USER_USER
 
 
 @pytest.fixture(scope="session")
@@ -70,17 +100,14 @@ def test_tokens(test_client: TestClient, test_users: tuple[str, str]) -> tuple[s
     user_id_admin, user_id_user = test_users
 
     # create token admin
-    response = test_client.post(url="/tokens", json={"user": user_id_admin, "token": "test-token-admin", "expires_at": int(time.time()) + 300})
+    response = test_client.post(url="/tokens", json={"user": user_id_admin, "token": TOKEN_ADMIN, "expires_at": int(time.time()) + 300})
     response.raise_for_status()
-
-    token_admin = response.text
 
     # create token user
-    response = test_client.post(url="/tokens", json={"user": user_id_user, "token": "test-token-user", "expires_at": int(time.time()) + 300})
+    response = test_client.post(url="/tokens", json={"user": user_id_user, "token": TOKEN_USER, "expires_at": int(time.time()) + 300})
     response.raise_for_status()
-    token_user = response.text
 
-    return token_admin, token_user
+    return TOKEN_ADMIN, TOKEN_USER
 
 
 @pytest.fixture(scope="session")
@@ -101,11 +128,11 @@ def client(test_client: TestClient, test_tokens: tuple[str, str]) -> Generator[T
     client.delete_admin = partial(client.delete, headers={"Authorization": f"Bearer {token_admin}"})
     client.patch_admin = partial(client.patch, headers={"Authorization": f"Bearer {token_admin}"})
 
-    # master
-    client.get_master = partial(client.get, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
-    client.post_master = partial(client.post, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
-    client.delete_master = partial(client.delete, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
-    client.patch_master = partial(client.patch, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
+    # root
+    client.get_root = partial(client.get, headers={"Authorization": f"Bearer {settings.auth.root_key}"})
+    client.post_root = partial(client.post, headers={"Authorization": f"Bearer {settings.auth.root_key}"})
+    client.delete_root = partial(client.delete, headers={"Authorization": f"Bearer {settings.auth.root_key}"})
+    client.patch_root = partial(client.patch, headers={"Authorization": f"Bearer {settings.auth.root_key}"})
 
     yield client
 
@@ -139,17 +166,17 @@ def cleanup(client: TestClient, test_roles: tuple[str, str], test_users: tuple[s
     logging.info(msg="cleanup users")
 
     # delete user admin
-    response = client.delete_master(url=f"/users/{user_id_admin}")
+    response = client.delete_root(url=f"/users/{user_id_admin}")
     response.raise_for_status()
 
     # delete user user
-    response = client.delete_master(url=f"/users/{user_id_user}")
+    response = client.delete_root(url=f"/users/{user_id_user}")
     response.raise_for_status()
 
     # delete role admin
-    response = client.delete_master(url=f"/roles/{role_id_admin}")
+    response = client.delete_root(url=f"/roles/{role_id_admin}")
     response.raise_for_status()
 
     # delete role user
-    response = client.delete_master(url=f"/roles/{role_id_user}")
+    response = client.delete_root(url=f"/roles/{role_id_user}")
     response.raise_for_status()

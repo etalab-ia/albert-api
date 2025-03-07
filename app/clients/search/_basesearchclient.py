@@ -13,13 +13,13 @@ from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
-from app.schemas.security import User
+from app.schemas.core.auth import AuthenticatedUser
 from app.utils.logging import logger
 from app.utils.variables import (
-    ENDPOINT__EMBEDDINGS,
     COLLECTION_TYPE__PRIVATE,
     DATABASE_TYPE__ELASTIC,
     DATABASE_TYPE__QDRANT,
+    ENDPOINT__EMBEDDINGS,
     SEARCH_TYPE__HYBRID,
     SEARCH_TYPE__LEXICAL,
     SEARCH_TYPE__SEMANTIC,
@@ -42,7 +42,7 @@ class BaseSearchClient(ABC):
         return getattr(module, f"{type.capitalize()}SearchClient")
 
     @abstractmethod
-    async def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
+    async def upsert(self, chunks: List[Chunk], collection_id: str, user: AuthenticatedUser) -> None:
         """
         Add chunks to a collection.
 
@@ -57,7 +57,7 @@ class BaseSearchClient(ABC):
     async def query(
         self,
         prompt: str,
-        user: User,
+        user: AuthenticatedUser,
         collection_ids: List[str] = [],
         method: Literal[SEARCH_TYPE__HYBRID, SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC] = SEARCH_TYPE__SEMANTIC,
         k: Optional[int] = 4,
@@ -82,7 +82,7 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_collections(self, user: User, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, user: AuthenticatedUser, collection_ids: List[str] = []) -> List[Collection]:
         """
         Get metadata of collections.
 
@@ -101,7 +101,7 @@ class BaseSearchClient(ABC):
         collection_id: str,
         collection_name: str,
         collection_model: str,
-        user: User,
+        user: AuthenticatedUser,
         collection_type: str = COLLECTION_TYPE__PRIVATE,
         collection_description: Optional[str] = None,
     ) -> Collection:
@@ -118,7 +118,7 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def delete_collection(self, collection_id: str, user: User) -> None:
+    def delete_collection(self, collection_id: str, user: AuthenticatedUser) -> None:
         """
         Delete a collection and all its associated data.
         Args:
@@ -128,7 +128,9 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_chunks(self, collection_id: str, document_id: str, user: User, limit: int = 10, offset: Union[int, UUID] = None) -> List[Chunk]:
+    def get_chunks(
+        self, collection_id: str, document_id: str, user: AuthenticatedUser, limit: int = 10, offset: Union[int, UUID] = None
+    ) -> List[Chunk]:
         """
         Get chunks from a collection and a document.
         Args:
@@ -143,7 +145,7 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_documents(self, collection_id: str, user: User, limit: int = 10, offset: Union[int, UUID] = None) -> List[Document]:
+    def get_documents(self, collection_id: str, user: AuthenticatedUser, limit: int = 10, offset: Union[int, UUID] = None) -> List[Document]:
         """
         Get documents from a collection.
 
@@ -159,14 +161,14 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def delete_document(self, collection_id: str, document_id: str, user: User):
+    def delete_document(self, collection_id: str, document_id: str, user: AuthenticatedUser):
         """
         Delete a document from a collection.
 
         Args:
             collection_id (str): The id of the collection to delete the document from.
             document_id (str): The id of the document to delete.
-            user (User): The user deleting the document.
+            user (AuthenticatedUser): The user deleting the document.
         """
         pass
 
@@ -198,7 +200,7 @@ class BaseSearchClient(ABC):
         Simple interface to create an embedding vector from a text input.
         """
 
-        model = self.models[model]
+        model = self.models(model=model)
         client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         try:
             response = await client.embeddings.create(input=input, model=client.model, encoding_format="float")

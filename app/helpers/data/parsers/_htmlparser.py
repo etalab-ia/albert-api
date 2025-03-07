@@ -6,7 +6,7 @@ import time
 from bs4 import BeautifulSoup
 
 
-from app.schemas.data import ParserOutput, ParserOutputMetadata
+from app.schemas.core.data import ParserOutput, ParserOutputMetadata
 from ._baseparser import BaseParser
 
 

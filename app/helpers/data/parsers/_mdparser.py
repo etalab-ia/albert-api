@@ -3,12 +3,10 @@ import time
 from typing import List, Optional, Tuple
 import uuid
 
-from bs4 import BeautifulSoup
 from fastapi import UploadFile
 
-from app.schemas.data import ParserOutput, ParserOutputMetadata
+from app.schemas.core.data import ParserOutput, ParserOutputMetadata
 
-from . import HTMLParser
 from ._baseparser import BaseParser
 
 

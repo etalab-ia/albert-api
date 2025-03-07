@@ -49,3 +49,6 @@ class VllmModelClient(AsyncOpenAI, BaseModelClient):
         # set attributes of the model
         response = response[0]
         self.max_context_length = response.get("max_model_len")
+
+        # set vector size
+        self.vector_size = None

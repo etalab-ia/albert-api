@@ -6,13 +6,14 @@ from fastapi.testclient import TestClient
 
 
 @pytest.fixture(scope="module")
-def setup(args, client: TestClient):
+def setup(client: TestClient):
     # Get an embeddings model
     response = client.get_user(url="/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
     model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
     MODEL_ID = model["id"]
+
     yield MODEL_ID
 
 
@@ -129,3 +130,5 @@ class TestEmbeddings:
         response_model = response.json()
 
         assert response_alias["data"][0]["embedding"] == response_model["data"][0]["embedding"]
+
+    # TODO test vector size

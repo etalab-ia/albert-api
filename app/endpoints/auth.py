@@ -1,250 +1,202 @@
 from typing import Optional
 
-from fastapi import APIRouter, Body, Path, Query, Request, Security
-from fastapi.responses import PlainTextResponse, Response
+from fastapi import APIRouter, Body, Depends, Path, Query, Request, Security
+from fastapi.responses import JSONResponse, Response
 
-from app.helpers import AuthManager, RateLimit
-from app.schemas.login import LoginRequest
-from app.schemas.roles import RateLimit as _RateLimit
-from app.schemas.roles import Role, RoleRequest, Roles, RoleUpdateRequest
-from app.schemas.tokens import Token, TokenRequest, Tokens
-from app.schemas.users import User, UserRequest, Users, UserUpdateRequest
-from app.utils.exceptions import InvalidPasswordException
-from app.utils.lifespan import auth
+from app.helpers import Authorization
+from app.schemas.auth import (
+    LoginRequest,
+    Role,
+    RoleRequest,
+    Roles,
+    RoleUpdateRequest,
+    Token,
+    TokenRequest,
+    Tokens,
+    User,
+    UserRequest,
+    Users,
+    UserUpdateRequest,
+    PermissionType,
+)
+from app.utils.depends import delete_root_role, delete_root_token, delete_root_user, update_root_role, update_root_user
+from app.utils.lifespan import context
 
 router = APIRouter()
 
 
 @router.post(path="/login")
-async def login(request: Request, body: LoginRequest = Body(description="The login request.")) -> Response:
+async def login(request: Request, body: LoginRequest = Body(description="The login request.")) -> User:
     """
     Login to the API.
     """
 
-    users = await auth.manager.get_users(user_id=body.user_id)
-    user = users[0]
+    user = await context.auth.login(user=body.user, password=body.password)
 
-    if not AuthManager._check_password(password=body.password, hashed_password=user.password):
-        raise InvalidPasswordException()
-
-    return Response(status_code=200)
+    return user
 
 
-@router.post(path="/roles")
-async def create_role(
-    request: Request, body: RoleRequest = Body(description="The role creation request."), user: User = Security(dependency=RateLimit(admin=True))
-) -> PlainTextResponse:
+@router.post(path="/roles", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_ROLE]))])
+async def create_role(request: Request, body: RoleRequest = Body(description="The role creation request.")) -> JSONResponse:
     """
-    Create a new role. If no limits are provided, the role will have all access without rate limits.
+    Create a new role.
     """
 
-    body = body.model_dump(exclude_none=True)
-    body["role_id"] = body.pop("role")
-    if body.get("limits"):
-        body["limits"] = [_RateLimit(**limit) for limit in body["limits"]]
-    role_id = await auth.manager.create_role(**body)
+    await context.auth.create_role(name=body.role, default=body.default, permissions=body.permissions, limits=body.limits)
 
-    return PlainTextResponse(status_code=201, content=str(role_id))
+    return JSONResponse(status_code=201, content={"id": body.role})
 
 
-@router.delete(path="/roles/{role}")
-async def delete_role(
-    request: Request, role: str = Path(description="The id of the role to delete."), user: User = Security(dependency=RateLimit(admin=True))
-) -> Response:
+@router.delete(path="/roles/{role}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_ROLE])), Depends(dependency=delete_root_role)])  # fmt: off
+async def delete_role(request: Request, role: str = Path(description="The id of the role to delete.")) -> Response:
     """
     Delete a role.
     """
 
-    await auth.manager.delete_role(role_id=role)
+    await context.auth.delete_role(name=role)
 
     return Response(status_code=204)
 
 
-@router.patch(path="/roles/{role}")
-async def update_role(
-    request: Request,
-    role: str = Path(description="The id of the role to update."),
-    body: RoleUpdateRequest = Body(description="The role update request."),
-    user: User = Security(dependency=RateLimit(admin=True)),
-) -> Response:
+@router.patch(path="/roles/{role}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.UPDATE_ROLE])), Depends(dependency=update_root_role)])  # fmt: off
+async def update_role(request: Request, role: str = Path(description="The id of the role to update."), body: RoleUpdateRequest = Body(description="The role update request.")) -> Response:  # fmt: off
     """
     Update a role.
     """
 
-    body = body.model_dump()
-    display_id = body.pop("role")
-    await auth.manager.update_role(role_id=role, display_id=display_id, **body)
+    await context.auth.update_role(name=role, new_name=body.role, default=body.default, permissions=body.permissions, limits=body.limits)
 
-    return Response(status_code=201)
+    return JSONResponse(status_code=200, content={"id": role})
 
 
-@router.get(path="/roles/{role}")
-async def get_role(
-    request: Request,
-    role: str = Path(description="The id of the role to get."),
-    user: User = Security(dependency=RateLimit(admin=True)),
-) -> Role:
+@router.get(path="/roles/{role}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))])
+async def get_role(request: Request, role: str = Path(description="The id of the role to get.")) -> Role:
     """
     Get a role by id.
     """
 
-    roles = await auth.manager.get_roles(role_id=[role])
+    roles = await context.auth.get_roles(name=role)
 
     return roles[0]
 
 
-@router.get(path="/roles")
+@router.get(path="/roles", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))])
 async def get_roles(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the roles to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the roles to get."),
-    user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Roles:
     """
     Get all roles.
     """
-
-    data = await auth.manager.get_roles(offset=offset, limit=limit)
+    data = await context.auth.get_roles(offset=offset, limit=limit)
 
     return Roles(data=data)
 
 
-@router.post(path="/users")
-async def create_user(
-    request: Request, body: UserRequest = Body(description="The user creation request."), user: User = Security(dependency=RateLimit(admin=True))
-) -> PlainTextResponse:
+@router.post(path="/users", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_USER]))])
+async def create_user(request: Request, body: UserRequest = Body(description="The user creation request.")) -> JSONResponse:
     """
     Create a new user.
     """
 
-    body = body.model_dump(exclude_none=True)
-    body["user_id"] = body.pop("user")
-    body["role_id"] = body.pop("role")
-    user = await auth.manager.create_user(**body)
+    user = await context.auth.create_user(name=body.user, role=body.role, password=body.password, expires_at=body.expires_at)
 
-    return PlainTextResponse(status_code=201, content=user)
+    return JSONResponse(status_code=201, content={"id": user})
 
 
-@router.delete(path="/users/{user:path}")
-async def delete_user(
-    request: Request,
-    user: str = Path(description="The id of the user to delete."),
-    _: User = Security(dependency=RateLimit(admin=True)),
-) -> Response:
+@router.delete(path="/users/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_USER])), Depends(dependency=delete_root_user)])  # fmt: off
+async def delete_user(request: Request, user: str = Path(description="The id of the user to delete.")) -> Response:
     """
     Delete a user.
     """
-    await auth.manager.delete_user(user_id=user)
+    await context.auth.delete_user(name=user)
 
     return Response(status_code=204)
 
 
-@router.patch(path="/users/{user:path}")
-async def update_user(
-    request: Request,
-    user: str = Path(description="The user name of the user to update."),
-    body: UserUpdateRequest = Body(description="The user update request."),
-    _: User = Security(dependency=RateLimit(admin=True)),
-) -> Response:
+@router.patch(path="/users/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.UPDATE_USER])), Depends(dependency=update_root_user)])  # fmt: off
+async def update_user(request: Request, user: str = Path(description="The user name of the user to update."), body: UserUpdateRequest = Body(description="The user update request.")) -> Response:  # fmt: off
     """
     Update a user.
     """
 
-    body = body.model_dump()
-    display_id = body.pop("user")
-    await auth.manager.update_user(user_id=user, display_id=display_id, **body)
+    await context.auth.update_user(name=user, new_name=body.user, password=body.password, role=body.role, expires_at=body.expires_at)
 
-    return Response(status_code=201)
+    return JSONResponse(status_code=200, content={"id": user})
 
 
-@router.get(path="/users/{user:path}")
-async def get_user(
-    request: Request, user: str = Path(description="The id of the user to get."), _: User = Security(dependency=RateLimit(admin=True))
-) -> User:
+@router.get(path="/users/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_USER]))])
+async def get_user(request: Request, user: str = Path(description="The id of the user to get.")) -> User:
     """
     Get a user by id.
     """
 
-    users = await auth.manager.get_users(user_ids=[user])
+    users = await context.auth.get_users(name=user)
 
     return users[0]
 
 
-@router.get(path="/users")
+@router.get(path="/users", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_USER]))])
 async def get_users(
     request: Request,
     role: Optional[str] = Query(default=None, description="The id of the role to filter the users by."),
     offset: int = Query(default=0, ge=0, description="The offset of the users to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the users to get."),
-    user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Users:
     """
     Get all users.
     """
-    data = await auth.manager.get_users(role_id=role, offset=offset, limit=limit)
+
+    data = await context.auth.get_users(role=role, offset=offset, limit=limit)
 
     return Users(data=data)
 
 
-@router.post(path="/tokens")
-async def create_token(
-    request: Request,
-    body: TokenRequest = Body(description="The token creation request."),
-    _: User = Security(dependency=RateLimit(admin=True)),
-) -> PlainTextResponse:
+@router.post(path="/tokens", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_TOKEN]))])
+async def create_token(request: Request, body: TokenRequest = Body(description="The token creation request.")) -> JSONResponse:
     """
     Create a new token.
     """
 
-    token = await auth.manager.create_token(user_id=body.user, token_id=body.token, expires_at=body.expires_at)
+    token = await context.auth.create_token(name=body.token, user=body.user, expires_at=body.expires_at)
 
-    return PlainTextResponse(status_code=201, content=token)
+    return JSONResponse(status_code=201, content={"id": token})
 
 
-@router.delete(path="/tokens/{user:path}/{token:path}")
-async def delete_token(
-    request: Request,
-    user: str = Path(description="The user ID of the user to delete the token for."),
-    token: str = Path(description="The token ID of the token to delete."),
-    _: User = Security(dependency=RateLimit(admin=True)),
-) -> Response:
+@router.delete(path="/tokens/{user:path}/{token:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_TOKEN])), Depends(dependency=delete_root_token)])  # fmt: off
+async def delete_token(request: Request, user: str = Path(description="The user ID of the user to delete the token for."), token: str = Path(description="The token ID of the token to delete.")) -> Response:  # fmt: off
     """
     Delete a token.
     """
 
-    await auth.manager.delete_token(user_id=user, token_id=token)
+    await context.auth.delete_token(name=token, user=user)
 
     return Response(status_code=204)
 
 
-@router.get(path="/tokens/{user:path}/{token:path}")
-async def get_token(
-    request: Request,
-    user: str = Path(description="The user ID of the user to get the token for."),
-    token: str = Path(description="The token ID of the token to get."),
-    _: User = Security(dependency=RateLimit(admin=True)),
-) -> Token:
+@router.get(path="/tokens/{user:path}/{token:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_TOKEN]))])
+async def get_token(request: Request, user: str = Path(description="The user ID of the user to get the token for."), token: str = Path(description="The token ID of the token to get.")) -> Token:  # fmt: off
     """
     Get a token by id.
     """
 
-    tokens = await auth.manager.get_tokens(user_id=user, token_id=token, offset=0, limit=1)
+    tokens = await context.auth.get_tokens(name=token, user=user)
 
     return tokens[0]
 
 
-@router.get(path="/tokens/{user}")
+@router.get(path="/tokens/{user}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_TOKEN]))])
 async def get_tokens(
     request: Request,
     user: str = Path(description="The id of the user to filter the tokens by."),
     offset: int = Query(default=0, ge=0, description="The offset of the tokens to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the tokens to get."),
-    _: User = Security(dependency=RateLimit(admin=True)),
 ) -> Tokens:
     """
     Get all tokens of a user.
     """
 
-    data = await auth.manager.get_tokens(user_id=user, offset=offset, limit=limit)
+    data = await context.auth.get_tokens(user=user, offset=offset, limit=limit)
 
     return Tokens(data=data)

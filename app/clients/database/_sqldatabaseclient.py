@@ -15,7 +15,6 @@ class SQLDatabaseClient:
         self.engine = create_async_engine(*args, **kwargs)  # TODO add timeout
         self.session = async_sessionmaker(bind=self.engine, expire_on_commit=False)
 
-        # initialize the database with a sync session and create the default master role and user
         engine = create_engine(url=kwargs.get("url", "").replace("+asyncpg", ""))
 
         with engine.connect() as connection:

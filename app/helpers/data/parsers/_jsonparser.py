@@ -5,7 +5,7 @@ import uuid
 
 from fastapi import UploadFile
 
-from app.schemas.data import ParserOutput, ParserOutputMetadata
+from app.schemas.core.data import ParserOutput, ParserOutputMetadata
 from app.schemas.files import JsonFile
 from app.utils.exceptions import InvalidJSONFormatException
 

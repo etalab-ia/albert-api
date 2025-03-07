@@ -5,25 +5,21 @@ from uuid import uuid4
 import streamlit as st
 
 from utils.chat import generate_stream
-from utils.common import get_collections, get_models, header, settings
+from utils.common import get_collections, get_models, header
 from utils.variables import MODEL_TYPE_LANGUAGE
 
-API_KEY = header()
+header(check_api_key=True)
 
 # Data
 try:
-    models = get_models(api_key=API_KEY, type=MODEL_TYPE_LANGUAGE)
-    collections = get_collections(api_key=API_KEY)
+    models = get_models(type=MODEL_TYPE_LANGUAGE, api_key=st.session_state["api_key"])
+    collections = get_collections(api_key=st.session_state["api_key"])
 except Exception:
     st.error("Error to fetch user data.")
     logging.debug(traceback.format_exc())
     st.stop()
 
 # State
-
-if "selected_model" not in st.session_state:
-    st.session_state["selected_model"] = models[0] if settings.default_chat_model not in models else settings.default_chat_model
-
 if "selected_collections" not in st.session_state:
     st.session_state.selected_collections = []
 
@@ -41,7 +37,7 @@ with st.sidebar:
     params = {"sampling_params": dict(), "rag": dict()}
 
     st.subheader(body="Chat parameters")
-    st.session_state["selected_model"] = st.selectbox(label="Language model", options=models, index=models.index(st.session_state.selected_model))
+    st.session_state["selected_model"] = st.selectbox(label="Language model", options=models)
 
     params["sampling_params"]["model"] = st.session_state["selected_model"]
     params["sampling_params"]["temperature"] = st.slider(label="Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
@@ -130,7 +126,7 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
             stream, sources = generate_stream(
                 messages=st.session_state.messages,
                 params=params,
-                api_key=API_KEY,
+                api_key=st.session_state["api_key"],
                 rag=rag,
                 rerank=False,
             )

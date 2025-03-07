@@ -4,7 +4,7 @@ import uuid
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from app.schemas.chunks import Chunk, ChunkMetadata
-from app.schemas.data import ParserOutput
+from app.schemas.core.data import ParserOutput
 
 
 class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):

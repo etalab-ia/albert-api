@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import HTTPException
 
 
@@ -22,11 +24,6 @@ class WrongSearchMethodException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
-class InvalidPasswordException(HTTPException):
-    def __init__(self, detail: str = "Invalid password."):
-        super().__init__(status_code=400, detail=detail)
-
-
 class RoleAlreadyExistsException(HTTPException):
     def __init__(self, detail: str = "Role already exists."):
         super().__init__(status_code=400, detail=detail)
@@ -37,33 +34,8 @@ class DeleteRoleWithUsersException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
-class DeleteMasterRoleException(HTTPException):
-    def __init__(self, detail: str = "Delete master role is not allowed."):
-        super().__init__(status_code=400, detail=detail)
-
-
-class UpdateMasterRoleException(HTTPException):
-    def __init__(self, detail: str = "Update master role is not allowed."):
-        super().__init__(status_code=400, detail=detail)
-
-
 class UserAlreadyExistsException(HTTPException):
     def __init__(self, detail: str = "User already exists."):
-        super().__init__(status_code=400, detail=detail)
-
-
-class DeleteMasterUserException(HTTPException):
-    def __init__(self, detail: str = "Delete master user is not allowed."):
-        super().__init__(status_code=400, detail=detail)
-
-
-class UpdateMasterUserException(HTTPException):
-    def __init__(self, detail: str = "Update master user is not allowed."):
-        super().__init__(status_code=400, detail=detail)
-
-
-class AddUserToMasterRoleException(HTTPException):
-    def __init__(self, detail: str = "Add user to master role is not allowed."):
         super().__init__(status_code=400, detail=detail)
 
 
@@ -72,17 +44,14 @@ class TokenAlreadyExistsException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
-class DeleteMasterTokenException(HTTPException):
-    def __init__(self, detail: str = "Delete master token is not allowed."):
-        super().__init__(status_code=400, detail=detail)
-
-
-class CreateTokenForMasterUserException(HTTPException):
-    def __init__(self, detail: str = "Create token for master user is not allowed."):
-        super().__init__(status_code=400, detail=detail)
-
-
 # 403
+
+
+class InvalidPasswordException(HTTPException):
+    def __init__(self, detail: str = "Invalid password."):
+        super().__init__(status_code=403, detail=detail)
+
+
 class InvalidAuthenticationSchemeException(HTTPException):
     def __init__(self, detail: str = "Invalid authentication scheme.") -> None:
         super().__init__(status_code=403, detail=detail)
@@ -166,3 +135,16 @@ class NotImplementedException(HTTPException):
 class UnsupportedFileUploadException(HTTPException):
     def __init__(self, detail: str = "Unsupported collection name for upload file.") -> None:
         super().__init__(status_code=422, detail=detail)
+
+
+# 429
+class RateLimitExceeded(HTTPException):
+    """
+    exception raised when a rate limit is hit.
+    """
+
+    limit = None
+
+    def __init__(self, detail: Optional[str] = None) -> None:
+        detail = f"Rate limit exceeded: {detail}" if detail else "Rate limit exceeded."
+        super(RateLimitExceeded, self).__init__(status_code=429, detail=detail)

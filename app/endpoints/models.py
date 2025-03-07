@@ -2,31 +2,45 @@ from typing import Union
 
 from fastapi import APIRouter, Path, Request, Security
 
-from app.helpers import RateLimit
+from app.helpers import Authorization
+from app.schemas.core.auth import AuthenticatedUser
 from app.schemas.models import Model, Models
-from app.schemas.security import User
-from app.utils.lifespan import models
+from app.utils.exceptions import ModelNotFoundException
+from app.utils.lifespan import context
 
 router = APIRouter()
 
 
 @router.get(path="/models/{model:path}")
-async def get_model(request: Request, model: str = Path(description="The name of the model to get."), user: User = Security(RateLimit())) -> Model:
+async def get_model(
+    request: Request,
+    model: str = Path(description="The name of the model to get."),
+    user: AuthenticatedUser = Security(dependency=Authorization()),
+) -> Model:
     """
-    Get a model by name.
+    Get a model by name and provide basic informations.
     """
 
-    response = models.registry.list(model=model)[0]
+    data = context.models.list(model=model)
+    if len(data) == 0:
+        raise ModelNotFoundException()
 
-    return response
+    model = data[0]
+    if user.limits[model.id].rpd == 0 or user.limits[model.id].rpd == 0:
+        raise ModelNotFoundException()
+
+    return model
 
 
 @router.get(path="/models")
-async def get_models(request: Request, user: User = Security(RateLimit())) -> Union[Models, Model]:
+async def get_models(request: Request, user: AuthenticatedUser = Security(dependency=Authorization())) -> Union[Models, Model]:
     """
-    Lists the currently available models, and provides basic informations.
+    Lists the currently available models and provides basic informations.
     """
 
-    data = models.registry.list()
+    data = context.models.list()
+    for i, model in enumerate(data):
+        if user.limits[model.id].rpd == 0 or user.limits[model.id].rpd == 0:
+            data.pop(i)
 
     return Models(data=data)

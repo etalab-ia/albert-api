@@ -1,23 +1,49 @@
-import time
-
+import pandas as pd
 import streamlit as st
 
-from utils.common import header, refresh_all_data, settings
-from utils.documents import create_collection, delete_collection, delete_document, load_data, upload_file
-from utils.variables import COLLECTION_TYPE_PRIVATE
+from utils.common import get_collections, get_documents, header, settings
+from utils.documents import create_collection, delete_collection, delete_document, upload_file
+from utils.variables import COLLECTION_DISPLAY_ID_INTERNET, COLLECTION_TYPE_PRIVATE
 
-API_KEY = header()
+header(check_api_key=True)
 
 with st.sidebar:
-    if st.button(label="**:material/refresh: Rafraîchir les données**", key="refresh", use_container_width=True):
-        refresh_all_data(api_key=API_KEY)
+    if st.button(label="**:material/refresh: Refresh data**", key="refresh-data-documents", use_container_width=True):
+        st.cache_data.clear()
 
-# Data
-collections, documents, df_collections, df_files = load_data(api_key=API_KEY)
+try:
+    collections = get_collections(api_key=st.session_state["api_key"])
+    collections = [collection for collection in collections if collection["id"] != COLLECTION_DISPLAY_ID_INTERNET]
+    documents = get_documents(
+        collection_ids=[collection["id"] for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE],
+        api_key=st.session_state["api_key"],
+    )
+except Exception as e:
+    st.error("Error to fetch user data.")
+    st.stop()
+
 
 # Collections
 st.subheader(body="Collections")
-st.dataframe(data=df_collections, hide_index=True, use_container_width=True)
+st.dataframe(
+    data=pd.DataFrame(
+        data=[
+            {
+                "ID": collection["id"],
+                "Name": collection["name"],
+                "Type": collection["type"],
+                "Model": collection["model"],
+                "Documents": collection["documents"],
+            }
+            for collection in collections
+        ],
+    ),
+    hide_index=True,
+    use_container_width=True,
+    column_config={
+        "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
+    },
+)
 
 col1, col2 = st.columns(spec=2)
 with col1:
@@ -25,11 +51,8 @@ with col1:
         collection_name = st.text_input(
             label="Collection name", placeholder="Mes documents", help="Create a private collection with the embeddings model of your choice."
         )
-        submit_create = st.button(label="Create", disabled=not collection_name)
-        if submit_create:
-            create_collection(api_key=API_KEY, collection_name=collection_name, collection_model=settings.documents_embeddings_model)
-            time.sleep(0.5)
-            st.rerun()
+        if st.button(label="Create", disabled=not collection_name):
+            create_collection(api_key=settings.api_key, collection_name=collection_name, collection_model=settings.documents_embeddings_model)
 
 with col2:
     with st.expander(label="Delete a collection", icon=":material/delete_forever:"):
@@ -39,11 +62,9 @@ with col2:
             key="delete_collection_selectbox",
         )
         collection_id = collection.split(" - ")[1] if collection else None
-        submit_delete = st.button(label="Delete", disabled=not collection_id, key="delete_collection_button")
-        if submit_delete:
-            delete_collection(api_key=API_KEY, collection_id=collection_id)
-            time.sleep(0.5)
-            st.rerun()
+        if st.button(label="Delete", disabled=not collection_id, key="delete_collection_button"):
+            delete_collection(api_key=settings.api_key, collection_id=collection_id)
+
 
 if not collections:
     st.info(body="No collection found, create one to start.")
@@ -51,7 +72,25 @@ if not collections:
 
 # Documents
 st.subheader(body="Documents")
-st.dataframe(data=df_files, hide_index=True, use_container_width=True)
+st.dataframe(
+    data=pd.DataFrame(
+        data=[
+            {
+                "Collection": document["collection_id"],
+                "ID": document["id"],
+                "Name": document["name"],
+                "Created at": pd.to_datetime(document["created_at"], unit="s"),
+                "Chunks": document["chunks"],
+            }
+            for document in documents
+        ]
+    ),
+    hide_index=True,
+    use_container_width=True,
+    column_config={
+        "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
+    },
+)
 
 col1, col2 = st.columns(spec=2)
 with col1:
@@ -66,18 +105,13 @@ with col1:
         submit_upload = st.button(label="Upload", disabled=not collection_id or not file_to_upload)
         if file_to_upload and submit_upload and collection_id:
             with st.spinner(text="Downloading and processing the document..."):
-                result = upload_file(api_key=API_KEY, file=file_to_upload, collection_id=collection_id)
-                time.sleep(0.5)
-                st.rerun()
+                result = upload_file(api_key=settings.api_key, file=file_to_upload, collection_id=collection_id)
 
-## Delete files
+
 with col2:
     with st.expander(label="Delete a document", icon=":material/delete_forever:"):
         document = st.selectbox(label="Select document to delete", options=[f"{document["name"]} - {document["id"]}" for document in documents])
         document_id = document.split(" - ")[1] if document else None
-        submit_delete = st.button(label="Delete", disabled=not document_id, key="delete_document_button")
-        if submit_delete:
-            document_collection = [document["collection_id"] for document in documents if document["id"] == document_id][0]
-            delete_document(api_key=API_KEY, collection_id=document_collection, document_id=document_id)
-            time.sleep(0.5)
-            st.rerun()
+        document_collection = [document["collection_id"] for document in documents if document["id"] == document_id][0]
+        if st.button(label="Delete", disabled=not document_id, key="delete_document_button"):
+            delete_document(api_key=settings.api_key, collection_id=document_collection, document_id=document_id)

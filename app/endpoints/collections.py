@@ -5,9 +5,10 @@ from uuid import UUID
 from fastapi import APIRouter, Path, Request, Response, Security
 from fastapi.responses import JSONResponse
 
-from app.helpers import RateLimit
+from app.helpers import Authorization
+from app.schemas.auth import PermissionType
 from app.schemas.collections import Collection, CollectionRequest, Collections
-from app.schemas.security import User
+from app.schemas.core.auth import AuthenticatedUser
 from app.utils.lifespan import databases
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PUBLIC
 
@@ -15,10 +16,15 @@ router = APIRouter()
 
 
 @router.post(path="/collections")
-async def create_collection(request: Request, body: CollectionRequest, user: User = Security(RateLimit())) -> Response:
+async def create_collection(
+    request: Request,
+    body: CollectionRequest,
+    user: AuthenticatedUser = Security(dependency=Authorization(permissions=[PermissionType.CREATE_PRIVATE_COLLECTION])),
+) -> Response:
     """
     Create a new collection.
     """
+
     collection_id = str(uuid.uuid4())
     await databases.search.create_collection(
         collection_id=collection_id,
@@ -33,7 +39,10 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
 
 
 @router.get(path="/collections")
-async def get_collections(request: Request, user: User = Security(RateLimit())) -> Union[Collection, Collections]:
+async def get_collections(
+    request: Request,
+    user: AuthenticatedUser = Security(dependency=Authorization(permissions=[PermissionType.READ_PRIVATE_COLLECTION])),
+) -> Union[Collection, Collections]:
     """
     Get list of collections.
     """
@@ -52,11 +61,14 @@ async def get_collections(request: Request, user: User = Security(RateLimit())) 
 
 @router.delete(path="/collections/{collection}")
 async def delete_collections(
-    request: Request, collection: UUID = Path(..., description="The collection ID"), user: User = Security(RateLimit())
+    request: Request,
+    collection: UUID = Path(..., description="The collection ID"),
+    user: AuthenticatedUser = Security(dependency=Authorization(permissions=[PermissionType.DELETE_PRIVATE_COLLECTION])),
 ) -> Response:
     """
     Delete a collection.
     """
+
     collection = str(collection)
     await databases.search.delete_collection(collection_id=collection, user=user)
 

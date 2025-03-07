@@ -88,18 +88,14 @@ class Database(ConfigBaseModel):
     args: dict = {}
 
 
-class RateLimit(ConfigBaseModel):
-    by_user: str = "100/minute"
-    by_ip: str = "1000/minute"
-
-
 class Auth(ConfigBaseModel):
-    master_key: str = "admin"
-    master_password: str = "admin"
+    root_key: str = "changeme"
+    root_user: str = "root"
+    root_password: str = "changeme"
+    limiting_strategy: Literal["moving_window", "fixed_window", "sliding_window"] = "moving_window"
 
 
 class Config(ConfigBaseModel):
-    rate_limit: RateLimit = Field(default_factory=RateLimit)
     auth: Auth = Field(default_factory=Auth)
     models: List[Model]
     databases: List[Database]
@@ -164,7 +160,6 @@ class Settings(BaseSettings):
         config = Config(**yaml.safe_load(stream=stream))
         stream.close()
 
-        values.rate_limit = config.rate_limit
         values.auth = config.auth
         values.internet = config.internet[0]
         values.models = config.models

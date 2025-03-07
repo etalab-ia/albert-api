@@ -1,7 +1,7 @@
 from typing import List
 import uuid
 from app.schemas.chunks import Chunk, ChunkMetadata
-from app.schemas.data import ParserOutput
+from app.schemas.core.data import ParserOutput
 
 
 class NoChunker:

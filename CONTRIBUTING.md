@@ -97,14 +97,13 @@ Pour utiliser le module testing de VSCode, veuillez la configuration suivante da
 
 ```json
 {
+    "python.terminal.activateEnvironment": false,
     "python.testing.pytestArgs": [
         "app/tests",
-        "--config-file=pyproject.toml",
-        "--api-key-user=<api key user>",
-        "--api-key-admin=<api key admin>"
+        "--config-file=pyproject.toml"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
 }
 ```
 

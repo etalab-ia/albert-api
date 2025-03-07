@@ -1,8 +1,8 @@
 """Init database
 
-Revision ID: 6089e7caef71
+Revision ID: 3e84fac08c0e
 Revises:
-Create Date: 2025-03-07 08:43:18.613794
+Create Date: 2025-03-14 19:02:24.239462
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "6089e7caef71"
+revision: str = "3e84fac08c0e"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,37 +24,72 @@ def upgrade() -> None:
     op.create_table(
         "role",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("display_id", sa.String(), nullable=True),
+        sa.Column("name", sa.String(), nullable=True),
         sa.Column("default", sa.Boolean(), nullable=True),
-        sa.Column("admin", sa.Boolean(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_role_display_id"), "role", ["display_id"], unique=True)
     op.create_index(op.f("ix_role_id"), "role", ["id"], unique=False)
+    op.create_index(op.f("ix_role_name"), "role", ["name"], unique=True)
     op.create_index("only_one_default_role", "role", ["default"], unique=True, postgresql_where=sa.text('"default"'))
     op.create_table(
-        "rate_limit",
+        "limit",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("role_id", sa.Integer(), nullable=False),
-        sa.Column("model_id", sa.String(), nullable=False),
-        sa.Column("type", sa.Enum("RPD", "RPM", "TPM", name="ratelimittype"), nullable=True),
-        sa.Column("value", sa.Float(), nullable=True),
+        sa.Column("model", sa.String(), nullable=False),
+        sa.Column("type", sa.Enum("TPM", "RPM", "RPD", name="limittype"), nullable=False),
+        sa.Column("value", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(["role_id"], ["role.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("role_id", "model", "type", name="unique_rate_limit_per_role"),
     )
-    op.create_index(op.f("ix_rate_limit_id"), "rate_limit", ["id"], unique=False)
+    op.create_index(op.f("ix_limit_id"), "limit", ["id"], unique=False)
+    op.create_table(
+        "permission",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("role_id", sa.Integer(), nullable=False),
+        sa.Column(
+            "permission",
+            sa.Enum(
+                "CREATE_ROLE",
+                "READ_ROLE",
+                "UPDATE_ROLE",
+                "DELETE_ROLE",
+                "CREATE_USER",
+                "READ_USER",
+                "UPDATE_USER",
+                "DELETE_USER",
+                "CREATE_TOKEN",
+                "READ_TOKEN",
+                "DELETE_TOKEN",
+                "CREATE_PRIVATE_COLLECTION",
+                "READ_PRIVATE_COLLECTION",
+                "UPDATE_PRIVATE_COLLECTION",
+                "DELETE_PRIVATE_COLLECTION",
+                "CREATE_PUBLIC_COLLECTION",
+                "READ_PUBLIC_COLLECTION",
+                "UPDATE_PUBLIC_COLLECTION",
+                "DELETE_PUBLIC_COLLECTION",
+                "READ_METRIC",
+                name="permissiontype",
+            ),
+            nullable=False,
+        ),
+        sa.Column("created_at", sa.DateTime(), nullable=True),
+        sa.ForeignKeyConstraint(["role_id"], ["role.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("role_id", "permission", name="unique_permission_per_role"),
+    )
+    op.create_index(op.f("ix_permission_id"), "permission", ["id"], unique=False)
     op.create_table(
         "user",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("display_id", sa.String(), nullable=True),
+        sa.Column("name", sa.String(), nullable=True),
         sa.Column("password", sa.String(), nullable=False),
         sa.Column("role_id", sa.Integer(), nullable=False),
-        sa.Column("budget_allocation", sa.Float(), nullable=True),
-        sa.Column("budget_reset", sa.Enum("HOUR", "DAY", "MONTH", "YEAR", name="budgetreset"), nullable=True),
+        sa.Column("expires_at", sa.DateTime(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
@@ -63,20 +98,19 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_user_display_id"), "user", ["display_id"], unique=True)
     op.create_index(op.f("ix_user_id"), "user", ["id"], unique=False)
+    op.create_index(op.f("ix_user_name"), "user", ["name"], unique=True)
     op.create_table(
         "token",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
-        sa.Column("display_id", sa.String(), nullable=True),
+        sa.Column("name", sa.String(), nullable=True),
         sa.Column("token", sa.String(), nullable=True),
         sa.Column("expires_at", sa.DateTime(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("user_id", "display_id", name="unique_token_display_id_per_user"),
+        sa.UniqueConstraint("user_id", "name", name="unique_token_name_per_user"),
     )
     op.create_index(op.f("ix_token_id"), "token", ["id"], unique=False)
     # ### end Alembic commands ###
@@ -86,13 +120,15 @@ def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_index(op.f("ix_token_id"), table_name="token")
     op.drop_table("token")
+    op.drop_index(op.f("ix_user_name"), table_name="user")
     op.drop_index(op.f("ix_user_id"), table_name="user")
-    op.drop_index(op.f("ix_user_display_id"), table_name="user")
     op.drop_table("user")
-    op.drop_index(op.f("ix_rate_limit_id"), table_name="rate_limit")
-    op.drop_table("rate_limit")
+    op.drop_index(op.f("ix_permission_id"), table_name="permission")
+    op.drop_table("permission")
+    op.drop_index(op.f("ix_limit_id"), table_name="limit")
+    op.drop_table("limit")
     op.drop_index("only_one_default_role", table_name="role", postgresql_where=sa.text('"default"'))
+    op.drop_index(op.f("ix_role_name"), table_name="role")
     op.drop_index(op.f("ix_role_id"), table_name="role")
-    op.drop_index(op.f("ix_role_display_id"), table_name="role")
     op.drop_table("role")
     # ### end Alembic commands ###

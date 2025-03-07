@@ -1,25 +1,20 @@
 from typing import List, Optional
 
-from app.helpers._modelrouter import ModelRouter
 from app.schemas.models import Model as ModelSchema
-from app.schemas.settings import Model as ModelSettings
 from app.utils.exceptions import ModelNotFoundException
-from app.utils.variables import (
-    MODEL_TYPE__EMBEDDINGS,
-    MODEL_TYPE__LANGUAGE,
-)
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE
+
+from ._modelrouter import ModelRouter
 
 
 class ModelRegistry:
-    def __init__(self, settings: List[ModelSettings]) -> None:
+    def __init__(self, routers: List[ModelRouter]) -> None:
         self.models = list()
         self.aliases = dict()
         self.internet_default_language_model = None
         self.internet_default_embeddings_model = None
 
-        for model in settings:
-            model = ModelRouter(model=model)
-
+        for model in routers:
             if "id" not in model.__dict__:  # no clients available
                 continue
 
@@ -38,31 +33,19 @@ class ModelRegistry:
         if not self.internet_default_language_model or not self.internet_default_embeddings_model:
             raise ValueError("Internet models are not setup.")
 
-    def __getitem__(self, key: str) -> ModelRouter:
-        """
-        Override the __getitem__ method to return a client model based on the routing strategy.
+    def __call__(self, model: str) -> ModelRouter:
+        model = self.aliases.get(model, model)
 
-        Args:
-            key (str): The key of the model to get (id or alias). If the model is not found, raise a ModelNotFoundException (404).
-
-        Returns:
-            ModelClient: the client model based on the routing strategy.
-        """
-        key = self.aliases.get(key, key)
-        try:
-            model = self.__dict__[key]
-
-        except KeyError:
-            raise ModelNotFoundException()
-
-        return model
+        if model in self.models:
+            return self.__dict__[model]
+        raise ModelNotFoundException()
 
     def list(self, model: Optional[str] = None) -> List[ModelSchema]:
         data = list()
         models = [model] if model else self.models
-
         for model in models:
-            model = self.__getitem__(key=model)
+            model = self.__call__(model=model)
+
             data.append(
                 ModelSchema(
                     id=model.id,
