@@ -3,7 +3,7 @@ from typing import List, Literal, Optional
 
 from fastapi import UploadFile
 
-from app.clients.search import BaseSearchClient as SearchClient
+# from app.clients.search import BaseSearchClient as SearchClient @TODO: split search into client and manager
 from app.helpers.data.chunkers import *
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
 from app.schemas.chunks import Chunk
@@ -22,7 +22,7 @@ class FileUploader:
         "md": FILE_TYPE__MD,
     }
 
-    def __init__(self, collection_id: str, search: SearchClient, user: User):
+    def __init__(self, collection_id: str, search, user: User):
         self.user = user
         self.search = search
 

@@ -16,13 +16,14 @@ from qdrant_client.http.models import (
     VectorParams,
 )
 
+
 from app.clients.search import BaseSearchClient
-from app.helpers import ModelRegistry
+from app.helpers import ModelRegistry, AuthManager
 from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
-from app.schemas.security import Role, User
+from app.schemas.security import User
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
@@ -45,10 +46,10 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
     METADATA_COLLECTION_ID = "collections"
     DOCUMENT_COLLECTION_ID = "documents"
 
-    def __init__(self, models: ModelRegistry, *args, **kwargs):
+    def __init__(self, models: ModelRegistry, auth: AuthManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.models = models
-
+        self.auth = auth
         if not super().collection_exists(collection_name=self.METADATA_COLLECTION_ID):
             super().create_collection(collection_name=self.METADATA_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
 
@@ -61,8 +62,10 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != Role.ADMIN and collection.type == COLLECTION_TYPE__PUBLIC:
-            raise InsufficientRightsException()
+        if collection.type == COLLECTION_TYPE__PUBLIC:
+            result = await self.auth.get_roles(role_id=user.role)
+            if not result[0].admin:
+                raise InsufficientRightsException()
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
@@ -203,7 +206,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
 
         return collections
 
-    def create_collection(
+    async def create_collection(
         self,
         collection_id: str,
         collection_name: str,
@@ -220,8 +223,11 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         if model.type != MODEL_TYPE__EMBEDDINGS:
             raise WrongModelTypeException()
 
-        if user.role != Role.ADMIN and collection_type == COLLECTION_TYPE__PUBLIC:
-            raise InsufficientRightsException()
+        if collection_type == COLLECTION_TYPE__PUBLIC:
+            result = await self.auth.get_roles(role_id=user.role)
+
+            if not result[0].admin:
+                raise InsufficientRightsException()
 
         # create metadata
         metadata = {
@@ -239,14 +245,16 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
 
         return Collection(id=collection_id, **metadata)
 
-    def delete_collection(self, collection_id: str, user: User) -> None:
+    async def delete_collection(self, collection_id: str, user: User) -> None:
         """
         See SearchClient.delete_collection
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != Role.ADMIN and collection.type == COLLECTION_TYPE__PUBLIC:
-            raise InsufficientRightsException()
+        if collection.type == COLLECTION_TYPE__PUBLIC:
+            result = await self.auth.get_roles(role_id=user.role)
+            if not result[0].admin:
+                raise InsufficientRightsException()
 
         super().delete_collection(collection_name=collection.id)
         super().delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
@@ -288,14 +296,16 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
 
         return documents
 
-    def delete_document(self, collection_id: str, document_id: str, user: User):
+    async def delete_document(self, collection_id: str, document_id: str, user: User):
         """
         See SearchClient.delete_document
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != Role.ADMIN and collection.type == COLLECTION_TYPE__PUBLIC:
-            raise InsufficientRightsException()
+        if collection.type == COLLECTION_TYPE__PUBLIC:
+            result = await self.auth.get_roles(role_id=user.role)
+            if not result[0].admin:
+                raise InsufficientRightsException()
 
         # delete chunks
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])

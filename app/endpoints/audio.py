@@ -3,10 +3,10 @@ from typing import List, Literal
 from fastapi import APIRouter, File, Form, Request, Security, UploadFile
 from fastapi.responses import PlainTextResponse
 
+from app.helpers import RateLimit
 from app.schemas.audio import AudioTranscription
-from app.utils.lifespan import models, limiter
-from app.utils.security import User, check_api_key, check_rate_limit
-from app.utils.settings import settings
+from app.schemas.security import User
+from app.utils.lifespan import models
 from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS
 
 router = APIRouter()
@@ -131,7 +131,6 @@ SUPPORTED_LANGUAGES_VALUES = sorted(set(SUPPORTED_LANGUAGES.values())) + sorted(
 
 
 @router.post(path=ENDPOINT__AUDIO_TRANSCRIPTIONS)
-@limiter.limit(limit_value=settings.rate_limit.by_user, key_func=lambda request: check_rate_limit(request=request))
 async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(description="The audio file object (not file name) to transcribe, in one of these formats: mp3 or wav."),
@@ -152,7 +151,7 @@ async def audio_transcriptions(
         description="The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. If set to 0, the model will use log probability to automatically increase the temperature until certain thresholds are hit.",
     ),
     timestamp_granularities: List[str] = Form(alias="timestamp_granularities[]", default=["segment"], description="Not implemented."),
-    user: User = Security(dependency=check_api_key),
+    user: User = Security(dependency=RateLimit()),
 ) -> AudioTranscription:
     """
     Transcribes audio into the input language.

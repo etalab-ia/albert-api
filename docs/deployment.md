@@ -4,27 +4,27 @@
 
 #### API
 
-| Variable | Requis | Description |
-| --- | --- | --- |
-| APP_NAME | Optionnel | Nom de l'application (défaut : "Albert API"). Ce nom sera utilisé la réponse du endpoint `/v1/models` pour la clef `owned_by` des modèles. |
-| APP_CONTACT_URL | Optionnel | URL pour les informations de contact de l'application (défaut : None) |
-| APP_CONTACT_EMAIL | Optionnel | Email de contact pour l'application (défaut : None) |
-| APP_VERSION | Optionnel | Version de l'application (défaut : "0.0.0") |
-| APP_DESCRIPTION | Optionnel | Description de l'application (défaut : None) |
-| CONFIG_FILE | Optionnel | Chemin vers le fichier de configuration (défaut : "config.yml") |
-| MIDDLEWARES | Optionnel | Activer ou désactiver les middlewares (défaut : "True") |
-| LOG_LEVEL | Optionnel | Niveau de journalisation (défaut : INFO) |
+| Variable | Requis | Type | Defaut | Description |
+| --- | --- | --- | --- | --- |
+| APP_NAME | Optionnel | str | "Albert API" | Nom de l'application (défaut : "Albert API"). Ce nom sera utilisé la réponse du endpoint `/v1/models` pour la clef `owned_by` des modèles. |
+| APP_CONTACT_URL | Optionnel | str | None | URL pour les informations de contact de l'application |
+| APP_CONTACT_EMAIL | Optionnel | str | None | Email de contact pour l'application |
+| APP_VERSION | Optionnel | str | "0.0.0" | Version de l'application |
+| APP_DESCRIPTION | Optionnel | str | None | Description de l'application |
+| CONFIG_FILE | Optionnel | str | "config.yml" | Chemin vers le fichier de configuration |
+| MIDDLEWARES | Optionnel | bool | True | Activer ou désactiver les middlewares |
+| LOG_LEVEL | Optionnel | str | "INFO" | Niveau de journalisation, affiche les endpoints `/health` et `/metrics` dans le schéma Swagger si `DEBUG` |
 
 #### UI
 
-| Variable | Requis | Description |
-| --- | --- | --- |
-| BASE_URL | Requis | URL de l'API (défaut : "http://localhost:8080/v1") |
-| EXCLUDE_MODELS | Optionnel | Liste des modèles à exclure de l'UI (défaut : None) |
-| DOCUMENTS_EMBEDDINGS_MODEL | Requis | Modèle de documents embeddings |
-| SUMMARIZE_TOC_MODEL | Requis | Modèle de résumé de table des matières |
-| SUMMARIZE_SUMMARY_MODEL | Requis | Modèle de résumé de sommaire |
-| DEFAULT_CHAT_MODEL | Optionnel | Modèle de chat par défaut (défaut : None) |
+| Variable | Requis | Type | Defaut | Description |
+| --- | --- | --- | --- | --- |
+| BASE_URL | Requis | str | "http://localhost:8080/v1" | URL de l'API |
+| EXCLUDE_MODELS | Optionnel | list[str] | [] | Liste des modèles à exclure de l'UI |
+| DOCUMENTS_EMBEDDINGS_MODEL | Requis | str | Modèle de documents embeddings |
+| SUMMARIZE_TOC_MODEL | Requis | str | Modèle de résumé de table des matières |
+| SUMMARIZE_SUMMARY_MODEL | Requis | str | Modèle de résumé de sommaire |
+| DEFAULT_CHAT_MODEL | Optionnel | str | None | Modèle de chat par défaut |
 
 ### Configuration
 

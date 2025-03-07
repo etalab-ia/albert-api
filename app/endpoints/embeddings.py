@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Request, Security
 
+from app.helpers import RateLimit
 from app.schemas.embeddings import Embeddings, EmbeddingsRequest
 from app.schemas.security import User
 from app.utils.lifespan import models
-from app.utils.security import check_api_key
 from app.utils.variables import ENDPOINT__EMBEDDINGS
 
 router = APIRouter()
 
 
 @router.post(path=ENDPOINT__EMBEDDINGS)
-async def embeddings(request: Request, body: EmbeddingsRequest, user: User = Security(dependency=check_api_key)) -> Embeddings:
+async def embeddings(request: Request, body: EmbeddingsRequest, user: User = Security(dependency=RateLimit())) -> Embeddings:
     """
     Creates an embedding vector representing the input text.
     """

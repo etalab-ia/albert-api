@@ -5,12 +5,12 @@ from typing import List, Literal, Optional
 from elasticsearch import Elasticsearch, NotFoundError, helpers
 
 from app.clients.search import BaseSearchClient
-from app.helpers import ModelRegistry
+from app.helpers import ModelRegistry, AuthManager
 from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
-from app.schemas.security import Role, User
+from app.schemas.security import User
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
@@ -30,10 +30,11 @@ from app.utils.variables import (
 class ElasticSearchClient(Elasticsearch, BaseSearchClient):
     BATCH_SIZE = 48
 
-    def __init__(self, models: ModelRegistry, *args, **kwargs):
+    def __init__(self, models: ModelRegistry, auth: AuthManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert super().ping(), "Elasticsearch is not reachable"
         self.models = models
+        self.auth = auth
 
     async def upsert(self, chunks: List[Chunk], collection_id: str, user: User) -> None:
         """
@@ -41,8 +42,10 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != Role.ADMIN and collection.type == COLLECTION_TYPE__PUBLIC:
-            raise InsufficientRightsException()
+        if collection.type == COLLECTION_TYPE__PUBLIC:
+            result = await self.auth.get_roles(role_id=user.role)
+            if not result[0].admin:
+                raise InsufficientRightsException()
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
@@ -138,7 +141,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
         return collections
 
-    def create_collection(
+    async def create_collection(
         self,
         collection_id: str,
         collection_name: str,
@@ -154,8 +157,10 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         if model.type != MODEL_TYPE__EMBEDDINGS:
             raise WrongModelTypeException()
 
-        if user.role != Role.ADMIN and collection_type == COLLECTION_TYPE__PUBLIC:
-            raise InsufficientRightsException()
+        if collection_type == COLLECTION_TYPE__PUBLIC:
+            result = await self.auth.get_roles(role_id=user.role)
+            if not result[0].admin:
+                raise InsufficientRightsException()
 
         settings = {
             "similarity": {"default": {"type": "BM25"}},
@@ -202,14 +207,16 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
         return Collection(id=collection_id, **mappings["_meta"])
 
-    def delete_collection(self, collection_id: str, user: User) -> None:
+    async def delete_collection(self, collection_id: str, user: User) -> None:
         """
         See SearchClient.delete_collection
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != Role.ADMIN and collection.type == COLLECTION_TYPE__PUBLIC:
-            raise InsufficientRightsException()
+        if collection.type == COLLECTION_TYPE__PUBLIC:
+            result = await self.auth.get_roles(role_id=user.role)
+            if not result[0].admin:
+                raise InsufficientRightsException()
 
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
@@ -260,14 +267,16 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
         return documents
 
-    def delete_document(self, collection_id: str, document_id: str, user: User):
+    async def delete_document(self, collection_id: str, document_id: str, user: User):
         """
         See SearchClient.delete_document
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if user.role != Role.ADMIN and collection.type == COLLECTION_TYPE__PUBLIC:
-            raise InsufficientRightsException()
+        if collection.type == COLLECTION_TYPE__PUBLIC:
+            result = await self.auth.get_roles(role_id=user.role)
+            if not result[0].admin:
+                raise InsufficientRightsException()
 
         # delete chunks
         body = {"query": {"match": {"metadata.document_id": document_id}}}

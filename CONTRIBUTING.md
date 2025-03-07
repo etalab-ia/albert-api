@@ -30,9 +30,19 @@ feat(collections): collection name retriever
 
 Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
 
+## Base de données (Alembic)
+
 ## API (FastAPI)
 
-1. Après avoir créé un fichier *config.yml*, lancez l'API en local
+1. Créez les tables de la base de données
+
+    L'API nécessite une base de données SQL. Vous devez préalablement exécuter les migrations pour créer les tables avec la commande suivante :
+
+    ```bash
+    alembic upgrade head
+    ```
+
+2. Après avoir créé un fichier *config.yml*, lancez l'API en local
 
     ```bash
     uvicorn app.main:app --port 8080 --log-level debug --reload
@@ -78,7 +88,7 @@ CONFIG_FILE=<path to config file> PYTHONPATH=. pytest app/tests/test_audio.py --
 Pour mettre à jour les snapshots, exécutez la commande suivante :
 
 ```bash
-CONFIG_FILE=<path to config file> PYTHONPATH=. pytest --config-file=pyproject.toml --api-key-user <api key user> --api-key-admin <api key admin> --update-snapshots
+CONFIG_FILE=<path to config file> PYTHONPATH=. pytest --config-file=pyproject.toml --api-key-user <api key user> --api-key-admin <api key admin> --snapshot-update
 ```
 
 ## Configurer les tests dans VSCode

@@ -11,6 +11,7 @@ from app.utils.variables import (
     DATABASE_TYPE__GRIST,
     DATABASE_TYPE__QDRANT,
     DATABASE_TYPE__REDIS,
+    DATABASE_TYPE__SQL,
     DEFAULT_APP_NAME,
     DEFAULT_TIMEOUT,
     INTERNET_TYPE__BRAVE,
@@ -83,7 +84,7 @@ class Internet(ConfigBaseModel):
 
 
 class Database(ConfigBaseModel):
-    type: Literal[DATABASE_TYPE__REDIS, DATABASE_TYPE__QDRANT, DATABASE_TYPE__GRIST, DATABASE_TYPE__ELASTIC]
+    type: Literal[DATABASE_TYPE__REDIS, DATABASE_TYPE__QDRANT, DATABASE_TYPE__GRIST, DATABASE_TYPE__ELASTIC, DATABASE_TYPE__SQL]
     args: dict = {}
 
 
@@ -92,8 +93,14 @@ class RateLimit(ConfigBaseModel):
     by_ip: str = "1000/minute"
 
 
+class Auth(ConfigBaseModel):
+    master_key: str = "admin"
+    master_password: str = "admin"
+
+
 class Config(ConfigBaseModel):
     rate_limit: RateLimit = Field(default_factory=RateLimit)
+    auth: Auth = Field(default_factory=Auth)
     models: List[Model]
     databases: List[Database]
     internet: List[Internet] = Field(default=[Internet()], max_length=1)
@@ -158,10 +165,12 @@ class Settings(BaseSettings):
         stream.close()
 
         values.rate_limit = config.rate_limit
+        values.auth = config.auth
         values.internet = config.internet[0]
         values.models = config.models
 
         values.databases = SimpleNamespace()
+        values.databases.sql = next((database for database in config.databases if database.type == DATABASE_TYPE__SQL), None)
         values.databases.redis = next((database for database in config.databases if database.type == DATABASE_TYPE__REDIS), None)
         values.databases.qdrant = next((database for database in config.databases if database.type == DATABASE_TYPE__QDRANT), None)
         values.databases.grist = next((database for database in config.databases if database.type == DATABASE_TYPE__GRIST), None)
