@@ -4,6 +4,8 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+# from app.utils.lifespan import models
+
 
 class RateLimitType(Enum):
     RPD = "rpd"  # request per day
@@ -12,7 +14,7 @@ class RateLimitType(Enum):
 
 
 class RateLimitRequest(BaseModel):
-    model: str
+    model: Literal["*"]  # , *models.models]
     type: Optional[RateLimitType] = None
     value: Optional[str] = None
 

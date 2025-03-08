@@ -3,14 +3,14 @@ from typing import List, Optional
 
 import bcrypt
 from jose import JWTError, jwt
-from sqlalchemy import Integer, cast, delete, insert, select, update, or_
+from sqlalchemy import Integer, cast, delete, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.sql import func
 
 from app.clients.database import SQLDatabaseClient
 from app.schemas.roles import RateLimit, RateLimitType, Role
 from app.schemas.tokens import Token
-from app.schemas.users import User
+from app.schemas.users import AuthenticatedUser, User
 from app.sql.models import RateLimit as RateLimitTable
 from app.sql.models import Role as RoleTable
 from app.sql.models import Token as TokenTable
@@ -482,9 +482,12 @@ class AuthManager:
 
         return token
 
-    async def check_token(self, token: str, admin: bool = False) -> Optional[User]:
+    async def check_token(self, token: str) -> Optional[AuthenticatedUser]:
         if token == settings.auth.master_key:
-            return User(id=self.MASTER_USER_ID, created_at=0, updated_at=0, role=self.MASTER_ROLE_ID)
+            user = await self.get_users(user_id=self.MASTER_USER_ID)
+            role = await self.get_roles(role_id=self.MASTER_ROLE_ID)
+
+            return AuthenticatedUser.from_user_and_role(user=user, role=role)
 
         try:
             claims = self._decode_token(token=token)
@@ -497,8 +500,6 @@ class AuthManager:
             statement = (
                 select(
                     UserTable.display_id.label("id"),
-                    cast(func.extract("epoch", UserTable.created_at), Integer).label("created_at"),
-                    cast(func.extract("epoch", UserTable.updated_at), Integer).label("updated_at"),
                     RoleTable.display_id.label("role"),
                 )
                 .select_from(TokenTable)
@@ -509,16 +510,16 @@ class AuthManager:
                 .where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
             )
 
-            if admin:
-                statement = statement.where(RoleTable.admin)
-
             result = await session.execute(statement=statement)
             user = result.first()
 
             if user is None:
                 return
 
-            return User(**user._mapping)
+            user = await self.get_users(user_id=user.id)
+            role = await self.get_roles(role_id=user.role)
+
+            return AuthenticatedUser.from_user_and_role(user=user, role=role)
 
     async def delete_token(self, user_id: str, token_id: str) -> None:
         if user_id == self.MASTER_USER_ID:
@@ -544,7 +545,9 @@ class AuthManager:
             await session.execute(statement=delete(table=TokenTable).where(TokenTable.id == token.id))
             await session.commit()
 
-    async def get_tokens(self, user_id: Optional[str] = None, token_id: Optional[str] = None, offset: int = 0, limit: int = 10) -> List[Token]:
+    async def get_tokens(
+        self, user_id: Optional[str] = None, token_id: Optional[str] = None, exclude_expired: bool = False, offset: int = 0, limit: int = 10
+    ) -> List[Token]:
         statement = (
             select(
                 TokenTable.display_id.label("id"),
@@ -562,6 +565,8 @@ class AuthManager:
             statement = statement.where(UserTable.display_id == user_id)
         if token_id:
             statement = statement.where(TokenTable.display_id == token_id)
+        if exclude_expired:
+            statement = statement.where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
 
         async with self.client.session() as session:
             result = await session.execute(statement=statement)

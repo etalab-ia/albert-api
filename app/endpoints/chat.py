@@ -7,7 +7,7 @@ from app.clients.search import BaseSearchClient as SearchClient
 from app.helpers import ModelRegistry, RateLimit, SearchManager, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search
-from app.schemas.security import User
+from app.schemas.users import AuthenticatedUser
 from app.utils.lifespan import databases, internet, models
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.post(path=ENDPOINT__CHAT_COMPLETIONS)
 async def chat_completions(
-    request: Request, body: ChatCompletionRequest, user: User = Security(dependency=RateLimit())
+    request: Request, body: ChatCompletionRequest, user: AuthenticatedUser = Security(dependency=RateLimit())
 ) -> Union[ChatCompletion, ChatCompletionChunk]:
     """Creates a model response for the given chat conversation.
 

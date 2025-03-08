@@ -5,7 +5,7 @@ from fastapi import APIRouter, Path, Query, Request, Response, Security
 
 from app.helpers import RateLimit
 from app.schemas.documents import Documents
-from app.schemas.security import User
+from app.schemas.users import AuthenticatedUser
 from app.utils.lifespan import databases
 
 router = APIRouter()
@@ -17,7 +17,7 @@ async def get_documents(
     collection: UUID = Path(description="The collection ID"),
     limit: Optional[int] = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
-    user: User = Security(RateLimit()),
+    user: AuthenticatedUser = Security(RateLimit()),
 ) -> Documents:
     """
     Get all documents ID from a collection.
@@ -33,7 +33,7 @@ async def delete_document(
     request: Request,
     collection: UUID = Path(description="The collection ID"),
     document: UUID = Path(description="The document ID"),
-    user: User = Security(RateLimit()),
+    user: AuthenticatedUser = Security(RateLimit()),
 ) -> Response:
     """
     Delete a document and relative collections.

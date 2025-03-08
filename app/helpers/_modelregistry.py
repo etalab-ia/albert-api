@@ -4,10 +4,8 @@ from app.helpers._modelrouter import ModelRouter
 from app.schemas.models import Model as ModelSchema
 from app.schemas.settings import Model as ModelSettings
 from app.utils.exceptions import ModelNotFoundException
-from app.utils.variables import (
-    MODEL_TYPE__EMBEDDINGS,
-    MODEL_TYPE__LANGUAGE,
-)
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE
+# from app.schemas.users import AuthenticatedUser
 
 
 class ModelRegistry:
@@ -23,7 +21,7 @@ class ModelRegistry:
             if "id" not in model.__dict__:  # no clients available
                 continue
 
-            self.__dict__[model.id] = model
+            # self.__dict__[model.id] = model
             self.models.append(model.id)
 
             for alias in model.aliases:
@@ -37,6 +35,14 @@ class ModelRegistry:
         # check if the internet models are available
         if not self.internet_default_language_model or not self.internet_default_embeddings_model:
             raise ValueError("Internet models are not setup.")
+
+    def get(self, model: str, user) -> ModelRouter:
+        model = self.aliases.get(model, model)
+
+        if model in self.models:
+            return self.__getitem__(key=model)
+
+        raise ModelNotFoundException()
 
     def __getitem__(self, key: str) -> ModelRouter:
         """

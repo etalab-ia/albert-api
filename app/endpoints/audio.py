@@ -5,7 +5,7 @@ from fastapi.responses import PlainTextResponse
 
 from app.helpers import RateLimit
 from app.schemas.audio import AudioTranscription
-from app.schemas.security import User
+from app.schemas.users import AuthenticatedUser
 from app.utils.lifespan import models
 from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS
 
@@ -151,7 +151,7 @@ async def audio_transcriptions(
         description="The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. If set to 0, the model will use log probability to automatically increase the temperature until certain thresholds are hit.",
     ),
     timestamp_granularities: List[str] = Form(alias="timestamp_granularities[]", default=["segment"], description="Not implemented."),
-    user: User = Security(dependency=RateLimit()),
+    user: AuthenticatedUser = Security(dependency=RateLimit()),
 ) -> AudioTranscription:
     """
     Transcribes audio into the input language.

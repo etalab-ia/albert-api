@@ -21,9 +21,6 @@ class RateLimit:
         if not user:
             raise InvalidAPIKeyException()
 
-        roles = await auth.manager.get_roles(role_id=user.role)
-        role = roles[0]
-
         # TODO: check if the user has a rate limit for the model
 
         if request.method in ["POST", "PUT"]:

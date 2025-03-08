@@ -3,7 +3,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, rerank, search
 from app.helpers import RateLimit
-from app.schemas.security import User
+from app.schemas.users import AuthenticatedUser
 from app.utils.lifespan import lifespan
 from app.utils.settings import settings
 
@@ -33,7 +33,7 @@ if settings.middleware:
 
 
 @app.get(path="/health", tags=["Monitoring"], include_in_schema=settings.log_level == "DEBUG")
-def health(user: User = Security(dependency=RateLimit(admin=False))) -> Response:
+def health(user: AuthenticatedUser = Security(dependency=RateLimit(admin=False))) -> Response:
     """
     Health check.
     """

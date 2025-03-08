@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.helpers import RateLimit
 from app.schemas.collections import Collection, CollectionRequest, Collections
-from app.schemas.security import User
+from app.schemas.users import AuthenticatedUser
 from app.utils.lifespan import databases
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PUBLIC
 
@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.post(path="/collections")
-async def create_collection(request: Request, body: CollectionRequest, user: User = Security(RateLimit())) -> Response:
+async def create_collection(request: Request, body: CollectionRequest, user: AuthenticatedUser = Security(RateLimit())) -> Response:
     """
     Create a new collection.
     """
@@ -33,7 +33,7 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
 
 
 @router.get(path="/collections")
-async def get_collections(request: Request, user: User = Security(RateLimit())) -> Union[Collection, Collections]:
+async def get_collections(request: Request, user: AuthenticatedUser = Security(RateLimit())) -> Union[Collection, Collections]:
     """
     Get list of collections.
     """
@@ -52,7 +52,7 @@ async def get_collections(request: Request, user: User = Security(RateLimit())) 
 
 @router.delete(path="/collections/{collection}")
 async def delete_collections(
-    request: Request, collection: UUID = Path(..., description="The collection ID"), user: User = Security(RateLimit())
+    request: Request, collection: UUID = Path(..., description="The collection ID"), user: AuthenticatedUser = Security(RateLimit())
 ) -> Response:
     """
     Delete a collection.
