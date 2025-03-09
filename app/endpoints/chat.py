@@ -8,7 +8,7 @@ from app.helpers import ModelRegistry, RateLimit, SearchManager, StreamingRespon
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search
 from app.schemas.users import AuthenticatedUser
-from app.utils.lifespan import databases, internet, models
+from app.utils.lifespan import databases, internet, context
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 router = APIRouter()
@@ -52,10 +52,10 @@ async def chat_completions(
         searches = [search.model_dump() for search in searches]
         return body, searches
 
-    body, searches = await retrieval_augmentation_generation(body=body, models=models.registry, search=databases.search, internet=internet.search)
+    body, searches = await retrieval_augmentation_generation(body=body, models=context.models, search=databases.search, internet=internet.search)
 
     # select client
-    model = models.registry[body["model"]]
+    model = context.models.get(model=body["model"], user=user)
     client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case

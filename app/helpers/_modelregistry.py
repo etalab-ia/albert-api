@@ -34,46 +34,32 @@ class ModelRegistry:
         if not self.internet_default_language_model or not self.internet_default_embeddings_model:
             raise ValueError("Internet models are not setup.")
 
-    def get(self, model: str, user: AuthenticatedUser) -> ModelRouter:
+    def get(self, model: str, user: Optional[AuthenticatedUser] = None) -> ModelRouter:
         model = self.aliases.get(model, model)
-        if model in self.models and user.limits(model)[2] != 0:
-            return self.__getitem__(key=model)
 
+        if model in self.models and (not user or user.rpd[model] != 0):
+            return self.__dict__[model]
         raise ModelNotFoundException()
 
-    def __getitem__(self, key: str) -> ModelRouter:
-        """
-        Override the __getitem__ method to return a client model based on the routing strategy.
-
-        Args:
-            key (str): The key of the model to get (id or alias). If the model is not found, raise a ModelNotFoundException (404).
-
-        Returns:
-            ModelClient: the client model based on the routing strategy.
-        """
-        key = self.aliases.get(key, key)
-        try:
-            model = self.__dict__[key]
-
-        except KeyError:
-            raise ModelNotFoundException()
-
-        return model
-
-    def list(self, model: Optional[str] = None) -> List[ModelSchema]:
+    def list(self, model: Optional[str] = None, user: Optional[AuthenticatedUser] = None) -> List[ModelSchema]:
         data = list()
         models = [model] if model else self.models
+        for m in models:
+            try:
+                m = self.get(model=m, user=user)
+            except ModelNotFoundException:
+                if model:
+                    raise ModelNotFoundException()
+                continue
 
-        for model in models:
-            model = self.__getitem__(key=model)
             data.append(
                 ModelSchema(
-                    id=model.id,
-                    type=model.type,
-                    max_context_length=model.max_context_length,
-                    owned_by=model.owned_by,
-                    created=model.created,
-                    aliases=model.aliases,
+                    id=m.id,
+                    type=m.type,
+                    max_context_length=m.max_context_length,
+                    owned_by=m.owned_by,
+                    created=m.created,
+                    aliases=m.aliases,
                 )
             )
 

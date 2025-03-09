@@ -195,12 +195,14 @@ class BaseSearchClient(ABC):
         return decorator_retry
 
     @_retry(tries=3, delay=2)
-    async def _create_embeddings(self, input: List[str], model: str) -> list[float] | list[list[float]] | dict:
+    async def _create_embeddings(
+        self, input: List[str], model: str, user: Optional[AuthenticatedUser] = None
+    ) -> list[float] | list[list[float]] | dict:
         """
         Simple interface to create an embedding vector from a text input.
         """
 
-        model = self.models[model]
+        model = self.models.get(model=model, user=user)
         client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         try:
             response = await client.embeddings.create(input=input, model=client.model, encoding_format="float")

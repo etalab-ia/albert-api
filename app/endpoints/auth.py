@@ -10,7 +10,7 @@ from app.schemas.roles import Role, RoleRequest, Roles, RoleUpdateRequest
 from app.schemas.tokens import Token, TokenRequest, Tokens
 from app.schemas.users import User, UserRequest, Users, UserUpdateRequest
 from app.utils.exceptions import InvalidPasswordException
-from app.utils.lifespan import auth
+from app.utils.lifespan import context
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ async def login(request: Request, body: LoginRequest = Body(description="The log
     Login to the API.
     """
 
-    users = await auth.manager.get_users(user_id=body.user_id)
+    users = await context.auth.get_users(user_id=body.user_id)
     user = users[0]
 
     if not AuthManager._check_password(password=body.password, hashed_password=user.password):
@@ -42,7 +42,7 @@ async def create_role(
     body["role_id"] = body.pop("role")
     if body.get("limits"):
         body["limits"] = [_RateLimit(**limit) for limit in body["limits"]]
-    role_id = await auth.manager.create_role(**body)
+    role_id = await context.auth.create_role(**body)
 
     return PlainTextResponse(status_code=201, content=str(role_id))
 
@@ -55,7 +55,7 @@ async def delete_role(
     Delete a role.
     """
 
-    await auth.manager.delete_role(role_id=role)
+    await context.auth.delete_role(role_id=role)
 
     return Response(status_code=204)
 
@@ -73,7 +73,7 @@ async def update_role(
 
     body = body.model_dump()
     display_id = body.pop("role")
-    await auth.manager.update_role(role_id=role, display_id=display_id, **body)
+    await context.auth.update_role(role_id=role, display_id=display_id, **body)
 
     return Response(status_code=201)
 
@@ -88,7 +88,7 @@ async def get_role(
     Get a role by id.
     """
 
-    roles = await auth.manager.get_roles(role_id=[role])
+    roles = await context.auth.get_roles(role_id=[role])
 
     return roles[0]
 
@@ -104,7 +104,7 @@ async def get_roles(
     Get all roles.
     """
 
-    data = await auth.manager.get_roles(offset=offset, limit=limit)
+    data = await context.auth.get_roles(offset=offset, limit=limit)
 
     return Roles(data=data)
 
@@ -120,7 +120,7 @@ async def create_user(
     body = body.model_dump(exclude_none=True)
     body["user_id"] = body.pop("user")
     body["role_id"] = body.pop("role")
-    user = await auth.manager.create_user(**body)
+    user = await context.auth.create_user(**body)
 
     return PlainTextResponse(status_code=201, content=user)
 
@@ -134,7 +134,7 @@ async def delete_user(
     """
     Delete a user.
     """
-    await auth.manager.delete_user(user_id=user)
+    await context.auth.delete_user(user_id=user)
 
     return Response(status_code=204)
 
@@ -152,7 +152,7 @@ async def update_user(
 
     body = body.model_dump()
     display_id = body.pop("user")
-    await auth.manager.update_user(user_id=user, display_id=display_id, **body)
+    await context.auth.update_user(user_id=user, display_id=display_id, **body)
 
     return Response(status_code=201)
 
@@ -165,7 +165,7 @@ async def get_user(
     Get a user by id.
     """
 
-    users = await auth.manager.get_users(user_ids=[user])
+    users = await context.auth.get_users(user_ids=[user])
 
     return users[0]
 
@@ -181,7 +181,7 @@ async def get_users(
     """
     Get all users.
     """
-    data = await auth.manager.get_users(role_id=role, offset=offset, limit=limit)
+    data = await context.auth.get_users(role_id=role, offset=offset, limit=limit)
 
     return Users(data=data)
 
@@ -196,7 +196,7 @@ async def create_token(
     Create a new token.
     """
 
-    token = await auth.manager.create_token(user_id=body.user, token_id=body.token, expires_at=body.expires_at)
+    token = await context.auth.create_token(user_id=body.user, token_id=body.token, expires_at=body.expires_at)
 
     return PlainTextResponse(status_code=201, content=token)
 
@@ -212,7 +212,7 @@ async def delete_token(
     Delete a token.
     """
 
-    await auth.manager.delete_token(user_id=user, token_id=token)
+    await context.auth.delete_token(user_id=user, token_id=token)
 
     return Response(status_code=204)
 
@@ -228,7 +228,7 @@ async def get_token(
     Get a token by id.
     """
 
-    tokens = await auth.manager.get_tokens(user_id=user, token_id=token, offset=0, limit=1)
+    tokens = await context.auth.get_tokens(user_id=user, token_id=token, offset=0, limit=1)
 
     return tokens[0]
 
@@ -245,6 +245,6 @@ async def get_tokens(
     Get all tokens of a user.
     """
 
-    data = await auth.manager.get_tokens(user_id=user, offset=offset, limit=limit)
+    data = await context.auth.get_tokens(user_id=user, offset=offset, limit=limit)
 
     return Tokens(data=data)

@@ -62,7 +62,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if collection.type == COLLECTION_TYPE__PUBLIC and not user.role.admin:
+        if collection.type == COLLECTION_TYPE__PUBLIC and not user.admin:
             raise InsufficientRightsException()
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
@@ -87,7 +87,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
 
             # create embeddings
             texts = [chunk.content for chunk in batch]
-            embeddings = await self._create_embeddings(input=texts, model=collection.model)
+            embeddings = await self._create_embeddings(input=texts, model=collection.model, user=user)
 
             # insert chunks and vectors
             super().upsert(
@@ -133,7 +133,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         if len(set(collection.model for collection in collections)) > 1:
             raise DifferentCollectionsModelsException()
 
-        response = await self._create_embeddings(input=[prompt], model=collections[0].model)
+        response = await self._create_embeddings(input=[prompt], model=collections[0].model, user=user)
 
         chunks = []
         for collection in collections:
@@ -217,11 +217,11 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         See SearchClient.create_collection
         """
 
-        model = self.models[collection_model]
+        model = self.models.get(model=collection_model, user=user)
         if model.type != MODEL_TYPE__EMBEDDINGS:
             raise WrongModelTypeException()
 
-        if collection_type == COLLECTION_TYPE__PUBLIC and not user.role.admin:
+        if collection_type == COLLECTION_TYPE__PUBLIC and not user.admin:
             raise InsufficientRightsException()
 
         # create metadata
@@ -246,7 +246,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if collection.type == COLLECTION_TYPE__PUBLIC and not user.role.admin:
+        if collection.type == COLLECTION_TYPE__PUBLIC and not user.admin:
             raise InsufficientRightsException()
 
         super().delete_collection(collection_name=collection.id)
@@ -297,7 +297,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
 
-        if collection.type == COLLECTION_TYPE__PUBLIC and not user.role.admin:
+        if collection.type == COLLECTION_TYPE__PUBLIC and not user.admin:
             raise InsufficientRightsException()
 
         # delete chunks

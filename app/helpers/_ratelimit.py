@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.schemas.users import User
 from app.utils.exceptions import InvalidAPIKeyException, InvalidAuthenticationSchemeException, InsufficientRightsException
-from app.utils.lifespan import auth
+from app.utils.lifespan import context
 
 
 class RateLimit:
@@ -16,11 +16,11 @@ class RateLimit:
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
 
-        user = await auth.manager.check_token(token=api_key.credentials)
+        user = await context.auth.check_token(token=api_key.credentials)
         if not user:
             raise InvalidAPIKeyException()
 
-        if self.admin and not user.role.admin:
+        if self.admin and not user.admin:
             raise InsufficientRightsException()
 
         # TODO: check if the user has a rate limit for the model

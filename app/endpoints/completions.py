@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Security
 from app.helpers import RateLimit
 from app.schemas.completions import CompletionRequest, Completions
 from app.schemas.users import AuthenticatedUser
-from app.utils.lifespan import models
+from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__COMPLETIONS
 
 router = APIRouter()
@@ -15,7 +15,7 @@ async def completions(request: Request, body: CompletionRequest, user: Authentic
     Completion API similar to OpenAI's API.
     """
 
-    model = models.registry[body.model]
+    model = context.models.get(model=body.model, user=user)
     client = model.get_client(endpoint=ENDPOINT__COMPLETIONS)
     response = await client.forward_request(method="POST", json=body.model_dump())
 

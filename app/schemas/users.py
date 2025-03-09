@@ -90,37 +90,30 @@ class AuthenticatedUser(BaseModel):
     budget_allocation: Optional[float] = None
     budget_reset: Optional[BudgetReset] = None
 
-    @property
-    def limits(self, model: str) -> tuple[Optional[int], Optional[int], Optional[int]]:
-        """
-        Get the rate limits (TPM, RPM, RPD) for a specific model. If None, model is not
-        ratelimited.
-
-        Args:
-            model: The model to get the rate limits for.
-
-        Returns:
-            A tuple of TPM, RPM, RPD for the model.
-        """
-        from app.utils.lifespan import models
+    @classmethod
+    def from_user_and_role(cls, user: User, role: Role):
+        from app.utils.lifespan import context
         import re
 
         # TODO support aliases pattern
-        tpm, rpm, rpd = 0, 0, 0
-        for model in models.models:
-            for limit in sorted(self.role.limits, key=lambda limit: len(limit.model)):
+        tpm, rpm, rpd = {}, {}, {}
+        for model in context.models.models:
+            tpm[model] = 0
+            rpm[model] = 0
+            rpd[model] = 0
+            for limit in sorted(role.limits, key=lambda limit: len(limit.model)):
                 if bool(re.match(pattern=limit.model, string=model)):
-                    tpm, rpm, rpd = limit.tpm, limit.rpm, limit.rpd
-        return tpm, rpm, rpd
+                    tpm[model] = limit.tpm
+                    rpm[model] = limit.rpm
+                    rpd[model] = limit.rpd
 
-    @classmethod
-    def from_user_and_role(cls, user: User, role: Role):
         return cls(
             id=user.id,
             role=role.id,
             admin=role.admin,
+            tpm=tpm,
+            rpm=rpm,
+            rpd=rpd,
             budget_allocation=user.budget_allocation,
             budget_reset=user.budget_reset,
-            created_at=user.created_at,
-            updated_at=user.updated_at,
         )

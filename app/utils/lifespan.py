@@ -13,17 +13,14 @@ from app.helpers import ModelRouter
 from app.utils.logging import logger
 import traceback
 
-auth = SimpleNamespace()
+context = SimpleNamespace()
 internet = SimpleNamespace()
-models = SimpleNamespace()
 databases = SimpleNamespace()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
-
-    auth.manager = AuthManager(client=SQLDatabaseClient(**settings.databases.sql.args))
 
     routers = []
     for model in settings.models:
@@ -43,7 +40,9 @@ async def lifespan(app: FastAPI):
         model = model.model_dump()
         model["clients"] = clients
         routers.append(ModelRouter(**model))
-    models.registry = ModelRegistry(routers=routers)
+
+    context.models = ModelRegistry(routers=routers)
+    context.auth = AuthManager(client=SQLDatabaseClient(**settings.databases.sql.args))
 
     internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
 
@@ -51,12 +50,12 @@ async def lifespan(app: FastAPI):
     type = settings.databases.qdrant.type if settings.databases.qdrant else settings.databases.elastic.type
     args = settings.databases.qdrant.args if settings.databases.qdrant else settings.databases.elastic.args
 
-    databases.search = SearchClient.import_module(type=type)(models=models.registry, auth=auth.manager, **args)
+    databases.search = SearchClient.import_module(type=type)(models=context.models, auth=context.auth, **args)
 
-    await auth.manager.setup()
+    await context.auth.setup()
 
     yield
 
     # cleanup resources when app shuts down
     databases.search.close()
-    await auth.manager.client.engine.dispose()
+    await context.auth.client.engine.dispose()

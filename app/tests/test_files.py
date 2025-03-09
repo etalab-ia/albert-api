@@ -166,3 +166,5 @@ class TestFiles:
             response = client.post_user(url="/v1/files", data=data, files=files)
 
         assert response.status_code == 403, response.text
+
+    # TODO: test no chunker

@@ -6,7 +6,7 @@ from fastapi.responses import PlainTextResponse
 from app.helpers import RateLimit
 from app.schemas.audio import AudioTranscription
 from app.schemas.users import AuthenticatedUser
-from app.utils.lifespan import models
+from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS
 
 router = APIRouter()
@@ -170,7 +170,7 @@ async def audio_transcriptions(
         "timestamp_granularities": timestamp_granularities,
     }
 
-    model = models.registry[model]
+    model = context.models.get(model=model, user=user)
     client = model.get_client(endpoint=ENDPOINT__AUDIO_TRANSCRIPTIONS)
     response = await client.forward_request(method="POST", files={"file": (file.filename, file_content, file.content_type)}, data=data)
 

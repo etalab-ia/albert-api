@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Security
 from app.helpers import RateLimit, SearchManager
 from app.schemas.search import Searches, SearchRequest
 from app.schemas.users import AuthenticatedUser
-from app.utils.lifespan import databases, internet, models
+from app.utils.lifespan import databases, internet, context
 
 router = APIRouter()
 
@@ -17,7 +17,7 @@ async def search(request: Request, body: SearchRequest, user: AuthenticatedUser 
     body = await request.json()
     body = SearchRequest(**body)
 
-    search_manager = SearchManager(models=models.registry, search=databases.search, internet=internet.search)
+    search_manager = SearchManager(models=context.models, search=databases.search, internet=internet.search)
     data = await search_manager.query(collections=body.collections, prompt=body.prompt, method=body.method, k=body.k, rff_k=body.rff_k, user=user)
 
     return Searches(data=data)
