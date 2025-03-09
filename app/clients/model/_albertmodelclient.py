@@ -49,3 +49,15 @@ class AlbertModelClient(AsyncOpenAI, BaseModelClient):
         # set attributes of the model
         response = response[0]
         self.max_context_length = response.get("max_context_length")
+
+        # set vector size
+        response = requests.post(
+            url=urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[ENDPOINT__EMBEDDINGS]),
+            headers=headers,
+            json={"model": self.model, "input": "hello world"},
+            timeout=self.timeout,
+        )
+        if response.status_code == 200:
+            self.vector_size = len(response.json()["data"][0]["embedding"])
+        else:
+            self.vector_size = None

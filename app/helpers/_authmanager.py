@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.sql import func
 
 from app.clients.database import SQLDatabaseClient
-from app.schemas.roles import RateLimit, RateLimitType, Role
+from app.schemas.roles import RateLimit, Role
 from app.schemas.tokens import Token
 from app.schemas.users import AuthenticatedUser, User
 from app.sql.models import RateLimit as RateLimitTable
@@ -98,13 +98,7 @@ class AuthManager:
             # create the master role limits
             try:
                 await session.execute(
-                    statement=insert(table=RateLimitTable).values(
-                        [
-                            {"role_id": self.master_role_id, "model_id": "*", "type": RateLimitType.RPD, "value": None},
-                            {"role_id": self.master_role_id, "model_id": "*", "type": RateLimitType.RPM, "value": None},
-                            {"role_id": self.master_role_id, "model_id": "*", "type": RateLimitType.TPM, "value": None},
-                        ]
-                    )
+                    statement=insert(table=RateLimitTable).values(role_id=self.master_role_id, model_id=".*", tpm=None, rpm=None, rpd=None)
                 )
                 await session.commit()
             except Exception:
@@ -179,8 +173,9 @@ class AuthManager:
                         statement=insert(table=RateLimitTable).values(
                             role_id=role.id,
                             model_id=limit.model,
-                            type=limit.type,
-                            value=limit.value,
+                            tpm=limit.tpm,
+                            rpm=limit.rpm,
+                            rpd=limit.rpd,
                         )
                     )
                 await session.commit()
@@ -264,8 +259,9 @@ class AuthManager:
                     cast(func.extract("epoch", RoleTable.created_at), Integer).label("created_at"),
                     cast(func.extract("epoch", RoleTable.updated_at), Integer).label("updated_at"),
                     RateLimitTable.model_id.label("limit_model_id"),
-                    RateLimitTable.type.label("limit_type"),
-                    RateLimitTable.value.label("limit_value"),
+                    RateLimitTable.tpm.label("limit_tpm"),
+                    RateLimitTable.rpm.label("limit_rpm"),
+                    RateLimitTable.rpd.label("limit_rpd"),
                     cast(func.extract("epoch", RateLimitTable.created_at), Integer).label("limit_created_at"),
                     cast(func.extract("epoch", RateLimitTable.updated_at), Integer).label("limit_updated_at"),
                 )
@@ -283,25 +279,12 @@ class AuthManager:
             # format the results
             roles = {}
             for row in results:
-                role = Role(
-                    id=row[0],
-                    default=row[1],
-                    admin=row[2],
-                    created_at=row[3],
-                    updated_at=row[4],
-                    limits=[],
-                )
+                role = Role(id=row[0], default=row[1], admin=row[2], created_at=row[3], updated_at=row[4], limits=[])
                 if row[0] not in roles:
                     roles[row[0]] = role
 
                 if row[5]:
-                    rate_limit = RateLimit(
-                        model=row[5],
-                        type=row[6]._value_ if row[6] else None,
-                        value=row[7],
-                        created_at=row[8],
-                        updated_at=row[9],
-                    )
+                    rate_limit = RateLimit(model=row[5], tpm=row[6], rpm=row[7], rpd=row[8], created_at=row[9], updated_at=row[10])
                     roles[row[0]].limits.append(rate_limit)
 
             roles = list(roles.values())
@@ -484,10 +467,10 @@ class AuthManager:
 
     async def check_token(self, token: str) -> Optional[AuthenticatedUser]:
         if token == settings.auth.master_key:
-            user = await self.get_users(user_id=self.MASTER_USER_ID)
-            role = await self.get_roles(role_id=self.MASTER_ROLE_ID)
+            users = await self.get_users(user_id=self.MASTER_USER_ID)
+            roles = await self.get_roles(role_id=self.MASTER_ROLE_ID)
 
-            return AuthenticatedUser.from_user_and_role(user=user, role=role)
+            return AuthenticatedUser.from_user_and_role(user=users[0], role=roles[0])
 
         try:
             claims = self._decode_token(token=token)
@@ -516,10 +499,10 @@ class AuthManager:
             if user is None:
                 return
 
-            user = await self.get_users(user_id=user.id)
-            role = await self.get_roles(role_id=user.role)
+            users = await self.get_users(user_id=user.id)
+            roles = await self.get_roles(role_id=user.role)
 
-            return AuthenticatedUser.from_user_and_role(user=user, role=role)
+            return AuthenticatedUser.from_user_and_role(user=users[0], role=roles[0])
 
     async def delete_token(self, user_id: str, token_id: str) -> None:
         if user_id == self.MASTER_USER_ID:

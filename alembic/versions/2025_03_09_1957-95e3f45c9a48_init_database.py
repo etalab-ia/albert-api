@@ -1,8 +1,8 @@
 """Init database
 
-Revision ID: 6089e7caef71
+Revision ID: 95e3f45c9a48
 Revises:
-Create Date: 2025-03-07 08:43:18.613794
+Create Date: 2025-03-09 19:57:00.252089
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "6089e7caef71"
+revision: str = "95e3f45c9a48"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -39,8 +39,9 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("role_id", sa.Integer(), nullable=False),
         sa.Column("model_id", sa.String(), nullable=False),
-        sa.Column("type", sa.Enum("RPD", "RPM", "TPM", name="ratelimittype"), nullable=True),
-        sa.Column("value", sa.Float(), nullable=True),
+        sa.Column("tpm", sa.Integer(), nullable=True),
+        sa.Column("rpm", sa.Integer(), nullable=True),
+        sa.Column("rpd", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(["role_id"], ["role.id"], ondelete="CASCADE"),

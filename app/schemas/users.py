@@ -3,8 +3,8 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, field_validator
 
-from app.schemas.roles import RateLimit, Role
-from app.utils.lifespan import models
+from app.schemas.roles import Role
+from typing import Dict
 
 
 class BudgetReset(Enum):
@@ -80,50 +80,47 @@ class Users(BaseModel):
 
 
 class AuthenticatedUser(BaseModel):
-    object: Literal["authenticated_user"] = "authenticated_user"
+    object: Literal["authenticated-user"] = "authenticated-user"
     id: str
-    role: Role
+    role: str
+    admin: bool
+    tpm: Dict[str, Optional[int]]
+    rpm: Dict[str, Optional[int]]
+    rpd: Dict[str, Optional[int]]
     budget_allocation: Optional[float] = None
     budget_reset: Optional[BudgetReset] = None
-    created_at: int
-    updated_at: int
 
     @property
-    def models(self) -> set[str]:
-        accepted_models = list(set([limit.model for limit in self.role.limits]))
-        if "*" in accepted_models:
-            return models.models
-        else:
-            _models = list()
-            for model in accepted_models:
-                if model in models.models:
-                    _models.append(model)
-                if model in models.aliases.keys():
-                    model = models.aliases[model]
-                    if model not in _models:
-                        _models.append(model)
+    def limits(self, model: str) -> tuple[Optional[int], Optional[int], Optional[int]]:
+        """
+        Get the rate limits (TPM, RPM, RPD) for a specific model. If None, model is not
+        ratelimited.
 
-        return _models
+        Args:
+            model: The model to get the rate limits for.
 
-    # @property
-    # def limits(self, model: str, type: RateLimitType) -> List[RateLimit]:
-    #     if model in self.models:
+        Returns:
+            A tuple of TPM, RPM, RPD for the model.
+        """
+        from app.utils.lifespan import models
+        import re
+
+        # TODO support aliases pattern
+        tpm, rpm, rpd = 0, 0, 0
+        for model in models.models:
+            for limit in sorted(self.role.limits, key=lambda limit: len(limit.model)):
+                if bool(re.match(pattern=limit.model, string=model)):
+                    tpm, rpm, rpd = limit.tpm, limit.rpm, limit.rpd
+        return tpm, rpm, rpd
 
     @classmethod
     def from_user_and_role(cls, user: User, role: Role):
         return cls(
             id=user.id,
-            role=role,
+            role=role.id,
+            admin=role.admin,
             budget_allocation=user.budget_allocation,
             budget_reset=user.budget_reset,
             created_at=user.created_at,
             updated_at=user.updated_at,
         )
-
-    def get_rate_limits_for_model(self, model: str) -> List[RateLimit]:
-        """Get all rate limits applicable for a specific model"""
-        limits = []
-        for limit in self.role.limits:
-            if limit.model == model or limit.model == "*":
-                limits.append(limit)
-        return limits

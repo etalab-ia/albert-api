@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from app.schemas.roles import RateLimitType
 from app.schemas.users import BudgetReset
 from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String, Boolean, Index, UniqueConstraint
 from sqlalchemy.sql import func
@@ -28,8 +27,9 @@ class RateLimit(Base):
     id = Column(Integer, primary_key=True, index=True)
     role_id = Column(Integer, ForeignKey(column="role.id", ondelete="CASCADE"), nullable=False)
     model_id = Column(String, nullable=False)
-    type = Column(Enum(RateLimitType), nullable=True)
-    value = Column(Float, nullable=True)
+    tpm = Column(Integer, nullable=True)
+    rpm = Column(Integer, nullable=True)
+    rpd = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now())
 

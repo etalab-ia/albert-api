@@ -1,27 +1,25 @@
 from typing import List, Optional
 
-from app.helpers._modelrouter import ModelRouter
 from app.schemas.models import Model as ModelSchema
-from app.schemas.settings import Model as ModelSettings
+from app.schemas.users import AuthenticatedUser
 from app.utils.exceptions import ModelNotFoundException
 from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE
-# from app.schemas.users import AuthenticatedUser
+
+from ._modelrouter import ModelRouter
 
 
 class ModelRegistry:
-    def __init__(self, settings: List[ModelSettings]) -> None:
+    def __init__(self, routers: List[ModelRouter]) -> None:
         self.models = list()
         self.aliases = dict()
         self.internet_default_language_model = None
         self.internet_default_embeddings_model = None
 
-        for model in settings:
-            model = ModelRouter(model=model)
-
+        for model in routers:
             if "id" not in model.__dict__:  # no clients available
                 continue
 
-            # self.__dict__[model.id] = model
+            self.__dict__[model.id] = model
             self.models.append(model.id)
 
             for alias in model.aliases:
@@ -36,10 +34,9 @@ class ModelRegistry:
         if not self.internet_default_language_model or not self.internet_default_embeddings_model:
             raise ValueError("Internet models are not setup.")
 
-    def get(self, model: str, user) -> ModelRouter:
+    def get(self, model: str, user: AuthenticatedUser) -> ModelRouter:
         model = self.aliases.get(model, model)
-
-        if model in self.models:
+        if model in self.models and user.limits(model)[2] != 0:
             return self.__getitem__(key=model)
 
         raise ModelNotFoundException()
