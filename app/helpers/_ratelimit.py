@@ -1,11 +1,14 @@
+import json
+import traceback
 from typing import Annotated
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.schemas.users import User
-from app.utils.exceptions import InvalidAPIKeyException, InvalidAuthenticationSchemeException, InsufficientRightsException
+from app.utils.exceptions import InsufficientRightsException, InvalidAPIKeyException, InvalidAuthenticationSchemeException
 from app.utils.lifespan import context
+from app.utils.logging import logger
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 
@@ -24,10 +27,15 @@ class RateLimit:
         if self.admin and not user.admin:
             raise InsufficientRightsException()
 
-        # rate limit for chat completions
-        # @TODO: extend to other endpoints
-        if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS):
-            body = await request.json()
-            await context.limiter(user=user, model=body["model"])
+        # rate limit check
+        if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS):  # @TODO: extend to other endpoints
+            body = await request.body()
+            body = json.loads(body) if body else {}
+
+            try:
+                await context.limiter(user=user, model=body["model"])
+            except Exception:
+                logger.error(msg="Error during rate limit check.")
+                logger.error(msg=traceback.format_exc())
 
         return user

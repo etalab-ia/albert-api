@@ -1,6 +1,6 @@
 [project]
 name = "albert-api"
-version = "1.0.0"
+version = "0.0.4"
 description = "Albert API projects"
 requires-python = ">=3.12"
 license = { text = "MIT" }

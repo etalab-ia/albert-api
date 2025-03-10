@@ -93,16 +93,16 @@ class TestAuth:
         response = client.delete_user(url="/tokens/test-user-user/inexistent-token")
         assert response.status_code == 403, response.text
 
-    # def test_create_user_with_user_token_and_master_role(self, client: TestClient):
-    #     """Test forbidden access to the POST /users endpoint with user token to check if user cannot create a user with master role."""
-    #     response = client.post_user(url="/users", json={"user": "test-user", "password": "test-password", "role": "master"})
-    #     assert response.status_code == 403, response.text
+    def test_create_user_with_user_token_and_master_role(self, client: TestClient):
+        """Test forbidden access to the POST /users endpoint with user token to check if user cannot create a user with master role."""
+        response = client.post_user(url="/users", json={"user": "test-user", "password": "test-password", "role": "master"})
+        assert response.status_code == 403, response.text
 
-    # def test_create_role_with_admin_token(self, client: TestClient):
-    #     """Test the POST /roles endpoint with admin token to check response code and text."""
-    #     response = client.post_admin(url="/roles", json={"role": "test-role", "default": False, "admin": False, "limits": []})
-    #     assert response.status_code == 201, response.text
-    #     assert response.text == "test-role"
+    def test_create_role_with_admin_token(self, client: TestClient):
+        """Test the POST /roles endpoint with admin token to check response code and text."""
+        response = client.post_admin(url="/roles", json={"role": "test-role", "default": False, "admin": False, "limits": []})
+        assert response.status_code == 201, response.text
+        assert response.text == "test-role"
 
     # def test_update_role_with_admin_token(self, client: TestClient):
     #     """Test the PATCH /roles endpoint with admin token to check if role is updated."""
