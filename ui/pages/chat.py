@@ -8,12 +8,12 @@ from utils.chat import generate_stream
 from utils.common import get_collections, get_models, header, settings
 from utils.variables import MODEL_TYPE_LANGUAGE
 
-API_KEY = header()
+header()
 
 # Data
 try:
-    models = get_models(api_key=API_KEY, type=MODEL_TYPE_LANGUAGE)
-    collections = get_collections(api_key=API_KEY)
+    models = get_models(api_key=settings.api_key, type=MODEL_TYPE_LANGUAGE)
+    collections = get_collections(api_key=settings.api_key)
 except Exception:
     st.error("Error to fetch user data.")
     logging.debug(traceback.format_exc())
@@ -130,7 +130,7 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
             stream, sources = generate_stream(
                 messages=st.session_state.messages,
                 params=params,
-                api_key=API_KEY,
+                api_key=settings.api_key,
                 rag=rag,
                 rerank=False,
             )

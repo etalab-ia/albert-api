@@ -47,6 +47,8 @@ class UserRequest(BaseModel):
     budget_allocation: Optional[float] = None
     budget_reset: Optional[BudgetReset] = None
 
+    # TODO: add expiration date
+
     @field_validator("user", mode="after")
     def strip_user(cls, user):
         user = user.strip()

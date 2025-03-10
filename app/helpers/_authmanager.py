@@ -22,6 +22,7 @@ from app.utils.exceptions import (
     DeleteMasterTokenException,
     DeleteMasterUserException,
     DeleteRoleWithUsersException,
+    InvalidPasswordException,
     RoleAlreadyExistsException,
     RoleNotFoundException,
     TokenAlreadyExistsException,
@@ -152,6 +153,21 @@ class AuthManager:
         return AuthManager.TOKEN_PREFIX + jwt.encode(
             claims={"user_id": user_id, "token_id": token_id, "expires_at": expires_at}, key=settings.auth.master_key, algorithm="HS256"
         )
+
+    async def login(self, user: str, password: str) -> str:
+        async with self.sql.session() as session:
+            result = await session.execute(statement=select(UserTable).where(UserTable.display_id == user))
+            try:
+                user = result.scalar_one()
+            except NoResultFound:
+                raise UserNotFoundException()
+
+            if not AuthManager._check_password(password=password, hashed_password=user.password):
+                raise InvalidPasswordException()
+
+            user = await self.get_users(user_id=user.display_id)
+
+            return user[0]
 
     async def create_role(self, role_id: str, default: bool = False, admin: bool = False, limits: List[RateLimit] = []) -> str:
         async with self.sql.session() as session:
@@ -369,7 +385,7 @@ class AuthManager:
                 .where(UserTable.display_id == user_id)
             )
             try:
-                user = result.scalar_one()
+                user = result.all()[0]
             except NoResultFound:
                 raise UserNotFoundException()
 
@@ -377,7 +393,7 @@ class AuthManager:
             display_id = display_id if display_id is not None else user.display_id
             password = self._get_hashed_password(password=password) if password is not None else user.password
 
-            if role_id != user.role_display_id:
+            if role_id is not None and role_id != user.role_display_id:
                 # check if role exists
                 result = await session.execute(statement=select(RoleTable).where(RoleTable.display_id == role_id))
                 try:
@@ -462,7 +478,9 @@ class AuthManager:
             token = self._encode_token(user_id=user.id, token_id=token.id, expires_at=expires_at)
 
             # update the token
-            await session.execute(statement=update(table=TokenTable).values(token=token[:8]).where(TokenTable.display_id == token_id))
+            await session.execute(
+                statement=update(table=TokenTable).values(token=f"{token[:8]}...{token[-8:]}").where(TokenTable.display_id == token_id)
+            )
             await session.commit()
 
         return token
@@ -522,12 +540,12 @@ class AuthManager:
                 .where(TokenTable.display_id == token_id)
             )
             try:
-                token = result.scalar_one()
+                token_id = result.scalar_one()
             except NoResultFound:
                 raise TokenNotFoundException()
 
             # delete the token
-            await session.execute(statement=delete(table=TokenTable).where(TokenTable.id == token.id))
+            await session.execute(statement=delete(table=TokenTable).where(TokenTable.id == token_id))
             await session.commit()
 
     async def get_tokens(
@@ -556,9 +574,6 @@ class AuthManager:
         async with self.sql.session() as session:
             result = await session.execute(statement=statement)
             tokens = [Token(**row._mapping) for row in result.all()]
-
-        if user_id and len(tokens) == 0:
-            raise UserNotFoundException()
 
         if token_id and len(tokens) == 0:
             raise TokenNotFoundException()

@@ -3,36 +3,33 @@ from typing import Optional
 from fastapi import APIRouter, Body, Path, Query, Request, Security
 from fastapi.responses import PlainTextResponse, Response
 
-from app.helpers import AuthManager, RateLimit
+from app.helpers import RateLimit
 from app.schemas.login import LoginRequest
 from app.schemas.roles import RateLimit as _RateLimit
 from app.schemas.roles import Role, RoleRequest, Roles, RoleUpdateRequest
 from app.schemas.tokens import Token, TokenRequest, Tokens
 from app.schemas.users import User, UserRequest, Users, UserUpdateRequest
-from app.utils.exceptions import InvalidPasswordException
 from app.utils.lifespan import context
 
 router = APIRouter()
 
 
 @router.post(path="/login")
-async def login(request: Request, body: LoginRequest = Body(description="The login request.")) -> Response:
+async def login(
+    request: Request, body: LoginRequest = Body(description="The login request."), _user: User = Security(dependency=RateLimit(admin=True))
+) -> User:
     """
     Login to the API.
     """
 
-    users = await context.auth.get_users(user_id=body.user_id)
-    user = users[0]
+    user = await context.auth.login(user=body.user, password=body.password)
 
-    if not AuthManager._check_password(password=body.password, hashed_password=user.password):
-        raise InvalidPasswordException()
-
-    return Response(status_code=200)
+    return user
 
 
 @router.post(path="/roles")
 async def create_role(
-    request: Request, body: RoleRequest = Body(description="The role creation request."), user: User = Security(dependency=RateLimit(admin=True))
+    request: Request, body: RoleRequest = Body(description="The role creation request."), _user: User = Security(dependency=RateLimit(admin=True))
 ) -> PlainTextResponse:
     """
     Create a new role. If no limits are provided, the role will have all access without rate limits.
@@ -49,7 +46,7 @@ async def create_role(
 
 @router.delete(path="/roles/{role}")
 async def delete_role(
-    request: Request, role: str = Path(description="The id of the role to delete."), user: User = Security(dependency=RateLimit(admin=True))
+    request: Request, role: str = Path(description="The id of the role to delete."), _user: User = Security(dependency=RateLimit(admin=True))
 ) -> Response:
     """
     Delete a role.
@@ -65,7 +62,7 @@ async def update_role(
     request: Request,
     role: str = Path(description="The id of the role to update."),
     body: RoleUpdateRequest = Body(description="The role update request."),
-    user: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Response:
     """
     Update a role.
@@ -82,13 +79,13 @@ async def update_role(
 async def get_role(
     request: Request,
     role: str = Path(description="The id of the role to get."),
-    user: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Role:
     """
     Get a role by id.
     """
 
-    roles = await context.auth.get_roles(role_id=[role])
+    roles = await context.auth.get_roles(role_id=role)
 
     return roles[0]
 
@@ -98,7 +95,7 @@ async def get_roles(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the roles to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the roles to get."),
-    user: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Roles:
     """
     Get all roles.
@@ -111,7 +108,7 @@ async def get_roles(
 
 @router.post(path="/users")
 async def create_user(
-    request: Request, body: UserRequest = Body(description="The user creation request."), user: User = Security(dependency=RateLimit(admin=True))
+    request: Request, body: UserRequest = Body(description="The user creation request."), _user: User = Security(dependency=RateLimit(admin=True))
 ) -> PlainTextResponse:
     """
     Create a new user.
@@ -129,7 +126,7 @@ async def create_user(
 async def delete_user(
     request: Request,
     user: str = Path(description="The id of the user to delete."),
-    _: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Response:
     """
     Delete a user.
@@ -144,28 +141,33 @@ async def update_user(
     request: Request,
     user: str = Path(description="The user name of the user to update."),
     body: UserUpdateRequest = Body(description="The user update request."),
-    _: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Response:
     """
     Update a user.
     """
 
-    body = body.model_dump()
-    display_id = body.pop("user")
-    await context.auth.update_user(user_id=user, display_id=display_id, **body)
+    await context.auth.update_user(
+        user_id=user,
+        display_id=body.user,
+        password=body.password,
+        role_id=body.role,
+        budget_allocation=body.budget_allocation,
+        budget_reset=body.budget_reset,
+    )
 
     return Response(status_code=201)
 
 
 @router.get(path="/users/{user:path}")
 async def get_user(
-    request: Request, user: str = Path(description="The id of the user to get."), _: User = Security(dependency=RateLimit(admin=True))
+    request: Request, user: str = Path(description="The id of the user to get."), _user: User = Security(dependency=RateLimit(admin=True))
 ) -> User:
     """
     Get a user by id.
     """
 
-    users = await context.auth.get_users(user_ids=[user])
+    users = await context.auth.get_users(user_id=user)
 
     return users[0]
 
@@ -176,7 +178,7 @@ async def get_users(
     role: Optional[str] = Query(default=None, description="The id of the role to filter the users by."),
     offset: int = Query(default=0, ge=0, description="The offset of the users to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the users to get."),
-    user: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Users:
     """
     Get all users.
@@ -190,7 +192,7 @@ async def get_users(
 async def create_token(
     request: Request,
     body: TokenRequest = Body(description="The token creation request."),
-    _: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> PlainTextResponse:
     """
     Create a new token.
@@ -206,7 +208,7 @@ async def delete_token(
     request: Request,
     user: str = Path(description="The user ID of the user to delete the token for."),
     token: str = Path(description="The token ID of the token to delete."),
-    _: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Response:
     """
     Delete a token.
@@ -222,7 +224,7 @@ async def get_token(
     request: Request,
     user: str = Path(description="The user ID of the user to get the token for."),
     token: str = Path(description="The token ID of the token to get."),
-    _: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Token:
     """
     Get a token by id.
@@ -239,7 +241,7 @@ async def get_tokens(
     user: str = Path(description="The id of the user to filter the tokens by."),
     offset: int = Query(default=0, ge=0, description="The offset of the tokens to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the tokens to get."),
-    _: User = Security(dependency=RateLimit(admin=True)),
+    _user: User = Security(dependency=RateLimit(admin=True)),
 ) -> Tokens:
     """
     Get all tokens of a user.

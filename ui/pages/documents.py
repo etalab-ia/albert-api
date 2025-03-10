@@ -6,14 +6,14 @@ from utils.common import header, refresh_all_data, settings
 from utils.documents import create_collection, delete_collection, delete_document, load_data, upload_file
 from utils.variables import COLLECTION_TYPE_PRIVATE
 
-API_KEY = header()
+header()
 
 with st.sidebar:
     if st.button(label="**:material/refresh: Rafraîchir les données**", key="refresh", use_container_width=True):
-        refresh_all_data(api_key=API_KEY)
+        refresh_all_data(api_key=settings.api_key)
 
 # Data
-collections, documents, df_collections, df_files = load_data(api_key=API_KEY)
+collections, documents, df_collections, df_files = load_data(api_key=settings.api_key)
 
 # Collections
 st.subheader(body="Collections")
@@ -27,7 +27,7 @@ with col1:
         )
         submit_create = st.button(label="Create", disabled=not collection_name)
         if submit_create:
-            create_collection(api_key=API_KEY, collection_name=collection_name, collection_model=settings.documents_embeddings_model)
+            create_collection(api_key=settings.api_key, collection_name=collection_name, collection_model=settings.documents_embeddings_model)
             time.sleep(0.5)
             st.rerun()
 
@@ -41,7 +41,7 @@ with col2:
         collection_id = collection.split(" - ")[1] if collection else None
         submit_delete = st.button(label="Delete", disabled=not collection_id, key="delete_collection_button")
         if submit_delete:
-            delete_collection(api_key=API_KEY, collection_id=collection_id)
+            delete_collection(api_key=settings.api_key, collection_id=collection_id)
             time.sleep(0.5)
             st.rerun()
 
@@ -66,7 +66,7 @@ with col1:
         submit_upload = st.button(label="Upload", disabled=not collection_id or not file_to_upload)
         if file_to_upload and submit_upload and collection_id:
             with st.spinner(text="Downloading and processing the document..."):
-                result = upload_file(api_key=API_KEY, file=file_to_upload, collection_id=collection_id)
+                result = upload_file(api_key=settings.api_key, file=file_to_upload, collection_id=collection_id)
                 time.sleep(0.5)
                 st.rerun()
 
@@ -78,6 +78,6 @@ with col2:
         submit_delete = st.button(label="Delete", disabled=not document_id, key="delete_document_button")
         if submit_delete:
             document_collection = [document["collection_id"] for document in documents if document["id"] == document_id][0]
-            delete_document(api_key=API_KEY, collection_id=document_collection, document_id=document_id)
+            delete_document(api_key=settings.api_key, collection_id=document_collection, document_id=document_id)
             time.sleep(0.5)
             st.rerun()

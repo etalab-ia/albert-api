@@ -7,8 +7,9 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     cache_ttl: int = 1800  # 30 minutes
-    base_url: str = "http://localhost:8080/v1"
-
+    api_url: str = "http://localhost:8080"
+    api_key: str
+    max_token_expiration_days: int = 60  # days
     # models
     exclude_models: str
     documents_embeddings_model: str

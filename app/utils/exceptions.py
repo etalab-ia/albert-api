@@ -24,11 +24,6 @@ class WrongSearchMethodException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
-class InvalidPasswordException(HTTPException):
-    def __init__(self, detail: str = "Invalid password."):
-        super().__init__(status_code=400, detail=detail)
-
-
 class RoleAlreadyExistsException(HTTPException):
     def __init__(self, detail: str = "Role already exists."):
         super().__init__(status_code=400, detail=detail)
@@ -85,6 +80,13 @@ class CreateTokenForMasterUserException(HTTPException):
 
 
 # 403
+
+
+class InvalidPasswordException(HTTPException):
+    def __init__(self, detail: str = "Invalid password."):
+        super().__init__(status_code=403, detail=detail)
+
+
 class InvalidAuthenticationSchemeException(HTTPException):
     def __init__(self, detail: str = "Invalid authentication scheme.") -> None:
         super().__init__(status_code=403, detail=detail)

@@ -10,7 +10,7 @@ from utils.variables import COLLECTION_DISPLAY_ID_INTERNET, COLLECTION_TYPE_PRIV
 
 def create_collection(api_key: str, collection_name: str, collection_model: str) -> None:
     headers = {"Authorization": f"Bearer {api_key}"}
-    response = requests.post(f"{settings.base_url}/collections", json={"name": collection_name, "model": collection_model}, headers=headers)
+    response = requests.post(f"{settings.api_url}/v1/collections", json={"name": collection_name, "model": collection_model}, headers=headers)
     if response.status_code == 201:
         st.toast("Create succeed", icon="✅")
         # clear cache
@@ -20,7 +20,7 @@ def create_collection(api_key: str, collection_name: str, collection_model: str)
 
 
 def delete_collection(api_key: str, collection_id: str) -> None:
-    url = f"{settings.base_url}/collections/{collection_id}"
+    url = f"{settings.api_url}/v1/collections/{collection_id}"
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
@@ -35,7 +35,7 @@ def upload_file(api_key: str, file, collection_id: str) -> None:
     headers = {"Authorization": f"Bearer {api_key}"}
     files = {"file": (file.name, file.getvalue(), file.type)}
     data = {"request": '{"collection": "%s"}' % collection_id}
-    response = requests.post(f"{settings.base_url}/files", data=data, files=files, headers=headers)
+    response = requests.post(url=f"{settings.api_url}/v1/files", data=data, files=files, headers=headers)
 
     if response.status_code == 201:
         st.toast("Upload succeed", icon="✅")
@@ -47,7 +47,7 @@ def upload_file(api_key: str, file, collection_id: str) -> None:
 
 
 def delete_document(api_key: str, collection_id: str, document_id: str) -> None:
-    url = f"{settings.base_url}/documents/{collection_id}/{document_id}"
+    url = f"{settings.api_url}/v1/documents/{collection_id}/{document_id}"
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:

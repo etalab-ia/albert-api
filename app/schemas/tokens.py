@@ -29,6 +29,7 @@ class Token(BaseModel):
     id: str
     user: str
     token: str
+    expires_at: Optional[int] = None
     created_at: int
     updated_at: int
 

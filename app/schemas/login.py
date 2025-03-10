@@ -2,12 +2,12 @@ from pydantic import BaseModel, field_validator
 
 
 class LoginRequest(BaseModel):
-    user_id: str
+    user: str
     password: str
 
-    @field_validator("user_id", mode="before")
-    def strip(cls, user_id):
-        if isinstance(user_id, str):
-            user_id = user_id.strip()
+    @field_validator("user", mode="before")
+    def strip(cls, user):
+        if isinstance(user, str):
+            user = user.strip()
 
-        return user_id
+        return user
