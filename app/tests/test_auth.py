@@ -1,3 +1,106 @@
+from fastapi.testclient import TestClient
+import pytest
+
+
+@pytest.mark.usefixtures("client", "setup", "cleanup")
+class TestAuth:
+    def test_create_role_with_user_token(self, client: TestClient, setup):
+        """Test the POST /roles endpoint with user token."""
+        response = client.post_user(url="/roles", json={"role": "test-role", "default": False, "admin": False, "limits": []})
+        assert response.status_code == 403, response.text
+
+    def test_create_role_with_admin_token(self, client: TestClient, setup):
+        """Test the POST /roles endpoint with admin token."""
+        response = client.post_admin(url="/roles", json={"role": "test-role", "default": False, "admin": False, "limits": []})
+        assert response.status_code == 201, response.text
+        assert response.text == "test-role"
+
+    def test_update_role_with_user_token(self, client: TestClient, setup):
+        """Test the PATCH /roles endpoint with user token."""
+        response = client.patch_user(url="/roles/test-role", json={"role": "test-role", "default": False, "admin": True, "limits": []})
+        assert response.status_code == 403, response.text
+
+    def test_update_role_with_admin_token(self, client: TestClient, setup):
+        """Test the PATCH /roles endpoint with admin token."""
+        response = client.patch_admin(url="/roles/test-role", json={"role": "test-role", "default": False, "admin": True, "limits": []})
+        assert response.status_code == 201, response.text
+
+        response = client.get_admin(url="/roles/test-role")
+        assert response.status_code == 200, response.text
+        assert response.json()["admin"] is True
+
+    def test_delete_role_with_user_token(self, client: TestClient, setup):
+        """Test the DELETE /roles endpoint with user token."""
+        response = client.delete_user(url="/roles/test-role")
+        assert response.status_code == 403, response.text
+
+    def test_delete_role_with_admin_token(self, client: TestClient, setup):
+        """Test the DELETE /roles endpoint with admin token."""
+        response = client.delete_admin(url="/roles/test-role")
+        assert response.status_code == 204, response.text
+
+    def test_delete_inexistent_role_with_admin_token(self, client: TestClient, setup):
+        """Test the DELETE /roles endpoint with admin token."""
+        response = client.delete_admin(url="/roles/inexistent-role")
+        assert response.status_code == 404, response.text
+
+    def test_update_inexistent_role_with_admin_token(self, client: TestClient, setup):
+        """Test the PATCH /roles endpoint with admin token."""
+        response = client.patch_admin(url="/roles/inexistent-role", json={"role": "inexistent-role", "default": False, "admin": False, "limits": []})
+        assert response.status_code == 404, response.text
+
+    def test_update_inexistent_role_with_user_token(self, client: TestClient, setup):
+        """Test the PATCH /roles endpoint with user token."""
+        response = client.patch_user(url="/roles/inexistent-role", json={"role": "inexistent-role", "default": False, "admin": False, "limits": []})
+        assert response.status_code == 400, response.text
+
+    def test_update_default_role_with_user_token(self, client: TestClient, setup):
+        """Test the PATCH /roles endpoint with user token."""
+        response = client.patch_user(url="/roles/test-role", json={"role": "test-role", "default": True, "admin": False, "limits": []})
+        assert response.status_code == 400, response.text
+
+    def test_delete_master_role_with_user_token(self, client: TestClient, setup):
+        """Test the DELETE /roles endpoint with user token."""
+        response = client.delete_user(url="/roles/master")
+        assert response.status_code == 403, response.text
+
+    def test_delete_master_role_with_admin_token(self, client: TestClient, setup):
+        """Test the DELETE /roles endpoint with admin token."""
+        response = client.delete_admin(url="/roles/master")
+        assert response.status_code == 403, response.text
+
+    def test_delete_default_role_with_user_token(self, client: TestClient, setup):
+        """Test the DELETE /roles endpoint with user token."""
+        response = client.delete_user(url="/roles/default")
+        assert response.status_code == 403, response.text
+
+    def test_delete_default_role_with_admin_token(self, client: TestClient, setup):
+        """Test the DELETE /roles endpoint with admin token."""
+        response = client.delete_admin(url="/roles/default")
+        assert response.status_code == 403, response.text
+
+    def test_remove_default_role_from_user_with_admin_token(self, client: TestClient, setup):
+        """Test the PATCH /roles endpoint with admin token to remove default role from user. Default role cannot be removed without a new default role."""
+        response = client.patch_admin(url="/roles/test-role", json={"role": "test-role", "default": False, "admin": False, "limits": []})
+        assert response.status_code == 400, response.text
+
+    def test_update_default_role_with_admin_token(self, client: TestClient, setup):
+        """Test the PATCH /roles endpoint with admin token."""
+
+        response = client.post_admin(url="/roles", json={"role": "test-role", "default": False, "admin": False, "limits": []})
+        assert response.status_code == 201, response.text
+
+        response = client.patch_admin(url="/roles/test-role", json={"role": "test-role", "default": True, "admin": False, "limits": []})
+        assert response.status_code == 201, response.text
+
+        response = client.post_admin(url="/users", json={"user": "test-user", "password": "test-password", "role": "test-role"})
+        assert response.status_code == 201, response.text
+
+        response = client.get_admin(url="/users/test-user")
+        assert response.status_code == 200, response.text
+        assert response.json()["role"] == "test-role"
+
+
 # create role with user token -> 403
 # create role with admin token -> 201
 # delete role -> 204
@@ -37,5 +140,3 @@
 # login with invalid role -> 404
 # login with master user -> 200
 # login with master role -> 200
-
-

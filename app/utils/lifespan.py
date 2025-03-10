@@ -1,17 +1,17 @@
 from contextlib import asynccontextmanager
+import traceback
 from types import SimpleNamespace
 
+from coredis import ConnectionPool
 from fastapi import FastAPI
 
 from app.clients.database import SQLDatabaseClient
 from app.clients.internet import BaseInternetClient as InternetClient
-from app.clients.search import BaseSearchClient as SearchClient
 from app.clients.model import BaseModelClient as ModelClient
-from app.helpers import AuthManager, ModelRegistry
-from app.utils.settings import settings
-from app.helpers import ModelRouter
+from app.clients.search import BaseSearchClient as SearchClient
+from app.helpers import AuthManager, Limiter, ModelRegistry, ModelRouter
 from app.utils.logging import logger
-import traceback
+from app.utils.settings import settings
 
 context = SimpleNamespace()
 internet = SimpleNamespace()
@@ -43,6 +43,7 @@ async def lifespan(app: FastAPI):
 
     context.models = ModelRegistry(routers=routers)
     context.auth = AuthManager(sql=SQLDatabaseClient(**settings.databases.sql.args))
+    context.limiter = Limiter(auth=context.auth, connection_pool=ConnectionPool(**settings.databases.redis.args), strategy=settings.auth.limiting_strategy)  # fmt: off
 
     internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
 
@@ -53,6 +54,7 @@ async def lifespan(app: FastAPI):
     databases.search = SearchClient.import_module(type=type)(models=context.models, auth=context.auth, **args)
 
     await context.auth.setup()
+    assert await context.limiter.redis.check(), "Redis database is not reachable."
 
     yield
 

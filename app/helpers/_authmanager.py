@@ -7,7 +7,7 @@ from sqlalchemy import Integer, cast, delete, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.sql import func
 
-from app.sqls.database import SQLDatabaseClient
+from app.clients.database import SQLDatabaseClient
 from app.schemas.roles import RateLimit, Role
 from app.schemas.tokens import Token
 from app.schemas.users import AuthenticatedUser, User
@@ -98,7 +98,7 @@ class AuthManager:
             # create the master role limits
             try:
                 await session.execute(
-                    statement=insert(table=RateLimitTable).values(role_id=self.master_role_id, model_id=".*", tpm=None, rpm=None, rpd=None)
+                    statement=insert(table=RateLimitTable).values(role_id=self.master_role_id, model_regex=".*", tpm=None, rpm=None, rpd=None)
                 )
                 await session.commit()
             except Exception:
@@ -172,7 +172,7 @@ class AuthManager:
                     await session.execute(
                         statement=insert(table=RateLimitTable).values(
                             role_id=role.id,
-                            model_id=limit.model,
+                            model_regex=limit.model_regex,
                             tpm=limit.tpm,
                             rpm=limit.rpm,
                             rpd=limit.rpd,
@@ -245,7 +245,9 @@ class AuthManager:
                 # create the new limits
                 for limit in limits:
                     await session.execute(
-                        statement=insert(table=RateLimitTable).values(role_id=role.id, model_id=limit.model, type=limit.type, value=limit.value)
+                        statement=insert(table=RateLimitTable).values(
+                            role_id=role.id, model_regex=limit.model_regex, tpm=limit.tpm, rpm=limit.rpm, rpd=limit.rpd
+                        )
                     )
             await session.commit()
 
@@ -258,7 +260,7 @@ class AuthManager:
                     RoleTable.admin,
                     cast(func.extract("epoch", RoleTable.created_at), Integer).label("created_at"),
                     cast(func.extract("epoch", RoleTable.updated_at), Integer).label("updated_at"),
-                    RateLimitTable.model_id.label("limit_model_id"),
+                    RateLimitTable.model_regex.label("limit_model_regex"),
                     RateLimitTable.tpm.label("limit_tpm"),
                     RateLimitTable.rpm.label("limit_rpm"),
                     RateLimitTable.rpd.label("limit_rpd"),

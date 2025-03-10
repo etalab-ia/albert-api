@@ -30,6 +30,7 @@ flowchart TD
 
     modelregistry --> limiter
     modelregistry ----> filemanager
+    modelregistry --> internetsearchmanager
     end
 
     subgraph **app/endpoints**

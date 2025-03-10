@@ -5,19 +5,19 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class RateLimitRequest(BaseModel):
-    model: str = Field(default=".*", description="Regex pattern to match the model ID, by default all models are matched.")
+    model_regex: str = Field(default=".*", description="Regex pattern to match the model ID, by default all models are matched.")
     tpm: Optional[int] = Field(default=None, ge=0)
     rpm: Optional[int] = Field(default=None, ge=0)
     rpd: Optional[int] = Field(default=None, ge=0)
 
-    @field_validator("model", mode="before")
-    def strip(cls, model):
-        model = model.strip()
-        return model
+    @field_validator("model_regex", mode="before")
+    def strip(cls, model_regex):
+        model_regex = model_regex.strip()
+        return model_regex
 
 
 class RateLimit(RateLimitRequest):
-    model: str = Field(default=".*", description="Regex pattern to match the model ID, by default all models are matched.")
+    model_regex: str = Field(default=".*", description="Regex pattern to match the model ID, by default all models are matched.")
     tpm: Optional[int] = Field(default=None, ge=0)
     rpm: Optional[int] = Field(default=None, ge=0)
     rpd: Optional[int] = Field(default=None, ge=0)

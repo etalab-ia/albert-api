@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.roles import Role
 from typing import Dict
@@ -15,11 +15,11 @@ class BudgetReset(Enum):
 
 
 class UserUpdateRequest(BaseModel):
-    id: Optional[str] = None
-    role: Optional[str] = None
-    password: Optional[str] = None
-    budget_allocation: Optional[float] = None
-    budget_reset: Optional[BudgetReset] = None
+    user: Optional[str] = Field(default=None, description="The new user ID.")
+    role: Optional[str] = Field(default=None, description="The new role ID.")
+    password: Optional[str] = Field(default=None, description="The new password.")
+    budget_allocation: Optional[float] = Field(default=None, description="The new budget allocation.")
+    budget_reset: Optional[BudgetReset] = Field(default=None, description="The new budget reset.")
 
     @field_validator("user", mode="after", check_fields=False)
     def strip_user(cls, user):

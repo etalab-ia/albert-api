@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import HTTPException
 
 
@@ -166,3 +168,16 @@ class NotImplementedException(HTTPException):
 class UnsupportedFileUploadException(HTTPException):
     def __init__(self, detail: str = "Unsupported collection name for upload file.") -> None:
         super().__init__(status_code=422, detail=detail)
+
+
+# 429
+class RateLimitExceeded(HTTPException):
+    """
+    exception raised when a rate limit is hit.
+    """
+
+    limit = None
+
+    def __init__(self, detail: Optional[str] = None) -> None:
+        detail = f"Rate limit exceeded: {detail}" if detail else "Rate limit exceeded."
+        super(RateLimitExceeded, self).__init__(status_code=429, detail=detail)

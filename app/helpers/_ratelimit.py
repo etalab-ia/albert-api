@@ -6,6 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.schemas.users import User
 from app.utils.exceptions import InvalidAPIKeyException, InvalidAuthenticationSchemeException, InsufficientRightsException
 from app.utils.lifespan import context
+from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 
 class RateLimit:
@@ -23,15 +24,10 @@ class RateLimit:
         if self.admin and not user.admin:
             raise InsufficientRightsException()
 
-        # TODO: check if the user has a rate limit for the model
-
-        if request.method in ["POST", "PUT"]:
-            try:
-                body = await request.json()
-                model = body.get("model")
-            except Exception as e:
-                print(e)
-                # Handle case where request might not have a JSON body
-                pass
+        # rate limit for chat completions
+        # @TODO: extend to other endpoints
+        if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS):
+            body = await request.json()
+            await context.limiter(user=user, model=body["model"])
 
         return user

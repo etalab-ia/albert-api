@@ -26,7 +26,7 @@ class RateLimit(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     role_id = Column(Integer, ForeignKey(column="role.id", ondelete="CASCADE"), nullable=False)
-    model_id = Column(String, nullable=False)
+    model_regex = Column(String, nullable=False)
     tpm = Column(Integer, nullable=True)
     rpm = Column(Integer, nullable=True)
     rpd = Column(Integer, nullable=True)
