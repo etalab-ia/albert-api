@@ -202,7 +202,7 @@ class BaseSearchClient(ABC):
         Simple interface to create an embedding vector from a text input.
         """
 
-        model = self.models.get(model=model, user=user)
+        model = self.models(model=model, user=user)
         client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         try:
             response = await client.embeddings.create(input=input, model=client.model, encoding_format="float")

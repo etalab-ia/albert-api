@@ -34,7 +34,7 @@ class ModelRegistry:
         if not self.internet_default_language_model or not self.internet_default_embeddings_model:
             raise ValueError("Internet models are not setup.")
 
-    def get(self, model: str, user: Optional[AuthenticatedUser] = None) -> ModelRouter:
+    def __call__(self, model: str, user: Optional[AuthenticatedUser] = None) -> ModelRouter:
         model = self.aliases.get(model, model)
 
         if model in self.models and (not user or user.rpd[model] != 0):

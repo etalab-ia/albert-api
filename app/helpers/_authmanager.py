@@ -7,7 +7,7 @@ from sqlalchemy import Integer, cast, delete, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.sql import func
 
-from app.clients.database import SQLDatabaseClient
+from app.sqls.database import SQLDatabaseClient
 from app.schemas.roles import RateLimit, Role
 from app.schemas.tokens import Token
 from app.schemas.users import AuthenticatedUser, User
@@ -42,16 +42,16 @@ class AuthManager:
     MASTER_USER_ID = "master"
     MASTER_TOKEN = "master"
 
-    def __init__(self, client: SQLDatabaseClient) -> None:
+    def __init__(self, sql: SQLDatabaseClient) -> None:
         """
-        Initialize the authentication client: create the master user and role if they don't exist and check if the master password is correct and update it if needed
+        Initialize the authentication manager: create the master user and role if they don't exist and check if the master password is correct and update it if needed
         """
 
-        self.client = client
+        self.sql = sql
 
     async def setup(self):
         # initialize create the default master role and user
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             # get the currently master data
             result = await session.execute(
                 statement=select(RoleTable.id.label("role_id"), UserTable.id.label("user_id"), TokenTable.token)
@@ -154,7 +154,7 @@ class AuthManager:
         )
 
     async def create_role(self, role_id: str, default: bool = False, admin: bool = False, limits: List[RateLimit] = []) -> str:
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             # create the role
             try:
                 await session.execute(statement=insert(table=RoleTable).values(display_id=role_id, default=default, admin=admin))
@@ -182,7 +182,7 @@ class AuthManager:
             return role_id
 
     async def delete_role(self, role_id: str) -> None:
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             if role_id == self.MASTER_ROLE_ID:
                 raise DeleteMasterRoleException()
 
@@ -205,7 +205,7 @@ class AuthManager:
         admin: Optional[bool] = None,
         limits: Optional[List[RateLimit]] = None,
     ) -> None:
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             if role_id == self.MASTER_ROLE_ID:
                 raise UpdateMasterRoleException()
 
@@ -250,7 +250,7 @@ class AuthManager:
             await session.commit()
 
     async def get_roles(self, role_id: Optional[str] = None, offset: int = 0, limit: int = 10) -> List[Role]:
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             statement = (
                 select(
                     RoleTable.display_id.label("id"),
@@ -299,7 +299,7 @@ class AuthManager:
     ) -> str:
         password = self._get_hashed_password(password=password)
 
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             # get the role id
             try:
                 result = await session.execute(statement=select(RoleTable).where(RoleTable.display_id == role_id))
@@ -325,7 +325,7 @@ class AuthManager:
         return user_id
 
     async def delete_user(self, user_id: str) -> None:
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             if user_id == self.MASTER_USER_ID:
                 raise DeleteMasterUserException()
 
@@ -345,7 +345,7 @@ class AuthManager:
         budget_allocation: Optional[float] = None,
         budget_reset: Optional[str] = None,
     ) -> None:
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             if user_id == self.MASTER_USER_ID:
                 raise UpdateMasterUserException()
 
@@ -405,7 +405,7 @@ class AuthManager:
     async def get_users(
         self, user_id: Optional[str] = None, role_id: Optional[str] = None, admin: bool = False, offset: int = 0, limit: int = 10
     ) -> List[User]:
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             statement = (
                 select(
                     UserTable.display_id.label("id"),
@@ -436,7 +436,7 @@ class AuthManager:
         if user_id == self.MASTER_USER_ID:
             raise CreateTokenForMasterUserException()
 
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             # get the user id
             result = await session.execute(statement=select(UserTable).where(UserTable.display_id == user_id))
             try:
@@ -479,7 +479,7 @@ class AuthManager:
         except IndexError:  # malformed token (no token prefix)
             return
 
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             statement = (
                 select(
                     UserTable.display_id.label("id"),
@@ -512,7 +512,7 @@ class AuthManager:
         await self.get_users(user_id=user_id)
 
         # check if token exists and retrieve the internal token id
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             result = await session.execute(
                 statement=select(TokenTable.id)
                 .join(target=UserTable, onclause=TokenTable.user_id == UserTable.id)
@@ -551,7 +551,7 @@ class AuthManager:
         if exclude_expired:
             statement = statement.where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
 
-        async with self.client.session() as session:
+        async with self.sql.session() as session:
             result = await session.execute(statement=statement)
             tokens = [Token(**row._mapping) for row in result.all()]
 

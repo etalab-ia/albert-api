@@ -85,7 +85,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
 
     async def _get_web_query(self, prompt: str, user: Optional[AuthenticatedUser] = None) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        model = self.models.get(model=self.models.internet_default_language_model, user=user)
+        model = self.models(model=self.models.internet_default_language_model, user=user)
         client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
         response = await client.chat.completions.create(

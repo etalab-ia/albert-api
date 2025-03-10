@@ -15,7 +15,7 @@ async def embeddings(request: Request, body: EmbeddingsRequest, user: Authentica
     Creates an embedding vector representing the input text.
     """
 
-    model = context.models.get(model=body.model, user=user)
+    model = context.models(model=body.model, user=user)
     client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
     response = await client.forward_request(method="POST", json=body.model_dump())
 

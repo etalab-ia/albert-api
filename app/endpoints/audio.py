@@ -170,7 +170,7 @@ async def audio_transcriptions(
         "timestamp_granularities": timestamp_granularities,
     }
 
-    model = context.models.get(model=model, user=user)
+    model = context.models(model=model, user=user)
     client = model.get_client(endpoint=ENDPOINT__AUDIO_TRANSCRIPTIONS)
     response = await client.forward_request(method="POST", files={"file": (file.filename, file_content, file.content_type)}, data=data)
 

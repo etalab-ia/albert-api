@@ -55,7 +55,7 @@ async def chat_completions(
     body, searches = await retrieval_augmentation_generation(body=body, models=context.models, search=databases.search, internet=internet.search)
 
     # select client
-    model = context.models.get(model=body["model"], user=user)
+    model = context.models(model=body["model"], user=user)
     client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case

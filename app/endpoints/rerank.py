@@ -14,7 +14,7 @@ async def rerank(request: Request, body: RerankRequest, user: AuthenticatedUser 
     """
     Creates an ordered array with each text assigned a relevance score, based on the query.
     """
-    model = context.models.get(model=body.model, user=user)
+    model = context.models(model=body.model, user=user)
     client = model.get_client(endpoint=ENDPOINT__RERANK)
     response = await client.forward_request(method="POST", json=body.model_dump())
 

@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
         routers.append(ModelRouter(**model))
 
     context.models = ModelRegistry(routers=routers)
-    context.auth = AuthManager(client=SQLDatabaseClient(**settings.databases.sql.args))
+    context.auth = AuthManager(sql=SQLDatabaseClient(**settings.databases.sql.args))
 
     internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
 
@@ -58,4 +58,4 @@ async def lifespan(app: FastAPI):
 
     # cleanup resources when app shuts down
     databases.search.close()
-    await context.auth.client.engine.dispose()
+    await context.auth.sql.engine.dispose()

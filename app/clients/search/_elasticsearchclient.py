@@ -151,7 +151,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         """
         See SearchClient.create_collection
         """
-        model = self.models.get(model=collection_model, user=user)
+        model = self.models(model=collection_model, user=user)
         if model.type != MODEL_TYPE__EMBEDDINGS:
             raise WrongModelTypeException()
 
