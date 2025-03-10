@@ -44,22 +44,20 @@ class ModelRegistry:
     def list(self, model: Optional[str] = None, user: Optional[AuthenticatedUser] = None) -> List[ModelSchema]:
         data = list()
         models = [model] if model else self.models
-        for m in models:
+        for model in models:
             try:
-                m = self.get(model=m, user=user)
+                model = self.__call__(model=model, user=user)
             except ModelNotFoundException:
-                if model:
-                    raise ModelNotFoundException()
                 continue
 
             data.append(
                 ModelSchema(
-                    id=m.id,
-                    type=m.type,
-                    max_context_length=m.max_context_length,
-                    owned_by=m.owned_by,
-                    created=m.created,
-                    aliases=m.aliases,
+                    id=model.id,
+                    type=model.type,
+                    max_context_length=model.max_context_length,
+                    owned_by=model.owned_by,
+                    created=model.created,
+                    aliases=model.aliases,
                 )
             )
 

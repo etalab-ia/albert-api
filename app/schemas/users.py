@@ -101,8 +101,8 @@ class AuthenticatedUser(BaseModel):
             tpm[model] = 0
             rpm[model] = 0
             rpd[model] = 0
-            for limit in sorted(role.limits, key=lambda limit: len(limit.model)):
-                if bool(re.match(pattern=limit.model, string=model)):
+            for limit in sorted(role.limits, key=lambda limit: len(limit.model_regex)):
+                if bool(re.match(pattern=limit.model_regex, string=model)):
                     tpm[model] = limit.tpm
                     rpm[model] = limit.rpm
                     rpd[model] = limit.rpd

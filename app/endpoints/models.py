@@ -2,6 +2,7 @@ from typing import Union
 
 from fastapi import APIRouter, Path, Request, Security
 
+from app.utils.exceptions import ModelNotFoundException
 from app.helpers import RateLimit
 from app.schemas.models import Model, Models
 from app.schemas.users import AuthenticatedUser
@@ -18,9 +19,11 @@ async def get_model(
     Get a model by name.
     """
 
-    response = context.models.list(model=model, user=user)[0]
+    response = context.models.list(model=model, user=user)
+    if len(response) == 0:
+        raise ModelNotFoundException()
 
-    return response
+    return response[0]
 
 
 @router.get(path="/models")

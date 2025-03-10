@@ -1,7 +1,7 @@
 services:
   api:
     image: ghcr.io/etalab-ia/albert-api/app:latest
-    command: gunicorn app.main:app --workers 1 --worker-connections 1000 --timeout 30 --worker-class uvicorn.workers.UvicornWorker
+    command: PYTHONPATH=. alembic upgrade head && gunicorn app.main:app --workers 1 --worker-connections 1000 --timeout 30 --worker-class uvicorn.workers.UvicornWorker
     environment:
       - PORT=8000
       - CONFIG_FILE=/home/albert/conf/config.yml
@@ -32,10 +32,10 @@ services:
     volumes:
       - redis:/data
     healthcheck:
-        test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-        interval: 4s
-        timeout: 10s
-        retries: 5
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 4s
+      timeout: 10s
+      retries: 5
 
   sql:
     image: postgres:16.5
@@ -48,12 +48,11 @@ services:
     volumes:
       - sql:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      test: [ "CMD-SHELL", "pg_isready", "-U", "postgres" ]
       interval: 4s
       timeout: 10s
       retries: 5
       start_period: 60s
-
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
