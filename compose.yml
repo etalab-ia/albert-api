@@ -1,7 +1,10 @@
 services:
   api:
-    image: ghcr.io/etalab-ia/albert-api/app:latest
-    command: gunicorn app.main:app --workers 1 --worker-connections 1000 --timeout 30 --worker-class uvicorn.workers.UvicornWorker
+    #image: ghcr.io/etalab-ia/albert-api/app:latest
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    command: /startup.sh
     environment:
       - PORT=8000
       - CONFIG_FILE=/home/albert/conf/config.yml
@@ -9,7 +12,8 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./config.example.yml:/home/albert/conf/config.yml:ro
+      - ./config.yml:/home/albert/conf/config.yml:ro
+      - ./app:/app
     depends_on:
       redis:
         condition: service_healthy
@@ -20,7 +24,8 @@ services:
     restart: always
     environment:
       - BASE_URL=http://api:8000/v1
-      - DOCUMENTS_EMBEDDINGS_MODEL=
+      - DOCUMENTS_EMBEDDINGS_MODEL=meta-llama/Llama-3.1-8B-Instruct
+      - EXCLUDE_MODELS=BAAI/bge-m3
     ports:
       - 8501:8501
 
@@ -56,9 +61,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: albert_test
+    volumes:
+      - postgres:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
 volumes:
   qdrant:
   redis:
+  postgres:

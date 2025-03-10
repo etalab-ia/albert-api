@@ -35,6 +35,10 @@ RUN apt-get update && apt-get install -y \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
+COPY scripts/startup.sh /
+RUN chown albert:albert /startup.sh
+RUN chmod u+x /startup.sh
+
 USER albert
 WORKDIR /
 
@@ -43,3 +47,4 @@ COPY --from=builder --chown=albert:albert /app /app
 COPY --from=builder --chown=albert:albert /.venv /.venv
 ENV PATH="/.venv/bin:${PATH}"
 ENV PYTHONPATH="/app:${PYTHONPATH}"
+CMD ["/startup.sh"]
