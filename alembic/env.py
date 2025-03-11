@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.utils.settings import settings
-from app.sql.models import Base, User, Role, Token, RateLimit  # noqa: F401
+from app.sql.models import Base
 
 config = context.config
 config.set_main_option(name="sqlalchemy.url", value=settings.databases.sql.args.get("url").replace("+asyncpg", ""))

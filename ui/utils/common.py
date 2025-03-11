@@ -24,16 +24,10 @@ def get_settings() -> Settings:
 settings = get_settings()
 
 
-def header() -> str:
-    def check_api_key(base_url: str, api_key: str) -> bool:
-        headers = {"Authorization": f"Bearer {api_key}"}
-        response = requests.get(url=base_url.replace("/v1", "/health"), headers=headers)
-
-        return response.status_code == 200
-
+def header(check_api_key: bool = False) -> str:
     def authenticate():
         @st.dialog(title="Login")
-        def login():
+        def _login():
             with st.form(key="login"):
                 user_id = st.text_input(label="Email", type="default", key="user_id")
                 password = st.text_input(label="Password", type="password", key="password")
@@ -69,7 +63,28 @@ def header() -> str:
         login_status = st.session_state.get("login_status")
 
         if login_status is None:
-            login()
+            _login()
+
+    def _check_api_key():
+        API_KEY = st.session_state.get("api_key")
+        if API_KEY is None:
+            with st.form(key="my_form"):
+                API_KEY = st.text_input(label="Please enter your API key", type="password")
+                submit = st.form_submit_button(label="Submit")
+                if submit:
+                    response = requests.get(url=f"{settings.api_url}/health", headers={"Authorization": f"Bearer {API_KEY}"})
+                    if response.status_code == 200:
+                        st.session_state["api_key"] = API_KEY
+                        st.toast("Authentication succeed", icon="✅")
+                        time.sleep(0.5)
+                        st.rerun()
+                    else:
+                        st.toast("Please enter a correct API key", icon="❌")
+                        st.stop()
+                else:
+                    st.stop()
+
+        return API_KEY
 
     with stylable_container(
         key="Header",
@@ -85,16 +100,18 @@ def header() -> str:
             st.subheader("Albert playground")
 
         # Authentication
-        API_KEY = authenticate()
+        authenticate()
+        if check_api_key:
+            _check_api_key()
         with col2:
             logout = st.button("Logout")
         if logout:
             st.session_state.pop("login_status")
             st.session_state.pop("user")
+            st.session_state.pop("api_key")
+            clear_cache()
             st.rerun()
         st.markdown("***")
-
-    return API_KEY
 
 
 def clear_cache() -> None:
@@ -102,11 +119,13 @@ def clear_cache() -> None:
     get_collections.clear()
     get_documents.clear()
     get_tokens.clear()
+    get_roles.clear()
+    get_users.clear()
 
 
 @st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
-def get_models(type: Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]) -> tuple[str, str, str]:
-    response = requests.get(url=f"{settings.api_url}/v1/models", headers={"Authorization": f"Bearer {settings.api_key}"})
+def get_models(type: Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK], api_key: str) -> tuple[str, str, str]:
+    response = requests.get(url=f"{settings.api_url}/v1/models", headers={"Authorization": f"Bearer {api_key}"})
     assert response.status_code == 200, response.text
     models = response.json()["data"]
     models = sorted([model["id"] for model in models if model["type"] == type])
@@ -115,8 +134,8 @@ def get_models(type: Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_T
 
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_collections() -> list:
-    response = requests.get(url=f"{settings.api_url}/v1/collections", headers={"Authorization": f"Bearer {settings.api_key}"})
+def get_collections(api_key: str) -> list:
+    response = requests.get(url=f"{settings.api_url}/v1/collections", headers={"Authorization": f"Bearer {api_key}"})
     assert response.status_code == 200, response.text
     collections = response.json()["data"]
 
@@ -130,10 +149,10 @@ def get_collections() -> list:
 
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_documents(collection_ids: List[str]) -> dict:
+def get_documents(collection_ids: List[str], api_key: str) -> dict:
     documents = list()
     for collection_id in collection_ids:
-        response = requests.get(url=f"{settings.api_url}/v1/documents/{collection_id}", headers={"Authorization": f"Bearer {settings.api_key}"})
+        response = requests.get(url=f"{settings.api_url}/v1/documents/{collection_id}", headers={"Authorization": f"Bearer {api_key}"})
         assert response.status_code == 200, response.text
         data = response.json()["data"]
         for document in data:
@@ -144,8 +163,28 @@ def get_documents(collection_ids: List[str]) -> dict:
 
 
 @st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
-def get_tokens():
+def get_tokens() -> list:
     response = requests.get(
-        url=f"{settings.api_url}/tokens/{st.session_state["user"]["id"]}", headers={"Authorization": f"Bearer {settings.api_key}"}
+        url=f"{settings.api_url}/tokens/{st.session_state["user"]["id"]}",
+        headers={"Authorization": f"Bearer {settings.api_key}"},
     )
+
     return response.json()["data"]
+
+
+@st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
+def get_roles(return_dataframe: bool = False):
+    response = requests.get(url=f"{settings.api_url}/roles", headers={"Authorization": f"Bearer {settings.api_key}"})
+    data = response.json()["data"]
+    data = [role for role in data if role["id"] != "master"]
+
+    return data
+
+
+@st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
+def get_users():
+    response = requests.get(url=f"{settings.api_url}/users", headers={"Authorization": f"Bearer {settings.api_key}"})
+    data = response.json()["data"]
+    data = [user for user in data if user["id"] != "master"]
+
+    return data

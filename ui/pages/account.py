@@ -31,8 +31,9 @@ with col1:
         if submit_change_password:
             change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
 
-with col2:
-    st.metric(label="Budget", value=st.session_state["user"]["budget_allocation"])
+# TODO: add expires at
+# with col2:
+#     st.metric(label="Expires at", value=pd.to_datetime(st.session_state["user"]["expires_at"], unit="s"))
 
 
 st.divider()
@@ -49,7 +50,7 @@ tokens = pd.DataFrame(
 
 st.dataframe(
     data=tokens.style.apply(
-        lambda x: ["background-color: #f0f0f0;color: grey" if x["Expiration"] < pd.Timestamp.now() else "" for _ in x],
+        lambda x: ["background-color: #f0f0f0;color: grey" if x["Expiration"] and x["Expiration"] < pd.Timestamp.now() else "" for _ in x],
         axis=1,
     ),
     use_container_width=True,
@@ -72,14 +73,11 @@ with col1:
             value=dt.datetime.now() + dt.timedelta(days=settings.max_token_expiration_days),
             help="Expiration date of the token.",
         )
-        submit_create = st.button(label="Create", disabled=not token_id)
-        if submit_create:
+        if st.button(label="Create", disabled=not token_id):
             create_token(token_id=token_id, expires_at=round(int(expires_at.strftime("%s"))))
 
 with col2:
     with st.expander(label="Delete a token", icon=":material/delete_forever:"):
         token_id = st.selectbox(label="Token ID", options=tokens.ID.values)
-        submit_delete = st.button(label="Delete", disabled=not token_id, key="delete_token_button")
-        if submit_delete:
+        if st.button(label="Delete", disabled=not token_id, key="delete_token_button"):
             delete_token(token_id=token_id)
-            clear_cache()

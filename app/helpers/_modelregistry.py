@@ -37,7 +37,7 @@ class ModelRegistry:
     def __call__(self, model: str, user: Optional[AuthenticatedUser] = None) -> ModelRouter:
         model = self.aliases.get(model, model)
 
-        if model in self.models and (not user or user.rpd[model] != 0):
+        if model in self.models and (not user or (user.rpd[model] != 0 and user.rpm[model] != 0)):
             return self.__dict__[model]
         raise ModelNotFoundException()
 

@@ -4,6 +4,7 @@ import requests
 import streamlit as st
 
 from utils.common import settings
+from utils.common import get_tokens
 
 
 def change_password(current_password: str, new_password: str, confirm_password: str):
@@ -79,6 +80,7 @@ def delete_token(token_id: str):
     if response.status_code == 204:
         st.toast("Delete succeed", icon="✅")
         time.sleep(0.5)
+        get_tokens.clear()
         st.rerun()
     else:
         st.toast("Delete failed", icon="❌")
