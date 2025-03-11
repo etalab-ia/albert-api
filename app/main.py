@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi.middleware import SlowAPIASGIMiddleware
 
-from app.db.session import get_db
+from app.sql.session import get_db
 from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, rerank, search
 from app.helpers import MetricsMiddleware, UsagesMiddleware
 from app.schemas.security import User

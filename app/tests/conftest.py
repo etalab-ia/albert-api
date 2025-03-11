@@ -8,7 +8,7 @@ import pytest
 
 from app.clients import AuthenticationClient
 from app.utils.variables import COLLECTION_TYPE__PRIVATE
-from app.db.models import Base
+from app.sql.models import Base
 
 
 def pytest_addoption(parser):

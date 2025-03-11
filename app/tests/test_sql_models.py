@@ -1,11 +1,11 @@
 from datetime import datetime
 import pytest
 
-from app.db.models import Usage
+from app.sql.models import Usage
 from sqlalchemy import desc
 
 
-class TestLogModel:
+class TestUsageModel:
     def test_create_log(self, db_session):
         """Test creating a log entry"""
         log = Usage(user="test_user", endpoint="/test/endpoint", model="test_model", prompt_tokens=100, completion_tokens=0.5, total_tokens=50)

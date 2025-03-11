@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.utils.settings import settings
-from app.db.models import Base
+from app.sql.models import Base
 
 # Get DB URL from app settings
 config = context.config

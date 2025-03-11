@@ -4,7 +4,7 @@ from typing import Generator
 from fastapi.testclient import TestClient
 import pytest
 
-from app.db.models import Usage
+from app.sql.models import Usage
 from app.utils.variables import MODEL_TYPE__LANGUAGE
 
 
@@ -63,6 +63,7 @@ class TestUsagesMiddleware:
         assert log.total_tokens is not None
         assert log.completion_tokens is not None
         assert log.duration is not None
+        assert log.method == "POST"
 
     def test_log_embeddings(self, args, test_client, db_session):
         """Test logging of embeddings request"""
