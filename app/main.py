@@ -1,14 +1,11 @@
 from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
-from slowapi.middleware import SlowAPIASGIMiddleware
 
-from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, rerank, search
-from app.helpers import MetricsMiddleware
-from app.schemas.security import User
+from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, rerank, search
+from app.helpers import RateLimit
+from app.schemas.users import AuthenticatedUser
 from app.utils.lifespan import lifespan
-from app.utils.security import check_admin_api_key, check_api_key
 from app.utils.settings import settings
-
 
 app = FastAPI(
     title=settings.app_name,
@@ -26,14 +23,17 @@ if settings.middleware:
     app.instrumentator = Instrumentator().instrument(app=app)
 
     # Middlewares
-    app.add_middleware(middleware_class=SlowAPIASGIMiddleware)
-    app.add_middleware(middleware_class=MetricsMiddleware)
-    app.instrumentator.expose(app=app, should_gzip=True, tags=["Monitoring"], dependencies=[Depends(dependency=check_admin_api_key)])
+    app.instrumentator.expose(
+        app=app,
+        should_gzip=True,
+        tags=["Monitoring"],
+        dependencies=[Depends(dependency=RateLimit(admin=True))],
+        include_in_schema=settings.log_level == "DEBUG",
+    )
 
 
-# Monitoring
-@app.get(path="/health", tags=["Monitoring"])
-def health(user: User = Security(dependency=check_api_key)) -> Response:
+@app.get(path="/health", tags=["Monitoring"], include_in_schema=settings.log_level == "DEBUG")
+def health(user: AuthenticatedUser = Security(dependency=RateLimit(admin=False))) -> Response:
     """
     Health check.
     """
@@ -41,12 +41,13 @@ def health(user: User = Security(dependency=check_api_key)) -> Response:
     return Response(status_code=200)
 
 
+app.include_router(router=auth.router, tags=["Auth"], include_in_schema=settings.log_level == "DEBUG")
 app.include_router(router=models.router, tags=["Models"], prefix="/v1")
 app.include_router(router=chat.router, tags=["Chat"], prefix="/v1")
 app.include_router(router=completions.router, tags=["Completions"], prefix="/v1")
 app.include_router(router=embeddings.router, tags=["Embeddings"], prefix="/v1")
 app.include_router(router=audio.router, tags=["Audio"], prefix="/v1")
-app.include_router(router=rerank.router, tags=["Reranking"], prefix="/v1")
+app.include_router(router=rerank.router, tags=["Rerank"], prefix="/v1")
 app.include_router(router=search.router, tags=["Search"], prefix="/v1")
 app.include_router(router=collections.router, tags=["Collections"], prefix="/v1")
 app.include_router(router=files.router, tags=["Files"], prefix="/v1")

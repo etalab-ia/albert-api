@@ -7,17 +7,17 @@ import streamlit as st
 from utils.common import get_models, header, settings
 from utils.variables import MODEL_TYPE_AUDIO, TRANSCRIPTION_SUPPORTED_LANGUAGES
 
-API_KEY = header()
+header(check_api_key=True)
 
 # Data
 try:
-    models = get_models(api_key=API_KEY, type=MODEL_TYPE_AUDIO)
+    models = get_models(type=MODEL_TYPE_AUDIO, api_key=st.session_state["api_key"])
 except Exception:
     st.error(body="Error to fetch user data.")
     logging.error(traceback.format_exc())
     st.stop()
 
-openai_client = OpenAI(base_url=settings.base_url, api_key=API_KEY)
+openai_client = OpenAI(base_url=f"{settings.api_url}/v1", api_key=st.session_state["api_key"])
 
 # Sidebar
 with st.sidebar:

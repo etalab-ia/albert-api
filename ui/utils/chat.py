@@ -12,7 +12,7 @@ def generate_stream(messages: List[dict], params: dict, api_key: str, rag: bool,
         prompt = messages[-1]["content"]
         k = params["rag"]["k"] * 2 if rerank else params["rag"]["k"]
         data = {"collections": params["rag"]["collections"], "k": k, "prompt": messages[-1]["content"], "score_threshold": None}
-        response = requests.post(f"{settings.base_url}/search", json=data, headers={"Authorization": f"Bearer {api_key}"})
+        response = requests.post(url=f"{settings.api_url}/v1/search", json=data, headers={"Authorization": f"Bearer {api_key}"})
         assert response.status_code == 200, f"{response.status_code} - {response.json()}"
 
         prompt_template = """Réponds à la question suivante de manière claire en te basant sur les extraits de documents ci-dessous. Si les documents ne sont pas pertinents pour répondre à la question, réponds que tu ne sais pas ou réponds directement la question à l'aide de tes connaissances. Réponds en français.
@@ -29,7 +29,7 @@ Les documents sont :
                 "prompt": prompt,
                 "input": [chunk["content"] for chunk in chunks],
             }
-            response = requests.post(f"{settings.base_url}/rerank", json=data, headers={"Authorization": f"Bearer {api_key}"})
+            response = requests.post(url=f"{settings.api_url}/v1/rerank", json=data, headers={"Authorization": f"Bearer {api_key}"})
             assert response.status_code == 200, f"{response.status_code} - {response.json()}"
 
             rerank_scores = sorted(response.json()["data"], key=lambda x: x["score"])
@@ -40,7 +40,7 @@ Les documents sont :
         prompt = prompt_template.format(prompt=prompt, chunks="\n\n".join(chunks))
         messages = messages[:-1] + [{"role": "user", "content": prompt}]
 
-    client = OpenAI(base_url=settings.base_url, api_key=api_key)
+    client = OpenAI(base_url=f"{settings.api_url}/v1", api_key=api_key)
     stream = client.chat.completions.create(stream=True, messages=messages, **params["sampling_params"])
 
     return stream, sources

@@ -4,22 +4,19 @@ from fastapi import APIRouter, Request, Security
 
 from app.clients.internet import BaseInternetClient as InternetClient
 from app.clients.search import BaseSearchClient as SearchClient
-from app.helpers import ModelRegistry, SearchManager, StreamingResponseWithStatusCode
+from app.helpers import ModelRegistry, RateLimit, SearchManager, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search
-from app.schemas.security import User
-from app.utils.lifespan import databases, internet, limiter, models
-from app.utils.security import check_api_key, check_rate_limit
-from app.utils.settings import settings
+from app.schemas.users import AuthenticatedUser
+from app.utils.lifespan import databases, internet, context
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 router = APIRouter()
 
 
 @router.post(path=ENDPOINT__CHAT_COMPLETIONS)
-@limiter.limit(limit_value=settings.rate_limit.by_user, key_func=lambda request: check_rate_limit(request=request))
 async def chat_completions(
-    request: Request, body: ChatCompletionRequest, user: User = Security(dependency=check_api_key)
+    request: Request, body: ChatCompletionRequest, user: AuthenticatedUser = Security(dependency=RateLimit())
 ) -> Union[ChatCompletion, ChatCompletionChunk]:
     """Creates a model response for the given chat conversation.
 
@@ -55,10 +52,10 @@ async def chat_completions(
         searches = [search.model_dump() for search in searches]
         return body, searches
 
-    body, searches = await retrieval_augmentation_generation(body=body, models=models.registry, search=databases.search, internet=internet.search)
+    body, searches = await retrieval_augmentation_generation(body=body, models=context.models, search=databases.search, internet=internet.search)
 
     # select client
-    model = models.registry[body["model"]]
+    model = context.models(model=body["model"], user=user)
     client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case

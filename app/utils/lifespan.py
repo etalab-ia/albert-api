@@ -1,45 +1,63 @@
 from contextlib import asynccontextmanager
+import traceback
 from types import SimpleNamespace
 
+from coredis import ConnectionPool
 from fastapi import FastAPI
-from redis.asyncio.connection import ConnectionPool
-from slowapi import Limiter
-from slowapi.util import get_ipaddr
 
-from app.clients import AuthenticationClient, CacheClient
+from app.clients.database import SQLDatabaseClient
 from app.clients.internet import BaseInternetClient as InternetClient
+from app.clients.model import BaseModelClient as ModelClient
 from app.clients.search import BaseSearchClient as SearchClient
-from app.helpers import ModelRegistry
+from app.helpers import AuthManager, Limiter, ModelRegistry, ModelRouter
+from app.utils.logging import logger
 from app.utils.settings import settings
 
-models = SimpleNamespace()
-databases = SimpleNamespace()
+context = SimpleNamespace()
 internet = SimpleNamespace()
-
-limiter = Limiter(
-    key_func=get_ipaddr,
-    storage_uri=f"redis://{settings.databases.redis.args.get("username", "")}:{settings.databases.redis.args.get("password", "")}@{settings.databases.redis.args.get("host", "localhost")}:{settings.databases.redis.args.get("port", 6379)}",
-    default_limits=[settings.rate_limit.by_ip],
-)
+databases = SimpleNamespace()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
-    app.state.limiter = limiter
+    routers = []
+    for model in settings.models:
+        clients = []
+        for client in model.clients:
+            try:
+                # model client can be not reatachable to API start up
+                client = ModelClient.import_module(type=client.type)(model=client.model, **client.args.model_dump())
+                clients.append(client)
+            except Exception as e:
+                logger.debug(msg=traceback.format_exc())
+                continue
+        if not clients:
+            logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
+            continue
+        logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
+        model = model.model_dump()
+        model["clients"] = clients
+        routers.append(ModelRouter(**model))
 
-    models.registry = ModelRegistry(settings=settings.models)
+    context.models = ModelRegistry(routers=routers)
+    context.auth = AuthManager(sql=SQLDatabaseClient(**settings.databases.sql.args))
+    context.limiter = Limiter(auth=context.auth, connection_pool=ConnectionPool(**settings.databases.redis.args), strategy=settings.auth.limiting_strategy)  # fmt: off
+
     internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
 
-    # databases
+    # @TODO: split search between Client and Manager
     type = settings.databases.qdrant.type if settings.databases.qdrant else settings.databases.elastic.type
     args = settings.databases.qdrant.args if settings.databases.qdrant else settings.databases.elastic.args
 
-    databases.search = SearchClient.import_module(type=type)(models=models.registry, **args)
-    databases.cache = CacheClient(connection_pool=ConnectionPool(**settings.databases.redis.args))
-    databases.auth = AuthenticationClient(cache=databases.cache, **settings.databases.grist.args) if settings.databases.grist else None
+    databases.search = SearchClient.import_module(type=type)(models=context.models, auth=context.auth, **args)
+
+    await context.auth.setup()
+    assert await context.limiter.redis.check(), "Redis database is not reachable."
 
     yield
 
+    # cleanup resources when app shuts down
     databases.search.close()
+    await context.auth.sql.engine.dispose()

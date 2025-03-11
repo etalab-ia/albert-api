@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import List
+from typing import List, Optional
 
 from fastapi import UploadFile
 import requests
@@ -8,6 +8,7 @@ from app.clients.internet import BaseInternetClient as InternetClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter
 from app.helpers.data.parsers import HTMLParser
 from app.schemas.chunks import Chunk
+from app.schemas.users import AuthenticatedUser
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 from ._modelregistry import ModelRegistry
@@ -75,16 +76,16 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         self.models = models
         self.internet = internet
 
-    async def get_chunks(self, prompt: str, collection_id: str, n: int = 3) -> List[Chunk]:
-        query = await self._get_web_query(prompt=prompt)
+    async def get_chunks(self, prompt: str, collection_id: str, n: int = 3, user: Optional[AuthenticatedUser] = None) -> List[Chunk]:
+        query = await self._get_web_query(prompt=prompt, user=user)
         urls = await self.internet.get_result_urls(query=query, n=n)
         chunks = self._build_chunks(urls=urls, query=query, collection_id=collection_id)
 
         return chunks
 
-    async def _get_web_query(self, prompt: str) -> str:
+    async def _get_web_query(self, prompt: str, user: Optional[AuthenticatedUser] = None) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        model = self.models[self.models.internet_default_language_model]
+        model = self.models(model=self.models.internet_default_language_model, user=user)
         client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
         response = await client.chat.completions.create(
