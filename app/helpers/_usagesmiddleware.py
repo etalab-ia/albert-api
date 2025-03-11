@@ -7,16 +7,18 @@ from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.clients import AuthenticationClient
-from app.db.models import Usage
-from app.db.session import get_db
+from app.sql.models import Usage
+from app.sql.session import get_db
 from app.utils.logging import logger
+from app.utils import variables
 
 
 class UsagesMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, db_func: Callable[[], Session] = get_db):
         super().__init__(app)
         self.db_func = db_func
-        self.MODELS_ENDPOINTS = ["/v1/chat/completions", "/v1/completions", "/v1/embeddings", "/v1/audio/transcriptions"]
+        # Get all model endpoints from variables.py
+        self.MODELS_ENDPOINTS = [getattr(variables, var_name) for var_name in dir(variables) if var_name.startswith("ENDPOINT__")]
 
     async def _extract_model_from_multipart(self, body: bytes, content_type: str) -> Optional[str]:
         try:
@@ -60,7 +62,16 @@ class UsagesMiddleware(BaseHTTPMiddleware):
         return usage_data, response
 
     async def _log_usage(
-        self, db: Session, start_time: datetime, duration: int, user_id: str, endpoint: str, model: str, usage_data: dict, status: int
+        self,
+        db: Session,
+        start_time: datetime,
+        duration: int,
+        user_id: str,
+        endpoint: str,
+        model: str,
+        usage_data: dict,
+        status: int,
+        method: str,
     ):
         try:
             log = Usage(
@@ -73,6 +84,7 @@ class UsagesMiddleware(BaseHTTPMiddleware):
                 completion_tokens=usage_data.get("completion_tokens"),
                 total_tokens=usage_data.get("total_tokens"),
                 status=status,
+                method=method,
             )
             db.add(log)
             db.commit()
@@ -84,9 +96,10 @@ class UsagesMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         endpoint = request.url.path
-        if endpoint not in self.MODELS_ENDPOINTS:
+        if not any(endpoint.endswith(model_endpoint) for model_endpoint in self.MODELS_ENDPOINTS):
             return await call_next(request)
 
+        method = request.method
         content_type = request.headers.get("Content-Type", "")
         body = await request.body()
 
@@ -121,7 +134,17 @@ class UsagesMiddleware(BaseHTTPMiddleware):
 
                 # Log usage
                 db = next(self.db_func())
-                await self._log_usage(db, start_time, duration, user_id, endpoint, model, usage_data, response.status_code)
+                await self._log_usage(
+                    db,
+                    start_time,
+                    duration,
+                    user_id,
+                    endpoint,
+                    model,
+                    usage_data,
+                    response.status_code,
+                    method,
+                )
 
         except Exception as e:
             logger.error(f"Error in UsagesMiddleware: {str(e)}")
