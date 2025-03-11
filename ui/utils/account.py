@@ -6,10 +6,6 @@ import streamlit as st
 from utils.common import settings
 
 
-def refresh_all_data() -> None:
-    get_tokens.clear()
-
-
 def change_password(current_password: str, new_password: str, confirm_password: str):
     response = requests.post(
         url=f"{settings.api_url}/login",
@@ -57,14 +53,6 @@ def change_password(current_password: str, new_password: str, confirm_password: 
         st.toast("Password update failed", icon="❌")
 
 
-@st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
-def get_tokens():
-    response = requests.get(
-        url=f"{settings.api_url}/tokens/{st.session_state["user"]["id"]}", headers={"Authorization": f"Bearer {settings.api_key}"}
-    )
-    return response.json()["data"]
-
-
 def create_token(token_id: str, expires_at: int):
     response = requests.post(
         url=f"{settings.api_url}/tokens",
@@ -94,8 +82,3 @@ def delete_token(token_id: str):
         st.rerun()
     else:
         st.toast("Delete failed", icon="❌")
-
-
-with st.sidebar:
-    if st.button(label="**:material/refresh: Rafraîchir les données**", key="refresh", use_container_width=True):
-        refresh_all_data()

@@ -260,6 +260,7 @@ class AuthManager:
 
                 # create the new limits
                 for limit in limits:
+                    limit = RateLimit(**limit)
                     await session.execute(
                         statement=insert(table=RateLimitTable).values(
                             role_id=role.id, model_regex=limit.model_regex, tpm=limit.tpm, rpm=limit.rpm, rpd=limit.rpd
@@ -302,7 +303,7 @@ class AuthManager:
                     roles[row[0]] = role
 
                 if row[5]:
-                    rate_limit = RateLimit(model=row[5], tpm=row[6], rpm=row[7], rpd=row[8], created_at=row[9], updated_at=row[10])
+                    rate_limit = RateLimit(model_regex=row[5], tpm=row[6], rpm=row[7], rpd=row[8], created_at=row[9], updated_at=row[10])
                     roles[row[0]].limits.append(rate_limit)
 
             roles = list(roles.values())

@@ -2,18 +2,18 @@ import time
 
 import streamlit as st
 
-from utils.common import header, refresh_all_data, settings
+from utils.common import clear_cache, header, settings
 from utils.documents import create_collection, delete_collection, delete_document, load_data, upload_file
 from utils.variables import COLLECTION_TYPE_PRIVATE
 
 header()
 
 with st.sidebar:
-    if st.button(label="**:material/refresh: Rafraîchir les données**", key="refresh", use_container_width=True):
-        refresh_all_data(api_key=settings.api_key)
+    if st.button(label="**:material/refresh: Refresh data**", key="refresh-data-documents", use_container_width=True):
+        clear_cache()
 
 # Data
-collections, documents, df_collections, df_files = load_data(api_key=settings.api_key)
+collections, documents, df_collections, df_files = load_data()
 
 # Collections
 st.subheader(body="Collections")

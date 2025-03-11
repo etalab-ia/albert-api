@@ -59,12 +59,11 @@ def delete_document(api_key: str, collection_id: str, document_id: str) -> None:
         st.toast("Delete failed", icon="❌")
 
 
-def load_data(api_key: str):
+def load_data():
     try:
-        collections = get_collections(api_key=api_key)
+        collections = get_collections()
         collections = [collection for collection in collections if collection["id"] != COLLECTION_DISPLAY_ID_INTERNET]
         documents = get_documents(
-            api_key=api_key,
             collection_ids=[collection["id"] for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE],
         )
     except Exception as e:

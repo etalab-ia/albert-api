@@ -12,8 +12,8 @@ header()
 
 # Data
 try:
-    models = get_models(api_key=settings.api_key, type=MODEL_TYPE_LANGUAGE)
-    collections = get_collections(api_key=settings.api_key)
+    models = get_models(type=MODEL_TYPE_LANGUAGE)
+    collections = get_collections()
 except Exception:
     st.error("Error to fetch user data.")
     logging.debug(traceback.format_exc())

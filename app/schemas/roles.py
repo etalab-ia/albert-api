@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class RateLimitRequest(BaseModel):
-    model_regex: str = Field(default=".*", description="Regex pattern to match the model ID, by default all models are matched.")
+    model_regex: str = Field(description="Regex pattern to match the model ID, by default all models are matched.")
     tpm: Optional[int] = Field(default=None, ge=0)
     rpm: Optional[int] = Field(default=None, ge=0)
     rpd: Optional[int] = Field(default=None, ge=0)
@@ -17,7 +17,7 @@ class RateLimitRequest(BaseModel):
 
 
 class RateLimit(RateLimitRequest):
-    model_regex: str = Field(default=".*", description="Regex pattern to match the model ID, by default all models are matched.")
+    model_regex: str = Field(description="Regex pattern to match the model ID, by default all models are matched.")
     tpm: Optional[int] = Field(default=None, ge=0)
     rpm: Optional[int] = Field(default=None, ge=0)
     rpd: Optional[int] = Field(default=None, ge=0)
@@ -36,7 +36,7 @@ class RoleRequest(BaseModel):
     role: str
     default: bool = False
     admin: bool = False
-    limits: Optional[List[RateLimitRequest]] = Field(default=[RateLimitRequest(model=".*", tpm=None, rpm=None, rpd=None)])
+    limits: Optional[List[RateLimitRequest]] = Field(default=[RateLimitRequest(model_regex=".*", tpm=None, rpm=None, rpd=None)])
 
     @field_validator("role", mode="before")
     def strip(cls, role):

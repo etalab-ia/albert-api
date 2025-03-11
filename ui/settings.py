@@ -1,6 +1,5 @@
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
 
-from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -14,14 +13,3 @@ class Settings(BaseSettings):
     exclude_models: str
     documents_embeddings_model: str
     default_chat_model: Optional[str] = None
-
-    @model_validator(mode="after")
-    def validate_models(cls, values) -> Any:
-        values.exclude_models = values.exclude_models.split(",")
-
-        if values.default_chat_model:
-            assert values.default_chat_model not in values.exclude_models, "Default chat model is in the exclude models"
-
-        assert values.documents_embeddings_model not in values.exclude_models, "Documents embeddings model is in the exclude models"
-
-        return values

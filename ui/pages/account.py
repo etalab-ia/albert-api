@@ -1,17 +1,17 @@
 import datetime as dt
 
+import pandas as pd
 import streamlit as st
 
-from utils.account import create_token, delete_token, get_tokens, change_password, refresh_all_data
-from utils.common import header, settings
-import pandas as pd
-
+from utils.account import change_password, create_token, delete_token
+from utils.common import clear_cache, get_tokens, header, settings
 
 header()
+tokens = get_tokens()
 
 with st.sidebar:
-    if st.button(label="**:material/refresh: Rafraîchir les données**", key="refresh-sidebar", use_container_width=True):
-        refresh_all_data()
+    if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):
+        clear_cache()
 
 col1, col2 = st.columns(2)
 with col1:
@@ -38,7 +38,6 @@ with col2:
 st.divider()
 st.subheader("API keys")
 
-tokens = get_tokens()
 tokens = pd.DataFrame(
     data={
         "ID": [token["id"] for token in tokens],
@@ -56,6 +55,7 @@ st.dataframe(
     use_container_width=True,
     hide_index=True,
     column_config={
+        "ID": st.column_config.ListColumn(label="ID"),
         "Expiration": st.column_config.DatetimeColumn(label="Expiration", format="D MMM YYYY"),
         "Created at": st.column_config.DatetimeColumn(label="Created at", format="D MMM YYYY"),
     },
@@ -82,4 +82,4 @@ with col2:
         submit_delete = st.button(label="Delete", disabled=not token_id, key="delete_token_button")
         if submit_delete:
             delete_token(token_id=token_id)
-            refresh_all_data(key="refresh-delete-token")
+            clear_cache()

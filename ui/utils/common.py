@@ -97,28 +97,27 @@ def header() -> str:
     return API_KEY
 
 
-def refresh_all_data(api_key: str) -> None:
-    get_models.clear(api_key)
-    get_collections.clear(api_key)
-    get_documents.clear(api_key)
+def clear_cache() -> None:
+    get_models.clear()
+    get_collections.clear()
+    get_documents.clear()
+    get_tokens.clear()
 
 
 @st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
-def get_models(api_key: str, type: Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]) -> tuple[str, str, str]:
-    headers = {"Authorization": f"Bearer {api_key}"}
-    response = requests.get(url=f"{settings.api_url}/v1/models", headers=headers)
-    assert response.status_code == 200, f"{response.status_code} - {response.json()}"
+def get_models(type: Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]) -> tuple[str, str, str]:
+    response = requests.get(url=f"{settings.api_url}/v1/models", headers={"Authorization": f"Bearer {settings.api_key}"})
+    assert response.status_code == 200, response.text
     models = response.json()["data"]
-    models = sorted([model["id"] for model in models if model["type"] == type and model["id"] not in settings.exclude_models])
+    models = sorted([model["id"] for model in models if model["type"] == type])
 
     return models
 
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_collections(api_key: str) -> list:
-    headers = {"Authorization": f"Bearer {api_key}"}
-    response = requests.get(url=f"{settings.api_url}/v1/collections", headers=headers)
-    assert response.status_code == 200, f"{response.status_code} - {response.json()}"
+def get_collections() -> list:
+    response = requests.get(url=f"{settings.api_url}/v1/collections", headers={"Authorization": f"Bearer {settings.api_key}"})
+    assert response.status_code == 200, response.text
     collections = response.json()["data"]
 
     collections = [
@@ -131,15 +130,22 @@ def get_collections(api_key: str) -> list:
 
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_documents(api_key: str, collection_ids: List[str]) -> dict:
+def get_documents(collection_ids: List[str]) -> dict:
     documents = list()
-    headers = {"Authorization": f"Bearer {api_key}"}
     for collection_id in collection_ids:
-        response = requests.get(url=f"{settings.api_url}/v1/documents/{collection_id}", headers=headers)
-        assert response.status_code == 200, f"{response.status_code} - {response.json()}"
+        response = requests.get(url=f"{settings.api_url}/v1/documents/{collection_id}", headers={"Authorization": f"Bearer {settings.api_key}"})
+        assert response.status_code == 200, response.text
         data = response.json()["data"]
         for document in data:
             document["collection_id"] = collection_id
             documents.append(document)
 
     return documents
+
+
+@st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
+def get_tokens():
+    response = requests.get(
+        url=f"{settings.api_url}/tokens/{st.session_state["user"]["id"]}", headers={"Authorization": f"Bearer {settings.api_key}"}
+    )
+    return response.json()["data"]
