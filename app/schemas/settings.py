@@ -25,11 +25,11 @@ from app.utils.variables import (
     MODEL_TYPE__RERANK,
     ROUTER_STRATEGY__ROUND_ROBIN,
     ROUTER_STRATEGY__SHUFFLE,
+    ROUTERS,
     SUPPORTED_MODEL_CLIENT_TYPES__AUDIO,
     SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS,
     SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE,
     SUPPORTED_MODEL_CLIENT_TYPES__RERANK,
-    ROUTERS,
 )
 
 
@@ -129,9 +129,6 @@ class Config(ConfigBaseModel):
         return values
 
 
-Routers = Literal[*ROUTERS]
-
-
 class Settings(BaseSettings):
     # logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
@@ -143,7 +140,7 @@ class Settings(BaseSettings):
     config_file: str = "config.yml"
 
     # disabled endpoints
-    disabled_routers: List[Routers] = Field(default_factory=list)
+    disabled_routers: List[Literal[*ROUTERS]] = Field(default_factory=list)
 
     # app
     app_name: str = DEFAULT_APP_NAME

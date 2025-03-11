@@ -51,8 +51,6 @@ SUPPORTED_MODEL_CLIENT_TYPES__AUDIO = [MODEL_CLIENT_TYPE__ALBERT, MODEL_CLIENT_T
 CHUNKERS = ["LangchainRecursiveCharacterTextSplitter", "NoChunker"]
 DEFAULT_CHUNKER = "LangchainRecursiveCharacterTextSplitter"  # TODO: rename RecursiveCharacterTextSplitter and remove from variables ?
 
-ROUTERS = ["models", "chat", "completions", "embeddings", "audio", "rerank", "search", "collections", "files", "documents", "chunks"]
-
 ROUTER__MODELS = "models"
 ROUTER__CHAT = "chat"
 ROUTER__COMPLETIONS = "completions"
@@ -64,3 +62,17 @@ ROUTER__COLLECTIONS = "collections"
 ROUTER__FILES = "files"
 ROUTER__DOCUMENTS = "documents"
 ROUTER__CHUNKS = "chunks"
+
+ROUTERS = [
+    ROUTER__MODELS,
+    ROUTER__CHAT,
+    ROUTER__COMPLETIONS,
+    ROUTER__EMBEDDINGS,
+    ROUTER__AUDIO,
+    ROUTER__RERANK,
+    ROUTER__SEARCH,
+    ROUTER__COLLECTIONS,
+    ROUTER__FILES,
+    ROUTER__DOCUMENTS,
+    ROUTER__CHUNKS,
+]
