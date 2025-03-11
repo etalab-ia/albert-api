@@ -9,7 +9,7 @@ from app.utils.variables import MODEL_TYPE__EMBEDDINGS, COLLECTION_TYPE__PRIVATE
 
 @pytest.fixture(scope="module")
 def setup(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
     response = test_client.get("/v1/models", timeout=10)
     models = response.json()
     EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
@@ -19,7 +19,7 @@ def setup(args, test_client):
     assert response.status_code == 201, response.text
     PRIVATE_COLLECTION_ID = response.json()["id"]
 
-    test_client.headers = {"Authorization": f"Bearer {args["api_key_admin"]}"}
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_admin']}"} if args else {}
     response = test_client.post("/v1/collections", json={"name": "pytest-public", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC})
     assert response.status_code == 201, response.text
     PUBLIC_COLLECTION_ID = response.json()["id"]
@@ -36,7 +36,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 201, response.text
 
@@ -47,7 +49,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % COLLECTION_DISPLAY_ID__INTERNET}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 422, response.text
         snapshot.assert_match(str(response.json()), "upload_internet_collection")
@@ -59,7 +63,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 201, response.text
 
@@ -70,7 +76,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/html")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 201, response.text
 
@@ -81,7 +89,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/html")}
             data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 201, response.text
 
@@ -92,7 +102,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "text/mardown")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 201, response.text
 
@@ -103,7 +115,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "text/markdown")}
             data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 201, response.text
 
@@ -114,7 +128,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/json")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 201, response.text
 
@@ -126,7 +142,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/json")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 422, response.text
 
@@ -137,7 +155,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 413, response.text
 
@@ -148,7 +168,9 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PUBLIC_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_admin"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_admin']}"} if args else {}
+            )
 
         assert response.status_code == 201, response.text
 
@@ -159,6 +181,8 @@ class TestFiles:
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PUBLIC_COLLECTION_ID}
-            response = test_client.post("/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+            response = test_client.post(
+                "/v1/files", data=data, files=files, headers={"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
+            )
 
         assert response.status_code == 403, response.text

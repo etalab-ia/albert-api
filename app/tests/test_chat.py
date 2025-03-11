@@ -11,7 +11,7 @@ from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE
 
 @pytest.fixture(scope="module")
 def setup(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
     # get a language model
     response = test_client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
@@ -48,7 +48,7 @@ class TestChat:
     def test_chat_completions_unstreamed_response(self, args, test_client, setup):
         """Test the POST /chat/completions unstreamed response."""
         MODEL_ID, _, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Hello, how are you?"}],
@@ -66,7 +66,7 @@ class TestChat:
     def test_chat_completions_streamed_response(self, args, test_client, setup):
         """Test the POST /chat/completions streamed response."""
         MODEL_ID, _, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Hello, how are you?"}],
@@ -89,7 +89,7 @@ class TestChat:
     def test_chat_completions_unknown_params(self, args, test_client, setup):
         """Test the POST /chat/completions unknown params."""
         MODEL_ID, _, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Hello, how are you?"}],
@@ -104,7 +104,7 @@ class TestChat:
 
     def test_chat_completions_context_too_large(self, args, test_client, setup):
         MODEL_ID, MAX_CONTEXT_LENGTH, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         prompt = "test" * (MAX_CONTEXT_LENGTH + 100)
         params = {
             "model": MODEL_ID,
@@ -118,7 +118,7 @@ class TestChat:
 
     def test_chat_completions_streamed_context_too_large(self, args, test_client, setup):
         MODEL_ID, MAX_CONTEXT_LENGTH, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         prompt = "test " * (MAX_CONTEXT_LENGTH + 1000)
         params = {
             "model": MODEL_ID,
@@ -133,7 +133,7 @@ class TestChat:
     def test_chat_completions_search_unstreamed_response(self, args, test_client, setup):
         """Test the GET /chat/completions search unstreamed response."""
         MODEL_ID, _, DOCUMENT_IDS, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Qui est Albert ?"}],
@@ -159,7 +159,7 @@ class TestChat:
     def test_chat_completions_search_streamed_response(self, args, test_client, setup):
         """Test the GET /chat/completions search streamed response."""
         MODEL_ID, _, DOCUMENT_IDS, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Qui est Albert ?"}],
@@ -193,7 +193,7 @@ class TestChat:
     def test_chat_completions_search_no_args(self, args, test_client, setup):
         """Test the GET /chat/completions search template not found."""
         MODEL_ID, _, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Qui est Albert ?"}],
@@ -208,7 +208,7 @@ class TestChat:
     def test_chat_completions_search_no_collections(self, args, test_client, setup):
         """Test the GET /chat/completions search no collections."""
         MODEL_ID, _, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Qui est Albert ?"}],
@@ -228,7 +228,7 @@ class TestChat:
     def test_chat_completions_search_template(self, args, test_client, setup):
         """Test the GET /chat/completions search template."""
         MODEL_ID, _, _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Qui est Albert ?"}],
@@ -251,7 +251,7 @@ class TestChat:
     def test_chat_completions_search_internet(self, args, test_client, setup):
         """Test the GET /chat/completions search internet."""
         MODEL_ID, _, _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Qui est Ulrich Tan ?"}],
@@ -272,7 +272,7 @@ class TestChat:
     def test_chat_completions_search_template_missing_placeholders(self, args, test_client, setup):
         """Test the GET /chat/completions search template missing placeholders."""
         MODEL_ID, _, _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Qui est Albert ?"}],
@@ -294,7 +294,7 @@ class TestChat:
     def test_chat_completions_search_wrong_collection(self, args, test_client, setup):
         """Test the GET /chat/completions search wrong collection."""
         MODEL_ID, _, _, COLLECTION_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"} if args else {}
         params = {
             "model": MODEL_ID,
             "messages": [{"role": "user", "content": "Qui est Albert ?"}],
