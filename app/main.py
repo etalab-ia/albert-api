@@ -3,28 +3,16 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi.middleware import SlowAPIASGIMiddleware
 
 from app.sql.session import get_db
-from app.endpoints import audio, chat, chunks, collections, completions, documents, embeddings, files, models, rerank, search
+from app.endpoints import endpoints_modules
 from app.helpers import MetricsMiddleware, UsagesMiddleware
 from app.schemas.security import User
+from app.utils.variables import ROUTERS
 from app.utils.lifespan import lifespan
 from app.utils.security import check_admin_api_key, check_api_key
 from app.utils.settings import settings
-from app.utils.variables import (
-    ROUTER__CHAT,
-    ROUTER__AUDIO,
-    ROUTER__CHUNKS,
-    ROUTER__COLLECTIONS,
-    ROUTER__COMPLETIONS,
-    ROUTER__DOCUMENTS,
-    ROUTER__EMBEDDINGS,
-    ROUTER__FILES,
-    ROUTER__MODELS,
-    ROUTER__RERANK,
-    ROUTER__SEARCH,
-)
 
 
-def create_app(*, db_func=get_db, enable_middlewares=True) -> FastAPI:
+def create_app(*, db_func=get_db, disabled_middleware=False) -> FastAPI:
     """Create FastAPI application."""
     app = FastAPI(
         title=settings.app_name,
@@ -37,7 +25,7 @@ def create_app(*, db_func=get_db, enable_middlewares=True) -> FastAPI:
         redoc_url="/documentation",
     )
 
-    if enable_middlewares:
+    if not disabled_middleware:
         # Prometheus metrics
         app.instrumentator = Instrumentator().instrument(app=app)
         # Middlewares
@@ -47,17 +35,9 @@ def create_app(*, db_func=get_db, enable_middlewares=True) -> FastAPI:
         app.instrumentator.expose(app=app, should_gzip=True, tags=["Monitoring"], dependencies=[Depends(dependency=check_admin_api_key)])
 
     # Add routers
-    app.include_router(router=models.router, tags=["Models"], prefix="/v1")
-    app.include_router(router=chat.router, tags=["Chat"], prefix="/v1")
-    app.include_router(router=completions.router, tags=["Completions"], prefix="/v1")
-    app.include_router(router=embeddings.router, tags=["Embeddings"], prefix="/v1")
-    app.include_router(router=audio.router, tags=["Audio"], prefix="/v1")
-    app.include_router(router=rerank.router, tags=["Reranking"], prefix="/v1")
-    app.include_router(router=search.router, tags=["Search"], prefix="/v1")
-    app.include_router(router=collections.router, tags=["Collections"], prefix="/v1")
-    app.include_router(router=files.router, tags=["Files"], prefix="/v1")
-    app.include_router(router=documents.router, tags=["Documents"], prefix="/v1")
-    app.include_router(router=chunks.router, tags=["Chunks"], prefix="/v1")
+    for endpoint in ROUTERS:
+        if endpoint not in settings.disabled_routers:
+            app.include_router(router=endpoints_modules[endpoint].router, tags=[endpoint.title()], prefix="/v1")
 
     # Health check
     @app.get(path="/health", tags=["Monitoring"])
@@ -65,32 +45,7 @@ def create_app(*, db_func=get_db, enable_middlewares=True) -> FastAPI:
         """Health check."""
         return Response(status_code=200)
 
-    disabled_routers = set(settings.disabled_routers)
-
-    if ROUTER__MODELS not in disabled_routers:
-        app.include_router(router=models.router, tags=[ROUTER__MODELS.title()], prefix="/v1")
-    if ROUTER__CHAT not in disabled_routers:
-        app.include_router(router=chat.router, tags=[ROUTER__CHAT.title()], prefix="/v1")
-    if ROUTER__COMPLETIONS not in disabled_routers:
-        app.include_router(router=completions.router, tags=[ROUTER__COMPLETIONS.title()], prefix="/v1")
-    if ROUTER__EMBEDDINGS not in disabled_routers:
-        app.include_router(router=embeddings.router, tags=[ROUTER__EMBEDDINGS.title()], prefix="/v1")
-    if ROUTER__AUDIO not in disabled_routers:
-        app.include_router(router=audio.router, tags=[ROUTER__AUDIO.title()], prefix="/v1")
-    if ROUTER__RERANK not in disabled_routers:
-        app.include_router(router=rerank.router, tags=[ROUTER__RERANK.title()], prefix="/v1")
-    if ROUTER__SEARCH not in disabled_routers:
-        app.include_router(router=search.router, tags=[ROUTER__SEARCH.title()], prefix="/v1")
-    if ROUTER__COLLECTIONS not in disabled_routers:
-        app.include_router(router=collections.router, tags=[ROUTER__COLLECTIONS.title()], prefix="/v1")
-    if ROUTER__FILES not in disabled_routers:
-        app.include_router(router=files.router, tags=[ROUTER__FILES.title()], prefix="/v1")
-    if ROUTER__DOCUMENTS not in disabled_routers:
-        app.include_router(router=documents.router, tags=[ROUTER__DOCUMENTS.title()], prefix="/v1")
-    if ROUTER__CHUNKS not in disabled_routers:
-        app.include_router(router=chunks.router, tags=[ROUTER__CHUNKS.title()], prefix="/v1")
-
     return app
 
 
-app = create_app(db_func=get_db, enable_middlewares=settings.middleware)
+app = create_app(db_func=get_db, disabled_middleware=settings.disabled_middleware)

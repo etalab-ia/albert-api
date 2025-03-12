@@ -54,7 +54,7 @@ def app_with_test_db(engine, db_session):
         yield db_session
 
     # Create app with test config
-    app = create_app(db_func=get_test_db, enable_middlewares=True)
+    app = create_app(db_func=get_test_db, disabled_middleware=False)
 
     return app
 

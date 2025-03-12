@@ -19,22 +19,8 @@ def setup(args, test_client):
 
 
 @pytest.fixture(scope="session")
-def app_with_middlewares(engine, db_session):
-    """Create FastAPI app with test database"""
-    from app.main import create_app
-
-    def get_test_db():
-        yield db_session
-
-    # Create app with test config
-    app = create_app(db_func=get_test_db, enable_middlewares=True)
-
-    return app
-
-
-@pytest.fixture(scope="session")
-def test_client(app_with_middlewares) -> Generator[TestClient, None, None]:
-    with TestClient(app=app_with_middlewares) as client:
+def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
+    with TestClient(app=app_with_test_db) as client:
         yield client
 
 
