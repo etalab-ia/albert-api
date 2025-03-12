@@ -9,6 +9,19 @@ from app.schemas.security import User
 from app.utils.lifespan import lifespan
 from app.utils.security import check_admin_api_key, check_api_key
 from app.utils.settings import settings
+from app.utils.variables import (
+    ROUTER__CHAT,
+    ROUTER__AUDIO,
+    ROUTER__CHUNKS,
+    ROUTER__COLLECTIONS,
+    ROUTER__COMPLETIONS,
+    ROUTER__DOCUMENTS,
+    ROUTER__EMBEDDINGS,
+    ROUTER__FILES,
+    ROUTER__MODELS,
+    ROUTER__RERANK,
+    ROUTER__SEARCH,
+)
 
 
 def create_app(*, db_func=get_db, enable_middlewares=True) -> FastAPI:
@@ -52,8 +65,32 @@ def create_app(*, db_func=get_db, enable_middlewares=True) -> FastAPI:
         """Health check."""
         return Response(status_code=200)
 
+    disabled_routers = set(settings.disabled_routers)
+
+    if ROUTER__MODELS not in disabled_routers:
+        app.include_router(router=models.router, tags=[ROUTER__MODELS.title()], prefix="/v1")
+    if ROUTER__CHAT not in disabled_routers:
+        app.include_router(router=chat.router, tags=[ROUTER__CHAT.title()], prefix="/v1")
+    if ROUTER__COMPLETIONS not in disabled_routers:
+        app.include_router(router=completions.router, tags=[ROUTER__COMPLETIONS.title()], prefix="/v1")
+    if ROUTER__EMBEDDINGS not in disabled_routers:
+        app.include_router(router=embeddings.router, tags=[ROUTER__EMBEDDINGS.title()], prefix="/v1")
+    if ROUTER__AUDIO not in disabled_routers:
+        app.include_router(router=audio.router, tags=[ROUTER__AUDIO.title()], prefix="/v1")
+    if ROUTER__RERANK not in disabled_routers:
+        app.include_router(router=rerank.router, tags=[ROUTER__RERANK.title()], prefix="/v1")
+    if ROUTER__SEARCH not in disabled_routers:
+        app.include_router(router=search.router, tags=[ROUTER__SEARCH.title()], prefix="/v1")
+    if ROUTER__COLLECTIONS not in disabled_routers:
+        app.include_router(router=collections.router, tags=[ROUTER__COLLECTIONS.title()], prefix="/v1")
+    if ROUTER__FILES not in disabled_routers:
+        app.include_router(router=files.router, tags=[ROUTER__FILES.title()], prefix="/v1")
+    if ROUTER__DOCUMENTS not in disabled_routers:
+        app.include_router(router=documents.router, tags=[ROUTER__DOCUMENTS.title()], prefix="/v1")
+    if ROUTER__CHUNKS not in disabled_routers:
+        app.include_router(router=chunks.router, tags=[ROUTER__CHUNKS.title()], prefix="/v1")
+
     return app
 
 
-# Create the main application instance
 app = create_app(db_func=get_db, enable_middlewares=settings.middleware)
