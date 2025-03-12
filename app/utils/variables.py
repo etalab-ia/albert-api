@@ -64,16 +64,4 @@ ROUTER__FILES = "files"
 ROUTER__DOCUMENTS = "documents"
 ROUTER__CHUNKS = "chunks"
 
-ROUTERS = [
-    ROUTER__MODELS,
-    ROUTER__CHAT,
-    ROUTER__COMPLETIONS,
-    ROUTER__EMBEDDINGS,
-    ROUTER__AUDIO,
-    ROUTER__RERANK,
-    ROUTER__SEARCH,
-    ROUTER__COLLECTIONS,
-    ROUTER__FILES,
-    ROUTER__DOCUMENTS,
-    ROUTER__CHUNKS,
-]
+ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
