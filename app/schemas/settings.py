@@ -80,7 +80,7 @@ class Model(ConfigBaseModel):
 
 
 class Internet(ConfigBaseModel):
-    type: Literal[INTERNET_TYPE__DUCKDUCKGO, INTERNET_TYPE__BRAVE] = INTERNET_TYPE__DUCKDUCKGO
+    type: Literal[INTERNET_TYPE__DUCKDUCKGO, INTERNET_TYPE__BRAVE]
     args: dict = {}
 
 
@@ -98,7 +98,7 @@ class Config(ConfigBaseModel):
     rate_limit: RateLimit = Field(default_factory=RateLimit)
     models: List[Model]
     databases: List[Database]
-    internet: List[Internet] = Field(default=[Internet()], max_length=1)
+    internet: List[Internet] = Field(default_factory=list, max_length=1)
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
@@ -165,7 +165,7 @@ class Settings(BaseSettings):
         stream.close()
 
         values.rate_limit = config.rate_limit
-        values.internet = config.internet[0]
+        values.internet = config.internet[0] if config.internet else None
         values.models = config.models
 
         values.databases = SimpleNamespace()
