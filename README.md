@@ -24,12 +24,12 @@ Si vous êtes un organisme public, vous pouvez demander une clé d'accès à Alb
 
 L'API Albert permet d'être un proxy entre des clients API d'IA générative et d'assurer du load balancing entre les différents clients :
 
-| Client | Supported version | Supported model types |
-|--- | --- | --- |
-| [OpenAI](https://platform.openai.com/docs/api-reference) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
-| [vLLM](https://github.com/vllm-project/vllm) | v0.6.6.post1 | • language |
-| [HuggingFace Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) | v1.5 | • embeddings<br>• reranking |
-| [Albert](https://github.com/etalab-ia/albert-api) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
+| Client                                                                                                  | Supported version | Supported model types                                        |
+| ------------------------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------ |
+| [OpenAI](https://platform.openai.com/docs/api-reference)                                                | latest            | • language<br>• embeddings<br>• reranking<br>• transcription |
+| [vLLM](https://github.com/vllm-project/vllm)                                                            | v0.6.6.post1      | • language                                                   |
+| [HuggingFace Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) | v1.5              | • embeddings<br>• reranking                                  |
+| [Albert](https://github.com/etalab-ia/albert-api)                                                       | latest            | • language<br>• embeddings<br>• reranking<br>• transcription |
 
 
 ## ⚙️ Fonctionnalités avancées
@@ -103,9 +103,9 @@ Pour déployer l'API Albert sur votre propre infrastructure, suivez la [document
 
 1. Complétez le fichier *[config.example.yml](./config.example.yml)* à la racine du dépot la configuration de vos API de modèles (voir la [documentation déploiement](./docs/deployment.md) pour plus d'informations).
 
-2. Complétez le fichier *[compose.yml](./compose.yml)* à la racine du dépot avec les variables d'environnement nécessaires.
+2. Complétez le fichier *[compose.yml](./compose.yml)* à la racine du dépot avec les variables d'environnement nécessaires pour l'UI.
 
-2. Déployez l'API avec Docker à l'aide du fichier [compose.yml](../compose.yml) à la racine du dépot.
+3. Déployez l'API avec Docker à l'aide du fichier [compose.yml](../compose.yml) à la racine du dépot.
 
   ```bash
   docker compose up --detach
