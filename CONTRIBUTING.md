@@ -17,43 +17,51 @@ feat(collections): collection name retriever
 
 *Le thème est optionnel et doit correspondre à un thématique de la code base (deploy, collections, models, ...).
 
-# Packages
+# Développement en environnement Docker
+
+1. Editez le fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* avec vos modèles de langage et d'embeddings.
+
+2. Editez le fichier *[compose.dev.yml](./compose.dev.yml)* avec les variables d'environnement nécessaires pour l'UI.
+
+    Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
+
+
+3. Pour développer dans un environnement Docker, lancer le docker compose de développement avec le mode watch :
+
+    ```bash
+    docker compose --file compose.dev.yml up --watch
+    ```
+
+L'API et l'UI seront disponibles respectivement sur les ports 8000 et 8501.
+
+# Développement hors environnement Docker
 
 1. Dans un environnement virtuel Python, installez les packages Python présents dans le fichier *[pyproject.toml](./pyproject.toml)*
 
-  ```bash 
-  pip install ".[ui,app,dev,test]"
-  pre-commit install
-  ```
-
-# Lancement des services
-
-Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
-
-## API (FastAPI)
-
-1. Après avoir créé un fichier *config.yml*, lancez l'API en local
-
-    ```bash
-    uvicorn app.main:app --port 8080 --log-level debug --reload
+    ```bash 
+    pip install ".[ui,app,dev,test]"
+    pre-commit install
     ```
 
-## User interface (Streamlit)
+2. Créez un fichier *config.yml* à partir du fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* avec vos modèles de langage et d'embeddings.
+   
+    Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
 
-1. Exportez les variables d'environnement nécessaires
+
+3. Lancez l'API en local
 
     ```bash
-    export BASE_URL=http://localhost:8080/v1
+    uvicorn app.main:app --port 8000 --log-level debug --reload
+    ```
+
+4. Exportez les variables d'environnement nécessaires pour l'UI.
+   
+    ```bash
+    export BASE_URL=http://localhost:8000/v1
     export DOCUMENTS_EMBEDDINGS_MODEL=
     ```
 
-2. Lancez l'API en local
-
-    ```bash
-    uvicorn app.main:app --port 8080 --log-level debug --reload
-    ``` 
-
-3. Lancez l'UI en local
+5. Lancez l'UI en local
 
     ```bash
     python -m streamlit run ui/chat.py --server.port 8501 --browser.gatherUsageStats false --theme.base light
@@ -61,9 +69,7 @@ Pour plus d'information sur le déploiement des services, veuillez consulter la 
 
 # Tests
 
-Merci, avant chaque pull request, de vérifier le bon déploiement de votre API en exécutant des tests unitaires.
-
-Pour exécuter les tests unitaires à la racine du projet, exécutez la commande suivante :
+Merci, avant chaque pull request, de vérifier le bon déploiement de votre API en exécutant les tests prévus à cet effet. Pour exécuter ces tests à la racine du projet, exécutez la commande suivante :
     
 ```bash
 CONFIG_FILE=<path to config file> PYTHONPATH=. pytest --config-file=pyproject.toml --api-key-user <api key user> --api-key-admin <api key admin>
@@ -122,9 +128,10 @@ Afin de spéficier les variables d'environnement nécessaires pour les tests, vo
 
 Il est important de tenir à jour les notebooks de docs/tutorials, afin de montrer des rapides exemples d'utilisation de l'API.
 
-Pour lancer les notebooks en local:
+Pour lancer les notebooks en local :
 
 ```bash
+pip install ".[dev]"
 jupyter notebook docs/tutorials/
 ```
 
@@ -137,6 +144,7 @@ Le linter du projet est [Ruff](https://beta.ruff.rs/docs/configuration/). Les r�
 1. Installez les hooks de pre-commit
 
     ```bash
+    pip install ".[dev]"
     pre-commit install
     ```
 
