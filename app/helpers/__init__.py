@@ -5,6 +5,7 @@ from ._modelregistry import ModelRegistry
 from ._modelrouter import ModelRouter
 from ._searchmanager import SearchManager
 from ._streamingresponsewithstatuscode import StreamingResponseWithStatusCode
+from ._usagesmiddleware import UsagesMiddleware
 
 __all__ = [
     "FileUploader",
@@ -14,4 +15,5 @@ __all__ = [
     "ModelRouter",
     "SearchManager",
     "StreamingResponseWithStatusCode",
+    "UsagesMiddleware",
 ]

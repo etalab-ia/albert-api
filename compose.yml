@@ -1,7 +1,10 @@
 services:
   api:
-    image: ghcr.io/etalab-ia/albert-api/app:latest
-    command: gunicorn app.main:app --workers 1 --worker-connections 1000 --timeout 30 --worker-class uvicorn.workers.UvicornWorker
+    #image: ghcr.io/etalab-ia/albert-api/app:latest
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    command: /startup.sh
     environment:
       - PORT=8000
       - CONFIG_FILE=/home/albert/conf/config.yml
@@ -9,9 +12,12 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./config.example.yml:/home/albert/conf/config.yml:ro
+      - ./config.yml:/home/albert/conf/config.yml:ro
+      - ./app:/app
     depends_on:
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
 
   ui:
@@ -20,7 +26,8 @@ services:
     restart: always
     environment:
       - BASE_URL=http://api:8000/v1
-      - DOCUMENTS_EMBEDDINGS_MODEL=
+      - DOCUMENTS_EMBEDDINGS_MODEL=meta-llama/Llama-3.1-8B-Instruct
+      - EXCLUDE_MODELS=BAAI/bge-m3
     ports:
       - 8501:8501
 
@@ -36,6 +43,8 @@ services:
         interval: 4s
         timeout: 10s
         retries: 5
+    ports:
+      - 6379:6379
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
@@ -44,7 +53,30 @@ services:
       - QDRANT__SERVICE__API_KEY=changeme
     volumes:
       - qdrant:/qdrant/storage
+    ports:
+      - 6333:6333
+      - 6334:6334
+
+  postgres:
+    image: postgres:16.5
+    restart: always
+    user: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-U", "postgres" ]
+      interval: 4s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    ports:
+      - "5432:5432"
 
 volumes:
   qdrant:
   redis:
+  postgres:

@@ -11,6 +11,7 @@ from app.utils.variables import (
     DATABASE_TYPE__GRIST,
     DATABASE_TYPE__QDRANT,
     DATABASE_TYPE__REDIS,
+    DATABASE_TYPE__SQL,
     DEFAULT_APP_NAME,
     DEFAULT_TIMEOUT,
     INTERNET_TYPE__BRAVE,
@@ -84,7 +85,7 @@ class Internet(ConfigBaseModel):
 
 
 class Database(ConfigBaseModel):
-    type: Literal[DATABASE_TYPE__REDIS, DATABASE_TYPE__QDRANT, DATABASE_TYPE__GRIST, DATABASE_TYPE__ELASTIC]
+    type: Literal[DATABASE_TYPE__REDIS, DATABASE_TYPE__QDRANT, DATABASE_TYPE__GRIST, DATABASE_TYPE__ELASTIC, DATABASE_TYPE__SQL]
     args: dict = {}
 
 
@@ -172,5 +173,6 @@ class Settings(BaseSettings):
         values.databases.qdrant = next((database for database in config.databases if database.type == DATABASE_TYPE__QDRANT), None)
         values.databases.grist = next((database for database in config.databases if database.type == DATABASE_TYPE__GRIST), None)
         values.databases.elastic = next((database for database in config.databases if database.type == DATABASE_TYPE__ELASTIC), None)
+        values.databases.sql = next((database for database in config.databases if database.type == DATABASE_TYPE__SQL), None)
 
         return values
