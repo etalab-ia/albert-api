@@ -31,14 +31,20 @@ def test_client() -> Generator[TestClient, None, None]:
 def test_roles(test_client: TestClient) -> tuple[str, str]:
     # delete tests users
     response = test_client.delete(url=f"/users/{USER_USER}")
+    logging.debug(msg=f"delete user {USER_USER}: {response.text}")
     response = test_client.delete(url=f"/users/{USER_ADMIN}")
+    logging.debug(msg=f"delete user {USER_ADMIN}: {response.text}")
 
     # delete tests roles
     response = test_client.delete(url=f"/roles/{ROLE_ADMIN}")
+    logging.debug(msg=f"delete role {ROLE_ADMIN}: {response.text}")
+
     response = test_client.delete(url=f"/roles/{ROLE_USER}")
+    logging.debug(msg=f"delete role {ROLE_USER}: {response.text}")
 
     # get models
     response = test_client.get(url="/v1/models")
+    logging.debug(msg=f"get models: {response.text}")
     response.raise_for_status()
     models = response.json()["data"]
     models = [model["id"] for model in models]
@@ -60,9 +66,10 @@ def test_roles(test_client: TestClient) -> tuple[str, str]:
             "role": ROLE_ADMIN,
             "default": False,
             "permissions": admin_permissions,
-            "limits": [{"model": model, "type": LimitType.TPM.value, "value": None} for model in models],
+            "limits": [{"model": model, "type": LimitType.RPM.value, "value": None} for model in models],
         },
     )
+    logging.debug(msg=f"create role {ROLE_ADMIN}: {response.text}")
     response.raise_for_status()
 
     # create role user
@@ -72,9 +79,10 @@ def test_roles(test_client: TestClient) -> tuple[str, str]:
             "role": ROLE_USER,
             "default": False,
             "permissions": user_permissions,
-            "limits": [{"model": model, "type": LimitType.TPM.value, "value": None} for model in models],
+            "limits": [{"model": model, "type": LimitType.RPM.value, "value": None} for model in models],
         },
     )
+    logging.debug(msg=f"create role {ROLE_USER}: {response.text}")
     response.raise_for_status()
 
     return ROLE_ADMIN, ROLE_USER
@@ -102,12 +110,13 @@ def test_tokens(test_client: TestClient, test_users: tuple[str, str]) -> tuple[s
     # create token admin
     response = test_client.post(url="/tokens", json={"user": user_id_admin, "token": TOKEN_ADMIN, "expires_at": int(time.time()) + 300})
     response.raise_for_status()
-
+    token_admin = response.json()["id"]
     # create token user
     response = test_client.post(url="/tokens", json={"user": user_id_user, "token": TOKEN_USER, "expires_at": int(time.time()) + 300})
     response.raise_for_status()
+    token_user = response.json()["id"]
 
-    return TOKEN_ADMIN, TOKEN_USER
+    return token_admin, token_user
 
 
 @pytest.fixture(scope="session")

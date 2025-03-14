@@ -32,7 +32,7 @@ def delete_role(role: str):
         time.sleep(0.5)
         st.rerun()
     else:
-        st.toast("Role deletion failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
 
 
 def update_role(
@@ -50,8 +50,7 @@ def update_role(
         st.rerun()
     else:
         logging.debug(response.text)
-        print(response.text)
-        st.toast("Role update failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
 
 
 def create_user(
@@ -70,7 +69,7 @@ def create_user(
         time.sleep(0.5)
         st.rerun()
     else:
-        st.toast("User creation failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
 
 
 def delete_user(user: str):
@@ -81,7 +80,7 @@ def delete_user(user: str):
         time.sleep(0.5)
         st.rerun()
     else:
-        st.toast("User deletion failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
 
 
 def update_user(
@@ -100,4 +99,4 @@ def update_user(
         time.sleep(0.5)
         st.rerun()
     else:
-        st.toast("User update failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")

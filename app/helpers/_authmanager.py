@@ -423,7 +423,7 @@ class AuthManager:
 
         return users
 
-    async def create_token(self, name: str, user: str, expires_at: Optional[int] = None) -> None:
+    async def create_token(self, name: str, user: str, expires_at: Optional[int] = None) -> str:
         async with self.sql.session() as session:
             # get the user id
             result = await session.execute(statement=select(UserTable).where(UserTable.name == user))
@@ -452,6 +452,8 @@ class AuthManager:
                 statement=update(table=TokenTable).values(token=f"{token[:8]}...{token[-8:]}", expires_at=expires_at).where(TokenTable.name == name)
             )
             await session.commit()
+
+            return token
 
     async def check_token(self, token: str) -> Optional[AuthenticatedUser]:
         def get_user_and_role(token: str) -> tuple[User, Role]:

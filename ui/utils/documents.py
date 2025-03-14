@@ -15,7 +15,7 @@ def create_collection(api_key: str, collection_name: str, collection_model: str)
         time.sleep(0.5)
         st.rerun()
     else:
-        st.toast("Create failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
 
 
 def delete_collection(api_key: str, collection_id: str) -> None:
@@ -28,7 +28,7 @@ def delete_collection(api_key: str, collection_id: str) -> None:
         time.sleep(0.5)
         st.rerun()
     else:
-        st.toast("Delete failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
 
 
 def upload_file(api_key: str, file, collection_id: str) -> None:
@@ -43,7 +43,7 @@ def upload_file(api_key: str, file, collection_id: str) -> None:
         time.sleep(0.5)
         st.rerun()
     else:
-        st.toast("Upload failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
 
 
 def delete_document(api_key: str, collection_id: str, document_id: str) -> None:
@@ -55,4 +55,4 @@ def delete_document(api_key: str, collection_id: str, document_id: str) -> None:
         time.sleep(0.5)
         st.rerun()
     else:
-        st.toast("Delete failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")

@@ -51,7 +51,7 @@ def change_password(current_password: str, new_password: str, confirm_password: 
         st.session_state["login_status"] = False
         st.rerun()
     else:
-        st.toast("Password update failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
 
 
 def create_token(token_id: str, expires_at: int):
@@ -65,12 +65,12 @@ def create_token(token_id: str, expires_at: int):
         @st.dialog(title="Token", width="large")
         def display_token():
             st.warning("**⚠️ Copy the token to your clipboard, it will not be displayed again.**")
-            st.code(response.text, language="text")
+            st.code(response.json()["id"], language="text")
 
         st.toast("Create succeed", icon="✅")
         display_token()
     else:
-        st.toast("Create failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
 
 
 def delete_token(token_id: str):
@@ -83,4 +83,4 @@ def delete_token(token_id: str):
         get_tokens.clear()
         st.rerun()
     else:
-        st.toast("Delete failed", icon="❌")
+        st.toast(response.json()["detail"], icon="❌")
