@@ -102,7 +102,7 @@ class TestAuth:
         """Test the POST /roles endpoint with admin token to check response code and text."""
         response = client.post_admin(url="/roles", json={"role": "test-role", "default": False, "admin": False, "limits": []})
         assert response.status_code == 201, response.text
-        assert response.text == "test-role"
+        assert response.json()["id"] == "test-role"
 
     # def test_update_role_with_admin_token(self, client: TestClient):
     #     """Test the PATCH /roles endpoint with admin token to check if role is updated."""

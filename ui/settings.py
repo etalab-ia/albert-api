@@ -9,7 +9,5 @@ class Settings(BaseSettings):
     api_url: str = "http://localhost:8080"
     api_key: str = "changeme"
     max_token_expiration_days: int = 60  # days
-    # models
-    exclude_models: str
     documents_embeddings_model: str
     default_chat_model: Optional[str] = None

@@ -18,7 +18,7 @@ async def get_documents(
     collection: UUID = Path(description="The collection ID"),
     limit: Optional[int] = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
-    user: AuthenticatedUser = Security(dependency=Authorization(permissions=[PermissionType.READ_PRIVATE_COLLECTION])),
+    user: AuthenticatedUser = Security(dependency=Authorization()),
 ) -> Documents:
     """
     Get all documents ID from a collection.

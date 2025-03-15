@@ -41,7 +41,7 @@ async def create_collection(
 @router.get(path="/collections")
 async def get_collections(
     request: Request,
-    user: AuthenticatedUser = Security(dependency=Authorization(permissions=[PermissionType.READ_PRIVATE_COLLECTION])),
+    user: AuthenticatedUser = Security(dependency=Authorization()),
 ) -> Union[Collection, Collections]:
     """
     Get list of collections.

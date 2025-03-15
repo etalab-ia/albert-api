@@ -181,8 +181,10 @@ col1, col2, col3 = st.columns(spec=3)
 with col1:
     with st.expander(label="Create a user", icon=":material/add_circle:"):
         user = st.text_input(label="User ID", placeholder="my-user", key="create_user_id")
+        default_role_index = [i for i, r in enumerate(roles) if r["default"]]
+        default_role_index = None if len(default_role_index) == 0 else default_role_index[0]
         password = st.text_input(label="Password", placeholder="my-password", type="password", key="create_user_password")
-        role = st.selectbox(label="Role", options=[role["id"] for role in roles], key="create_user_role")
+        role = st.selectbox(label="Role", options=[role["id"] for role in roles], key="create_user_role", index=default_role_index)
         if st.button(label="Create", disabled=not user, key="create_user_button"):
             create_user(user=user, password=password, role=role)
 
@@ -194,9 +196,18 @@ with col2:
 
 with col3:
     with st.expander(label="Update a user", icon=":material/update:"):
-        user_id = st.selectbox(label="User ID", options=[user["id"] for user in users], key="update_user_id")
-        user = st.text_input(label="User", placeholder="my-user", key="update_user_user", value=None)
-        password = st.text_input(label="Password", placeholder="my-password", type="password", key="update_user_password", value=None)
-        role = st.selectbox(label="Role", options=[role["id"] for role in roles], key="update_user_role")
+        user_id = st.selectbox(label="User", options=[user["id"] for user in users], key="update_user_id")
+        if not user_id:
+            st.stop()
+        user = [u for u in users if u["id"] == user_id][0]
+        role = [r for r in roles if r["id"] == user["role"]][0]["id"]
+        new_user = st.text_input(label="User ID", placeholder="my-user", key="update_user_user", value=user["id"])
+        new_password = st.text_input(label="Password", placeholder="my-password", type="password", key="update_user_password", value=None)
+        new_role = st.selectbox(
+            label="Role",
+            options=[role["id"] for role in roles],
+            key="update_user_role",
+            index=[i for i, r in enumerate(roles) if r["id"] == role][0],
+        )
         if st.button(label="Update", disabled=not user_id, key="update_user_button"):
-            update_user(user_id=user_id, user=user, password=password, role=role)
+            update_user(user_id=user_id, user=new_user, password=new_password, role=new_role)

@@ -4,7 +4,6 @@ from uuid import UUID
 from fastapi import APIRouter, Path, Query, Request, Security
 
 from app.helpers import Authorization
-from app.schemas.auth import PermissionType
 from app.schemas.chunks import Chunks
 from app.schemas.core.auth import AuthenticatedUser
 from app.utils.lifespan import databases
@@ -19,7 +18,7 @@ async def get_chunks(
     document: UUID = Path(description="The document ID"),
     limit: int = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
-    user: AuthenticatedUser = Security(dependency=Authorization(permissions=[PermissionType.READ_PRIVATE_COLLECTION])),
+    user: AuthenticatedUser = Security(dependency=Authorization()),
 ) -> Chunks:
     """
     Get chunks of a document.
