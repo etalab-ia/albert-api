@@ -24,7 +24,6 @@ class AuthenticatedUser(BaseModel):
     def from_user_and_role(cls, id: str, user: User, role: Role):
         from app.utils.lifespan import context
 
-        # TODO support aliases pattern
         limits = {}
         for model in context.models.models:
             if user.id == settings.auth.root_user:

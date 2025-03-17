@@ -5,7 +5,7 @@ from typing import Optional
 import requests
 import streamlit as st
 
-from utils.common import get_roles, get_users, settings
+from utils.common import check_password, get_roles, get_users, settings
 
 
 def create_role(role: str, default: bool):
@@ -53,14 +53,13 @@ def update_role(
         st.toast(response.json()["detail"], icon="❌")
 
 
-def create_user(
-    user: str,
-    password: str,
-    role: str,
-):
+def create_user(user: str, password: str, role: str, expires_at: Optional[int] = None):
+    if not check_password(password):
+        return
+
     response = requests.post(
         url=f"{settings.api_url}/users",
-        json={"user": user, "password": password, "role": role},
+        json={"user": user, "password": password, "role": role, "expires_at": expires_at},
         headers={"Authorization": f"Bearer {settings.api_key}"},
     )
     if response.status_code == 201:
@@ -84,14 +83,14 @@ def delete_user(user: str):
 
 
 def update_user(
-    user_id: str,
-    user: Optional[str] = None,
-    password: Optional[str] = None,
-    role: Optional[str] = None,
+    user_id: str, user: Optional[str] = None, password: Optional[str] = None, role: Optional[str] = None, expires_at: Optional[int] = None
 ):
+    if password and not check_password(password):
+        return
+
     response = requests.patch(
         url=f"{settings.api_url}/users/{user_id}",
-        json={"user": user, "password": password, "role": role},
+        json={"user": user, "password": password, "role": role, "expires_at": expires_at},
         headers={"Authorization": f"Bearer {settings.api_key}"},
     )
     if response.status_code == 200:

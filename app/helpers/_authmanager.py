@@ -1,3 +1,4 @@
+import time
 import traceback
 from typing import List, Optional
 
@@ -143,18 +144,20 @@ class AuthManager:
 
     async def login(self, user: str, password: str) -> str:
         async with self.sql.session() as session:
-            result = await session.execute(statement=select(UserTable).where(UserTable.name == user))
-            try:
-                user = result.scalar_one()
-            except NoResultFound:
-                raise UserNotFoundException()
+            users = await self.get_users(name=user)
+            user = users[0]
 
-            if not AuthManager._check_password(password=password, hashed_password=user.password):
+            async with self.sql.session() as session:
+                result = await session.execute(statement=select(UserTable.password).where(UserTable.name == user.id))
+                user_password = result.scalar_one()
+
+            if not AuthManager._check_password(password=password, hashed_password=user_password):
                 raise InvalidPasswordException()
 
-            user = await self.get_users(name=user.name)
+            if user.expires_at is not None and user.expires_at < time.time():
+                raise UserNotFoundException()
 
-            return user[0]
+            return user
 
     async def create_role(self, name: str, default: bool = False, limits: List[Limit] = [], permissions: List[PermissionType] = []) -> None:  # fmt: off
         async with self.sql.session() as session:

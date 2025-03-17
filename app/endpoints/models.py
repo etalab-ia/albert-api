@@ -28,8 +28,5 @@ async def get_models(request: Request, user: AuthenticatedUser = Security(depend
     """
 
     data = context.models.list()
-    for i, model in enumerate(data):
-        if user.limits[model.id].rpd == 0 or user.limits[model.id].rpd == 0:
-            data.pop(i)
 
     return Models(data=data)

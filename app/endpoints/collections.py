@@ -32,7 +32,7 @@ async def create_collection(
         collection_model=body.model,
         collection_type=body.type,
         collection_description=body.description,
-        user=user,
+        user=user.user,
     )
 
     return JSONResponse(status_code=201, content={"id": collection_id})
@@ -70,6 +70,6 @@ async def delete_collections(
     """
 
     collection = str(collection)
-    await databases.search.delete_collection(collection_id=collection, user=user)
+    await databases.search.delete_collection(collection_id=collection, user=user.user)
 
     return Response(status_code=204)

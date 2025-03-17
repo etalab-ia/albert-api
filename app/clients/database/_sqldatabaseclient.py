@@ -12,7 +12,7 @@ class SQLDatabaseClient:
         """
         Async SQLDatabaseClient with check if database is reachable when API startup.
         """
-        self.engine = create_async_engine(*args, **kwargs)  # TODO add timeout
+        self.engine = create_async_engine(*args, **kwargs)
         self.session = async_sessionmaker(bind=self.engine, expire_on_commit=False)
 
         engine = create_engine(url=kwargs.get("url", "").replace("+asyncpg", ""))

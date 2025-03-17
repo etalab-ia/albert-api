@@ -8,7 +8,6 @@ from app.clients.search import BaseSearchClient
 from app.helpers import AuthManager, ModelRegistry
 from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
-from app.schemas.core.auth import AuthenticatedUser
 from app.schemas.documents import Document
 from app.schemas.search import Search
 from app.utils.exceptions import (
@@ -35,11 +34,11 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         self.models = models
         self.auth = auth
 
-    async def upsert(self, chunks: List[Chunk], collection_id: str, user: AuthenticatedUser) -> None:
+    async def upsert(self, chunks: List[Chunk], collection_id: str, user_id: str) -> None:
         """
         See SearchClient.upsert
         """
-        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+        collection = self.get_collections(collection_ids=[collection_id], user_id=user_id)[0]
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
@@ -52,11 +51,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
             actions = [
                 {
                     "_index": collection_id,
-                    "_source": {
-                        "body": chunk.content,
-                        "embedding": embedding,
-                        "metadata": chunk.metadata.model_dump(),
-                    },
+                    "_source": {"body": chunk.content, "embedding": embedding, "metadata": chunk.metadata.model_dump()},
                 }
                 for chunk, embedding in zip(batch, embeddings)
             ]
@@ -67,7 +62,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
     async def query(
         self,
         prompt: str,
-        user: AuthenticatedUser,
+        user_id: str,
         collection_ids: List[str] = [],
         method: Literal[SEARCH_TYPE__HYBRID, SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC] = SEARCH_TYPE__SEMANTIC,
         k: Optional[int] = 4,
@@ -76,7 +71,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         """
         See SearchClient.query
         """
-        collections = self.get_collections(collection_ids=collection_ids, user=user)
+        collections = self.get_collections(collection_ids=collection_ids, user_id=user_id)
 
         if method == SEARCH_TYPE__LEXICAL:
             searches = self._lexical_query(prompt=prompt, collection_ids=collection_ids, k=k)
@@ -86,22 +81,22 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         if len(set(collection.model for collection in collections)) > 1:
             raise DifferentCollectionsModelsException()
 
-        embedding = await self._create_embeddings(input=[prompt], model=collections[0].model)[0]
+        response = await self._create_embeddings(input=[prompt], model=collections[0].model)
 
         if method == SEARCH_TYPE__SEMANTIC:
-            searches = self._semantic_query(prompt=prompt, embedding=embedding, collection_ids=collection_ids, size=k)
+            searches = self._semantic_query(prompt=prompt, embedding=response[0], collection_ids=collection_ids, size=k)
 
             return searches
 
         if method == SEARCH_TYPE__HYBRID:
             with ThreadPoolExecutor(max_workers=2) as executor:
                 lexical_searches = executor.submit(self._lexical_query, prompt, collection_ids, k).result()
-                semantic_searches = executor.submit(self._semantic_query, prompt, embedding, collection_ids, k).result()
+                semantic_searches = executor.submit(self._semantic_query, prompt, response[0], collection_ids, k).result()
                 searches = self.build_ranked_searches(searches_list=[lexical_searches, semantic_searches], k=k, rff_k=rff_k)
 
         return searches
 
-    def get_collections(self, user: AuthenticatedUser, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, user_id: str, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
@@ -116,7 +111,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         except NotFoundError as e:
             raise CollectionNotFoundException()
 
-        collections = [collection for collection in collections if collection.user == user.id or collection.type == COLLECTION_TYPE__PUBLIC]
+        collections = [collection for collection in collections if collection.user_id == user_id or collection.type == COLLECTION_TYPE__PUBLIC]
 
         if collection_ids:
             for collection in collections:
@@ -140,7 +135,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
         collection_id: str,
         collection_name: str,
         collection_model: str,
-        user: AuthenticatedUser,
+        user: str,
         collection_type: str = COLLECTION_TYPE__PRIVATE,
         collection_description: Optional[str] = None,
     ) -> Collection:
@@ -185,7 +180,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
                 "name": collection_name,
                 "type": collection_type,
                 "model": collection_model,
-                "user": user.id,
+                "user": user,
                 "description": collection_description,
                 "created_at": round(time.time()),
                 "documents": 0,
@@ -196,14 +191,14 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
         return Collection(id=collection_id, **mappings["_meta"])
 
-    async def delete_collection(self, collection_id: str, user: AuthenticatedUser) -> None:
+    async def delete_collection(self, collection_id: str, user: str) -> None:
         """
         See SearchClient.delete_collection
         """
         collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
         self.indices.delete(index=collection_id, ignore_unavailable=True)
 
-    def get_chunks(self, collection_id: str, document_id: str, user: AuthenticatedUser, limit: int = 10, offset: int = 0) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: str, limit: int = 10, offset: int = 0) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
@@ -222,11 +217,11 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
     # @TODO: pagination between qdrant and elasticsearch diverging
     # @TODO: offset is not supported by elasticsearch
-    def get_documents(self, collection_id: str, user: AuthenticatedUser, limit: int = 10, offset: int = 0) -> List[Document]:
+    def get_documents(self, collection_id: str, user: str, limit: int = 10, offset: int = 0) -> List[Document]:
         """
         See SearchClient.get_documents
         """
-        _ = self.get_collections(collection_ids=[collection_id], user=user)  # check if collection exists
+        _ = self.get_collections(collection_ids=[collection_id], user=str)  # check if collection exists
 
         body = {
             "query": {"match_all": {}},
@@ -250,7 +245,7 @@ class ElasticSearchClient(Elasticsearch, BaseSearchClient):
 
         return documents
 
-    async def delete_document(self, collection_id: str, document_id: str, user: AuthenticatedUser):
+    async def delete_document(self, collection_id: str, document_id: str, user: str):
         """
         See SearchClient.delete_document
         """

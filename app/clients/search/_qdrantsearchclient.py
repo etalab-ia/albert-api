@@ -23,7 +23,6 @@ from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
-from app.schemas.core.auth import AuthenticatedUser
 from app.utils.exceptions import (
     CollectionNotFoundException,
     DifferentCollectionsModelsException,
@@ -55,11 +54,11 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         if not super().collection_exists(collection_name=self.DOCUMENT_COLLECTION_ID):
             super().create_collection(collection_name=self.DOCUMENT_COLLECTION_ID, vectors_config={}, on_disk_payload=False)
 
-    async def upsert(self, chunks: List[Chunk], collection_id: str, user: AuthenticatedUser) -> None:
+    async def upsert(self, chunks: List[Chunk], collection_id: str, user_id: str) -> None:
         """
         See SearchClient.upsert
         """
-        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+        collection = self.get_collections(collection_ids=[collection_id], user_id=user_id)[0]
 
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
@@ -110,7 +109,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
     async def query(
         self,
         prompt: str,
-        user: AuthenticatedUser,
+        user_id: str,
         collection_ids: List[str] = [],
         method: Literal[SEARCH_TYPE__HYBRID, SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC] = SEARCH_TYPE__SEMANTIC,
         k: Optional[int] = 4,
@@ -124,12 +123,12 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         if method != SEARCH_TYPE__SEMANTIC:
             raise NotImplementedException("Lexical and hybrid search are not available for Qdrant database.")
 
-        collections = self.get_collections(collection_ids=collection_ids, user=user)
+        collections = self.get_collections(collection_ids=collection_ids, user_id=user_id)
 
         if len(set(collection.model for collection in collections)) > 1:
             raise DifferentCollectionsModelsException()
 
-        response = await self._create_embeddings(input=[prompt], model=collections[0].model, user=user)
+        response = await self._create_embeddings(input=[prompt], model=collections[0].model)
 
         chunks = []
         for collection in collections:
@@ -153,7 +152,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
 
         return searches
 
-    def get_collections(self, user: AuthenticatedUser, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, user_id: str, collection_ids: List[str] = []) -> List[Collection]:
         """
         See SearchClient.get_collections
         """
@@ -161,8 +160,8 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         must = [HasIdCondition(has_id=collection_ids)] if collection_ids else []
 
         should = []
-        if user:
-            should.append(FieldCondition(key="user", match=MatchAny(any=[user.id])))
+        if user_id:
+            should.append(FieldCondition(key="user", match=MatchAny(any=[user_id])))
         should.append(FieldCondition(key="type", match=MatchAny(any=[COLLECTION_TYPE__PUBLIC])))
         filter = Filter(must=must, should=should)
 
@@ -191,7 +190,6 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
                     name=collection.payload.get("name"),
                     type=collection.payload.get("type"),
                     model=collection.payload.get("model"),
-                    user=collection.payload.get("user"),
                     description=collection.payload.get("description"),
                     created_at=collection.payload.get("created_at"),
                     documents=collection.payload.get("documents"),
@@ -205,7 +203,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
         collection_id: str,
         collection_name: str,
         collection_model: str,
-        user: AuthenticatedUser,
+        user_id: str,
         collection_type: str = COLLECTION_TYPE__PRIVATE,
         collection_description: Optional[str] = None,
     ) -> Collection:
@@ -222,7 +220,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
             "name": collection_name,
             "type": collection_type,
             "model": collection_model,
-            "user": user.id,
+            "user": user_id,
             "description": collection_description,
             "created_at": round(time.time()),
             "documents": 0,
@@ -233,22 +231,20 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
 
         return Collection(id=collection_id, **metadata)
 
-    async def delete_collection(self, collection_id: str, user: AuthenticatedUser) -> None:
+    async def delete_collection(self, collection_id: str, user_id) -> None:
         """
         See SearchClient.delete_collection
         """
-        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+        collection = self.get_collections(collection_ids=[collection_id], user_id=user_id)[0]
 
         super().delete_collection(collection_name=collection.id)
         super().delete(collection_name=self.METADATA_COLLECTION_ID, points_selector=PointIdsList(points=[collection.id]))
 
-    def get_chunks(
-        self, collection_id: str, document_id: str, user: AuthenticatedUser, limit: int = 10, offset: Optional[UUID] = None
-    ) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user_id: str, limit: int = 10, offset: Optional[UUID] = None) -> List[Chunk]:
         """
         See SearchClient.get_chunks
         """
-        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+        collection = self.get_collections(collection_ids=[collection_id], user_id=user_id)[0]
 
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
         data = super().scroll(collection_name=collection.id, scroll_filter=filter, limit=limit, offset=offset)[0]
@@ -256,11 +252,11 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
 
         return chunks
 
-    def get_documents(self, collection_id: str, user: AuthenticatedUser, limit: int = 10, offset: Optional[UUID] = None) -> List[Document]:
+    def get_documents(self, collection_id: str, user_id: str, limit: int = 10, offset: Optional[UUID] = None) -> List[Document]:
         """
         See SearchClient.get_documents
         """
-        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+        collection = self.get_collections(collection_ids=[collection_id], user_id=user_id)[0]
 
         filter = Filter(must=[FieldCondition(key="collection_id", match=MatchAny(any=[collection_id]))])
         data = super().scroll(collection_name=self.DOCUMENT_COLLECTION_ID, scroll_filter=filter, limit=limit, offset=offset)[0]
@@ -281,11 +277,11 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
 
         return documents
 
-    async def delete_document(self, collection_id: str, document_id: str, user: AuthenticatedUser):
+    async def delete_document(self, collection_id: str, document_id: str, user_id: str):
         """
         See SearchClient.delete_document
         """
-        collection = self.get_collections(collection_ids=[collection_id], user=user)[0]
+        collection = self.get_collections(collection_ids=[collection_id], user_id=user_id)[0]
 
         # delete chunks
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])

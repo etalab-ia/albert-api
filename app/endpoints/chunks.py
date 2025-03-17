@@ -25,6 +25,6 @@ async def get_chunks(
     """
 
     collection, document = str(collection), str(document)
-    data = databases.search.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user)
+    data = databases.search.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user.user)
 
     return Chunks(data=data)

@@ -4,10 +4,11 @@ import pandas as pd
 import streamlit as st
 
 from utils.account import change_password, create_token, delete_token
-from utils.common import get_tokens, header, settings
+from utils.common import get_models, get_tokens, header, settings, get_limits
 
 header()
 tokens = get_tokens()
+models = get_models(api_key=settings.api_key)
 
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):
@@ -31,14 +32,16 @@ with col1:
         if submit_change_password:
             change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
 
-# TODO: add expires at
-# with col2:
-#     st.metric(label="Expires at", value=pd.to_datetime(st.session_state["user"]["expires_at"], unit="s"))
+with col2:
+    st.metric(
+        label="Expires at",
+        value=pd.to_datetime(st.session_state["user"]["expires_at"], unit="s").strftime("%d %b %Y")
+        if st.session_state["user"]["expires_at"]
+        else None,
+    )
 
 
-st.divider()
 st.subheader("API keys")
-
 tokens = pd.DataFrame(
     data={
         "ID": [token["id"] for token in tokens],
@@ -47,7 +50,6 @@ tokens = pd.DataFrame(
         "Expiration": [pd.to_datetime(token["expires_at"], unit="s") for token in tokens],
     }
 )
-
 st.dataframe(
     data=tokens.style.apply(
         lambda x: ["background-color: #f0f0f0;color: grey" if x["Expiration"] and x["Expiration"] < pd.Timestamp.now() else "" for _ in x],
@@ -81,3 +83,17 @@ with col2:
         token_id = st.selectbox(label="Token ID", options=tokens.ID.values)
         if st.button(label="Delete", disabled=not token_id, key="delete_token_button"):
             delete_token(token_id=token_id)
+
+st.subheader("Rate limits")
+limits = get_limits(models=models, role=st.session_state["user"]["role"])
+st.dataframe(
+    data=pd.DataFrame(
+        data={
+            "Request per minute": [limits[model]["rpm"] for model in models],
+            "Request per day": [limits[model]["rpd"] for model in models],
+            "Tokens per minute": [limits[model]["tpm"] for model in models],
+        },
+        index=models,
+    ),
+    use_container_width=True,
+)

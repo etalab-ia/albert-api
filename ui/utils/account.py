@@ -3,8 +3,7 @@ import time
 import requests
 import streamlit as st
 
-from utils.common import settings
-from utils.common import get_tokens
+from utils.common import check_password, get_tokens, settings
 
 
 def change_password(current_password: str, new_password: str, confirm_password: str):
@@ -25,18 +24,7 @@ def change_password(current_password: str, new_password: str, confirm_password: 
         st.toast("New password cannot be the same as the current password", icon="❌")
         return
 
-    if len(new_password) < 8:
-        st.toast("New password must be at least 8 characters long", icon="❌")
-        return
-    if not any(char.isupper() for char in new_password):
-        st.toast("New password must contain at least one uppercase letter", icon="❌")
-        return
-    if not any(char.islower() for char in new_password):
-        st.toast("New password must contain at least one lowercase letter", icon="❌")
-        return
-
-    if not any(char.isdigit() for char in new_password):
-        st.toast("New password must contain at least one digit", icon="❌")
+    if not check_password(new_password):
         return
 
     response = requests.patch(

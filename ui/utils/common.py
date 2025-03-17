@@ -1,19 +1,13 @@
 from functools import lru_cache
-from typing import List, Literal
+import time
+from typing import List, Literal, Optional
 
 import requests
 from settings import Settings
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
-from utils.variables import (
-    COLLECTION_DISPLAY_ID_INTERNET,
-    MODEL_TYPE_AUDIO,
-    MODEL_TYPE_EMBEDDINGS,
-    MODEL_TYPE_LANGUAGE,
-    MODEL_TYPE_RERANK,
-)
-import time
+from utils.variables import COLLECTION_DISPLAY_ID_INTERNET, MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
 
 
 @lru_cache
@@ -115,11 +109,14 @@ def header(check_api_key: bool = False) -> str:
 
 
 @st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
-def get_models(type: Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK], api_key: str) -> tuple[str, str, str]:
+def get_models(api_key: str, type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]] = None) -> list:
     response = requests.get(url=f"{settings.api_url}/v1/models", headers={"Authorization": f"Bearer {api_key}"})
     assert response.status_code == 200, response.text
     models = response.json()["data"]
-    models = sorted([model["id"] for model in models if model["type"] == type])
+    if type is None:
+        models = sorted([model["id"] for model in models])
+    else:
+        models = sorted([model["id"] for model in models if model["type"] == type])
 
     return models
 
@@ -156,15 +153,14 @@ def get_documents(collection_ids: List[str], api_key: str) -> dict:
 @st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
 def get_tokens() -> list:
     response = requests.get(
-        url=f"{settings.api_url}/tokens/{st.session_state["user"]["id"]}",
-        headers={"Authorization": f"Bearer {settings.api_key}"},
+        url=f"{settings.api_url}/tokens/{st.session_state["user"]["id"]}", headers={"Authorization": f"Bearer {settings.api_key}"}
     )
 
     return response.json()["data"]
 
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_roles(return_dataframe: bool = False):
+def get_roles():
     response = requests.get(url=f"{settings.api_url}/roles?offset=0&limit=100", headers={"Authorization": f"Bearer {settings.api_key}"})
 
     assert response.status_code == 200, response.text
@@ -182,3 +178,35 @@ def get_users():
     data = [user for user in data if user["role"] != "root"]
 
     return data
+
+
+def get_limits(models: list, role: dict) -> dict:
+    limits = {}
+    for model in models:
+        limits[model] = {"tpm": 0, "rpm": 0, "rpd": 0}
+        for limit in role["limits"]:
+            if limit["model"] == model and limit["type"] == "tpm":
+                limits[model]["tpm"] = limit["value"]
+            elif limit["model"] == model and limit["type"] == "rpm":
+                limits[model]["rpm"] = limit["value"]
+            elif limit["model"] == model and limit["type"] == "rpd":
+                limits[model]["rpd"] = limit["value"]
+
+    return limits
+
+
+def check_password(password: str) -> bool:
+    if len(password) < 8:
+        st.toast("New password must be at least 8 characters long", icon="❌")
+        return False
+    if not any(char.isupper() for char in password):
+        st.toast("New password must contain at least one uppercase letter", icon="❌")
+        return False
+    if not any(char.islower() for char in password):
+        st.toast("New password must contain at least one lowercase letter", icon="❌")
+        return False
+    if not any(char.isdigit() for char in password):
+        st.toast("New password must contain at least one digit", icon="❌")
+        return False
+
+    return True

@@ -25,7 +25,6 @@ class Collection(BaseModel):
     description: Optional[str] = None
     type: Optional[Literal[COLLECTION_TYPE__PUBLIC, COLLECTION_TYPE__PRIVATE]]
     model: Optional[str] = None  # add optional for internet collection
-    user: Optional[str] = None
     created_at: Optional[int] = None
     documents: Optional[int] = None
 

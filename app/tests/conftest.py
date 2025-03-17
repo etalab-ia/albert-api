@@ -2,7 +2,6 @@ from functools import partial
 import logging
 import time
 from typing import Generator
-import uuid
 
 from fastapi.testclient import TestClient
 import pytest
@@ -59,29 +58,20 @@ def test_roles(test_client: TestClient) -> tuple[str, str]:
         PermissionType.READ_PUBLIC_COLLECTION.value,
     ]
 
+    # get limits
+    limits = []
+    for model in models:
+        limits.append({"model": model, "type": LimitType.RPM.value, "value": None})
+        limits.append({"model": model, "type": LimitType.RPD.value, "value": None})
+        limits.append({"model": model, "type": LimitType.TPM.value, "value": None})
+
     # create role admin
-    response = test_client.post(
-        url="/roles",
-        json={
-            "role": ROLE_ADMIN,
-            "default": False,
-            "permissions": admin_permissions,
-            "limits": [{"model": model, "type": LimitType.RPM.value, "value": None} for model in models],
-        },
-    )
+    response = test_client.post(url="/roles", json={"role": ROLE_ADMIN, "default": False, "permissions": admin_permissions, "limits": limits})
     logging.debug(msg=f"create role {ROLE_ADMIN}: {response.text}")
     response.raise_for_status()
 
     # create role user
-    response = test_client.post(
-        url="/roles",
-        json={
-            "role": ROLE_USER,
-            "default": False,
-            "permissions": user_permissions,
-            "limits": [{"model": model, "type": LimitType.RPM.value, "value": None} for model in models],
-        },
-    )
+    response = test_client.post(url="/roles", json={"role": ROLE_USER, "default": False, "permissions": user_permissions, "limits": limits})
     logging.debug(msg=f"create role {ROLE_USER}: {response.text}")
     response.raise_for_status()
 
@@ -93,11 +83,11 @@ def test_users(test_client: TestClient, test_roles: tuple[str, str]) -> tuple[st
     role_id_admin, role_id_user = test_roles
 
     # create user admin
-    response = test_client.post(url="/users", json={"user": USER_ADMIN, "password": str(uuid.uuid4()), "role": role_id_admin})
+    response = test_client.post(url="/users", json={"user": USER_ADMIN, "password": "test-password", "role": role_id_admin})
     response.raise_for_status()
 
     # create user user
-    response = test_client.post(url="/users", json={"user": USER_USER, "password": str(uuid.uuid4()), "role": role_id_user})
+    response = test_client.post(url="/users", json={"user": USER_USER, "password": "test-password", "role": role_id_user})
     response.raise_for_status()
 
     return USER_ADMIN, USER_USER
@@ -174,18 +164,18 @@ def cleanup(client: TestClient, test_roles: tuple[str, str], test_users: tuple[s
 
     logging.info(msg="cleanup users")
 
-    # delete user admin
-    response = client.delete_root(url=f"/users/{user_id_admin}")
-    response.raise_for_status()
+    # # delete user admin
+    # response = client.delete_root(url=f"/users/{user_id_admin}")
+    # response.raise_for_status()
 
-    # delete user user
-    response = client.delete_root(url=f"/users/{user_id_user}")
-    response.raise_for_status()
+    # # delete user user
+    # response = client.delete_root(url=f"/users/{user_id_user}")
+    # response.raise_for_status()
 
-    # delete role admin
-    response = client.delete_root(url=f"/roles/{role_id_admin}")
-    response.raise_for_status()
+    # # delete role admin
+    # response = client.delete_root(url=f"/roles/{role_id_admin}")
+    # response.raise_for_status()
 
-    # delete role user
-    response = client.delete_root(url=f"/roles/{role_id_user}")
-    response.raise_for_status()
+    # # delete role user
+    # response = client.delete_root(url=f"/roles/{role_id_user}")
+    # response.raise_for_status()

@@ -6,7 +6,10 @@ from coredis import ConnectionPool
 
 from app.helpers import AuthManager
 from app.schemas.core.auth import AuthenticatedUser
-from app.utils.exceptions import RateLimitExceeded
+from app.schemas.auth import LimitType
+
+from app.utils.logging import logger
+import traceback
 
 
 class Limiter:
@@ -18,10 +21,7 @@ class Limiter:
         self.redis_host = self.connection_pool.connection_kwargs["host"]
         self.redis_port = self.connection_pool.connection_kwargs["port"]
         self.redis_password = self.connection_pool.connection_kwargs.get("password", "")
-        self.redis = storage.RedisStorage(
-            uri=f"async+redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}",
-            connection_pool=self.connection_pool,
-        )
+        self.redis = storage.RedisStorage(uri=f"async+redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}", connection_pool=self.connection_pool)  # fmt: off
 
         if strategy == "moving_window":
             self.strategy = strategies.MovingWindowRateLimiter(storage=self.redis)
@@ -30,18 +30,23 @@ class Limiter:
         elif strategy == "sliding_window":
             self.strategy = strategies.SlidingWindowCounterRateLimiter(storage=self.redis)
 
-    async def __call__(self, user: AuthenticatedUser, model: str) -> None:
+    async def __call__(self, user: AuthenticatedUser, model: str, type: Literal[LimitType.RPM, LimitType.RPD]) -> None:
         # @TODO: add tpm limit
-        rpm = user.limits.get(model).rpm
-        rpd = user.limits.get(model).rpd
 
-        if rpm:
-            rpm_limit = RateLimitItemPerMinute(amount=rpm)
-            result = await self.strategy.hit(rpm_limit, f"rpm:{user.id}:{model}")
-            if not result:
-                raise RateLimitExceeded(detail=f"{str(rpm_limit).split("per")[0]} requests for {model} per minute exceeded.")
-        if rpd:
-            rpd_limit = RateLimitItemPerDay(amount=rpd)
-            result = await self.strategy.hit(rpd_limit, f"rpd:{user.id}:{model}")
-            if not result:
-                raise RateLimitExceeded(detail=f"{str(rpd_limit).split("per")[0]} requests for {model} per day exceeded.")
+        try:
+            if type == LimitType.RPM and user.limits.get(model).rpm:
+                limit = RateLimitItemPerMinute(amount=user.limits.get(model).rpm)
+                result = await self.strategy.hit(limit, f"rpm:{user.id}:{model}")
+                if not result:
+                    return False
+
+            elif type == LimitType.RPD and user.limits.get(model).rpd:
+                limit = RateLimitItemPerDay(amount=user.limits.get(model).rpd)
+                result = await self.strategy.hit(limit, f"rpd:{user.id}:{model}")
+                if not result:
+                    return False
+        except Exception:
+            logger.error(msg="Error during rate limit check.")
+            logger.error(msg=traceback.format_exc())
+
+        return True

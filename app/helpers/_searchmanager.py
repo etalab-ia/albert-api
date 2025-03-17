@@ -4,7 +4,6 @@ import uuid
 from app.clients.internet import BaseInternetClient as InternetClient
 from app.clients.search import BaseSearchClient as SearchClient
 from app.helpers import InternetManager, ModelRegistry
-from app.schemas.core.auth import AuthenticatedUser
 from app.schemas.search import Search
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET
 
@@ -24,7 +23,7 @@ class SearchManager:
         self.internet_manager = InternetManager(models=models, internet=internet)
 
     async def query(
-        self, collections: List[str], prompt: str, method: str, k: int, rff_k: int, user: AuthenticatedUser, score_threshold: float = 0.0
+        self, collections: List[str], prompt: str, method: str, k: int, rff_k: int, user: str, score_threshold: float = 0.0
     ) -> List[Search]:
         # internet search
         internet_chunks = []

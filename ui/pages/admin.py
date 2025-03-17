@@ -1,8 +1,8 @@
 import pandas as pd
 import streamlit as st
 
-from utils.admin import create_role, create_user, delete_role, delete_user, update_user, update_role
-from utils.common import get_models, get_roles, get_users, header, settings
+from utils.admin import create_role, create_user, delete_role, delete_user, update_role, update_user
+from utils.common import get_limits, get_models, get_roles, get_users, header, settings
 from utils.variables import ADMIN_PERMISSIONS, MODEL_TYPE_LANGUAGE
 
 header()
@@ -103,23 +103,12 @@ if role := st.selectbox(label="**Select a role**", options=[role["id"] for role 
     )
 
     st.write("**Model rate limits**")
-
-    tpm, rpm, rpd = {}, {}, {}
-    for model in models:
-        tpm[model], rpm[model], rpd[model] = 0, 0, 0
-        for limit in role["limits"]:
-            if limit["model"] == model and limit["type"] == "tpm":
-                tpm[model] = limit["value"]
-            elif limit["model"] == model and limit["type"] == "rpm":
-                rpm[model] = limit["value"]
-            elif limit["model"] == model and limit["type"] == "rpd":
-                rpd[model] = limit["value"]
-
+    limits = get_limits(models=models, role=role)
     initial_limits = pd.DataFrame(
         data={
-            "Request per minute": [rpm[model] for model in models],
-            "Request per day": [rpd[model] for model in models],
-            "Tokens per minute": [tpm[model] for model in models],
+            "Request per minute": [limits[model]["rpm"] for model in models],
+            "Request per day": [limits[model]["rpd"] for model in models],
+            "Tokens per minute": [limits[model]["tpm"] for model in models],
         },
         index=models,
     )
@@ -147,11 +136,11 @@ if role := st.selectbox(label="**Select a role**", options=[role["id"] for role 
         limits = []
         for model, row in edited_limits.iterrows():
             for type in row.index:
-                _type = "tpm" if type == "Tokens per minute" else type
-                _type = "rpm" if type == "Request per minute" else _type
-                _type = "rpd" if type == "Request per day" else _type
-                limits.append({"model": model, "type": _type, "value": None if pd.isna(row[type]) else int(row[type])})
-        st.write(limits)
+                value = None if pd.isna(row[type]) else int(row[type])
+                type = "tpm" if type == "Tokens per minute" else type
+                type = "rpm" if type == "Request per minute" else type
+                type = "rpd" if type == "Request per day" else type
+                limits.append({"model": model, "type": type, "value": value})
         update_role(role_id=role["id"], permissions=permissions, limits=limits, default=default)
 
 st.divider()
@@ -162,6 +151,7 @@ st.dataframe(
         data={
             "ID": [user["id"] for user in users],
             "Role": [user["role"] for user in users],
+            "Expires at": [pd.to_datetime(user["expires_at"], unit="s") if user["expires_at"] else None for user in users],
             "Created at": [pd.to_datetime(user["created_at"], unit="s") for user in users],
             "Updated at": [pd.to_datetime(user["updated_at"], unit="s") for user in users],
         }
@@ -171,6 +161,7 @@ st.dataframe(
     column_config={
         "ID": st.column_config.ListColumn(label="ID"),
         "Role": st.column_config.ListColumn(label="Role"),
+        "Expires at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
         "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
         "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
     },
@@ -185,8 +176,9 @@ with col1:
         default_role_index = None if len(default_role_index) == 0 else default_role_index[0]
         password = st.text_input(label="Password", placeholder="my-password", type="password", key="create_user_password")
         role = st.selectbox(label="Role", options=[role["id"] for role in roles], key="create_user_role", index=default_role_index)
-        if st.button(label="Create", disabled=not user, key="create_user_button"):
-            create_user(user=user, password=password, role=role)
+        expires_at = st.date_input(label="Expires at", key="create_user_expires_at", min_value=pd.Timestamp.now(), value=None)
+        if st.button(label="Create", disabled=not user or not password or not role, key="create_user_button"):
+            create_user(user=user, password=password, role=role, expires_at=expires_at)
 
 with col2:
     with st.expander(label="Delete a user", icon=":material/delete_forever:"):
@@ -209,5 +201,7 @@ with col3:
             key="update_user_role",
             index=[i for i, r in enumerate(roles) if r["id"] == role][0],
         )
+        expires_at = st.date_input(label="Expires at", key="update_user_expires_at", min_value=pd.Timestamp.now(), value=None)
+        expires_at = None if expires_at is None else int(pd.Timestamp(expires_at).timestamp())
         if st.button(label="Update", disabled=not user_id, key="update_user_button"):
-            update_user(user_id=user_id, user=new_user, password=new_password, role=new_role)
+            update_user(user_id=user_id, user=new_user, password=new_password, role=new_role, expires_at=expires_at)

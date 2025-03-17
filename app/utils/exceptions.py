@@ -62,7 +62,7 @@ class InvalidAPIKeyException(HTTPException):
         super().__init__(status_code=403, detail=detail)
 
 
-class InsufficientRightsException(HTTPException):
+class InsufficientPermissionException(HTTPException):
     def __init__(self, detail: str = "Insufficient rights.") -> None:
         super().__init__(status_code=403, detail=detail)
 

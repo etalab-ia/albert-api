@@ -33,3 +33,12 @@ databases:
     args:
       host: redis
       password: changeme
+
+  - type: sql
+    args:
+      url: postgresql+asyncpg://postgres:changeme@postgres:5432/postgres
+      echo: False
+      pool_size: 5
+      max_overflow: 10
+      pool_pre_ping: True
+      connect_args: {"server_settings": {"statement_timeout": "60"}}
