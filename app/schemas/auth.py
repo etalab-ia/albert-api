@@ -46,16 +46,16 @@ class Limit(BaseModel):
 
 
 class RoleUpdateRequest(BaseModel):
-    role: Optional[str] = None
-    default: Optional[bool] = None
-    permissions: Optional[List[PermissionType]] = None
-    limits: Optional[List[Limit]] = None
+    name: Optional[str] = Field(default=None, description="The new role name.")
+    default: Optional[bool] = Field(default=None, description="Whether this role is the default role.")
+    permissions: Optional[List[PermissionType]] = Field(default=None, description="The new permissions.")
+    limits: Optional[List[Limit]] = Field(default=None, description="The new limits.")
 
-    @field_validator("role", mode="before")
-    def strip(cls, role):
-        if isinstance(role, str):
-            role = role.strip()
-        return role
+    @field_validator("name", mode="before")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+        return name
 
     @field_validator("limits", mode="before")
     def check_duplicate_limits(cls, limits):
@@ -72,16 +72,16 @@ class RoleUpdateRequest(BaseModel):
 
 
 class RoleRequest(BaseModel):
-    role: str
+    name: str
     default: bool = False
     permissions: Optional[List[PermissionType]] = []
     limits: List[Limit] = []
 
-    @field_validator("role", mode="before")
-    def strip(cls, role):
-        if isinstance(role, str):
-            role = role.strip()
-        return role
+    @field_validator("name", mode="before")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+        return name
 
     @field_validator("limits", mode="before")
     def check_duplicate_limits(cls, limits):
@@ -99,6 +99,7 @@ class RoleRequest(BaseModel):
 class Role(BaseModel):
     object: Literal["role"] = "role"
     id: str
+    name: str
     default: bool
     permissions: List[PermissionType]
     limits: List[Limit]
@@ -112,28 +113,27 @@ class Roles(BaseModel):
 
 
 class UserUpdateRequest(BaseModel):
-    user: Optional[str] = Field(default=None, description="The new user ID.")
-    role: Optional[str] = Field(default=None, description="The new role ID.")
+    name: Optional[str] = Field(default=None, description="The new user name.")
+    role: Optional[int] = Field(default=None, description="The new role ID.")
     password: Optional[str] = Field(default=None, description="The new password.")
     expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp.")
 
     @field_validator("expires_at", mode="before")
     def must_be_future(cls, expires_at):
-        if expires_at is not None:
-            now_timestamp = int(dt.datetime.now(tz=dt.UTC).timestamp())
-            if expires_at <= now_timestamp:
+        if isinstance(expires_at, int):
+            if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
                 raise ValueError("Wrong timestamp, must be in the future.")
 
         return expires_at
 
-    @field_validator("user", mode="before", check_fields=False)
-    def strip_user(cls, user):
-        if user is not None:
-            user = user.strip()
-            if not user:  # empty string
+    @field_validator("name", mode="before", check_fields=False)
+    def strip_name(cls, name):
+        if name is not None:
+            name = name.strip()
+            if not name:  # empty string
                 raise ValueError("Empty string is not allowed.")
 
-            return user
+        return name
 
     @field_validator("password", mode="before", check_fields=False)
     def strip_password(cls, password):
@@ -153,27 +153,26 @@ class UserUpdateRequest(BaseModel):
 
 
 class UserRequest(BaseModel):
-    user: str
-    role: str
-    password: str
-    expires_at: Optional[int] = None
+    name: str = Field(description="The user name.")
+    role: int = Field(description="The role ID.")
+    password: str = Field(description="The user password.")
+    expires_at: Optional[int] = Field(default=None, description="The expiration timestamp.")
 
     @field_validator("expires_at", mode="before")
     def must_be_future(cls, expires_at):
-        if expires_at is not None:
-            now_timestamp = int(dt.datetime.now(tz=dt.UTC).timestamp())
-            if expires_at <= now_timestamp:
+        if isinstance(expires_at, int):
+            if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
                 raise ValueError("Wrong timestamp, must be in the future.")
 
         return expires_at
 
-    @field_validator("user", mode="before")
-    def strip_user(cls, user):
-        user = user.strip()
-        if not user:  # empty string
+    @field_validator("name", mode="before")
+    def strip_name(cls, name):
+        name = name.strip()
+        if not name:  # empty string
             raise ValueError("Empty string is not allowed.")
 
-        return user
+        return name
 
     @field_validator("password", mode="before")
     def strip_password(cls, password):
@@ -194,7 +193,8 @@ class UserRequest(BaseModel):
 class User(BaseModel):
     object: Literal["user"] = "user"
     id: str
-    role: str
+    name: str
+    role: int
     expires_at: Optional[int] = None
     created_at: int
     updated_at: int
@@ -206,22 +206,21 @@ class Users(BaseModel):
 
 
 class TokenRequest(BaseModel):
-    user: str
-    token: str
+    user: int
+    name: str
     expires_at: Optional[int] = Field(None, description="Timestamp in seconds")
 
-    @field_validator("token", mode="before")
-    def strip(cls, token):
-        if isinstance(token, str):
-            token = token.strip()
+    @field_validator("name", mode="before")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
 
-        return token
+        return name
 
     @field_validator("expires_at", mode="before")
     def must_be_future(cls, expires_at):
-        if expires_at is not None:
-            now_timestamp = int(dt.datetime.now(tz=dt.UTC).timestamp())
-            if expires_at <= now_timestamp:
+        if isinstance(expires_at, int):
+            if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
                 raise ValueError("Wrong timestamp, must be in the future.")
 
         return expires_at
@@ -237,8 +236,7 @@ class TokenRequest(BaseModel):
 class Token(BaseModel):
     object: Literal["token"] = "token"
     id: str
-    user: str
-    token: Optional[str] = None
+    name: Optional[str] = None
     expires_at: Optional[int] = None
     created_at: int
 
@@ -249,10 +247,10 @@ class Tokens(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    user: str
-    password: str
+    user_name: str
+    user_password: str
 
-    @field_validator("user", mode="before")
+    @field_validator("user_name", mode="before")
     def strip(cls, user):
         if isinstance(user, str):
             user = user.strip()

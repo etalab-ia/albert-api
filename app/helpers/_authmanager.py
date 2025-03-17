@@ -10,12 +10,15 @@ from sqlalchemy.sql import func
 
 from app.clients.database import SQLDatabaseClient
 from app.schemas.auth import Limit, PermissionType, Role, Token, User
-from app.schemas.core.auth import AuthenticatedUser
+from app.schemas.core.auth import UserInfo
 from app.sql.models import Limit as LimitTable
 from app.sql.models import Permission as PermissionTable
 from app.sql.models import Role as RoleTable
 from app.sql.models import Token as TokenTable
 from app.sql.models import User as UserTable
+from app.sql.models import Collection as CollectionTable
+from app.sql.models import Document as DocumentTable
+from app.schemas.collections import CollectionType
 from app.utils.exceptions import (
     DeleteRoleWithUsersException,
     InvalidPasswordException,
@@ -25,7 +28,11 @@ from app.utils.exceptions import (
     TokenNotFoundException,
     UserAlreadyExistsException,
     UserNotFoundException,
+    CollectionNotFoundException,
+    DocumentNotFoundException,
 )
+from app.schemas.collections import Collection
+from app.schemas.documents import Document
 from app.utils.logging import logger
 from app.utils.settings import settings
 from app.utils.variables import ROOT_ROLE
@@ -142,20 +149,21 @@ class AuthManager:
             algorithm="HS256",
         )
 
-    async def login(self, user: str, password: str) -> str:
+    async def login(self, user_name: str, user_password: str) -> User:
         async with self.sql.session() as session:
-            users = await self.get_users(name=user)
-            user = users[0]
+            result = await session.execute(statement=select(UserTable).where(UserTable.name == user_name))
+            try:
+                user = result.scalar_one()
+            except NoResultFound:
+                raise UserNotFoundException()
 
-            async with self.sql.session() as session:
-                result = await session.execute(statement=select(UserTable.password).where(UserTable.name == user.id))
-                user_password = result.scalar_one()
-
-            if not AuthManager._check_password(password=password, hashed_password=user_password):
+            if not AuthManager._check_password(password=user_password, hashed_password=user.password):
                 raise InvalidPasswordException()
 
             if user.expires_at is not None and user.expires_at < time.time():
                 raise UserNotFoundException()
+
+            user = User(id=user.id, name=user.name, role=user.role_id, expires_at=user.expires_at)
 
             return user
 
@@ -181,18 +189,18 @@ class AuthManager:
 
             await session.commit()
 
-    async def delete_role(self, name: str) -> None:
+    async def delete_role(self, role_id: int) -> None:
         async with self.sql.session() as session:
             # check if role exists
             try:
-                result = await session.execute(statement=select(RoleTable).where(RoleTable.name == name))
+                result = await session.execute(statement=select(RoleTable).where(RoleTable.id == role_id))
                 result.scalar_one()
             except NoResultFound:
                 raise RoleNotFoundException()
 
             # delete the role
             try:
-                await session.execute(statement=delete(table=RoleTable).where(RoleTable.name == name))
+                await session.execute(statement=delete(table=RoleTable).where(RoleTable.id == role_id))
             except IntegrityError:
                 raise DeleteRoleWithUsersException()
 
@@ -200,8 +208,8 @@ class AuthManager:
 
     async def update_role(
         self,
-        name: str,
-        new_name: Optional[str] = None,
+        role_id: int,
+        name: Optional[str] = None,
         default: Optional[bool] = None,
         limits: Optional[List[Limit]] = None,
         permissions: Optional[List[PermissionType]] = None,
@@ -209,13 +217,13 @@ class AuthManager:
         async with self.sql.session() as session:
             # check if role exists
             try:
-                result = await session.execute(statement=select(RoleTable).where(RoleTable.name == name))
+                result = await session.execute(statement=select(RoleTable).where(RoleTable.id == role_id))
                 role = result.scalar_one()
             except NoResultFound:
                 raise RoleNotFoundException()
 
             # update the role
-            name = new_name if new_name is not None else role.name
+            name = name if name is not None else role.name
             if default:
                 # change the currently default role to not be default
                 result = await session.execute(statement=select(RoleTable).where(RoleTable.default))
@@ -254,66 +262,77 @@ class AuthManager:
 
             await session.commit()
 
-    async def get_roles(self, name: Optional[str] = None, offset: int = 0, limit: int = 10) -> List[Role]:
+    async def get_roles(self, role_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Role]:
         async with self.sql.session() as session:
-            # get the unique role IDs with pagination
-            statement = select(RoleTable.id).offset(offset=offset).limit(limit=limit)
+            if not role_id:
+                # get the unique role IDs with pagination
+                statement = select(RoleTable.id).offset(offset=offset).limit(limit=limit)
 
-            if name:
-                statement = statement.where(RoleTable.name == name)
+                if role_id:
+                    statement = statement.where(RoleTable.id == role_id)
 
-            result = await session.execute(statement=statement)
-            role_ids = [row[0] for row in result.all()]
-
-            if name and len(role_ids) == 0:
-                raise RoleNotFoundException()
+                result = await session.execute(statement=statement)
+                selected_roles = [row[0] for row in result.all()]
+            else:
+                selected_roles = [role_id]
 
             # then get all the data for these specific role IDs
             statement = (
                 select(
-                    RoleTable.name.label("id"),
+                    RoleTable.id,
+                    RoleTable.name,
                     RoleTable.default,
-                    cast(func.extract("epoch", RoleTable.created_at), Integer).label("created_at"),
-                    cast(func.extract("epoch", RoleTable.updated_at), Integer).label("updated_at"),
-                    LimitTable.model.label("limit_model"),
-                    LimitTable.type.label("limit_type"),
-                    LimitTable.value.label("limit_value"),
-                    PermissionTable.permission.label("permission"),
+                    cast(func.extract("epoch", RoleTable.created_at), Integer),
+                    cast(func.extract("epoch", RoleTable.updated_at), Integer),
+                    LimitTable.model,
+                    LimitTable.type,
+                    LimitTable.value,
+                    PermissionTable.permission,
                 )
                 .outerjoin(target=LimitTable, onclause=RoleTable.id == LimitTable.role_id)
                 .outerjoin(target=PermissionTable, onclause=RoleTable.id == PermissionTable.role_id)
-                .where(RoleTable.id.in_(role_ids))
+                .where(RoleTable.id.in_(selected_roles))
             )
 
             result = await session.execute(statement=statement)
-            results = result.all()
+            results = [row._asdict() for row in result.all()]
 
             # format the results
             roles = {}
             for row in results:
-                role = Role(id=row[0], default=row[1], created_at=row[2], updated_at=row[3], limits=[], permissions=[])
-                if row[0] not in roles:
-                    roles[row[0]] = role
-
-                if row[4]:
-                    rate_limit = Limit(model=row[4], type=row[5], value=row[6])
-                    roles[row[0]].limits.append(rate_limit)
-                if row[7]:
-                    roles[row[0]].permissions.append(PermissionType(value=row[7]))
+                role = Role(
+                    id=row["id"],
+                    name=row["name"],
+                    default=row["default"],
+                    created_at=row["created_at"],
+                    updated_at=row["updated_at"],
+                    limits=[],
+                    permissions=[],
+                )
+                if role.id not in roles:
+                    roles[role.id] = role
+                if row.model:
+                    rate_limit = Limit(model=row["model"], type=row["type"], value=row["value"])
+                    roles[role.id].limits.append(rate_limit)
+                if row["permission"]:
+                    roles[role.id].permissions.append(PermissionType(value=row["permission"]))
 
             roles = list(roles.values())
 
+            if role_id and len(roles) == 0:
+                raise RoleNotFoundException()
+
         return roles
 
-    async def create_user(self, name: str, password: str, role: str, expires_at: Optional[int] = None) -> None:
+    async def create_user(self, name: str, password: str, role_id: int, expires_at: Optional[int] = None) -> None:
         password = self._get_hashed_password(password=password)
         expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
         async with self.sql.session() as session:
-            # get the role id
+            # check if role exists
             try:
-                result = await session.execute(statement=select(RoleTable.id).where(RoleTable.name == role))
-                role_id = result.scalar_one()
+                result = await session.execute(statement=select(RoleTable.id).where(RoleTable.id == role_id))
+                result.scalar_one()
             except NoResultFound:
                 raise RoleNotFoundException()
 
@@ -325,12 +344,12 @@ class AuthManager:
 
             await session.commit()
 
-    async def delete_user(self, name: str) -> None:
+    async def delete_user(self, user_id: int) -> None:
         async with self.sql.session() as session:
             # check if user exists
             try:
-                result = await session.execute(statement=select(UserTable.id).where(UserTable.name == name))
-                user_id = result.scalar_one()
+                result = await session.execute(statement=select(UserTable.id).where(UserTable.id == user_id))
+                result.scalar_one()
             except NoResultFound:
                 raise UserNotFoundException()
 
@@ -338,11 +357,9 @@ class AuthManager:
             await session.execute(statement=delete(table=UserTable).where(UserTable.id == user_id))
             await session.commit()
 
-    async def update_user(
-        self, name: str, new_name: Optional[str] = None, password: Optional[str] = None, role: Optional[str] = None, expires_at: Optional[int] = None
-    ) -> None:
+    async def update_user(self, user_id: int, name: Optional[str] = None, password: Optional[str] = None, role_id: Optional[int] = None, expires_at: Optional[int] = None) -> None:  # fmt: off
         """
-        Attention ici car expires_at est toujours remplacé par la valeur passée en paramètre car None est une valeur valide pour expires_at.
+        TODO Attention ici car expires_at est toujours remplacé par la valeur passée en paramètre car None est une valeur valide pour expires_at.
         """
         async with self.sql.session() as session:
             # check if user exists
@@ -353,83 +370,74 @@ class AuthManager:
                     UserTable.password,
                     UserTable.expires_at,
                     RoleTable.id.label("role_id"),
-                    RoleTable.name.label("role_name"),
-                )
-                .join(target=RoleTable, onclause=UserTable.role_id == RoleTable.id)
-                .where(UserTable.name == name)
+                    RoleTable.name.label("role"),
+                ).where(UserTable.id == user_id)
             )
             try:
                 user = result.all()[0]
-            except NoResultFound:
+            except IndexError:
                 raise UserNotFoundException()
 
             # update the user
-            name = new_name if new_name is not None else user.name
+            name = name if name is not None else user.name
             password = self._get_hashed_password(password=password) if password is not None else user.password
             expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
-            role_id = None
-            if role is not None and role != user.role_name:
+            if role_id is not None and role_id != user.role_id:
                 # check if role exists
-                result = await session.execute(statement=select(RoleTable.id).where(RoleTable.name == role))
+                result = await session.execute(statement=select(RoleTable.id).where(RoleTable.id == role_id))
                 try:
-                    role_id = result.scalar_one()
+                    result.scalar_one()
                 except NoResultFound:
                     raise RoleNotFoundException()
 
             role_id = role_id if role_id is not None else user.role_id
             await session.execute(
                 statement=update(table=UserTable)
-                .values(
-                    name=name,
-                    password=password,
-                    role_id=role_id,
-                    expires_at=expires_at,
-                    updated_at=func.now(),
-                )
+                .values(name=name, password=password, role_id=role_id, expires_at=expires_at, updated_at=func.now())
                 .where(UserTable.id == user.id)
             )
             await session.commit()
 
-    async def get_users(self, name: Optional[str] = None, role: Optional[str] = None, offset: int = 0, limit: int = 10) -> List[User]:
+    async def get_users(self, user_id: Optional[str] = None, role_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[User]:
         async with self.sql.session() as session:
             # get the unique user IDs with pagination
-            statement = select(UserTable.id).offset(offset=offset).limit(limit=limit)
+            if not user_id:
+                statement = select(UserTable.id).offset(offset=offset).limit(limit=limit)
 
-            if name:
-                statement = statement.where(UserTable.name == name)
-            if role:
-                statement = statement.where(RoleTable.name == role)
+                if user_id:
+                    statement = statement.where(UserTable.id == user_id)
+                if role_id:
+                    statement = statement.where(UserTable.role_id == role_id)
 
-            result = await session.execute(statement=statement)
-            user_ids = [row[0] for row in result.all()]
-
-            if (name or role) and len(user_ids) == 0:
-                raise UserNotFoundException()
+                result = await session.execute(statement=statement)
+                selected_users = [row[0] for row in result.all()]
+            else:
+                selected_users = [user_id]
 
             # then get all the data for these specific user IDs
-            statement = (
-                select(
-                    UserTable.name.label("id"),
-                    cast(func.extract("epoch", UserTable.expires_at), Integer).label("expires_at"),
-                    cast(func.extract("epoch", UserTable.created_at), Integer).label("created_at"),
-                    cast(func.extract("epoch", UserTable.updated_at), Integer).label("updated_at"),
-                    RoleTable.name.label("role"),
-                )
-                .outerjoin(target=RoleTable, onclause=UserTable.role_id == RoleTable.id)
-                .where(UserTable.id.in_(user_ids))
-            )
+            statement = select(
+                UserTable.id,
+                UserTable.name,
+                UserTable.role_id.label("role"),
+                cast(func.extract("epoch", UserTable.expires_at), Integer),
+                cast(func.extract("epoch", UserTable.created_at), Integer),
+                cast(func.extract("epoch", UserTable.updated_at), Integer),
+            ).where(UserTable.id.in_(selected_users))
             result = await session.execute(statement=statement)
 
             # format the results
             users = [User(**row._mapping) for row in result.all()]
 
+            if user_id and len(users) == 0:
+                raise UserNotFoundException()
+
         return users
 
-    async def create_token(self, name: str, user: str, expires_at: Optional[int] = None) -> str:
+    async def create_token(self, name: str, user_id: int, expires_at: Optional[int] = None) -> str:
         async with self.sql.session() as session:
             # get the user id
-            result = await session.execute(statement=select(UserTable).where(UserTable.name == user))
+            result = await session.execute(statement=select(UserTable).where(UserTable.id == user_id))
             try:
                 user = result.scalar_one()
             except NoResultFound:
@@ -458,32 +466,185 @@ class AuthManager:
 
             return token
 
-    async def check_token(self, token: str) -> Optional[AuthenticatedUser]:
-        def get_user_and_role(token: str) -> tuple[User, Role]:
-            # TODO FINISH THIS
+    async def delete_token(self, token_id: int, user_id: int) -> None:
+        async with self.sql.session() as session:
+            # check if token exists
+            result = await session.execute(statement=select(TokenTable.id).where(TokenTable.id == token_id).where(TokenTable.user_id == user_id))
+            try:
+                result.scalar_one()
+            except NoResultFound:
+                raise TokenNotFoundException()
+
+            # delete the token
+            await session.execute(statement=delete(table=TokenTable).where(TokenTable.id == token_id))
+            await session.commit()
+
+    async def get_tokens(self, token_id: Optional[int] = None, exclude_expired: bool = False, offset: int = 0, limit: int = 10) -> List[Token]:
+        async with self.sql.session() as session:
+            # get the unique token IDs with pagination
+            if not token_id:
+                statement = select(TokenTable.id).offset(offset=offset).limit(limit=limit)
+                if exclude_expired:
+                    statement = statement.where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
+
+                result = await session.execute(statement=statement)
+                selected_tokens = [row[0] for row in result.all()]
+            else:
+                selected_tokens = [token_id]
+
             statement = (
                 select(
-                    UserTable.id.label("id"),
-                    UserTable.name.label("user"),
-                    RoleTable.name.label("role"),
-                    cast(func.extract("epoch", UserTable.expires_at), Integer).label("expires_at"),
-                    PermissionTable.permission.label("permission"),
-                    LimitTable.model.label("limit_model"),
-                    LimitTable.type.label("limit_type"),
-                    LimitTable.value.label("limit_value"),
+                    TokenTable.id,
+                    TokenTable.token,
+                    TokenTable.name,
+                    cast(func.extract("epoch", TokenTable.expires_at), Integer),
+                    cast(func.extract("epoch", TokenTable.created_at), Integer),
                 )
-                .select_from(TokenTable)
-                .join(target=UserTable, onclause=TokenTable.user_id == UserTable.id)
-                .join(target=RoleTable, onclause=UserTable.role_id == RoleTable.id)
-                .outerjoin(target=PermissionTable, onclause=RoleTable.id == PermissionTable.role_id)
-                .outerjoin(target=LimitTable, onclause=RoleTable.id == LimitTable.role_id)
-                .where(TokenTable.user_id == claims["user_id"])
-                .where(TokenTable.id == claims["token_id"])
-                .where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
-            ).limit(limit=1)
+                .offset(offset=offset)
+                .limit(limit=limit)
+                .where(TokenTable.id.in_(selected_tokens))
+            )
+            if exclude_expired:
+                statement = statement.where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
 
-            results = result.all()
+            result = await session.execute(statement=statement)
+            tokens = [Token(**row._mapping) for row in result.all()]
 
+            if token_id and len(tokens) == 0:
+                raise TokenNotFoundException()
+
+            return tokens
+
+    async def create_collection(self, name: str, user_id: int, type: CollectionType, description: Optional[str] = None) -> None:
+        async with self.sql.session() as session:
+            # check if user exists
+            result = await session.execute(statement=select(UserTable.id).where(UserTable.id == user_id))
+            try:
+                result.scalar_one()
+            except NoResultFound:
+                raise UserNotFoundException()
+
+            # create the collection
+            await session.execute(statement=insert(table=CollectionTable).values(name=name, user_id=user_id, type=type, description=description))
+            await session.commit()
+
+    async def delete_collection(self, name: str, user_id: int) -> None:
+        async with self.sql.session() as session:
+            # check if user exists
+            result = await session.execute(statement=select(UserTable.id).where(UserTable.id == user_id))
+            try:
+                result.scalar_one()
+            except NoResultFound:
+                raise UserNotFoundException()
+
+            # delete the collection
+            await session.execute(statement=delete(table=CollectionTable).where(CollectionTable.name == name).where(CollectionTable.user_id == user_id))  # fmt: off
+            await session.commit()
+
+    async def update_collection(
+        self, collection_id: int, name: Optional[str] = None, type: Optional[CollectionType] = None, description: Optional[str] = None
+    ) -> None:
+        async with self.sql.session() as session:
+            # check if collection exists
+            result = await session.execute(
+                statement=select(CollectionTable)
+                .join(target=UserTable, onclause=UserTable.id == CollectionTable.user_id)
+                .where(CollectionTable.id == collection_id)
+            )
+            try:
+                collection = result.scalar_one()
+            except NoResultFound:
+                raise CollectionNotFoundException()
+
+            name = name if name is not None else collection.name
+            type = type if type is not None else collection.type
+            description = description if description is not None else collection.description
+
+            await session.execute(
+                statement=update(table=CollectionTable)
+                .values(name=name, type=type, description=description, updated_at=func.now())
+                .where(CollectionTable.id == collection.id)
+            )
+            await session.commit()
+
+    async def get_collections(self, user_id: int, collection_id: Optional[int] = None, include_public: bool = True, offset: int = 0, limit: int = 10) -> List[Collection]:  # fmt: off
+        async with self.sql.session() as session:
+            # get the unique collection IDs with pagination
+            if not collection_id:
+                statement = select(CollectionTable).offset(offset=offset).limit(limit=limit)
+            if include_public:
+                statement = statement.where(or_(CollectionTable.user_id == user_id, CollectionTable.type == CollectionType.PUBLIC))
+            else:
+                statement = statement.where(CollectionTable.user_id == user_id)
+
+            statement = statement.join(target=DocumentTable, onclause=CollectionTable.id == DocumentTable.collection_id)
+
+            result = await session.execute(statement=statement)
+            collections = result.all()
+
+            if collection_id and len(collections) == 0:
+                raise CollectionNotFoundException()
+
+            collections = [Collection(**row._mapping) for row in result.all()]
+
+        return collections
+
+    async def create_document(self, name: str, collection_id: int, user_id: int) -> None:
+        async with self.sql.session() as session:
+            # check if collection exists
+            result = await session.execute(statement=select(CollectionTable.documents).where(CollectionTable.id == collection_id))
+            try:
+                documents = result.scalar_one()
+            except NoResultFound:
+                raise CollectionNotFoundException()
+
+            await session.execute(statement=insert(table=DocumentTable).values(name=name, collection_id=collection_id, user_id=user_id))
+            await session.commit()
+
+    async def delete_document(self, document_id: str, collection_id: int, user_id: int) -> None:
+        async with self.sql.session() as session:
+            # check if document exists
+            result = await session.execute(
+                statement=select(DocumentTable.id)
+                .where(DocumentTable.id == document_id)
+                .where(DocumentTable.collection_id == collection_id)
+                .where(DocumentTable.user_id == user_id)
+            )
+            try:
+                result.scalar_one()
+            except NoResultFound:
+                raise DocumentNotFoundException()
+
+            await session.execute(
+                statement=delete(table=DocumentTable)
+                .where(DocumentTable.id == document_id)
+                .where(DocumentTable.collection_id == collection_id)
+                .where(DocumentTable.user_id == user_id)
+            )
+
+            await session.commit()
+
+    async def get_documents(self, document_id: Optional[int] = None, collection_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
+        statement = select(DocumentTable).offset(offset=offset).limit(limit=limit)
+
+        if document_id:
+            statement = statement.where(DocumentTable.id == document_id)
+        if collection_id:
+            statement = statement.where(DocumentTable.collection_id == collection_id)
+
+        async with self.sql.session() as session:
+            result = await session.execute(statement=statement)
+            documents = result.all()
+
+        if document_id and len(documents) == 0:
+            raise DocumentNotFoundException()
+
+        documents = [Document(**row._mapping) for row in result.all()]
+
+        return documents
+
+    async def check_token(self, token: str, include_collections: bool = True) -> Optional[UserInfo]:
+        # TODO: add cache
         async with self.sql.session() as session:
             if token == settings.auth.root_key:
                 result = await session.execute(statement=select(UserTable.id).where(UserTable.name == settings.auth.root_user))
@@ -491,7 +652,7 @@ class AuthManager:
                 users = await self.get_users(name=settings.auth.root_user)
                 roles = await self.get_roles(name=ROOT_ROLE)
 
-                return AuthenticatedUser.from_user_and_role(id=user_id, user=users[0], role=roles[0])
+                return UserInfo.build(id=user_id, user=users[0], role=roles[0], collections=[])
 
             try:
                 claims = self._decode_token(token=token)
@@ -500,83 +661,18 @@ class AuthManager:
             except IndexError:  # malformed token (no token prefix)
                 return
 
-            statement = (
-                select(
-                    UserTable.id.label("id"),
-                    UserTable.name.label("user"),
-                    RoleTable.name.label("role"),
-                )
-                .select_from(TokenTable)
-                .join(target=UserTable, onclause=TokenTable.user_id == UserTable.id)
-                .join(target=RoleTable, onclause=UserTable.role_id == RoleTable.id)
-                .where(TokenTable.user_id == claims["user_id"])
-                .where(TokenTable.id == claims["token_id"])
-                .where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
-            )
-
-            result = await session.execute(statement=statement)
-            user = result.first()
-
-            if user is None:
+            try:
+                tokens = await self.get_tokens(token_id=claims["token_id"], exclude_expired=True)
+                assert tokens[0].user == claims["user_id"]
+            except TokenNotFoundException:
                 return
 
-            users = await self.get_users(name=user.user)
-            roles = await self.get_roles(name=user.role)
+            users = await self.get_users(name=tokens[0].user)
+            roles = await self.get_roles(name=users[0].role)
+            collections = []
+            if include_collections:
+                collections = await self.get_collections(user=users[0].name)
 
-            return AuthenticatedUser.from_user_and_role(id=user.id, user=users[0], role=roles[0])
+            user_info = UserInfo.build(id=users[0].id, user=users[0], role=roles[0], collections=collections)
 
-    async def delete_token(self, name: str, user: str) -> None:
-        async with self.sql.session() as session:
-            # check if user exists
-            try:
-                result = await session.execute(statement=select(UserTable.id).where(UserTable.name == user))
-                user_id = result.scalar_one()
-            except NoResultFound:
-                raise TokenNotFoundException()
-
-            # check if token exists and retrieve the internal token id
-            result = await session.execute(
-                statement=select(TokenTable.id)
-                .join(target=UserTable, onclause=TokenTable.user_id == UserTable.id)
-                .where(UserTable.id == user_id)
-                .where(TokenTable.name == name)
-            )
-            try:
-                token_id = result.scalar_one()
-            except NoResultFound:
-                raise TokenNotFoundException()
-
-            # delete the token
-            await session.execute(statement=delete(table=TokenTable).where(TokenTable.id == token_id))
-            await session.commit()
-
-    async def get_tokens(
-        self, name: Optional[str] = None, user: Optional[str] = None, exclude_expired: bool = False, offset: int = 0, limit: int = 10
-    ) -> List[Token]:
-        statement = (
-            select(
-                TokenTable.name.label("id"),
-                TokenTable.token,
-                cast(func.extract("epoch", TokenTable.expires_at), Integer).label("expires_at"),
-                cast(func.extract("epoch", TokenTable.created_at), Integer).label("created_at"),
-                UserTable.name.label("user"),
-            )
-            .join(target=UserTable, onclause=TokenTable.user_id == UserTable.id)
-            .offset(offset=offset)
-            .limit(limit=limit)
-        )
-        if name:
-            statement = statement.where(TokenTable.name == name)
-        if user:
-            statement = statement.where(UserTable.name == user)
-        if exclude_expired:
-            statement = statement.where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
-
-        async with self.sql.session() as session:
-            result = await session.execute(statement=statement)
-            tokens = [Token(**row._mapping) for row in result.all()]
-
-        if name and len(tokens) == 0:
-            raise TokenNotFoundException()
-
-        return tokens
+            return user_info

@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 from app.schemas.auth import LimitType, PermissionType, Role, User
+from app.schemas.core.collection import Collection, CollectionType
 from app.utils.settings import settings
 
 
@@ -12,16 +13,17 @@ class Limits(BaseModel):
     rpd: Optional[int] = None
 
 
-class AuthenticatedUser(BaseModel):
+class UserInfo(BaseModel):
     id: int
-    user: str
-    role: str
+    role_id: int
     permissions: List[PermissionType]
     limits: Dict[str, Limits]
+    public_collections: List[int] = []
+    private_collections: List[int] = []
     expires_at: Optional[int] = None
 
     @classmethod
-    def from_user_and_role(cls, id: str, user: User, role: Role):
+    def build(cls, id: str, user: User, role: Role, collections: List[Collection]):
         from app.utils.lifespan import context
 
         limits = {}
@@ -38,4 +40,20 @@ class AuthenticatedUser(BaseModel):
                     elif limit.model == model and limit.type == LimitType.RPD:
                         limits[model].rpd = limit.value
 
-        return cls(id=id, user=user.id, role=role.id, limits=limits, permissions=role.permissions, expires_at=user.expires_at)
+        public_collections = []
+        private_collections = []
+        for collection in collections:
+            if collection.type == CollectionType.PUBLIC:
+                public_collections.append(collection.id)
+            else:
+                private_collections.append(collection.id)
+
+        return cls(
+            id=id,
+            role_id=role.id,
+            permissions=role.permissions,
+            limits=limits,
+            public_collections=public_collections,
+            private_collections=private_collections,
+            expires_at=user.expires_at,
+        )

@@ -4,6 +4,7 @@ from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Bool
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship, backref
 from app.schemas.auth import PermissionType, LimitType
+from app.schemas.collections import CollectionType
 
 Base = declarative_base()
 
@@ -73,3 +74,30 @@ class Token(Base):
     user = relationship(argument="User", backref=backref(name="token", cascade="all, delete-orphan"))
 
     __table_args__ = (UniqueConstraint("user_id", "name", name="unique_token_name_per_user"),)
+
+
+class Collection(Base):
+    __tablename__ = "collection"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey(column="user.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    type = Column(Enum(CollectionType), nullable=False)
+    documents = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now())
+
+    user = relationship(argument="User", backref=backref(name="collection", cascade="all, delete-orphan"))
+
+
+class Document(Base):
+    __tablename__ = "document"
+
+    id = Column(Integer, primary_key=True, index=True)
+    collection_id = Column(Integer, ForeignKey(column="collection.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, nullable=False)
+    chunks = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=func.now())
+
+    collection = relationship(argument="Collection", backref=backref(name="document", cascade="all, delete-orphan"))

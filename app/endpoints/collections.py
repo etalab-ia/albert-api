@@ -9,7 +9,7 @@ from app.helpers import Authorization
 from app.schemas.auth import PermissionType
 from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.core.auth import AuthenticatedUser
-from app.utils.lifespan import databases
+from app.utils.lifespan import databases, context
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PUBLIC
 
 router = APIRouter()
@@ -34,6 +34,8 @@ async def create_collection(
         collection_description=body.description,
         user=user.user,
     )
+
+    context.auth.create_collection(collection_id=collection_id, user=user.user, type=body.type)
 
     return JSONResponse(status_code=201, content={"id": collection_id})
 
