@@ -10,20 +10,13 @@ from sqlalchemy.sql import func
 
 from app.clients.database import SQLDatabaseClient
 from app.schemas.auth import Limit, PermissionType, Role, Token, User
-from app.schemas.collections import Collection, CollectionType
-from app.schemas.core.auth import UserInfo
-from app.schemas.documents import Document
-from app.sql.models import Collection as CollectionTable
-from app.sql.models import Document as DocumentTable
 from app.sql.models import Limit as LimitTable
 from app.sql.models import Permission as PermissionTable
 from app.sql.models import Role as RoleTable
 from app.sql.models import Token as TokenTable
 from app.sql.models import User as UserTable
 from app.utils.exceptions import (
-    CollectionNotFoundException,
     DeleteRoleWithUsersException,
-    DocumentNotFoundException,
     InvalidPasswordException,
     RoleAlreadyExistsException,
     RoleNotFoundException,
@@ -510,132 +503,13 @@ class IdentityAccessManager:
 
             return tokens
 
-    async def create_collection(self, name: str, user_id: int, type: CollectionType, description: Optional[str] = None) -> int:
-        async with self.sql.session() as session:
-            # check if user exists
-            result = await session.execute(statement=select(UserTable.id).where(UserTable.id == user_id))
-            try:
-                result.scalar_one()
-            except NoResultFound:
-                raise UserNotFoundException()
-
-            # create the collection
-            await session.execute(statement=insert(table=CollectionTable).values(name=name, user_id=user_id, type=type, description=description))
-            await session.commit()
-
-            # get the collection id
-            result = await session.execute(statement=select(CollectionTable.id).where(CollectionTable.name == name))
-            collection_id = result.scalar_one()
-
-            return collection_id
-
-    async def delete_collection(self, collection_id: int) -> None:
-        async with self.sql.session() as session:
-            # check if collection exists
-            result = await session.execute(statement=select(CollectionTable.id).where(CollectionTable.id == collection_id))
-            try:
-                result.scalar_one()
-            except NoResultFound:
-                raise CollectionNotFoundException()
-
-            # delete the collection
-            await session.execute(statement=delete(table=CollectionTable).where(CollectionTable.id == collection_id))
-            await session.commit()
-
-    async def update_collection(
-        self, collection_id: int, name: Optional[str] = None, type: Optional[CollectionType] = None, description: Optional[str] = None
-    ) -> None:
-        async with self.sql.session() as session:
-            # check if collection exists
-            result = await session.execute(
-                statement=select(CollectionTable)
-                .join(target=UserTable, onclause=UserTable.id == CollectionTable.user_id)
-                .where(CollectionTable.id == collection_id)
-            )
-            try:
-                collection = result.scalar_one()
-            except NoResultFound:
-                raise CollectionNotFoundException()
-
-            name = name if name is not None else collection.name
-            type = type if type is not None else collection.type
-            description = description if description is not None else collection.description
-
-            await session.execute(
-                statement=update(table=CollectionTable)
-                .values(name=name, type=type, description=description, updated_at=func.now())
-                .where(CollectionTable.id == collection.id)
-            )
-            await session.commit()
-
-    async def get_collections(self, user_id: int, collection_id: Optional[int] = None, include_public: bool = True, offset: int = 0, limit: int = 10) -> List[Collection]:  # fmt: off
-        async with self.sql.session() as session:
-            statement = select(CollectionTable).offset(offset=offset).limit(limit=limit)
-
-            if collection_id:
-                statement = statement.where(CollectionTable.id == collection_id)
-            if include_public:
-                statement = statement.where(or_(CollectionTable.user_id == user_id, CollectionTable.type == CollectionType.PUBLIC))
-            else:
-                statement = statement.where(CollectionTable.user_id == user_id)
-
-            # TODO: add documents count
-
-            result = await session.execute(statement=statement)
-            collections = result.all()
-
-            if collection_id and len(collections) == 0:
-                raise CollectionNotFoundException()
-
-            collections = [Collection(**row._mapping) for row in result.all()]
-
-        return collections
-
-    async def create_document(self, name: str, collection_id: int, user_id: int) -> int:
-        async with self.sql.session() as session:
-            # check if collection exists
-            result = await session.execute(statement=select(CollectionTable.documents).where(CollectionTable.id == collection_id))
-            try:
-                result.scalar_one()
-            except NoResultFound:
-                raise CollectionNotFoundException()
-
-            await session.execute(statement=insert(table=DocumentTable).values(name=name, collection_id=collection_id, user_id=user_id))
-            await session.commit()
-
-            # get the document id
-            result = await session.execute(statement=select(DocumentTable.id).where(DocumentTable.name == name))
-            document_id = result.scalar_one()
-
-            return document_id
-
-    async def get_documents(self, collection_id: int, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
-        async with self.sql.session() as session:
-            statement = select(DocumentTable).offset(offset=offset).limit(limit=limit).where(DocumentTable.collection_id == collection_id)
-
-            if document_id:
-                statement = statement.where(DocumentTable.id == document_id)
-
-            result = await session.execute(statement=statement)
-            documents = result.all()
-
-            if document_id and len(documents) == 0:
-                raise DocumentNotFoundException()
-
-            documents = [Document(**row._mapping) for row in result.all()]
-
-            return documents
-
-    async def check_token(self, token: str, include_collections: bool = True) -> Optional[UserInfo]:
-        # TODO: add cache
+    async def check_token(self, token: str) -> Optional[int]:
         async with self.sql.session() as session:
             if token == settings.auth.root_key:
                 result = await session.execute(statement=select(UserTable.id).where(UserTable.name == settings.auth.root_user))
                 user_id = result.scalar_one()
-                users = await self.get_users(user_id=user_id)
-                roles = await self.get_roles(role_id=users[0].role)
 
-                return UserInfo.build(id=user_id, user=users[0], role=roles[0], collections=[])
+                return user_id
 
             try:
                 claims = self._decode_token(token=token)
@@ -650,10 +524,4 @@ class IdentityAccessManager:
             except TokenNotFoundException:
                 return
 
-            users = await self.get_users(name=tokens[0].user)
-            roles = await self.get_roles(name=users[0].role)
-            collections = []
-            if include_collections:
-                collections = await self.get_collections(user=users[0].name)
-
-            return UserInfo.build(id=users[0].id, user=users[0], role=roles[0], collections=collections)
+            return claims["user_id"]

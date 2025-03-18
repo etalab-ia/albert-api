@@ -69,6 +69,7 @@ class Authorization:
         return user.id
 
     async def _check_api_key(self, api_key: HTTPAuthorizationCredentials) -> UserInfo:
+        # TODO: add cache
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
 
@@ -77,12 +78,22 @@ class Authorization:
 
         from app.utils.lifespan import context
 
-        user = await context.iam.check_token(token=api_key.credentials)
-
-        if not user or (user.expires_at is not None and user.expires_at < datetime.now()):
+        user_id = await context.iam.check_token(token=api_key.credentials)
+        if not user_id:
             raise InvalidAPIKeyException()
 
-        return user
+        users = await context.iam.get_users(user_id=user_id)
+        user = users[0]
+
+        if user.expires_at < datetime.now():
+            raise InvalidAPIKeyException()
+
+        roles = await context.iam.get_roles(role_id=user.role)
+        role = roles[0]
+
+        collections = await context.iam.get_collections(user_id=user.id)
+
+        return UserInfo.build(id=user.id, user=user, role=role, collections=collections)
 
     async def _check_permissions(self, user: UserInfo) -> None:
         if self.permissions and not all(perm in user.permissions for perm in self.permissions):

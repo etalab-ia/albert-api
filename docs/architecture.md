@@ -8,7 +8,7 @@ config:
     mergeEdges: true
 
 ---
-flowchart TD
+flowchart LR
     config@{ shape: tag-doc, label: "config.yml" }
     
     subgraph **main.py**
@@ -124,6 +124,4 @@ flowchart TD
 
     authorization ==all endpoints==> **app/endpoints**
     linkStyle 31 stroke: red
-
-
 ```

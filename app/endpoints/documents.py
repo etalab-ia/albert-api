@@ -6,7 +6,7 @@ from fastapi import APIRouter, Path, Query, Request, Response, Security
 from app.helpers import Authorization
 from app.schemas.auth import PermissionType
 from app.schemas.documents import Documents
-from app.utils.lifespan import databases
+from app.utils.lifespan import context
 
 router = APIRouter()
 
@@ -14,7 +14,7 @@ router = APIRouter()
 @router.get(path="/documents/{collection}")
 async def get_documents(
     request: Request,
-    collection: UUID = Path(description="The collection ID"),
+    collection: int = Path(description="The collection ID"),
     limit: Optional[int] = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
     user: str = Security(dependency=Authorization()),
@@ -22,8 +22,8 @@ async def get_documents(
     """
     Get all documents ID from a collection.
     """
-    collection = str(collection)
-    data = databases.search.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
+
+    data = await context.iam.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
 
     return Documents(data=data)
 
@@ -31,14 +31,13 @@ async def get_documents(
 @router.delete(path="/documents/{collection}/{document}")
 async def delete_document(
     request: Request,
-    collection: UUID = Path(description="The collection ID"),
-    document: UUID = Path(description="The document ID"),
+    collection: int = Path(description="The collection ID"),
+    document: int = Path(description="The document ID"),
     user: str = Security(dependency=Authorization(permissions=[PermissionType.DELETE_PRIVATE_COLLECTION])),
 ) -> Response:
     """
     Delete a document and relative collections.
     """
-    collection, document = str(collection), str(document)
-    await databases.search.delete_document(collection_id=collection, document_id=document, user=user)
+    await context.iam.delete_document(collection_id=collection, document_id=document, user=user)
 
     return Response(status_code=204)
