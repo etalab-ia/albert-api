@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Request, Security
 
 from app.helpers import Authorization, SearchManager
-from app.schemas.core.auth import AuthenticatedUser
 from app.schemas.search import Searches, SearchRequest
 from app.utils.lifespan import context, databases, internet
 
@@ -12,7 +11,7 @@ router = APIRouter()
 async def search(
     request: Request,
     body: SearchRequest,
-    user: AuthenticatedUser = Security(dependency=Authorization()),
+    user: str = Security(dependency=Authorization()),
 ) -> Searches:
     """
     Get relevant chunks from the collections and a query.

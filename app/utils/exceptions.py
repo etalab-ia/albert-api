@@ -45,8 +45,6 @@ class TokenAlreadyExistsException(HTTPException):
 
 
 # 403
-
-
 class InvalidPasswordException(HTTPException):
     def __init__(self, detail: str = "Invalid password."):
         super().__init__(status_code=403, detail=detail)
@@ -70,6 +68,11 @@ class InsufficientPermissionException(HTTPException):
 # 404
 class CollectionNotFoundException(HTTPException):
     def __init__(self, detail: str = "Collection not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
+class DocumentNotFoundException(HTTPException):
+    def __init__(self, detail: str = "Document not found.") -> None:
         super().__init__(status_code=404, detail=detail)
 
 

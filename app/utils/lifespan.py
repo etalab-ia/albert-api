@@ -9,7 +9,7 @@ from app.clients.database import SQLDatabaseClient
 from app.clients.internet import BaseInternetClient as InternetClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.search import BaseSearchClient as SearchClient
-from app.helpers import AuthManager, Limiter, ModelRegistry, ModelRouter
+from app.helpers import IdentityAccessManager, Limiter, ModelRegistry, ModelRouter
 from app.utils.logging import logger
 from app.utils.settings import settings
 
@@ -42,8 +42,8 @@ async def lifespan(app: FastAPI):
         routers.append(ModelRouter(**model))
 
     context.models = ModelRegistry(routers=routers)
-    context.auth = AuthManager(sql=SQLDatabaseClient(**settings.databases.sql.args))
-    context.limiter = Limiter(auth=context.auth, connection_pool=ConnectionPool(**settings.databases.redis.args), strategy=settings.auth.limiting_strategy)  # fmt: off
+    context.iam = IdentityAccessManager(sql=SQLDatabaseClient(**settings.databases.sql.args))
+    context.limiter = Limiter(connection_pool=ConnectionPool(**settings.databases.redis.args), strategy=settings.auth.limiting_strategy)
 
     internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
 
@@ -51,13 +51,13 @@ async def lifespan(app: FastAPI):
     type = settings.databases.qdrant.type if settings.databases.qdrant else settings.databases.elastic.type
     args = settings.databases.qdrant.args if settings.databases.qdrant else settings.databases.elastic.args
 
-    databases.search = SearchClient.import_module(type=type)(models=context.models, auth=context.auth, **args)
+    databases.search = SearchClient.import_module(type=type)(models=context.models, auth=context.iam, **args)
 
-    await context.auth.setup()
+    await context.iam.setup()
     assert await context.limiter.redis.check(), "Redis database is not reachable."
 
     yield
 
     # cleanup resources when app shuts down
     databases.search.close()
-    await context.auth.sql.engine.dispose()
+    await context.iam.sql.engine.dispose()

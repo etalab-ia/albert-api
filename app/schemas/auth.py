@@ -98,7 +98,7 @@ class RoleRequest(BaseModel):
 
 class Role(BaseModel):
     object: Literal["role"] = "role"
-    id: str
+    id: int
     name: str
     default: bool
     permissions: List[PermissionType]
@@ -192,7 +192,7 @@ class UserRequest(BaseModel):
 
 class User(BaseModel):
     object: Literal["user"] = "user"
-    id: str
+    id: int
     name: str
     role: int
     expires_at: Optional[int] = None
@@ -206,8 +206,8 @@ class Users(BaseModel):
 
 
 class TokenRequest(BaseModel):
-    user: int
     name: str
+    user: int
     expires_at: Optional[int] = Field(None, description="Timestamp in seconds")
 
     @field_validator("name", mode="before")
@@ -235,8 +235,8 @@ class TokenRequest(BaseModel):
 
 class Token(BaseModel):
     object: Literal["token"] = "token"
-    id: str
-    name: Optional[str] = None
+    id: int
+    name: str
     expires_at: Optional[int] = None
     created_at: int
 

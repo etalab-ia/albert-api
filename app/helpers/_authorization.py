@@ -5,14 +5,15 @@ from typing import Annotated, List
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.schemas.auth import LimitType, PermissionType, User
-from app.schemas.core.auth import AuthenticatedUser
+from app.schemas.auth import LimitType, PermissionType
+from app.schemas.core.auth import UserInfo
 from app.utils.exceptions import (
     InsufficientPermissionException,
     InvalidAPIKeyException,
     InvalidAuthenticationSchemeException,
     RateLimitExceeded,
 )
+from app.utils.settings import settings
 from app.utils.variables import (
     COLLECTION_TYPE__PUBLIC,
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
@@ -23,7 +24,6 @@ from app.utils.variables import (
     ENDPOINT__FILES,
     ENDPOINT__RERANK,
     ENDPOINT__SEARCH,
-    ROOT_ROLE,
 )
 
 
@@ -31,11 +31,11 @@ class Authorization:
     def __init__(self, permissions: List[PermissionType] = []):
         self.permissions = permissions
 
-    async def __call__(self, request: Request, api_key: Annotated[HTTPAuthorizationCredentials, Depends(dependency=HTTPBearer(scheme_name="API key"))]) -> User:  # fmt: off
+    async def __call__(self, request: Request, api_key: Annotated[HTTPAuthorizationCredentials, Depends(dependency=HTTPBearer(scheme_name="API key"))]) -> str:  # fmt: off
         user = await self._check_api_key(api_key=api_key)
 
-        if user.role == ROOT_ROLE:  # root user can do anything
-            return user
+        if user.id == settings.auth.root_user:  # root user can do anything
+            return user.id
 
         await self._check_permissions(user=user)
 
@@ -66,9 +66,9 @@ class Authorization:
         if request.url.path.startswith(f"/v1{ENDPOINT__SEARCH}") and request.method == "POST":
             await self._check_search_post(user=user, request=request)
 
-        return user
+        return user.id
 
-    async def _check_api_key(self, api_key: HTTPAuthorizationCredentials) -> AuthenticatedUser:
+    async def _check_api_key(self, api_key: HTTPAuthorizationCredentials) -> UserInfo:
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
 
@@ -77,19 +77,24 @@ class Authorization:
 
         from app.utils.lifespan import context
 
-        user = await context.auth.check_token(token=api_key.credentials)
+        user = await context.iam.check_token(token=api_key.credentials)
 
         if not user or (user.expires_at is not None and user.expires_at < datetime.now()):
             raise InvalidAPIKeyException()
 
         return user
 
-    async def _check_permissions(self, user: AuthenticatedUser) -> None:
+    async def _check_permissions(self, user: UserInfo) -> None:
         if self.permissions and not all(perm in user.permissions for perm in self.permissions):
             raise InsufficientPermissionException()
 
-    async def _check_limits(self, user: AuthenticatedUser, model: str, check_only_access: bool = False) -> None:
+    async def _check_limits(self, user: UserInfo, model: str, check_only_access: bool = False) -> None:
         from app.utils.lifespan import context
+
+        model = context.models.aliases.get(model, model)
+
+        if model not in user.limits:
+            return
 
         if user.limits[model].rpm == 0 or user.limits[model].rpd == 0:
             raise InsufficientPermissionException(detail=f"Insufficient permissions to access the model {model}.")
@@ -97,101 +102,76 @@ class Authorization:
         if check_only_access:
             return
 
-        check = await context.limiter(user=user, model=model, type=LimitType.RPM)
+        check = await context.limiter(user_id=user.id, model=model, type=LimitType.RPM, value=user.limits[model].rpm)
         if not check:
             raise RateLimitExceeded(detail=f"{str(user.limits[model].rpm)} requests for {model} per minute exceeded.")
 
-        check = await context.limiter(user=user, model=model, type=LimitType.RPD)
+        check = await context.limiter(user_id=user.id, model=model, type=LimitType.RPD, value=user.limits[model].rpd)
         if not check:
             raise RateLimitExceeded(detail=f"{str(user.limits[model].rpd)} requests for {model} per day exceeded.")
 
-    async def _check_audio_transcription_post(self, user: AuthenticatedUser, request: Request) -> None:
+    async def _check_audio_transcription_post(self, user: UserInfo, request: Request) -> None:
         # @TODO: add rate limit check
         pass
 
-    async def _check_chat_completions_post(self, user: AuthenticatedUser, request: Request) -> None:
-        from app.utils.lifespan import context
-
+    async def _check_chat_completions_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
         body = json.loads(body)
-        model = context.models.aliases.get(body["model"], body["model"])
 
-        if model not in user.limits:
-            return
-
-        await self._check_limits(user=user, model=model)
+        await self._check_limits(user=user, model=body["model"])
 
         # @TODO: add rate limit check for search model
 
-    async def _check_collections_post(self, user: AuthenticatedUser, request: Request) -> None:
-        from app.utils.lifespan import context
-
+    async def _check_collections_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
         body = json.loads(body)
-        model = context.models.aliases.get(body["model"], body["model"])
 
-        if model not in user.limits:
-            return
+        await self._check_limits(user=user, model=body["model"], check_only_access=True)
 
-        await self._check_limits(user=user, model=model, check_only_access=True)
-
-        print("##################", body)
         if body["type"] == COLLECTION_TYPE__PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in user.permissions:
             raise InsufficientPermissionException()
 
-    async def _check_collections_delete(self, user: AuthenticatedUser, request: Request) -> None:
+    async def _check_collections_delete(self, user: UserInfo, request: Request) -> None:
         from app.utils.lifespan import context
 
         collection_id = request.path_params["collection"]
         collections = await context.databases.search.get_collections(collection_ids=[collection_id])
+
         if not collections:
             return
 
         if collections[0]["type"] == COLLECTION_TYPE__PUBLIC and PermissionType.DELETE_PUBLIC_COLLECTION not in user.permissions:
             raise InsufficientPermissionException()
 
-    async def _check_documents_delete(self, user: AuthenticatedUser, request: Request) -> None:
+    async def _check_documents_delete(self, user: UserInfo, request: Request) -> None:
         from app.utils.lifespan import context
 
         collection_id = request.path_params["collection"]
         collections = await context.databases.search.get_collections(collection_ids=[collection_id])
+
         if not collections:
             return
 
         if collections[0]["type"] == COLLECTION_TYPE__PUBLIC and PermissionType.DELETE_PUBLIC_COLLECTION not in user.permissions:
             raise InsufficientPermissionException()
 
-    async def _check_embeddings_post(self, user: AuthenticatedUser, request: Request) -> None:
-        from app.utils.lifespan import context
-
+    async def _check_embeddings_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
         body = json.loads(body)
-        model = context.models.aliases.get(body["model"], body["model"])
 
-        if model not in user.limits:
-            return
-
-        await self._check_limits(user=user, model=model)
-
-    async def _check_files_post(self, user: AuthenticatedUser, request: Request) -> None:
+    async def _check_files_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
         body = json.loads(body)
 
         if body["type"] == COLLECTION_TYPE__PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in user.permissions:
             raise InsufficientPermissionException()
 
-    async def _check_rerank_post(self, user: AuthenticatedUser, request: Request) -> None:
-        from app.utils.lifespan import context
-
+    async def _check_rerank_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
         body = json.loads(body) if body else {}
-        model = context.models.aliases.get(body["model"], body["model"])
 
-        if model and model not in user.limits:
-            return
+        await self._check_limits(user=user, model=body["model"])
 
-        await self._check_limits(user=user, model=model)
-
-    async def _check_search_post(self, user: AuthenticatedUser, request: Request) -> None:
+    async def _check_search_post(self, user: UserInfo, request: Request) -> None:
         # @TODO: add collection model check and rate limit of the model
         pass

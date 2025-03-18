@@ -18,7 +18,7 @@ from qdrant_client.http.models import (
 
 
 from app.clients.search import BaseSearchClient
-from app.helpers import ModelRegistry, AuthManager
+from app.helpers import ModelRegistry, IdentityAccessManager
 from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
@@ -44,7 +44,7 @@ class QdrantSearchClient(QdrantClient, BaseSearchClient):
     METADATA_COLLECTION_ID = "collections"
     DOCUMENT_COLLECTION_ID = "documents"
 
-    def __init__(self, models: ModelRegistry, auth: AuthManager, *args, **kwargs):
+    def __init__(self, models: ModelRegistry, auth: IdentityAccessManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.models = models
         self.auth = auth

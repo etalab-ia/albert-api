@@ -5,7 +5,6 @@ from fastapi import APIRouter, Path, Query, Request, Response, Security
 
 from app.helpers import Authorization
 from app.schemas.auth import PermissionType
-from app.schemas.core.auth import AuthenticatedUser
 from app.schemas.documents import Documents
 from app.utils.lifespan import databases
 
@@ -18,7 +17,7 @@ async def get_documents(
     collection: UUID = Path(description="The collection ID"),
     limit: Optional[int] = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
-    user: AuthenticatedUser = Security(dependency=Authorization()),
+    user: str = Security(dependency=Authorization()),
 ) -> Documents:
     """
     Get all documents ID from a collection.
@@ -34,7 +33,7 @@ async def delete_document(
     request: Request,
     collection: UUID = Path(description="The collection ID"),
     document: UUID = Path(description="The document ID"),
-    user: AuthenticatedUser = Security(dependency=Authorization(permissions=[PermissionType.DELETE_PRIVATE_COLLECTION])),
+    user: str = Security(dependency=Authorization(permissions=[PermissionType.DELETE_PRIVATE_COLLECTION])),
 ) -> Response:
     """
     Delete a document and relative collections.

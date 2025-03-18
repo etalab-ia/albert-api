@@ -5,7 +5,7 @@ from typing import List, Literal, Optional
 from elasticsearch import Elasticsearch, NotFoundError, helpers
 
 from app.clients.search import BaseSearchClient
-from app.helpers import AuthManager, ModelRegistry
+from app.helpers import IdentityAccessManager, ModelRegistry
 from app.schemas.chunks import Chunk, ChunkMetadata
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
@@ -28,7 +28,7 @@ from app.utils.variables import (
 class ElasticSearchClient(Elasticsearch, BaseSearchClient):
     BATCH_SIZE = 48
 
-    def __init__(self, models: ModelRegistry, auth: AuthManager, *args, **kwargs):
+    def __init__(self, models: ModelRegistry, auth: IdentityAccessManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert super().ping(), "Elasticsearch is not reachable"
         self.models = models

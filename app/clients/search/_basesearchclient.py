@@ -13,7 +13,6 @@ from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection
 from app.schemas.documents import Document
 from app.schemas.search import Search
-from app.schemas.core.auth import AuthenticatedUser
 from app.utils.logging import logger
 from app.utils.variables import (
     COLLECTION_TYPE__PRIVATE,
@@ -42,7 +41,7 @@ class BaseSearchClient(ABC):
         return getattr(module, f"{type.capitalize()}SearchClient")
 
     @abstractmethod
-    async def upsert(self, chunks: List[Chunk], collection_id: str, user: AuthenticatedUser) -> None:
+    async def upsert(self, chunks: List[Chunk], collection_id: str, user: str) -> None:
         """
         Add chunks to a collection.
 
@@ -57,7 +56,7 @@ class BaseSearchClient(ABC):
     async def query(
         self,
         prompt: str,
-        user: AuthenticatedUser,
+        user: str,
         collection_ids: List[str] = [],
         method: Literal[SEARCH_TYPE__HYBRID, SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC] = SEARCH_TYPE__SEMANTIC,
         k: Optional[int] = 4,
@@ -82,7 +81,7 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_collections(self, user: AuthenticatedUser, collection_ids: List[str] = []) -> List[Collection]:
+    def get_collections(self, user: str, collection_ids: List[str] = []) -> List[Collection]:
         """
         Get metadata of collections.
 
@@ -101,7 +100,7 @@ class BaseSearchClient(ABC):
         collection_id: str,
         collection_name: str,
         collection_model: str,
-        user: AuthenticatedUser,
+        user: str,
         collection_type: str = COLLECTION_TYPE__PRIVATE,
         collection_description: Optional[str] = None,
     ) -> Collection:
@@ -118,7 +117,7 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def delete_collection(self, collection_id: str, user: AuthenticatedUser) -> None:
+    def delete_collection(self, collection_id: str, user: str) -> None:
         """
         Delete a collection and all its associated data.
         Args:
@@ -128,9 +127,7 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_chunks(
-        self, collection_id: str, document_id: str, user: AuthenticatedUser, limit: int = 10, offset: Union[int, UUID] = None
-    ) -> List[Chunk]:
+    def get_chunks(self, collection_id: str, document_id: str, user: str, limit: int = 10, offset: Union[int, UUID] = None) -> List[Chunk]:
         """
         Get chunks from a collection and a document.
         Args:
@@ -145,7 +142,7 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def get_documents(self, collection_id: str, user: AuthenticatedUser, limit: int = 10, offset: Union[int, UUID] = None) -> List[Document]:
+    def get_documents(self, collection_id: str, user: str, limit: int = 10, offset: Union[int, UUID] = None) -> List[Document]:
         """
         Get documents from a collection.
 
@@ -161,14 +158,14 @@ class BaseSearchClient(ABC):
         pass
 
     @abstractmethod
-    def delete_document(self, collection_id: str, document_id: str, user: AuthenticatedUser):
+    def delete_document(self, collection_id: str, document_id: str, user: str):
         """
         Delete a document from a collection.
 
         Args:
             collection_id (str): The id of the collection to delete the document from.
             document_id (str): The id of the document to delete.
-            user (AuthenticatedUser): The user deleting the document.
+            user (UserInfo): The user deleting the document.
         """
         pass
 

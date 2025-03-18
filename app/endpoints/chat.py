@@ -9,13 +9,12 @@ from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletion
 from app.schemas.search import Search
 from app.utils.lifespan import context, databases, internet
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
-from app.schemas.core.auth import AuthenticatedUser
 
 router = APIRouter()
 
 
 @router.post(path=ENDPOINT__CHAT_COMPLETIONS)
-async def chat_completions(request: Request, body: ChatCompletionRequest, user: AuthenticatedUser = Security(dependency=Authorization())) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
+async def chat_completions(request: Request, body: ChatCompletionRequest, user: str = Security(dependency=Authorization())) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
     """Creates a model response for the given chat conversation.
 
     **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional

@@ -90,6 +90,8 @@ class Collection(Base):
 
     user = relationship(argument="User", backref=backref(name="collection", cascade="all, delete-orphan"))
 
+    __table_args__ = (UniqueConstraint("user_id", "name", name="unique_collection_name_per_user"),)
+
 
 class Document(Base):
     __tablename__ = "document"
@@ -101,3 +103,5 @@ class Document(Base):
     created_at = Column(DateTime, default=func.now())
 
     collection = relationship(argument="Collection", backref=backref(name="document", cascade="all, delete-orphan"))
+
+    __table_args__ = (UniqueConstraint("collection_id", "name", name="unique_document_name_per_collection"),)

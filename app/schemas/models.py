@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.utils.variables import MODEL_TYPE__AUDIO, MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE, MODEL_TYPE__RERANK
 
 
+# TODO pass enum to model type
 class Model(Model):
     object: Literal["model"] = "model"
     max_context_length: Optional[int] = None

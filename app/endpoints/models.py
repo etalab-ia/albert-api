@@ -3,7 +3,6 @@ from typing import Union
 from fastapi import APIRouter, Path, Request, Security
 
 from app.helpers import Authorization
-from app.schemas.core.auth import AuthenticatedUser
 from app.schemas.models import Model, Models
 from app.utils.lifespan import context
 
@@ -22,7 +21,7 @@ async def get_model(request: Request, model: str = Path(description="The name of
 
 
 @router.get(path="/models")
-async def get_models(request: Request, user: AuthenticatedUser = Security(dependency=Authorization())) -> Union[Models, Model]:
+async def get_models(request: Request, user: str = Security(dependency=Authorization())) -> Union[Models, Model]:
     """
     Lists the currently available models and provides basic informations.
     """

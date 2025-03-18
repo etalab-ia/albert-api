@@ -31,7 +31,7 @@ async def login(request: Request, body: LoginRequest = Body(description="The log
     Login to the API.
     """
 
-    user = await context.auth.login(user=body.user, password=body.password)
+    user = await context.iam.login(user_name=body.user_name, user_password=body.user_password)
 
     return user
 
@@ -42,40 +42,40 @@ async def create_role(request: Request, body: RoleRequest = Body(description="Th
     Create a new role.
     """
 
-    await context.auth.create_role(name=body.role, default=body.default, permissions=body.permissions, limits=body.limits)
+    role_id = await context.iam.create_role(name=body.name, default=body.default, permissions=body.permissions, limits=body.limits)
 
-    return JSONResponse(status_code=201, content={"id": body.role})
+    return JSONResponse(status_code=201, content={"id": role_id})
 
 
 @router.delete(path="/roles/{role}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_ROLE])), Depends(dependency=delete_root_role)])  # fmt: off
-async def delete_role(request: Request, role: str = Path(description="The id of the role to delete.")) -> Response:
+async def delete_role(request: Request, role: int = Path(description="The ID of the role to delete.")) -> Response:
     """
     Delete a role.
     """
 
-    await context.auth.delete_role(name=role)
+    await context.iam.delete_role(role_id=role)
 
     return Response(status_code=204)
 
 
 @router.patch(path="/roles/{role}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.UPDATE_ROLE])), Depends(dependency=update_root_role)])  # fmt: off
-async def update_role(request: Request, role: str = Path(description="The id of the role to update."), body: RoleUpdateRequest = Body(description="The role update request.")) -> Response:  # fmt: off
+async def update_role(request: Request, role: int = Path(description="The ID of the role to update."), body: RoleUpdateRequest = Body(description="The role update request.")) -> Response:  # fmt: off
     """
     Update a role.
     """
 
-    await context.auth.update_role(name=role, new_name=body.role, default=body.default, permissions=body.permissions, limits=body.limits)
+    await context.iam.update_role(role_id=role, name=body.name, default=body.default, permissions=body.permissions, limits=body.limits)
 
-    return JSONResponse(status_code=200, content={"id": role})
+    return Response(status_code=204)
 
 
 @router.get(path="/roles/{role}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))])
-async def get_role(request: Request, role: str = Path(description="The id of the role to get.")) -> Role:
+async def get_role(request: Request, role: int = Path(description="The ID of the role to get.")) -> Role:
     """
     Get a role by id.
     """
 
-    roles = await context.auth.get_roles(name=role)
+    roles = await context.iam.get_roles(role_id=role)
 
     return roles[0]
 
@@ -89,7 +89,7 @@ async def get_roles(
     """
     Get all roles.
     """
-    data = await context.auth.get_roles(offset=offset, limit=limit)
+    data = await context.iam.get_roles(offset=offset, limit=limit)
 
     return Roles(data=data)
 
@@ -100,39 +100,39 @@ async def create_user(request: Request, body: UserRequest = Body(description="Th
     Create a new user.
     """
 
-    user = await context.auth.create_user(name=body.user, role=body.role, password=body.password, expires_at=body.expires_at)
+    user_id = await context.iam.create_user(name=body.name, role=body.role, password=body.password, expires_at=body.expires_at)
 
-    return JSONResponse(status_code=201, content={"id": user})
+    return JSONResponse(status_code=201, content={"id": user_id})
 
 
 @router.delete(path="/users/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_USER])), Depends(dependency=delete_root_user)])  # fmt: off
-async def delete_user(request: Request, user: str = Path(description="The id of the user to delete.")) -> Response:
+async def delete_user(request: Request, user: int = Path(description="The ID of the user to delete.")) -> Response:
     """
     Delete a user.
     """
-    await context.auth.delete_user(name=user)
+    await context.iam.delete_user(user_id=user)
 
     return Response(status_code=204)
 
 
 @router.patch(path="/users/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.UPDATE_USER])), Depends(dependency=update_root_user)])  # fmt: off
-async def update_user(request: Request, user: str = Path(description="The user name of the user to update."), body: UserUpdateRequest = Body(description="The user update request.")) -> Response:  # fmt: off
+async def update_user(request: Request, user: int = Path(description="The ID of the user to update."), body: UserUpdateRequest = Body(description="The user update request.")) -> Response:  # fmt: off
     """
     Update a user.
     """
 
-    await context.auth.update_user(name=user, new_name=body.user, password=body.password, role=body.role, expires_at=body.expires_at)
+    await context.iam.update_user(user_id=user, name=body.name, password=body.password, role=body.role, expires_at=body.expires_at)
 
-    return JSONResponse(status_code=200, content={"id": user})
+    return Response(status_code=204)
 
 
 @router.get(path="/users/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_USER]))])
-async def get_user(request: Request, user: str = Path(description="The id of the user to get.")) -> User:
+async def get_user(request: Request, user: int = Path(description="The ID of the user to get.")) -> User:
     """
     Get a user by id.
     """
 
-    users = await context.auth.get_users(name=user)
+    users = await context.iam.get_users(user_id=user)
 
     return users[0]
 
@@ -140,7 +140,7 @@ async def get_user(request: Request, user: str = Path(description="The id of the
 @router.get(path="/users", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_USER]))])
 async def get_users(
     request: Request,
-    role: Optional[str] = Query(default=None, description="The id of the role to filter the users by."),
+    role: Optional[int] = Query(default=None, description="The ID of the role to filter the users by."),
     offset: int = Query(default=0, ge=0, description="The offset of the users to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the users to get."),
 ) -> Users:
@@ -148,7 +148,7 @@ async def get_users(
     Get all users.
     """
 
-    data = await context.auth.get_users(role=role, offset=offset, limit=limit)
+    data = await context.iam.get_users(role_id=role, offset=offset, limit=limit)
 
     return Users(data=data)
 
@@ -159,9 +159,9 @@ async def create_token(request: Request, body: TokenRequest = Body(description="
     Create a new token.
     """
 
-    token = await context.auth.create_token(name=body.token, user=body.user, expires_at=body.expires_at)
+    token_id, token = await context.iam.create_token(name=body.name, user_id=body.user, expires_at=body.expires_at)
 
-    return JSONResponse(status_code=201, content={"id": token})
+    return JSONResponse(status_code=201, content={"id": token_id, "token": token})
 
 
 @router.delete(path="/tokens/{user:path}/{token:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_TOKEN])), Depends(dependency=delete_root_token)])  # fmt: off
@@ -170,7 +170,7 @@ async def delete_token(request: Request, user: str = Path(description="The user 
     Delete a token.
     """
 
-    await context.auth.delete_token(name=token, user=user)
+    await context.iam.delete_token(name=token, user=user)
 
     return Response(status_code=204)
 
@@ -181,7 +181,7 @@ async def get_token(request: Request, user: str = Path(description="The user ID 
     Get a token by id.
     """
 
-    tokens = await context.auth.get_tokens(name=token, user=user)
+    tokens = await context.iam.get_tokens(name=token, user=user)
 
     return tokens[0]
 
@@ -197,6 +197,6 @@ async def get_tokens(
     Get all tokens of a user.
     """
 
-    data = await context.auth.get_tokens(user=user, offset=offset, limit=limit)
+    data = await context.iam.get_tokens(user=user, offset=offset, limit=limit)
 
     return Tokens(data=data)

@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 from app.schemas.auth import LimitType, PermissionType, Role, User
-from app.schemas.core.collection import Collection, CollectionType
+from app.schemas.collections import Collection, CollectionType
 from app.utils.settings import settings
 
 

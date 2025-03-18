@@ -1,16 +1,13 @@
 from typing import Union
-import uuid
-from uuid import UUID
 
-from fastapi import APIRouter, Path, Request, Response, Security
+from fastapi import APIRouter, Path, Query, Request, Response, Security
 from fastapi.responses import JSONResponse
 
 from app.helpers import Authorization
 from app.schemas.auth import PermissionType
-from app.schemas.collections import Collection, CollectionRequest, Collections
-from app.schemas.core.auth import AuthenticatedUser
-from app.utils.lifespan import databases, context
-from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PUBLIC
+from app.schemas.collections import Collection, CollectionRequest, Collections, CollectionType
+from app.utils.lifespan import context
+from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET
 
 router = APIRouter()
 
@@ -19,23 +16,13 @@ router = APIRouter()
 async def create_collection(
     request: Request,
     body: CollectionRequest,
-    user: AuthenticatedUser = Security(dependency=Authorization(permissions=[PermissionType.CREATE_PRIVATE_COLLECTION])),
-) -> Response:
+    user: int = Security(dependency=Authorization(permissions=[PermissionType.CREATE_PRIVATE_COLLECTION])),
+) -> JSONResponse:
     """
     Create a new collection.
     """
 
-    collection_id = str(uuid.uuid4())
-    await databases.search.create_collection(
-        collection_id=collection_id,
-        collection_name=body.name,
-        collection_model=body.model,
-        collection_type=body.type,
-        collection_description=body.description,
-        user=user.user,
-    )
-
-    context.auth.create_collection(collection_id=collection_id, user=user.user, type=body.type)
+    collection_id = context.iam.create_collection(user_id=user, type=body.type, description=body.description)
 
     return JSONResponse(status_code=201, content={"id": collection_id})
 
@@ -43,7 +30,9 @@ async def create_collection(
 @router.get(path="/collections")
 async def get_collections(
     request: Request,
-    user: AuthenticatedUser = Security(dependency=Authorization()),
+    offset: int = Query(default=0, ge=0, description="The offset of the collections to get."),
+    limit: int = Query(default=10, ge=1, le=100, description="The limit of the collections to get."),
+    user: int = Security(dependency=Authorization()),
 ) -> Union[Collection, Collections]:
     """
     Get list of collections.
@@ -51,27 +40,22 @@ async def get_collections(
     internet_collection = Collection(
         id=COLLECTION_DISPLAY_ID__INTERNET,
         name=COLLECTION_DISPLAY_ID__INTERNET,
-        model=None,
-        type=COLLECTION_TYPE__PUBLIC,
+        type=CollectionType.PUBLIC,
         description="Use this collection to search on the internet.",
     )
-    data = databases.search.get_collections(user=user)
+
+    data = await context.iam.get_collections(user_id=user, include_public=True, offset=offset, limit=limit)
     data.append(internet_collection)
 
     return Collections(data=data)
 
 
-@router.delete(path="/collections/{collection}")
-async def delete_collections(
-    request: Request,
-    collection: UUID = Path(..., description="The collection ID"),
-    user: AuthenticatedUser = Security(dependency=Authorization(permissions=[PermissionType.DELETE_PRIVATE_COLLECTION])),
-) -> Response:
+@router.delete(path="/collections/{collection}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_PRIVATE_COLLECTION]))])  # fmt: off
+async def delete_collections(request: Request, collection: int = Path(..., description="The collection ID")) -> Response:
     """
     Delete a collection.
     """
 
-    collection = str(collection)
-    await databases.search.delete_collection(collection_id=collection, user=user.user)
+    await context.iam.delete_collection(collection_id=collection)
 
     return Response(status_code=204)
