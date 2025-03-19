@@ -31,6 +31,7 @@ from app.utils.variables import (
     SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE,
     SUPPORTED_MODEL_CLIENT_TYPES__RERANK,
 )
+from app.schemas.models import ModelType
 
 
 class ConfigBaseModel(BaseModel):
@@ -66,13 +67,13 @@ class Model(ConfigBaseModel):
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
-        if values.type == MODEL_TYPE__EMBEDDINGS:
+        if values.type == ModelType.EMBEDDINGS:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS, f"Invalid model type for client type {values.clients[0].type}"
-        elif values.type == MODEL_TYPE__LANGUAGE:
+        elif values.type == ModelType.LANGUAGE:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE, f"Invalid model type for client type {values.clients[0].type}"
-        elif values.type == MODEL_TYPE__AUDIO:
+        elif values.type == ModelType.AUDIO:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__AUDIO, f"Invalid model type for client type {values.clients[0].type}"
-        elif values.type == MODEL_TYPE__RERANK:
+        elif values.type == ModelType.RERANK:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__RERANK, f"Invalid model type for client type {values.clients[0].type}"
 
         return values
@@ -93,6 +94,11 @@ class Auth(ConfigBaseModel):
     root_user: str = "root"
     root_password: str = "changeme"
     limiting_strategy: Literal["moving_window", "fixed_window", "sliding_window"] = "moving_window"
+
+
+class General(ConfigBaseModel):
+    internet_model: str
+    documents_model: str
 
 
 class Config(ConfigBaseModel):
@@ -160,6 +166,7 @@ class Settings(BaseSettings):
         config = Config(**yaml.safe_load(stream=stream))
         stream.close()
 
+        values.general = config.general
         values.auth = config.auth
         values.internet = config.internet[0]
         values.models = config.models
@@ -170,5 +177,8 @@ class Settings(BaseSettings):
         values.databases.qdrant = next((database for database in config.databases if database.type == DATABASE_TYPE__QDRANT), None)
         values.databases.grist = next((database for database in config.databases if database.type == DATABASE_TYPE__GRIST), None)
         values.databases.elastic = next((database for database in config.databases if database.type == DATABASE_TYPE__ELASTIC), None)
+
+        assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.LANGUAGE], f"Internet model is not defined in models section with type {ModelType.LANGUAGE}."  # fmt: off
+        assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off
 
         return values

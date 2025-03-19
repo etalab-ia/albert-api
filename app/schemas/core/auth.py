@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 from app.schemas.auth import LimitType, PermissionType, Role, User
-from app.schemas.collections import Collection, CollectionType
+from app.schemas.collections import Collection, CollectionVisibility
 from app.utils.settings import settings
 
 
@@ -43,7 +43,7 @@ class UserInfo(BaseModel):
         public_collections = []
         private_collections = []
         for collection in collections:
-            if collection.type == CollectionType.PUBLIC:
+            if collection.type == CollectionVisibility.PUBLIC:
                 public_collections.append(collection.id)
             else:
                 private_collections.append(collection.id)

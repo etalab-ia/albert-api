@@ -1,7 +1,6 @@
 from io import BytesIO
 from typing import List
 import time
-import uuid
 
 from fastapi import UploadFile
 from pdfminer.high_level import extract_text_to_fp
@@ -31,12 +30,7 @@ class PDFParser(BaseParser):
         content = output.getvalue().decode("utf-8").strip()
 
         content = self.clean(content)
-        metadata = ParserOutputMetadata(
-            collection_id=self.collection_id,
-            document_id=str(uuid.uuid4()),
-            document_name=file.filename,
-            document_created_at=round(time.time()),
-        )
+        metadata = ParserOutputMetadata(document_name=file.filename, document_created_at=round(time.time()))
 
         output = [ParserOutput(content=content, metadata=metadata)]
 

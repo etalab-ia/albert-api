@@ -1,25 +1,26 @@
+from enum import Enum
 from typing import List, Literal, Optional, Union
 from uuid import UUID
+
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.utils.exceptions import WrongSearchMethodException
 from app.schemas.chunks import Chunk
-from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, SEARCH_TYPE__HYBRID, SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC
+from app.utils.exceptions import WrongSearchMethodException
+from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET
+
+
+class SearchMethod(Enum):
+    SEARCH_TYPE_HYBRID = "hybrid"
+    SEARCH_TYPE_LEXICAL = "lexical"
+    SEARCH_TYPE_SEMANTIC = "semantic"
 
 
 class SearchArgs(BaseModel):
-    collections: List[Union[UUID, Literal[COLLECTION_DISPLAY_ID__INTERNET]]] = Field(
-        description="List of collections ID (UUID or `internet` for internet collection) to search."
-    )
+    collections: List[Union[UUID, Literal[COLLECTION_DISPLAY_ID__INTERNET]]] = Field(description="List of collections ID (UUID or `internet` for internet collection) to search.")  # fmt: off
     rff_k: int = Field(default=20, description="k constant in RFF algorithm")
     k: int = Field(gt=0, default=4, description="Number of results to return")
-    method: Literal[SEARCH_TYPE__HYBRID, SEARCH_TYPE__LEXICAL, SEARCH_TYPE__SEMANTIC] = Field(default=SEARCH_TYPE__SEMANTIC)
-    score_threshold: Optional[float] = Field(
-        default=0.0,
-        ge=0.0,
-        le=1.0,
-        description="Score of cosine similarity threshold for filtering results, only available for semantic search method.",
-    )
+    method: SearchMethod = Field(default=SearchMethod.SEARCH_TYPE_SEMANTIC)
+    score_threshold: Optional[float] = Field(default=0.0, ge=0.0, le=1.0, description="Score of cosine similarity threshold for filtering results, only available for semantic search method.")  # fmt: off
 
     @field_validator("collections", mode="after")
     def convert_to_string(cls, collections) -> List[str]:
@@ -27,7 +28,7 @@ class SearchArgs(BaseModel):
 
     @model_validator(mode="after")
     def score_threshold_filter(cls, values):
-        if values.score_threshold and values.method != SEARCH_TYPE__SEMANTIC:
+        if values.score_threshold and values.method != SearchMethod.SEARCH_TYPE_SEMANTIC:
             raise WrongSearchMethodException(detail="Score threshold is only available for semantic search method.")
         return values
 

@@ -429,7 +429,7 @@ class IdentityAccessManager:
 
         return users
 
-    async def create_token(self, name: str, user_id: int, expires_at: Optional[int] = None) -> Tuple[int, str]:
+    async def create_token(self, user_id: int, name: str, expires_at: Optional[int] = None) -> Tuple[int, str]:
         async with self.sql.session() as session:
             # get the user id
             result = await session.execute(statement=select(UserTable).where(UserTable.id == user_id))
@@ -464,6 +464,7 @@ class IdentityAccessManager:
     async def delete_token(self, token_id: int) -> None:
         async with self.sql.session() as session:
             # check if token exists
+            # TODO voir s'il faut ajouter user_ids
             result = await session.execute(statement=select(TokenTable.id).where(TokenTable.id == token_id))
             try:
                 result.scalar_one()

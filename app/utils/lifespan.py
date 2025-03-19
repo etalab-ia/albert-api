@@ -4,12 +4,12 @@ from types import SimpleNamespace
 
 from coredis import ConnectionPool
 from fastapi import FastAPI
+from qdrant_client import AsyncQdrantClient
 
 from app.clients.database import SQLDatabaseClient
 from app.clients.internet import BaseInternetClient as InternetClient
 from app.clients.model import BaseModelClient as ModelClient
-from app.clients.search import BaseSearchClient as SearchClient
-from app.helpers import IdentityAccessManager, Limiter, ModelRegistry, ModelRouter
+from app.helpers import IdentityAccessManager, Limiter, ModelRegistry, ModelRouter, DocumentManager, InternetManager
 from app.utils.logging import logger
 from app.utils.settings import settings
 
@@ -21,7 +21,13 @@ databases = SimpleNamespace()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
+    # setup clients
+    sql = SQLDatabaseClient(**settings.databases.sql.args)
+    qdrant = AsyncQdrantClient(**settings.databases.qdrant.args)
+    redis = ConnectionPool(**settings.databases.redis.args)
+    internet = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
 
+    # setup context
     routers = []
     for model in settings.models:
         clients = []
@@ -42,16 +48,9 @@ async def lifespan(app: FastAPI):
         routers.append(ModelRouter(**model))
 
     context.models = ModelRegistry(routers=routers)
-    context.iam = IdentityAccessManager(sql=SQLDatabaseClient(**settings.databases.sql.args))
-    context.limiter = Limiter(connection_pool=ConnectionPool(**settings.databases.redis.args), strategy=settings.auth.limiting_strategy)
-
-    internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
-
-    # @TODO: split search between Client and Manager
-    type = settings.databases.qdrant.type if settings.databases.qdrant else settings.databases.elastic.type
-    args = settings.databases.qdrant.args if settings.databases.qdrant else settings.databases.elastic.args
-
-    databases.search = SearchClient.import_module(type=type)(models=context.models, auth=context.iam, **args)
+    context.iam = IdentityAccessManager(sql=sql)
+    context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
+    context.documents = DocumentManager(sql=sql, qdrant=qdrant, internet=InternetManager(internet=internet))
 
     await context.iam.setup()
     assert await context.limiter.redis.check(), "Redis database is not reachable."

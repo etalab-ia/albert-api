@@ -1,13 +1,10 @@
-from typing import List, Tuple, Union
+from typing import Union
 
 from fastapi import APIRouter, Request, Security
 
-from app.clients.internet import BaseInternetClient as InternetClient
-from app.clients.search import BaseSearchClient as SearchClient
-from app.helpers import Authorization, ModelRegistry, SearchManager, StreamingResponseWithStatusCode
+from app.helpers import Authorization, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
-from app.schemas.search import Search
-from app.utils.lifespan import context, databases, internet
+from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 router = APIRouter()
@@ -22,34 +19,35 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, user: 
     may be ignored depending on the backend used and the model support.
     """
 
-    # retrieval augmentation generation
-    async def retrieval_augmentation_generation(
-        body: ChatCompletionRequest, models: ModelRegistry, search: SearchClient, internet: InternetClient
-    ) -> Tuple[ChatCompletionRequest, List[Search]]:
-        searches = []
-        if body.search:
-            search_manager = SearchManager(models=models, search=search, internet=internet)
-            searches = await search_manager.query(
-                collections=body.search_args.collections,
-                prompt=body.messages[-1]["content"],
-                method=body.search_args.method,
-                k=body.search_args.k,
-                rff_k=body.search_args.rff_k,
-                user=user,
-            )
-            if searches:
-                body.messages[-1]["content"] = body.search_args.template.format(
-                    prompt=body.messages[-1]["content"], chunks="\n".join([search.chunk.content for search in searches])
-                )
+    # TODO: fix
+    # # retrieval augmentation generation
+    # async def retrieval_augmentation_generation(
+    #     body: ChatCompletionRequest, models: ModelRegistry, search: SearchClient, internet: InternetClient
+    # ) -> Tuple[ChatCompletionRequest, List[Search]]:
+    #     searches = []
+    #     if body.search:
+    #         search_manager = SearchManager(models=models, search=search, internet=internet)
+    #         searches = await search_manager.query(
+    #             collections=body.search_args.collections,
+    #             prompt=body.messages[-1]["content"],
+    #             method=body.search_args.method,
+    #             k=body.search_args.k,
+    #             rff_k=body.search_args.rff_k,
+    #             user=user,
+    #         )
+    #         if searches:
+    #             body.messages[-1]["content"] = body.search_args.template.format(
+    #                 prompt=body.messages[-1]["content"], chunks="\n".join([search.chunk.content for search in searches])
+    #             )
 
-        body = body.model_dump()
-        body.pop("search", None)
-        body.pop("search_args", None)
+    #     body = body.model_dump()
+    #     body.pop("search", None)
+    #     body.pop("search_args", None)
 
-        searches = [search.model_dump() for search in searches]
-        return body, searches
+    #     searches = [search.model_dump() for search in searches]
+    #     return body, searches
 
-    body, searches = await retrieval_augmentation_generation(body=body, models=context.models, search=databases.search, internet=internet.search)
+    # body, searches = await retrieval_augmentation_generation(body=body, models=context.models, search=databases.search, internet=internet.search)
 
     # select client
     model = context.models(model=body["model"])
@@ -60,8 +58,8 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, user: 
         response = await client.forward_request(
             method="POST",
             json=body,
-            additional_data_value=searches,
-            additional_data_key="search_results",
+            # additional_data_value=searches,
+            # additional_data_key="search_results",
         )
         return ChatCompletion(**response.json())
 
@@ -70,8 +68,8 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, user: 
         content=client.forward_stream(
             method="POST",
             json=body,
-            additional_data_value=searches,
-            additional_data_key="search_results",
+            # additional_data_value=searches,
+            # additional_data_key="search_results",
         ),
         media_type="text/event-stream",
     )

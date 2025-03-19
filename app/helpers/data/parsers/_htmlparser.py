@@ -1,6 +1,5 @@
 from typing import List
 from fastapi import UploadFile
-import uuid
 import time
 
 from bs4 import BeautifulSoup
@@ -67,9 +66,7 @@ class HTMLParser(BaseParser):
 
         content = self.clean("\n".join(extracted_text).strip())
         name = file.filename.strip()
-        metadata = ParserOutputMetadata(
-            collection_id=self.collection_id, document_id=str(uuid.uuid4()), document_name=name, document_created_at=round(time.time()), title=title
-        )
+        metadata = ParserOutputMetadata(document_name=name, document_created_at=round(time.time()), title=title)
 
         output = [ParserOutput(content=content, metadata=metadata)]
 

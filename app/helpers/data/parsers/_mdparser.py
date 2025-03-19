@@ -1,7 +1,6 @@
 import re
 import time
 from typing import List, Optional, Tuple
-import uuid
 
 from fastapi import UploadFile
 
@@ -62,9 +61,7 @@ class MarkdownParser(BaseParser):
 
         name = file.filename.strip()
 
-        metadata = ParserOutputMetadata(
-            collection_id=self.collection_id, document_id=str(uuid.uuid4()), document_name=name, document_created_at=round(time.time()), title=title
-        )
+        metadata = ParserOutputMetadata(document_name=name, document_created_at=round(time.time()), title=title)
 
         output = [ParserOutput(content=content, metadata=metadata)]
 

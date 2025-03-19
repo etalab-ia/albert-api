@@ -20,45 +20,40 @@ flowchart LR
     end
 
     subgraph **app/clients**
-    redisclient[Redis ConnectionPool]
+    redisclient[Redis - ConnectionPool]
     sqlclient[SQLDatabaseClient]
-    searchclient[QdrantDatabaseClient<br>ElasticSearchDatabaseClient]
+    qdrantclient[Qrant - AsyncQdrantClient]
     internetclient[BraveInternetClient<br>DuckduckgoInternetClient]
     modelclient@{ shape: processes, label: "VllmModelClient<br>TeiModelClient<br>AlbertModelClient<br>OpenaiModelClient" }
     
     lifespan --> redisclient
     lifespan --> sqlclient
-    lifespan -- one of two --> searchclient
+    lifespan --> qdrantclient
     lifespan -- one of two--> internetclient
     lifespan -- for each model --> modelclient
 
     style redisclient stroke-dasharray: 5 5
+    style qdrantclient stroke-dasharray: 5 5
     end
     
     subgraph **app/helpers**
-    iternetsearcher[InternetSearcher]
-    documentsearcher[DocumentSearcher]
     modelrouter@{ shape: processes, label: "ModelRouter" }
     modelregistry[ModelRegistry]
     identityaccessmanager[IdentityAccessManager]
     documentmanager[DocumentManager]
-    documentuploader[DocumentUploader]
     limiter[Limiter]
 
-    internetclient --> internetsearcher
     modelclient --> modelrouter
     modelrouter --> modelregistry
     sqlclient --> identityaccessmanager
  
-    searchclient --> documentmanager
-   
-    documentmanager --> documentsearcher
-    documentmanager --> documentuploader
+    internetclient --> internetmanager
+    internetmanager --> documentmanager
+    sqlclient --> documentmanager
+    qdrantclient --> documentmanager
     redisclient --> limiter
 
-    style internetsearcher fill:green,stroke:#000,stroke-width:1px,color:#fff
-    style documentsearcher fill:blue,stroke:#000,stroke-width:1px,color:#fff
-    style documentuploader fill:pink,stroke:#000,stroke-width:1px,color:#fff
+    style documentmanager fill:blue,stroke:#000,stroke-width:1px,color:#fff
     style modelregistry fill:orange,stroke:#000,stroke-width:1px,color:#fff
     style identityaccessmanager fill:purple,stroke:#000,stroke-width:1px,color:#fff
     style limiter fill:black,stroke:#000,stroke-width:1px,color:#fff
@@ -76,8 +71,6 @@ flowchart LR
     collectionsendpoints[collections]
     authendpoints[auth]
 
-    documentuploader ==> documentsendpoints
-
     modelregistry ==> modelsendpoints
     modelregistry ==> chatendpoints
     modelregistry ==> completionsendpoint
@@ -86,27 +79,13 @@ flowchart LR
     modelregistry ==> searchendpoints
     modelregistry ==> documentsendpoints
  
-    internetsearcher ==> searchendpoints
-    documentsearcher ==> searchendpoints
-
     identityaccessmanager ==> authendpoints
-    identityaccessmanager ==> collectionsendpoints
-    identityaccessmanager ==> documentsendpoints
+
+    documentmanager ==> documentsendpoints
+    documentmanager ==> searchendpoints
+    documentmanager ==> collectionsendpoints
 
 
-    linkStyle 15 stroke: pink
-    linkStyle 16 stroke: orange
-    linkStyle 17 stroke: orange
-    linkStyle 18 stroke: orange
-    linkStyle 19 stroke: orange
-    linkStyle 20 stroke: orange
-    linkStyle 21 stroke: orange
-    linkStyle 22 stroke: orange
-    linkStyle 23 stroke: green
-    linkStyle 24 stroke: blue
-    linkStyle 25 stroke: purple
-    linkStyle 26 stroke: purple
-    linkStyle 27 stroke: purple
     end
     
     subgraph **depends.py**
@@ -117,11 +96,7 @@ flowchart LR
     modelregistry ===> authorization
 
     style authorization fill:red,stroke:#000,stroke-width:1px,color:#fff
-    linkStyle 28 stroke: black
-    linkStyle 29 stroke: purple
-    linkStyle 30 stroke: orange
     end
 
     authorization ==all endpoints==> **app/endpoints**
-    linkStyle 31 stroke: red
 ```

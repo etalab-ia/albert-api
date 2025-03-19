@@ -1,10 +1,8 @@
-from datetime import datetime
-
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Boolean, Index, UniqueConstraint
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship, backref
 from app.schemas.auth import PermissionType, LimitType
-from app.schemas.collections import CollectionType
+from app.schemas.collections import CollectionVisibility
 
 Base = declarative_base()
 
@@ -15,8 +13,8 @@ class Role(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     default = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), nullable=False)
 
     __table_args__ = (Index("only_one_default_role", default, unique=True, postgresql_where=default),)
 
@@ -27,7 +25,7 @@ class Permission(Base):
     id = Column(Integer, primary_key=True, index=True)
     role_id = Column(Integer, ForeignKey(column="role.id", ondelete="CASCADE"), nullable=False)
     permission = Column(Enum(PermissionType), nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     role = relationship(argument="Role", backref=backref(name="permission", cascade="all, delete-orphan"))
 
@@ -42,7 +40,7 @@ class Limit(Base):
     model = Column(String, nullable=False)
     type = Column(Enum(LimitType), nullable=False)
     value = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     role = relationship(argument="Role", backref=backref(name="rate_limit", cascade="all, delete-orphan"))
 
@@ -57,8 +55,8 @@ class User(Base):
     password = Column(String, nullable=False)
     role_id = Column(Integer, ForeignKey(column="role.id"), nullable=False)
     expires_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.now)
-    updated_at = Column(DateTime, nullable=False, default=datetime.now)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), nullable=False)
 
 
 class Token(Base):
@@ -69,7 +67,7 @@ class Token(Base):
     name = Column(String, nullable=True)
     token = Column(String, nullable=True)
     expires_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     user = relationship(argument="User", backref=backref(name="token", cascade="all, delete-orphan"))
 
@@ -83,10 +81,10 @@ class Collection(Base):
     user_id = Column(Integer, ForeignKey(column="user.id", ondelete="CASCADE"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
-    type = Column(Enum(CollectionType), nullable=False)
-    documents = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now())
+    visibility = Column(Enum(CollectionVisibility), nullable=False)
+    vector_size = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), nullable=False)
 
     user = relationship(argument="User", backref=backref(name="collection", cascade="all, delete-orphan"))
 
@@ -99,8 +97,7 @@ class Document(Base):
     id = Column(Integer, primary_key=True, index=True)
     collection_id = Column(Integer, ForeignKey(column="collection.id", ondelete="CASCADE"), nullable=False)
     name = Column(String, nullable=False)
-    chunks = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     collection = relationship(argument="Collection", backref=backref(name="document", cascade="all, delete-orphan"))
 

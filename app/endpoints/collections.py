@@ -5,9 +5,11 @@ from fastapi.responses import JSONResponse
 
 from app.helpers import Authorization
 from app.schemas.auth import PermissionType
-from app.schemas.collections import Collection, CollectionRequest, Collections, CollectionType
+from app.schemas.collections import Collection, CollectionRequest, Collections, CollectionVisibility
 from app.utils.lifespan import context
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET
+from app.schemas.core.auth import UserInfo
+from app.utils.exceptions import CollectionNotFoundException
 
 router = APIRouter()
 
@@ -40,7 +42,7 @@ async def get_collections(
     internet_collection = Collection(
         id=COLLECTION_DISPLAY_ID__INTERNET,
         name=COLLECTION_DISPLAY_ID__INTERNET,
-        type=CollectionType.PUBLIC,
+        type=CollectionVisibility.PUBLIC,
         description="Use this collection to search on the internet.",
     )
 
@@ -50,11 +52,17 @@ async def get_collections(
     return Collections(data=data)
 
 
-@router.delete(path="/collections/{collection}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_PRIVATE_COLLECTION]))])  # fmt: off
-async def delete_collections(request: Request, collection: int = Path(..., description="The collection ID")) -> Response:
+@router.delete(path="/collections/{collection}")  # fmt: off
+async def delete_collections(
+    request: Request,
+    collection: int = Path(..., description="The collection ID"),
+    user: UserInfo = Security(dependency=Authorization(permissions=[PermissionType.DELETE_PRIVATE_COLLECTION])),
+) -> Response:
     """
     Delete a collection.
     """
+    if collection not in user.private_collections:
+        raise CollectionNotFoundException()
 
     await context.iam.delete_collection(collection_id=collection)
 

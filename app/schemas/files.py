@@ -1,11 +1,15 @@
 import json
 from typing import Dict, List, Literal, Optional
-from uuid import UUID
-
+from enum import Enum
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.utils.variables import CHUNKERS, COLLECTION_DISPLAY_ID__INTERNET
+from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET
 from app.utils.exceptions import UnsupportedFileUploadException
+
+
+class ChunkerName(Enum):
+    LangchainRecursiveCharacterTextSplitter = "LangchainRecursiveCharacterTextSplitter"
+    NoChunker = "NoChunker"
 
 
 class ChunkerArgs(BaseModel):
@@ -20,12 +24,12 @@ class ChunkerArgs(BaseModel):
 
 
 class Chunker(BaseModel):
-    name: Optional[Literal[*CHUNKERS]] = Field(default=None, description="The name of the chunker to use for the file upload.")  # fmt: off
+    name: Optional[ChunkerName] = Field(default=None, description="The name of the chunker to use for the file upload.")  # fmt: off
     args: Optional[ChunkerArgs] = Field(default=None, description="The arguments to use for the chunker to use for the file upload.")  # fmt: off
 
 
 class FilesRequest(BaseModel):
-    collection: UUID = Field(default=..., description="The collection ID to use for the file upload. The file will be vectorized with model defined by the collection.")  # fmt: off
+    collection: int = Field(default=..., description="The collection ID to use for the file upload. The file will be vectorized with model defined by the collection.")  # fmt: off
     chunker: Optional[Chunker] = Field(default=None, description="The chunker to use for the file upload.")  # fmt: off
 
     @model_validator(mode="before")

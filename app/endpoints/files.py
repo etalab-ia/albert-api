@@ -1,21 +1,17 @@
-from fastapi import APIRouter, Body, File, Response, Security, UploadFile
+from fastapi import APIRouter, Body, File, Security, UploadFile
+from fastapi.responses import JSONResponse
 
 from app.helpers import Authorization
-from app.helpers._fileuploader import FileUploader
 from app.schemas.auth import PermissionType
 from app.schemas.files import ChunkerArgs, FilesRequest
 from app.utils.exceptions import FileSizeLimitExceededException
-from app.utils.lifespan import databases
+from app.utils.lifespan import context
 
 router = APIRouter()
 
 
-@router.post(path="/files")
-async def upload_file(
-    file: UploadFile = File(...),
-    request: FilesRequest = Body(...),
-    user: str = Security(dependency=Authorization(permissions=[PermissionType.CREATE_PRIVATE_COLLECTION])),
-) -> Response:
+@router.post(path="/files", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_PRIVATE_COLLECTION]))])
+async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body(...)) -> JSONResponse:
     """
     Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.
 
@@ -43,11 +39,13 @@ async def upload_file(
 
     chunker_args["length_function"] = len if chunker_args["length_function"] == "len" else chunker_args["length_function"]
 
-    uploader = FileUploader(search=databases.search, user=user, collection_id=request.collection)
-    output = uploader.parse(file=file)
-    chunks = uploader.split(input=output, chunker_name=chunker_name, chunker_args=chunker_args)
-    await uploader.upsert(chunks=chunks)
+    # TODO: loop for JSON
+    user_id = ""
+    model_client = ""
+    document_id = await context.documents.create_document(
+        user_id=user_id, model_client=model_client, collection_id=request.collection, file=file, chunker_name=chunker_name, chunker_args=chunker_args
+    )
 
     file.file.close()
 
-    return Response(status_code=201)
+    return JSONResponse(status_code=201, content={"id": document_id})
