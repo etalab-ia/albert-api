@@ -33,13 +33,25 @@ async def lifespan(app: FastAPI):
     internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
 
     # databases
-    type = settings.databases.qdrant.type if settings.databases.qdrant else settings.databases.elastic.type
-    args = settings.databases.qdrant.args if settings.databases.qdrant else settings.databases.elastic.args
+    if settings.databases.qdrant and settings.databases.qdrant.type:
+        type = settings.databases.qdrant.type
+    elif settings.databases.elastic and settings.databases.elastic.type:
+        type = settings.databases.elastic.type
+    else:
+        type = None
 
-    databases.search = SearchClient.import_module(type=type)(models=models.registry, **args)
+    if settings.databases.qdrant and settings.databases.qdrant.args:
+        args = settings.databases.qdrant.args
+    elif settings.databases.elastic and settings.databases.elastic.args:
+        args = settings.databases.elastic.args
+    else:
+        args = None
+
+    databases.search = SearchClient.import_module(type=type)(models=models.registry, **args) if type and args else None
     databases.cache = CacheClient(connection_pool=ConnectionPool(**settings.databases.redis.args))
     databases.auth = AuthenticationClient(cache=databases.cache, **settings.databases.grist.args) if settings.databases.grist else None
 
     yield
 
-    databases.search.close()
+    if databases.search:
+        databases.search.close()

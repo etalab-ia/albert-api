@@ -12,6 +12,7 @@ from app.utils.lifespan import databases, internet, limiter, models
 from app.utils.security import check_api_key, check_rate_limit
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
+from app.utils.exceptions import NoVectorStoreAvailableException
 
 router = APIRouter()
 
@@ -34,6 +35,8 @@ async def chat_completions(
     ) -> Tuple[ChatCompletionRequest, List[Search]]:
         searches = []
         if body.search:
+            if not search:
+                raise NoVectorStoreAvailableException()
             search_manager = SearchManager(models=models, search=search, internet=internet)
             searches = await search_manager.query(
                 collections=body.search_args.collections,
