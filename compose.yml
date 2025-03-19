@@ -66,6 +66,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    ports:
+      - 5432:5432
 
 volumes:
   qdrant:
