@@ -1,0 +1,71 @@
+rate_limit:
+  by_key: 300/minute
+  by_ip: 1000/minute
+
+databases:
+  - type: qdrant
+    args:
+      url: http://localhost:6333
+      api_key: ${QDRANT_API_KEY}
+      prefer_grpc: True
+      grpc_port: 6334
+      timeout: 10
+
+  - type: redis
+    args:
+      host: redis
+      port: 6379
+      password: ${REDIS_PASSWORD}
+
+  - type: grist
+    args:
+      api_key: ${GRIST_API_KEY}
+      server: https://grist.numerique.gouv.fr
+      doc_id: 4fBA11fFqHuhn36G5uLDRr
+      table_id: DEV
+
+  - type: sql
+    args:
+      url: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres"
+
+models:
+  - id: meta-llama/Llama-3.1-8B-Instruct
+    type: text-generation
+    owned_by: test
+    default_internet: true
+    aliases: ["AgentPublic/Llama-3.1-8B-Instruct", "AgentPublic/llama3-instruct-8b"]
+    clients:
+      - model: meta-llama/Llama-3.1-8B-Instruct
+        type: albert
+        args:
+          api_url: https://albert.api.etalab.gouv.fr
+          api_key: ${ALBERT_API_KEY}
+
+  - id: BAAI/bge-m3
+    type: text-embeddings-inference
+    default_internet: true
+    aliases: ["BAAI/bge-m3-large"]
+    clients:
+      - model: BAAI/bge-m3
+        type: albert
+        args:
+          api_url: https://albert.api.etalab.gouv.fr
+          api_key: ${ALBERT_API_KEY}
+
+  - id: openai/whisper-large-v3
+    type: automatic-speech-recognition
+    clients:
+      - model: openai/whisper-large-v3
+        type: albert
+        args:
+          api_url: https://albert.api.etalab.gouv.fr
+          api_key: ${ALBERT_API_KEY}
+
+  - id: BAAI/bge-reranker-v2-m3
+    type: text-classification
+    clients:
+      - model: BAAI/bge-reranker-v2-m3
+        type: albert
+        args:
+          api_url: https://albert.api.etalab.gouv.fr
+          api_key: ${ALBERT_API_KEY}
