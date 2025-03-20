@@ -73,4 +73,4 @@ jobs:
       env:
         ALBERT_CONFIG: config.test.yml
       run: |
-        pytest --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
+        python -m pytest app/tests --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
