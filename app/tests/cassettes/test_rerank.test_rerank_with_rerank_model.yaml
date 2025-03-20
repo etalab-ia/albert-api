@@ -1,0 +1,39 @@
+interactions:
+- request:
+    body: '{"prompt":"Sort these sentences by relevance.","input":["Sentence 1","Sentence
+      2","Sentence 3"],"model":"BAAI/bge-reranker-v2-m3"}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '130'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/rerank
+  response:
+    body:
+      string: Internal Server Error
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '21'
+      Content-Type:
+      - text/plain; charset=utf-8
+      Date:
+      - Wed, 12 Mar 2025 12:38:11 GMT
+      Server:
+      - nginx/1.27.4
+    status:
+      code: 500
+      message: Internal Server Error
+version: 1

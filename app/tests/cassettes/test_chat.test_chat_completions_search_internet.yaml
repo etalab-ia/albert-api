@@ -1,0 +1,202 @@
+interactions:
+- request:
+    body: "{\"messages\":[{\"role\":\"user\",\"content\":\"Tu es un sp\xE9cialiste
+      pour transformer des demandes en requ\xEAte google. Tu sais \xE9crire les meilleurs
+      types de recherches pour arriver aux meilleurs r\xE9sultats.\\nVoici la demande
+      : Qui est Ulrich Tan ?\\nR\xE9ponds en donnant uniquement une requ\xEAte google
+      qui permettrait de trouver des informations pour r\xE9pondre \xE0 la question.\\nExemples
+      :\\nquestion: Peut-on avoir des jours de cong\xE9 pour un mariage ?\\nreponse
+      : jour cong\xE9 mariage conditions\\nquestion : Donnes-moi des informations
+      sur toto et titi\\nreponse : toto titi\\nComment refaire une pi\xE8ce d'identit\xE9
+      ?\\nreponse : Renouvellement pi\xE8ce identit\xE9 France\\nNe donnes pas d'explication,
+      ne mets pas de guillemets, r\xE9ponds uniquement avec la requ\xEAte google qui
+      renverra les meilleurs r\xE9sultats pour la demande. Ne mets pas de mots qui
+      ne servent \xE0 rien dans la requ\xEAte Google.\\n\"}],\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"stream\":false,\"temperature\":0.2}"
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '960'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - AlbertModelClient/Python 1.63.0
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.63.0
+      x-stainless-read-timeout:
+      - '300'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.0
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: '{"id":"chatcmpl-85f40c3cabd14ace88ea79c14972ea19","choices":[{"finish_reason":"stop","index":0,"logprobs":null,"message":{"content":"Ulrich
+        Tan","refusal":null,"role":"assistant","audio":null,"function_call":null,"tool_calls":[]},"stop_reason":null}],"created":1741783211,"model":"meta-llama/Llama-3.1-8B-Instruct","object":"chat.completion","service_tier":null,"system_fingerprint":null,"usage":{"completion_tokens":4,"prompt_tokens":234,"total_tokens":238,"completion_tokens_details":null,"prompt_tokens_details":null},"search_results":[],"prompt_logprobs":null}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Mar 2025 12:40:11 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '564'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - api.duckduckgo.com
+      user-agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/120.0.0.0 Safari/537.36
+    method: GET
+    uri: https://api.duckduckgo.com/?q=Ulrich+Tan&format=json&kl=fr-fr&safe=1
+  response:
+    body:
+      string: '{"Abstract":"","AbstractSource":"","AbstractText":"","AbstractURL":"","Answer":"","AnswerType":"","Definition":"","DefinitionSource":"","DefinitionURL":"","Entity":"","Heading":"","Image":"","ImageHeight":"","ImageIsLogo":"","ImageWidth":"","Infobox":"","Redirect":"","RelatedTopics":[],"Results":[],"Type":"N","meta":{"attribution":null,"blockgroup":null,"created_date":"2021-03-24","description":"testing","designer":null,"dev_date":"2021-03-24","dev_milestone":"development","developer":[{"name":"zt","type":"duck.co","url":"https://duck.co/user/zt"}],"example_query":"","id":"just_another_test","is_stackexchange":0,"js_callback_name":"another_test","live_date":null,"maintainer":{"github":""},"name":"Just
+        Another Test","perl_module":"DDG::Lontail::AnotherTest","producer":null,"production_state":"offline","repo":"fathead","signal_from":"just_another_test","src_domain":"how
+        about there","src_id":null,"src_name":"hi there","src_options":{"directory":"","is_fanon":0,"is_mediawiki":0,"is_wikipedia":0,"language":"","min_abstract_length":null,"skip_abstract":0,"skip_abstract_paren":0,"skip_icon":0,"skip_image_name":0,"skip_qr":"","src_info":"","src_skip":""},"src_url":"Hello
+        there","status":null,"tab":"is this source","topic":[],"unsafe":null}}'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - max-age=1
+      Connection:
+      - keep-alive
+      Content-Security-Policy:
+      - 'default-src ''none'' ; connect-src  https://duckduckgo.com https://*.duckduckgo.com
+        https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com
+        ; manifest-src  https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/
+        https://spreadprivacy.com ; media-src  https://duckduckgo.com https://*.duckduckgo.com
+        https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com
+        ; script-src blob:  https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/
+        https://spreadprivacy.com ''unsafe-inline'' ''unsafe-eval'' ; font-src data:  https://duckduckgo.com
+        https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/
+        https://spreadprivacy.com ; img-src data:  https://duckduckgo.com https://*.duckduckgo.com
+        https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com
+        ; style-src  https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/
+        https://spreadprivacy.com ''unsafe-inline'' ; object-src ''none'' ; worker-src
+        blob: ; child-src blob:  https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/
+        https://spreadprivacy.com ; frame-src blob:  https://duckduckgo.com https://*.duckduckgo.com
+        https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com
+        ; form-action  https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/
+        https://spreadprivacy.com ; frame-ancestors ''self'' https://html.duckduckgo.com;
+        base-uri ''self'' ; block-all-mixed-content ;'
+      Content-Type:
+      - application/x-javascript
+      Date:
+      - Wed, 12 Mar 2025 12:40:11 GMT
+      Expect-CT:
+      - max-age=0
+      Expires:
+      - Wed, 12 Mar 2025 12:40:12 GMT
+      Permissions-Policy:
+      - interest-cohort=()
+      Referrer-Policy:
+      - origin
+      Server:
+      - nginx
+      Server-Timing:
+      - total;dur=45;desc="Backend Total [n]"
+      Strict-Transport-Security:
+      - max-age=31536000
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      X-Content-Type-Options:
+      - nosniff
+      X-Detected-Query-Lang:
+      - en
+      X-DuckDuckGo-Locale:
+      - en_US
+      X-DuckDuckGo-Results:
+      - '1'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Robots-Tag:
+      - noindex
+      X-XSS-Protection:
+      - 1;mode=block
+      content-length:
+      - '1253'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"messages":[{"role":"user","content":"Qui est Ulrich Tan ?"}],"model":"meta-llama/Llama-3.1-8B-Instruct","frequency_penalty":0.0,"logit_bias":null,"logprobs":false,"top_logprobs":null,"presence_penalty":0.0,"max_tokens":10,"max_completion_tokens":null,"n":1,"response_format":null,"seed":null,"stop":[],"stream":false,"stream_options":null,"temperature":0.7,"top_p":1,"tools":null,"tool_choice":"none"}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '403'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: "{\"id\":\"chatcmpl-aca6eae8ebc14af69adeadcc39d76890\",\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"Je
+        n'ai pas trouv\xE9 d'informations sur\",\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[]},\"stop_reason\":null}],\"created\":1741783211,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"object\":\"chat.completion\",\"service_tier\":null,\"system_fingerprint\":null,\"usage\":{\"completion_tokens\":10,\"prompt_tokens\":41,\"total_tokens\":51,\"completion_tokens_details\":null,\"prompt_tokens_details\":null},\"search_results\":[],\"prompt_logprobs\":null}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Mar 2025 12:40:12 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '593'
+    status:
+      code: 200
+      message: OK
+version: 1
