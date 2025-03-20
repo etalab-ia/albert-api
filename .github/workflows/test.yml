@@ -61,7 +61,7 @@ jobs:
     - name: Create config from template
       run: |
         chmod +x ./generate_config.sh
-        ./generate_config.sh config.test.yml
+        ./generate_config.sh
       env:
         QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
         REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
