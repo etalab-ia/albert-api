@@ -3,10 +3,16 @@
 # Default output file is config.yml if no parameter is provided
 OUTPUT_FILE=${1:-config.yml}
 
+# Load .env file if it exists
+if [ -f ".env" ]; then
+  echo "Loading environment from .env file"
+  export $(grep -v '^#' .env | xargs)
+fi
 # Set default hosts for local development and testing
 POSTGRES_USER=${POSTGRES_USER:-postgres}
-POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
 POSTGRES_HOST=${POSTGRES_HOST:-localhost}
+POSTGRES_DB=${POSTGRES_DB:-postgres}
 REDIS_HOST=${REDIS_HOST:-localhost}
 REDIS_PASSWORD=${REDIS_PASSWORD:-changeme}
 QDRANT_HOST=${QDRANT_HOST:-localhost}
@@ -22,6 +28,7 @@ cat config.template.yml | sed \
   -e "s|\${POSTGRES_USER}|${POSTGRES_USER}|g" \
   -e "s|\${POSTGRES_PASSWORD}|${POSTGRES_PASSWORD}|g" \
   -e "s|\${POSTGRES_HOST}|${POSTGRES_HOST}|g" \
+  -e "s|\${POSTGRES_PORT}|${POSTGRES_HOST}|g" \
   -e "s|\${ALBERT_API_KEY}|${ALBERT_API_KEY}|g" \
   > "$OUTPUT_FILE"
 
