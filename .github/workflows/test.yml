@@ -78,7 +78,7 @@ jobs:
 
     - name: Create config from template
       run: |
-        ./generate_config.sh config.test.yml
+        ./generate_config.sh
       env:
         GRIST_API_KEY: ${{ secrets.GRIST_API_KEY }}
         ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
