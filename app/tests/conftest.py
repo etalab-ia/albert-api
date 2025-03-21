@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Generator
 from sqlalchemy import create_engine
-from sqlalchemy_utils import database_exists, create_database, drop_database
+from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.orm import sessionmaker
 
 from fastapi.testclient import TestClient
@@ -60,7 +60,6 @@ def engine(worker_id):
 
     # Cleanup after all tests
     Base.metadata.drop_all(_engine)
-    drop_database(db_url)
 
 
 @pytest.fixture(scope="session")
