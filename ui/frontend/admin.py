@@ -1,20 +1,21 @@
 import pandas as pd
 import streamlit as st
 
-from utils.admin import create_role, create_user, delete_role, delete_user, update_role, update_user
-from utils.common import get_limits, get_models, get_roles, get_users, header, settings
+from ui.backend.admin import create_role, create_user, delete_role, delete_user, update_role, update_user
+from ui.frontend.header import header
+from utils.common import get_limits, get_models, get_roles, get_users
 from utils.variables import ADMIN_PERMISSIONS, MODEL_TYPE_LANGUAGE
 
 header()
 
 
-if not all(perm in st.session_state["user"]["role"]["permissions"] for perm in ADMIN_PERMISSIONS):
+if not all(perm in st.session_state["user"].role["permissions"] for perm in ADMIN_PERMISSIONS):
     st.info("Access denied.")
     st.stop()
 
 users = get_users()
 roles = get_roles()
-models = get_models(type=MODEL_TYPE_LANGUAGE, api_key=settings.api_key)
+models = get_models(type=MODEL_TYPE_LANGUAGE, api_key=st.session_state["user"].api_key)
 
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):
@@ -25,6 +26,7 @@ st.dataframe(
     data=pd.DataFrame(
         data={
             "ID": [role["id"] for role in roles],
+            "Name": [role["name"] for role in roles],
             "Default": [role["default"] for role in roles],
             "Created at": [pd.to_datetime(role["created_at"], unit="s") for role in roles],
             "Updated at": [pd.to_datetime(role["updated_at"], unit="s") for role in roles],
@@ -34,6 +36,7 @@ st.dataframe(
     use_container_width=True,
     column_config={
         "ID": st.column_config.TextColumn(label="ID"),
+        "Name": st.column_config.ListColumn(label="Name"),
         "Default": st.column_config.CheckboxColumn(label="Default"),
         "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True),
         "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True),

@@ -8,8 +8,8 @@ from app.utils.exceptions import UnsupportedFileUploadException
 
 
 class ChunkerName(Enum):
-    LangchainRecursiveCharacterTextSplitter = "LangchainRecursiveCharacterTextSplitter"
-    NoChunker = "NoChunker"
+    LANGCHAIN_RECURSIVE_CHARACTER_TEXT_SPLITTER = "LangchainRecursiveCharacterTextSplitter"
+    NO_CHUNKER = "NoChunker"
 
 
 class ChunkerArgs(BaseModel):

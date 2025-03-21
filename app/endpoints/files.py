@@ -2,7 +2,6 @@ from fastapi import APIRouter, Body, File, Security, UploadFile
 from fastapi.responses import JSONResponse
 
 from app.helpers import Authorization
-from app.schemas.auth import PermissionType
 from app.schemas.files import ChunkerArgs, FilesRequest
 from app.utils.exceptions import FileSizeLimitExceededException
 from app.utils.lifespan import context
@@ -10,7 +9,7 @@ from app.utils.lifespan import context
 router = APIRouter()
 
 
-@router.post(path="/files", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_PRIVATE_COLLECTION]))])
+@router.post(path="/files", dependencies=[Security(dependency=Authorization())])
 async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body(...)) -> JSONResponse:
     """
     Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.
@@ -43,7 +42,12 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
     user_id = ""
     model_client = ""
     document_id = await context.documents.create_document(
-        user_id=user_id, model_client=model_client, collection_id=request.collection, file=file, chunker_name=chunker_name, chunker_args=chunker_args
+        user_id=user_id,
+        model_client=model_client,
+        collection_id=request.collection,
+        file=file,
+        chunker_name=chunker_name,
+        chunker_args=chunker_args,
     )
 
     file.file.close()

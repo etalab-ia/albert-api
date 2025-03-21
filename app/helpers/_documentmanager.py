@@ -10,7 +10,6 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from app.clients.database import SQLDatabaseClient
 from app.clients.model import BaseModelClient as ModelClient
-from ._internetmanager import InternetManager
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
 from app.schemas.chunks import Chunk, ChunkMetadata
@@ -31,6 +30,8 @@ from app.utils.exceptions import (
     UnsupportedFileTypeException,
 )
 from app.utils.logging import logger
+
+from ._internetmanager import InternetManager
 
 
 class DocumentManager:
@@ -185,16 +186,20 @@ class DocumentManager:
 
             return documents
 
-    async def get_chunks(
-        self, collection_id: int, document_id: int, chunk_id: Optional[int] = None, offset: Optional[UUID] = None, limit: int = 10
-    ) -> List[Chunk]:
-        # TODO: add chunk_id filter
+    async def get_chunks(self, document_id: int, chunk_id: Optional[int] = None, offset: Optional[UUID] = None, limit: int = 10) -> List[Chunk]:
+        # check if document exists
+        result = await self.sql.session.execute(statement=select(DocumentTable).where(DocumentTable.id == document_id))
+        document = result.scalar_one()
+        if not document:
+            raise DocumentNotFoundException()
+
+        # check if document exists
         must = [FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))]
         if chunk_id:
             must.append(FieldCondition(key="metadata.id", match=MatchValue(value=chunk_id)))
 
         filter = Filter(must=must)
-        data = await self.qdrant.scroll(collection_name=collection_id, scroll_filter=filter, limit=limit, offset=offset)[0]
+        data = await self.qdrant.scroll(collection_name=document.collection_id, scroll_filter=filter, limit=limit, offset=offset)[0]
         chunks = [Chunk(id=chunk.id, content=chunk.payload["content"], metadata=ChunkMetadata(**chunk.payload["metadata"])) for chunk in data]
 
         return chunks
@@ -208,7 +213,6 @@ class DocumentManager:
         method: str,
         k: int,
         rff_k: int,
-        user: str,
         score_threshold: float = 0.0,
         search_on_internet: bool = False,
     ) -> List[Search]:
@@ -311,7 +315,7 @@ class DocumentManager:
         rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
     ) -> List[Search]:
-        if method != SearchMethod.SEARCH_TYPE_SEMANTIC:
+        if method != SearchMethod.SEMANTIC:
             raise NotImplementedException("Lexical and hybrid search are not available for Qdrant database.")
 
         response = await self._create_embeddings(input=[prompt], model=model_client.model)

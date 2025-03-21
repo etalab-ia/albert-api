@@ -41,6 +41,9 @@ async def lifespan(app: FastAPI):
                 continue
         if not clients:
             logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
+            print(model.id)
+            assert model.id != settings.general["internet_model"], f"Internet model ({model.id}) must be reachable."
+            assert model.id != settings.general["documents_model"], f"Documents model ({model.id}) must be reachable."
             continue
         logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
         model = model.model_dump()
@@ -52,11 +55,11 @@ async def lifespan(app: FastAPI):
     context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
     context.documents = DocumentManager(sql=sql, qdrant=qdrant, internet=InternetManager(internet=internet))
 
-    await context.iam.setup()
+    # await context.iam.setup()
     assert await context.limiter.redis.check(), "Redis database is not reachable."
 
     yield
 
     # cleanup resources when app shuts down
-    databases.search.close()
-    await context.iam.sql.engine.dispose()
+    qdrant.close()
+    await sql.engine.dispose()

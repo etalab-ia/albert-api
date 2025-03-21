@@ -1,15 +1,12 @@
-import time
-import traceback
 from typing import List, Optional, Tuple
 
-import bcrypt
 from jose import JWTError, jwt
 from sqlalchemy import Integer, cast, delete, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.sql import func
 
 from app.clients.database import SQLDatabaseClient
-from app.schemas.auth import Limit, PermissionType, Role, Token, User
+from app.schemas.auth import Limit, PermissionType, Role, Token, User, LimitType
 from app.sql.models import Limit as LimitTable
 from app.sql.models import Permission as PermissionTable
 from app.sql.models import Role as RoleTable
@@ -17,7 +14,6 @@ from app.sql.models import Token as TokenTable
 from app.sql.models import User as UserTable
 from app.utils.exceptions import (
     DeleteRoleWithUsersException,
-    InvalidPasswordException,
     RoleAlreadyExistsException,
     RoleNotFoundException,
     TokenAlreadyExistsException,
@@ -25,9 +21,7 @@ from app.utils.exceptions import (
     UserAlreadyExistsException,
     UserNotFoundException,
 )
-from app.utils.logging import logger
 from app.utils.settings import settings
-from app.utils.variables import ROOT_ROLE
 
 
 class IdentityAccessManager:
@@ -35,98 +29,105 @@ class IdentityAccessManager:
 
     def __init__(self, sql: SQLDatabaseClient) -> None:
         """
-        Initialize the authentication manager: create the root user and role if they don't exist and check if the root password is correct and update it if needed
+        Initialize the authentication manager: create the root user and role.
         """
 
         self.sql = sql
 
-    async def setup(self):
-        # initialize create the root role and user
-        async with self.sql.session() as session:
-            # get the currently root data
-            result = await session.execute(
-                statement=select(RoleTable.id.label("role_id"), UserTable.id.label("user_id"), TokenTable.token)
-                .outerjoin(target=UserTable, onclause=RoleTable.id == UserTable.role_id)
-                .outerjoin(target=TokenTable, onclause=UserTable.id == TokenTable.user_id)
-                .where(RoleTable.name == ROOT_ROLE)
-            )
-            currently_root = result.all()
+        from app.utils.lifespan import context
 
-            if currently_root:
-                assert len(currently_root) == 1, "Root role have more than one user or token, please check the database."
-                currently_root = [row._mapping for row in currently_root][0]
+        root_limits = [Limit(model=model, type=type, value=None) for model in context.models.models for type in LimitType]
+        root_permissions = [permission for permission in PermissionType]
+        self.root_role = Role(id=0, name="root", default=False, permissions=root_permissions, limits=root_limits)
+        self.root_user = User(id=0, name="root", role=0, expires_at=None, created_at=0, updated_at=0)
 
-                if currently_root["token"]:
-                    assert self._check_password(password=settings.auth.root_key, hashed_password=currently_root["token"]), "Provided root key is not matching with stored root key"  # fmt: off
+    # async def setup(self):
+    #     # initialize create the root role and user
+    #     async with self.sql.session() as session:
+    #         # get the currently root data
+    #         result = await session.execute(
+    #             statement=select(RoleTable.id.label("role_id"), UserTable.id.label("user_id"), TokenTable.token)
+    #             .outerjoin(target=UserTable, onclause=RoleTable.id == UserTable.role_id)
+    #             .outerjoin(target=TokenTable, onclause=UserTable.id == TokenTable.user_id)
+    #             .where(RoleTable.name == ROOT_ROLE)
+    #         )
+    #         currently_root = result.all()
 
-                # delete currently root user
-                try:
-                    await session.execute(statement=delete(table=UserTable).where(UserTable.id == currently_root["user_id"]))
-                    await session.commit()
-                except Exception:
-                    logger.debug(msg=traceback.format_exc())
-                    raise Exception("Failed to delete currently root user.")
+    #         if currently_root:
+    #             assert len(currently_root) == 1, "Root role have more than one user or token, please check the database."
+    #             currently_root = [row._mapping for row in currently_root][0]
 
-                # delete the currently root role
-                try:
-                    await session.execute(statement=delete(table=RoleTable).where(RoleTable.id == currently_root["role_id"]))
-                    await session.commit()
-                except Exception:
-                    logger.debug(msg=traceback.format_exc())
-                    raise Exception("Failed to delete currently root role.")
+    #             # if currently_root["token"]:
+    #             #     assert self._check_password(password=settings.auth.root_key, hashed_password=currently_root["token"]), "Provided root key is not matching with stored root key"  # fmt: off
 
-            # create the root role
-            try:
-                await session.execute(statement=insert(table=RoleTable).values(name=ROOT_ROLE, default=False))
-                await session.commit()
-            except Exception:
-                logger.debug(msg=traceback.format_exc())
-                raise Exception("Failed to create default root role.")
+    #             # delete currently root user
+    #             try:
+    #                 await session.execute(statement=delete(table=UserTable).where(UserTable.id == currently_root["user_id"]))
+    #                 await session.commit()
+    #             except Exception:
+    #                 logger.debug(msg=traceback.format_exc())
+    #                 raise Exception("Failed to delete currently root user.")
 
-            result = await session.execute(statement=select(RoleTable).where(RoleTable.name == ROOT_ROLE))
-            self.root_role_id = result.scalar_one().id
+    #             # delete the currently root role
+    #             try:
+    #                 await session.execute(statement=delete(table=RoleTable).where(RoleTable.id == currently_root["role_id"]))
+    #                 await session.commit()
+    #             except Exception:
+    #                 logger.debug(msg=traceback.format_exc())
+    #                 raise Exception("Failed to delete currently root role.")
 
-            # create the root permissions
-            values = [{"role_id": self.root_role_id, "permission": permission} for permission in PermissionType]
-            try:
-                await session.execute(statement=insert(table=PermissionTable).values(values))
-                await session.commit()
-            except Exception:
-                logger.debug(msg=traceback.format_exc())
-                raise Exception("Failed to create root permissions.")
+    #         # create the root role
+    #         try:
+    #             await session.execute(statement=insert(table=RoleTable).values(name=ROOT_ROLE, default=False))
+    #             await session.commit()
+    #         except Exception:
+    #             logger.debug(msg=traceback.format_exc())
+    #             raise Exception("Failed to create default root role.")
 
-            # create the root user
-            try:
-                await session.execute(
-                    statement=insert(table=UserTable).values(
-                        name=settings.auth.root_user,
-                        password=self._get_hashed_password(password=settings.auth.root_password),
-                        role_id=self.root_role_id,
-                    )
-                )
-                await session.commit()
-            except Exception:
-                logger.debug(msg=traceback.format_exc())
-                raise Exception("Failed to create root user.")
+    #         result = await session.execute(statement=select(RoleTable).where(RoleTable.name == ROOT_ROLE))
+    #         self.root_role_id = result.scalar_one().id
 
-            result = await session.execute(statement=select(UserTable).where(UserTable.name == settings.auth.root_user))
-            self.root_user_id = result.scalar_one().id
+    #         # create the root permissions
+    #         values = [{"role_id": self.root_role_id, "permission": permission} for permission in PermissionType]
+    #         try:
+    #             await session.execute(statement=insert(table=PermissionTable).values(values))
+    #             await session.commit()
+    #         except Exception:
+    #             logger.debug(msg=traceback.format_exc())
+    #             raise Exception("Failed to create root permissions.")
 
-            # create the root token
-            try:
-                await session.execute(statement=insert(table=TokenTable).values(user_id=self.root_user_id, name=ROOT_ROLE))
-                await session.commit()
-            except Exception:
-                logger.debug(msg=traceback.format_exc())
-                raise Exception("Failed to create root token.")
+    #         # create the root user
+    #         try:
+    #             await session.execute(
+    #                 statement=insert(table=UserTable).values(
+    #                     name=settings.auth.root_user,
+    #                     # password=self._get_hashed_password(password=settings.auth.root_password),
+    #                     role_id=self.root_role_id,
+    #                 )
+    #             )
+    #             await session.commit()
+    #         except Exception:
+    #             logger.debug(msg=traceback.format_exc())
+    #             raise Exception("Failed to create root user.")
 
-    @staticmethod
-    def _get_hashed_password(password: str) -> str:
-        return bcrypt.hashpw(password=password.encode(encoding="utf-8"), salt=bcrypt.gensalt()).decode(encoding="utf-8")
+    #         result = await session.execute(statement=select(UserTable).where(UserTable.name == settings.auth.root_user))
+    #         self.root_user_id = result.scalar_one().id
 
-    @staticmethod
-    def _check_password(password: str, hashed_password: str) -> bool:
-        return bcrypt.checkpw(password=password.encode(encoding="utf-8"), hashed_password=hashed_password.encode(encoding="utf-8"))
+    #         # create the root token
+    #         try:
+    #             await session.execute(statement=insert(table=TokenTable).values(user_id=self.root_user_id, name=ROOT_ROLE))
+    #             await session.commit()
+    #         except Exception:
+    #             logger.debug(msg=traceback.format_exc())
+    #             raise Exception("Failed to create root token.")
+
+    # @staticmethod
+    # def _get_hashed_password(password: str) -> str:
+    #     return bcrypt.hashpw(password=password.encode(encoding="utf-8"), salt=bcrypt.gensalt()).decode(encoding="utf-8")
+
+    # @staticmethod
+    # def _check_password(password: str, hashed_password: str) -> bool:
+    #     return bcrypt.checkpw(password=password.encode(encoding="utf-8"), hashed_password=hashed_password.encode(encoding="utf-8"))
 
     @staticmethod
     def _decode_token(token: str) -> dict:
@@ -141,23 +142,32 @@ class IdentityAccessManager:
             algorithm="HS256",
         )
 
-    async def login(self, user_name: str, user_password: str) -> User:
-        async with self.sql.session() as session:
-            result = await session.execute(statement=select(UserTable).where(UserTable.name == user_name))
-            try:
-                user = result.scalar_one()
-            except NoResultFound:
-                raise UserNotFoundException()
+    # async def login(self, user_name: str, user_password: str) -> User:
+    #     async with self.sql.session() as session:
+    #         result = await session.execute(
+    #             statement=select(
+    #                 UserTable.id,
+    #                 UserTable.name,
+    #                 UserTable.password,
+    #                 UserTable.role_id.label("role"),
+    #                 cast(func.extract("epoch", UserTable.expires_at), Integer).label("expires_at"),
+    #                 cast(func.extract("epoch", UserTable.created_at), Integer).label("created_at"),
+    #                 cast(func.extract("epoch", UserTable.updated_at), Integer).label("updated_at"),
+    #             ).where(UserTable.name == user_name)
+    #         )
+    #         try:
+    #             user = result.all()
+    #             user = User(**[row._mapping for row in user][0])
+    #         except IndexError:
+    #             raise UserNotFoundException()
 
-            if not IdentityAccessManager._check_password(password=user_password, hashed_password=user.password):
-                raise InvalidPasswordException()
+    #         if not IdentityAccessManager._check_password(password=user_password, hashed_password=user.password):
+    #             raise InvalidPasswordException()
 
-            if user.expires_at is not None and user.expires_at < time.time():
-                raise UserNotFoundException()
+    #         if user.expires_at is not None and user.expires_at < time.time():
+    #             raise UserNotFoundException()
 
-            user = User(id=user.id, name=user.name, role=user.role_id, expires_at=user.expires_at)
-
-            return user
+    #         return user
 
     async def create_role(self, name: str, default: bool = False, limits: List[Limit] = [], permissions: List[PermissionType] = []) -> int:
         async with self.sql.session() as session:
@@ -257,6 +267,9 @@ class IdentityAccessManager:
             await session.commit()
 
     async def get_roles(self, role_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Role]:
+        if role_id is not None and role_id == 0:
+            return [self.root_role]
+
         async with self.sql.session() as session:
             if not role_id:
                 # get the unique role IDs with pagination
@@ -276,8 +289,8 @@ class IdentityAccessManager:
                     RoleTable.id,
                     RoleTable.name,
                     RoleTable.default,
-                    cast(func.extract("epoch", RoleTable.created_at), Integer),
-                    cast(func.extract("epoch", RoleTable.updated_at), Integer),
+                    cast(func.extract("epoch", RoleTable.created_at), Integer).label("created_at"),
+                    cast(func.extract("epoch", RoleTable.updated_at), Integer).label("updated_at"),
                     LimitTable.model,
                     LimitTable.type,
                     LimitTable.value,
@@ -305,7 +318,7 @@ class IdentityAccessManager:
                 )
                 if role.id not in roles:
                     roles[role.id] = role
-                if row.model:
+                if row["model"]:
                     rate_limit = Limit(model=row["model"], type=row["type"], value=row["value"])
                     roles[role.id].limits.append(rate_limit)
                 if row["permission"]:
@@ -313,13 +326,14 @@ class IdentityAccessManager:
 
             roles = list(roles.values())
 
-            if role_id and len(roles) == 0:
+            if role_id is not None and len(roles) == 0:
                 raise RoleNotFoundException()
 
         return roles
 
-    async def create_user(self, name: str, password: str, role_id: int, expires_at: Optional[int] = None) -> int:
-        password = self._get_hashed_password(password=password)
+    # async def create_user(self, name: str, password: str, role_id: int, expires_at: Optional[int] = None) -> int:
+    async def create_user(self, name: str, role_id: int, expires_at: Optional[int] = None) -> int:
+        # password = self._get_hashed_password(password=password)
         expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
         async with self.sql.session() as session:
@@ -332,7 +346,8 @@ class IdentityAccessManager:
 
             # create the user
             try:
-                await session.execute(statement=insert(table=UserTable).values(name=name, password=password, role_id=role_id, expires_at=expires_at))
+                # await session.execute(statement=insert(table=UserTable).values(name=name, password=password, role_id=role_id, expires_at=expires_at))
+                await session.execute(statement=insert(table=UserTable).values(name=name, role_id=role_id, expires_at=expires_at))
             except IntegrityError:
                 raise UserAlreadyExistsException()
 
@@ -357,7 +372,8 @@ class IdentityAccessManager:
             await session.execute(statement=delete(table=UserTable).where(UserTable.id == user_id))
             await session.commit()
 
-    async def update_user(self, user_id: int, name: Optional[str] = None, password: Optional[str] = None, role_id: Optional[int] = None, expires_at: Optional[int] = None) -> None:  # fmt: off
+    # async def update_user(self, user_id: int, name: Optional[str] = None, password: Optional[str] = None, role_id: Optional[int] = None, expires_at: Optional[int] = None) -> None:  # fmt: off
+    async def update_user(self, user_id: int, name: Optional[str] = None, role_id: Optional[int] = None, expires_at: Optional[int] = None) -> None:
         """
         TODO Attention ici car expires_at est toujours remplacé par la valeur passée en paramètre car None est une valeur valide pour expires_at.
         """
@@ -367,7 +383,7 @@ class IdentityAccessManager:
                 statement=select(
                     UserTable.id,
                     UserTable.name,
-                    UserTable.password,
+                    # UserTable.password,
                     UserTable.expires_at,
                     RoleTable.id.label("role_id"),
                     RoleTable.name.label("role"),
@@ -380,7 +396,7 @@ class IdentityAccessManager:
 
             # update the user
             name = name if name is not None else user.name
-            password = self._get_hashed_password(password=password) if password is not None else user.password
+            # password = self._get_hashed_password(password=password) if password is not None else user.password
             expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
             if role_id is not None and role_id != user.role_id:
@@ -394,12 +410,16 @@ class IdentityAccessManager:
             role_id = role_id if role_id is not None else user.role_id
             await session.execute(
                 statement=update(table=UserTable)
-                .values(name=name, password=password, role_id=role_id, expires_at=expires_at, updated_at=func.now())
+                # .values(name=name, password=password, role_id=role_id, expires_at=expires_at, updated_at=func.now())
+                .values(name=name, role_id=role_id, expires_at=expires_at, updated_at=func.now())
                 .where(UserTable.id == user.id)
             )
             await session.commit()
 
-    async def get_users(self, user_id: Optional[str] = None, role_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[User]:
+    async def get_users(self, user_id: Optional[int] = None, role_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[User]:
+        if user_id is not None and user_id == 0:
+            return [self.root_user]
+
         async with self.sql.session() as session:
             # then get all the data for these specific user IDs
             statement = (
@@ -407,9 +427,9 @@ class IdentityAccessManager:
                     UserTable.id,
                     UserTable.name,
                     UserTable.role_id.label("role"),
-                    cast(func.extract("epoch", UserTable.expires_at), Integer),
-                    cast(func.extract("epoch", UserTable.created_at), Integer),
-                    cast(func.extract("epoch", UserTable.updated_at), Integer),
+                    cast(func.extract("epoch", UserTable.expires_at), Integer).label("expires_at"),
+                    cast(func.extract("epoch", UserTable.created_at), Integer).label("created_at"),
+                    cast(func.extract("epoch", UserTable.updated_at), Integer).label("updated_at"),
                 )
                 .offset(offset=offset)
                 .limit(limit=limit)
@@ -420,11 +440,9 @@ class IdentityAccessManager:
                 statement = statement.where(UserTable.role_id == role_id)
 
             result = await session.execute(statement=statement)
-
-            # format the results
             users = [User(**row._mapping) for row in result.all()]
 
-            if user_id and len(users) == 0:
+            if user_id is not None and len(users) == 0:
                 raise UserNotFoundException()
 
         return users
@@ -476,7 +494,7 @@ class IdentityAccessManager:
             await session.commit()
 
     async def get_tokens(
-        self, user_id: int, token_id: Optional[int] = None, exclude_expired: bool = False, offset: int = 0, limit: int = 10
+        self, user_id: Optional[int] = None, token_id: Optional[int] = None, exclude_expired: bool = False, offset: int = 0, limit: int = 10
     ) -> List[Token]:
         async with self.sql.session() as session:
             statement = (
@@ -484,13 +502,14 @@ class IdentityAccessManager:
                     TokenTable.id,
                     TokenTable.token,
                     TokenTable.name,
-                    cast(func.extract("epoch", TokenTable.expires_at), Integer),
-                    cast(func.extract("epoch", TokenTable.created_at), Integer),
+                    cast(func.extract("epoch", TokenTable.expires_at), Integer).label("expires_at"),
+                    cast(func.extract("epoch", TokenTable.created_at), Integer).label("created_at"),
                 )
                 .offset(offset=offset)
                 .limit(limit=limit)
-                .where(TokenTable.user_id == user_id)
             )
+            if user_id:
+                statement = statement.where(TokenTable.user_id == user_id)
             if token_id:
                 statement = statement.where(TokenTable.id == token_id)
             if exclude_expired:
@@ -499,7 +518,7 @@ class IdentityAccessManager:
             result = await session.execute(statement=statement)
             tokens = [Token(**row._mapping) for row in result.all()]
 
-            if token_id and len(tokens) == 0:
+            if token_id is not None and len(tokens) == 0:
                 raise TokenNotFoundException()
 
             return tokens
@@ -507,6 +526,7 @@ class IdentityAccessManager:
     async def check_token(self, token: str) -> Optional[int]:
         async with self.sql.session() as session:
             if token == settings.auth.root_key:
+                # TODO: est-ce que c'est nécessaire de récupérer ca ?
                 result = await session.execute(statement=select(UserTable.id).where(UserTable.name == settings.auth.root_user))
                 user_id = result.scalar_one()
 

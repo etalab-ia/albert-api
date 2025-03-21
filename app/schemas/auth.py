@@ -22,14 +22,7 @@ class PermissionType(Enum):
     CREATE_TOKEN = "create_token"
     READ_TOKEN = "read_token"
     DELETE_TOKEN = "delete_token"
-    CREATE_PRIVATE_COLLECTION = "create_private_collection"
-    READ_PRIVATE_COLLECTION = "read_private_collection"
-    UPDATE_PRIVATE_COLLECTION = "update_private_collection"
-    DELETE_PRIVATE_COLLECTION = "delete_private_collection"
     CREATE_PUBLIC_COLLECTION = "create_public_collection"
-    READ_PUBLIC_COLLECTION = "read_public_collection"
-    UPDATE_PUBLIC_COLLECTION = "update_public_collection"
-    DELETE_PUBLIC_COLLECTION = "delete_public_collection"
     READ_METRIC = "read_metric"
 
 
@@ -246,13 +239,13 @@ class Tokens(BaseModel):
     data: List[Token]
 
 
-class LoginRequest(BaseModel):
-    user_name: str
-    user_password: str
+# class LoginRequest(BaseModel):
+#     user_name: str
+#     user_password: str
 
-    @field_validator("user_name", mode="before")
-    def strip(cls, user):
-        if isinstance(user, str):
-            user = user.strip()
+#     @field_validator("user_name", mode="before")
+#     def strip(cls, user):
+#         if isinstance(user, str):
+#             user = user.strip()
 
-        return user
+#         return user

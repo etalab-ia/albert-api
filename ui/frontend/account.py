@@ -3,12 +3,14 @@ import datetime as dt
 import pandas as pd
 import streamlit as st
 
-from utils.account import change_password, create_token, delete_token
-from utils.common import get_models, get_tokens, header, settings, get_limits
+from ui.backend.account import change_password, create_token, delete_token
+from ui.backend.settings import settings
+from ui.frontend.header import header
+from utils.common import get_limits, get_models, get_tokens
 
 header()
 tokens = get_tokens()
-models = get_models(api_key=settings.api_key)
+models = get_models(api_key=st.session_state["user"].api_key)
 
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):
@@ -16,7 +18,7 @@ with st.sidebar:
 
 col1, col2 = st.columns(2)
 with col1:
-    st.metric(label="User ID", value=st.session_state["user"]["id"])
+    st.metric(label="User ID", value=st.session_state["user"].name)
 
     with st.expander(label="Change password", icon=":material/key:"):
         current_password = st.text_input(label="Current password", type="password", key="current_password")
@@ -28,18 +30,20 @@ with col1:
         )
         confirm_password = st.text_input(label="Confirm password", type="password", key="confirm_password")
 
-        submit_change_password = st.button(label="Change", disabled=not current_password or not new_password or not confirm_password)
+        submit_change_password = st.button(
+            label="Change",
+            disabled=not current_password or not new_password or not confirm_password or st.session_state["user"].name == settings.admin_name,
+        )
         if submit_change_password:
             change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
 
 with col2:
     st.metric(
         label="Expires at",
-        value=pd.to_datetime(st.session_state["user"]["expires_at"], unit="s").strftime("%d %b %Y")
-        if st.session_state["user"]["expires_at"]
+        value=pd.to_datetime(st.session_state["user"].user["expires_at"], unit="s").strftime("%d %b %Y")
+        if st.session_state["user"].user["expires_at"]
         else None,
     )
-
 
 st.subheader("API keys")
 tokens = pd.DataFrame(
@@ -75,17 +79,17 @@ with col1:
             value=dt.datetime.now() + dt.timedelta(days=settings.max_token_expiration_days),
             help="Expiration date of the token.",
         )
-        if st.button(label="Create", disabled=not token_id):
+        if st.button(label="Create", disabled=not token_id or st.session_state["user"].name == settings.admin_name):
             create_token(token_id=token_id, expires_at=round(int(expires_at.strftime("%s"))))
 
 with col2:
     with st.expander(label="Delete a token", icon=":material/delete_forever:"):
         token_id = st.selectbox(label="Token ID", options=tokens.ID.values)
-        if st.button(label="Delete", disabled=not token_id, key="delete_token_button"):
+        if st.button(label="Delete", disabled=not token_id or st.session_state["user"].name == settings.admin_name, key="delete_token_button"):
             delete_token(token_id=token_id)
 
 st.subheader("Rate limits")
-limits = get_limits(models=models, role=st.session_state["user"]["role"])
+limits = get_limits(models=models, role=st.session_state["user"].role)
 st.dataframe(
     data=pd.DataFrame(
         data={

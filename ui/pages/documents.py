@@ -1,22 +1,24 @@
 import pandas as pd
 import streamlit as st
 
-from utils.common import get_collections, get_documents, header, settings
+from utils.common import get_collections, get_documents, settings
 from utils.documents import create_collection, delete_collection, delete_document, upload_file
 from utils.variables import COLLECTION_DISPLAY_ID_INTERNET, COLLECTION_TYPE_PRIVATE
 
-header(check_api_key=True)
+from ui.frontend.header import header
+
+header()
 
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-data-documents", use_container_width=True):
         st.cache_data.clear()
 
 try:
-    collections = get_collections(api_key=st.session_state["api_key"])
+    collections = get_collections(api_key=st.session_state["user"].api_key)
     collections = [collection for collection in collections if collection["id"] != COLLECTION_DISPLAY_ID_INTERNET]
     documents = get_documents(
         collection_ids=[collection["id"] for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE],
-        api_key=st.session_state["api_key"],
+        api_key=st.session_state["user"].api_key,
     )
 except Exception as e:
     st.error("Error to fetch user data.")
@@ -52,7 +54,9 @@ with col1:
             label="Collection name", placeholder="Mes documents", help="Create a private collection with the embeddings model of your choice."
         )
         if st.button(label="Create", disabled=not collection_name):
-            create_collection(api_key=settings.api_key, collection_name=collection_name, collection_model=settings.documents_embeddings_model)
+            create_collection(
+                api_key=st.session_state["user"].api_key, collection_name=collection_name, collection_model=settings.documents_embeddings_model
+            )
 
 with col2:
     with st.expander(label="Delete a collection", icon=":material/delete_forever:"):
@@ -63,7 +67,7 @@ with col2:
         )
         collection_id = collection.split(" - ")[1] if collection else None
         if st.button(label="Delete", disabled=not collection_id, key="delete_collection_button"):
-            delete_collection(api_key=settings.api_key, collection_id=collection_id)
+            delete_collection(api_key=st.session_state["user"].api_key, collection_id=collection_id)
 
 
 if not collections:
@@ -105,7 +109,7 @@ with col1:
         submit_upload = st.button(label="Upload", disabled=not collection_id or not file_to_upload)
         if file_to_upload and submit_upload and collection_id:
             with st.spinner(text="Downloading and processing the document..."):
-                result = upload_file(api_key=settings.api_key, file=file_to_upload, collection_id=collection_id)
+                result = upload_file(api_key=st.session_state["user"].api_key, file=file_to_upload, collection_id=collection_id)
 
 
 with col2:
@@ -114,4 +118,4 @@ with col2:
         document_id = document.split(" - ")[1] if document else None
         document_collection = [document["collection_id"] for document in documents if document["id"] == document_id][0]
         if st.button(label="Delete", disabled=not document_id, key="delete_document_button"):
-            delete_document(api_key=settings.api_key, collection_id=document_collection, document_id=document_id)
+            delete_document(api_key=st.session_state["user"].api_key, collection_id=document_collection, document_id=document_id)

@@ -61,7 +61,6 @@ class Model(ConfigBaseModel):
     type: Literal[MODEL_TYPE__LANGUAGE, MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__AUDIO, MODEL_TYPE__RERANK]
     aliases: List[str] = []
     owned_by: str = DEFAULT_APP_NAME
-    default_internet: bool = False
     routing_strategy: Literal[ROUTER_STRATEGY__ROUND_ROBIN, ROUTER_STRATEGY__SHUFFLE] = ROUTER_STRATEGY__SHUFFLE
     clients: List[ModelClient]
 
@@ -91,8 +90,8 @@ class Database(ConfigBaseModel):
 
 class Auth(ConfigBaseModel):
     root_key: str = "changeme"
-    root_user: str = "root"
-    root_password: str = "changeme"
+    # root_user: str = "root"  # TODO; remove this field
+    # root_password: str = "changeme"
     limiting_strategy: Literal["moving_window", "fixed_window", "sliding_window"] = "moving_window"
 
 
@@ -118,10 +117,6 @@ class Config(ConfigBaseModel):
         assert len(aliases) == len(set(aliases)), "Duplicated aliases found."  # fmt: off
         assert len(language_models) > 0, "At least one language model is required."  # fmt: off
         assert len(embeddings_models) > 0, "At least one embeddings model is required."  # fmt: off
-        assert any(model.default_internet for model in language_models), "At least one language model must be set to default_internet=True."  # fmt: off
-        assert any(model.default_internet for model in embeddings_models), "At least one embeddings model must be set to default_internet=True."  # fmt: off
-        assert len([model for model in language_models if model.default_internet]) == 1, "There are more than one default internet language model."  # fmt: off
-        assert len([model for model in embeddings_models if model.default_internet]) == 1, "There are more than one default internet embeddings model."  # fmt: off
 
         return values
 
@@ -178,7 +173,7 @@ class Settings(BaseSettings):
         values.databases.grist = next((database for database in config.databases if database.type == DATABASE_TYPE__GRIST), None)
         values.databases.elastic = next((database for database in config.databases if database.type == DATABASE_TYPE__ELASTIC), None)
 
-        assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.LANGUAGE], f"Internet model is not defined in models section with type {ModelType.LANGUAGE}."  # fmt: off
-        assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off
+        assert values.general["internet_model"] in [model.id for model in values.models if model.type == ModelType.LANGUAGE.value], f"Internet model is not defined in models section with type {ModelType.LANGUAGE}."  # fmt: off
+        assert values.general["documents_model"] in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS.value], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off
 
         return values

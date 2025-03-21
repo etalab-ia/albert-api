@@ -2,7 +2,6 @@ from typing import List, Optional
 
 from app.schemas.models import Model as ModelSchema
 from app.utils.exceptions import ModelNotFoundException
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE
 
 from ._modelrouter import ModelRouter
 
@@ -23,15 +22,6 @@ class ModelRegistry:
 
             for alias in model.aliases:
                 self.aliases[alias] = model.id
-
-            if model._default_internet and model.type == MODEL_TYPE__LANGUAGE:  # set default language internet model
-                self.internet_default_language_model = model.id
-            if model._default_internet and model.type == MODEL_TYPE__EMBEDDINGS:  # set default embeddings internet model
-                self.internet_default_embeddings_model = model.id
-
-        # check if the internet models are available
-        if not self.internet_default_language_model or not self.internet_default_embeddings_model:
-            raise ValueError("Internet models are not setup.")
 
     def __call__(self, model: str) -> ModelRouter:
         model = self.aliases.get(model, model)

@@ -37,16 +37,18 @@ services:
       timeout: 10s
       retries: 5
 
-  sql:
+  postgres:
     image: postgres:16.5
     restart: always
     user: postgres
     environment:
+      - CREATE_DB=api,ui
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=changeme
       - POSTGRES_DB=postgres
     volumes:
       - sql:/var/lib/postgresql/data
+      - ./scripts/postgres_entrypoint.sh:/docker-entrypoint-initdb.d/postgres_entrypoint.sh
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready", "-U", "postgres" ]
       interval: 4s

@@ -1,8 +1,8 @@
 """Init database
 
-Revision ID: 3e84fac08c0e
+Revision ID: 7a3db3a5deaf
 Revises:
-Create Date: 2025-03-14 19:02:24.239462
+Create Date: 2025-03-21 11:33:00.415416
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "3e84fac08c0e"
+revision: str = "7a3db3a5deaf"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,8 +26,8 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=True),
         sa.Column("default", sa.Boolean(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=True),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_role_id"), "role", ["id"], unique=False)
@@ -40,7 +40,7 @@ def upgrade() -> None:
         sa.Column("model", sa.String(), nullable=False),
         sa.Column("type", sa.Enum("TPM", "RPM", "RPD", name="limittype"), nullable=False),
         sa.Column("value", sa.Integer(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["role_id"], ["role.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("role_id", "model", "type", name="unique_rate_limit_per_role"),
@@ -64,20 +64,13 @@ def upgrade() -> None:
                 "CREATE_TOKEN",
                 "READ_TOKEN",
                 "DELETE_TOKEN",
-                "CREATE_PRIVATE_COLLECTION",
-                "READ_PRIVATE_COLLECTION",
-                "UPDATE_PRIVATE_COLLECTION",
-                "DELETE_PRIVATE_COLLECTION",
                 "CREATE_PUBLIC_COLLECTION",
-                "READ_PUBLIC_COLLECTION",
-                "UPDATE_PUBLIC_COLLECTION",
-                "DELETE_PUBLIC_COLLECTION",
                 "READ_METRIC",
                 name="permissiontype",
             ),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["role_id"], ["role.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("role_id", "permission", name="unique_permission_per_role"),
@@ -87,7 +80,6 @@ def upgrade() -> None:
         "user",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=True),
-        sa.Column("password", sa.String(), nullable=False),
         sa.Column("role_id", sa.Integer(), nullable=False),
         sa.Column("expires_at", sa.DateTime(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
@@ -101,25 +93,55 @@ def upgrade() -> None:
     op.create_index(op.f("ix_user_id"), "user", ["id"], unique=False)
     op.create_index(op.f("ix_user_name"), "user", ["name"], unique=True)
     op.create_table(
+        "collection",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("description", sa.String(), nullable=True),
+        sa.Column("visibility", sa.Enum("PRIVATE", "PUBLIC", name="collectionvisibility"), nullable=False),
+        sa.Column("vector_size", sa.Integer(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id", "name", name="unique_collection_name_per_user"),
+    )
+    op.create_index(op.f("ix_collection_id"), "collection", ["id"], unique=False)
+    op.create_table(
         "token",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=True),
         sa.Column("token", sa.String(), nullable=True),
         sa.Column("expires_at", sa.DateTime(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "name", name="unique_token_name_per_user"),
     )
     op.create_index(op.f("ix_token_id"), "token", ["id"], unique=False)
+    op.create_table(
+        "document",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("collection_id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(["collection_id"], ["collection.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("collection_id", "name", name="unique_document_name_per_collection"),
+    )
+    op.create_index(op.f("ix_document_id"), "document", ["id"], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f("ix_document_id"), table_name="document")
+    op.drop_table("document")
     op.drop_index(op.f("ix_token_id"), table_name="token")
     op.drop_table("token")
+    op.drop_index(op.f("ix_collection_id"), table_name="collection")
+    op.drop_table("collection")
     op.drop_index(op.f("ix_user_name"), table_name="user")
     op.drop_index(op.f("ix_user_id"), table_name="user")
     op.drop_table("user")

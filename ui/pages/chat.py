@@ -5,15 +5,17 @@ from uuid import uuid4
 import streamlit as st
 
 from utils.chat import generate_stream
-from utils.common import get_collections, get_models, header
+from utils.common import get_collections, get_models
 from utils.variables import MODEL_TYPE_LANGUAGE
 
-header(check_api_key=True)
+from ui.frontend.header import header
+
+header()
 
 # Data
 try:
-    models = get_models(type=MODEL_TYPE_LANGUAGE, api_key=st.session_state["api_key"])
-    collections = get_collections(api_key=st.session_state["api_key"])
+    models = get_models(type=MODEL_TYPE_LANGUAGE, api_key=st.session_state["user"].api_key)
+    collections = get_collections(api_key=st.session_state["user"].api_key)
 except Exception:
     st.error("Error to fetch user data.")
     logging.debug(traceback.format_exc())
@@ -126,7 +128,7 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
             stream, sources = generate_stream(
                 messages=st.session_state.messages,
                 params=params,
-                api_key=st.session_state["api_key"],
+                api_key=st.session_state["user"].api_key,
                 rag=rag,
                 rerank=False,
             )

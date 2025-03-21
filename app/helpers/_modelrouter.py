@@ -32,7 +32,6 @@ class ModelRouter:
         id: str,
         type: str,
         owned_by: str,
-        default_internet: str,
         aliases: list[str],
         routing_strategy: str,
         clients: list[ModelSettings],
@@ -58,7 +57,6 @@ class ModelRouter:
         self.max_context_length = max_context_length
 
         self._vector_size = vector_sizes[0]
-        self._default_internet = default_internet
         self._routing_strategy = routing_strategy
         self._cycle = cycle(clients)
         self._clients = clients

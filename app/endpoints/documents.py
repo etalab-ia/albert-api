@@ -4,7 +4,6 @@ from uuid import UUID
 from fastapi import APIRouter, Path, Query, Request, Response, Security
 
 from app.helpers import Authorization
-from app.schemas.auth import PermissionType
 from app.schemas.documents import Documents
 from app.utils.lifespan import context
 
@@ -23,7 +22,7 @@ async def get_documents(
     Get all documents ID from a collection.
     """
 
-    data = await context.iam.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
+    data = await context.iam.get_documents(collection_id=collection, limit=limit, offset=offset, user_id=user.id)
 
     return Documents(data=data)
 
@@ -33,11 +32,11 @@ async def delete_document(
     request: Request,
     collection: int = Path(description="The collection ID"),
     document: int = Path(description="The document ID"),
-    user: str = Security(dependency=Authorization(permissions=[PermissionType.DELETE_PRIVATE_COLLECTION])),
+    user: str = Security(dependency=Authorization()),
 ) -> Response:
     """
     Delete a document and relative collections.
     """
-    await context.iam.delete_document(collection_id=collection, document_id=document, user=user)
+    await context.iam.delete_document(collection_id=collection, document_id=document, user_id=user.id)
 
     return Response(status_code=204)

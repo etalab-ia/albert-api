@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request, Security
 
-from app.helpers import Authorization, SearchManager
+from app.helpers import Authorization
 from app.schemas.search import Searches, SearchRequest
-from app.utils.lifespan import context, databases, internet
+from app.utils.lifespan import context
 
 router = APIRouter()
 
@@ -19,7 +19,8 @@ async def search(
     body = await request.json()
     body = SearchRequest(**body)
 
-    search_manager = SearchManager(models=context.models, search=databases.search, internet=internet.search)
-    data = await search_manager.query(collections=body.collections, prompt=body.prompt, method=body.method, k=body.k, rff_k=body.rff_k, user=user)
+    data = await context.documents.search(
+        collection_ids=body.collections, prompt=body.prompt, method=body.method, k=body.k, rff_k=body.rff_k, user_id=user.id
+    )
 
     return Searches(data=data)
