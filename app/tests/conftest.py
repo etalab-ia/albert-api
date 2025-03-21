@@ -98,6 +98,11 @@ def cleanup_collections(args, test_client):
 
     yield USER, ADMIN
 
+    # Skip cleanup if running in GitHub Actions
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        logging.info("Skipping collections cleanup in GitHub Actions environment")
+        return
+
     logging.info("cleanup collections")
 
     # delete private collections
