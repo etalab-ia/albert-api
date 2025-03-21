@@ -7,6 +7,7 @@ from app.helpers import InternetManager, ModelRegistry
 from app.schemas.search import Search
 from app.schemas.security import User
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET
+from app.utils.exceptions import InternetSearchNotAvailable
 
 
 class SearchManager:
@@ -29,6 +30,8 @@ class SearchManager:
         # internet search
         internet_chunks = []
         if COLLECTION_DISPLAY_ID__INTERNET in collections:
+            if not self.internet_manager.internet:
+                raise InternetSearchNotAvailable()
             internet_collection_id = str(uuid.uuid4())
             internet_chunks = await self.internet_manager.get_chunks(prompt=prompt, collection_id=internet_collection_id)
 
