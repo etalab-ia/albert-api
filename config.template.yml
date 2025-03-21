@@ -5,17 +5,17 @@ rate_limit:
 databases:
   - type: sql
     args:
-      url: "postgresql://postgres:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:5432/postgres"
+      url: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres"
 
   - type: redis
     args:
-      host: ${REDIS_HOST:-localhost}
+      host: ${REDIS_HOST}
       port: 6379
       password: ${REDIS_PASSWORD}
 
   - type: qdrant
     args:
-      url: http://${QDRANT_HOST:-localhost}:6333
+      url: http://${QDRANT_HOST}:6333
       api_key: ${QDRANT_API_KEY}
       prefer_grpc: True
       grpc_port: 6334
@@ -25,7 +25,7 @@ databases:
     args:
       api_key: ${GRIST_API_KEY}
       server: https://grist.numerique.gouv.fr
-      doc_id: 4fBA11fFqHuhn36G5uLDRr
+      doc_id: ${GRIST_DOC_ID}
       table_id: DEV
 
 models:
