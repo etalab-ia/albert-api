@@ -43,6 +43,9 @@ async def lifespan(app: FastAPI):
     databases.cache = CacheClient(connection_pool=ConnectionPool(**settings.databases.redis.args))
     databases.auth = AuthenticationClient(cache=databases.cache, **settings.databases.grist.args) if settings.databases.grist else None
 
+    # Store databases in app.state for middleware access
+    app.state.databases = databases
+
     yield
 
     databases.search.close()

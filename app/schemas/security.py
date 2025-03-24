@@ -20,3 +20,4 @@ class Role(Enum):
 class User(BaseModel):
     id: str
     role: Role
+    name: str
