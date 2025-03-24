@@ -10,9 +10,9 @@ Base = declarative_base()
 class Role(Base):
     __tablename__ = "role"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
-    default = Column(Boolean, default=False)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    default = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), nullable=False)
 
@@ -22,7 +22,7 @@ class Role(Base):
 class Permission(Base):
     __tablename__ = "permission"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     role_id = Column(Integer, ForeignKey(column="role.id", ondelete="CASCADE"), nullable=False)
     permission = Column(Enum(PermissionType), nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
@@ -35,7 +35,7 @@ class Permission(Base):
 class Limit(Base):
     __tablename__ = "limit"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     role_id = Column(Integer, ForeignKey(column="role.id", ondelete="CASCADE"), nullable=False)
     model = Column(String, nullable=False)
     type = Column(Enum(LimitType), nullable=False)
@@ -50,9 +50,8 @@ class Limit(Base):
 class User(Base):
     __tablename__ = "user"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, unique=True)
-    # password = Column(String, nullable=False)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String, index=True, unique=True, nullable=False)
     role_id = Column(Integer, ForeignKey(column="role.id"), nullable=False)
     expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
@@ -62,7 +61,7 @@ class User(Base):
 class Token(Base):
     __tablename__ = "token"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey(column="user.id", ondelete="CASCADE"), nullable=False)
     name = Column(String, nullable=True)
     token = Column(String, nullable=True)

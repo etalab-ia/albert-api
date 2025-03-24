@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
 from ui.backend.login import login
-from ui.sql.session import get_session
+from ui.backend.sql.session import get_session
 
 
 def header():
@@ -49,5 +49,5 @@ def header():
             st.rerun()
 
         if st.session_state.get("user") and st.session_state["user"].role["name"] == "master":
-            st.warning("You are logged in as a master user. This is not recommended for production use. Please use a regular user instead.")
+            st.warning("You are logged in as the master user. This is not recommended for production use, please use a regular user instead.")
         st.markdown("***")

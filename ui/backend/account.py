@@ -4,11 +4,11 @@ import requests
 from sqlalchemy import select, update
 import streamlit as st
 
+from ui.backend.common import check_password, get_tokens
 from ui.backend.login import get_hashed_password
-from ui.backend.settings import settings
-from ui.sql.models import User as UserTable
-from ui.sql.session import get_session
-from ui.utils.common import check_password, get_tokens
+from ui.settings import settings
+from ui.backend.sql.models import User as UserTable
+from ui.backend.sql.session import get_session
 
 
 def change_password(current_password: str, new_password: str, confirm_password: str):

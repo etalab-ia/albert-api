@@ -2,7 +2,7 @@ from functools import lru_cache
 import os
 from typing import Any, Literal
 
-from pydantic import BaseModel, field_validator, model_validator, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 import yaml
 

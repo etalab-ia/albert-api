@@ -141,8 +141,6 @@ async def get_current_user(request: Request, user: UserInfo = Security(dependenc
     """
     Get the current user.
     """
-    print("#######################")
-    print(user)
 
     users = await context.iam.get_users(user_id=user.user_id)
 

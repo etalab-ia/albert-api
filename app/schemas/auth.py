@@ -124,27 +124,10 @@ class UserUpdateRequest(BaseModel):
 
         return name
 
-    # @field_validator("password", mode="before", check_fields=False)
-    # def strip_password(cls, password):
-    #     if password is not None:
-    #         password = password.strip()
-    #         if not password:  # empty string
-    #             raise ValueError("Empty string is not allowed.")
-
-    #     return password
-
-    # @field_validator("role", mode="after")
-    # def check_root(cls, role):
-    #     if role == ROOT_ROLE:
-    #         raise HTTPException(status_code=403, detail="Root role is not allowed to add users.")
-
-    #     return role
-
 
 class UserRequest(BaseModel):
     name: str = Field(description="The user name.")
     role: int = Field(description="The role ID.")
-    # password: str = Field(description="The user password.")
     expires_at: Optional[int] = Field(default=None, description="The expiration timestamp.")
 
     @field_validator("expires_at", mode="before")
@@ -162,21 +145,6 @@ class UserRequest(BaseModel):
             raise ValueError("Empty string is not allowed.")
 
         return name
-
-    # @field_validator("password", mode="before")
-    # def strip_password(cls, password):
-    #     password = password.strip()
-    #     if not password:  # empty string
-    #         raise ValueError("Empty string is not allowed.")
-
-    #     return password
-
-    # @field_validator("role", mode="after")
-    # def check_root(cls, role):
-    #     if role == ROOT_ROLE:
-    #         raise HTTPException(status_code=403, detail="Root role is not allowed to add users.")
-
-    #     return role
 
 
 class User(BaseModel):
@@ -226,15 +194,3 @@ class Token(BaseModel):
 class Tokens(BaseModel):
     object: Literal["list"] = "list"
     data: List[Token]
-
-
-# class LoginRequest(BaseModel):
-#     user_name: str
-#     user_password: str
-
-#     @field_validator("user_name", mode="before")
-#     def strip(cls, user):
-#         if isinstance(user, str):
-#             user = user.strip()
-
-#         return user

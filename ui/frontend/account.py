@@ -4,9 +4,9 @@ import pandas as pd
 import streamlit as st
 
 from ui.backend.account import change_password, create_token, delete_token
-from ui.backend.settings import settings
+from ui.settings import settings
 from ui.frontend.header import header
-from utils.common import get_limits, get_models, get_tokens
+from ui.backend.common import get_limits, get_models, get_tokens
 
 header()
 tokens = get_tokens()
@@ -15,6 +15,7 @@ models = get_models(api_key=st.session_state["user"].api_key)
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):
         st.cache_data.clear()
+        st.rerun()
 
 col1, col2 = st.columns(2)
 with col1:

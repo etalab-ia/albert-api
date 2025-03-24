@@ -7,9 +7,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 import streamlit as st
 
-from ui.backend.settings import settings
-from ui.sql.models import User as UserTable
-from ui.utils.variables import ADMIN_PERMISSIONS
+from ui.settings import settings
+from ui.backend.sql.models import User as UserTable
+from ui.variables import ADMIN_PERMISSIONS
 
 
 class User(BaseModel):
@@ -32,7 +32,6 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
     # master login flow
     if user_name == settings.master_username:
         response = requests.get(url=f"{settings.api_url}/users/me", headers={"Authorization": f"Bearer {user_password}"})
-        print(response.json())
         if response.status_code != 404:  # only master get 404 on /users/me
             st.error(response.json()["detail"])
             st.stop()
@@ -56,7 +55,7 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
         st.session_state["user"] = user
         st.rerun()
 
-    # non-admin login flow
+    # basic login flow
     db_user = session.execute(select(UserTable).where(UserTable.name == user_name)).scalar_one_or_none()
     if not db_user:
         st.error("Invalid username or password")

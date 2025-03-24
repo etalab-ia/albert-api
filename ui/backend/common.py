@@ -1,10 +1,13 @@
 from typing import List, Literal, Optional
 
 import requests
+from sqlalchemy import select
 import streamlit as st
 
-from utils.variables import COLLECTION_DISPLAY_ID_INTERNET, MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
-from backend.settings import settings
+from ui.settings import settings
+from ui.backend.sql.models import User as UserTable
+from ui.backend.sql.session import get_session
+from ui.variables import COLLECTION_DISPLAY_ID_INTERNET, MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
 
 
 @st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
@@ -68,19 +71,27 @@ def get_roles():
 
     assert response.status_code == 200, response.text
     data = response.json()["data"]
-    data = [role for role in data if role["id"] != "root"]
 
     return data
 
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_users():
+def get_users(offset: int = 0, limit: int = 100):
     response = requests.get(
-        url=f"{settings.api_url}/users?offset=0&limit=100", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+        url=f"{settings.api_url}/users?offset={offset}&limit={limit}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
     )
     assert response.status_code == 200, response.text
     data = response.json()["data"]
-    data = [user for user in data if user["role"] != "root"]
+
+    session = next(get_session())
+    db_data = session.execute(select(UserTable).offset(offset).limit(limit)).scalars().all()
+
+    # Convert SQLAlchemy User objects to dictionaries
+    db_data = [user.api_user_id for user in db_data]
+
+    # Filter API data based on database user IDs
+    for user in data:
+        user["access_ui"] = True if user["id"] in db_data else False
 
     return data
 

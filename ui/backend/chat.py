@@ -3,7 +3,7 @@ from typing import List, Tuple
 from openai import OpenAI
 import requests
 
-from utils.common import settings
+from ui.settings import settings
 
 
 def generate_stream(messages: List[dict], params: dict, api_key: str, rag: bool, rerank: bool) -> Tuple[str, List[str]]:

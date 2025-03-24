@@ -41,10 +41,10 @@ async def lifespan(app: FastAPI):
                 continue
         if not clients:
             logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
-            print(model.id)
             assert model.id != settings.general["internet_model"], f"Internet model ({model.id}) must be reachable."
             assert model.id != settings.general["documents_model"], f"Documents model ({model.id}) must be reachable."
             continue
+
         logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
         model = model.model_dump()
         model["clients"] = clients

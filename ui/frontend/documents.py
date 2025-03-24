@@ -1,17 +1,17 @@
 import pandas as pd
 import streamlit as st
 
-from utils.common import get_collections, get_documents, settings
-from utils.documents import create_collection, delete_collection, delete_document, upload_file
-from utils.variables import COLLECTION_DISPLAY_ID_INTERNET, COLLECTION_TYPE_PRIVATE
-
+from ui.backend.common import get_collections, get_documents, settings
+from ui.backend.documents import create_collection, delete_collection, delete_document, upload_file
 from ui.frontend.header import header
+from ui.variables import COLLECTION_DISPLAY_ID_INTERNET, COLLECTION_TYPE_PRIVATE
 
 header()
 
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-data-documents", use_container_width=True):
         st.cache_data.clear()
+        st.rerun()
 
 try:
     collections = get_collections(api_key=st.session_state["user"].api_key)

@@ -4,11 +4,10 @@ from uuid import uuid4
 
 import streamlit as st
 
-from utils.chat import generate_stream
-from utils.common import get_collections, get_models
-from utils.variables import MODEL_TYPE_LANGUAGE
-
+from ui.backend.chat import generate_stream
+from ui.backend.common import get_collections, get_models
 from ui.frontend.header import header
+from ui.variables import MODEL_TYPE_LANGUAGE
 
 header()
 

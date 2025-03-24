@@ -3,7 +3,8 @@ import time
 import requests
 import streamlit as st
 
-from utils.common import get_collections, get_documents, settings
+from ui.backend.common import get_collections, get_documents
+from ui.settings import settings
 
 
 def create_collection(api_key: str, collection_name: str, collection_model: str) -> None:

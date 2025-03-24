@@ -8,8 +8,8 @@ from sqlalchemy import engine_from_config, pool
 os.environ["config_file"] = os.path.join("..", os.environ.get("CONFIG_FILE", "config.yml"))
 sys.path.append("..")
 
-from ui.backend.settings import settings
-from ui.sql.models import Base
+from ui.settings import settings
+from ui.backend.sql.models import Base
 
 config = context.config
 config.set_main_option(name="sqlalchemy.url", value=settings.database.url.replace("+asyncpg", ""))

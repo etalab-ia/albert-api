@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 
-from ui.backend.settings import settings
+from ui.settings import settings
 
 st.set_page_config(
     page_title="Albert playground",
@@ -28,9 +28,9 @@ st.logo(
 pg = st.navigation(
     pages=[
         st.Page(page="frontend/account.py", title="My account", icon=":material/account_circle:"),
-        st.Page(page="pages/chat.py", title="Chat", icon=":material/chat:"),
-        st.Page(page="pages/documents.py", title="Documents", icon=":material/file_copy:"),
-        st.Page(page="pages/transcription.py", title="Transcription", icon=":material/graphic_eq:"),
+        st.Page(page="frontend/chat.py", title="Chat", icon=":material/chat:"),
+        st.Page(page="frontend/documents.py", title="Documents", icon=":material/file_copy:"),
+        st.Page(page="frontend/transcription.py", title="Transcription", icon=":material/graphic_eq:"),
         st.Page(page="frontend/admin.py", title="Admin", icon=":material/admin_panel_settings:"),
     ]
 )

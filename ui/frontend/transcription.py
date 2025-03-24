@@ -4,10 +4,9 @@ import traceback
 from openai import OpenAI
 import streamlit as st
 
-from utils.common import get_models, settings
-from utils.variables import MODEL_TYPE_AUDIO, TRANSCRIPTION_SUPPORTED_LANGUAGES
-
+from ui.backend.common import get_models, settings
 from ui.frontend.header import header
+from ui.variables import MODEL_TYPE_AUDIO, TRANSCRIPTION_SUPPORTED_LANGUAGES
 
 header()
 
