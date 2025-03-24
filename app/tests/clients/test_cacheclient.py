@@ -23,7 +23,7 @@ class TestCacheClient:
 
         # Execute
         with patch.object(logger, "info") as mock_logger:
-            client = CacheClient(connection_pool=connection_pool)
+            CacheClient(connection_pool=connection_pool)
 
         # Assert
         mock_sync_redis.assert_called_once_with(**connection_kwargs)
@@ -55,7 +55,7 @@ class TestCacheClient:
 
         # Execute
         with patch.object(logger, "info") as mock_logger:
-            client = CacheClient(connection_pool=connection_pool)
+            CacheClient(connection_pool=connection_pool)
 
         # Assert
         mock_sync_redis.assert_called_once_with(**connection_kwargs)
@@ -85,7 +85,7 @@ class TestCacheClient:
 
         # Execute
         with patch.object(logger, "info") as mock_logger:
-            client = CacheClient(connection_pool=connection_pool)
+            CacheClient(connection_pool=connection_pool)
 
         # Assert
         mock_sync_redis.assert_called_once_with(**connection_kwargs)
