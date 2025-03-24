@@ -2,6 +2,9 @@ rate_limit:
   by_key: 300/minute
   by_ip: 1000/minute
 
+internet:
+  - type: duckduckgo
+
 databases:
   - type: sql
     args:
