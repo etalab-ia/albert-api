@@ -32,7 +32,7 @@ with col1:
 
         submit_change_password = st.button(
             label="Change",
-            disabled=not current_password or not new_password or not confirm_password or st.session_state["user"].name == settings.admin_name,
+            disabled=not current_password or not new_password or not confirm_password or st.session_state["user"].name == settings.master_username,
         )
         if submit_change_password:
             change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
@@ -79,13 +79,13 @@ with col1:
             value=dt.datetime.now() + dt.timedelta(days=settings.max_token_expiration_days),
             help="Expiration date of the token.",
         )
-        if st.button(label="Create", disabled=not token_id or st.session_state["user"].name == settings.admin_name):
+        if st.button(label="Create", disabled=not token_id or st.session_state["user"].name == settings.master_username):
             create_token(token_id=token_id, expires_at=round(int(expires_at.strftime("%s"))))
 
 with col2:
     with st.expander(label="Delete a token", icon=":material/delete_forever:"):
         token_id = st.selectbox(label="Token ID", options=tokens.ID.values)
-        if st.button(label="Delete", disabled=not token_id or st.session_state["user"].name == settings.admin_name, key="delete_token_button"):
+        if st.button(label="Delete", disabled=not token_id or st.session_state["user"].name == settings.master_username, key="delete_token_button"):
             delete_token(token_id=token_id)
 
 st.subheader("Rate limits")

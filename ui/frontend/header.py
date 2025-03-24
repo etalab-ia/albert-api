@@ -47,4 +47,7 @@ def header():
             st.session_state.pop("api_key", default=None)
             st.cache_data.clear()
             st.rerun()
+
+        if st.session_state.get("user") and st.session_state["user"].role["name"] == "master":
+            st.warning("You are logged in as a master user. This is not recommended for production use. Please use a regular user instead.")
         st.markdown("***")

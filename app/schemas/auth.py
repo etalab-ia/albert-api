@@ -3,11 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Literal, Optional
 
-from fastapi import HTTPException
 from pydantic import BaseModel, Field, field_validator
-
-from app.utils.settings import settings
-from app.utils.variables import ROOT_ROLE
 
 
 class PermissionType(Enum):
@@ -108,7 +104,7 @@ class Roles(BaseModel):
 class UserUpdateRequest(BaseModel):
     name: Optional[str] = Field(default=None, description="The new user name.")
     role: Optional[int] = Field(default=None, description="The new role ID.")
-    password: Optional[str] = Field(default=None, description="The new password.")
+    # password: Optional[str] = Field(default=None, description="The new password.")
     expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp.")
 
     @field_validator("expires_at", mode="before")
@@ -128,27 +124,27 @@ class UserUpdateRequest(BaseModel):
 
         return name
 
-    @field_validator("password", mode="before", check_fields=False)
-    def strip_password(cls, password):
-        if password is not None:
-            password = password.strip()
-            if not password:  # empty string
-                raise ValueError("Empty string is not allowed.")
+    # @field_validator("password", mode="before", check_fields=False)
+    # def strip_password(cls, password):
+    #     if password is not None:
+    #         password = password.strip()
+    #         if not password:  # empty string
+    #             raise ValueError("Empty string is not allowed.")
 
-        return password
+    #     return password
 
-    @field_validator("role", mode="after")
-    def check_root(cls, role):
-        if role == ROOT_ROLE:
-            raise HTTPException(status_code=403, detail="Root role is not allowed to add users.")
+    # @field_validator("role", mode="after")
+    # def check_root(cls, role):
+    #     if role == ROOT_ROLE:
+    #         raise HTTPException(status_code=403, detail="Root role is not allowed to add users.")
 
-        return role
+    #     return role
 
 
 class UserRequest(BaseModel):
     name: str = Field(description="The user name.")
     role: int = Field(description="The role ID.")
-    password: str = Field(description="The user password.")
+    # password: str = Field(description="The user password.")
     expires_at: Optional[int] = Field(default=None, description="The expiration timestamp.")
 
     @field_validator("expires_at", mode="before")
@@ -167,20 +163,20 @@ class UserRequest(BaseModel):
 
         return name
 
-    @field_validator("password", mode="before")
-    def strip_password(cls, password):
-        password = password.strip()
-        if not password:  # empty string
-            raise ValueError("Empty string is not allowed.")
+    # @field_validator("password", mode="before")
+    # def strip_password(cls, password):
+    #     password = password.strip()
+    #     if not password:  # empty string
+    #         raise ValueError("Empty string is not allowed.")
 
-        return password
+    #     return password
 
-    @field_validator("role", mode="after")
-    def check_root(cls, role):
-        if role == ROOT_ROLE:
-            raise HTTPException(status_code=403, detail="Root role is not allowed to add users.")
+    # @field_validator("role", mode="after")
+    # def check_root(cls, role):
+    #     if role == ROOT_ROLE:
+    #         raise HTTPException(status_code=403, detail="Root role is not allowed to add users.")
 
-        return role
+    #     return role
 
 
 class User(BaseModel):
@@ -217,13 +213,6 @@ class TokenRequest(BaseModel):
                 raise ValueError("Wrong timestamp, must be in the future.")
 
         return expires_at
-
-    @field_validator("user", mode="after")
-    def check_root(cls, user):
-        if user == settings.auth.root_user:
-            raise HTTPException(status_code=403, detail="Root user cannot have a new token.")
-
-        return user
 
 
 class Token(BaseModel):

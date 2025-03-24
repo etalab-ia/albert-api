@@ -79,6 +79,17 @@ async def get_role(request: Request, role: int = Path(description="The ID of the
     return roles[0]
 
 
+@router.get(path="/roles/me")
+async def get_current_role(request: Request, user: UserInfo = Security(dependency=Authorization())) -> Role:
+    """
+    Get the current role.
+    """
+
+    roles = await context.iam.get_roles(role_id=user.role_id)
+
+    return roles[0]
+
+
 @router.get(path="/roles", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))])
 async def get_roles(
     request: Request,
@@ -99,7 +110,7 @@ async def create_user(request: Request, body: UserRequest = Body(description="Th
     Create a new user.
     """
 
-    user_id = await context.iam.create_user(name=body.name, role_id=body.role, password=body.password, expires_at=body.expires_at)
+    user_id = await context.iam.create_user(name=body.name, role_id=body.role, expires_at=body.expires_at)
 
     return JSONResponse(status_code=201, content={"id": user_id})
 
@@ -120,7 +131,7 @@ async def update_user(request: Request, user: int = Path(description="The ID of 
     Update a user.
     """
 
-    await context.iam.update_user(user_id=user, name=body.name, password=body.password, role_id=body.role, expires_at=body.expires_at)
+    await context.iam.update_user(user_id=user, name=body.name, role_id=body.role, expires_at=body.expires_at)
 
     return Response(status_code=204)
 
@@ -130,6 +141,8 @@ async def get_current_user(request: Request, user: UserInfo = Security(dependenc
     """
     Get the current user.
     """
+    print("#######################")
+    print(user)
 
     users = await context.iam.get_users(user_id=user.user_id)
 

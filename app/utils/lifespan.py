@@ -61,5 +61,5 @@ async def lifespan(app: FastAPI):
     yield
 
     # cleanup resources when app shuts down
-    qdrant.close()
+    await qdrant.close()
     await sql.engine.dispose()

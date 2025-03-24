@@ -1,3 +1,5 @@
+import time
+
 import bcrypt
 from pydantic import BaseModel
 import requests
@@ -7,6 +9,7 @@ import streamlit as st
 
 from ui.backend.settings import settings
 from ui.sql.models import User as UserTable
+from ui.utils.variables import ADMIN_PERMISSIONS
 
 
 class User(BaseModel):
@@ -26,30 +29,35 @@ def check_password(password: str, hashed_password: str) -> bool:
 
 
 def login(user_name: str, user_password: str, session: Session) -> dict:
-    # admin login flow
-    if user_name == settings.admin_name and user_password == settings.admin_password:
-        response = requests.get(url=f"{settings.api_url}/users/me", headers={"Authorization": f"Bearer {settings.api_key}"})
-
-        if response.status_code != 200:
+    # master login flow
+    if user_name == settings.master_username:
+        response = requests.get(url=f"{settings.api_url}/users/me", headers={"Authorization": f"Bearer {user_password}"})
+        print(response.json())
+        if response.status_code != 404:  # only master get 404 on /users/me
             st.error(response.json()["detail"])
             st.stop()
 
-        user = response.json()
-        response = requests.get(url=f"{settings.api_url}/roles/{user["role"]}", headers={"Authorization": f"Bearer {settings.api_key}"})
-
+        response = requests.get(url=f"{settings.api_url}/v1/models", headers={"Authorization": f"Bearer {user_password}"})
         if response.status_code != 200:
             st.error(response.json()["detail"])
             st.stop()
+        models = response.json()["data"]
 
-        role = response.json()
-        user = User(id=0, name=settings.admin_name, api_key=settings.api_key, user=user, role=role)
+        limits = []
+        for model in models:
+            limits.append({"model": model["id"], "type": "tpm", "value": None})
+            limits.append({"model": model["id"], "type": "rpm", "value": None})
+            limits.append({"model": model["id"], "type": "rpd", "value": None})
+
+        role = {"object": "role", "id": 0, "name": "master", "default": False, "permissions": ADMIN_PERMISSIONS, "limits": limits}
+        user = User(id=0, name=settings.master_username, api_key=user_password, user={"expires_at": None}, role=role)
 
         st.session_state["login_status"] = True
         st.session_state["user"] = user
         st.rerun()
 
     # non-admin login flow
-    db_user = session.execute(select(UserTable).where(UserTable.name == user_name)).limit(1).all()
+    db_user = session.execute(select(UserTable).where(UserTable.name == user_name)).scalar_one_or_none()
     if not db_user:
         st.error("Invalid username or password")
         st.stop()
@@ -59,19 +67,23 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
         st.error("Invalid username or password")
         st.stop()
 
-    response = requests.get(url=f"{settings.api_url}/users/{db_user.api_user_id}", headers={"Authorization": f"Bearer {settings.api_key}"})
+    response = requests.get(url=f"{settings.api_url}/users/me", headers={"Authorization": f"Bearer {db_user.api_key}"})
     if response.status_code != 200:
         st.error(response.json()["detail"])
         st.stop()
-    api_user = response.json()
+    user = response.json()
 
-    response = requests.get(url=f"{settings.api_url}/roles/{db_user.api_role_id}", headers={"Authorization": f"Bearer {settings.api_key}"})
+    if user["expires_at"] and user["expires_at"] < int(time.time()):
+        st.error("Invalid username or password")
+        st.stop()
+
+    response = requests.get(url=f"{settings.api_url}/roles/me", headers={"Authorization": f"Bearer {db_user.api_key}"})
     if response.status_code != 200:
         st.error(response.json()["detail"])
         st.stop()
     role = response.json()
 
-    user = User(id=db_user.id, name=db_user.name, api_key=db_user.api_key, user=api_user, role=role)
+    user = User(id=db_user.id, name=db_user.name, api_key=db_user.api_key, user=user, role=role)
 
     st.session_state["login_status"] = True
     st.session_state["user"] = user

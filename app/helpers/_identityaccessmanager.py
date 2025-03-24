@@ -173,13 +173,23 @@ class IdentityAccessManager:
         async with self.sql.session() as session:
             # create the role
             try:
-                await session.execute(statement=insert(table=RoleTable).values(name=name, default=default))
+                await session.execute(statement=insert(table=RoleTable).values(name=name))
                 await session.commit()
             except IntegrityError:
                 raise RoleAlreadyExistsException()
 
             result = await session.execute(statement=select(RoleTable.id).where(RoleTable.name == name))
             role_id = result.scalar_one()
+
+            # set the role as default if needed
+            if default:
+                # change the currently default role to not be default
+                result = await session.execute(statement=select(RoleTable).where(RoleTable.default))
+                existing_default_role = result.scalar_one_or_none()
+                if existing_default_role:
+                    await session.execute(statement=update(table=RoleTable).values(default=False).where(RoleTable.id == existing_default_role.id))
+
+            await session.execute(statement=update(table=RoleTable).values(default=default).where(RoleTable.id == role_id))
 
             # create the limits
             for limit in limits:
@@ -231,8 +241,9 @@ class IdentityAccessManager:
             if default:
                 # change the currently default role to not be default
                 result = await session.execute(statement=select(RoleTable).where(RoleTable.default))
-                existing_default_role = result.scalar_one()
-                await session.execute(statement=update(table=RoleTable).values(default=False).where(RoleTable.id == existing_default_role.id))
+                existing_default_role = result.scalar_one_or_none()
+                if existing_default_role:
+                    await session.execute(statement=update(table=RoleTable).values(default=False).where(RoleTable.id == existing_default_role.id))
 
             default = default if default is not None else role.default
 
@@ -267,11 +278,8 @@ class IdentityAccessManager:
             await session.commit()
 
     async def get_roles(self, role_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Role]:
-        if role_id is not None and role_id == 0:
-            return [self.root_role]
-
         async with self.sql.session() as session:
-            if not role_id:
+            if role_id is not None:
                 # get the unique role IDs with pagination
                 statement = select(RoleTable.id).offset(offset=offset).limit(limit=limit)
 
@@ -417,9 +425,6 @@ class IdentityAccessManager:
             await session.commit()
 
     async def get_users(self, user_id: Optional[int] = None, role_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[User]:
-        if user_id is not None and user_id == 0:
-            return [self.root_user]
-
         async with self.sql.session() as session:
             # then get all the data for these specific user IDs
             statement = (
@@ -434,11 +439,12 @@ class IdentityAccessManager:
                 .offset(offset=offset)
                 .limit(limit=limit)
             )
-            if user_id:
+            if user_id is not None:
                 statement = statement.where(UserTable.id == user_id)
-            if role_id:
+            if role_id is not None:
                 statement = statement.where(UserTable.role_id == role_id)
-
+            print("#######################")
+            print(statement)
             result = await session.execute(statement=statement)
             users = [User(**row._mapping) for row in result.all()]
 
@@ -508,11 +514,11 @@ class IdentityAccessManager:
                 .offset(offset=offset)
                 .limit(limit=limit)
             )
-            if user_id:
+            if user_id is not None:
                 statement = statement.where(TokenTable.user_id == user_id)
-            if token_id:
+            if token_id is not None:
                 statement = statement.where(TokenTable.id == token_id)
-            if exclude_expired:
+            if exclude_expired is not None:
                 statement = statement.where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
 
             result = await session.execute(statement=statement)

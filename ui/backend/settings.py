@@ -19,11 +19,10 @@ class Database(ConfigBaseModel):
 class Config(ConfigBaseModel):
     cache_ttl: int = 1800  # 30 minutes
     api_url: str = "http://localhost:8080"
-    api_key: str = "changeme"  # must be a key with admin privileges (ex: root key)
+    api_key: str = Field(default="changeme", description="API key with CREATE and DELETE token privileges (ex: master key)")
     max_token_expiration_days: int = 60  # days
     database: Database = Field(default_factory=Database)
-    admin_name: str = "admin"
-    admin_password: str = "changeme"
+    master_username: str = "master"
 
 
 class Settings(BaseSettings):

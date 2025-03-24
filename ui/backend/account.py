@@ -39,10 +39,10 @@ def change_password(current_password: str, new_password: str, confirm_password: 
     st.rerun()
 
 
-def create_token(token_id: str, expires_at: int):
+def create_token(name: str, expires_at: int):
     response = requests.post(
         url=f"{settings.api_url}/tokens",
-        json={"user": st.session_state["user"]["id"], "token": token_id, "expires_at": expires_at},
+        json={"user": st.session_state["user"].user["id"], "token": name, "expires_at": expires_at},
         headers={"Authorization": f"Bearer {settings.api_key}"},
     )
     if response.status_code == 201:
