@@ -35,7 +35,7 @@ async def test_check_api_key_with_no_name_in_cache():
             cache=mock_redis, table_id="TEST", doc_id="test-doc-id", server="https://example.com", api_key="test-grist-api-key"
         )
 
-        user = await auth_client.check_api_key("test-api-key")
+        await auth_client.check_api_key("test-api-key")
 
         # Verify Redis was called correctly
         mock_redis.get.assert_called_once_with(redis_key)
