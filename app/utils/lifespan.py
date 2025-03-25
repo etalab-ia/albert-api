@@ -33,18 +33,14 @@ async def lifespan(app: FastAPI):
     internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
 
     # databases
-    if settings.databases.qdrant and settings.databases.qdrant.type:
+    if settings.databases.qdrant:
         type = settings.databases.qdrant.type
-    elif settings.databases.elastic and settings.databases.elastic.type:
-        type = settings.databases.elastic.type
-    else:
-        type = None
-
-    if settings.databases.qdrant and settings.databases.qdrant.args:
         args = settings.databases.qdrant.args
-    elif settings.databases.elastic and settings.databases.elastic.args:
+    elif settings.databases.elastic:
+        type = settings.databases.elastic.type
         args = settings.databases.elastic.args
     else:
+        type = None
         args = None
 
     databases.search = SearchClient.import_module(type=type)(models=models.registry, **args) if type and args else None
