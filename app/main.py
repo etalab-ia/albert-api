@@ -39,6 +39,10 @@ def create_app(*, db_func=get_db, disabled_middleware=False) -> FastAPI:
         if endpoint not in settings.disabled_routers:
             app.include_router(router=endpoints_modules[endpoint].router, tags=[endpoint.title()], prefix="/v1")
 
+    from app.endpoints import ocr
+
+    app.include_router(router=ocr.router, tags="Ocr", prefix="/beta")
+
     # Health check
     @app.get(path="/health", tags=["Monitoring"])
     def health(user: User = Security(dependency=check_api_key)) -> Response:
