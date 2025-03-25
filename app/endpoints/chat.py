@@ -20,7 +20,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, user: 
     """
 
     # TODO: fix
-    # # retrieval augmentation generation
+    # retrieval augmentation generation
     # async def retrieval_augmentation_generation(
     #     body: ChatCompletionRequest, models: ModelRegistry, search: SearchClient, internet: InternetClient
     # ) -> Tuple[ChatCompletionRequest, List[Search]]:
@@ -48,7 +48,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, user: 
     #     return body, searches
 
     # body, searches = await retrieval_augmentation_generation(body=body, models=context.models, search=databases.search, internet=internet.search)
-
+    body = body.model_dump()
     # select client
     model = context.models(model=body["model"])
     client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)

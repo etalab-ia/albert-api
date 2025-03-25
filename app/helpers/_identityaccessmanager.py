@@ -359,11 +359,10 @@ class IdentityAccessManager:
 
             return token_id, token
 
-    async def delete_token(self, token_id: int) -> None:
+    async def delete_token(self, user_id: int, token_id: int) -> None:
         async with self.sql.session() as session:
             # check if token exists
-            # TODO voir s'il faut ajouter user_ids
-            result = await session.execute(statement=select(TokenTable.id).where(TokenTable.id == token_id))
+            result = await session.execute(statement=select(TokenTable.id).where(TokenTable.id == token_id).where(TokenTable.user_id == user_id))
             try:
                 result.scalar_one()
             except NoResultFound:
@@ -374,23 +373,22 @@ class IdentityAccessManager:
             await session.commit()
 
     async def get_tokens(
-        self, user_id: Optional[int] = None, token_id: Optional[int] = None, exclude_expired: bool = False, offset: int = 0, limit: int = 10
+        self, user_id: int, token_id: Optional[int] = None, exclude_expired: bool = False, offset: int = 0, limit: int = 10
     ) -> List[Token]:
         async with self.sql.session() as session:
             statement = (
                 select(
                     TokenTable.id,
-                    TokenTable.token,
                     TokenTable.name,
+                    TokenTable.token,
                     TokenTable.user_id.label("user"),
                     cast(func.extract("epoch", TokenTable.expires_at), Integer).label("expires_at"),
                     cast(func.extract("epoch", TokenTable.created_at), Integer).label("created_at"),
                 )
                 .offset(offset=offset)
                 .limit(limit=limit)
-            )
-            if user_id is not None:
-                statement = statement.where(TokenTable.user_id == user_id)
+            ).where(TokenTable.user_id == user_id)
+
             if token_id is not None:
                 statement = statement.where(TokenTable.id == token_id)
             if exclude_expired is not None:
@@ -414,8 +412,7 @@ class IdentityAccessManager:
                 return
 
             try:
-                tokens = await self.get_tokens(token_id=claims["token_id"], exclude_expired=True)
-                assert tokens[0].user == claims["user_id"]
+                tokens = await self.get_tokens(user_id=claims["user_id"], token_id=claims["token_id"], exclude_expired=True)
             except TokenNotFoundException:
                 return
 

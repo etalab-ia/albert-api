@@ -42,7 +42,7 @@ def change_password(current_password: str, new_password: str, confirm_password: 
 def create_token(name: str, expires_at: int):
     response = requests.post(
         url=f"{settings.api_url}/tokens",
-        json={"user": st.session_state["user"].user["id"], "token": name, "expires_at": expires_at},
+        json={"user": st.session_state["user"].user["id"], "name": name, "expires_at": expires_at},
         headers={"Authorization": f"Bearer {settings.api_key}"},
     )
     if response.status_code == 201:
@@ -50,7 +50,7 @@ def create_token(name: str, expires_at: int):
         @st.dialog(title="Token", width="large")
         def display_token():
             st.warning("**⚠️ Copy the token to your clipboard, it will not be displayed again.**")
-            st.code(response.json()["id"], language="text")
+            st.code(response.json()["token"], language="text")
 
         st.toast("Create succeed", icon="✅")
         display_token()
@@ -58,11 +58,8 @@ def create_token(name: str, expires_at: int):
         st.toast(response.json()["detail"], icon="❌")
 
 
-def delete_token(token_id: str):
-    response = requests.delete(
-        url=f"{settings.api_url}/tokens/{st.session_state["user"]["id"]}/{token_id}",
-        headers={"Authorization": f"Bearer {settings.api_key}"},
-    )
+def delete_token(token_id: int):
+    response = requests.delete(url=f"{settings.api_url}/tokens/{token_id}", headers={"Authorization": f"Bearer {settings.api_key}"})
     if response.status_code == 204:
         st.toast("Delete succeed", icon="✅")
         time.sleep(0.5)

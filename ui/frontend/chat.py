@@ -12,13 +12,12 @@ from ui.variables import MODEL_TYPE_LANGUAGE
 header()
 
 # Data
-try:
-    models = get_models(type=MODEL_TYPE_LANGUAGE, api_key=st.session_state["user"].api_key)
-    collections = get_collections(api_key=st.session_state["user"].api_key)
-except Exception:
-    st.error("Error to fetch user data.")
-    logging.debug(traceback.format_exc())
-    st.stop()
+# try:
+models = get_models(type=MODEL_TYPE_LANGUAGE)
+limits = st.session_state["user"].role["limits"]
+limits = [limit["model"] for limit in limits if (limit["type"] == "tpm" or limit["type"] == "rpm") and (limit["value"] is None or limit["value"] > 0)]
+models = [model for model in models if model in limits]
+collections = get_collections()
 
 # State
 if "selected_collections" not in st.session_state:
@@ -127,7 +126,6 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
             stream, sources = generate_stream(
                 messages=st.session_state.messages,
                 params=params,
-                api_key=st.session_state["user"].api_key,
                 rag=rag,
                 rerank=False,
             )

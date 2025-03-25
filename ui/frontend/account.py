@@ -10,53 +10,53 @@ from ui.backend.common import get_limits, get_models, get_tokens
 
 header()
 tokens = get_tokens()
-models = get_models(api_key=st.session_state["user"].api_key)
+tokens = [token for token in tokens if token["name"] != "playground"]
+
+models = get_models()
 
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 
-col1, col2 = st.columns(2)
-with col1:
-    st.metric(label="User ID", value=st.session_state["user"].name)
 
-    with st.expander(label="Change password", icon=":material/key:"):
-        current_password = st.text_input(label="Current password", type="password", key="current_password")
-        new_password = st.text_input(
-            label="New password",
-            type="password",
-            key="new_password",
-            help="New password must be at least 8 characters long and contain at least one uppercase letter, one special character, and one digit.",
-        )
-        confirm_password = st.text_input(label="Confirm password", type="password", key="confirm_password")
+st.metric(label="User ID", value=st.session_state["user"].name, border=True)
 
-        submit_change_password = st.button(
-            label="Change",
-            disabled=not current_password or not new_password or not confirm_password or st.session_state["user"].name == settings.master_username,
-        )
-        if submit_change_password:
-            change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
-
-with col2:
-    st.metric(
-        label="Expires at",
-        value=pd.to_datetime(st.session_state["user"].user["expires_at"], unit="s").strftime("%d %b %Y")
-        if st.session_state["user"].user["expires_at"]
-        else None,
+st.metric(
+    label="Account expiration",
+    value=pd.to_datetime(st.session_state["user"].user["expires_at"], unit="s").strftime("%d %b %Y")
+    if st.session_state["user"].user["expires_at"]
+    else None,
+    border=False,
+)
+with st.expander(label="Change password", icon=":material/key:"):
+    current_password = st.text_input(label="Current password", type="password", key="current_password")
+    new_password = st.text_input(
+        label="New password",
+        type="password",
+        key="new_password",
+        help="New password must be at least 8 characters long and contain at least one uppercase letter, one special character, and one digit.",
     )
+    confirm_password = st.text_input(label="Confirm password", type="password", key="confirm_password")
+
+    submit_change_password = st.button(
+        label="Change",
+        disabled=not current_password or not new_password or not confirm_password or st.session_state["user"].name == settings.master_username,
+    )
+    if submit_change_password:
+        change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
 
 st.subheader("API keys")
-tokens = pd.DataFrame(
-    data={
-        "ID": [token["id"] for token in tokens],
-        "Token": [token["token"] for token in tokens],
-        "Created at": [pd.to_datetime(token["created_at"], unit="s") for token in tokens],
-        "Expiration": [pd.to_datetime(token["expires_at"], unit="s") for token in tokens],
-    }
-)
 st.dataframe(
-    data=tokens.style.apply(
+    data=pd.DataFrame(
+        data={
+            "ID": [token["id"] for token in tokens],
+            "Name": [token["name"] for token in tokens],
+            "Token": [token["token"] for token in tokens],
+            "Created at": [pd.to_datetime(token["created_at"], unit="s") for token in tokens],
+            "Expiration": [pd.to_datetime(token["expires_at"], unit="s") for token in tokens],
+        }
+    ).style.apply(
         lambda x: ["background-color: #f0f0f0;color: grey" if x["Expiration"] and x["Expiration"] < pd.Timestamp.now() else "" for _ in x],
         axis=1,
     ),
@@ -72,7 +72,7 @@ st.dataframe(
 col1, col2 = st.columns(spec=2)
 with col1:
     with st.expander(label="Create a token", icon=":material/add_circle:"):
-        token_id = st.text_input(label="Token ID", placeholder="my-token", help="ID of the token to create.")
+        token_name = st.text_input(label="Token name", placeholder="Enter a name for your token", help="Name of the token to create.")
         expires_at = st.date_input(
             label="Expires at",
             min_value=dt.datetime.now(),
@@ -80,12 +80,13 @@ with col1:
             value=dt.datetime.now() + dt.timedelta(days=settings.max_token_expiration_days),
             help="Expiration date of the token.",
         )
-        if st.button(label="Create", disabled=not token_id or st.session_state["user"].name == settings.master_username):
-            create_token(token_id=token_id, expires_at=round(int(expires_at.strftime("%s"))))
+        if st.button(label="Create", disabled=not token_name or st.session_state["user"].name == settings.master_username):
+            create_token(name=token_name, expires_at=round(int(expires_at.strftime("%s"))))
 
 with col2:
     with st.expander(label="Delete a token", icon=":material/delete_forever:"):
-        token_id = st.selectbox(label="Token ID", options=tokens.ID.values)
+        token_name = st.selectbox(label="Token ID", options=[token["name"] for token in tokens])
+        token_id = [token["id"] for token in tokens if token["name"] == token_name][0] if token_name else None
         if st.button(label="Delete", disabled=not token_id or st.session_state["user"].name == settings.master_username, key="delete_token_button"):
             delete_token(token_id=token_id)
 

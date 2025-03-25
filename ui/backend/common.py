@@ -11,8 +11,8 @@ from ui.variables import COLLECTION_DISPLAY_ID_INTERNET, MODEL_TYPE_AUDIO, MODEL
 
 
 @st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
-def get_models(api_key: str, type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]] = None) -> list:
-    response = requests.get(url=f"{settings.api_url}/v1/models", headers={"Authorization": f"Bearer {api_key}"})
+def get_models(type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]] = None) -> list:
+    response = requests.get(url=f"{settings.api_url}/v1/models", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
     assert response.status_code == 200, response.text
     models = response.json()["data"]
     if type is None:
@@ -24,8 +24,8 @@ def get_models(api_key: str, type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_T
 
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_collections(api_key: str) -> list:
-    response = requests.get(url=f"{settings.api_url}/v1/collections", headers={"Authorization": f"Bearer {api_key}"})
+def get_collections() -> list:
+    response = requests.get(url=f"{settings.api_url}/v1/collections", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
     assert response.status_code == 200, response.text
     collections = response.json()["data"]
 
@@ -39,10 +39,12 @@ def get_collections(api_key: str) -> list:
 
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_documents(collection_ids: List[str], api_key: str) -> dict:
+def get_documents(collection_ids: List[str]) -> dict:
     documents = list()
     for collection_id in collection_ids:
-        response = requests.get(url=f"{settings.api_url}/v1/documents/{collection_id}", headers={"Authorization": f"Bearer {api_key}"})
+        response = requests.get(
+            url=f"{settings.api_url}/v1/documents/{collection_id}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+        )
         assert response.status_code == 200, response.text
         data = response.json()["data"]
         for document in data:

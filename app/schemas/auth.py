@@ -193,6 +193,7 @@ class Token(BaseModel):
     object: Literal["token"] = "token"
     id: int
     name: str
+    token: str
     user: int
     expires_at: Optional[int] = None
     created_at: int

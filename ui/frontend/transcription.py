@@ -12,7 +12,7 @@ header()
 
 # Data
 try:
-    models = get_models(type=MODEL_TYPE_AUDIO, api_key=st.session_state["user"].api_key)
+    models = get_models(type=MODEL_TYPE_AUDIO)
 except Exception:
     st.error(body="Error to fetch user data.")
     logging.error(traceback.format_exc())

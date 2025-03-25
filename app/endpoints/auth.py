@@ -24,17 +24,6 @@ from app.utils.lifespan import context
 router = APIRouter()
 
 
-# @router.post(path="/login")
-# async def login(request: Request, body: LoginRequest = Body(description="The login request.")) -> User:
-#     """
-#     Login to the API.
-#     """
-
-#     user = await context.iam.login(user_name=body.user_name, user_password=body.user_password)
-
-#     return user
-
-
 @router.post(path="/roles", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_ROLE]))])
 async def create_role(request: Request, body: RoleRequest = Body(description="The role creation request.")) -> JSONResponse:
     """
@@ -185,39 +174,39 @@ async def create_token(request: Request, body: TokenRequest = Body(description="
     return JSONResponse(status_code=201, content={"id": token_id, "token": token})
 
 
-@router.delete(path="/tokens/{token:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_TOKEN]))])
-async def delete_token(request: Request, token: int = Path(description="The token ID of the token to delete.")) -> Response:
+@router.delete(path="/tokens/{token:path}")
+async def delete_token(request: Request, token: int = Path(description="The token ID of the token to delete."), user: UserInfo = Security(dependency=Authorization())) -> Response:  # fmt: off
     """
     Delete a token.
     """
 
-    await context.iam.delete_token(token_id=token)
+    await context.iam.delete_token(user_id=user.user_id, token_id=token)
 
     return Response(status_code=204)
 
 
-@router.get(path="/tokens/{token:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_TOKEN]))])
-async def get_token(request: Request, token: int = Path(description="The token ID of the token to get.")) -> Token:
+@router.get(path="/tokens/{token:path}")
+async def get_token(request: Request, token: int = Path(description="The token ID of the token to get."), user: UserInfo = Security(dependency=Authorization())) -> Token:  # fmt: off
     """
-    Get a token by id.
+    Get your token by id.
     """
 
-    tokens = await context.iam.get_tokens(token_id=token)
+    tokens = await context.iam.get_tokens(user_id=user.user_id, token_id=token)
 
     return tokens[0]
 
 
-@router.get(path="/tokens", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_TOKEN]))])
+@router.get(path="/tokens")
 async def get_tokens(
     request: Request,
-    user: Optional[int] = Query(default=None, description="The id of the user to filter the tokens by."),
     offset: int = Query(default=0, ge=0, description="The offset of the tokens to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the tokens to get."),
+    user: UserInfo = Security(dependency=Authorization()),
 ) -> Tokens:
     """
-    Get all tokens of a user.
+    Get all your tokens.
     """
 
-    data = await context.iam.get_tokens(user_id=user, offset=offset, limit=limit)
+    data = await context.iam.get_tokens(user_id=user.user_id, offset=offset, limit=limit)
 
     return Tokens(data=data)

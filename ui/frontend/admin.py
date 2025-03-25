@@ -4,12 +4,15 @@ import streamlit as st
 from ui.backend.admin import create_role, create_user, delete_role, delete_user, update_role, update_user
 from ui.frontend.header import header
 from ui.backend.common import get_limits, get_models, get_roles, get_users
-from ui.variables import ADMIN_PERMISSIONS, MODEL_TYPE_LANGUAGE
+from ui.variables import ADMIN_PERMISSIONS
 
 header()
 
-tab1, tab2 = st.tabs(["Roles", "Users"])
+if not all(perm in st.session_state["user"].role["permissions"] for perm in ADMIN_PERMISSIONS):
+    st.info("Access denied.")
+    st.stop()
 
+tab1, tab2 = st.tabs(["Roles", "Users"])
 with tab1:
     if not all(perm in st.session_state["user"].role["permissions"] for perm in ADMIN_PERMISSIONS):
         st.info("Access denied.")
@@ -17,7 +20,7 @@ with tab1:
 
     users = get_users()
     roles = get_roles()
-    models = get_models(type=MODEL_TYPE_LANGUAGE, api_key=st.session_state["user"].api_key)
+    models = get_models()
 
     with st.sidebar:
         if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):

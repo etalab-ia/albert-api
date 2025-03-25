@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from limits import RateLimitItemPerDay, RateLimitItemPerMinute
 from limits.aio import storage, strategies
@@ -27,17 +27,17 @@ class Limiter:
         elif strategy == "sliding_window":
             self.strategy = strategies.SlidingWindowCounterRateLimiter(storage=self.redis)
 
-    async def __call__(self, user_id: int, model: str, type: Literal[LimitType.RPM, LimitType.RPD], value: int) -> None:
+    async def __call__(self, user_id: int, model: str, type: Literal[LimitType.RPM, LimitType.RPD], value: Optional[int] = None) -> None:
         # @TODO: add tpm limit
 
         try:
-            if type == LimitType.RPM:
+            if type == LimitType.RPM and value is not None:
                 limit = RateLimitItemPerMinute(amount=value)
                 result = await self.strategy.hit(limit, f"rpm:{user_id}:{model}")
                 if not result:
                     return False
 
-            elif type == LimitType.RPD:
+            elif type == LimitType.RPD and value is not None:
                 limit = RateLimitItemPerDay(amount=value)
                 result = await self.strategy.hit(limit, f"rpd:{user_id}:{model}")
                 if not result:

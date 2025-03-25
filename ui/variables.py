@@ -18,7 +18,6 @@ ADMIN_PERMISSIONS = [
     "create_token",
     "read_token",
     "delete_token",
-    "read_metric",
 ]
 
 TRANSCRIPTION_SUPPORTED_LANGUAGES = [
