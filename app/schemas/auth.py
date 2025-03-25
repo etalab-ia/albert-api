@@ -40,10 +40,11 @@ class RoleUpdateRequest(BaseModel):
     permissions: Optional[List[PermissionType]] = Field(default=None, description="The new permissions.")
     limits: Optional[List[Limit]] = Field(default=None, description="The new limits.")
 
-    @field_validator("name", mode="before")
+    @field_validator("name", mode="after")
     def strip_name(cls, name):
         if isinstance(name, str):
-            name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty")
         return name
 
     @field_validator("limits", mode="before")
@@ -66,10 +67,12 @@ class RoleRequest(BaseModel):
     permissions: Optional[List[PermissionType]] = []
     limits: List[Limit] = []
 
-    @field_validator("name", mode="before")
+    @field_validator("name", mode="after")
     def strip_name(cls, name):
         if isinstance(name, str):
             name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty")
         return name
 
     @field_validator("limits", mode="before")
@@ -115,12 +118,12 @@ class UserUpdateRequest(BaseModel):
 
         return expires_at
 
-    @field_validator("name", mode="before", check_fields=False)
+    @field_validator("name", mode="after")
     def strip_name(cls, name):
         if name is not None:
             name = name.strip()
-            if not name:  # empty string
-                raise ValueError("Empty string is not allowed.")
+            if name == "":
+                raise ValueError("Name cannot be empty.")
 
         return name
 
@@ -138,11 +141,12 @@ class UserRequest(BaseModel):
 
         return expires_at
 
-    @field_validator("name", mode="before")
+    @field_validator("name", mode="after")
     def strip_name(cls, name):
-        name = name.strip()
-        if not name:  # empty string
-            raise ValueError("Empty string is not allowed.")
+        if isinstance(name, str):
+            name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty.")
 
         return name
 
@@ -167,10 +171,12 @@ class TokenRequest(BaseModel):
     user: int
     expires_at: Optional[int] = Field(None, description="Timestamp in seconds")
 
-    @field_validator("name", mode="before")
+    @field_validator("name", mode="after")
     def strip_name(cls, name):
         if isinstance(name, str):
             name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty.")
 
         return name
 
@@ -187,6 +193,7 @@ class Token(BaseModel):
     object: Literal["token"] = "token"
     id: int
     name: str
+    user: int
     expires_at: Optional[int] = None
     created_at: int
 

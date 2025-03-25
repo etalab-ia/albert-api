@@ -45,17 +45,17 @@ with tab1:
         },
     )
 
-    if len(roles) == 0:
-        st.stop()
-
     name = st.selectbox(label="**Select a role**", options=[role["name"] for role in roles], disabled=st.session_state.get("new_role_button", False))
     st.button(
         label="**Or create a new role**",
         on_click=lambda: setattr(st.session_state, "new_role_button", not st.session_state.get("new_role_button", False)),
         use_container_width=True,
     )
-    role = [role for role in roles if role["name"] == name][0] if not st.session_state.get("new_role_button", False) else {"default": False, "permissions": [], "limits": []}  # fmt: off
-    new_name = st.text_input(label="Role name", placeholder="Enter role name")
+    if not st.session_state.get("new_role_button", False) and roles:
+        role = [role for role in roles if role["name"] == name][0]
+    else:
+        role = {"name": None, "default": False, "permissions": [], "limits": []}
+    new_name = st.text_input(label="Role name", placeholder="Enter role name", value=role["name"])
     default = st.toggle(label="Default", key="update_role_default", value=role["default"], help="If true, this role will be assigned to new users by default.")  # fmt: off
 
     st.write("**Admin permissions**")
@@ -143,7 +143,7 @@ with tab1:
             label="**:material/update: Update**",
             key="update_limits_button",
             use_container_width=True,
-            disabled=st.session_state.get("new_role_button", False),
+            disabled=st.session_state.get("new_role_button", False) or not roles,
         ):
             limits = []
             for model, row in edited_limits.iterrows():
@@ -160,7 +160,7 @@ with tab1:
             label="**:material/delete_forever: Delete**",
             key="delete_role_button",
             use_container_width=True,
-            disabled=st.session_state.get("new_role_button", False),
+            disabled=st.session_state.get("new_role_button", False) or not roles,
         ):
             delete_role(role=role["id"])
 
@@ -203,23 +203,25 @@ with tab2:
     default_role = default_role[0] if default_role else None
     default_role_index = role_names.index(default_role) if default_role else None
 
-    user = [user for user in users if user["name"] == name][0] if not st.session_state.get("new_user_button", False) else {"name": None, "role": default_role, "expires_at": None}  # fmt: off
+    if not st.session_state.get("new_user_button", False) and users:
+        user = [user for user in users if user["name"] == name][0]
+    else:
+        user = {"name": None, "role": default_role, "expires_at": None}
+
     new_name = st.text_input(label="User name", placeholder="Enter user name", value=user["name"])
     new_password = st.text_input(label="Password", placeholder="Enter password", type="password")
 
     user_role = [role["name"] for role in roles if role["id"] == user["role"]]
     user_role = user_role[0] if user_role else None
     user_role_index = role_names.index(user_role) if user_role else None
-    role_index = user_role_index or default_role_index  # default role for new user or user role for existing user
-
-    st.write(f"default_role_index: {default_role_index}")
-    st.write(f"user_role_index: {user_role_index}")
-    st.write(f"role_index: {role_index}")
+    role_index = default_role_index if st.session_state.get("new_user_button", False) else user_role_index
     role_name = st.selectbox(label="Role", options=[role["name"] for role in roles], key="create_user_role", index=role_index)
     new_role = [role["id"] for role in roles if role["name"] == role_name][0] if role_name else None
 
-    new_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", min_value=pd.Timestamp.now(), value=user["expires_at"])
-    new_expires_at = None if new_expires_at is None else int(pd.Timestamp(new_expires_at).timestamp())
+    expires_at = pd.to_datetime(user["expires_at"], unit="s") if user["expires_at"] else None
+    no_expiration = st.toggle(label="No expiration", key="create_user_no_expiration", value=expires_at is None)
+    new_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", min_value=pd.Timestamp.now(), value=expires_at, disabled=no_expiration)  # fmt: off
+    new_expires_at = None if no_expiration or pd.isna(new_expires_at) else int(pd.Timestamp(new_expires_at).timestamp())
 
     col1, col2, col3 = st.columns(spec=3)
 
@@ -228,40 +230,24 @@ with tab2:
             label="**:material/add: Add**",
             key="add_user_button",
             use_container_width=True,
-            disabled=not new_name and not new_password and not new_role,
+            disabled=not st.session_state.get("new_user_button", False) or not roles,
         ):
             create_user(name=new_name, password=new_password, role=new_role, expires_at=new_expires_at)
 
     with col2:
         if st.button(
-            label="**:material/delete_forever: Delete**",
-            key="delete_user_button",
-            use_container_width=True,
-            disabled=not st.session_state.get("new_user_button", False) and not new_name and not new_password and not new_role,
-        ):
-            name = st.selectbox(label="User", options=[user["name"] for user in users], key="delete_user_name")
-            user = [user["id"] for user in users if user["name"] == name][0] if name else None
-            if st.button(label="Delete", disabled=not user, key="delete_user_button"):
-                delete_user(user=user)
-
-    with col3:
-        if st.button(
             label="**:material/update: Update**",
             key="update_user_button",
             use_container_width=True,
-            disabled=st.session_state.get("new_user_button", False) and not new_name and not new_password and not new_role,
+            disabled=st.session_state.get("new_user_button", False) or not users or not user["access_ui"],
         ):
-            name = st.selectbox(label="User", options=[user["name"] for user in users], key="update_selected_user_name")
-            user = [user for user in users if user["name"] == name][0] if name else None
-            if not user:
-                st.stop()
+            update_user(user=user["id"], name=new_name, password=new_password, role=new_role, expires_at=new_expires_at)
 
-            new_name = st.text_input(label="Name", placeholder="Enter name", key="update_user_name", value=user["name"])
-            new_password = st.text_input(label="Password", placeholder="Enter password", type="password", key="update_user_password", value=None)
-            default_role_index = [i for i, role in enumerate(roles) if role["id"] == user["role"]][0]
-            new_role_name = st.selectbox(label="Role", options=[role["name"] for role in roles], key="update_user_role", index=default_role_index)
-            new_role = [role["id"] for role in roles if role["name"] == new_role_name][0]
-            expires_at = st.date_input(label="Expires at", key="update_user_expires_at", min_value=pd.Timestamp.now(), value=None)
-            expires_at = None if expires_at is None else int(pd.Timestamp(expires_at).timestamp())
-            if st.button(label="Update", disabled=not user["access_ui"], key="update_user_button"):
-                update_user(user=user["id"], name=new_name, password=new_password, role=new_role, expires_at=expires_at)
+    with col3:
+        if st.button(
+            label="**:material/delete_forever: Delete**",
+            key="delete_user_button",
+            use_container_width=True,
+            disabled=st.session_state.get("new_user_button", False) or not users,
+        ):
+            delete_user(user=user["id"])

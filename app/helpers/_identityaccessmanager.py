@@ -382,6 +382,7 @@ class IdentityAccessManager:
                     TokenTable.id,
                     TokenTable.token,
                     TokenTable.name,
+                    TokenTable.user_id.label("user"),
                     cast(func.extract("epoch", TokenTable.expires_at), Integer).label("expires_at"),
                     cast(func.extract("epoch", TokenTable.created_at), Integer).label("created_at"),
                 )

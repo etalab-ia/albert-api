@@ -68,17 +68,6 @@ async def update_role(request: Request, role: int = Path(description="The ID of 
     return Response(status_code=204)
 
 
-@router.get(path="/roles/{role:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))])
-async def get_role(request: Request, role: int = Path(description="The ID of the role to get.")) -> Role:
-    """
-    Get a role by id.
-    """
-
-    roles = await context.iam.get_roles(role_id=role)
-
-    return roles[0]
-
-
 @router.get(path="/roles/me")
 async def get_current_role(request: Request, user: UserInfo = Security(dependency=Authorization())) -> Role:
     """
@@ -86,6 +75,17 @@ async def get_current_role(request: Request, user: UserInfo = Security(dependenc
     """
 
     roles = await context.iam.get_roles(role_id=user.role_id)
+
+    return roles[0]
+
+
+@router.get(path="/roles/{role:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))])
+async def get_role(request: Request, role: int = Path(description="The ID of the role to get.")) -> Role:
+    """
+    Get a role by id.
+    """
+
+    roles = await context.iam.get_roles(role_id=role)
 
     return roles[0]
 

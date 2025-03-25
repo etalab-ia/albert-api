@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 import requests
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, insert, select, update, func
 import streamlit as st
 
 from ui.backend.common import check_password, get_roles, get_users
@@ -20,7 +20,7 @@ def create_role(name: str, default: bool, permissions: list, limits: list):
     )
     if response.status_code != 201:
         st.toast(response.json()["detail"], icon="❌")
-        st.stop()
+        return
 
     st.toast("Role created", icon="✅")
     time.sleep(0.5)
@@ -32,7 +32,7 @@ def delete_role(role: int):
     response = requests.delete(url=f"{settings.api_url}/roles/{role}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
     if response.status_code != 204:
         st.toast(response.json()["detail"], icon="❌")
-        st.stop()
+        return
 
     st.toast("Role deleted", icon="✅")
     time.sleep(0.5)
@@ -50,7 +50,7 @@ def update_role(
     )
     if response.status_code != 204:
         st.toast(response.json()["detail"], icon="❌")
-        st.stop()
+        return
 
     st.toast("Role updated", icon="✅")
     time.sleep(0.5)
@@ -70,7 +70,7 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
 
     if response.status_code != 201:
         st.toast(response.json()["detail"], icon="❌")
-        st.stop()
+        return
 
     user_id = response.json()["id"]
 
@@ -83,11 +83,12 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
 
     if response.status_code != 201:
         st.toast(response.json()["detail"], icon="❌")
-        st.stop()
+        return
 
     api_key = response.json()["token"]
 
     session = next(get_session())
+    expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
     session.execute(
         insert(UserTable).values(
             name=name,
@@ -110,7 +111,7 @@ def delete_user(user: int):
     response = requests.delete(url=f"{settings.api_url}/users/{user}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
     if response.status_code != 204:
         st.toast(response.json()["detail"], icon="❌")
-        st.stop()
+        return
 
     session = next(get_session())
     session.execute(delete(UserTable).where(UserTable.api_user_id == user))
@@ -132,7 +133,7 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
     )
     if response.status_code != 204:
         st.toast(response.json()["detail"], icon="❌")
-        st.stop()
+        return
 
     session = next(get_session())
     db_user = session.execute(select(UserTable).where(UserTable.api_user_id == user)).scalar_one()
@@ -140,7 +141,7 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
     name = name or db_user.name
     password = get_hashed_password(password) if password else db_user.password
     role = role or db_user.api_role_id
-    expires_at = expires_at or db_user.expires_at
+    expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
     session.execute(
         update(UserTable)

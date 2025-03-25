@@ -60,7 +60,6 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
     if not db_user:
         st.error("Invalid username or password")
         st.stop()
-    db_user = [row._mapping for row in db_user][0]
 
     if not check_password(password=user_password, hashed_password=db_user.password):
         st.error("Invalid username or password")

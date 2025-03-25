@@ -11,7 +11,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True, unique=True)
     password = Column(String, nullable=False)
-    api_role_id = Column(Integer, unique=True, nullable=False)
+    api_role_id = Column(Integer, nullable=False)
     api_user_id = Column(Integer, unique=True, nullable=False)
     api_key = Column(String, unique=True, nullable=True)
     expires_at = Column(DateTime, nullable=True)
