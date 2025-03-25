@@ -30,7 +30,10 @@ async def lifespan(app: FastAPI):
     app.state.limiter = limiter
 
     models.registry = ModelRegistry(settings=settings.models)
-    internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
+    if settings.internet:
+        internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
+    else:
+        internet.search = None
 
     # databases
     if settings.databases.qdrant:
@@ -46,6 +49,9 @@ async def lifespan(app: FastAPI):
     databases.search = SearchClient.import_module(type=type)(models=models.registry, **args) if type and args else None
     databases.cache = CacheClient(connection_pool=ConnectionPool(**settings.databases.redis.args))
     databases.auth = AuthenticationClient(cache=databases.cache, **settings.databases.grist.args) if settings.databases.grist else None
+
+    # Store databases in app.state for middleware access
+    app.state.databases = databases
 
     yield
 

@@ -6,6 +6,7 @@ DATABASE_TYPE__REDIS = "redis"
 DATABASE_TYPE__QDRANT = "qdrant"
 DATABASE_TYPE__GRIST = "grist"
 DATABASE_TYPE__ELASTIC = "elastic"
+DATABASE_TYPE__SQL = "sql"
 
 DEFAULT_APP_NAME = "Albert API"
 DEFAULT_TIMEOUT = 300
@@ -50,3 +51,17 @@ SUPPORTED_MODEL_CLIENT_TYPES__AUDIO = [MODEL_CLIENT_TYPE__ALBERT, MODEL_CLIENT_T
 
 CHUNKERS = ["LangchainRecursiveCharacterTextSplitter", "NoChunker"]
 DEFAULT_CHUNKER = "LangchainRecursiveCharacterTextSplitter"  # TODO: rename RecursiveCharacterTextSplitter and remove from variables ?
+
+ROUTER__MODELS = "models"
+ROUTER__CHAT = "chat"
+ROUTER__COMPLETIONS = "completions"
+ROUTER__EMBEDDINGS = "embeddings"
+ROUTER__AUDIO = "audio"
+ROUTER__RERANK = "rerank"
+ROUTER__SEARCH = "search"
+ROUTER__COLLECTIONS = "collections"
+ROUTER__FILES = "files"
+ROUTER__DOCUMENTS = "documents"
+ROUTER__CHUNKS = "chunks"
+
+ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]

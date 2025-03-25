@@ -12,8 +12,9 @@
 | APP_VERSION | Optionnel | Version de l'application (défaut : "0.0.0") |
 | APP_DESCRIPTION | Optionnel | Description de l'application (défaut : None) |
 | CONFIG_FILE | Optionnel | Chemin vers le fichier de configuration (défaut : "config.yml") |
-| MIDDLEWARES | Optionnel | Activer ou désactiver les middlewares (défaut : "True") |
+| DISABLED_MIDDLEWARE | Optionnel | Activer ou désactiver les middlewares (défaut : "False") |
 | LOG_LEVEL | Optionnel | Niveau de journalisation (défaut : INFO) |
+| DISABLED_ROUTERS | Optionnel | Liste des routers de l'API désactivés (défaut : []). A entrer sous forme de liste python, exemple `DISABLED_ROUTERS='["embeddings", "audio"]'` |
 
 #### UI
 

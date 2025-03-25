@@ -11,6 +11,7 @@ from app.utils.variables import (
     DATABASE_TYPE__GRIST,
     DATABASE_TYPE__QDRANT,
     DATABASE_TYPE__REDIS,
+    DATABASE_TYPE__SQL,
     DEFAULT_APP_NAME,
     DEFAULT_TIMEOUT,
     INTERNET_TYPE__BRAVE,
@@ -25,6 +26,7 @@ from app.utils.variables import (
     MODEL_TYPE__RERANK,
     ROUTER_STRATEGY__ROUND_ROBIN,
     ROUTER_STRATEGY__SHUFFLE,
+    ROUTERS,
     SUPPORTED_MODEL_CLIENT_TYPES__AUDIO,
     SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS,
     SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE,
@@ -78,12 +80,12 @@ class Model(ConfigBaseModel):
 
 
 class Internet(ConfigBaseModel):
-    type: Literal[INTERNET_TYPE__DUCKDUCKGO, INTERNET_TYPE__BRAVE] = INTERNET_TYPE__DUCKDUCKGO
+    type: Literal[INTERNET_TYPE__DUCKDUCKGO, INTERNET_TYPE__BRAVE]
     args: dict = {}
 
 
 class Database(ConfigBaseModel):
-    type: Literal[DATABASE_TYPE__REDIS, DATABASE_TYPE__QDRANT, DATABASE_TYPE__GRIST, DATABASE_TYPE__ELASTIC]
+    type: Literal[DATABASE_TYPE__REDIS, DATABASE_TYPE__QDRANT, DATABASE_TYPE__GRIST, DATABASE_TYPE__ELASTIC, DATABASE_TYPE__SQL]
     args: dict = {}
 
 
@@ -96,7 +98,7 @@ class Config(ConfigBaseModel):
     rate_limit: RateLimit = Field(default_factory=RateLimit)
     models: List[Model]
     databases: List[Database]
-    internet: List[Internet] = Field(default=[Internet()], max_length=1)
+    internet: List[Internet] = Field(default_factory=list, max_length=1)
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
@@ -137,10 +139,15 @@ class Config(ConfigBaseModel):
 class Settings(BaseSettings):
     # logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
-    middleware: bool = True
+
+    # middleware on/off
+    disabled_middleware: bool = False
 
     # config
     config_file: str = "config.yml"
+
+    # disabled endpoints
+    disabled_routers: List[Literal[*ROUTERS]] = Field(default_factory=list)
 
     # app
     app_name: str = DEFAULT_APP_NAME
@@ -164,7 +171,7 @@ class Settings(BaseSettings):
         stream.close()
 
         values.rate_limit = config.rate_limit
-        values.internet = config.internet[0]
+        values.internet = config.internet[0] if config.internet else None
         values.models = config.models
 
         values.databases = SimpleNamespace()
@@ -172,5 +179,6 @@ class Settings(BaseSettings):
         values.databases.qdrant = next((database for database in config.databases if database.type == DATABASE_TYPE__QDRANT), None)
         values.databases.grist = next((database for database in config.databases if database.type == DATABASE_TYPE__GRIST), None)
         values.databases.elastic = next((database for database in config.databases if database.type == DATABASE_TYPE__ELASTIC), None)
+        values.databases.sql = next((database for database in config.databases if database.type == DATABASE_TYPE__SQL), None)
 
         return values

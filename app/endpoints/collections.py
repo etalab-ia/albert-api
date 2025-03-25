@@ -7,10 +7,11 @@ from fastapi.responses import JSONResponse
 
 from app.schemas.collections import Collection, CollectionRequest, Collections
 from app.schemas.security import User
-from app.utils.lifespan import databases
+from app.utils.lifespan import databases, internet
 from app.utils.security import check_api_key
 from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PUBLIC
-from app.utils.exceptions import NoVectorStoreAvailableException
+
+from app.utils.exceptions import NoVectorStoreAvailableException, ReservedCollectionIDException
 
 router = APIRouter()
 
@@ -20,8 +21,13 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     """
     Create a new collection.
     """
+
     if not databases.search:
         raise NoVectorStoreAvailableException()
+
+    if (body.name == COLLECTION_DISPLAY_ID__INTERNET) and (not internet.search):
+        raise ReservedCollectionIDException()
+
     collection_id = str(uuid.uuid4())
     databases.search.create_collection(
         collection_id=collection_id,
