@@ -105,16 +105,12 @@ class Config(ConfigBaseModel):
         models = [model.id for model in values.models]
         aliases = [alias for model in values.models for alias in model.aliases] + models
         language_models = [model for model in values.models if model.type == MODEL_TYPE__LANGUAGE]
-        embeddings_models = [model for model in values.models if model.type == MODEL_TYPE__EMBEDDINGS]
 
         assert len(models) == len(set(models)), "Duplicated models name found."  # fmt: off
         assert len(aliases) == len(set(aliases)), "Duplicated aliases found."  # fmt: off
         assert len(language_models) > 0, "At least one language model is required."  # fmt: off
-        assert len(embeddings_models) > 0, "At least one embeddings model is required."  # fmt: off
         assert any(model.default_internet for model in language_models), "At least one language model must be set to default_internet=True."  # fmt: off
-        assert any(model.default_internet for model in embeddings_models), "At least one embeddings model must be set to default_internet=True."  # fmt: off
         assert len([model for model in language_models if model.default_internet]) == 1, "There are more than one default internet language model."  # fmt: off
-        assert len([model for model in embeddings_models if model.default_internet]) == 1, "There are more than one default internet embeddings model."  # fmt: off
 
         return values
 
@@ -123,9 +119,19 @@ class Config(ConfigBaseModel):
         cache_databases = [database for database in values.databases if database.type == DATABASE_TYPE__REDIS]
         assert len(cache_databases) == 1, "There must be only one cache database."  # fmt: off
 
-        # check if there is only one search database
+        # check if there is at most one search database
         databases = [database for database in values.databases if database.type == DATABASE_TYPE__QDRANT or database.type == DATABASE_TYPE__ELASTIC]
-        assert len(databases) == 1, f"There must be only one search database ({DATABASE_TYPE__QDRANT} or {DATABASE_TYPE__ELASTIC})."  # fmt: off
+        assert len(databases) <= 1, f"There must be at most one search database ({DATABASE_TYPE__QDRANT} or {DATABASE_TYPE__ELASTIC})."  # fmt: off
+
+        return values
+
+    @model_validator(mode="after")
+    def validate_embeddings(cls, values) -> Any:
+        databases = [database for database in values.databases if database.type == DATABASE_TYPE__QDRANT or database.type == DATABASE_TYPE__ELASTIC]
+        embeddings_models = [model for model in values.models if model.type == MODEL_TYPE__EMBEDDINGS]
+
+        if len(databases) > 0:
+            assert len(embeddings_models) > 0, "At least one embeddings model is required with a vector store."
 
         return values
 
