@@ -81,7 +81,6 @@ class Collection(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     visibility = Column(Enum(CollectionVisibility), nullable=False)
-    vector_size = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), nullable=False)
 

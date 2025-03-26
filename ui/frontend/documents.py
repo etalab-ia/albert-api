@@ -1,29 +1,28 @@
 import pandas as pd
 import streamlit as st
 
-from ui.backend.common import get_collections, get_documents, settings
+from ui.backend.common import get_collections, get_documents, get_models
 from ui.backend.documents import create_collection, delete_collection, delete_document, upload_file
 from ui.frontend.header import header
-from ui.variables import COLLECTION_DISPLAY_ID_INTERNET, COLLECTION_TYPE_PRIVATE
+from ui.variables import COLLECTION_VISIBILITY_PRIVATE, MODEL_TYPE_EMBEDDINGS
+from ui.settings import settings
 
 header()
+models = get_models(type=MODEL_TYPE_EMBEDDINGS)
+if not settings.documents_model or settings.documents_model not in models:
+    st.info("Please select a text-embeddings-inference model in the settings to activate the documents page.")
+    st.stop()
 
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-data-documents", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 
-try:
-    collections = get_collections(api_key=st.session_state["user"].api_key)
-    collections = [collection for collection in collections if collection["id"] != COLLECTION_DISPLAY_ID_INTERNET]
-    documents = get_documents(
-        collection_ids=[collection["id"] for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE],
-        api_key=st.session_state["user"].api_key,
-    )
-except Exception as e:
-    st.error("Error to fetch user data.")
-    st.stop()
 
+collections = get_collections()
+documents = get_documents(
+    collection_ids=[collection["id"] for collection in collections if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE],
+)
 
 # Collections
 st.subheader(body="Collections")
@@ -33,9 +32,10 @@ st.dataframe(
             {
                 "ID": collection["id"],
                 "Name": collection["name"],
-                "Type": collection["type"],
-                "Model": collection["model"],
+                "Visibility": collection["visibility"],
                 "Documents": collection["documents"],
+                "Updated at": pd.to_datetime(collection["updated_at"], unit="s"),
+                "Created at": pd.to_datetime(collection["created_at"], unit="s"),
             }
             for collection in collections
         ],
@@ -43,6 +43,7 @@ st.dataframe(
     hide_index=True,
     use_container_width=True,
     column_config={
+        "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
         "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
     },
 )
@@ -54,15 +55,17 @@ with col1:
             label="Collection name", placeholder="Mes documents", help="Create a private collection with the embeddings model of your choice."
         )
         if st.button(label="Create", disabled=not collection_name):
-            create_collection(
-                api_key=st.session_state["user"].api_key, collection_name=collection_name, collection_model=settings.documents_embeddings_model
-            )
+            create_collection(collection_name=collection_name, collection_model=settings.documents_model)
 
 with col2:
     with st.expander(label="Delete a collection", icon=":material/delete_forever:"):
         collection = st.selectbox(
             label="Select collection to delete",
-            options=[f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE],
+            options=[
+                f"{collection["name"]} - {collection["id"]}"
+                for collection in collections
+                if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE
+            ],
             key="delete_collection_selectbox",
         )
         collection_id = collection.split(" - ")[1] if collection else None
@@ -101,7 +104,11 @@ with col1:
     with st.expander(label="Upload a file", icon=":material/upload_file:"):
         collection = st.selectbox(
             label="Select a collection",
-            options=[f"{collection["name"]} - {collection["id"]}" for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE],
+            options=[
+                f"{collection["name"]} - {collection["id"]}"
+                for collection in collections
+                if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE
+            ],
             key="upload_file_selectbox",
         )
         collection_id = collection.split(" - ")[1] if collection else None

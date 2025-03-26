@@ -22,24 +22,15 @@ L'API implémente un système de rôle à 3 niveaux :
 
 Par défaut, le rate limiting est de 100 requêtes par minute pour tous les niveaux. Il est de 10 requêtes par minute pour le niveau 0 (user) pour les endpoints tagués *Core*.
 
-| Relation | Subject           | Permission                |
-| -------- | ----------------- | ------------------------- |
-| create   | Role              | CREATE_ROLE               |
-| read     | Role              | READ_ROLE                 |
-| update   | Role              | UPDATE_ROLE               |
-| delete   | Role              | DELETE_ROLE               |
-| create   | User              | CREATE_USER               |
-| read     | User              | READ_USER                 |
-| update   | User              | UPDATE_USER               |
-| delete   | User              | DELETE_USER               |
-| create   | Token             | CREATE_TOKEN              |
-| read     | Token             | READ_TOKEN                |
-| delete   | Token             | DELETE_TOKEN              |
-| create   | PublicCollection  | CREATE_PUBLIC_COLLECTION  |
-| read     | PublicCollection  |                           |
-| update   | PublicCollection  | UPDATE_PUBLIC_COLLECTION  |
-| delete   | PublicCollection  | DELETE_PUBLIC_COLLECTION  |
-| create   | PrivateCollection | CREATE_PRIVATE_COLLECTION |
-| read     | PrivateCollection | READ_PRIVATE_COLLECTION   |
-| update   | PrivateCollection | UPDATE_PRIVATE_COLLECTION |
-| delete   | PrivateCollection | DELETE_PRIVATE_COLLECTION |
+| Relation | Subject          | Permission               |
+| -------- | ---------------- | ------------------------ |
+| create   | Role             | CREATE_ROLE              |
+| read     | Role             | READ_ROLE                |
+| update   | Role             | UPDATE_ROLE              |
+| delete   | Role             | DELETE_ROLE              |
+| create   | User             | CREATE_USER              |
+| read     | User             | READ_USER                |
+| update   | User             | UPDATE_USER              |
+| delete   | User             | DELETE_USER              |
+| create   | PublicCollection | CREATE_PUBLIC_COLLECTION |
+| read     | Metric           | READ_METRIC              |

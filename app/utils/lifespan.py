@@ -14,8 +14,6 @@ from app.utils.logging import logger
 from app.utils.settings import settings
 
 context = SimpleNamespace()
-internet = SimpleNamespace()
-databases = SimpleNamespace()
 
 
 @asynccontextmanager

@@ -33,6 +33,7 @@ with tab1:
                 "ID": [role["id"] for role in roles],
                 "Name": [role["name"] for role in roles],
                 "Default": [role["default"] for role in roles],
+                "Users": [role["users"] for role in roles],
                 "Created at": [pd.to_datetime(role["created_at"], unit="s") for role in roles],
                 "Updated at": [pd.to_datetime(role["updated_at"], unit="s") for role in roles],
             },
@@ -61,10 +62,11 @@ with tab1:
     new_name = st.text_input(label="Role name", placeholder="Enter role name", value=role["name"])
     default = st.toggle(label="Default", key="update_role_default", value=role["default"], help="If true, this role will be assigned to new users by default.")  # fmt: off
 
-    st.write("**Admin permissions**")
-    col1, col2, col3, col4 = st.columns(spec=4)
+    st.subheader("Admin permissions")
+    col1, col2, col3 = st.columns(spec=3)
     permissions = []
     with col1:
+        st.caption("Roles")
         if st.checkbox(label="Create role", key="create_role", value="create_role" in role["permissions"]):
             permissions.append("create_role")
         if st.checkbox(label="Read role", key="read_role", value="read_role" in role["permissions"]):
@@ -75,6 +77,7 @@ with tab1:
             permissions.append("update_role")
 
     with col2:
+        st.caption("Users")
         if st.checkbox(label="Create user", key="create_user", value="create_user" in role["permissions"]):
             permissions.append("create_user")
         if st.checkbox(label="Read user", key="read_user", value="read_user" in role["permissions"]):
@@ -85,21 +88,14 @@ with tab1:
             permissions.append("update_user")
 
     with col3:
-        if st.checkbox(label="Create token", key="create_token", value="create_token" in role["permissions"]):
-            permissions.append("create_token")
-        if st.checkbox(label="Read token", key="read_token", value="read_token" in role["permissions"]):
-            permissions.append("read_token")
-        if st.checkbox(label="Delete token", key="delete_token", value="delete_token" in role["permissions"]):
-            permissions.append("delete_token")
-
-    with col4:
+        st.caption("Others")
         if st.checkbox(label="Read metric", key="read_metric", value="read_metric" in role["permissions"]):
             permissions.append("read_metric")
         create_public_collection = st.checkbox(label="Create public collection", key="create_public_collection", value="create_public_collection" in role["permissions"])  # fmt: off
         if create_public_collection:
             permissions.append("create_public_collection")
 
-    st.write("**Model rate limits**")
+    st.subheader("Model rate limits")
     limits = get_limits(models=models, role=role)
     initial_limits = pd.DataFrame(
         data={

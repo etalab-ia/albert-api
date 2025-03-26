@@ -1,8 +1,8 @@
 """Init database
 
-Revision ID: 815e59f8ee3a
+Revision ID: 74eb752267a1
 Revises:
-Create Date: 2025-03-25 13:25:11.502633
+Create Date: 2025-03-26 09:00:07.547783
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "815e59f8ee3a"
+revision: str = "74eb752267a1"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -61,9 +61,6 @@ def upgrade() -> None:
                 "READ_USER",
                 "UPDATE_USER",
                 "DELETE_USER",
-                "CREATE_TOKEN",
-                "READ_TOKEN",
-                "DELETE_TOKEN",
                 "CREATE_PUBLIC_COLLECTION",
                 "READ_METRIC",
                 name="permissiontype",
@@ -99,7 +96,6 @@ def upgrade() -> None:
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("visibility", sa.Enum("PRIVATE", "PUBLIC", name="collectionvisibility"), nullable=False),
-        sa.Column("vector_size", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),

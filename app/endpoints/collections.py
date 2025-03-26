@@ -19,14 +19,15 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     Create a new collection.
     """
 
-    model = context.models.get_model(models=settings.general.documents_model)
+    model = context.models(model=settings.general["documents_model"])
     client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
     vector_size = client.vector_size
-    collection_id = context.documents.create_collection(
+    collection_id = await context.documents.create_collection(
+        name=body.name,
         vector_size=vector_size,
-        user_id=user.user_id,
         visibility=body.visibility,
         description=body.description,
+        user_id=user.user_id,
     )
 
     return JSONResponse(status_code=201, content={"id": collection_id})

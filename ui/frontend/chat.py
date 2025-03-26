@@ -1,5 +1,3 @@
-import logging
-import traceback
 from uuid import uuid4
 
 import streamlit as st
@@ -42,9 +40,9 @@ with st.sidebar:
     params["sampling_params"]["model"] = st.session_state["selected_model"]
     params["sampling_params"]["temperature"] = st.slider(label="Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
 
-    if st.toggle(label="Max tokens", value=False):
-        max_tokens = st.number_input(label="Max tokens", value=100, min_value=0, step=100)
-        params["sampling_params"]["max_tokens"] = max_tokens
+    max_tokens_active = st.toggle(label="Max tokens", value=None)
+    max_tokens = st.number_input(label="Max tokens", value=100, min_value=0, step=100, disabled=not max_tokens_active)
+    params["sampling_params"]["max_tokens"] = max_tokens if max_tokens_active else None
 
     st.subheader(body="RAG parameters")
     model_collections = [f"{collection["name"]} - {collection["id"]}" for collection in collections]
@@ -130,9 +128,8 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
                 rerank=False,
             )
             response = st.write_stream(stream=stream)
-        except Exception:
-            st.error(body="Error to generate response.")
-            logging.debug(traceback.format_exc())
+        except Exception as e:
+            st.error(body=e)
             st.stop()
 
         formatted_sources = []

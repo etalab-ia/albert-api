@@ -15,9 +15,6 @@ class PermissionType(Enum):
     READ_USER = "read_user"
     UPDATE_USER = "update_user"
     DELETE_USER = "delete_user"
-    CREATE_TOKEN = "create_token"
-    READ_TOKEN = "read_token"
-    DELETE_TOKEN = "delete_token"
     CREATE_PUBLIC_COLLECTION = "create_public_collection"
     READ_METRIC = "read_metric"
 
@@ -95,6 +92,7 @@ class Role(BaseModel):
     default: bool
     permissions: List[PermissionType]
     limits: List[Limit]
+    users: int = 0
     created_at: int = Field(default_factory=lambda: int(datetime.now().timestamp()))
     updated_at: int = Field(default_factory=lambda: int(datetime.now().timestamp()))
 
@@ -168,7 +166,7 @@ class Users(BaseModel):
 
 class TokenRequest(BaseModel):
     name: str
-    user: int
+    user: Optional[int] = Field(default=None, description="User ID to create the token for another user (by default, the current user). Required CREATE_USER permission.")  # fmt: off
     expires_at: Optional[int] = Field(None, description="Timestamp in seconds")
 
     @field_validator("name", mode="after")

@@ -22,7 +22,7 @@ async def get_documents(
     Get all documents ID from a collection.
     """
 
-    data = await context.iam.get_documents(collection_id=collection, limit=limit, offset=offset, user_id=user.id)
+    data = await context.documents.get_documents(collection_id=collection, limit=limit, offset=offset, user_id=user.user_id)
 
     return Documents(data=data)
 
@@ -37,6 +37,6 @@ async def delete_document(
     """
     Delete a document and relative collections.
     """
-    await context.iam.delete_document(collection_id=collection, document_id=document, user_id=user.id)
+    await context.documents.delete_document(collection_id=collection, document_id=document, user_id=user.user_id)
 
     return Response(status_code=204)

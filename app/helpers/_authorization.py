@@ -1,11 +1,11 @@
-from datetime import datetime
 import json
-from typing import Annotated, List
+import time
+from typing import Annotated, List, Optional
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.schemas.auth import LimitType, PermissionType
+from app.schemas.auth import Limit, LimitType, PermissionType, Role, User
 from app.schemas.collections import CollectionVisibility
 from app.schemas.core.auth import UserInfo
 from app.utils.exceptions import (
@@ -24,6 +24,7 @@ from app.utils.variables import (
     ENDPOINT__FILES,
     ENDPOINT__RERANK,
     ENDPOINT__SEARCH,
+    ENDPOINT__TOKENS,
 )
 
 
@@ -63,6 +64,9 @@ class Authorization:
         if request.url.path.startswith(f"/v1{ENDPOINT__SEARCH}") and request.method == "POST":
             await self._check_search_post(user=user, request=request)
 
+        if request.url.path.startswith(f"/v1{ENDPOINT__TOKENS}") and request.method == "POST":
+            await self._check_tokens_post(user=user, request=request)
+
         return user
 
     async def _check_api_key(self, api_key: HTTPAuthorizationCredentials) -> UserInfo:
@@ -75,8 +79,13 @@ class Authorization:
 
         from app.utils.lifespan import context
 
-        if api_key.credentials == settings.auth.root_key:  # root user can do anything
-            return UserInfo.build(user=context.iam.root_user, role=context.iam.root_role)
+        if api_key.credentials == settings.auth.master_key:  # master user can do anything
+            master_limits = [Limit(model=model, type=type, value=None) for model in context.models.models for type in LimitType]
+            master_permissions = [permission for permission in PermissionType]
+            master_role = Role(id=0, name="master", default=False, permissions=master_permissions, limits=master_limits)
+            master_user = User(id=0, name="master", role=0, expires_at=None, created_at=0, updated_at=0)
+
+            return UserInfo.build(user=master_user, role=master_role)
 
         user_id = await context.iam.check_token(token=api_key.credentials)
         if not user_id:
@@ -85,7 +94,7 @@ class Authorization:
         users = await context.iam.get_users(user_id=user_id)
         user = users[0]
 
-        if user.expires_at and user.expires_at < datetime.now():
+        if user.expires_at and user.expires_at < time.time():
             raise InvalidAPIKeyException()
 
         roles = await context.iam.get_roles(role_id=user.role)
@@ -97,8 +106,11 @@ class Authorization:
         if self.permissions and not all(perm in user.permissions for perm in self.permissions):
             raise InsufficientPermissionException()
 
-    async def _check_limits(self, user: UserInfo, model: str, check_only_access: bool = False) -> None:
+    async def _check_limits(self, user: UserInfo, model: Optional[str] = None, check_only_access: bool = False) -> None:
         from app.utils.lifespan import context
+
+        if not model:
+            return
 
         model = context.models.aliases.get(model, model)
 
@@ -127,7 +139,7 @@ class Authorization:
         body = await request.body()
         body = json.loads(body)
 
-        await self._check_limits(user=user, model=body["model"])
+        await self._check_limits(user=user, model=body.get("model"))
 
         # @TODO: add rate limit check for search model
 
@@ -135,23 +147,28 @@ class Authorization:
         body = await request.body()
         body = json.loads(body)
 
-        await self._check_limits(user=user, model=body["model"], check_only_access=True)
-
-        if body["visibility"] == CollectionVisibility.PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in user.permissions:
+        if body.get("visibility", CollectionVisibility.PRIVATE) == CollectionVisibility.PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in user.permissions:  # fmt: off
             raise InsufficientPermissionException()
 
     async def _check_embeddings_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
         body = json.loads(body)
 
-        await self._check_limits(user=user, model=body["model"])
+        await self._check_limits(user=user, model=body.get("model"))
 
     async def _check_rerank_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        await self._check_limits(user=user, model=body["model"])
+        await self._check_limits(user=user, model=body.get("model"))
 
     async def _check_search_post(self, user: UserInfo, request: Request) -> None:
         # @TODO: add collection model check and rate limit of the model
         pass
+
+    async def _check_tokens_post(self, user: UserInfo, request: Request) -> None:
+        body = await request.body()
+        body = json.loads(body)
+
+        if body.get("user", None) and PermissionType.CREATE_USER not in user.permissions:
+            raise InsufficientPermissionException()

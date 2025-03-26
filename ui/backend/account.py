@@ -42,8 +42,8 @@ def change_password(current_password: str, new_password: str, confirm_password: 
 def create_token(name: str, expires_at: int):
     response = requests.post(
         url=f"{settings.api_url}/tokens",
-        json={"user": st.session_state["user"].user["id"], "name": name, "expires_at": expires_at},
-        headers={"Authorization": f"Bearer {settings.api_key}"},
+        json={"name": name, "expires_at": expires_at},
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
     if response.status_code == 201:
 
@@ -59,7 +59,7 @@ def create_token(name: str, expires_at: int):
 
 
 def delete_token(token_id: int):
-    response = requests.delete(url=f"{settings.api_url}/tokens/{token_id}", headers={"Authorization": f"Bearer {settings.api_key}"})
+    response = requests.delete(url=f"{settings.api_url}/tokens/{token_id}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
     if response.status_code == 204:
         st.toast("Delete succeed", icon="✅")
         time.sleep(0.5)

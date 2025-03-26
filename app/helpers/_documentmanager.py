@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from fastapi import UploadFile
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, MatchValue, PointStruct, VectorParams
-from sqlalchemy import delete, func, insert, or_, select, update
+from sqlalchemy import cast, delete, distinct, func, insert, or_, select, update, Integer
 from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from app.clients.database import SQLDatabaseClient
@@ -41,7 +41,6 @@ class DocumentManager:
     FILE_EXTENSION_HTML = "html"
     FILE_EXTENSION_MD = "md"
     SUPPORTED_FILE_EXTENSIONS = [FILE_EXTENSION_PDF, FILE_EXTENSION_JSON, FILE_EXTENSION_HTML, FILE_EXTENSION_MD]
-    COLLECTION_DISPLAY_ID__INTERNET = "internet"
 
     def __init__(self, sql: SQLDatabaseClient, qdrant: AsyncQdrantClient, internet: InternetManager) -> None:
         self.sql = sql
@@ -49,7 +48,12 @@ class DocumentManager:
         self.internet = internet
 
     async def create_collection(
-        self, vector_size: int, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None
+        self,
+        user_id: int,
+        name: str,
+        visibility: CollectionVisibility,
+        vector_size: int,
+        description: Optional[str] = None,
     ) -> int:
         async with self.sql.session() as session:
             await session.execute(
@@ -61,7 +65,9 @@ class DocumentManager:
             result = await session.execute(statement=select(CollectionTable.id).where(CollectionTable.name == name))
             collection_id = result.scalar_one()
 
-        await self.qdrant.create_collection(collection_name=collection_id, vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE))
+        await self.qdrant.create_collection(
+            collection_name=str(collection_id), vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
+        )
 
         return collection_id
 
@@ -80,13 +86,14 @@ class DocumentManager:
             await session.execute(statement=delete(table=CollectionTable).where(CollectionTable.id == collection_id))
             await session.commit()
 
-    async def update_collection(self, collection_id: int, name: Optional[str] = None, visibility: Optional[CollectionVisibility] = None, description: Optional[str] = None) -> None:  # fmt: off
+    async def update_collection(self, user_id: int, collection_id: int, name: Optional[str] = None, visibility: Optional[CollectionVisibility] = None, description: Optional[str] = None) -> None:  # fmt: off
         async with self.sql.session() as session:
             # check if collection exists
             result = await session.execute(
                 statement=select(CollectionTable)
                 .join(target=UserTable, onclause=UserTable.id == CollectionTable.user_id)
                 .where(CollectionTable.id == collection_id)
+                .where(UserTable.id == user_id)
             )
             try:
                 collection = result.scalar_one()
@@ -106,7 +113,23 @@ class DocumentManager:
 
     async def get_collections(self, user_id: int, collection_id: Optional[int] = None, include_public: bool = True, offset: int = 0, limit: int = 10) -> List[Collection]:  # fmt: off
         async with self.sql.session() as session:
-            statement = select(CollectionTable).offset(offset=offset).limit(limit=limit)
+            # Query basic collection data
+            statement = (
+                select(
+                    CollectionTable.id,
+                    CollectionTable.name,
+                    CollectionTable.user_id,
+                    CollectionTable.visibility,
+                    CollectionTable.description,
+                    func.count(distinct(DocumentTable.id)).label("documents"),
+                    cast(func.extract("epoch", CollectionTable.created_at), Integer).label("created_at"),
+                    cast(func.extract("epoch", CollectionTable.updated_at), Integer).label("updated_at"),
+                )
+                .outerjoin(DocumentTable, CollectionTable.id == DocumentTable.collection_id)
+                .group_by(CollectionTable.id)
+                .offset(offset=offset)
+                .limit(limit=limit)
+            )
 
             if collection_id:
                 statement = statement.where(CollectionTable.id == collection_id)
@@ -115,19 +138,15 @@ class DocumentManager:
             else:
                 statement = statement.where(CollectionTable.user_id == user_id)
 
-            # TODO: add documents count
-
             result = await session.execute(statement=statement)
-            collections = result.all()
+            collections = [Collection(**row._asdict()) for row in result.all()]
 
             if collection_id and len(collections) == 0:
                 raise CollectionNotFoundException()
 
-            collections = [Collection(**row._mapping) for row in result.all()]
-
         return collections
 
-    async def create_document(self, collection_id: int, user_id: int, file: UploadFile, chunker_name: ChunkerName, chunker_args: dict, model_client: ModelClient) -> int:  # fmt: off
+    async def create_document(self, user_id: int, collection_id: int, file: UploadFile, chunker_name: ChunkerName, chunker_args: dict, model_client: ModelClient) -> int:  # fmt: off
         file_name = file.filename.strip()
         file_extension = file_name.rsplit(".", maxsplit=1)[-1]
 
@@ -169,9 +188,16 @@ class DocumentManager:
 
         return document_id
 
-    async def get_documents(self, collection_id: int, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
+    async def get_documents(self, user_id: int, collection_id: int, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
         async with self.sql.session() as session:
-            statement = select(DocumentTable).offset(offset=offset).limit(limit=limit).where(DocumentTable.collection_id == collection_id)
+            statement = (
+                select(DocumentTable)
+                .offset(offset=offset)
+                .limit(limit=limit)
+                .where(DocumentTable.collection_id == collection_id)
+                .outerjoin(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
+                .where(CollectionTable.user_id == user_id)
+            )
             if document_id:
                 statement = statement.where(DocumentTable.id == document_id)
 
@@ -186,9 +212,13 @@ class DocumentManager:
 
             return documents
 
-    async def get_chunks(self, document_id: int, chunk_id: Optional[int] = None, offset: Optional[UUID] = None, limit: int = 10) -> List[Chunk]:
+    async def get_chunks(
+        self, user_id: int, document_id: int, chunk_id: Optional[int] = None, offset: Optional[UUID] = None, limit: int = 10
+    ) -> List[Chunk]:
         # check if document exists
-        result = await self.sql.session.execute(statement=select(DocumentTable).where(DocumentTable.id == document_id))
+        result = await self.sql.session.execute(
+            statement=select(DocumentTable).where(DocumentTable.id == document_id).where(DocumentTable.user_id == user_id)
+        )
         document = result.scalar_one()
         if not document:
             raise DocumentNotFoundException()

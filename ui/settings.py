@@ -1,6 +1,6 @@
 from functools import lru_cache
 import os
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
@@ -19,10 +19,10 @@ class Database(ConfigBaseModel):
 class Config(ConfigBaseModel):
     cache_ttl: int = 1800  # 30 minutes
     api_url: str = "http://localhost:8080"
-    api_key: str = Field(default="changeme", description="API key with CREATE and DELETE token privileges (ex: master key)")
     max_token_expiration_days: int = 60  # days
     database: Database = Field(default_factory=Database)
     master_username: str = "master"
+    documents_model: Optional[str] = Field(default=None, description="Model to use for activate document page. Must be a text-embeddings-inference model.")  # fmt: off
 
 
 class Settings(BaseSettings):

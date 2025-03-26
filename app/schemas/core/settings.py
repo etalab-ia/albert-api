@@ -89,9 +89,7 @@ class Database(ConfigBaseModel):
 
 
 class Auth(ConfigBaseModel):
-    root_key: str = "changeme"
-    # root_user: str = "root"  # TODO; remove this field
-    # root_password: str = "changeme"
+    master_key: str = "changeme"
     limiting_strategy: Literal["moving_window", "fixed_window", "sliding_window"] = "moving_window"
 
 

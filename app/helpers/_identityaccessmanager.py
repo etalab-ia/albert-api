@@ -1,12 +1,12 @@
 from typing import List, Optional, Tuple
 
 from jose import JWTError, jwt
-from sqlalchemy import Integer, cast, delete, insert, or_, select, update
+from sqlalchemy import Integer, cast, delete, distinct, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.sql import func
 
 from app.clients.database import SQLDatabaseClient
-from app.schemas.auth import Limit, PermissionType, Role, Token, User, LimitType
+from app.schemas.auth import Limit, PermissionType, Role, Token, User
 from app.sql.models import Limit as LimitTable
 from app.sql.models import Permission as PermissionTable
 from app.sql.models import Role as RoleTable
@@ -28,29 +28,18 @@ class IdentityAccessManager:
     TOKEN_PREFIX = "sk-"
 
     def __init__(self, sql: SQLDatabaseClient) -> None:
-        """
-        Initialize the authentication manager: create the root user and role.
-        """
-
         self.sql = sql
-
-        from app.utils.lifespan import context
-
-        root_limits = [Limit(model=model, type=type, value=None) for model in context.models.models for type in LimitType]
-        root_permissions = [permission for permission in PermissionType]
-        self.root_role = Role(id=0, name="root", default=False, permissions=root_permissions, limits=root_limits)
-        self.root_user = User(id=0, name="root", role=0, expires_at=None, created_at=0, updated_at=0)
 
     @staticmethod
     def _decode_token(token: str) -> dict:
         token = token.split(IdentityAccessManager.TOKEN_PREFIX)[1]
-        return jwt.decode(token=token, key=settings.auth.root_key, algorithms=["HS256"])
+        return jwt.decode(token=token, key=settings.auth.master_key, algorithms=["HS256"])
 
     @staticmethod
     def _encode_token(user_id: int, token_id: int, expires_at: Optional[int] = None) -> str:
         return IdentityAccessManager.TOKEN_PREFIX + jwt.encode(
             claims={"user_id": user_id, "token_id": token_id, "expires_at": expires_at},
-            key=settings.auth.root_key,
+            key=settings.auth.master_key,
             algorithm="HS256",
         )
 
@@ -172,53 +161,63 @@ class IdentityAccessManager:
             else:
                 selected_roles = [role_id]
 
-            # then get all the data for these specific role IDs
-            statement = (
+            # Query basic role data with user count
+            role_query = (
                 select(
                     RoleTable.id,
                     RoleTable.name,
                     RoleTable.default,
                     cast(func.extract("epoch", RoleTable.created_at), Integer).label("created_at"),
                     cast(func.extract("epoch", RoleTable.updated_at), Integer).label("updated_at"),
-                    LimitTable.model,
-                    LimitTable.type,
-                    LimitTable.value,
-                    PermissionTable.permission,
+                    func.count(distinct(UserTable.id)).label("users"),
                 )
-                .outerjoin(target=LimitTable, onclause=RoleTable.id == LimitTable.role_id)
-                .outerjoin(target=PermissionTable, onclause=RoleTable.id == PermissionTable.role_id)
+                .outerjoin(UserTable, RoleTable.id == UserTable.role_id)
                 .where(RoleTable.id.in_(selected_roles))
+                .group_by(RoleTable.id)
             )
 
-            result = await session.execute(statement=statement)
-            results = [row._asdict() for row in result.all()]
+            result = await session.execute(role_query)
+            role_results = [row._asdict() for row in result.all()]
 
-            # format the results
+            if role_id is not None and len(role_results) == 0:
+                raise RoleNotFoundException()
+
+            # Build roles dictionary
             roles = {}
-            for row in results:
-                role = Role(
+            for row in role_results:
+                roles[row["id"]] = Role(
                     id=row["id"],
                     name=row["name"],
                     default=row["default"],
                     created_at=row["created_at"],
                     updated_at=row["updated_at"],
+                    users=row["users"],
                     limits=[],
                     permissions=[],
                 )
-                if role.id not in roles:
-                    roles[role.id] = role
-                if row["model"]:
-                    rate_limit = Limit(model=row["model"], type=row["type"], value=row["value"])
-                    roles[role.id].limits.append(rate_limit)
-                if row["permission"]:
-                    roles[role.id].permissions.append(PermissionType(value=row["permission"]))
 
-            roles = list(roles.values())
+            # Query limits for these roles
+            if roles:
+                limits_query = select(LimitTable.role_id, LimitTable.model, LimitTable.type, LimitTable.value).where(
+                    LimitTable.role_id.in_(list(roles.keys()))
+                )
 
-            if role_id is not None and len(roles) == 0:
-                raise RoleNotFoundException()
+                result = await session.execute(limits_query)
+                for row in result:
+                    role_id = row.role_id
+                    if role_id in roles:
+                        roles[role_id].limits.append(Limit(model=row.model, type=row.type, value=row.value))
 
-        return roles
+                # Query permissions for these roles
+                permissions_query = select(PermissionTable.role_id, PermissionTable.permission).where(PermissionTable.role_id.in_(list(roles.keys())))
+
+                result = await session.execute(permissions_query)
+                for row in result:
+                    role_id = row.role_id
+                    if role_id in roles:
+                        roles[role_id].permissions.append(PermissionType(value=row.permission))
+
+            return list(roles.values())
 
     async def create_user(self, name: str, role_id: int, expires_at: Optional[int] = None) -> int:
         expires_at = func.to_timestamp(expires_at) if expires_at is not None else None

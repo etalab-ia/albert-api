@@ -163,13 +163,14 @@ async def get_users(
     return Users(data=data)
 
 
-@router.post(path="/tokens", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_TOKEN]))])
-async def create_token(request: Request, body: TokenRequest = Body(description="The token creation request.")) -> JSONResponse:
+@router.post(path="/tokens")
+async def create_token(request: Request, body: TokenRequest = Body(description="The token creation request."), user: UserInfo = Security(dependency=Authorization())) -> JSONResponse:  # fmt: off
     """
     Create a new token.
     """
 
-    token_id, token = await context.iam.create_token(name=body.name, user_id=body.user, expires_at=body.expires_at)
+    user_id = body.user if body.user else user.user_id
+    token_id, token = await context.iam.create_token(user_id=user_id, name=body.name, expires_at=body.expires_at)
 
     return JSONResponse(status_code=201, content={"id": token_id, "token": token})
 

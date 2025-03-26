@@ -5,7 +5,7 @@ from fastapi import APIRouter, Path, Query, Request, Security
 
 from app.helpers import Authorization
 from app.schemas.chunks import Chunks
-from app.utils.lifespan import databases
+from app.utils.lifespan import context
 
 router = APIRouter()
 
@@ -24,6 +24,6 @@ async def get_chunks(
     """
 
     collection, document = str(collection), str(document)
-    data = databases.search.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user=user.user)
+    data = context.documents.search.get_chunks(collection_id=collection, document_id=document, limit=limit, offset=offset, user_id=user.user_id)
 
     return Chunks(data=data)

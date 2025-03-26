@@ -4,7 +4,7 @@ MODEL_TYPE_AUDIO = "automatic-speech-recognition"
 MODEL_TYPE_RERANK = "text-classification"
 
 COLLECTION_DISPLAY_ID_INTERNET = "internet"
-COLLECTION_TYPE_PRIVATE = "private"
+COLLECTION_VISIBILITY_PRIVATE = "private"
 
 ADMIN_PERMISSIONS = [
     "create_role",
@@ -15,9 +15,6 @@ ADMIN_PERMISSIONS = [
     "read_user",
     "update_user",
     "delete_user",
-    "create_token",
-    "read_token",
-    "delete_token",
 ]
 
 TRANSCRIPTION_SUPPORTED_LANGUAGES = [

@@ -22,7 +22,7 @@ TOKEN_USER = "test-token-user"
 @pytest.fixture(scope="session")
 def test_client() -> Generator[TestClient, None, None]:
     with TestClient(app=app) as client:
-        client.headers = {"Authorization": f"Bearer {settings.auth.root_key}"}
+        client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
         yield client
 
 
@@ -128,10 +128,10 @@ def client(test_client: TestClient, test_tokens: tuple[str, str]) -> Generator[T
     client.patch_admin = partial(client.patch, headers={"Authorization": f"Bearer {token_admin}"})
 
     # root
-    client.get_root = partial(client.get, headers={"Authorization": f"Bearer {settings.auth.root_key}"})
-    client.post_root = partial(client.post, headers={"Authorization": f"Bearer {settings.auth.root_key}"})
-    client.delete_root = partial(client.delete, headers={"Authorization": f"Bearer {settings.auth.root_key}"})
-    client.patch_root = partial(client.patch, headers={"Authorization": f"Bearer {settings.auth.root_key}"})
+    client.get_root = partial(client.get, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
+    client.post_root = partial(client.post, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
+    client.delete_root = partial(client.delete, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
+    client.patch_root = partial(client.patch, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
 
     yield client
 

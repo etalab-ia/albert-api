@@ -7,7 +7,7 @@ import streamlit as st
 from ui.settings import settings
 from ui.backend.sql.models import User as UserTable
 from ui.backend.sql.session import get_session
-from ui.variables import COLLECTION_DISPLAY_ID_INTERNET, MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
+from ui.variables import MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
 
 
 @st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
@@ -26,14 +26,12 @@ def get_models(type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
 def get_collections() -> list:
     response = requests.get(url=f"{settings.api_url}/v1/collections", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
-    assert response.status_code == 200, response.text
-    collections = response.json()["data"]
 
-    collections = [
-        collection
-        for collection in collections
-        if collection["model"] == settings.documents_embeddings_model or collection["id"] == COLLECTION_DISPLAY_ID_INTERNET
-    ]
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
+
+    collections = response.json()["data"]
 
     return collections
 
@@ -45,7 +43,11 @@ def get_documents(collection_ids: List[str]) -> dict:
         response = requests.get(
             url=f"{settings.api_url}/v1/documents/{collection_id}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
         )
-        assert response.status_code == 200, response.text
+
+        if response.status_code != 200:
+            st.error(response.json()["detail"])
+            return []
+
         data = response.json()["data"]
         for document in data:
             document["collection_id"] = collection_id
@@ -62,6 +64,10 @@ def get_tokens() -> list:
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
+
     return response.json()["data"]
 
 
@@ -71,7 +77,10 @@ def get_roles():
         url=f"{settings.api_url}/roles?offset=0&limit=100", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
     )
 
-    assert response.status_code == 200, response.text
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
+
     data = response.json()["data"]
 
     return data
@@ -82,7 +91,11 @@ def get_users(offset: int = 0, limit: int = 100):
     response = requests.get(
         url=f"{settings.api_url}/users?offset={offset}&limit={limit}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
     )
-    assert response.status_code == 200, response.text
+
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
+
     data = response.json()["data"]
 
     session = next(get_session())
