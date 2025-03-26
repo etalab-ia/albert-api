@@ -2,6 +2,8 @@ interactions:
 - request:
     body: '{"input":"Test text","model":"BAAI/bge-m3","dimensions":null,"encoding_format":"float"}'
     headers:
+      Authorization:
+      - Bearer dummy_token_for_test
       accept:
       - '*/*'
       accept-encoding:
@@ -27,7 +29,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 12 Mar 2025 12:38:09 GMT
+      - Wed, 26 Mar 2025 13:22:37 GMT
       Server:
       - nginx/1.27.4
       Transfer-Encoding:

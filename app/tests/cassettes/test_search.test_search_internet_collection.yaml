@@ -14,6 +14,8 @@ interactions:
       pour la demande. Ne mets pas de mots qui ne servent \xE0 rien dans la requ\xEAte
       Google.\\n\"}],\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"stream\":false,\"temperature\":0.2}"
     headers:
+      Authorization:
+      - Bearer dummy_token_for_test
       accept:
       - application/json
       accept-encoding:
@@ -50,15 +52,15 @@ interactions:
     uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
   response:
     body:
-      string: "{\"id\":\"chatcmpl-9162c2175ef445948312b20876eddaff\",\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"plus
-        grand plan\xE8te syst\xE8me solaire\",\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[]},\"stop_reason\":null}],\"created\":1741783092,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"object\":\"chat.completion\",\"service_tier\":null,\"system_fingerprint\":null,\"usage\":{\"completion_tokens\":8,\"prompt_tokens\":238,\"total_tokens\":246,\"completion_tokens_details\":null,\"prompt_tokens_details\":null},\"search_results\":[],\"prompt_logprobs\":null}"
+      string: "{\"id\":\"chatcmpl-693695c37657492b8fa7ea7a29d257ce\",\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"plus
+        grand plan\xE8te syst\xE8me solaire\",\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[],\"reasoning_content\":null},\"stop_reason\":null}],\"created\":1742995361,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"object\":\"chat.completion\",\"service_tier\":null,\"system_fingerprint\":null,\"usage\":{\"completion_tokens\":8,\"prompt_tokens\":238,\"total_tokens\":246,\"completion_tokens_details\":null,\"prompt_tokens_details\":null},\"search_results\":[],\"prompt_logprobs\":null}"
     headers:
       Connection:
       - keep-alive
       Content-Type:
       - application/json
       Date:
-      - Wed, 12 Mar 2025 12:38:12 GMT
+      - Wed, 26 Mar 2025 13:22:41 GMT
       Server:
       - nginx/1.27.4
       Transfer-Encoding:
@@ -66,7 +68,7 @@ interactions:
       Vary:
       - Accept-Encoding
       content-length:
-      - '590'
+      - '615'
     status:
       code: 200
       message: OK
@@ -121,11 +123,11 @@ interactions:
       Content-Type:
       - application/x-javascript
       Date:
-      - Wed, 12 Mar 2025 12:38:12 GMT
+      - Wed, 26 Mar 2025 13:22:41 GMT
       Expect-CT:
       - max-age=0
       Expires:
-      - Wed, 12 Mar 2025 12:38:13 GMT
+      - Wed, 26 Mar 2025 13:22:42 GMT
       Permissions-Policy:
       - interest-cohort=()
       Referrer-Policy:
@@ -133,7 +135,7 @@ interactions:
       Server:
       - nginx
       Server-Timing:
-      - total;dur=49;desc="Backend Total [n]"
+      - total;dur=45;desc="Backend Total [n]"
       Strict-Transport-Security:
       - max-age=31536000
       Transfer-Encoding:

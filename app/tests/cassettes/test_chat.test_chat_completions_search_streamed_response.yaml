@@ -2,6 +2,8 @@ interactions:
 - request:
     body: '{"input":["Qui est Albert ?"],"model":"BAAI/bge-m3","encoding_format":"float"}'
     headers:
+      Authorization:
+      - Bearer dummy_token_for_test
       accept:
       - application/json
       accept-encoding:
@@ -45,7 +47,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 12 Mar 2025 12:40:10 GMT
+      - Wed, 26 Mar 2025 13:22:33 GMT
       Server:
       - nginx/1.27.4
       Transfer-Encoding:
@@ -64,6 +66,8 @@ interactions:
       souverain de l'\xE9tat fran\xE7ais.\\nErasmus sous entend tout autant le nom
       d'un savant qu'une programme \xE9ducatif de la nation fran\xE7aise.\"}],\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"frequency_penalty\":0.0,\"logit_bias\":null,\"logprobs\":false,\"top_logprobs\":null,\"presence_penalty\":0.0,\"max_tokens\":10,\"max_completion_tokens\":null,\"n\":1,\"response_format\":null,\"seed\":null,\"stop\":[],\"stream\":true,\"stream_options\":null,\"temperature\":0.7,\"top_p\":1,\"tools\":null,\"tool_choice\":\"none\"}"
     headers:
+      Authorization:
+      - Bearer dummy_token_for_test
       accept:
       - '*/*'
       accept-encoding:
@@ -82,18 +86,18 @@ interactions:
     uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
   response:
     body:
-      string: "data: {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
-        {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"D\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
-        {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"'\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
-        {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"apr\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
-        {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\xE8s\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
-        {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"
-        les\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"
-        documents\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"
-        four\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"nis\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
-        {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\",\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
-        {\"id\":\"chatcmpl-08bd4a6b8adb4d4ebcbc7b60a3e835e1\",\"object\":\"chat.completion.chunk\",\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"
-        on\"},\"logprobs\":null,\"finish_reason\":\"length\",\"stop_reason\":null}]}\n\ndata:
+      string: "data: {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
+        {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"D\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
+        {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"'\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
+        {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"apr\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
+        {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\xE8s\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
+        {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"
+        les\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"
+        documents\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"
+        four\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"nis\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
+        {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\",\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata:
+        {\"id\":\"chatcmpl-9a6c34f095a0405eae296af987373455\",\"object\":\"chat.completion.chunk\",\"created\":1742995354,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"
+        il\"},\"logprobs\":null,\"finish_reason\":\"length\",\"stop_reason\":null}]}\n\ndata:
         [DONE]\n\n"
     headers:
       Connection:
@@ -101,7 +105,7 @@ interactions:
       Content-Type:
       - text/event-stream; charset=utf-8
       Date:
-      - Wed, 12 Mar 2025 12:40:10 GMT
+      - Wed, 26 Mar 2025 13:22:34 GMT
       Server:
       - nginx/1.27.4
       Transfer-Encoding:

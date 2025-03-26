@@ -13,6 +13,8 @@ interactions:
       renverra les meilleurs r\xE9sultats pour la demande. Ne mets pas de mots qui
       ne servent \xE0 rien dans la requ\xEAte Google.\\n\"}],\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"stream\":false,\"temperature\":0.2}"
     headers:
+      Authorization:
+      - Bearer dummy_token_for_test
       accept:
       - application/json
       accept-encoding:
@@ -49,15 +51,15 @@ interactions:
     uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
   response:
     body:
-      string: '{"id":"chatcmpl-85f40c3cabd14ace88ea79c14972ea19","choices":[{"finish_reason":"stop","index":0,"logprobs":null,"message":{"content":"Ulrich
-        Tan","refusal":null,"role":"assistant","audio":null,"function_call":null,"tool_calls":[]},"stop_reason":null}],"created":1741783211,"model":"meta-llama/Llama-3.1-8B-Instruct","object":"chat.completion","service_tier":null,"system_fingerprint":null,"usage":{"completion_tokens":4,"prompt_tokens":234,"total_tokens":238,"completion_tokens_details":null,"prompt_tokens_details":null},"search_results":[],"prompt_logprobs":null}'
+      string: '{"id":"chatcmpl-adf029f230fe4774bd1ef1b28107438d","choices":[{"finish_reason":"stop","index":0,"logprobs":null,"message":{"content":"Ulrich
+        Tan","refusal":null,"role":"assistant","audio":null,"function_call":null,"tool_calls":[],"reasoning_content":null},"stop_reason":null}],"created":1742995354,"model":"meta-llama/Llama-3.1-8B-Instruct","object":"chat.completion","service_tier":null,"system_fingerprint":null,"usage":{"completion_tokens":4,"prompt_tokens":234,"total_tokens":238,"completion_tokens_details":null,"prompt_tokens_details":null},"search_results":[],"prompt_logprobs":null}'
     headers:
       Connection:
       - keep-alive
       Content-Type:
       - application/json
       Date:
-      - Wed, 12 Mar 2025 12:40:11 GMT
+      - Wed, 26 Mar 2025 13:22:35 GMT
       Server:
       - nginx/1.27.4
       Transfer-Encoding:
@@ -65,7 +67,7 @@ interactions:
       Vary:
       - Accept-Encoding
       content-length:
-      - '564'
+      - '589'
     status:
       code: 200
       message: OK
@@ -120,11 +122,11 @@ interactions:
       Content-Type:
       - application/x-javascript
       Date:
-      - Wed, 12 Mar 2025 12:40:11 GMT
+      - Wed, 26 Mar 2025 13:22:35 GMT
       Expect-CT:
       - max-age=0
       Expires:
-      - Wed, 12 Mar 2025 12:40:12 GMT
+      - Wed, 26 Mar 2025 13:22:36 GMT
       Permissions-Policy:
       - interest-cohort=()
       Referrer-Policy:
@@ -132,7 +134,7 @@ interactions:
       Server:
       - nginx
       Server-Timing:
-      - total;dur=45;desc="Backend Total [n]"
+      - total;dur=43;desc="Backend Total [n]"
       Strict-Transport-Security:
       - max-age=31536000
       Transfer-Encoding:
@@ -161,6 +163,8 @@ interactions:
 - request:
     body: '{"messages":[{"role":"user","content":"Qui est Ulrich Tan ?"}],"model":"meta-llama/Llama-3.1-8B-Instruct","frequency_penalty":0.0,"logit_bias":null,"logprobs":false,"top_logprobs":null,"presence_penalty":0.0,"max_tokens":10,"max_completion_tokens":null,"n":1,"response_format":null,"seed":null,"stop":[],"stream":false,"stream_options":null,"temperature":0.7,"top_p":1,"tools":null,"tool_choice":"none"}'
     headers:
+      Authorization:
+      - Bearer dummy_token_for_test
       accept:
       - '*/*'
       accept-encoding:
@@ -179,15 +183,15 @@ interactions:
     uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
   response:
     body:
-      string: "{\"id\":\"chatcmpl-aca6eae8ebc14af69adeadcc39d76890\",\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"Je
-        n'ai pas trouv\xE9 d'informations sur\",\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[]},\"stop_reason\":null}],\"created\":1741783211,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"object\":\"chat.completion\",\"service_tier\":null,\"system_fingerprint\":null,\"usage\":{\"completion_tokens\":10,\"prompt_tokens\":41,\"total_tokens\":51,\"completion_tokens_details\":null,\"prompt_tokens_details\":null},\"search_results\":[],\"prompt_logprobs\":null}"
+      string: "{\"id\":\"chatcmpl-74cdfe0464b54e7586a57f55080144c3\",\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"Je
+        n'ai pas trouv\xE9 d'information sur une\",\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[],\"reasoning_content\":null},\"stop_reason\":null}],\"created\":1742995355,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"object\":\"chat.completion\",\"service_tier\":null,\"system_fingerprint\":null,\"usage\":{\"completion_tokens\":10,\"prompt_tokens\":41,\"total_tokens\":51,\"completion_tokens_details\":null,\"prompt_tokens_details\":null},\"search_results\":[],\"prompt_logprobs\":null}"
     headers:
       Connection:
       - keep-alive
       Content-Type:
       - application/json
       Date:
-      - Wed, 12 Mar 2025 12:40:12 GMT
+      - Wed, 26 Mar 2025 13:22:35 GMT
       Server:
       - nginx/1.27.4
       Transfer-Encoding:
@@ -195,7 +199,7 @@ interactions:
       Vary:
       - Accept-Encoding
       content-length:
-      - '593'
+      - '621'
     status:
       code: 200
       message: OK

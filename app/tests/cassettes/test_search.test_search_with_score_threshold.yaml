@@ -2,6 +2,8 @@ interactions:
 - request:
     body: '{"input":["Erasmus"],"model":"BAAI/bge-m3","encoding_format":"float"}'
     headers:
+      Authorization:
+      - Bearer dummy_token_for_test
       accept:
       - application/json
       accept-encoding:
@@ -45,7 +47,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 12 Mar 2025 12:38:12 GMT
+      - Wed, 26 Mar 2025 13:22:41 GMT
       Server:
       - nginx/1.27.4
       Transfer-Encoding:

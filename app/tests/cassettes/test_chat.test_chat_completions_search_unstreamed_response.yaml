@@ -2,6 +2,8 @@ interactions:
 - request:
     body: '{"input":["Qui est Albert ?"],"model":"BAAI/bge-m3","encoding_format":"float"}'
     headers:
+      Authorization:
+      - Bearer dummy_token_for_test
       accept:
       - application/json
       accept-encoding:
@@ -45,7 +47,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 12 Mar 2025 12:40:10 GMT
+      - Wed, 26 Mar 2025 13:22:33 GMT
       Server:
       - nginx/1.27.4
       Transfer-Encoding:
@@ -64,6 +66,8 @@ interactions:
       souverain de l'\xE9tat fran\xE7ais.\\nErasmus sous entend tout autant le nom
       d'un savant qu'une programme \xE9ducatif de la nation fran\xE7aise.\"}],\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"frequency_penalty\":0.0,\"logit_bias\":null,\"logprobs\":false,\"top_logprobs\":null,\"presence_penalty\":0.0,\"max_tokens\":10,\"max_completion_tokens\":null,\"n\":1,\"response_format\":null,\"seed\":null,\"stop\":[],\"stream\":false,\"stream_options\":null,\"temperature\":0.7,\"top_p\":1,\"tools\":null,\"tool_choice\":\"none\"}"
     headers:
+      Authorization:
+      - Bearer dummy_token_for_test
       accept:
       - '*/*'
       accept-encoding:
@@ -82,15 +86,15 @@ interactions:
     uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
   response:
     body:
-      string: "{\"id\":\"chatcmpl-55637fcfaeff49189ddcb6d92a8c2650\",\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"D'apr\xE8s
-        les documents fournis, il\",\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[]},\"stop_reason\":null}],\"created\":1741783210,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"object\":\"chat.completion\",\"service_tier\":null,\"system_fingerprint\":null,\"usage\":{\"completion_tokens\":10,\"prompt_tokens\":107,\"total_tokens\":117,\"completion_tokens_details\":null,\"prompt_tokens_details\":null},\"search_results\":[],\"prompt_logprobs\":null}"
+      string: "{\"id\":\"chatcmpl-21eace4d9b304f679a8d4d09c64ddcf1\",\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"D'apr\xE8s
+        les documents fournis, il\",\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[],\"reasoning_content\":null},\"stop_reason\":null}],\"created\":1742995353,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"object\":\"chat.completion\",\"service_tier\":null,\"system_fingerprint\":null,\"usage\":{\"completion_tokens\":10,\"prompt_tokens\":107,\"total_tokens\":117,\"completion_tokens_details\":null,\"prompt_tokens_details\":null},\"search_results\":[],\"prompt_logprobs\":null}"
     headers:
       Connection:
       - keep-alive
       Content-Type:
       - application/json
       Date:
-      - Wed, 12 Mar 2025 12:40:10 GMT
+      - Wed, 26 Mar 2025 13:22:33 GMT
       Server:
       - nginx/1.27.4
       Transfer-Encoding:
@@ -98,7 +102,7 @@ interactions:
       Vary:
       - Accept-Encoding
       content-length:
-      - '591'
+      - '616'
     status:
       code: 200
       message: OK
