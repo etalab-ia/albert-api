@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [ 174-tests-CI-CD ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
