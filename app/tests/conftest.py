@@ -42,15 +42,6 @@ def pytest_configure(config):
     VCR_GLOBAL_CASSETTE.__enter__()
 
 
-def pytest_unconfigure(config):
-    """Called before test process is exited."""
-    global VCR_GLOBAL_CASSETTE
-
-    # Close the global cassette to ensure all recordings are saved
-    if VCR_GLOBAL_CASSETTE is not None:
-        VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
-
-
 def pytest_addoption(parser):
     parser.addoption("--api-key-user", action="store", default="EMPTY")
     parser.addoption("--api-key-admin", action="store", default="EMPTY")
@@ -112,11 +103,18 @@ def app_with_test_db(engine, db_session):
     """Create FastAPI app with test database"""
     from app.main import create_app
 
+    global VCR_GLOBAL_CASSETTE, VCR_INSTANCE
+
     def get_test_db():
         yield db_session
 
     # Create app with test config
     app = create_app(db_func=get_test_db, disabled_middleware=False)
+
+    # Exit the global cassette, requests done by app initialization
+    # are recorded in the global cassette
+    if VCR_GLOBAL_CASSETTE is not None:
+        VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
 
     return app
 
@@ -164,7 +162,6 @@ def cleanup_collections(args, test_client):
 @pytest.fixture(autouse=True)
 def vcr_cassette(request):
     """Use VCR for specific tests, with per-test cassettes"""
-    global VCR_GLOBAL_CASSETTE, VCR_INSTANCE
 
     # Skip VCR for tests that does not support it
     def module_to_skip(request):
@@ -176,10 +173,6 @@ def vcr_cassette(request):
         yield
         return
 
-    # Temporarily exit the global cassette
-    if VCR_GLOBAL_CASSETTE is not None:
-        VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
-
     # Use a test-specific cassette
     test_name = request.node.name.replace("[", "_").replace("]", "_")
     cassette_path = f"{request.module.__name__}.{test_name}"
@@ -187,6 +180,6 @@ def vcr_cassette(request):
     with VCR_INSTANCE.use_cassette(cassette_path + ".yaml"):
         yield
 
-    # Re-enter the global cassette after the test is done
-    if VCR_GLOBAL_CASSETTE is not None:
-        VCR_GLOBAL_CASSETTE.__enter__()
+    # # Re-enter the global cassette after the test is done
+    # if VCR_GLOBAL_CASSETTE is not None:
+    #     VCR_GLOBAL_CASSETTE.__enter__()
