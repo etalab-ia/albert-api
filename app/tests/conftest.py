@@ -14,6 +14,42 @@ from app.clients import AuthenticationClient
 from app.utils.variables import COLLECTION_TYPE__PRIVATE
 from app.sql.models import Base
 
+# Define global VCR instance and cassette
+VCR_INSTANCE = None
+VCR_GLOBAL_CASSETTE = None
+
+
+def pytest_configure(config):
+    """Called after command line options have been parsed and all plugins and initial conftest files loaded.
+    This is the earliest pytest hook we can use to set up VCR globally.
+    """
+    global VCR_INSTANCE, VCR_GLOBAL_CASSETTE
+
+    cassette_library_dir = Path(__file__).parent / "cassettes"
+    os.makedirs(cassette_library_dir, exist_ok=True)
+
+    VCR_INSTANCE = vcr.VCR(
+        cassette_library_dir=str(cassette_library_dir),
+        record_mode="once",
+        match_on=["method", "scheme", "host", "port", "path", "query"],
+        filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
+        before_record_request=lambda request: None if request.host == "testserver" else request,
+        decode_compressed_response=True,
+    )
+
+    # Store the cassette object so we can properly close it later
+    VCR_GLOBAL_CASSETTE = VCR_INSTANCE.use_cassette("global_setup_cassette.yaml")
+    VCR_GLOBAL_CASSETTE.__enter__()
+
+
+def pytest_unconfigure(config):
+    """Called before test process is exited."""
+    global VCR_GLOBAL_CASSETTE
+
+    # Close the global cassette to ensure all recordings are saved
+    if VCR_GLOBAL_CASSETTE is not None:
+        VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
+
 
 def pytest_addoption(parser):
     parser.addoption("--api-key-user", action="store", default="EMPTY")
@@ -126,26 +162,9 @@ def cleanup_collections(args, test_client):
 
 
 @pytest.fixture(autouse=True)
-def vcr_config():
-    """Global VCR configuration"""
-    cassette_library_dir = Path(__file__).parent / "cassettes"
-    os.makedirs(cassette_library_dir, exist_ok=True)
-
-    custom_vcr = vcr.VCR(
-        cassette_library_dir=str(cassette_library_dir),
-        record_mode="once",
-        match_on=["method", "scheme", "host", "port", "path", "query"],
-        filter_headers=["authorization"],
-        before_record_request=lambda request: None if request.host == "testserver" else request,
-        decode_compressed_response=True,
-    )
-
-    return custom_vcr
-
-
-@pytest.fixture(autouse=True)
-def vcr_cassette(request, vcr_config):
-    """Automatically use VCR for each test"""
+def vcr_cassette(request):
+    """Use VCR for specific tests, with per-test cassettes"""
+    global VCR_GLOBAL_CASSETTE, VCR_INSTANCE
 
     # Skip VCR for tests that does not support it
     def module_to_skip(request):
@@ -157,8 +176,17 @@ def vcr_cassette(request, vcr_config):
         yield
         return
 
+    # Temporarily exit the global cassette
+    if VCR_GLOBAL_CASSETTE is not None:
+        VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
+
+    # Use a test-specific cassette
     test_name = request.node.name.replace("[", "_").replace("]", "_")
     cassette_path = f"{request.module.__name__}.{test_name}"
 
-    with vcr_config.use_cassette(cassette_path + ".yaml"):
+    with VCR_INSTANCE.use_cassette(cassette_path + ".yaml"):
         yield
+
+    # Re-enter the global cassette after the test is done
+    if VCR_GLOBAL_CASSETTE is not None:
+        VCR_GLOBAL_CASSETTE.__enter__()
