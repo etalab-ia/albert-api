@@ -87,4 +87,8 @@ jobs:
       env:
         ALBERT_CONFIG: config.test.yml
       run: |
-        python -m pytest app/tests --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
+        python -m pytest tests --cov=./app --cov-report=lcov:./coverage/lcov.info --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
+    - name: Report coverage to PR
+      uses: romeovs/lcov-reporter-action@v0.3.1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}

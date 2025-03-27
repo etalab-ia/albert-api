@@ -22,7 +22,7 @@ def setup(args, test_client):
     COLLECTION_ID = response.json()["id"]
 
     # Upload a file
-    file_path = "app/tests/assets/json.json"
+    file_path = "tests/assets/json.json"
     files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
     data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
     response = test_client.post("/v1/files", data=data, files=files)

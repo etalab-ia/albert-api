@@ -26,7 +26,7 @@ def setup(args, test_client):
     COLLECTION_ID = response.json()["id"]
 
     # Upload the file to the collection
-    file_path = "app/tests/assets/json.json"
+    file_path = "tests/assets/json.json"
     files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
     data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % COLLECTION_ID}
     response = test_client.post("/v1/files", data=data, files=files)
