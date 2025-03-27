@@ -84,15 +84,17 @@ jobs:
         ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
         
     - name: Run tests
-      env:
-        ALBERT_CONFIG: config.test.yml
       run: |
-        python -m pytest tests --cov=./app --cov-report=lcov:./coverage/lcov.info --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
-    - name: Report coverage to PR
-      uses: romeovs/lcov-reporter-action@v0.3.1
+        python -m pytest tests --cov=./app --cov-report=xml --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
+      
+    - name: Create coverage badge
+      run: |
+        mkdir -p .github/badges
+        COVERAGE_PCT=$(echo "scale=2; ${COVERAGE} * 100" | bc)
+        echo "{\"schemaVersion\":1,\"label\":\"coverage\",\"message\":\"${COVERAGE_PCT}%\",\"color\":\"$(if (( $(echo "${COVERAGE_PCT} >= 80" | bc -l) )); then echo "green"; elif (( $(echo "${COVERAGE_PCT} >= 70" | bc -l) )); then echo "yellow"; else echo "red"; fi)\"}" > .github/badges/coverage.json
+
+    - name: Commit coverage badge
+      uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
+        commit_message: Update coverage badge
+        file_pattern: .github/badges/coverage.json
