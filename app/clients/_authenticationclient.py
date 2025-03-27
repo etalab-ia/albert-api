@@ -7,7 +7,7 @@ import traceback
 from typing import List, Optional
 
 import aiohttp
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from redis.asyncio import Redis
 import requests
 
@@ -99,10 +99,13 @@ class AuthenticationClient(AsyncGristDocAPI):
 
         if cache_user:
             cache_user = json.loads(cache_user)
-            user = User(id=cache_user["id"], role=Role.get(cache_user["role"]), name=cache_user.get("name"))
-            ttl = await self.redis.ttl(redis_key)
-            if ttl > 300:
-                return user
+            try:
+                user = User(id=cache_user["id"], role=Role.get(cache_user["role"]), name=cache_user.get("name"))
+                ttl = await self.redis.ttl(redis_key)
+                if ttl > 300:
+                    return user
+            except ValidationError as e:
+                logger.warning(msg="Invalid User in cache: %s" % e)
 
         try:
             # fetch from grist

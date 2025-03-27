@@ -7,6 +7,7 @@ from app.schemas.documents import Documents
 from app.schemas.security import User
 from app.utils.lifespan import databases
 from app.utils.security import check_api_key
+from app.utils.exceptions import NoVectorStoreAvailableException
 
 router = APIRouter()
 
@@ -22,6 +23,8 @@ async def get_documents(
     """
     Get all documents ID from a collection.
     """
+    if not databases.search:
+        raise NoVectorStoreAvailableException()
     collection = str(collection)
     data = databases.search.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
 
@@ -38,6 +41,8 @@ async def delete_document(
     """
     Delete a document and relative collections.
     """
+    if not databases.search:
+        raise NoVectorStoreAvailableException()
     collection, document = str(collection), str(document)
     databases.search.delete_document(collection_id=collection, document_id=document, user=user)
 

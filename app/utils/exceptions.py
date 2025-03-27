@@ -21,7 +21,12 @@ class WrongSearchMethodException(HTTPException):
     def __init__(self, detail: str = "Wrong search method."):
         super().__init__(status_code=400, detail=detail)
 
+        
+class NoVectorStoreAvailableException(HTTPException):
+    def __init__(self, detail: str = "No vector store available."):
+        super().__init__(status_code=400, detail=detail)
 
+      
 class InternetSearchNotAvailable(HTTPException):
     def __init__(self, detail: str = "Internet search is not available."):
         super().__init__(status_code=400, detail=detail)
