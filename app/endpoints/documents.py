@@ -37,6 +37,6 @@ async def delete_document(
     """
     Delete a document and relative collections.
     """
-    await context.documents.delete_document(collection_id=collection, document_id=document, user_id=user.user_id)
+    await context.documents.delete_document(document_id=document, user_id=user.user_id)
 
     return Response(status_code=204)

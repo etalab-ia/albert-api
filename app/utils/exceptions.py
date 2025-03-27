@@ -4,8 +4,18 @@ from fastapi import HTTPException
 
 
 # 400
-class ParsingFileFailedException(HTTPException):
-    def __init__(self, detail: str = "Parsing file failed.") -> None:
+class ParsingDocumentFailedException(HTTPException):
+    def __init__(self, detail: str = "Parsing document failed.") -> None:
+        super().__init__(status_code=400, detail=detail)
+
+
+class ChunkingFailedException(HTTPException):
+    def __init__(self, detail: str = "Chunking failed.") -> None:
+        super().__init__(status_code=400, detail=detail)
+
+
+class VectorizationFailedException(HTTPException):
+    def __init__(self, detail: str = "Vectorization failed.") -> None:
         super().__init__(status_code=400, detail=detail)
 
 

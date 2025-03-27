@@ -47,13 +47,11 @@ class IdentityAccessManager:
         async with self.sql.session() as session:
             # create the role
             try:
-                await session.execute(statement=insert(table=RoleTable).values(name=name))
+                result = await session.execute(statement=insert(table=RoleTable).values(name=name).returning(RoleTable.id))
+                role_id = result.scalar_one()
                 await session.commit()
             except IntegrityError:
                 raise RoleAlreadyExistsException()
-
-            result = await session.execute(statement=select(RoleTable.id).where(RoleTable.name == name))
-            role_id = result.scalar_one()
 
             # set the role as default if needed
             if default:
@@ -232,15 +230,20 @@ class IdentityAccessManager:
 
             # create the user
             try:
-                await session.execute(statement=insert(table=UserTable).values(name=name, role_id=role_id, expires_at=expires_at))
+                result = await session.execute(
+                    statement=insert(table=UserTable)
+                    .values(
+                        name=name,
+                        role_id=role_id,
+                        expires_at=expires_at,
+                    )
+                    .returning(UserTable.id)
+                )
+                user_id = result.scalar_one()
             except IntegrityError:
                 raise UserAlreadyExistsException()
 
             await session.commit()
-
-            # get the user id
-            result = await session.execute(statement=select(UserTable.id).where(UserTable.name == name))
-            user_id = result.scalar_one()
 
             return user_id
 
@@ -337,14 +340,11 @@ class IdentityAccessManager:
 
             # create the token
             try:
-                await session.execute(statement=insert(table=TokenTable).values(user_id=user.id, name=name))
+                result = await session.execute(statement=insert(table=TokenTable).values(user_id=user.id, name=name).returning(TokenTable.id))
+                token_id = result.scalar_one()
                 await session.commit()
             except IntegrityError:
                 raise TokenAlreadyExistsException()
-
-            # get the token id
-            result = await session.execute(statement=select(TokenTable.id).where(TokenTable.name == name).where(TokenTable.user_id == user.id))
-            token_id = result.scalar_one()
 
             # generate the token
             token = self._encode_token(user_id=user.id, token_id=token_id, expires_at=expires_at)

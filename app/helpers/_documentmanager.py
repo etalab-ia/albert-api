@@ -1,12 +1,13 @@
-import traceback
 import time
+import traceback
 from typing import List, Optional
 from uuid import UUID, uuid4
 
 from fastapi import UploadFile
 from qdrant_client import AsyncQdrantClient
+from qdrant_client.http.exceptions import ResponseHandlingException
 from qdrant_client.http.models import Distance, FieldCondition, Filter, FilterSelector, MatchAny, MatchValue, PointStruct, VectorParams
-from sqlalchemy import cast, delete, distinct, func, insert, or_, select, update, Integer
+from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.exc import NoResultFound
 
 from app.clients.database import SQLDatabaseClient
@@ -23,11 +24,12 @@ from app.sql.models import Collection as CollectionTable
 from app.sql.models import Document as DocumentTable
 from app.sql.models import User as UserTable
 from app.utils.exceptions import (
+    ChunkingFailedException,
     CollectionNotFoundException,
     DocumentNotFoundException,
-    InvalidJSONFormatException,
     NotImplementedException,
-    ParsingFileFailedException,
+    ParsingDocumentFailedException,
+    VectorizationFailedException,
 )
 from app.utils.logging import logger
 
@@ -56,14 +58,13 @@ class DocumentManager:
         description: Optional[str] = None,
     ) -> int:
         async with self.sql.session() as session:
-            await session.execute(
-                statement=insert(table=CollectionTable).values(name=name, user_id=user_id, visibility=visibility, description=description)
+            result = await session.execute(
+                statement=insert(table=CollectionTable)
+                .values(name=name, user_id=user_id, visibility=visibility, description=description)
+                .returning(CollectionTable.id)
             )
-            await session.commit()
-
-            # get the collection id
-            result = await session.execute(statement=select(CollectionTable.id).where(CollectionTable.name == name))
             collection_id = result.scalar_one()
+            await session.commit()
 
         await self.qdrant.create_collection(
             collection_name=str(collection_id), vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
@@ -162,16 +163,28 @@ class DocumentManager:
         file_name = file.filename.strip()
         file_extension = file_name.rsplit(".", maxsplit=1)[-1]
 
-        document = self._parse(file=file, file_extension=file_extension)
-        chunks = self._split(document=document, chunker_name=chunker_name, chunker_args=chunker_args)
+        # TODO: add json structure validation
+
+        try:
+            document = self._parse(file=file, file_extension=file_extension)
+        except Exception as e:
+            logger.error(msg=f"Error during file parsing: {e}")
+            logger.debug(msg=traceback.format_exc())
+            raise ParsingDocumentFailedException(detail=f"Parsing document failed: {e}")
+
+        try:
+            chunks = self._split(document=document, chunker_name=chunker_name, chunker_args=chunker_args)
+        except Exception as e:
+            logger.error(msg=f"Error during document splitting: {e}")
+            logger.debug(msg=traceback.format_exc())
+            raise ChunkingFailedException(detail=f"Chunking failed: {e}")
 
         async with self.sql.session() as session:
-            await session.execute(statement=insert(table=DocumentTable).values(name=file_name, collection_id=collection_id))
-            await session.commit()
-
-            # get the document id
-            result = await session.execute(statement=select(DocumentTable.id).where(DocumentTable.name == file_name))
+            result = await session.execute(
+                statement=insert(table=DocumentTable).values(name=file_name, collection_id=collection_id).returning(DocumentTable.id)
+            )
             document_id = result.scalar_one()
+            await session.commit()
 
         for i, chunk in enumerate(chunks):
             chunk.metadata.id = i + 1
@@ -187,13 +200,18 @@ class DocumentManager:
             logger.error(msg=f"Error during document creation: {e}")
             logger.debug(msg=traceback.format_exc())
             await self.delete_document(user_id=user_id, document_id=document_id)
+            raise VectorizationFailedException(detail=f"Vectorization failed: {e}")  # TODO: add error code
 
         return document_id
 
     async def get_documents(self, user_id: int, collection_id: int, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
         async with self.sql.session() as session:
             statement = (
-                select(DocumentTable)
+                select(
+                    DocumentTable.id,
+                    DocumentTable.name,
+                    cast(func.extract("epoch", DocumentTable.created_at), Integer).label("created_at"),
+                )
                 .offset(offset=offset)
                 .limit(limit=limit)
                 .where(DocumentTable.collection_id == collection_id)
@@ -204,15 +222,23 @@ class DocumentManager:
                 statement = statement.where(DocumentTable.id == document_id)
 
             result = await session.execute(statement=statement)
-            documents = result.all()
+            documents = [Document(**row._asdict()) for row in result.all()]
 
             if document_id and len(documents) == 0:
                 raise DocumentNotFoundException()
 
-            # TODO get document count
-            documents = [Document(**row._mapping) for row in result.all()]
+        # chunks count
+        for document in documents:
+            try:
+                chunks_count = await self.qdrant.count(
+                    collection_name=str(collection_id),
+                    count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
+                )
+                document.chunks = chunks_count.count
+            except ResponseHandlingException as e:
+                document.chunks = None
 
-            return documents
+        return documents
 
     async def delete_document(self, user_id: int, document_id: int) -> None:
         # check if document exists
@@ -313,15 +339,7 @@ class DocumentManager:
         elif file_extension == self.FILE_EXTENSION_MD:
             parser = MarkdownParser()
 
-        try:
-            output = parser.parse(file=file)
-        except Exception as e:  # TODO: simplify exception handling (only one exception)
-            logger.error(msg=f"Error during file parsing: {e}")
-            logger.debug(msg=traceback.format_exc())
-            if isinstance(e, InvalidJSONFormatException):
-                raise e
-            else:
-                raise ParsingFileFailedException()
+        output = parser.parse(file=file)
 
         return output
 
@@ -350,7 +368,7 @@ class DocumentManager:
 
             # insert chunks and vectors
             await self.qdrant.upsert(
-                collection_name=collection_id,
+                collection_name=str(collection_id),
                 points=[
                     PointStruct(id=str(uuid4()), vector=embedding, payload={"content": chunk.content, "metadata": chunk.metadata.model_dump()})
                     for chunk, embedding in zip(batch, embeddings)

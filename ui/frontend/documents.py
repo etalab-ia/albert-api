@@ -84,8 +84,8 @@ st.dataframe(
                 "Collection": document["collection_id"],
                 "ID": document["id"],
                 "Name": document["name"],
-                "Created at": pd.to_datetime(document["created_at"], unit="s"),
                 "Chunks": document["chunks"],
+                "Created at": pd.to_datetime(document["created_at"], unit="s"),
             }
             for document in documents
         ]
@@ -114,8 +114,8 @@ with col1:
 
 with col2:
     with st.expander(label="Delete a document", icon=":material/delete_forever:"):
-        document_name = st.selectbox(label="Select document to delete", options=[document["name"] for document in documents])
-        document_id = [document["id"] for document in documents if document["name"] == document_name]
+        document_name = st.selectbox(label="Select document to delete", options=[f"{document["name"]} ({document["id"]})" for document in documents])
+        document_id = [document["id"] for document in documents if f"{document["name"]} ({document["id"]})" == document_name]
         document_id = document_id[0] if document_id else None
         document_collection = [document["collection_id"] for document in documents if document["id"] == document_id]
         document_collection = document_collection[0] if document_id else None

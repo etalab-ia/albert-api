@@ -19,7 +19,6 @@ from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
     ENDPOINT__COLLECTIONS,
-    ENDPOINT__DOCUMENTS,
     ENDPOINT__EMBEDDINGS,
     ENDPOINT__RERANK,
     ENDPOINT__SEARCH,
@@ -44,9 +43,6 @@ class Authorization:
 
         if request.url.path.startswith(f"/v1{ENDPOINT__COLLECTIONS}") and request.method == "POST":
             await self._check_collections_post(user=user, request=request)
-
-        if request.url.path.startswith(f"/v1{ENDPOINT__DOCUMENTS}") and request.method == "DELETE":
-            await self._check_documents_delete(user=user, request=request)
 
         if request.url.path.startswith(f"/v1{ENDPOINT__EMBEDDINGS}") and request.method == "POST":
             await self._check_embeddings_post(user=user, request=request)

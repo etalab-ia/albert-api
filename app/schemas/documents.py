@@ -1,15 +1,14 @@
-from typing import Literal, List
+from typing import Literal, List, Optional
 
 from pydantic import BaseModel
 
 
 class Document(BaseModel):
     object: Literal["document"] = "document"
-    id: str
+    id: int
     name: str
     created_at: int
-    updated_at: int
-    chunks: int = 0
+    chunks: Optional[int] = None
 
 
 class Documents(BaseModel):
