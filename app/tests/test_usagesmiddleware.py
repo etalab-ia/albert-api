@@ -10,7 +10,7 @@ from app.utils.variables import MODEL_TYPE__LANGUAGE
 
 @pytest.fixture(scope="module")
 def setup(args, test_client):
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+    test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
     # Get a language model for testing
     response = test_client.get("/v1/models")
     models = response.json()
@@ -29,7 +29,7 @@ class TestUsagesMiddleware:
     def test_log_chat_completion(self, args, test_client, setup, db_session):
         """Test logging of chat completion request"""
         MODEL_ID = setup
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
         params = {
             "model": MODEL_ID,
@@ -44,7 +44,7 @@ class TestUsagesMiddleware:
         assert log.endpoint == "/v1/chat/completions"
         assert log.model == MODEL_ID
         assert isinstance(log.datetime, datetime)
-        assert log.user is not None
+        assert log.user == "Etalab (tests)"
         assert log.prompt_tokens is not None
         assert log.total_tokens is not None
         assert log.completion_tokens is not None
@@ -53,7 +53,7 @@ class TestUsagesMiddleware:
 
     def test_log_embeddings(self, args, test_client, db_session):
         """Test logging of embeddings request"""
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
         before = db_session.query(Usage).filter_by(endpoint="/v1/embeddings").count()
 
         # Get embeddings model
@@ -81,7 +81,7 @@ class TestUsagesMiddleware:
 
     def test_no_log_for_non_model_endpoint(self, args, test_client, db_session):
         """Test that non-model endpoints are not logged"""
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
         previous = db_session.query(Usage).count()
 
         response = test_client.get("/v1/models")
@@ -93,7 +93,7 @@ class TestUsagesMiddleware:
 
     def test_log_with_invalid_json(self, args, test_client, db_session):
         """Test handling of invalid JSON in request body"""
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
         previous = db_session.query(Usage).count()
         invalid_json = "{"  # Invalid JSON

@@ -5,6 +5,7 @@ from app.schemas.search import Searches, SearchRequest
 from app.schemas.security import User
 from app.utils.lifespan import databases, models, internet
 from app.utils.security import check_api_key
+from app.utils.exceptions import NoVectorStoreAvailableException
 
 router = APIRouter()
 
@@ -14,6 +15,8 @@ async def search(request: Request, body: SearchRequest, user: User = Security(de
     """
     Get relevant chunks from the collections and a query.
     """
+    if not databases.search:
+        raise NoVectorStoreAvailableException()
 
     body = await request.json()
     body = SearchRequest(**body)

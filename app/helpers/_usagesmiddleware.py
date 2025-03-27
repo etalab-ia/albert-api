@@ -6,7 +6,6 @@ from fastapi import Request, Response
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.clients import AuthenticationClient
 from app.sql.models import Usage
 from app.sql.session import get_db
 from app.utils.logging import logger
@@ -128,8 +127,9 @@ class UsagesMiddleware(BaseHTTPMiddleware):
 
         try:
             authorization = request.headers.get("Authorization")
-            if authorization:
-                user_id = AuthenticationClient.api_key_to_user_id(input=authorization)
+            # Access auth client through app.state.databases
+            if hasattr(request.app.state, "databases") and hasattr(request.app.state.databases, "auth"):
+                user = await request.app.state.databases.auth.check_api_key(key=authorization.split(sep=" ")[1])
                 usage_data, response = await self._handle_streaming_response(response)
 
                 # Log usage
@@ -138,7 +138,7 @@ class UsagesMiddleware(BaseHTTPMiddleware):
                     db,
                     start_time,
                     duration,
-                    user_id,
+                    user.name if user else "UNKNOWN",
                     endpoint,
                     model,
                     usage_data,

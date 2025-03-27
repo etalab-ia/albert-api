@@ -21,6 +21,21 @@ class WrongSearchMethodException(HTTPException):
     def __init__(self, detail: str = "Wrong search method."):
         super().__init__(status_code=400, detail=detail)
 
+        
+class NoVectorStoreAvailableException(HTTPException):
+    def __init__(self, detail: str = "No vector store available."):
+        super().__init__(status_code=400, detail=detail)
+
+      
+class InternetSearchNotAvailable(HTTPException):
+    def __init__(self, detail: str = "Internet search is not available."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class ReservedCollectionIDException(HTTPException):
+    def __init__(self, detail: str = "'internet' is a collection name reserved for internet search, which is not available."):
+        super().__init__(status_code=400, detail=detail)
+
 
 # 403
 class InvalidAuthenticationSchemeException(HTTPException):

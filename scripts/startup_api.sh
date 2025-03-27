@@ -7,7 +7,7 @@ WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-1000}
 TIMEOUT=${TIMEOUT:-30}
 KEEP_ALIVE=${KEEP_ALIVE:-75}
 GRACEFUL_TIMEOUT=${GRACEFUL_TIMEOUT:-75}
-GUNICORN_ADDITIONAL_ARGS=${GUNICORN_ADDITIONAL_ARGS:-""} # ex: --log-config app/log.conf
+GUNICORN_CMD_ARGS=${GUNICORN_CMD_ARGS:-""} # ex: --log-config app/log.conf
 
 # Run database migrations
 python -m alembic -c app/alembic.ini upgrade head
@@ -21,4 +21,4 @@ exec gunicorn app.main:app \
     --keep-alive $KEEP_ALIVE \
     --graceful-timeout $GRACEFUL_TIMEOUT \
     --bind 0.0.0.0:8000 \
-    $GUNICORN_ADDITIONAL_ARGS
+    $GUNICORN_CMD_ARGS

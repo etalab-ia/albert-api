@@ -1,18 +1,12 @@
 services:
   api:
-    build:
-      context: .
-      dockerfile: app/Dockerfile
+    image: ghcr.io/etalab-ia/albert-api/app:latest
+    platform: linux/amd64
     restart: always
     ports:
       - 8000:8000
     volumes:
       - ./config.example.yml:/config.yml:ro
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./app
-          target: /app
     depends_on:
       redis:
         condition: service_healthy
@@ -20,9 +14,8 @@ services:
         condition: service_healthy
 
   ui:
-    build:
-      context: .
-      dockerfile: ui/Dockerfile
+    image: ghcr.io/etalab-ia/albert-api/ui:latest
+    platform: linux/amd64
     restart: always
     environment:
       - BASE_URL=http://api:8000/v1
@@ -30,11 +23,6 @@ services:
       - EXCLUDE_MODELS=
     ports:
       - 8501:8501
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./ui
-          target: /app
 
   redis:
     image: redis/redis-stack-server:7.2.0-v11
@@ -78,8 +66,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
-    ports:
-      - "5432:5432"
 
 volumes:
   qdrant:
