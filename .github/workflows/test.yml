@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_call: # Add this to make the workflow reusable
 
 jobs:
   test:
@@ -93,7 +94,7 @@ jobs:
         # Extract coverage percentage from coverage.xml
         COVERAGE=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('coverage.xml').getroot().get('line-rate'))")
         COVERAGE_PCT=$(printf "%.2f" $(echo "${COVERAGE} * 100" | bc))
-        echo "{\"schemaVersion\":1,\"label\":\"coverage\",\"message\":\"${COVERAGE_PCT}%\",\"color\":\"$(if (( $(echo "${COVERAGE_PCT} >= 80" | bc -l) )); then echo "green"; elif (( $(echo "${COVERAGE_PCT} >= 70" | bc -l) )); then echo "yellow"; else echo "red"; fi)\"}" > .github/badges/coverage.json
+        echo "{\"schemaVersion\":1,\"label\":\"Coverage\",\"message\":\"${COVERAGE_PCT}%\",\"color\":\"$(if (( $(echo "${COVERAGE_PCT} >= 80" | bc -l) )); then echo "green"; elif (( $(echo "${COVERAGE_PCT} >= 70" | bc -l) )); then echo "yellow"; else echo "red"; fi)\"}" > .github/badges/coverage.json
 
     - name: Commit coverage badge
       uses: stefanzweifel/git-auto-commit-action@v4
