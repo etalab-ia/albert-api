@@ -1,12 +1,13 @@
 import traceback
+import time
 from typing import List, Optional
 from uuid import UUID, uuid4
 
 from fastapi import UploadFile
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, MatchValue, PointStruct, VectorParams
+from qdrant_client.http.models import Distance, FieldCondition, Filter, FilterSelector, MatchAny, MatchValue, PointStruct, VectorParams
 from sqlalchemy import cast, delete, distinct, func, insert, or_, select, update, Integer
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import NoResultFound
 
 from app.clients.database import SQLDatabaseClient
 from app.clients.model import BaseModelClient as ModelClient
@@ -27,7 +28,6 @@ from app.utils.exceptions import (
     InvalidJSONFormatException,
     NotImplementedException,
     ParsingFileFailedException,
-    UnsupportedFileTypeException,
 )
 from app.utils.logging import logger
 
@@ -85,6 +85,9 @@ class DocumentManager:
             # delete the collection
             await session.execute(statement=delete(table=CollectionTable).where(CollectionTable.id == collection_id))
             await session.commit()
+
+            # delete the collection from qdrant
+        await self.qdrant.delete_collection(collection_name=str(collection_id))
 
     async def update_collection(self, user_id: int, collection_id: int, name: Optional[str] = None, visibility: Optional[CollectionVisibility] = None, description: Optional[str] = None) -> None:  # fmt: off
         async with self.sql.session() as session:
@@ -147,26 +150,24 @@ class DocumentManager:
         return collections
 
     async def create_document(self, user_id: int, collection_id: int, file: UploadFile, chunker_name: ChunkerName, chunker_args: dict, model_client: ModelClient) -> int:  # fmt: off
+        # check if collection exists
+        async with self.sql.session() as session:
+            result = await session.execute(
+                statement=select(CollectionTable).where(CollectionTable.id == collection_id).where(CollectionTable.user_id == user_id)
+            )
+            collection = result.scalar_one()
+            if not collection:
+                raise CollectionNotFoundException()
+
         file_name = file.filename.strip()
         file_extension = file_name.rsplit(".", maxsplit=1)[-1]
-
-        if file_extension not in self.SUPPORTED_FILE_EXTENSIONS:
-            raise UnsupportedFileTypeException()
 
         document = self._parse(file=file, file_extension=file_extension)
         chunks = self._split(document=document, chunker_name=chunker_name, chunker_args=chunker_args)
 
         async with self.sql.session() as session:
-            i = 0
-            while True:
-                try:
-                    await session.execute(statement=insert(table=DocumentTable).values(name=file_name, collection_id=collection_id, user_id=user_id))
-                    await session.commit()
-                    break
-                except IntegrityError:
-                    i += 1
-                    file_name, file_extension = file_name.rsplit(".", maxsplit=1)
-                    file_name = f"{file_name} ({i}).{file_extension}"
+            await session.execute(statement=insert(table=DocumentTable).values(name=file_name, collection_id=collection_id))
+            await session.commit()
 
             # get the document id
             result = await session.execute(statement=select(DocumentTable.id).where(DocumentTable.name == file_name))
@@ -175,16 +176,17 @@ class DocumentManager:
         for i, chunk in enumerate(chunks):
             chunk.metadata.id = i + 1
             chunk.metadata.document_part = f"{i + 1}/{len(chunks)}"
-            chunk.metadata.collection_id = collection_id
+            chunk.metadata.collection_id = collection.id
+            chunk.metadata.collection_name = collection.name
             chunk.metadata.document_id = document_id
             chunk.metadata.document_name = file_name
-
+            chunk.metadata.document_created_at = round(time.time())
         try:
             await self._upsert(chunks=chunks, collection_id=collection_id, model_client=model_client)
         except Exception as e:
             logger.error(msg=f"Error during document creation: {e}")
             logger.debug(msg=traceback.format_exc())
-            self.delete_document(document_id=document_id)
+            await self.delete_document(user_id=user_id, document_id=document_id)
 
         return document_id
 
@@ -211,6 +213,26 @@ class DocumentManager:
             documents = [Document(**row._mapping) for row in result.all()]
 
             return documents
+
+    async def delete_document(self, user_id: int, document_id: int) -> None:
+        # check if document exists
+        async with self.sql.session() as session:
+            result = await session.execute(
+                statement=select(DocumentTable)
+                .join(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
+                .where(DocumentTable.id == document_id)
+                .where(CollectionTable.user_id == user_id)
+            )
+            document = result.scalar_one()
+            if not document:
+                raise DocumentNotFoundException()
+
+            await session.execute(statement=delete(table=DocumentTable).where(DocumentTable.id == document_id))
+            await session.commit()
+
+            # delete the document from qdrant
+            filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
+            await self.qdrant.delete(collection_name=str(document.collection_id), points_selector=FilterSelector(filter=filter))
 
     async def get_chunks(
         self, user_id: int, document_id: int, chunk_id: Optional[int] = None, offset: Optional[UUID] = None, limit: int = 10
@@ -304,7 +326,7 @@ class DocumentManager:
         return output
 
     def _split(self, document: ParserOutput, chunker_name: ChunkerName, chunker_args: dict) -> List[Chunk]:
-        if chunker_name == ChunkerName.LangchainRecursiveCharacterTextSplitter:
+        if chunker_name == ChunkerName.LANGCHAIN_RECURSIVE_CHARACTER_TEXT_SPLITTER:
             chunker = LangchainRecursiveCharacterTextSplitter(**chunker_args)
         else:  # ChunkerName.NoChunker
             chunker = NoChunker()
@@ -330,7 +352,7 @@ class DocumentManager:
             await self.qdrant.upsert(
                 collection_name=collection_id,
                 points=[
-                    PointStruct(id=chunk.id, vector=embedding, payload={"content": chunk.content, "metadata": chunk.metadata.model_dump()})
+                    PointStruct(id=str(uuid4()), vector=embedding, payload={"content": chunk.content, "metadata": chunk.metadata.model_dump()})
                     for chunk, embedding in zip(batch, embeddings)
                 ],
             )

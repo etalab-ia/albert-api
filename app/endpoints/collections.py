@@ -19,7 +19,7 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     Create a new collection.
     """
 
-    model = context.models(model=settings.general["documents_model"])
+    model = context.models(model=settings.general.documents_model)
     client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
     vector_size = client.vector_size
     collection_id = await context.documents.create_collection(

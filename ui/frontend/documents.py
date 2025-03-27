@@ -20,9 +20,8 @@ with st.sidebar:
 
 
 collections = get_collections()
-documents = get_documents(
-    collection_ids=[collection["id"] for collection in collections if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE],
-)
+private_collections = [collection for collection in collections if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE]
+documents = get_documents(collection_ids=[collection["id"] for collection in private_collections])
 
 # Collections
 st.subheader(body="Collections")
@@ -52,25 +51,24 @@ col1, col2 = st.columns(spec=2)
 with col1:
     with st.expander(label="Create a collection", icon=":material/add_circle:"):
         collection_name = st.text_input(
-            label="Collection name", placeholder="Mes documents", help="Create a private collection with the embeddings model of your choice."
+            label="Collection name", placeholder="Enter collection name", help="Create a private collection with the embeddings model of your choice."
         )
-        if st.button(label="Create", disabled=not collection_name):
+        if st.button(label="Create", disabled=not collection_name or st.session_state["user"].name == settings.master_username):
             create_collection(collection_name=collection_name, collection_model=settings.documents_model)
 
 with col2:
     with st.expander(label="Delete a collection", icon=":material/delete_forever:"):
-        collection = st.selectbox(
-            label="Select collection to delete",
-            options=[
-                f"{collection["name"]} - {collection["id"]}"
-                for collection in collections
-                if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE
-            ],
-            key="delete_collection_selectbox",
+        collection_name = st.selectbox(
+            label="Select collection to delete", options=[collection["name"] for collection in private_collections], key="delete_collection_selectbox"
         )
-        collection_id = collection.split(" - ")[1] if collection else None
-        if st.button(label="Delete", disabled=not collection_id, key="delete_collection_button"):
-            delete_collection(api_key=st.session_state["user"].api_key, collection_id=collection_id)
+        collection_id = [collection["id"] for collection in private_collections if collection["name"] == collection_name]
+        collection_id = collection_id[0] if collection_id else None
+        if st.button(
+            label="Delete",
+            disabled=not collection_id or st.session_state["user"].name == settings.master_username,
+            key="delete_collection_button",
+        ):
+            delete_collection(collection_id=collection_id)
 
 
 if not collections:
@@ -102,27 +100,25 @@ st.dataframe(
 col1, col2 = st.columns(spec=2)
 with col1:
     with st.expander(label="Upload a file", icon=":material/upload_file:"):
-        collection = st.selectbox(
-            label="Select a collection",
-            options=[
-                f"{collection["name"]} - {collection["id"]}"
-                for collection in collections
-                if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE
-            ],
-            key="upload_file_selectbox",
+        collection_name = st.selectbox(
+            label="Select a collection", options=[collection["name"] for collection in private_collections], key="upload_file_selectbox"
         )
-        collection_id = collection.split(" - ")[1] if collection else None
+        collection_id = [collection["id"] for collection in private_collections if collection["name"] == collection_name]
+        collection_id = collection_id[0] if collection_id else None
         file_to_upload = st.file_uploader(label="File", type=["pdf", "html", "json", "md"])
         submit_upload = st.button(label="Upload", disabled=not collection_id or not file_to_upload)
         if file_to_upload and submit_upload and collection_id:
             with st.spinner(text="Downloading and processing the document..."):
-                result = upload_file(api_key=st.session_state["user"].api_key, file=file_to_upload, collection_id=collection_id)
+                result = upload_file(file=file_to_upload, collection_id=collection_id)
 
 
 with col2:
     with st.expander(label="Delete a document", icon=":material/delete_forever:"):
-        document = st.selectbox(label="Select document to delete", options=[f"{document["name"]} - {document["id"]}" for document in documents])
-        document_id = document.split(" - ")[1] if document else None
-        document_collection = [document["collection_id"] for document in documents if document["id"] == document_id][0]
+        document_name = st.selectbox(label="Select document to delete", options=[document["name"] for document in documents])
+        document_id = [document["id"] for document in documents if document["name"] == document_name]
+        document_id = document_id[0] if document_id else None
+        document_collection = [document["collection_id"] for document in documents if document["id"] == document_id]
+        document_collection = document_collection[0] if document_id else None
+
         if st.button(label="Delete", disabled=not document_id, key="delete_document_button"):
-            delete_document(api_key=st.session_state["user"].api_key, collection_id=document_collection, document_id=document_id)
+            delete_document(collection_id=document_collection, document_id=document_id)

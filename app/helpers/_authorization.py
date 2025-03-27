@@ -21,7 +21,6 @@ from app.utils.variables import (
     ENDPOINT__COLLECTIONS,
     ENDPOINT__DOCUMENTS,
     ENDPOINT__EMBEDDINGS,
-    ENDPOINT__FILES,
     ENDPOINT__RERANK,
     ENDPOINT__SEARCH,
     ENDPOINT__TOKENS,
@@ -46,17 +45,11 @@ class Authorization:
         if request.url.path.startswith(f"/v1{ENDPOINT__COLLECTIONS}") and request.method == "POST":
             await self._check_collections_post(user=user, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__COLLECTIONS}") and request.method == "DELETE":
-            await self._check_collections_delete(user=user, request=request)
-
         if request.url.path.startswith(f"/v1{ENDPOINT__DOCUMENTS}") and request.method == "DELETE":
             await self._check_documents_delete(user=user, request=request)
 
         if request.url.path.startswith(f"/v1{ENDPOINT__EMBEDDINGS}") and request.method == "POST":
             await self._check_embeddings_post(user=user, request=request)
-
-        if request.url.path.startswith(f"/v1{ENDPOINT__FILES}") and request.method == "POST":
-            await self._check_files_delete(user=user, request=request)
 
         if request.url.path.startswith(f"/v1{ENDPOINT__RERANK}") and request.method == "POST":
             await self._check_rerank_post(user=user, request=request)
@@ -148,7 +141,7 @@ class Authorization:
         body = json.loads(body)
 
         if body.get("visibility", CollectionVisibility.PRIVATE) == CollectionVisibility.PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in user.permissions:  # fmt: off
-            raise InsufficientPermissionException()
+            raise InsufficientPermissionException("Missing permission to create public collections.")
 
     async def _check_embeddings_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
@@ -171,4 +164,4 @@ class Authorization:
         body = json.loads(body)
 
         if body.get("user", None) and PermissionType.CREATE_USER not in user.permissions:
-            raise InsufficientPermissionException()
+            raise InsufficientPermissionException("Missing permission to create token for another user.")

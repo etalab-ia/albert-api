@@ -20,10 +20,6 @@ from app.utils.variables import (
     MODEL_CLIENT_TYPE__OPENAI,
     MODEL_CLIENT_TYPE__TEI,
     MODEL_CLIENT_TYPE__VLLM,
-    MODEL_TYPE__AUDIO,
-    MODEL_TYPE__EMBEDDINGS,
-    MODEL_TYPE__LANGUAGE,
-    MODEL_TYPE__RERANK,
     ROUTER_STRATEGY__ROUND_ROBIN,
     ROUTER_STRATEGY__SHUFFLE,
     SUPPORTED_MODEL_CLIENT_TYPES__AUDIO,
@@ -58,7 +54,7 @@ class ModelClient(ConfigBaseModel):
 
 class Model(ConfigBaseModel):
     id: str
-    type: Literal[MODEL_TYPE__LANGUAGE, MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__AUDIO, MODEL_TYPE__RERANK]
+    type: ModelType
     aliases: List[str] = []
     owned_by: str = DEFAULT_APP_NAME
     routing_strategy: Literal[ROUTER_STRATEGY__ROUND_ROBIN, ROUTER_STRATEGY__SHUFFLE] = ROUTER_STRATEGY__SHUFFLE
@@ -66,14 +62,16 @@ class Model(ConfigBaseModel):
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
-        if values.type == ModelType.EMBEDDINGS:
+        if values.type == ModelType.EMBEDDINGS.value:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS, f"Invalid model type for client type {values.clients[0].type}"
-        elif values.type == ModelType.LANGUAGE:
+        elif values.type == ModelType.LANGUAGE.value:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE, f"Invalid model type for client type {values.clients[0].type}"
-        elif values.type == ModelType.AUDIO:
+        elif values.type == ModelType.AUDIO.value:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__AUDIO, f"Invalid model type for client type {values.clients[0].type}"
-        elif values.type == ModelType.RERANK:
+        elif values.type == ModelType.RERANK.value:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__RERANK, f"Invalid model type for client type {values.clients[0].type}"
+        else:
+            raise ValueError(f"Invalid model type: {values.type}")
 
         return values
 
@@ -90,7 +88,7 @@ class Database(ConfigBaseModel):
 
 class Auth(ConfigBaseModel):
     master_key: str = "changeme"
-    limiting_strategy: Literal["moving_window", "fixed_window", "sliding_window"] = "moving_window"
+    limiting_strategy: Literal["moving_window", "fixed_window", "sliding_window"] = "fixed_window"
 
 
 class General(ConfigBaseModel):
@@ -99,6 +97,7 @@ class General(ConfigBaseModel):
 
 
 class Config(ConfigBaseModel):
+    general: General
     auth: Auth = Field(default_factory=Auth)
     models: List[Model]
     databases: List[Database]
@@ -108,8 +107,8 @@ class Config(ConfigBaseModel):
     def validate_models(cls, values) -> Any:
         models = [model.id for model in values.models]
         aliases = [alias for model in values.models for alias in model.aliases] + models
-        language_models = [model for model in values.models if model.type == MODEL_TYPE__LANGUAGE]
-        embeddings_models = [model for model in values.models if model.type == MODEL_TYPE__EMBEDDINGS]
+        language_models = [model for model in values.models if model.type == ModelType.LANGUAGE.value]
+        embeddings_models = [model for model in values.models if model.type == ModelType.EMBEDDINGS.value]
 
         assert len(models) == len(set(models)), "Duplicated models name found."  # fmt: off
         assert len(aliases) == len(set(aliases)), "Duplicated aliases found."  # fmt: off
@@ -171,7 +170,7 @@ class Settings(BaseSettings):
         values.databases.grist = next((database for database in config.databases if database.type == DATABASE_TYPE__GRIST), None)
         values.databases.elastic = next((database for database in config.databases if database.type == DATABASE_TYPE__ELASTIC), None)
 
-        assert values.general["internet_model"] in [model.id for model in values.models if model.type == ModelType.LANGUAGE.value], f"Internet model is not defined in models section with type {ModelType.LANGUAGE}."  # fmt: off
-        assert values.general["documents_model"] in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS.value], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off
+        assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.LANGUAGE.value], f"Internet model is not defined in models section with type {ModelType.LANGUAGE}."  # fmt: off
+        assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS.value], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off
 
         return values

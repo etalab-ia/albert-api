@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 # TODO pass enum to model type
-class ModelType(Enum):
+class ModelType(str, Enum):
     AUDIO = "automatic-speech-recognition"
     EMBEDDINGS = "text-embeddings-inference"
     LANGUAGE = "text-generation"

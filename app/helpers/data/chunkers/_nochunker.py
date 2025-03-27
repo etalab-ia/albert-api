@@ -9,9 +9,8 @@ class NoChunker:
 
     def split(self, document: ParserOutput) -> List[Chunk]:
         chunks = list()
-
-        metadata = ChunkMetadata(**document.metadata.model_dump())
-        contents = [document.content]
+        metadata = ChunkMetadata(**document.metadata)
+        contents = document.contents  # no split
 
         for i, content in enumerate(contents):
             if len(content) < self.chunk_min_size:

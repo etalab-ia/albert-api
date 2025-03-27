@@ -2,35 +2,31 @@ from itertools import cycle
 import random
 import time
 
-
 from app.clients.model import BaseModelClient as ModelClient
 from app.schemas.core.settings import Model as ModelSettings
+from app.schemas.models import ModelType
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
     ENDPOINT__EMBEDDINGS,
     ENDPOINT__RERANK,
-    MODEL_TYPE__AUDIO,
-    MODEL_TYPE__EMBEDDINGS,
-    MODEL_TYPE__LANGUAGE,
-    MODEL_TYPE__RERANK,
     ROUTER_STRATEGY__ROUND_ROBIN,
 )
 
 
 class ModelRouter:
     ENDPOINT_MODEL_TYPE_TABLE = {
-        ENDPOINT__CHAT_COMPLETIONS: [MODEL_TYPE__LANGUAGE],
-        ENDPOINT__EMBEDDINGS: [MODEL_TYPE__EMBEDDINGS],
-        ENDPOINT__AUDIO_TRANSCRIPTIONS: [MODEL_TYPE__AUDIO],
-        ENDPOINT__RERANK: [MODEL_TYPE__RERANK],
+        ENDPOINT__CHAT_COMPLETIONS: [ModelType.LANGUAGE],
+        ENDPOINT__EMBEDDINGS: [ModelType.EMBEDDINGS],
+        ENDPOINT__AUDIO_TRANSCRIPTIONS: [ModelType.AUDIO],
+        ENDPOINT__RERANK: [ModelType.RERANK],
     }
 
     def __init__(
         self,
         id: str,
-        type: str,
+        type: ModelType,
         owned_by: str,
         aliases: list[str],
         routing_strategy: str,

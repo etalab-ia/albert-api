@@ -39,11 +39,6 @@ class FilesRequest(BaseModel):
             return cls(**json.loads(values))
         return values
 
-    @field_validator("collection", mode="after")
-    @classmethod
-    def convert_to_string(cls, collection):
-        return str(collection)
-
     @field_validator("collection", mode="before")
     @classmethod
     def check_collection_name(cls, collection):

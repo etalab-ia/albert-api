@@ -1,10 +1,9 @@
 import re
-import time
 from typing import List, Optional, Tuple
 
 from fastapi import UploadFile
 
-from app.schemas.core.data import ParserOutput, ParserOutputMetadata
+from app.schemas.core.data import ParserOutput
 
 from ._baseparser import BaseParser
 
@@ -61,7 +60,7 @@ class MarkdownParser(BaseParser):
 
         name = file.filename.strip()
 
-        metadata = ParserOutputMetadata(document_name=name, document_created_at=round(time.time()), title=title)
+        metadata = {"title": title}
 
         output = [ParserOutput(content=content, metadata=metadata)]
 

@@ -1,11 +1,10 @@
 from typing import List
 from fastapi import UploadFile
-import time
 
 from bs4 import BeautifulSoup
 
 
-from app.schemas.core.data import ParserOutput, ParserOutputMetadata
+from app.schemas.core.data import ParserOutput
 from ._baseparser import BaseParser
 
 
@@ -65,8 +64,7 @@ class HTMLParser(BaseParser):
         title = max([(text, len(text.split())) for text in title.split(" - ")], key=lambda x: x[1])[0]
 
         content = self.clean("\n".join(extracted_text).strip())
-        name = file.filename.strip()
-        metadata = ParserOutputMetadata(document_name=name, document_created_at=round(time.time()), title=title)
+        metadata = {"title": title}
 
         output = [ParserOutput(content=content, metadata=metadata)]
 

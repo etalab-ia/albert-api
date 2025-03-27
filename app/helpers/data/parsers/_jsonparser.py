@@ -5,7 +5,7 @@ import uuid
 
 from fastapi import UploadFile
 
-from app.schemas.core.data import ParserOutput, ParserOutputMetadata
+from app.schemas.core.data import ParserOutput
 from app.schemas.files import JsonFile
 from app.utils.exceptions import InvalidJSONFormatException
 
@@ -37,13 +37,13 @@ class JSONParser(BaseParser):
         created_at = round(time.time())
         for document in file.documents:
             content = self.clean(document.text)
-            metadata = ParserOutputMetadata(
-                collection_id=self.collection_id,
-                document_id=str(uuid.uuid4()),
-                document_name=document.title,
-                document_created_at=created_at,
+            metadata = {
+                "collection_id": self.collection_id,
+                "document_id": str(uuid.uuid4()),
+                "document_name": document.title,
+                "document_created_at": created_at,
                 **document.metadata,
-            )
+            }
             output.append(ParserOutput(content=content, metadata=metadata))
 
         return output

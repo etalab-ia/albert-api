@@ -4,19 +4,13 @@ from pydantic import BaseModel
 
 
 class ChunkMetadata(BaseModel):
-    collection_id: str
-    document_id: str
-    document_name: str
-    document_part: int
-    internet_query: str | None = None
-
     class Config:
         extra = "allow"
 
 
 class Chunk(BaseModel):
     object: Literal["chunk"] = "chunk"
-    id: str
+    id: int
     metadata: ChunkMetadata
     content: str
 
