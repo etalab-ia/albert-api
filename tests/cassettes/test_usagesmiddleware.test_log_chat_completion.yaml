@@ -1,0 +1,45 @@
+interactions:
+- request:
+    body: '{"messages":[{"role":"user","content":"Hello"}],"model":"meta-llama/Llama-3.1-8B-Instruct","frequency_penalty":0.0,"logit_bias":null,"logprobs":false,"top_logprobs":null,"presence_penalty":0.0,"max_tokens":null,"max_completion_tokens":null,"n":1,"response_format":null,"seed":null,"stop":[],"stream":false,"stream_options":null,"temperature":0.7,"top_p":1,"tools":null,"tool_choice":"none"}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '390'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: '{"id":"chatcmpl-5854a7a0d90a4c1f8e41dad83abbc27e","choices":[{"finish_reason":"stop","index":0,"logprobs":null,"message":{"content":"Hello.
+        How can I assist you today?","refusal":null,"role":"assistant","audio":null,"function_call":null,"tool_calls":[],"reasoning_content":null},"stop_reason":null}],"created":1742995363,"model":"meta-llama/Llama-3.1-8B-Instruct","object":"chat.completion","service_tier":null,"system_fingerprint":null,"usage":{"completion_tokens":10,"prompt_tokens":36,"total_tokens":46,"completion_tokens_details":null,"prompt_tokens_details":null},"search_results":[],"prompt_logprobs":null}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 26 Mar 2025 13:22:43 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '612'
+    status:
+      code: 200
+      message: OK
+version: 1

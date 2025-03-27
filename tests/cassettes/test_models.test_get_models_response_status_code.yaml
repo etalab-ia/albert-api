@@ -1,0 +1,52 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+    method: GET
+    uri: https://grist.numerique.gouv.fr/api/docs/4fBA11fFqHuhn36G5uLDRr/tables/DEV/records?filter=%7B%22KEY%22:+%5B%22unittest-admin-Y9pipjpwkwkZs2jA3FQyizq3D3wUxcHNdsHVaZP7ejxyRvRiUjx2Wq95mdHPp3AZ%22%5D%7D&limit=1
+  response:
+    body:
+      string: '{"records":[{"id":18,"fields":{"ID2":"mgde5ol8dka3nze7","KEY":"unittest-admin-Y9pipjpwkwkZs2jA3FQyizq3D3wUxcHNdsHVaZP7ejxyRvRiUjx2Wq95mdHPp3AZ","EXPIRATION":4070908800,"Notes":"","USER":"Etalab
+        (tests)","ROLE":"admin","Mails":""}}]}'
+    headers:
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Access-Control-Allow-Headers:
+      - Authorization, Content-Type, X-Requested-With
+      Access-Control-Allow-Methods:
+      - GET, PATCH, PUT, POST, DELETE, OPTIONS
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Language:
+      - en
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Thu, 27 Mar 2025 10:01:10 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin
+      Set-Cookie:
+      - grist_core=s%3Ag-d0d22d85144f1c572991770ffbe0cc88d2b15a1aa7644ecbd93699b4bf2ec652.BXGkHB7pZDX48Zr3bZOE%2BySYNoS1LKBIaa7vJGMfojo;
+        Path=/; HttpOnly; SameSite=Lax
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      X-Content-Type-Options:
+      - nosniff
+      X-Powered-By:
+      - Express
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '232'
+    status:
+      code: 200
+      message: OK
+version: 1

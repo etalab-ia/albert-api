@@ -18,4 +18,4 @@ async def rerank(request: Request, body: RerankRequest, user: User = Security(ch
     client = model.get_client(endpoint=ENDPOINT__RERANK)
     response = await client.forward_request(method="POST", json=body.model_dump())
 
-    return Reranks(data=response.json())
+    return Reranks(**response.json())

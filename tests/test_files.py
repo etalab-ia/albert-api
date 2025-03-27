@@ -32,7 +32,7 @@ class TestFiles:
     def test_upload_pdf_file(self, args, test_client, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/pdf.pdf"
+        file_path = "tests/assets/pdf.pdf"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
@@ -43,7 +43,7 @@ class TestFiles:
     def test_upload_internet_collection(self, args, test_client, setup, snapshot):
         _, _ = setup
 
-        file_path = "app/tests/assets/pdf.pdf"
+        file_path = "tests/assets/pdf.pdf"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % COLLECTION_DISPLAY_ID__INTERNET}
@@ -55,7 +55,7 @@ class TestFiles:
     def test_upload_pdf_file_chunker_parameters(self, args, test_client, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/pdf.pdf"
+        file_path = "tests/assets/pdf.pdf"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
@@ -66,7 +66,7 @@ class TestFiles:
     def test_upload_html_file(self, args, test_client, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/html.html"
+        file_path = "tests/assets/html.html"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/html")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
@@ -77,7 +77,7 @@ class TestFiles:
     def test_upload_html_file_chunker_parameters(self, args, test_client, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/html.html"
+        file_path = "tests/assets/html.html"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/html")}
             data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
@@ -88,7 +88,7 @@ class TestFiles:
     def test_upload_mardown_file(self, args, test_client, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/markdown.md"
+        file_path = "tests/assets/markdown.md"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "text/mardown")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
@@ -99,7 +99,7 @@ class TestFiles:
     def test_upload_mardown_file_chunker_parameters(self, args, test_client, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/markdown.md"
+        file_path = "tests/assets/markdown.md"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "text/markdown")}
             data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
@@ -110,7 +110,7 @@ class TestFiles:
     def test_upload_json_file(self, args, test_client, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/json.json"
+        file_path = "tests/assets/json.json"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/json")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
@@ -121,7 +121,7 @@ class TestFiles:
     def test_upload_json_file_wrong_format(self, args, test_client, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/json_wrong_format.json"
+        file_path = "tests/assets/json_wrong_format.json"
         files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/json")}
@@ -133,7 +133,7 @@ class TestFiles:
     def test_upload_too_large_file(self, args, test_client, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
-        file_path = "app/tests/assets/pdf_too_large.pdf"
+        file_path = "tests/assets/pdf_too_large.pdf"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
@@ -144,7 +144,7 @@ class TestFiles:
     def test_upload_in_public_collection_with_admin(self, args, test_client, setup):
         _, PUBLIC_COLLECTION_ID = setup
 
-        file_path = "app/tests/assets/pdf.pdf"
+        file_path = "tests/assets/pdf.pdf"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PUBLIC_COLLECTION_ID}
@@ -155,7 +155,7 @@ class TestFiles:
     def test_upload_in_public_collection_with_user(self, args, test_client, setup):
         _, PUBLIC_COLLECTION_ID = setup
 
-        file_path = "app/tests/assets/pdf.pdf"
+        file_path = "tests/assets/pdf.pdf"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PUBLIC_COLLECTION_ID}

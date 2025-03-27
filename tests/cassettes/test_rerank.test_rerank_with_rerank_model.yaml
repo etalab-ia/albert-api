@@ -1,0 +1,45 @@
+interactions:
+- request:
+    body: '{"prompt":"Sort these sentences by relevance.","input":["Sentence 1","Sentence
+      2","Sentence 3"],"model":"BAAI/bge-reranker-v2-m3"}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '130'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/rerank
+  response:
+    body:
+      string: '{"object":"list","data":[{"score":0.29787827,"index":0},{"score":0.068537496,"index":2},{"score":0.037397135,"index":1}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 26 Mar 2025 13:22:40 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '121'
+    status:
+      code: 200
+      message: OK
+version: 1
