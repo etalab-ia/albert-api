@@ -4,7 +4,8 @@ import os
 from fastapi.testclient import TestClient
 import pytest
 
-from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, COLLECTION_TYPE__PRIVATE, COLLECTION_TYPE__PUBLIC, MODEL_TYPE__EMBEDDINGS
+from app.schemas.collections import CollectionVisibility
+from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, MODEL_TYPE__EMBEDDINGS
 
 
 @pytest.fixture(scope="module")
@@ -16,14 +17,14 @@ def setup(client: TestClient):
 
     response = client.post_user(
         url="/v1/collections",
-        json={"name": "test-collection-private", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE},
+        json={"name": "test-collection-private", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PRIVATE},
     )
     assert response.status_code == 201, response.text
     PRIVATE_COLLECTION_ID = response.json()["id"]
 
     response = client.post_admin(
         url="/v1/collections",
-        json={"name": "test-collection-public", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC},
+        json={"name": "test-collection-public", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PUBLIC},
     )
     assert response.status_code == 201, response.text
     PUBLIC_COLLECTION_ID = response.json()["id"]

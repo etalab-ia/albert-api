@@ -62,7 +62,7 @@ with tab1:
     new_name = st.text_input(label="Role name", placeholder="Enter role name", value=role["name"])
     default = st.toggle(label="Default", key="update_role_default", value=role["default"], help="If true, this role will be assigned to new users by default.")  # fmt: off
 
-    st.subheader("Admin permissions")
+    st.subheader(f"Permissions of the {"*new*" if st.session_state.get("new_role_button", False) else f"*{role["name"]}*"} role")
     col1, col2, col3 = st.columns(spec=3)
     permissions = []
     with col1:
@@ -95,7 +95,7 @@ with tab1:
         if create_public_collection:
             permissions.append("create_public_collection")
 
-    st.subheader("Model rate limits")
+    st.subheader(f"Rate limits of the {"*new*" if st.session_state.get("new_role_button", False) else f"*{role["name"]}*"} role")
     limits = get_limits(models=models, role=role)
     initial_limits = pd.DataFrame(
         data={
@@ -192,7 +192,7 @@ with tab2:
 
     name = st.selectbox(label="**Select a user**", options=[user["name"] for user in users], disabled=st.session_state.get("new_user_button", False))
     st.button(
-        label="**Or create a new user**",
+        label="**Create a new user**",
         on_click=lambda: setattr(st.session_state, "new_user_button", not st.session_state.get("new_user_button", False)),
         use_container_width=True,
     )

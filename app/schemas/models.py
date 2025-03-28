@@ -1,16 +1,9 @@
-from enum import Enum
 from typing import List, Literal, Optional
 
 from openai.types import Model
 from pydantic import BaseModel
 
-
-# TODO pass enum to model type
-class ModelType(str, Enum):
-    AUDIO = "automatic-speech-recognition"
-    EMBEDDINGS = "text-embeddings-inference"
-    LANGUAGE = "text-generation"
-    RERANK = "text-classification"
+from app.schemas.core.models import ModelType
 
 
 class Model(Model):

@@ -4,26 +4,6 @@ from fastapi import HTTPException
 
 
 # 400
-class ParsingDocumentFailedException(HTTPException):
-    def __init__(self, detail: str = "Parsing document failed.") -> None:
-        super().__init__(status_code=400, detail=detail)
-
-
-class ChunkingFailedException(HTTPException):
-    def __init__(self, detail: str = "Chunking failed.") -> None:
-        super().__init__(status_code=400, detail=detail)
-
-
-class VectorizationFailedException(HTTPException):
-    def __init__(self, detail: str = "Vectorization failed.") -> None:
-        super().__init__(status_code=400, detail=detail)
-
-
-class NoChunksToUpsertException(HTTPException):
-    def __init__(self, detail: str = "No chunks to upsert.") -> None:
-        super().__init__(status_code=400, detail=detail)
-
-
 class SearchMethodNotAvailableException(HTTPException):
     def __init__(self, detail: str = "Method not available."):
         super().__init__(status_code=400, detail=detail)
@@ -115,7 +95,22 @@ class FileSizeLimitExceededException(HTTPException):
 
 
 # 422
-class InvalidJSONFormatException(HTTPException):
+class ParsingDocumentFailedException(HTTPException):
+    def __init__(self, detail: str = "Parsing document failed.") -> None:
+        super().__init__(status_code=422, detail=detail)
+
+
+class ChunkingFailedException(HTTPException):
+    def __init__(self, detail: str = "Chunking failed.") -> None:
+        super().__init__(status_code=422, detail=detail)
+
+
+class VectorizationFailedException(HTTPException):
+    def __init__(self, detail: str = "Vectorization failed.") -> None:
+        super().__init__(status_code=422, detail=detail)
+
+
+class InvalidJSONFileFormatException(HTTPException):
     def __init__(self, detail: str = "Invalid JSON file format.") -> None:
         super().__init__(status_code=422, detail=detail)
 

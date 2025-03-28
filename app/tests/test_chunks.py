@@ -5,7 +5,8 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.schemas.chunks import Chunks
-from app.utils.variables import COLLECTION_TYPE__PRIVATE, MODEL_TYPE__EMBEDDINGS
+from app.schemas.collections import CollectionVisibility
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS
 
 
 @pytest.fixture(scope="module")
@@ -17,7 +18,9 @@ def setup(client: TestClient):
     logging.info(f"test embeddings model ID: {EMBEDDINGS_MODEL_ID}")
 
     # Create a collection
-    response = client.post_user(url="/v1/collections", json={"name": "pytest", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE})
+    response = client.post_user(
+        url="/v1/collections", json={"name": "pytest", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PRIVATE}
+    )
     assert response.status_code == 201
     COLLECTION_ID = response.json()["id"]
 

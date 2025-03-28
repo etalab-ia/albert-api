@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 from types import SimpleNamespace
 from typing import Any, List, Literal, Optional
@@ -5,7 +6,8 @@ from typing import Any, List, Literal, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 import yaml
-
+from app.schemas.core.auth import LimitingStrategy
+from app.schemas.core.models import ModelType, RoutingStrategy
 from app.utils.variables import (
     DATABASE_TYPE__ELASTIC,
     DATABASE_TYPE__GRIST,
@@ -14,20 +16,20 @@ from app.utils.variables import (
     DATABASE_TYPE__SQL,
     DEFAULT_APP_NAME,
     DEFAULT_TIMEOUT,
-    INTERNET_TYPE__BRAVE,
-    INTERNET_TYPE__DUCKDUCKGO,
     MODEL_CLIENT_TYPE__ALBERT,
     MODEL_CLIENT_TYPE__OPENAI,
     MODEL_CLIENT_TYPE__TEI,
     MODEL_CLIENT_TYPE__VLLM,
-    ROUTER_STRATEGY__ROUND_ROBIN,
-    ROUTER_STRATEGY__SHUFFLE,
     SUPPORTED_MODEL_CLIENT_TYPES__AUDIO,
     SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS,
     SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE,
     SUPPORTED_MODEL_CLIENT_TYPES__RERANK,
 )
-from app.schemas.models import ModelType
+
+
+class InternetType(str, Enum):
+    DUCKDUCKGO = "duckduckgo"
+    BRAVE = "brave"
 
 
 class ConfigBaseModel(BaseModel):
@@ -57,18 +59,18 @@ class Model(ConfigBaseModel):
     type: ModelType
     aliases: List[str] = []
     owned_by: str = DEFAULT_APP_NAME
-    routing_strategy: Literal[ROUTER_STRATEGY__ROUND_ROBIN, ROUTER_STRATEGY__SHUFFLE] = ROUTER_STRATEGY__SHUFFLE
+    routing_strategy: RoutingStrategy = RoutingStrategy.SHUFFLE
     clients: List[ModelClient]
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
-        if values.type == ModelType.EMBEDDINGS.value:
+        if values.type == ModelType.EMBEDDINGS:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS, f"Invalid model type for client type {values.clients[0].type}"
-        elif values.type == ModelType.LANGUAGE.value:
+        elif values.type == ModelType.LANGUAGE:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE, f"Invalid model type for client type {values.clients[0].type}"
-        elif values.type == ModelType.AUDIO.value:
+        elif values.type == ModelType.AUDIO:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__AUDIO, f"Invalid model type for client type {values.clients[0].type}"
-        elif values.type == ModelType.RERANK.value:
+        elif values.type == ModelType.RERANK:
             assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__RERANK, f"Invalid model type for client type {values.clients[0].type}"
         else:
             raise ValueError(f"Invalid model type: {values.type}")
@@ -77,7 +79,7 @@ class Model(ConfigBaseModel):
 
 
 class Internet(ConfigBaseModel):
-    type: Literal[INTERNET_TYPE__DUCKDUCKGO, INTERNET_TYPE__BRAVE] = INTERNET_TYPE__DUCKDUCKGO
+    type: InternetType = InternetType.DUCKDUCKGO
     args: dict = {}
 
 
@@ -88,7 +90,7 @@ class Database(ConfigBaseModel):
 
 class Auth(ConfigBaseModel):
     master_key: str = "changeme"
-    limiting_strategy: Literal["moving_window", "fixed_window", "sliding_window"] = "fixed_window"
+    limiting_strategy: LimitingStrategy = LimitingStrategy.FIXED_WINDOW
 
 
 class General(ConfigBaseModel):
@@ -107,8 +109,8 @@ class Config(ConfigBaseModel):
     def validate_models(cls, values) -> Any:
         models = [model.id for model in values.models]
         aliases = [alias for model in values.models for alias in model.aliases] + models
-        language_models = [model for model in values.models if model.type == ModelType.LANGUAGE.value]
-        embeddings_models = [model for model in values.models if model.type == ModelType.EMBEDDINGS.value]
+        language_models = [model for model in values.models if model.type == ModelType.LANGUAGE]
+        embeddings_models = [model for model in values.models if model.type == ModelType.EMBEDDINGS]
 
         assert len(models) == len(set(models)), "Duplicated models name found."  # fmt: off
         assert len(aliases) == len(set(aliases)), "Duplicated aliases found."  # fmt: off
@@ -170,7 +172,7 @@ class Settings(BaseSettings):
         values.databases.grist = next((database for database in config.databases if database.type == DATABASE_TYPE__GRIST), None)
         values.databases.elastic = next((database for database in config.databases if database.type == DATABASE_TYPE__ELASTIC), None)
 
-        assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.LANGUAGE.value], f"Internet model is not defined in models section with type {ModelType.LANGUAGE}."  # fmt: off
-        assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS.value], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off
+        assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.LANGUAGE], f"Internet model is not defined in models section with type {ModelType.LANGUAGE}."  # fmt: off
+        assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off
 
         return values

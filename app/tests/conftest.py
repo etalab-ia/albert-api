@@ -8,7 +8,7 @@ import pytest
 
 from app.main import app
 from app.utils.settings import settings
-from app.utils.variables import COLLECTION_TYPE__PRIVATE
+from app.schemas.collections import CollectionVisibility
 from app.schemas.auth import LimitType, PermissionType
 
 ROLE_ADMIN = "test-role-admin"
@@ -29,17 +29,17 @@ def test_client() -> Generator[TestClient, None, None]:
 @pytest.fixture(scope="session")
 def test_roles(test_client: TestClient) -> tuple[str, str]:
     # delete tests users
-    response = test_client.delete(url=f"/users/{USER_USER}")
-    logging.debug(msg=f"delete user {USER_USER}: {response.text}")
-    response = test_client.delete(url=f"/users/{USER_ADMIN}")
-    logging.debug(msg=f"delete user {USER_ADMIN}: {response.text}")
+    # response = test_client.delete(url=f"/users/{USER_USER}")
+    # logging.debug(msg=f"delete user {USER_USER}: {response.text}")
+    # response = test_client.delete(url=f"/users/{USER_ADMIN}")
+    # logging.debug(msg=f"delete user {USER_ADMIN}: {response.text}")
 
-    # delete tests roles
-    response = test_client.delete(url=f"/roles/{ROLE_ADMIN}")
-    logging.debug(msg=f"delete role {ROLE_ADMIN}: {response.text}")
+    # # delete tests roles
+    # response = test_client.delete(url=f"/roles/{ROLE_ADMIN}")
+    # logging.debug(msg=f"delete role {ROLE_ADMIN}: {response.text}")
 
-    response = test_client.delete(url=f"/roles/{ROLE_USER}")
-    logging.debug(msg=f"delete role {ROLE_USER}: {response.text}")
+    # response = test_client.delete(url=f"/roles/{ROLE_USER}")
+    # logging.debug(msg=f"delete role {ROLE_USER}: {response.text}")
 
     # get models
     response = test_client.get(url="/v1/models")
@@ -50,13 +50,7 @@ def test_roles(test_client: TestClient) -> tuple[str, str]:
 
     # get permissions
     admin_permissions = [permission.value for permission in PermissionType]
-    user_permissions = [
-        PermissionType.CREATE_PRIVATE_COLLECTION.value,
-        PermissionType.READ_PRIVATE_COLLECTION.value,
-        PermissionType.UPDATE_PRIVATE_COLLECTION.value,
-        PermissionType.DELETE_PRIVATE_COLLECTION.value,
-        PermissionType.READ_PUBLIC_COLLECTION.value,
-    ]
+    user_permissions = []
 
     # get limits
     limits = []
@@ -66,45 +60,50 @@ def test_roles(test_client: TestClient) -> tuple[str, str]:
         limits.append({"model": model, "type": LimitType.TPM.value, "value": None})
 
     # create role admin
-    response = test_client.post(url="/roles", json={"role": ROLE_ADMIN, "default": False, "permissions": admin_permissions, "limits": limits})
-    logging.debug(msg=f"create role {ROLE_ADMIN}: {response.text}")
+    response = test_client.post(url="/roles", json={"name": "test-role-admin", "default": False, "permissions": admin_permissions, "limits": limits})
+    logging.debug(msg=f"create role test-role-admin: {response.text}")
     response.raise_for_status()
 
+    role_id_admin = response.json()["id"]
     # create role user
-    response = test_client.post(url="/roles", json={"role": ROLE_USER, "default": False, "permissions": user_permissions, "limits": limits})
-    logging.debug(msg=f"create role {ROLE_USER}: {response.text}")
+    response = test_client.post(url="/roles", json={"name": "test-role-user", "default": False, "permissions": user_permissions, "limits": limits})
+    logging.debug(msg=f"create role test-role-user: {response.text}")
     response.raise_for_status()
+    role_id_user = response.json()["id"]
 
-    return ROLE_ADMIN, ROLE_USER
+    return role_id_admin, role_id_user
 
 
 @pytest.fixture(scope="session")
-def test_users(test_client: TestClient, test_roles: tuple[str, str]) -> tuple[str, str]:
+def test_users(test_client: TestClient, test_roles: tuple[int, int]) -> tuple[int, int]:
     role_id_admin, role_id_user = test_roles
 
     # create user admin
-    response = test_client.post(url="/users", json={"user": USER_ADMIN, "password": "test-password", "role": role_id_admin})
+    response = test_client.post(url="/users", json={"name": "test-user-admin", "password": "test-password", "role": role_id_admin})
     response.raise_for_status()
+    user_id_admin = response.json()["id"]
 
     # create user user
-    response = test_client.post(url="/users", json={"user": USER_USER, "password": "test-password", "role": role_id_user})
+    response = test_client.post(url="/users", json={"name": "test-user-user", "password": "test-password", "role": role_id_user})
     response.raise_for_status()
+    user_id_user = response.json()["id"]
 
-    return USER_ADMIN, USER_USER
+    return user_id_admin, user_id_user
 
 
 @pytest.fixture(scope="session")
-def test_tokens(test_client: TestClient, test_users: tuple[str, str]) -> tuple[str, str]:
+def test_tokens(test_client: TestClient, test_users: tuple[int, int]) -> tuple[int, int]:
     user_id_admin, user_id_user = test_users
 
     # create token admin
-    response = test_client.post(url="/tokens", json={"user": user_id_admin, "token": TOKEN_ADMIN, "expires_at": int(time.time()) + 300})
+    response = test_client.post(url="/tokens", json={"user": user_id_admin, "name": "test-token-admin", "expires_at": int(time.time()) + 300})
     response.raise_for_status()
-    token_admin = response.json()["id"]
+    token_admin = response.json()["token"]
+
     # create token user
-    response = test_client.post(url="/tokens", json={"user": user_id_user, "token": TOKEN_USER, "expires_at": int(time.time()) + 300})
+    response = test_client.post(url="/tokens", json={"user": user_id_user, "name": "test-token-user", "expires_at": int(time.time()) + 300})
     response.raise_for_status()
-    token_user = response.json()["id"]
+    token_user = response.json()["token"]
 
     return token_admin, token_user
 
@@ -137,7 +136,7 @@ def client(test_client: TestClient, test_tokens: tuple[str, str]) -> Generator[T
 
 
 @pytest.fixture(scope="session")
-def cleanup(client: TestClient, test_roles: tuple[str, str], test_users: tuple[str, str]):
+def cleanup(client: TestClient, test_roles: tuple[int, int], test_users: tuple[int, int]):
     user_id_admin, user_id_user = test_users
     role_id_admin, role_id_user = test_roles
 
@@ -149,7 +148,7 @@ def cleanup(client: TestClient, test_roles: tuple[str, str], test_users: tuple[s
     response = client.get_user(url="/v1/collections")
     response.raise_for_status()
     collections = response.json()["data"]
-    collection_ids = [collection["id"] for collection in collections if collection["type"] == COLLECTION_TYPE__PRIVATE and collection["user"] == user_id_user]  # fmt: off
+    collection_ids = [collection["id"] for collection in collections if collection["visibility"] == CollectionVisibility.PRIVATE.value]
     for collection_id in collection_ids:
         client.delete_user(url=f"/v1/collections/{collection_id}")
 
@@ -164,18 +163,18 @@ def cleanup(client: TestClient, test_roles: tuple[str, str], test_users: tuple[s
 
     logging.info(msg="cleanup users")
 
-    # # delete user admin
-    # response = client.delete_root(url=f"/users/{user_id_admin}")
-    # response.raise_for_status()
+    # delete user admin
+    response = client.delete_root(url=f"/users/{user_id_admin}")
+    response.raise_for_status()
 
-    # # delete user user
-    # response = client.delete_root(url=f"/users/{user_id_user}")
-    # response.raise_for_status()
+    # delete user user
+    response = client.delete_root(url=f"/users/{user_id_user}")
+    response.raise_for_status()
 
-    # # delete role admin
-    # response = client.delete_root(url=f"/roles/{role_id_admin}")
-    # response.raise_for_status()
+    # delete role admin
+    response = client.delete_root(url=f"/roles/{role_id_admin}")
+    response.raise_for_status()
 
-    # # delete role user
-    # response = client.delete_root(url=f"/roles/{role_id_user}")
-    # response.raise_for_status()
+    # delete role user
+    response = client.delete_root(url=f"/roles/{role_id_user}")
+    response.raise_for_status()

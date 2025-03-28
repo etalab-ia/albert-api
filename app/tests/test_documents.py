@@ -3,8 +3,9 @@ import os
 
 import pytest
 
+from app.schemas.collections import CollectionVisibility
 from app.schemas.documents import Documents
-from app.utils.variables import COLLECTION_TYPE__PRIVATE, MODEL_TYPE__EMBEDDINGS
+from app.utils.variables import MODEL_TYPE__EMBEDDINGS
 
 
 @pytest.fixture(scope="module")
@@ -16,7 +17,7 @@ def setup(client):
 
     response = client.post_user(
         url="/v1/collections",
-        json={"name": "test-collection-private", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE},
+        json={"name": "test-collection-private", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PRIVATE},
     )
     assert response.status_code == 201
     PRIVATE_COLLECTION_ID = response.json()["id"]

@@ -1,8 +1,14 @@
 from typing import Dict, List, Optional, Self
 
 from pydantic import BaseModel
-
+from enum import Enum
 from app.schemas.auth import LimitType, PermissionType, Role, User
+
+
+class LimitingStrategy(str, Enum):
+    MOVING_WINDOW = "moving_window"
+    FIXED_WINDOW = "fixed_window"
+    SLIDING_WINDOW = "sliding_window"
 
 
 class Limits(BaseModel):

@@ -3,15 +3,14 @@ import random
 import time
 
 from app.clients.model import BaseModelClient as ModelClient
+from app.schemas.core.models import ModelType, RoutingStrategy
 from app.schemas.core.settings import Model as ModelSettings
-from app.schemas.models import ModelType
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
     ENDPOINT__EMBEDDINGS,
     ENDPOINT__RERANK,
-    ROUTER_STRATEGY__ROUND_ROBIN,
 )
 
 
@@ -61,7 +60,7 @@ class ModelRouter:
         if endpoint and self.type not in self.ENDPOINT_MODEL_TYPE_TABLE[endpoint]:
             raise WrongModelTypeException()
 
-        if self._routing_strategy == ROUTER_STRATEGY__ROUND_ROBIN:
+        if self._routing_strategy == RoutingStrategy.ROUND_ROBIN.value:
             client = self._routing_strategy_round_robin()
         else:  # ROUTER_STRATEGY__SHUFFLE
             client = self._routing_strategy_shuffle()

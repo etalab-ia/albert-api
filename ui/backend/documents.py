@@ -7,7 +7,7 @@ from ui.backend.common import get_collections, get_documents
 from ui.settings import settings
 
 
-def create_collection(collection_name: str, collection_model: str) -> None:
+def create_collection(collection_name: str) -> None:
     headers = {"Authorization": f"Bearer {st.session_state["user"].api_key}"}
     response = requests.post(f"{settings.api_url}/v1/collections", json={"name": collection_name}, headers=headers)
 
@@ -21,7 +21,7 @@ def create_collection(collection_name: str, collection_model: str) -> None:
     st.rerun()
 
 
-def delete_collection(collection_id: str) -> None:
+def delete_collection(collection_id: int) -> None:
     url = f"{settings.api_url}/v1/collections/{collection_id}"
     headers = {"Authorization": f"Bearer {st.session_state["user"].api_key}"}
     response = requests.delete(url, headers=headers)

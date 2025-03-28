@@ -3,11 +3,10 @@ import logging
 import pytest
 
 from app.schemas.collections import Collection, Collections
+from app.schemas.collections import CollectionVisibility
 from app.utils.variables import (
     MODEL_TYPE__EMBEDDINGS,
     MODEL_TYPE__LANGUAGE,
-    COLLECTION_TYPE__PRIVATE,
-    COLLECTION_TYPE__PUBLIC,
 )
 from fastapi.testclient import TestClient
 
@@ -29,7 +28,7 @@ class TestCollections:
     def test_create_private_collection_with_user(self, client: TestClient, setup):
         EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": "test-collection-private", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
+        params = {"name": "test-collection-private", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PRIVATE}
         response = client.post_user(url="/v1/collections", json=params)
         assert response.status_code == 201, response.text
         assert "id" in response.json().keys()
@@ -37,14 +36,14 @@ class TestCollections:
     def test_create_public_collection_with_user(self, client: TestClient, setup):
         EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": "test-collection-public", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC}
+        params = {"name": "test-collection-public", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PUBLIC}
         response = client.post_user(url="/v1/collections", json=params)
         assert response.status_code == 403, response.text
 
     def test_create_public_collection_with_admin(self, client: TestClient, setup):
         EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": "test-collection-public", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC}
+        params = {"name": "test-collection-public", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PUBLIC}
         response = client.post_admin(url="/v1/collections", json=params)
         assert response.status_code == 201, response.text
         assert "id" in response.json().keys()
@@ -52,14 +51,14 @@ class TestCollections:
     def test_create_private_collection_with_language_model_with_user(self, client: TestClient, setup):
         _, LANGUAGE_MODEL_ID = setup
 
-        params = {"name": "test-collection-private", "model": LANGUAGE_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
+        params = {"name": "test-collection-private", "model": LANGUAGE_MODEL_ID, "visibility": CollectionVisibility.PRIVATE}
         response = client.post_user(url="/v1/collections", json=params)
         assert response.status_code == 422, response.text
 
     def test_create_private_collection_with_unknown_model_with_user(self, client: TestClient, setup):
         _, _ = setup
 
-        params = {"name": "test-collection-private", "model": "unknown-model", "type": COLLECTION_TYPE__PRIVATE}
+        params = {"name": "test-collection-private", "model": "unknown-model", "visibility": CollectionVisibility.PRIVATE}
         response = client.post_user(url="/v1/collections", json=params)
         assert response.status_code == 404, response.text
 
@@ -85,7 +84,7 @@ class TestCollections:
     def test_get_collection_of_other_user(self, client: TestClient, setup):
         EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": "test-collection-private-admin", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
+        params = {"name": "test-collection-private-admin", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PRIVATE}
         response = client.post_admin(url="/v1/collections", json=params)
         assert response.status_code == 201, response.text
 
@@ -122,14 +121,19 @@ class TestCollections:
     def test_create_collection_with_empty_name(self, client: TestClient, setup):
         EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": " ", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
+        params = {"name": " ", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PRIVATE}
         response = client.post_user(url="/v1/collections", json=params)
         assert response.status_code == 422, response.text
 
     def test_create_collection_with_description(self, client: TestClient, setup):
         EMBEDDINGS_MODEL_ID, _ = setup
 
-        params = {"name": "test-description", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE, "description": "test-description"}
+        params = {
+            "name": "test-description",
+            "model": EMBEDDINGS_MODEL_ID,
+            "visibility": CollectionVisibility.PRIVATE,
+            "description": "test-description",
+        }
         response = client.post_user(url="/v1/collections", json=params)
         assert response.status_code == 201, response.text
 

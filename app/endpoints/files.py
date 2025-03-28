@@ -1,10 +1,14 @@
+import json
+from io import BytesIO
+
 from fastapi import APIRouter, Body, File, Security, UploadFile
 from fastapi.responses import JSONResponse
 
 from app.helpers import Authorization
 from app.schemas.core.auth import UserInfo
+from app.schemas.core.data import JsonFile
 from app.schemas.files import ChunkerArgs, FilesRequest
-from app.utils.exceptions import FileSizeLimitExceededException
+from app.utils.exceptions import FileSizeLimitExceededException, InvalidJSONFileFormatException
 from app.utils.lifespan import context
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__EMBEDDINGS
@@ -41,20 +45,35 @@ async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body
 
     chunker_args["length_function"] = len if chunker_args["length_function"] == "len" else chunker_args["length_function"]
 
-    # TODO: loop for JSON
+    if file.content_type == "application/json":
+        try:
+            file = JsonFile(documents=json.loads(file.file.read())).documents
+        except json.JSONDecodeError as e:
+            raise InvalidJSONFileFormatException(detail=e)
 
-    model = context.models(model=settings.general.documents_model)
-    client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
+        files = [
+            UploadFile(
+                filename=f"{document.title}.json",
+                file=BytesIO(json.dumps(document.model_dump()).encode("utf-8")),
+            )
+            for document in file
+        ]
+    else:
+        files = [file]
 
-    document_id = await context.documents.create_document(
-        user_id=user.user_id,
-        model_client=client,
-        collection_id=request.collection,
-        file=file,
-        chunker_name=chunker_name,
-        chunker_args=chunker_args,
-    )
+    for file in files:
+        model = context.models(model=settings.general.documents_model)
+        client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
 
-    file.file.close()
+        document_id = await context.documents.create_document(
+            user_id=user.user_id,
+            model_client=client,
+            collection_id=request.collection,
+            file=file,
+            chunker_name=chunker_name,
+            chunker_args=chunker_args,
+        )
+
+        file.file.close()
 
     return JSONResponse(status_code=201, content={"id": document_id})

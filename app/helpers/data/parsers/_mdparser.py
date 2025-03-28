@@ -58,10 +58,7 @@ class MarkdownParser(BaseParser):
 
         content = self.clean("\n".join(extracted_text).strip())
 
-        name = file.filename.strip()
-
         metadata = {"title": title}
-
-        output = [ParserOutput(content=content, metadata=metadata)]
+        output = [ParserOutput(contents=[content], metadata=metadata)]
 
         return output

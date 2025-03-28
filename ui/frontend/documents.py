@@ -81,8 +81,8 @@ st.dataframe(
     data=pd.DataFrame(
         data=[
             {
-                "Collection": document["collection_id"],
                 "ID": document["id"],
+                "Collection": [collection["name"] for collection in collections if collection["id"] == document["collection_id"]][0],
                 "Name": document["name"],
                 "Chunks": document["chunks"],
                 "Created at": pd.to_datetime(document["created_at"], unit="s"),

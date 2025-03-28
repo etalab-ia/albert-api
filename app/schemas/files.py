@@ -1,10 +1,7 @@
 import json
-from typing import Dict, List, Literal, Optional
+from typing import List, Literal
 from enum import Enum
-from pydantic import BaseModel, Field, field_validator, model_validator
-
-from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET
-from app.utils.exceptions import UnsupportedFileUploadException
+from pydantic import BaseModel, Field, model_validator
 
 
 class ChunkerName(Enum):
@@ -24,13 +21,13 @@ class ChunkerArgs(BaseModel):
 
 
 class Chunker(BaseModel):
-    name: Optional[ChunkerName] = Field(default=None, description="The name of the chunker to use for the file upload.")  # fmt: off
-    args: Optional[ChunkerArgs] = Field(default=None, description="The arguments to use for the chunker to use for the file upload.")  # fmt: off
+    name: ChunkerName = Field(default=ChunkerName.LANGCHAIN_RECURSIVE_CHARACTER_TEXT_SPLITTER, description="The name of the chunker to use for the file upload.")  # fmt: off
+    args: ChunkerArgs = Field(default_factory=ChunkerArgs, description="The arguments to use for the chunker to use for the file upload.")  # fmt: off
 
 
 class FilesRequest(BaseModel):
     collection: int = Field(default=..., description="The collection ID to use for the file upload. The file will be vectorized with model defined by the collection.")  # fmt: off
-    chunker: Optional[Chunker] = Field(default=None, description="The chunker to use for the file upload.")  # fmt: off
+    chunker: Chunker = Field(default_factory=Chunker, description="The chunker to use for the file upload.")  # fmt: off
 
     @model_validator(mode="before")
     @classmethod
@@ -38,20 +35,3 @@ class FilesRequest(BaseModel):
         if isinstance(values, str):
             return cls(**json.loads(values))
         return values
-
-    @field_validator("collection", mode="before")
-    @classmethod
-    def check_collection_name(cls, collection):
-        if str(collection) == COLLECTION_DISPLAY_ID__INTERNET:
-            raise UnsupportedFileUploadException()
-        return collection
-
-
-class Json(BaseModel):
-    title: str
-    text: str
-    metadata: Dict[str, str] = {}
-
-
-class JsonFile(BaseModel):
-    documents: List[Json]

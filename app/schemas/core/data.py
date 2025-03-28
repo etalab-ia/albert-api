@@ -1,16 +1,16 @@
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 
 from pydantic import BaseModel
 
 
-class Collection(BaseModel):
-    id: str
-    user_id: str
-    name: str
-    description: str
-    model: str
-    type: str
-    created_at: int
+class JsonFileDocument(BaseModel):
+    title: Optional[str] = None
+    text: str
+    metadata: Dict[str, str] = {}
+
+
+class JsonFile(BaseModel):
+    documents: List[JsonFileDocument]
 
 
 class ParserOutput(BaseModel):
