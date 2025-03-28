@@ -145,7 +145,7 @@ def vcr_cassette(request, vcr_config):
 
     # Skip VCR for tests that does not support it
     def module_to_skip(request):
-        for module in ["test_audio", "test_documents", "test_files"]:
+        for module in ["test_audio", "test_documents", "test_files", "test_ocr"]:
             if request.module.__name__.endswith(module):
                 return True
 
