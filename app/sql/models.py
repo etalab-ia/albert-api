@@ -1,7 +1,8 @@
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Boolean, Index, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy.orm import backref, declarative_base, relationship
 from sqlalchemy.sql import func
-from sqlalchemy.orm import declarative_base, relationship, backref
-from app.schemas.auth import PermissionType, LimitType
+
+from app.schemas.auth import LimitType, PermissionType
 from app.schemas.collections import CollectionVisibility
 
 Base = declarative_base()

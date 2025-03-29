@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Self
 
 from pydantic import BaseModel
 from enum import Enum
-from app.schemas.auth import LimitType, PermissionType, Role, User
+from app.schemas.auth import Role, User, PermissionType, LimitType
 
 
 class LimitingStrategy(str, Enum):
@@ -13,6 +13,7 @@ class LimitingStrategy(str, Enum):
 
 class Limits(BaseModel):
     tpm: Optional[int] = None
+    tpd: Optional[int] = None
     rpm: Optional[int] = None
     rpd: Optional[int] = None
 
@@ -30,13 +31,15 @@ class UserInfo(BaseModel):
 
         limits = {}
         for model in context.models.models:
-            limits[model] = Limits(tpm=0, rpm=0, rpd=0)
+            limits[model] = Limits(tpm=0, tpd=0, rpm=0, rpd=0)
             for limit in role.limits:
                 if limit.model == model and limit.type == LimitType.TPM:
                     limits[model].tpm = limit.value
+                elif limit.model == model and limit.type == LimitType.TPD:
+                    limits[model].tpd = limit.value
                 elif limit.model == model and limit.type == LimitType.RPM:
                     limits[model].rpm = limit.value
-                elif limit.model == model and limit.type == LimitType.RPD:
+                else:  # LimitType.RPD:
                     limits[model].rpd = limit.value
 
         return cls(

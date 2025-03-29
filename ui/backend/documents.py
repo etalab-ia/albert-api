@@ -57,9 +57,9 @@ def upload_file(file, collection_id: str) -> None:
     st.rerun()
 
 
-def delete_document(collection_id: str, document_id: str) -> None:
+def delete_document(document_id: str) -> None:
     response = requests.delete(
-        url=f"{settings.api_url}/v1/documents/{collection_id}/{document_id}",
+        url=f"{settings.api_url}/v1/documents/{document_id}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 

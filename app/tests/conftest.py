@@ -148,7 +148,7 @@ def cleanup(client: TestClient, test_roles: tuple[int, int], test_users: tuple[i
     response = client.get_user(url="/v1/collections")
     response.raise_for_status()
     collections = response.json()["data"]
-    collection_ids = [collection["id"] for collection in collections if collection["visibility"] == CollectionVisibility.PRIVATE.value]
+    collection_ids = [collection["id"] for collection in collections if collection["visibility"] == CollectionVisibility.PRIVATE]
     for collection_id in collection_ids:
         client.delete_user(url=f"/v1/collections/{collection_id}")
 

@@ -146,7 +146,7 @@ class TestChat:
                 chunk = json.loads(chunk)
                 chat_completion_chunk = ChatCompletionChunk(**chunk)
                 if i == 0:
-                    assert chat_completion_chunk.search_results[0].chunk.metadata.document_id in DOCUMENT_IDS
+                    assert chat_completion_chunk.search_results[0].chunk.metadata["document_id"] in DOCUMENT_IDS
                 i = 1
 
     def test_chat_completions_search_no_args(self, client: TestClient, setup):

@@ -1,6 +1,6 @@
 from typing import List
-from app.schemas.chunks import Chunk, ChunkMetadata
-from app.schemas.core.data import ParserOutput
+from app.schemas.chunks import Chunk
+from app.schemas.core.documents import ParserOutput
 
 
 class NoChunker:
@@ -9,14 +9,13 @@ class NoChunker:
 
     def split(self, document: ParserOutput) -> List[Chunk]:
         chunks = list()
-        metadata = ChunkMetadata(**document.metadata)
+        metadata = document.metadata
         contents = document.contents  # no split
 
         for i, content in enumerate(contents):
             if len(content) < self.chunk_min_size:
                 continue
 
-            metadata.document_part = f"{i + 1}/{len(contents)}"
             chunks.append(Chunk(content=content, id=i + 1, metadata=metadata))
 
         return chunks

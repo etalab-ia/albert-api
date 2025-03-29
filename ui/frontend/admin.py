@@ -48,21 +48,25 @@ with tab1:
             "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True),
         },
     )
+    col1, col2 = st.columns(spec=[5, 1])
+    with col2:
+        if st.pills(
+            label="",
+            options=["Create new role"],
+            default=["Create new role"] if st.session_state.get("new_role", False) else [],
+        ):
+            st.session_state["new_role"] = not st.session_state.get("new_role", False)
+    with col1:
+        name = st.selectbox(label="**Select a role**", options=[role["name"] for role in roles], disabled=st.session_state.get("new_role", False))
 
-    name = st.selectbox(label="**Select a role**", options=[role["name"] for role in roles], disabled=st.session_state.get("new_role_button", False))
-    st.button(
-        label="**Or create a new role**",
-        on_click=lambda: setattr(st.session_state, "new_role_button", not st.session_state.get("new_role_button", False)),
-        use_container_width=True,
-    )
-    if not st.session_state.get("new_role_button", False) and roles:
+    if not st.session_state.get("new_role", False) and roles:
         role = [role for role in roles if role["name"] == name][0]
     else:
         role = {"name": None, "default": False, "permissions": [], "limits": []}
     new_name = st.text_input(label="Role name", placeholder="Enter role name", value=role["name"])
     default = st.toggle(label="Default", key="update_role_default", value=role["default"], help="If true, this role will be assigned to new users by default.")  # fmt: off
 
-    st.subheader(f"Permissions of the {"*new*" if st.session_state.get("new_role_button", False) else f"*{role["name"]}*"} role")
+    st.subheader(f"Permissions of the {"*new*" if st.session_state.get("new_role", False) else f"*{role["name"]}*"} role")
     col1, col2, col3 = st.columns(spec=3)
     permissions = []
     with col1:
@@ -95,13 +99,14 @@ with tab1:
         if create_public_collection:
             permissions.append("create_public_collection")
 
-    st.subheader(f"Rate limits of the {"*new*" if st.session_state.get("new_role_button", False) else f"*{role["name"]}*"} role")
+    st.subheader(f"Rate limits of the {"*new*" if st.session_state.get("new_role", False) else f"*{role["name"]}*"} role")
     limits = get_limits(models=models, role=role)
     initial_limits = pd.DataFrame(
         data={
             "Request per minute": [limits[model]["rpm"] for model in models],
             "Request per day": [limits[model]["rpd"] for model in models],
             "Tokens per minute": [limits[model]["tpm"] for model in models],
+            "Tokens per day": [limits[model]["tpd"] for model in models],
         },
         index=models,
     )
@@ -115,6 +120,7 @@ with tab1:
             "Request per minute": st.column_config.NumberColumn(label="Request per minute", min_value=0, step=1, required=False),
             "Request per day": st.column_config.NumberColumn(label="Request per day", min_value=0, step=1, required=False),
             "Tokens per minute": st.column_config.NumberColumn(label="Tokens per minute", min_value=0, step=1, required=False),
+            "Tokens per day": st.column_config.NumberColumn(label="Tokens per day", min_value=0, step=1, required=False),
         },
     )
 
@@ -124,13 +130,14 @@ with tab1:
             label="**:material/add: Add**",
             key="add_limits_button",
             use_container_width=True,
-            disabled=not st.session_state.get("new_role_button", False),
+            disabled=not st.session_state.get("new_role", False),
         ):
             limits = []
             for model, row in edited_limits.iterrows():
                 for type in row.index:
                     value = None if pd.isna(row[type]) else int(row[type])
                     type = "tpm" if type == "Tokens per minute" else type
+                    type = "tpd" if type == "Tokens per day" else type
                     type = "rpm" if type == "Request per minute" else type
                     type = "rpd" if type == "Request per day" else type
                     limits.append({"model": model, "type": type, "value": value})
@@ -142,13 +149,14 @@ with tab1:
             label="**:material/update: Update**",
             key="update_limits_button",
             use_container_width=True,
-            disabled=st.session_state.get("new_role_button", False) or not roles,
+            disabled=st.session_state.get("new_role", False) or not roles,
         ):
             limits = []
             for model, row in edited_limits.iterrows():
                 for type in row.index:
                     value = None if pd.isna(row[type]) else int(row[type])
                     type = "tpm" if type == "Tokens per minute" else type
+                    type = "tpd" if type == "Tokens per day" else type
                     type = "rpm" if type == "Request per minute" else type
                     type = "rpd" if type == "Request per day" else type
                     limits.append({"model": model, "type": type, "value": value})
@@ -159,7 +167,7 @@ with tab1:
             label="**:material/delete_forever: Delete**",
             key="delete_role_button",
             use_container_width=True,
-            disabled=st.session_state.get("new_role_button", False) or not roles,
+            disabled=st.session_state.get("new_role", False) or not roles,
         ):
             delete_role(role=role["id"])
 
@@ -190,19 +198,19 @@ with tab2:
         },
     )
 
-    name = st.selectbox(label="**Select a user**", options=[user["name"] for user in users], disabled=st.session_state.get("new_user_button", False))
-    st.button(
-        label="**Create a new user**",
-        on_click=lambda: setattr(st.session_state, "new_user_button", not st.session_state.get("new_user_button", False)),
-        use_container_width=True,
-    )
+    col1, col2 = st.columns(spec=[5, 1])
+    with col2:
+        if st.pills(label="", options=["Create new user"], default=["Create new user"] if st.session_state.get("new_user", False) else []):
+            st.session_state["new_user"] = not st.session_state.get("new_user", False)
+    with col1:
+        name = st.selectbox(label="**Select a user**", options=[user["name"] for user in users], disabled=st.session_state.get("new_user", False))
 
     role_names = [role["name"] for role in roles]
     default_role = [role["name"] for role in roles if role["default"]]
     default_role = default_role[0] if default_role else None
     default_role_index = role_names.index(default_role) if default_role else None
 
-    if not st.session_state.get("new_user_button", False) and users:
+    if not st.session_state.get("new_user", False) and users:
         user = [user for user in users if user["name"] == name][0]
     else:
         user = {"name": None, "role": default_role, "expires_at": None}
@@ -213,7 +221,7 @@ with tab2:
     user_role = [role["name"] for role in roles if role["id"] == user["role"]]
     user_role = user_role[0] if user_role else None
     user_role_index = role_names.index(user_role) if user_role else None
-    role_index = default_role_index if st.session_state.get("new_user_button", False) else user_role_index
+    role_index = default_role_index if st.session_state.get("new_user", False) else user_role_index
     role_name = st.selectbox(label="Role", options=[role["name"] for role in roles], key="create_user_role", index=role_index)
     new_role = [role["id"] for role in roles if role["name"] == role_name][0] if role_name else None
 
@@ -229,7 +237,7 @@ with tab2:
             label="**:material/add: Add**",
             key="add_user_button",
             use_container_width=True,
-            disabled=not st.session_state.get("new_user_button", False) or not roles,
+            disabled=not st.session_state.get("new_user", False) or not roles,
         ):
             create_user(name=new_name, password=new_password, role=new_role, expires_at=new_expires_at)
 
@@ -238,7 +246,7 @@ with tab2:
             label="**:material/update: Update**",
             key="update_user_button",
             use_container_width=True,
-            disabled=st.session_state.get("new_user_button", False) or not users or not user["access_ui"],
+            disabled=st.session_state.get("new_user", False) or not users or not user["access_ui"],
         ):
             update_user(user=user["id"], name=new_name, password=new_password, role=new_role, expires_at=new_expires_at)
 
@@ -247,6 +255,6 @@ with tab2:
             label="**:material/delete_forever: Delete**",
             key="delete_user_button",
             use_container_width=True,
-            disabled=st.session_state.get("new_user_button", False) or not users,
+            disabled=st.session_state.get("new_user", False) or not users,
         ):
             delete_user(user=user["id"])

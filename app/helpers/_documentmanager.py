@@ -14,9 +14,9 @@ from app.clients.database import SQLDatabaseClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
-from app.schemas.chunks import Chunk, ChunkMetadata
+from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
-from app.schemas.core.data import ParserOutput
+from app.schemas.core.documents import ParserOutput
 from app.schemas.documents import Document
 from app.schemas.files import ChunkerName
 from app.schemas.search import Search, SearchMethod
@@ -37,7 +37,7 @@ from ._internetmanager import InternetManager
 
 
 class DocumentManager:
-    BATCH_SIZE = 48  # TODO: retrieve batch size from model registry
+    BATCH_SIZE = 48  # @TODO: retrieve batch size from model registry
     FILE_EXTENSION_PDF = "pdf"
     FILE_EXTENSION_JSON = "json"
     FILE_EXTENSION_HTML = "html"
@@ -122,7 +122,7 @@ class DocumentManager:
                 select(
                     CollectionTable.id,
                     CollectionTable.name,
-                    CollectionTable.user_id,
+                    UserTable.name.label("owner"),
                     CollectionTable.visibility,
                     CollectionTable.description,
                     func.count(distinct(DocumentTable.id)).label("documents"),
@@ -130,7 +130,8 @@ class DocumentManager:
                     cast(func.extract("epoch", CollectionTable.updated_at), Integer).label("updated_at"),
                 )
                 .outerjoin(DocumentTable, CollectionTable.id == DocumentTable.collection_id)
-                .group_by(CollectionTable.id)
+                .outerjoin(UserTable, CollectionTable.user_id == UserTable.id)
+                .group_by(CollectionTable.id, UserTable.name)
                 .offset(offset=offset)
                 .limit(limit=limit)
             )
@@ -163,8 +164,6 @@ class DocumentManager:
         file_name = file.filename.strip()
         file_extension = file_name.rsplit(".", maxsplit=1)[-1]
 
-        # TODO: add json structure validation
-
         try:
             document = self._parse(file=file, file_extension=file_extension)
         except Exception as e:
@@ -187,37 +186,38 @@ class DocumentManager:
             await session.commit()
 
         for i, chunk in enumerate(chunks):
-            chunk.metadata.id = i + 1
-            chunk.metadata.document_part = f"{i + 1}/{len(chunks)}"
-            chunk.metadata.collection_id = collection.id
-            chunk.metadata.collection_name = collection.name
-            chunk.metadata.document_id = document_id
-            chunk.metadata.document_name = file_name
-            chunk.metadata.document_created_at = round(time.time())
+            chunk.metadata["document_part"] = f"{i + 1}/{len(chunks)}"
+            chunk.metadata["collection_id"] = collection.id
+            chunk.metadata["collection_name"] = collection.name
+            chunk.metadata["document_id"] = document_id
+            chunk.metadata["document_name"] = file_name
+            chunk.metadata["document_created_at"] = round(time.time())
         try:
             await self._upsert(chunks=chunks, collection_id=collection_id, model_client=model_client)
         except Exception as e:
             logger.error(msg=f"Error during document creation: {e}")
             logger.debug(msg=traceback.format_exc())
             await self.delete_document(user_id=user_id, document_id=document_id)
-            raise VectorizationFailedException(detail=f"Vectorization failed: {e}")  # TODO: add error code
+            raise VectorizationFailedException(detail=f"Vectorization failed: {e}")
 
         return document_id
 
-    async def get_documents(self, user_id: int, collection_id: int, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
+    async def get_documents(self, user_id: int, collection_id: Optional[int] = None, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
         async with self.sql.session() as session:
             statement = (
                 select(
                     DocumentTable.id,
                     DocumentTable.name,
+                    DocumentTable.collection_id,
                     cast(func.extract("epoch", DocumentTable.created_at), Integer).label("created_at"),
                 )
                 .offset(offset=offset)
                 .limit(limit=limit)
-                .where(DocumentTable.collection_id == collection_id)
                 .outerjoin(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
                 .where(CollectionTable.user_id == user_id)
             )
+            if collection_id:
+                statement = statement.where(DocumentTable.collection_id == collection_id)
             if document_id:
                 statement = statement.where(DocumentTable.id == document_id)
 
@@ -231,7 +231,7 @@ class DocumentManager:
         for document in documents:
             try:
                 chunks_count = await self.qdrant.count(
-                    collection_name=str(collection_id),
+                    collection_name=str(document.collection_id),
                     count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
                 )
                 document.chunks = chunks_count.count
@@ -278,7 +278,11 @@ class DocumentManager:
 
         filter = Filter(must=must)
         data = await self.qdrant.scroll(collection_name=document.collection_id, scroll_filter=filter, limit=limit, offset=offset)[0]
-        chunks = [Chunk(id=chunk.id, content=chunk.payload["content"], metadata=ChunkMetadata(**chunk.payload["metadata"])) for chunk in data]
+
+        chunks = list()
+        for chunk in data:
+            chunk_id = chunk.payload["metadata"].pop("id")
+            chunks.append(Chunk(id=chunk_id, content=chunk.payload["content"], metadata=chunk.payload["metadata"]))
 
         return chunks
 
@@ -292,11 +296,11 @@ class DocumentManager:
         k: int,
         rff_k: int,
         score_threshold: float = 0.0,
-        search_on_internet: bool = False,
+        web_search: bool = False,
     ) -> List[Search]:
         # internet search
         internet_chunks = []
-        if search_on_internet:
+        if web_search:
             internet_chunks = await self.internet_manager.get_chunks(prompt=prompt)
 
             if internet_chunks:
@@ -363,14 +367,17 @@ class DocumentManager:
             batch = chunks[i : i + self.BATCH_SIZE]
             # create embeddings
             texts = [chunk.content for chunk in batch]
-
             embeddings = await self._create_embeddings(input=texts, model_client=model_client)
+
+            # add id to metadata
+            for chunk in batch:
+                chunk.metadata["id"] = chunk.id
 
             # insert chunks and vectors
             await self.qdrant.upsert(
                 collection_name=str(collection_id),
                 points=[
-                    PointStruct(id=str(uuid4()), vector=embedding, payload={"content": chunk.content, "metadata": chunk.metadata.model_dump()})
+                    PointStruct(id=str(uuid4()), vector=embedding, payload={"content": chunk.content, "metadata": chunk.metadata})
                     for chunk, embedding in zip(batch, embeddings)
                 ],
             )
@@ -388,19 +395,17 @@ class DocumentManager:
         if method != SearchMethod.SEMANTIC:
             raise NotImplementedException("Lexical and hybrid search are not available for Qdrant database.")
 
-        response = await self._create_embeddings(input=[prompt], model=model_client.model)
+        response = await self._create_embeddings(input=[prompt], model_client=model_client)
 
         chunks = []
-        for collection in collection_ids:
-            results = self.qdrant.search(
-                collection_name=collection.id,
+        for collection_id in collection_ids:
+            results = await self.qdrant.search(
+                collection_name=str(collection_id),
                 query_vector=response[0],
                 limit=k,
                 score_threshold=score_threshold,
                 with_payload=True,
             )
-            for result in results:
-                result.payload["metadata"]["collection"] = collection.id
             chunks.extend(results)
 
         # sort by similarity score and get top k

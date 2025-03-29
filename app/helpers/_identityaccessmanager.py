@@ -262,7 +262,7 @@ class IdentityAccessManager:
 
     async def update_user(self, user_id: int, name: Optional[str] = None, role_id: Optional[int] = None, expires_at: Optional[int] = None) -> None:
         """
-        TODO Attention ici car expires_at est toujours remplacé par la valeur passée en paramètre car None est une valeur valide pour expires_at.
+        Attention ici car expires_at est toujours remplacé par la valeur passée en paramètre car None est une valeur valide pour expires_at.
         """
         async with self.sql.session() as session:
             # check if user exists

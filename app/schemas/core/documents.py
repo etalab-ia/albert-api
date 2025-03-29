@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class JsonFileDocument(BaseModel):
     title: Optional[str] = None
     text: str
-    metadata: Dict[str, str] = {}
+    metadata: Dict[str, Union[str, int, float, bool]] = {}
 
 
 class JsonFile(BaseModel):

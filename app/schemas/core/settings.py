@@ -6,25 +6,18 @@ from typing import Any, List, Literal, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 import yaml
+
 from app.schemas.core.auth import LimitingStrategy
-from app.schemas.core.models import ModelType, RoutingStrategy
-from app.utils.variables import (
-    DATABASE_TYPE__ELASTIC,
-    DATABASE_TYPE__GRIST,
-    DATABASE_TYPE__QDRANT,
-    DATABASE_TYPE__REDIS,
-    DATABASE_TYPE__SQL,
-    DEFAULT_APP_NAME,
-    DEFAULT_TIMEOUT,
-    MODEL_CLIENT_TYPE__ALBERT,
-    MODEL_CLIENT_TYPE__OPENAI,
-    MODEL_CLIENT_TYPE__TEI,
-    MODEL_CLIENT_TYPE__VLLM,
-    SUPPORTED_MODEL_CLIENT_TYPES__AUDIO,
-    SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS,
-    SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE,
-    SUPPORTED_MODEL_CLIENT_TYPES__RERANK,
-)
+from app.schemas.core.models import ModelClientType, ModelType, RoutingStrategy
+from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT
+
+
+class DatabaseType(str, Enum):
+    ELASTIC = "elastic"
+    GRIST = "grist"
+    QDRANT = "qdrant"
+    REDIS = "redis"
+    SQL = "sql"
 
 
 class InternetType(str, Enum):
@@ -50,7 +43,7 @@ class ModelClientArgs(ConfigBaseModel):
 
 class ModelClient(ConfigBaseModel):
     model: str
-    type: Literal[MODEL_CLIENT_TYPE__ALBERT, MODEL_CLIENT_TYPE__OPENAI, MODEL_CLIENT_TYPE__TEI, MODEL_CLIENT_TYPE__VLLM]
+    type: ModelClientType
     args: ModelClientArgs
 
 
@@ -65,13 +58,13 @@ class Model(ConfigBaseModel):
     @model_validator(mode="after")
     def validate_model_type(cls, values):
         if values.type == ModelType.EMBEDDINGS:
-            assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS, f"Invalid model type for client type {values.clients[0].type}"
+            assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
         elif values.type == ModelType.LANGUAGE:
-            assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE, f"Invalid model type for client type {values.clients[0].type}"
+            assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
         elif values.type == ModelType.AUDIO:
-            assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__AUDIO, f"Invalid model type for client type {values.clients[0].type}"
+            assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__AUDIO, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
         elif values.type == ModelType.RERANK:
-            assert values.clients[0].type in SUPPORTED_MODEL_CLIENT_TYPES__RERANK, f"Invalid model type for client type {values.clients[0].type}"
+            assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__RERANK, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
         else:
             raise ValueError(f"Invalid model type: {values.type}")
 
@@ -84,7 +77,7 @@ class Internet(ConfigBaseModel):
 
 
 class Database(ConfigBaseModel):
-    type: Literal[DATABASE_TYPE__REDIS, DATABASE_TYPE__QDRANT, DATABASE_TYPE__GRIST, DATABASE_TYPE__ELASTIC, DATABASE_TYPE__SQL]
+    type: DatabaseType
     args: dict = {}
 
 
@@ -121,12 +114,12 @@ class Config(ConfigBaseModel):
 
     @model_validator(mode="after")
     def validate_databases(cls, values) -> Any:
-        cache_databases = [database for database in values.databases if database.type == DATABASE_TYPE__REDIS]
+        cache_databases = [database for database in values.databases if database.type == DatabaseType.REDIS]
         assert len(cache_databases) == 1, "There must be only one cache database."  # fmt: off
 
         # check if there is only one search database
-        databases = [database for database in values.databases if database.type == DATABASE_TYPE__QDRANT or database.type == DATABASE_TYPE__ELASTIC]
-        assert len(databases) == 1, f"There must be only one search database ({DATABASE_TYPE__QDRANT} or {DATABASE_TYPE__ELASTIC})."  # fmt: off
+        databases = [database for database in values.databases if database.type == DatabaseType.QDRANT]
+        assert len(databases) == 1, f"There must be only one search database ({DatabaseType.QDRANT})."  # fmt: off
 
         return values
 
@@ -166,11 +159,11 @@ class Settings(BaseSettings):
         values.models = config.models
 
         values.databases = SimpleNamespace()
-        values.databases.sql = next((database for database in config.databases if database.type == DATABASE_TYPE__SQL), None)
-        values.databases.redis = next((database for database in config.databases if database.type == DATABASE_TYPE__REDIS), None)
-        values.databases.qdrant = next((database for database in config.databases if database.type == DATABASE_TYPE__QDRANT), None)
-        values.databases.grist = next((database for database in config.databases if database.type == DATABASE_TYPE__GRIST), None)
-        values.databases.elastic = next((database for database in config.databases if database.type == DATABASE_TYPE__ELASTIC), None)
+        values.databases.sql = next((database for database in config.databases if database.type == DatabaseType.SQL), None)
+        values.databases.redis = next((database for database in config.databases if database.type == DatabaseType.REDIS), None)
+        values.databases.qdrant = next((database for database in config.databases if database.type == DatabaseType.QDRANT), None)
+        values.databases.grist = next((database for database in config.databases if database.type == DatabaseType.GRIST), None)
+        values.databases.elastic = next((database for database in config.databases if database.type == DatabaseType.ELASTIC), None)
 
         assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.LANGUAGE], f"Internet model is not defined in models section with type {ModelType.LANGUAGE}."  # fmt: off
         assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off

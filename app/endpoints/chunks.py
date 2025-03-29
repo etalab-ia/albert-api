@@ -6,11 +6,12 @@ from fastapi import APIRouter, Path, Query, Request, Security
 from app.helpers import Authorization
 from app.schemas.chunks import Chunks
 from app.utils.lifespan import context
+from app.utils.variables import ENDPOINT__CHUNKS
 
 router = APIRouter()
 
 
-@router.get(path="/chunks/{collection}/{document}")
+@router.get(path=ENDPOINT__CHUNKS + "/{collection}/{document}")
 async def get_chunks(
     request: Request,
     collection: UUID = Path(description="The collection ID"),

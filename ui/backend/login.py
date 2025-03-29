@@ -45,6 +45,7 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
         limits = []
         for model in models:
             limits.append({"model": model["id"], "type": "tpm", "value": None})
+            limits.append({"model": model["id"], "type": "tpd", "value": None})
             limits.append({"model": model["id"], "type": "rpm", "value": None})
             limits.append({"model": model["id"], "type": "rpd", "value": None})
 

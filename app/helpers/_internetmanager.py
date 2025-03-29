@@ -50,8 +50,7 @@ class InternetManager:
 
     USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
     PAGE_LOAD_TIMEOUT = 60
-    # TODO: make chunk size dynamic based on the model
-    CHUNK_SIZE = 1000
+    CHUNK_SIZE = 1000  # @TODO: make chunk size dynamic based on the model
     CHUNK_OVERLAP = 0
     CHUNK_MIN_SIZE = 20
     BATCH_SIZE = 32
@@ -71,8 +70,6 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
 
     def __init__(self, internet: InternetClient) -> None:
         self.internet = internet
-
-        # TODO: récupérer le modèle de language
 
     async def get_chunks(self, prompt: str, model_client: ModelClient, n: int = 3) -> List[Chunk]:
         query = await self._get_web_query(prompt=prompt, model_client=model_client)
@@ -107,7 +104,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             file = BytesIO(response.text.encode("utf-8"))
             file = UploadFile(filename=url, file=file)
 
-            # TODO: parse pdf if url is a pdf or json if url is a json
+            # @TODO: parse pdf if url is a pdf or json if url is a json
             output = parser.parse(file=file)
             chunks.extend(chunker.split(input=output))
 
@@ -116,5 +113,5 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         else:
             # Add internet query to the metadata of each chunk
             for chunk in chunks:
-                chunk.metadata.internet_query = query
+                chunk.metadata["web_search_query"] = query
             return chunks

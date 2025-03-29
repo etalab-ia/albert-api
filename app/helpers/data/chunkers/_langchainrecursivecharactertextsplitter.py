@@ -2,8 +2,8 @@ from typing import List
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from app.schemas.chunks import Chunk, ChunkMetadata
-from app.schemas.core.data import ParserOutput
+from app.schemas.chunks import Chunk
+from app.schemas.core.documents import ParserOutput
 
 
 class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
@@ -12,7 +12,7 @@ class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
         self.chunk_min_size = chunk_min_size
 
     def split(self, document: ParserOutput) -> List[Chunk]:
-        metadata = ChunkMetadata(**document.metadata)
+        metadata = document.metadata
 
         _chunks = list()
         for content in document.contents:
@@ -22,7 +22,6 @@ class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
         for i, chunk in enumerate(_chunks):
             if len(chunk) < self.chunk_min_size:
                 continue
-            metadata.document_part = f"{i + 1}/{len(_chunks)}"
-            chunks.append(Chunk(content=chunk, id=i + 1, metadata=metadata))
+            chunks.append(Chunk(id=i + 1, content=chunk, metadata=metadata))
 
         return chunks

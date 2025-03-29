@@ -32,6 +32,7 @@ st.dataframe(
                 "ID": collection["id"],
                 "Name": collection["name"],
                 "Visibility": collection["visibility"],
+                "Owner": collection["owner"],
                 "Documents": collection["documents"],
                 "Updated at": pd.to_datetime(collection["updated_at"], unit="s"),
                 "Created at": pd.to_datetime(collection["created_at"], unit="s"),

@@ -5,9 +5,9 @@ from typing import Annotated, List, Optional
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.schemas.auth import Limit, LimitType, PermissionType, Role, User
+from app.schemas.auth import Limit, Role, User
 from app.schemas.collections import CollectionVisibility
-from app.schemas.core.auth import UserInfo
+from app.schemas.core.auth import LimitType, PermissionType, UserInfo
 from app.utils.exceptions import (
     InsufficientPermissionException,
     InvalidAPIKeyException,
@@ -59,7 +59,7 @@ class Authorization:
         return user
 
     async def _check_api_key(self, api_key: HTTPAuthorizationCredentials) -> UserInfo:
-        # TODO: add cache
+        # @TODO: add cache
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
 
@@ -121,8 +121,10 @@ class Authorization:
             raise RateLimitExceeded(detail=f"{str(user.limits[model].rpd)} requests for {model} per day exceeded.")
 
     async def _check_audio_transcription_post(self, user: UserInfo, request: Request) -> None:
-        # @TODO: add rate limit check
-        pass
+        body = await request.body()
+        body = json.loads(body)
+
+        await self._check_limits(user=user, model=body.get("model"))
 
     async def _check_chat_completions_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
@@ -130,7 +132,8 @@ class Authorization:
 
         await self._check_limits(user=user, model=body.get("model"))
 
-        # @TODO: add rate limit check for search model
+        if body.get("search", False):
+            await self._check_limits(user=user, model=body.get("search_args", {}).get("model", None))
 
     async def _check_collections_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()
@@ -152,8 +155,10 @@ class Authorization:
         await self._check_limits(user=user, model=body.get("model"))
 
     async def _check_search_post(self, user: UserInfo, request: Request) -> None:
-        # @TODO: add collection model check and rate limit of the model
-        pass
+        body = await request.body()
+        body = json.loads(body)
+
+        await self._check_limits(user=user, model=body.get("model"))
 
     async def _check_tokens_post(self, user: UserInfo, request: Request) -> None:
         body = await request.body()

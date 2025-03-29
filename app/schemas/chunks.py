@@ -1,17 +1,12 @@
-from typing import List, Literal
+from typing import Any, Dict, List, Literal
 
 from pydantic import BaseModel
-
-
-class ChunkMetadata(BaseModel):
-    class Config:
-        extra = "allow"
 
 
 class Chunk(BaseModel):
     object: Literal["chunk"] = "chunk"
     id: int
-    metadata: ChunkMetadata
+    metadata: Dict[str, Any]
     content: str
 
 

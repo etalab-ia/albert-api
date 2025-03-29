@@ -130,5 +130,3 @@ class TestEmbeddings:
         response_model = response.json()
 
         assert response_alias["data"][0]["embedding"] == response_model["data"][0]["embedding"]
-
-    # TODO test vector size

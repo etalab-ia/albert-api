@@ -12,9 +12,15 @@ header()
 # Data
 # try:
 models = get_models(type=MODEL_TYPE_LANGUAGE)
-limits = st.session_state["user"].role["limits"]
-limits = [limit["model"] for limit in limits if (limit["type"] == "tpm" or limit["type"] == "rpm") and (limit["value"] is None or limit["value"] > 0)]
+limits = {}
+for limit in st.session_state["user"].role["limits"]:
+    if limit["model"] not in limits:
+        limits[limit["model"]] = {"tpm": 0, "tpd": 0, "rpd": 0, "rpm": 0}
+    limits[limit["model"]][limit["type"]] = limit["value"]
+st.write(limits)
+limits = [model for model, values in limits.items() if (values["rpd"] is None or values["rpd"] > 0) and (values["rpm"] is None or values["rpm"] > 0)]
 models = [model for model in models if model in limits]
+st.write(limits)
 collections = get_collections()
 
 # State

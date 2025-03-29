@@ -1,12 +1,11 @@
 import datetime as dt
 from datetime import datetime
-from enum import Enum
 from typing import List, Literal, Optional
-
+from enum import Enum
 from pydantic import BaseModel, Field, field_validator
 
 
-class PermissionType(Enum):
+class PermissionType(str, Enum):
     CREATE_ROLE = "create_role"
     READ_ROLE = "read_role"
     UPDATE_ROLE = "update_role"
@@ -19,8 +18,9 @@ class PermissionType(Enum):
     READ_METRIC = "read_metric"
 
 
-class LimitType(Enum):
+class LimitType(str, Enum):
     TPM = "tpm"
+    TPD = "tpd"
     RPM = "rpm"
     RPD = "rpd"
 

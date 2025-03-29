@@ -27,7 +27,7 @@ class Limiter:
             self.strategy = strategies.SlidingWindowCounterRateLimiter(storage=self.redis)
 
     async def __call__(self, user_id: int, model: str, type: Literal[LimitType.RPM, LimitType.RPD], value: Optional[int] = None) -> None:
-        # @TODO: add tpm limit
+        # @TODO: add TPD & TPM limits
 
         try:
             if type == LimitType.RPM and value is not None:

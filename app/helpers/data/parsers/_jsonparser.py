@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import UploadFile
 
-from app.schemas.core.data import ParserOutput
+from app.schemas.core.documents import ParserOutput
 
 from ._baseparser import BaseParser
 

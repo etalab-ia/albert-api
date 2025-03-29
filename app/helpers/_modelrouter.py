@@ -60,7 +60,7 @@ class ModelRouter:
         if endpoint and self.type not in self.ENDPOINT_MODEL_TYPE_TABLE[endpoint]:
             raise WrongModelTypeException()
 
-        if self._routing_strategy == RoutingStrategy.ROUND_ROBIN.value:
+        if self._routing_strategy == RoutingStrategy.ROUND_ROBIN:
             client = self._routing_strategy_round_robin()
         else:  # ROUTER_STRATEGY__SHUFFLE
             client = self._routing_strategy_shuffle()

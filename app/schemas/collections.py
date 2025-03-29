@@ -4,7 +4,7 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
-class CollectionVisibility(Enum):
+class CollectionVisibility(str, Enum):
     PRIVATE = "private"
     PUBLIC = "public"
 
@@ -28,6 +28,7 @@ class Collection(BaseModel):
     object: Literal["collection"] = "collection"
     id: int
     name: str
+    owner: str
     description: Optional[str] = None
     visibility: Optional[CollectionVisibility] = None
     created_at: int

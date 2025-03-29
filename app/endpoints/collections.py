@@ -5,15 +5,15 @@ from fastapi.responses import JSONResponse
 
 from app.helpers import Authorization
 from app.schemas.collections import Collection, CollectionRequest, Collections
-from app.utils.lifespan import context
-from app.utils.variables import ENDPOINT__EMBEDDINGS
 from app.schemas.core.auth import UserInfo
+from app.utils.lifespan import context
 from app.utils.settings import settings
+from app.utils.variables import ENDPOINT__COLLECTIONS, ENDPOINT__EMBEDDINGS
 
 router = APIRouter()
 
 
-@router.post(path="/collections")
+@router.post(path=ENDPOINT__COLLECTIONS)
 async def create_collection(request: Request, body: CollectionRequest, user: UserInfo = Security(dependency=Authorization())) -> JSONResponse:
     """
     Create a new collection.
@@ -33,7 +33,7 @@ async def create_collection(request: Request, body: CollectionRequest, user: Use
     return JSONResponse(status_code=201, content={"id": collection_id})
 
 
-@router.get(path="/collections")
+@router.get(path=ENDPOINT__COLLECTIONS)
 async def get_collections(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the collections to get."),
@@ -49,7 +49,7 @@ async def get_collections(
     return Collections(data=data)
 
 
-@router.delete(path="/collections/{collection}")
+@router.delete(path=ENDPOINT__COLLECTIONS + "/{collection}")
 async def delete_collections(
     request: Request, collection: int = Path(..., description="The collection ID"), user: UserInfo = Security(dependency=Authorization())
 ) -> Response:

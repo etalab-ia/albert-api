@@ -98,6 +98,7 @@ st.dataframe(
             "Request per minute": [limits[model]["rpm"] for model in models],
             "Request per day": [limits[model]["rpd"] for model in models],
             "Tokens per minute": [limits[model]["tpm"] for model in models],
+            "Tokens per day": [limits[model]["tpd"] for model in models],
         },
         index=models,
     ),

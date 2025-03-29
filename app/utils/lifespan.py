@@ -9,7 +9,7 @@ from qdrant_client import AsyncQdrantClient
 from app.clients.database import SQLDatabaseClient
 from app.clients.internet import BaseInternetClient as InternetClient
 from app.clients.model import BaseModelClient as ModelClient
-from app.helpers import IdentityAccessManager, Limiter, ModelRegistry, ModelRouter, DocumentManager, InternetManager
+from app.helpers import DocumentManager, IdentityAccessManager, InternetManager, Limiter, ModelRegistry, ModelRouter
 from app.utils.logging import logger
 from app.utils.settings import settings
 
@@ -39,8 +39,8 @@ async def lifespan(app: FastAPI):
                 continue
         if not clients:
             logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
-            assert model.id != settings.general["internet_model"], f"Internet model ({model.id}) must be reachable."
-            assert model.id != settings.general["documents_model"], f"Documents model ({model.id}) must be reachable."
+            assert model.id != settings.general.internet_model, f"Internet model ({model.id}) must be reachable."
+            assert model.id != settings.general.documents_model, f"Documents model ({model.id}) must be reachable."
             continue
 
         logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")

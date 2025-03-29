@@ -25,35 +25,48 @@ def get_models(type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
 def get_collections() -> list:
-    response = requests.get(url=f"{settings.api_url}/v1/collections", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
-
-    if response.status_code != 200:
-        st.error(response.json()["detail"])
-        return []
-
-    collections = response.json()["data"]
-
-    return collections
-
-
-@st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_documents(collection_ids: List[str]) -> dict:
-    documents = list()
-    for collection_id in collection_ids:
+    offset, limit = 0, 100
+    data = list()
+    while True:
         response = requests.get(
-            url=f"{settings.api_url}/v1/documents/{collection_id}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+            url=f"{settings.api_url}/v1/collections?offset={offset}&limit={limit}",
+            headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
         )
 
         if response.status_code != 200:
             st.error(response.json()["detail"])
             return []
 
-        data = response.json()["data"]
-        for document in data:
-            document["collection_id"] = collection_id
-            documents.append(document)
+        batch = response.json()["data"]
+        data.extend(batch)
+        if len(batch) < limit:
+            break
+        offset += limit
 
-    return documents
+    return data
+
+
+@st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
+def get_documents(collection_ids: List[str]) -> dict:
+    offset, limit = 0, 100
+    data = list()
+    while True:
+        response = requests.get(
+            url=f"{settings.api_url}/v1/documents?offset={offset}&limit={limit}",
+            headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
+        )
+
+        if response.status_code != 200:
+            st.error(response.json()["detail"])
+            return []
+
+        batch = response.json()["data"]
+        data.extend(batch)
+        if len(batch) < limit:
+            break
+        offset += limit
+
+    return data
 
 
 @st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
@@ -73,30 +86,44 @@ def get_tokens() -> list:
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
 def get_roles():
-    response = requests.get(
-        url=f"{settings.api_url}/roles?offset=0&limit=100", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
-    )
+    offset, limit = 0, 100
+    data = list()
 
-    if response.status_code != 200:
-        st.error(response.json()["detail"])
-        return []
+    while True:
+        response = requests.get(
+            url=f"{settings.api_url}/roles?offset={offset}&limit={limit}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+        )
+        if response.status_code != 200:
+            st.error(response.json()["detail"])
+            return []
 
-    data = response.json()["data"]
+        batch = response.json()["data"]
+        data.extend(batch)
+        if len(batch) < limit:
+            break
+        offset += limit
 
     return data
 
 
 @st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
-def get_users(offset: int = 0, limit: int = 100):
-    response = requests.get(
-        url=f"{settings.api_url}/users?offset={offset}&limit={limit}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
-    )
+def get_users():
+    offset, limit = 0, 100
+    data = list()
 
-    if response.status_code != 200:
-        st.error(response.json()["detail"])
-        return []
+    while True:
+        response = requests.get(
+            url=f"{settings.api_url}/users?offset={offset}&limit={limit}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+        )
+        if response.status_code != 200:
+            st.error(response.json()["detail"])
+            return []
 
-    data = response.json()["data"]
+        batch = response.json()["data"]
+        data.extend(batch)
+        if len(batch) < limit:
+            break
+        offset += limit
 
     session = next(get_session())
     db_data = session.execute(select(UserTable).offset(offset).limit(limit)).scalars().all()
@@ -114,13 +141,15 @@ def get_users(offset: int = 0, limit: int = 100):
 def get_limits(models: list, role: dict) -> dict:
     limits = {}
     for model in models:
-        limits[model] = {"tpm": 0, "rpm": 0, "rpd": 0}
+        limits[model] = {"tpm": 0, "tpd": 0, "rpm": 0, "rpd": 0}
         for limit in role["limits"]:
             if limit["model"] == model and limit["type"] == "tpm":
                 limits[model]["tpm"] = limit["value"]
+            elif limit["model"] == model and limit["type"] == "tpd":
+                limits[model]["tpd"] = limit["value"]
             elif limit["model"] == model and limit["type"] == "rpm":
                 limits[model]["rpm"] = limit["value"]
-            elif limit["model"] == model and limit["type"] == "rpd":
+            else:  # LimitType.RPD
                 limits[model]["rpd"] = limit["value"]
 
     return limits

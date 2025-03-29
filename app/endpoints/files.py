@@ -1,22 +1,22 @@
-import json
 from io import BytesIO
+import json
 
 from fastapi import APIRouter, Body, File, Security, UploadFile
 from fastapi.responses import JSONResponse
 
 from app.helpers import Authorization
 from app.schemas.core.auth import UserInfo
-from app.schemas.core.data import JsonFile
+from app.schemas.core.documents import JsonFile
 from app.schemas.files import ChunkerArgs, FilesRequest
 from app.utils.exceptions import FileSizeLimitExceededException, InvalidJSONFileFormatException
 from app.utils.lifespan import context
 from app.utils.settings import settings
-from app.utils.variables import ENDPOINT__EMBEDDINGS
+from app.utils.variables import ENDPOINT__EMBEDDINGS, ENDPOINT__FILES
 
 router = APIRouter()
 
 
-@router.post(path="/files")
+@router.post(path=ENDPOINT__FILES)
 async def upload_file(file: UploadFile = File(...), request: FilesRequest = Body(...), user: UserInfo = Security(dependency=Authorization())) -> JSONResponse:  # fmt: off
     """
     Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.

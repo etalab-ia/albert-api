@@ -49,7 +49,7 @@ class TestChunks:
         chunks = Chunks(**response.json())  # test output format
 
         assert len(chunks.data) > 0
-        assert chunks.data[0].metadata.document_id == DOCUMENT_ID
+        assert chunks.data[0].metadata["document_id"] == DOCUMENT_ID
 
     def test_delete_chunks(self, client: TestClient, setup):
         COLLECTION_ID, DOCUMENT_ID = setup
