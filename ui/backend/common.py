@@ -88,7 +88,6 @@ def get_tokens() -> list:
 def get_roles():
     offset, limit = 0, 100
     data = list()
-
     while True:
         response = requests.get(
             url=f"{settings.api_url}/roles?offset={offset}&limit={limit}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
@@ -149,7 +148,7 @@ def get_limits(models: list, role: dict) -> dict:
                 limits[model]["tpd"] = limit["value"]
             elif limit["model"] == model and limit["type"] == "rpm":
                 limits[model]["rpm"] = limit["value"]
-            else:  # LimitType.RPD
+            elif limit["model"] == model and limit["type"] == "rpd":
                 limits[model]["rpd"] = limit["value"]
 
     return limits

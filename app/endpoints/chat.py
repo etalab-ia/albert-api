@@ -23,6 +23,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, user: 
 
     # retrieval augmentation generation
     async def retrieval_augmentation_generation(body: ChatCompletionRequest) -> Tuple[ChatCompletionRequest, List[Search]]:
+        results = []
         if body.search:
             model = context.models(model=settings.general.documents_model)
             client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)

@@ -9,7 +9,7 @@ from qdrant_client import AsyncQdrantClient
 from app.clients.database import SQLDatabaseClient
 from app.clients.internet import BaseInternetClient as InternetClient
 from app.clients.model import BaseModelClient as ModelClient
-from app.helpers import DocumentManager, IdentityAccessManager, InternetManager, Limiter, ModelRegistry, ModelRouter
+from app.helpers import DocumentManager, IdentityAccessManager, WebSearchManager, Limiter, ModelRegistry, ModelRouter
 from app.utils.logging import logger
 from app.utils.settings import settings
 
@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
     context.models = ModelRegistry(routers=routers)
     context.iam = IdentityAccessManager(sql=sql)
     context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
-    context.documents = DocumentManager(sql=sql, qdrant=qdrant, internet=InternetManager(internet=internet))
+    context.documents = DocumentManager(sql=sql, qdrant=qdrant, websearch=WebSearchManager(internet=internet))
 
     # await context.iam.setup()
     assert await context.limiter.redis.check(), "Redis database is not reachable."

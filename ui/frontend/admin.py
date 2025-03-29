@@ -48,17 +48,13 @@ with tab1:
             "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True),
         },
     )
-    col1, col2 = st.columns(spec=[5, 1])
-    with col2:
-        if st.pills(
-            label="",
-            options=["Create new role"],
-            default=["Create new role"] if st.session_state.get("new_role", False) else [],
-        ):
-            st.session_state["new_role"] = not st.session_state.get("new_role", False)
-    with col1:
-        name = st.selectbox(label="**Select a role**", options=[role["name"] for role in roles], disabled=st.session_state.get("new_role", False))
 
+    name = st.selectbox(label="**Select a role**", options=[role["name"] for role in roles], disabled=st.session_state.get("new_role", False))
+    st.button(
+        label="**Create a new role**",
+        on_click=lambda: setattr(st.session_state, "new_role", not st.session_state.get("new_role", False)),
+        use_container_width=True,
+    )
     if not st.session_state.get("new_role", False) and roles:
         role = [role for role in roles if role["name"] == name][0]
     else:
@@ -198,13 +194,12 @@ with tab2:
         },
     )
 
-    col1, col2 = st.columns(spec=[5, 1])
-    with col2:
-        if st.pills(label="", options=["Create new user"], default=["Create new user"] if st.session_state.get("new_user", False) else []):
-            st.session_state["new_user"] = not st.session_state.get("new_user", False)
-    with col1:
-        name = st.selectbox(label="**Select a user**", options=[user["name"] for user in users], disabled=st.session_state.get("new_user", False))
-
+    name = st.selectbox(label="**Select a user**", options=[user["name"] for user in users], disabled=st.session_state.get("new_user", False))
+    st.button(
+        label="**Create a new user**",
+        on_click=lambda: setattr(st.session_state, "new_user", not st.session_state.get("new_user", False)),
+        use_container_width=True,
+    )
     role_names = [role["name"] for role in roles]
     default_role = [role["name"] for role in roles if role["default"]]
     default_role = default_role[0] if default_role else None

@@ -39,7 +39,7 @@ class UserInfo(BaseModel):
                     limits[model].tpd = limit.value
                 elif limit.model == model and limit.type == LimitType.RPM:
                     limits[model].rpm = limit.value
-                else:  # LimitType.RPD:
+                elif limit.model == model and limit.type == LimitType.RPD:
                     limits[model].rpd = limit.value
 
         return cls(

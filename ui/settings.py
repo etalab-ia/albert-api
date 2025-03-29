@@ -1,6 +1,6 @@
 from functools import lru_cache
 import os
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
@@ -22,7 +22,6 @@ class Config(ConfigBaseModel):
     max_token_expiration_days: int = 60  # days
     database: Database = Field(default_factory=Database)
     master_username: str = "master"
-    documents_model: Optional[str] = Field(default=None, description="Model to use for activate document page. Must be a text-embeddings-inference model.")  # fmt: off
 
 
 class Settings(BaseSettings):

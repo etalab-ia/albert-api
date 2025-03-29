@@ -47,8 +47,8 @@ flowchart LR
     modelrouter --> modelregistry
     sqlclient --> identityaccessmanager
  
-    internetclient --> internetmanager
-    internetmanager --> documentmanager
+    internetclient --> websearchmanager
+    websearchmanager --> documentmanager
     sqlclient --> documentmanager
     qdrantclient --> documentmanager
     redisclient --> limiter

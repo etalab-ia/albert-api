@@ -3,24 +3,17 @@ from uuid import uuid4
 import streamlit as st
 
 from ui.backend.chat import generate_stream
-from ui.backend.common import get_collections, get_models
+from ui.backend.common import get_collections, get_limits, get_models
 from ui.frontend.header import header
 from ui.variables import MODEL_TYPE_LANGUAGE
 
 header()
 
 # Data
-# try:
 models = get_models(type=MODEL_TYPE_LANGUAGE)
-limits = {}
-for limit in st.session_state["user"].role["limits"]:
-    if limit["model"] not in limits:
-        limits[limit["model"]] = {"tpm": 0, "tpd": 0, "rpd": 0, "rpm": 0}
-    limits[limit["model"]][limit["type"]] = limit["value"]
-st.write(limits)
+limits = get_limits(models=models, role=st.session_state["user"].role)
 limits = [model for model, values in limits.items() if (values["rpd"] is None or values["rpd"] > 0) and (values["rpm"] is None or values["rpm"] > 0)]
 models = [model for model in models if model in limits]
-st.write(limits)
 collections = get_collections()
 
 # State
@@ -51,9 +44,7 @@ with st.sidebar:
     params["sampling_params"]["max_tokens"] = max_tokens if max_tokens_active else None
 
     st.subheader(body="RAG parameters")
-    model_collections = [f"{collection["name"]} - {collection["id"]}" for collection in collections]
-
-    if model_collections:
+    if collections:
 
         @st.dialog(title="Select collections")
         def add_collection(collections: list) -> None:
@@ -61,14 +52,10 @@ with st.sidebar:
             col1, col2 = st.columns(spec=2)
 
             for collection in collections:
-                collection_id = collection.split(" - ")[1]
-                if st.checkbox(
-                    label=f"{collection.split(" - ")[0]} (*{collection_id[:8]}*)",
-                    value=False if collection_id not in st.session_state.selected_collections else True,
-                ):
-                    selected_collections.append(collection_id)
-                elif collection_id in selected_collections:
-                    selected_collections.remove(collection_id)
+                if st.checkbox(label=collection["name"], value=False if collection["id"] not in st.session_state.selected_collections else True):
+                    selected_collections.append(collection["id"])
+                elif collection["id"] in selected_collections:
+                    selected_collections.remove(collection["id"])
 
             with col1:
                 if st.button(label="**Submit :material/check_circle:**", use_container_width=True):
@@ -89,7 +76,7 @@ with st.sidebar:
             key="add_collections",
         )
         if pill == 0:
-            add_collection(collections=model_collections)
+            add_collection(collections=collections)
 
         params["rag"]["collections"] = st.session_state.selected_collections
         params["rag"]["k"] = st.number_input(label="Number of chunks to retrieve (k)", value=3)

@@ -36,6 +36,11 @@ class IdentityAccessManager:
         return jwt.decode(token=token, key=settings.auth.master_key, algorithms=["HS256"])
 
     @staticmethod
+    def _decode_token(token: str) -> dict:
+        token = token.split(IdentityAccessManager.TOKEN_PREFIX)[1]
+        return jwt.decode(token=token, key=settings.auth.master_key, algorithms=["HS256"])
+
+    @staticmethod
     def _encode_token(user_id: int, token_id: int, expires_at: Optional[int] = None) -> str:
         return IdentityAccessManager.TOKEN_PREFIX + jwt.encode(
             claims={"user_id": user_id, "token_id": token_id, "expires_at": expires_at},

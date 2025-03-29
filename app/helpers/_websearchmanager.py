@@ -11,7 +11,7 @@ from app.helpers.data.parsers import HTMLParser
 from app.schemas.chunks import Chunk
 
 
-class InternetManager:
+class WebSearchManager:
     LIMITED_DOMAINS = [
         "service-public.fr",
         ".gouv.fr",

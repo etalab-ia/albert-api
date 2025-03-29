@@ -8,7 +8,7 @@ from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.exceptions import ResponseHandlingException
 from qdrant_client.http.models import Distance, FieldCondition, Filter, FilterSelector, MatchAny, MatchValue, PointStruct, VectorParams
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from app.clients.database import SQLDatabaseClient
 from app.clients.model import BaseModelClient as ModelClient
@@ -25,6 +25,7 @@ from app.sql.models import Document as DocumentTable
 from app.sql.models import User as UserTable
 from app.utils.exceptions import (
     ChunkingFailedException,
+    CollectionAlreadyExistsException,
     CollectionNotFoundException,
     DocumentNotFoundException,
     NotImplementedException,
@@ -33,7 +34,7 @@ from app.utils.exceptions import (
 )
 from app.utils.logging import logger
 
-from ._internetmanager import InternetManager
+from ._websearchmanager import WebSearchManager
 
 
 class DocumentManager:
@@ -44,10 +45,10 @@ class DocumentManager:
     FILE_EXTENSION_MD = "md"
     SUPPORTED_FILE_EXTENSIONS = [FILE_EXTENSION_PDF, FILE_EXTENSION_JSON, FILE_EXTENSION_HTML, FILE_EXTENSION_MD]
 
-    def __init__(self, sql: SQLDatabaseClient, qdrant: AsyncQdrantClient, internet: InternetManager) -> None:
+    def __init__(self, sql: SQLDatabaseClient, qdrant: AsyncQdrantClient, websearch: WebSearchManager) -> None:
         self.sql = sql
         self.qdrant = qdrant
-        self.internet = internet
+        self.websearch = websearch
 
     async def create_collection(
         self,
@@ -57,14 +58,17 @@ class DocumentManager:
         vector_size: int,
         description: Optional[str] = None,
     ) -> int:
-        async with self.sql.session() as session:
-            result = await session.execute(
-                statement=insert(table=CollectionTable)
-                .values(name=name, user_id=user_id, visibility=visibility, description=description)
-                .returning(CollectionTable.id)
-            )
-            collection_id = result.scalar_one()
-            await session.commit()
+        try:
+            async with self.sql.session() as session:
+                result = await session.execute(
+                    statement=insert(table=CollectionTable)
+                    .values(name=name, user_id=user_id, visibility=visibility, description=description)
+                    .returning(CollectionTable.id)
+                )
+                collection_id = result.scalar_one()
+                await session.commit()
+        except IntegrityError as e:
+            raise CollectionAlreadyExistsException()
 
         await self.qdrant.create_collection(
             collection_name=str(collection_id), vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
@@ -298,19 +302,19 @@ class DocumentManager:
         score_threshold: float = 0.0,
         web_search: bool = False,
     ) -> List[Search]:
-        # internet search
-        internet_chunks = []
+        # web search
+        web_chunks = []
         if web_search:
-            internet_chunks = await self.internet_manager.get_chunks(prompt=prompt)
+            web_chunks = await self.websearch.get_chunks(prompt=prompt)
 
-            if internet_chunks:
-                internet_collection_id = await self.create_collection(
-                    name=f"tmp_internet_collection_{uuid4()}",
-                    model_client=model_client,
-                    user_id=user_id,
-                )
-                await self.search.upsert(chunks=internet_chunks, collection_id=internet_collection_id)
-                collection_ids.append(internet_collection_id)
+        if web_chunks:
+            web_collection_id = await self.create_collection(
+                name=f"tmp_web_collection_{uuid4()}",
+                model_client=model_client,
+                user_id=user_id,
+            )
+            await self.upsert(chunks=web_chunks, collection_id=web_collection_id)
+            collection_ids.append(web_collection_id)
 
         searches = await self._query(
             model_client=model_client,
@@ -322,8 +326,8 @@ class DocumentManager:
             score_threshold=score_threshold,
         )
 
-        if internet_chunks:
-            await self.search.delete_collection(collection_id=internet_collection_id)
+        if web_chunks:
+            await self.delete_collection(collection_id=web_collection_id)
 
         if score_threshold:
             searches = [search for search in searches if search.score >= score_threshold]

@@ -1,18 +1,13 @@
 import pandas as pd
 import streamlit as st
 
-from ui.backend.common import get_collections, get_documents, get_models
+from ui.backend.common import get_collections, get_documents
 from ui.backend.documents import create_collection, delete_collection, delete_document, upload_file
 from ui.frontend.header import header
-from ui.variables import COLLECTION_VISIBILITY_PRIVATE, MODEL_TYPE_EMBEDDINGS
+from ui.variables import COLLECTION_VISIBILITY_PRIVATE
 from ui.settings import settings
 
 header()
-models = get_models(type=MODEL_TYPE_EMBEDDINGS)
-if not settings.documents_model or settings.documents_model not in models:
-    st.info("Please select a text-embeddings-inference model in the settings to activate the documents page.")
-    st.stop()
-
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-data-documents", use_container_width=True):
         st.cache_data.clear()
@@ -55,7 +50,7 @@ with col1:
             label="Collection name", placeholder="Enter collection name", help="Create a private collection with the embeddings model of your choice."
         )
         if st.button(label="Create", disabled=not collection_name or st.session_state["user"].name == settings.master_username):
-            create_collection(collection_name=collection_name, collection_model=settings.documents_model)
+            create_collection(collection_name=collection_name)
 
 with col2:
     with st.expander(label="Delete a collection", icon=":material/delete_forever:"):
