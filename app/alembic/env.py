@@ -8,7 +8,7 @@ from app.utils.settings import settings
 
 config = context.config
 config.set_main_option(name="sqlalchemy.url", value=settings.databases.sql.args.get("url").replace("+asyncpg", ""))
-
+print(config.get_main_option("sqlalchemy.url"))
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

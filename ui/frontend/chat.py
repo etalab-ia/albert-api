@@ -91,7 +91,7 @@ with st.chat_message(name="assistant"):
     st.markdown(
         body="""Bonjour je suis Albert, et je peux vous aider si vous avez des questions administratives !
 
-Je peux me connecter à vos bases de connaissances, pour ça sélectionnez les collections voulues dans le menu de gauche. Je peux également chercher sur les sites officiels de l'État, pour ça sélectionnez la collection "Internet" à gauche. Si vous ne souhaitez pas utiliser de collection, désactivez le RAG en décochant la fonction "Activated RAG".
+Je peux me connecter à vos bases de connaissances, pour ça sélectionnez les collections voulues dans le menu de gauche. Si vous ne souhaitez pas utiliser de collection, désactivez le RAG en décochant la fonction "Activated RAG".
                 
 Comment puis-je vous aider ?
 """

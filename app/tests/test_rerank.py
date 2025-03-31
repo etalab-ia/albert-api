@@ -9,7 +9,7 @@ from app.schemas.rerank import Reranks
 
 @pytest.fixture(scope="module")
 def setup(client: TestClient):
-    response = client.get_user(url="/v1/models")
+    response = client.get_without_permissions(url="/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
 
@@ -22,14 +22,14 @@ def setup(client: TestClient):
     yield RERANK_MODEL_ID, EMBEDDINGS_MODEL_ID
 
 
-@pytest.mark.usefixtures("client", "setup", "cleanup")
+@pytest.mark.usefixtures("client", "setup")
 class TestRerank:
     def test_rerank_with_rerank_model(self, client: TestClient, setup):
         """Test the POST /rerank with a rerank model."""
         RERANK_MODEL_ID, _ = setup
 
         params = {"model": RERANK_MODEL_ID, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
-        response = client.post_user(url="/v1/rerank", json=params)
+        response = client.post_without_permissions(url="/v1/rerank", json=params)
         assert response.status_code == 200, response.text
 
         Reranks(**response.json())  # test output format
@@ -39,7 +39,7 @@ class TestRerank:
         _, EMBEDDINGS_MODEL_ID = setup
 
         params = {"model": EMBEDDINGS_MODEL_ID, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
-        response = client.post_user(url="/v1/rerank", json=params)
+        response = client.post_without_permissions(url="/v1/rerank", json=params)
         assert response.status_code == 422, response.text
 
     def test_rerank_with_unknown_model(self, client: TestClient, setup):
@@ -47,5 +47,5 @@ class TestRerank:
         _, _ = setup
 
         params = {"model": "unknown", "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
-        response = client.post_user(url="/v1/rerank", json=params)
+        response = client.post_without_permissions(url="/v1/rerank", json=params)
         assert response.status_code == 404, response.text

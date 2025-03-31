@@ -1,7 +1,9 @@
 from enum import Enum
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
+
+from app.schemas import BaseModel
 
 
 class CollectionVisibility(str, Enum):

@@ -64,6 +64,18 @@ class BaseModelClient(ABC):
 
         return url, headers, json, files, data
 
+    def _format_response(self, response: httpx.Response, endpoint: Optional[str] = None) -> httpx.Response:
+        """
+        Format a response from a client model. This method can be overridden by a subclass to add additional headers or parameters.
+
+        Args:
+            response(httpx.Response): The response from the API.
+
+        Returns:
+            httpx.Response: The formatted response.
+        """
+        return response
+
     async def forward_request(
         self,
         method: str,
@@ -116,6 +128,8 @@ class BaseModelClient(ABC):
             data = response.json()
             data[additional_data_key] = additional_data_value
             response = httpx.Response(status_code=response.status_code, content=dumps(data))
+
+        response = self._format_response(response=response)
 
         return response
 

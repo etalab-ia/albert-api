@@ -22,9 +22,8 @@ def create_collection(collection_name: str) -> None:
 
 
 def delete_collection(collection_id: int) -> None:
-    url = f"{settings.playground.api_url}/v1/collections/{collection_id}"
     headers = {"Authorization": f"Bearer {st.session_state["user"].api_key}"}
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(url=f"{settings.playground.api_url}/v1/collections/{collection_id}", headers=headers)
 
     if response.status_code != 204:
         st.toast(response.json()["detail"], icon="❌")
@@ -32,17 +31,16 @@ def delete_collection(collection_id: int) -> None:
 
     st.toast("Delete succeed", icon="✅")
     get_collections.clear()
+    get_documents.clear()
     time.sleep(0.5)
     st.rerun()
 
 
 def upload_file(file, collection_id: str) -> None:
-    files = {"file": (file.name, file.getvalue(), file.type)}
-    data = {"request": '{"collection": "%s"}' % collection_id}
     response = requests.post(
         url=f"{settings.playground.api_url}/v1/files",
-        data=data,
-        files=files,
+        data={"request": '{"collection": "%s"}' % collection_id},
+        files={"file": (file.name, file.getvalue(), file.type)},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
@@ -51,7 +49,7 @@ def upload_file(file, collection_id: str) -> None:
         return
 
     st.toast("Upload succeed", icon="✅")
-    get_collections.clear()  # since the number of documents in the collection has changed
+    get_collections.clear()
     get_documents.clear()
     time.sleep(0.5)
     st.rerun()
@@ -68,7 +66,7 @@ def delete_document(document_id: str) -> None:
         return
 
     st.toast("Delete succeed", icon="✅")
-    get_collections.clear()  # since the number of documents in the collection has changed
+    get_collections.clear()
     get_documents.clear()
     time.sleep(0.5)
     st.rerun()

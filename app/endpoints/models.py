@@ -21,8 +21,8 @@ async def get_model(request: Request, model: str = Path(description="The name of
     return model
 
 
-@router.get(path=ENDPOINT__MODELS)
-async def get_models(request: Request, user: str = Security(dependency=Authorization())) -> Union[Models, Model]:
+@router.get(path=ENDPOINT__MODELS, dependencies=[Security(dependency=Authorization())])
+async def get_models(request: Request) -> Union[Models, Model]:
     """
     Lists the currently available models and provides basic informations.
     """

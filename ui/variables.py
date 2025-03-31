@@ -3,7 +3,6 @@ MODEL_TYPE_LANGUAGE = "text-generation"
 MODEL_TYPE_AUDIO = "automatic-speech-recognition"
 MODEL_TYPE_RERANK = "text-classification"
 
-COLLECTION_DISPLAY_ID_INTERNET = "internet"
 COLLECTION_VISIBILITY_PRIVATE = "private"
 
 ADMIN_PERMISSIONS = [

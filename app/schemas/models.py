@@ -2,7 +2,8 @@ from enum import Enum
 from typing import List, Literal, Optional
 
 from openai.types import Model
-from pydantic import BaseModel
+
+from app.schemas import BaseModel
 
 
 class ModelType(str, Enum):

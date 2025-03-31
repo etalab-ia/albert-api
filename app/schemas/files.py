@@ -1,8 +1,10 @@
-from enum import Enum
 import json
+from enum import Enum
 from typing import List, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import Field, model_validator
+
+from app.schemas import BaseModel
 
 
 class ChunkerName(str, Enum):

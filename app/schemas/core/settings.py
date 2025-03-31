@@ -1,4 +1,5 @@
 from enum import Enum
+import logging
 import os
 from types import SimpleNamespace
 from typing import Any, List, Literal, Optional
@@ -19,7 +20,7 @@ class DatabaseType(str, Enum):
     SQL = "sql"
 
 
-class InternetType(str, Enum):
+class WebSearchType(str, Enum):
     DUCKDUCKGO = "duckduckgo"
     BRAVE = "brave"
 
@@ -70,14 +71,33 @@ class Model(ConfigBaseModel):
         return values
 
 
-class Internet(ConfigBaseModel):
-    type: InternetType = InternetType.DUCKDUCKGO
+class WebSearch(ConfigBaseModel):
+    type: WebSearchType = WebSearchType.DUCKDUCKGO
+    model: str
+    args: dict = {}
+
+
+class DatabaseQdrant(ConfigBaseModel):
+    model: str
     args: dict = {}
 
 
 class Database(ConfigBaseModel):
     type: DatabaseType
+    model: Optional[str] = None
     args: dict = {}
+
+    @model_validator(mode="after")
+    def qdrant(cls, values):
+        # Qdrant does not support grpc for create index payload
+        if values.type == DatabaseType.QDRANT:
+            if values.args.get("prefer_grpc"):
+                logging.warning("Qdrant does not support grpc for create index payload, force REST connection.")
+            values.args["prefer_grpc"] = False
+
+            assert values.model, "A text embeddings inference model ID is required for Qdrant database."
+
+        return values
 
 
 class Auth(ConfigBaseModel):
@@ -85,17 +105,11 @@ class Auth(ConfigBaseModel):
     limiting_strategy: LimitingStrategy = LimitingStrategy.FIXED_WINDOW
 
 
-class General(ConfigBaseModel):
-    internet_model: Optional[str] = None
-    documents_model: str
-
-
 class Config(ConfigBaseModel):
-    general: General
     auth: Auth = Field(default_factory=Auth)
     models: List[Model] = Field(min_length=1)
     databases: List[Database] = Field(min_length=1)
-    internet: List[Internet] = Field(default_factory=list, max_length=1)
+    web_search: List[WebSearch] = Field(default_factory=list, max_length=1)
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
@@ -149,9 +163,8 @@ class Settings(BaseSettings):
         config = Config(**yaml.safe_load(stream=stream))
         stream.close()
 
-        values.general = config.general
         values.auth = config.auth
-        values.internet = config.internet[0]
+        values.web_search = config.web_search[0]
         values.models = config.models
 
         values.databases = SimpleNamespace()
@@ -159,12 +172,14 @@ class Settings(BaseSettings):
         values.databases.redis = next((database for database in config.databases if database.type == DatabaseType.REDIS), None)
         values.databases.qdrant = next((database for database in config.databases if database.type == DatabaseType.QDRANT), None)
 
-        if values.databases.qdrant:
-            assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.TEXT_EMBEDDINGS_INFERENCE], f"Documents model is not defined in models section with type {ModelType.TEXT_EMBEDDINGS_INFERENCE}."  # fmt: off
+        assert values.databases.sql.args["url"].startswith("postgresql+asyncpg://") or values.databases.sql.args["url"].startswith("sqlite+aiosqlite://"), "SQL connection must be async."  # fmt: off
 
-        if values.internet:
-            assert values.databases.qdrant, "Qdrant database is required to use internet."
-            assert values.general.internet_model, "Internet model is required to use internet."
-            assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.TEXT_GENERATION], f"Internet model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
+        if values.databases.qdrant:
+            assert values.databases.sql, "SQL database is required to use Qdrant features."
+            assert values.databases.qdrant.model in [model.id for model in values.models if model.type == ModelType.TEXT_EMBEDDINGS_INFERENCE], f"Qdrant model is not defined in models section with type {ModelType.TEXT_EMBEDDINGS_INFERENCE}."  # fmt: off
+
+        if values.web_search:
+            assert values.databases.qdrant, "Qdrant database is required to use web_search."
+            assert values.web_search.model in [model.id for model in values.models if model.type == ModelType.TEXT_GENERATION], f"Web search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
 
         return values

@@ -26,6 +26,8 @@ class ModelRouter:
         aliases: list[str],
         routing_strategy: str,
         clients: list[ModelSettings],
+        *args,
+        **kwargs,
     ):
         vector_sizes, max_context_lengths = list(), list()
 

@@ -1,9 +1,10 @@
+from json import dumps
 from typing import Optional
 from urllib.parse import urljoin
 
+import httpx
 from openai import AsyncOpenAI
 import requests
-
 from app.clients.model._basemodelclient import BaseModelClient
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
@@ -25,7 +26,7 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         ENDPOINT__RERANK: "/rerank",
     }
 
-    def __init__(self, model: str, api_url: str, api_key: str, timeout: int) -> None:
+    def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
         Initialize the TEI model client and check if the model is available.
         """
@@ -83,3 +84,8 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
             json = {"query": json["prompt"], "texts": json["input"]}
 
         return url, headers, json, files, data
+
+    def _format_response(self, response: httpx.Response) -> httpx.Response:
+        response = httpx.Response(status_code=response.status_code, content=dumps({"data": response.json()}))
+
+        return response

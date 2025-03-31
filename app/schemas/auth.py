@@ -1,8 +1,11 @@
 import datetime as dt
 from datetime import datetime
-from typing import List, Literal, Optional
 from enum import Enum
-from pydantic import BaseModel, Field, field_validator
+from typing import List, Literal, Optional
+
+from pydantic import Field, field_validator
+
+from app.schemas import BaseModel
 
 
 class PermissionType(str, Enum):

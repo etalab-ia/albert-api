@@ -61,7 +61,7 @@ L'API Albert permet d'accéder à un ensemble de modèles de langage et d'embedd
 
 ### Interroger des documents (search - retrieval augmented generation)
 
-L'API Albert permet d'interroger des documents dans une base vectorielle. Ces documents sont classés dans des collections. Vous pouvez créer vos collections privées et utiliser les collections publiques déjà existantes. Enfin, une collection "internet" permet d'effectuer une recherche sur internet pour compléter la réponse du modèle.
+L'API Albert permet d'interroger des documents dans une base vectorielle. Ces documents sont classés dans des collections. Vous pouvez créer vos collections privées et utiliser les collections publiques déjà existantes.
 
 <a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/retrieval_augmented_generation.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>

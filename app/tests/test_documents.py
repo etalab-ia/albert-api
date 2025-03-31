@@ -1,62 +1,82 @@
-import logging
+import json
 import os
+from uuid import uuid4
 
+from fastapi.testclient import TestClient
 import pytest
 
 from app.schemas.collections import CollectionVisibility
-from app.schemas.documents import Documents
-from app.schemas.models import ModelType
+from app.schemas.documents import Document, Documents
 
 
 @pytest.fixture(scope="module")
 def setup(client):
-    response = client.get_user(url="/v1/models", timeout=10)
-    models = response.json()
-    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]["id"]
-    logging.info(f"test embedings model ID: {EMBEDDINGS_MODEL_ID}")
-
-    response = client.post_user(
+    response = client.post_without_permissions(
         url="/v1/collections",
-        json={"name": "test-collection-private", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PRIVATE},
+        json={"name": f"test_collection_{str(uuid4())}", "visibility": CollectionVisibility.PRIVATE},
     )
-    assert response.status_code == 201
-    PRIVATE_COLLECTION_ID = response.json()["id"]
+    assert response.status_code == 201, response.text
+    COLLECTION_ID = response.json()["id"]
 
     file_path = "app/tests/assets/json.json"
     files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
-    data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
-    response = client.post_user(url="/v1/files", data=data, files=files)
-    assert response.status_code == 201
+    data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
+    response = client.post_without_permissions(url="/v1/files", data=data, files=files)
+    assert response.status_code == 201, response.text
 
-    yield PRIVATE_COLLECTION_ID
+    DOCUMENT_ID = response.json()["id"]
+
+    yield COLLECTION_ID, DOCUMENT_ID
 
 
-@pytest.mark.usefixtures("client", "setup", "cleanup")
+@pytest.mark.usefixtures("client", "setup")
 class TestDocuments:
-    def test_get_documents(self, client, setup):
-        PRIVATE_COLLECTION_ID = setup
-
-        response = client.get_user(url=f"/v1/documents/{PRIVATE_COLLECTION_ID}")
+    def test_get_document(self, client: TestClient, setup):
+        COLLECTION_ID, DOCUMENT_ID = setup
+        response = client.get_without_permissions(url="/v1/documents", params={"collection": COLLECTION_ID})
         assert response.status_code == 200, response.text
 
-        Documents(**response.json())  # test output format
+        documents = [document for document in response.json()["data"] if document["id"] == DOCUMENT_ID]
+        assert len(documents) == 1
 
-    def test_collection_document_count(self, client, setup):
-        PRIVATE_COLLECTION_ID = setup
+    def test_format_document(self, client: TestClient, setup):
+        COLLECTION_ID, DOCUMENT_ID = setup
 
-        response = client.get_user(url="/v1/collections")
-        collection = [collection for collection in response.json()["data"] if collection["id"] == PRIVATE_COLLECTION_ID][0]
-        assert collection["documents"] == 2
+        response = client.get_without_permissions(url="/v1/documents")
+        assert response.status_code == 200, response.text
 
-    def test_delete_document(self, client, setup):
-        PRIVATE_COLLECTION_ID = setup
+        documents = response.json()
+        Documents(**documents)  # test output format
 
-        response = client.get_user(url=f"/v1/documents/{PRIVATE_COLLECTION_ID}")
-        document_id = response.json()["data"][0]["id"]
+        response = client.get_without_permissions(url="/v1/documents", params={"collection": COLLECTION_ID})
+        assert response.status_code == 200, response.text
 
-        response = client.delete_user(url=f"/v1/documents/{PRIVATE_COLLECTION_ID}/{document_id}")
+        documents = response.json()
+        Documents(**documents)  # test output format
+
+        response = client.get_without_permissions(url=f"/v1/documents/{DOCUMENT_ID}")
+        assert response.status_code == 200, response.text
+
+        document = response.json()
+        Document(**document)  # test output format
+
+    def test_collection_document_count(self, client: TestClient, setup):
+        COLLECTION_ID, DOCUMENT_ID = setup
+
+        with open("app/tests/assets/json.json", "r") as f:
+            data = json.load(f)
+            document_count = len(data)
+
+        response = client.get_without_permissions(url="/v1/collections")
+        collection = [collection for collection in response.json()["data"] if collection["id"] == COLLECTION_ID][0]
+        assert collection["documents"] == document_count
+
+    def test_delete_document(self, client: TestClient, setup):
+        COLLECTION_ID, DOCUMENT_ID = setup
+
+        response = client.delete_without_permissions(url=f"/v1/documents/{DOCUMENT_ID}")
         assert response.status_code == 204, response.text
 
-        response = client.get_user(url=f"/v1/documents/{PRIVATE_COLLECTION_ID}")
+        response = client.get_without_permissions(url="/v1/documents")
         documents = response.json()["data"]
-        assert document_id not in [document["id"] for document in documents]
+        assert DOCUMENT_ID not in [document["id"] for document in documents]

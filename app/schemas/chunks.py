@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Literal
 
-from pydantic import BaseModel
+from app.schemas import BaseModel
 
 
 class Chunk(BaseModel):
