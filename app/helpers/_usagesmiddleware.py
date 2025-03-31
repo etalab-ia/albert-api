@@ -2,14 +2,16 @@ from datetime import datetime
 import json
 from typing import Callable, Optional
 
-from fastapi import Request, Response
+from fastapi import Request, Response, Security
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.helpers import Authorization
+from app.schemas.core.auth import UserInfo
 from app.sql.models import Usage
 from app.sql.session import get_db
-from app.utils.logging import logger
 from app.utils import variables
+from app.utils.logging import logger
 
 
 class UsagesMiddleware(BaseHTTPMiddleware):
@@ -93,10 +95,14 @@ class UsagesMiddleware(BaseHTTPMiddleware):
         finally:
             db.close()
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next, user: UserInfo = Security(dependency=Authorization())) -> Response:
         endpoint = request.url.path
         if not any(endpoint.endswith(model_endpoint) for model_endpoint in self.MODELS_ENDPOINTS):
             return await call_next(request)
+
+        print("#########################")
+        print(user)
+        print("#########################")
 
         method = request.method
         content_type = request.headers.get("Content-Type", "")
@@ -126,11 +132,24 @@ class UsagesMiddleware(BaseHTTPMiddleware):
             return response
 
         try:
-            # TODO: changer pour récupérer l'utilisateur depuis la base de données sans requête supplémentaire
-            authorization = request.headers.get("Authorization")
-            # Access auth client through app.state.databases
-            if hasattr(request.app.state, "databases") and hasattr(request.app.state.databases, "auth"):
-                user = await request.app.state.databases.auth.check_api_key(key=authorization.split(sep=" ")[1])
+            from app.utils.lifespan import context
+
+            api_key = request.headers.get("Authorization")
+            print("#########################")
+            print(api_key)
+            print("#########################")
+            api_key = api_key.split(sep=" ")[1]
+            claims = context.iam._decode_token(token=api_key)
+            user_id = claims.get("user_id")
+
+            print("#########################")
+            print(user_id)
+            print("#########################")
+
+            # authorization = request.headers.get("Authorization")
+            # # Access auth client through app.state.databases
+            if hasattr(request.app.state, "sql") and hasattr(request.app.state.sql, "auth"):
+                #     user = await request.app.state.databases.auth.check_api_key(key=authorization.split(sep=" ")[1])
                 usage_data, response = await self._handle_streaming_response(response)
 
                 # Log usage
@@ -139,7 +158,7 @@ class UsagesMiddleware(BaseHTTPMiddleware):
                     db=db,
                     start_time=start_time,
                     duration=duration,
-                    user_id=user.name if user else "UNKNOWN",
+                    user_id=user_id,
                     endpoint=endpoint,
                     model=model,
                     usage_data=usage_data,

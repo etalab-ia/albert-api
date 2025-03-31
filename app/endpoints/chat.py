@@ -4,6 +4,7 @@ from fastapi import APIRouter, Request, Security
 
 from app.helpers import Authorization, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
+from app.schemas.core.auth import UserInfo
 from app.schemas.search import Search
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.lifespan import context
@@ -14,7 +15,7 @@ router = APIRouter()
 
 
 @router.post(path=ENDPOINT__CHAT_COMPLETIONS)
-async def chat_completions(request: Request, body: ChatCompletionRequest, user: str = Security(dependency=Authorization())) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
+async def chat_completions(request: Request, body: ChatCompletionRequest, user: UserInfo = Security(dependency=Authorization())) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
     """Creates a model response for the given chat conversation.
 
     **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional
