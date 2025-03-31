@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE
+from app.schemas.models import ModelType
 
 
 @pytest.fixture(scope="module")
@@ -16,7 +16,7 @@ def setup(client: TestClient):
     response = client.get_user(url="/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
-    model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]
+    model = [model for model in response_json["data"] if model["type"] == ModelType.TEXT_GENERATION][0]
     MODEL_ID = model["id"]
     MAX_CONTEXT_LENGTH = model["max_context_length"]
 
@@ -24,7 +24,7 @@ def setup(client: TestClient):
     logging.info(msg=f"test max context length: {MAX_CONTEXT_LENGTH}")
 
     # create a collection
-    embeddings_model_id = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
+    embeddings_model_id = [model["id"] for model in response_json["data"] if model["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]
     logging.info(msg=f"test embeddings model ID: {embeddings_model_id}")
     response = client.post_user(url="/v1/collections", json={"name": "test-collection-private", "model": embeddings_model_id})
     assert response.status_code == 201, f"error: create collection ({response.status_code})"

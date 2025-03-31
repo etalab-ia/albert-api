@@ -5,9 +5,10 @@ import uuid
 from fastapi.testclient import TestClient
 import pytest
 
+from app.schemas.models import ModelType
 from app.schemas.search import Search, Searches
 from app.utils.logging import logger
-from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, MODEL_TYPE__EMBEDDINGS
+from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET
 
 
 @pytest.fixture(scope="module")
@@ -17,7 +18,7 @@ def setup(client: TestClient):
     # Get a embedding model
     response = client.get_user(url="/v1/models")
     response = response.json()["data"]
-    EMBEDDINGS_MODEL_ID = [model["id"] for model in response if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
+    EMBEDDINGS_MODEL_ID = [model["id"] for model in response if model["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]
     logging.info(f"test model ID: {EMBEDDINGS_MODEL_ID}")
 
     # Create a collection

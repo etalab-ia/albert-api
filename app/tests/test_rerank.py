@@ -1,11 +1,10 @@
 import logging
 
+from fastapi.testclient import TestClient
 import pytest
 
+from app.schemas.models import ModelType
 from app.schemas.rerank import Reranks
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__RERANK
-
-from fastapi.testclient import TestClient
 
 
 @pytest.fixture(scope="module")
@@ -14,10 +13,10 @@ def setup(client: TestClient):
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
 
-    RERANK_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__RERANK][0]
+    RERANK_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == ModelType.TEXT_CLASSIFICATION][0]
     logging.info(f"test model ID: {RERANK_MODEL_ID}")
 
-    EMBEDDINGS_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
+    EMBEDDINGS_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]
     logging.info(f"test model ID: {EMBEDDINGS_MODEL_ID}")
 
     yield RERANK_MODEL_ID, EMBEDDINGS_MODEL_ID

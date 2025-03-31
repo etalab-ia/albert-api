@@ -1,8 +1,8 @@
+from fastapi.testclient import TestClient
 import pytest
 
+from app.schemas.models import ModelType
 from app.utils.settings import settings
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS
-from fastapi.testclient import TestClient
 
 
 @pytest.fixture(scope="module")
@@ -11,7 +11,7 @@ def setup(client: TestClient):
     response = client.get_user(url="/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
-    model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
+    model = [model for model in response_json["data"] if model["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]
     MODEL_ID = model["id"]
 
     yield MODEL_ID
@@ -67,7 +67,7 @@ class TestEmbeddings:
         # Get a non-embeddings model (e.g., language model)
         response = client.get_user(url="/v1/models")
         models = response.json()["data"]
-        non_embeddings_model = [m for m in models if m["type"] != MODEL_TYPE__EMBEDDINGS][0]
+        non_embeddings_model = [m for m in models if m["type"] != ModelType.TEXT_EMBEDDINGS_INFERENCE][0]
 
         params = {"model": non_embeddings_model["id"], "input": "Test text"}
         response = client.post_user(url="/v1/embeddings", json=params)

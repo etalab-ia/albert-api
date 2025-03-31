@@ -8,7 +8,8 @@ from pydantic_settings import BaseSettings
 import yaml
 
 from app.schemas.core.auth import LimitingStrategy
-from app.schemas.core.models import ModelClientType, ModelType, RoutingStrategy
+from app.schemas.core.models import ModelClientType, RoutingStrategy
+from app.schemas.models import ModelType
 from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
 
 
@@ -55,13 +56,13 @@ class Model(ConfigBaseModel):
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
-        if values.type == ModelType.EMBEDDINGS:
+        if values.type == ModelType.TEXT_EMBEDDINGS_INFERENCE:
             assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
-        elif values.type == ModelType.LANGUAGE:
+        elif values.type == ModelType.TEXT_GENERATION:
             assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
-        elif values.type == ModelType.AUDIO:
+        elif values.type == ModelType.AUTOMATIC_SPEECH_RECOGNITION:
             assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__AUDIO, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
-        elif values.type == ModelType.RERANK:
+        elif values.type == ModelType.TEXT_CLASSIFICATION:
             assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__RERANK, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
         else:
             raise ValueError(f"Invalid model type: {values.type}")
@@ -159,10 +160,10 @@ class Settings(BaseSettings):
         values.databases.qdrant = next((database for database in config.databases if database.type == DatabaseType.QDRANT), None)
 
         if values.databases.qdrant:
-            assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off
+            assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.TEXT_EMBEDDINGS_INFERENCE], f"Documents model is not defined in models section with type {ModelType.TEXT_EMBEDDINGS_INFERENCE}."  # fmt: off
 
         if values.internet:
             assert values.databases.qdrant, "Qdrant database is required to use internet."
-            assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.LANGUAGE], f"Internet model is not defined in models section with type {ModelType.LANGUAGE}."  # fmt: off
+            assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.TEXT_GENERATION], f"Internet model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
 
         return values

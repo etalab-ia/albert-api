@@ -5,14 +5,15 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.schemas.collections import CollectionVisibility
-from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET, MODEL_TYPE__EMBEDDINGS
+from app.schemas.models import ModelType
+from app.utils.variables import COLLECTION_DISPLAY_ID__INTERNET
 
 
 @pytest.fixture(scope="module")
 def setup(client: TestClient):
     response = client.get_user(url="/v1/models", timeout=10)
     models = response.json()
-    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
+    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]["id"]
     logging.info(f"test embedings model ID: {EMBEDDINGS_MODEL_ID}")
 
     response = client.post_user(

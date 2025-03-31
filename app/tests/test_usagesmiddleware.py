@@ -4,8 +4,8 @@ from typing import Generator
 from fastapi.testclient import TestClient
 import pytest
 
+from app.schemas.models import ModelType
 from app.sql.models import Usage
-from app.utils.variables import MODEL_TYPE__LANGUAGE
 
 
 @pytest.fixture(scope="module")
@@ -14,7 +14,7 @@ def setup(args, test_client):
     # Get a language model for testing
     response = test_client.get("/v1/models")
     models = response.json()
-    MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]["id"]
+    MODEL_ID = [model for model in models["data"] if model["type"] == ModelType.TEXT_GENERATION][0]["id"]
     yield MODEL_ID
 
 

@@ -6,7 +6,7 @@ import pytest
 
 from app.schemas.chunks import Chunks
 from app.schemas.collections import CollectionVisibility
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS
+from app.schemas.models import ModelType
 
 
 @pytest.fixture(scope="module")
@@ -14,7 +14,7 @@ def setup(client: TestClient):
     # Get embedding model
     response = client.get_user(url="/v1/models", timeout=10)
     models = response.json()
-    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
+    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]["id"]
     logging.info(f"test embeddings model ID: {EMBEDDINGS_MODEL_ID}")
 
     # Create a collection
