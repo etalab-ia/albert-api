@@ -41,7 +41,7 @@ with st.expander(label="Change password", icon=":material/key:"):
 
     submit_change_password = st.button(
         label="Change",
-        disabled=not current_password or not new_password or not confirm_password or st.session_state["user"].name == settings.master_username,
+        disabled=not current_password or not new_password or not confirm_password or st.session_state["user"].name == settings.auth.master_username,
     )
     if submit_change_password:
         change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
@@ -76,18 +76,18 @@ with col1:
         expires_at = st.date_input(
             label="Expires at",
             min_value=dt.datetime.now(),
-            max_value=dt.datetime.now() + dt.timedelta(days=settings.max_token_expiration_days),
-            value=dt.datetime.now() + dt.timedelta(days=settings.max_token_expiration_days),
+            max_value=dt.datetime.now() + dt.timedelta(days=settings.playground.max_api_key_expiration_days),
+            value=dt.datetime.now() + dt.timedelta(days=settings.playground.max_api_key_expiration_days),
             help="Expiration date of the token.",
         )
-        if st.button(label="Create", disabled=not token_name or st.session_state["user"].name == settings.master_username):
+        if st.button(label="Create", disabled=not token_name or st.session_state["user"].name == settings.auth.master_username):
             create_token(name=token_name, expires_at=round(int(expires_at.strftime("%s"))))
 
 with col2:
     with st.expander(label="Delete a token", icon=":material/delete_forever:"):
         token_name = st.selectbox(label="Token ID", options=[token["name"] for token in tokens])
         token_id = [token["id"] for token in tokens if token["name"] == token_name][0] if token_name else None
-        if st.button(label="Delete", disabled=not token_id or st.session_state["user"].name == settings.master_username, key="delete_token_button"):
+        if st.button(label="Delete", disabled=not token_id or st.session_state["user"].name == settings.auth.master_username, key="delete_token_button"):  # fmt: off
             delete_token(token_id=token_id)
 
 st.subheader("Rate limits")

@@ -18,7 +18,7 @@ except Exception:
     logging.error(traceback.format_exc())
     st.stop()
 
-openai_client = OpenAI(base_url=f"{settings.api_url}/v1", api_key=st.session_state["user"].api_key)
+openai_client = OpenAI(base_url=f"{settings.playground.api_url}/v1", api_key=st.session_state["user"].api_key)
 
 # Sidebar
 with st.sidebar:

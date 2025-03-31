@@ -126,6 +126,7 @@ class UsagesMiddleware(BaseHTTPMiddleware):
             return response
 
         try:
+            # TODO: changer pour récupérer l'utilisateur depuis la base de données sans requête supplémentaire
             authorization = request.headers.get("Authorization")
             # Access auth client through app.state.databases
             if hasattr(request.app.state, "databases") and hasattr(request.app.state.databases, "auth"):
@@ -135,15 +136,15 @@ class UsagesMiddleware(BaseHTTPMiddleware):
                 # Log usage
                 db = next(self.db_func())
                 await self._log_usage(
-                    db,
-                    start_time,
-                    duration,
-                    user.name if user else "UNKNOWN",
-                    endpoint,
-                    model,
-                    usage_data,
-                    response.status_code,
-                    method,
+                    db=db,
+                    start_time=start_time,
+                    duration=duration,
+                    user_id=user.name if user else "UNKNOWN",
+                    endpoint=endpoint,
+                    model=model,
+                    usage_data=usage_data,
+                    status=response.status_code,
+                    method=method,
                 )
 
         except Exception as e:

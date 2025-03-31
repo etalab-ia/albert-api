@@ -1,26 +1,10 @@
-models:
-  - id: turbo
-    type: text-generation
-    default_internet: True
-    clients:
-      - model: gpt-3.5-turbo
-        type: openai
-        args:
-          api_url: https://api.openai.com
-          api_key: sk-...aB
-          timeout: 60
+general:
+  documents_model: my-embeddings-model # change this 
 
-  - id: embeddings-small
-    type: text-embeddings-inference
-    default_internet: True
-    clients:
-      - model: text-embedding-3-small
-        type: openai
-        args:
-          api_url: https://api.openai.com
-          api_key: sk-...aB
-          timeout: 60
+auth:
+  master_key: changeme
 
+databases:
   - type: qdrant
     args:
       url: http://qdrant
@@ -41,3 +25,31 @@ models:
       max_overflow: 10
       pool_pre_ping: True
       connect_args: {"server_settings": {"statement_timeout": "60"}}
+
+models:
+  - id: my-language-model
+    type: text-generation
+    default_internet: True
+    clients:
+      - model: gpt-3.5-turbo
+        type: openai
+        args:
+          api_url: https://api.openai.com
+          api_key: sk-...aB
+          timeout: 60
+
+  - id: my-embeddings-model
+    type: text-embeddings-inference
+    default_internet: True
+    clients:
+      - model: text-embedding-3-small
+        type: openai
+        args:
+          api_url: https://api.openai.com
+          api_key: sk-...aB
+          timeout: 60
+
+ui:
+  api_url: http://localhost:8081
+  database:
+    url: postgresql://postgres:changeme@localhost:5432/ui

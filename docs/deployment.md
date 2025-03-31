@@ -158,7 +158,7 @@ Uniquement la racine de l'URL doit être renseignée, ne pas inclure `/v1` dans 
 
 | Argument | Requis | Description | Type | Valeurs |
 | --- | --- | --- | --- | --- |
-| type | Requis | Définit le type de base de données. | str | `redis`, `qdrant`, `grist` (1) |
+| type | Requis | Définit le type de base de données. | str | `redis`, `qdrant`, `sql` (1) |
 | args | Requis | Arguments de la base de données. | dict | (2) |
 
 **Exemple**
@@ -179,12 +179,14 @@ databases:
       port: 6379
       password: changeme
   
-  - type: grist
+  - type: sql
     args:
-      api_key: 12..9c
-      server: https://grist.numerique.gouv.fr
-      doc_id: 4fBA12fFpHuxn38G6sLPMr
-      table_id: DEV
+      url: postgresql://postgres:changeme@localhost:5432/api
+      echo: False
+      pool_size: 5
+      max_overflow: 10
+      pool_pre_ping: True
+      connect_args: {"server_settings": {"statement_timeout": "60"}}
 ```   
 
 **(1) Les types de bases de données**
@@ -193,16 +195,14 @@ databases:
 | --- | --- | --- | --- |
 | `redis` | Requis | Cache et rate limiting | [Redis](https://redis.io/) |
 | `qdrant` | Requis | Vector store | [Qdrant](https://qdrant.tech/) |
-| `grist` | Optionnel | Auth | [Grist](https://www.getgrist.com/) |
-
-Si grist n'est pas configuré, l'API Albert est ouverte sans authentification.
+| `sql` | Requis | Base de données relationnelle | [SQLAlchemy](https://www.sqlalchemy.org/) |
 
 **(2) Les arguments des clients de bases de données**
 
 Les arguments des bases de données sont tous ceux acceptés les clients python respectifs de ces bases de données :
 - [client Redis](https://github.com/redis/redis-py)
 - [client Qdrant](https://github.com/qdrant/qdrant-client)
-- [client Grist](https://github.com/gristlabs/py_grist_api)
+- [client SQLAlchemy](https://www.sqlalchemy.org/)
 
 #### internet
 

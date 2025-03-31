@@ -49,7 +49,7 @@ with col1:
         collection_name = st.text_input(
             label="Collection name", placeholder="Enter collection name", help="Create a private collection with the embeddings model of your choice."
         )
-        if st.button(label="Create", disabled=not collection_name or st.session_state["user"].name == settings.master_username):
+        if st.button(label="Create", disabled=not collection_name or st.session_state["user"].name == settings.auth.master_username):
             create_collection(collection_name=collection_name)
 
 with col2:
@@ -61,7 +61,7 @@ with col2:
         collection_id = collection_id[0] if collection_id else None
         if st.button(
             label="Delete",
-            disabled=not collection_id or st.session_state["user"].name == settings.master_username,
+            disabled=not collection_id or st.session_state["user"].name == settings.auth.master_username,
             key="delete_collection_button",
         ):
             delete_collection(collection_id=collection_id)

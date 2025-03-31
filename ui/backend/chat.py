@@ -14,7 +14,7 @@ def generate_stream(messages: List[dict], params: dict, rag: bool, rerank: bool)
         k = params["rag"]["k"] * 2 if rerank else params["rag"]["k"]
         data = {"collections": params["rag"]["collections"], "k": k, "prompt": messages[-1]["content"], "score_threshold": None}
         response = requests.post(
-            url=f"{settings.api_url}/v1/search", json=data, headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+            url=f"{settings.playground.api_url}/v1/search", json=data, headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
         )
         assert response.status_code == 200, f"{response.status_code} - {response.json()}"
 
@@ -33,7 +33,7 @@ Les documents sont :
                 "input": [chunk["content"] for chunk in chunks],
             }
             response = requests.post(
-                url=f"{settings.api_url}/v1/rerank", json=data, headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+                url=f"{settings.playground.api_url}/v1/rerank", json=data, headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
             )
             assert response.status_code == 200, f"{response.status_code} - {response.json()}"
 
@@ -45,7 +45,7 @@ Les documents sont :
         prompt = prompt_template.format(prompt=prompt, chunks="\n\n".join(chunks))
         messages = messages[:-1] + [{"role": "user", "content": prompt}]
 
-    client = OpenAI(base_url=f"{settings.api_url}/v1", api_key=st.session_state["user"].api_key)
+    client = OpenAI(base_url=f"{settings.playground.api_url}/v1", api_key=st.session_state["user"].api_key)
     stream = client.chat.completions.create(stream=True, messages=messages, **params["sampling_params"])
 
     return stream, sources

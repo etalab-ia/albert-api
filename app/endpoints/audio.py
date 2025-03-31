@@ -6,7 +6,7 @@ from fastapi.responses import PlainTextResponse
 from app.helpers import Authorization
 from app.schemas.audio import AudioTranscription
 from app.utils.lifespan import context
-from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, SUPPORTED_LANGUAGES_VALUES
+from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, AUDIO_SUPPORTED_LANGUAGES_VALUES
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(description="The audio file object (not file name) to transcribe, in one of these formats: mp3 or wav."),
     model: str = AudioTranscriptionModel,
-    language: Literal[*SUPPORTED_LANGUAGES_VALUES] = AudioTranscriptionLanguage,
+    language: Literal[*AUDIO_SUPPORTED_LANGUAGES_VALUES] = AudioTranscriptionLanguage,
     prompt: str = AudioTranscriptionPrompt,
     response_format: Literal["json", "text"] = AudioTranscriptionResponseFormat,
     temperature: float = AudioTranscriptionTemperature,

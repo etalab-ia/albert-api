@@ -13,7 +13,6 @@ from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
 
 
 class DatabaseType(str, Enum):
-    GRIST = "grist"
     QDRANT = "qdrant"
     REDIS = "redis"
     SQL = "sql"
@@ -93,8 +92,8 @@ class General(ConfigBaseModel):
 class Config(ConfigBaseModel):
     general: General
     auth: Auth = Field(default_factory=Auth)
-    models: List[Model]
-    databases: List[Database]
+    models: List[Model] = Field(min_length=1)
+    databases: List[Database] = Field(min_length=1)
     internet: List[Internet] = Field(default_factory=list, max_length=1)
 
     @model_validator(mode="after")
@@ -158,7 +157,6 @@ class Settings(BaseSettings):
         values.databases.sql = next((database for database in config.databases if database.type == DatabaseType.SQL), None)
         values.databases.redis = next((database for database in config.databases if database.type == DatabaseType.REDIS), None)
         values.databases.qdrant = next((database for database in config.databases if database.type == DatabaseType.QDRANT), None)
-        values.databases.grist = next((database for database in config.databases if database.type == DatabaseType.GRIST), None)
 
         if values.databases.qdrant:
             assert values.general.documents_model in [model.id for model in values.models if model.type == ModelType.EMBEDDINGS], f"Documents model is not defined in models section with type {ModelType.EMBEDDINGS}."  # fmt: off
