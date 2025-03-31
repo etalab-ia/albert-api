@@ -86,7 +86,7 @@ class Auth(ConfigBaseModel):
 
 
 class General(ConfigBaseModel):
-    internet_model: str
+    internet_model: Optional[str] = None
     documents_model: str
 
 
@@ -164,6 +164,7 @@ class Settings(BaseSettings):
 
         if values.internet:
             assert values.databases.qdrant, "Qdrant database is required to use internet."
+            assert values.general.internet_model, "Internet model is required to use internet."
             assert values.general.internet_model in [model.id for model in values.models if model.type == ModelType.TEXT_GENERATION], f"Internet model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
 
         return values

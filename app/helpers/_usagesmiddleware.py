@@ -1,13 +1,12 @@
 from datetime import datetime
 import json
+import traceback
 from typing import Callable, Optional
 
-from fastapi import Request, Response, Security
+from fastapi import Request, Response
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.helpers import Authorization
-from app.schemas.core.auth import UserInfo
 from app.sql.models import Usage
 from app.sql.session import get_db
 from app.utils import variables
@@ -67,7 +66,7 @@ class UsagesMiddleware(BaseHTTPMiddleware):
         db: Session,
         start_time: datetime,
         duration: int,
-        user_id: str,
+        user_id: int,
         endpoint: str,
         model: str,
         usage_data: dict,
@@ -78,7 +77,7 @@ class UsagesMiddleware(BaseHTTPMiddleware):
             log = Usage(
                 datetime=start_time,
                 duration=duration,
-                user=user_id,
+                user_id=user_id,
                 endpoint=endpoint,
                 model=model,
                 prompt_tokens=usage_data.get("prompt_tokens"),
@@ -90,19 +89,16 @@ class UsagesMiddleware(BaseHTTPMiddleware):
             db.add(log)
             db.commit()
         except Exception as e:
+            logger.debug(traceback.format_exc())
             logger.error(f"Failed to log usage: {str(e)}")
             db.rollback()
         finally:
             db.close()
 
-    async def dispatch(self, request: Request, call_next, user: UserInfo = Security(dependency=Authorization())) -> Response:
+    async def dispatch(self, request: Request, call_next) -> Response:
         endpoint = request.url.path
         if not any(endpoint.endswith(model_endpoint) for model_endpoint in self.MODELS_ENDPOINTS):
             return await call_next(request)
-
-        print("#########################")
-        print(user)
-        print("#########################")
 
         method = request.method
         content_type = request.headers.get("Content-Type", "")
@@ -132,24 +128,27 @@ class UsagesMiddleware(BaseHTTPMiddleware):
             return response
 
         try:
+            from app.utils.exceptions import InvalidAuthenticationSchemeException, InvalidAPIKeyException
             from app.utils.lifespan import context
+            from app.utils.settings import settings
 
             api_key = request.headers.get("Authorization")
-            print("#########################")
-            print(api_key)
-            print("#########################")
-            api_key = api_key.split(sep=" ")[1]
-            claims = context.iam._decode_token(token=api_key)
-            user_id = claims.get("user_id")
+            scheme, credentials = api_key.split(sep=" ")
+            if scheme != "Bearer":
+                raise InvalidAuthenticationSchemeException()
 
-            print("#########################")
-            print(user_id)
-            print("#########################")
+            if not credentials:
+                raise InvalidAPIKeyException()
 
-            # authorization = request.headers.get("Authorization")
-            # # Access auth client through app.state.databases
-            if hasattr(request.app.state, "sql") and hasattr(request.app.state.sql, "auth"):
-                #     user = await request.app.state.databases.auth.check_api_key(key=authorization.split(sep=" ")[1])
+            if credentials == settings.auth.master_key:  # master user can do anything
+                logger.info("Skipping usage logging for master user")
+                return response
+
+            user_id = await context.iam.check_token(token=credentials)
+            if not user_id:
+                raise InvalidAPIKeyException()
+
+            if hasattr(request.app.state, "sql"):
                 usage_data, response = await self._handle_streaming_response(response)
 
                 # Log usage
@@ -167,6 +166,7 @@ class UsagesMiddleware(BaseHTTPMiddleware):
                 )
 
         except Exception as e:
+            logger.debug(traceback.format_exc())
             logger.error(f"Error in UsagesMiddleware: {str(e)}")
 
         return response
