@@ -3,23 +3,19 @@ import random
 import time
 
 from app.clients.model import BaseModelClient as ModelClient
-from app.schemas.core.models import ModelType, RoutingStrategy
+from app.schemas.core.models import RoutingStrategy
+from app.schemas.models import ModelType
 from app.schemas.core.settings import Model as ModelSettings
 from app.utils.exceptions import WrongModelTypeException
-from app.utils.variables import (
-    ENDPOINT__AUDIO_TRANSCRIPTIONS,
-    ENDPOINT__CHAT_COMPLETIONS,
-    ENDPOINT__EMBEDDINGS,
-    ENDPOINT__RERANK,
-)
+from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS, ENDPOINT__RERANK
 
 
 class ModelRouter:
     ENDPOINT_MODEL_TYPE_TABLE = {
-        ENDPOINT__CHAT_COMPLETIONS: [ModelType.LANGUAGE],
-        ENDPOINT__EMBEDDINGS: [ModelType.EMBEDDINGS],
-        ENDPOINT__AUDIO_TRANSCRIPTIONS: [ModelType.AUDIO],
-        ENDPOINT__RERANK: [ModelType.RERANK],
+        ENDPOINT__CHAT_COMPLETIONS: [ModelType.TEXT_GENERATION],
+        ENDPOINT__EMBEDDINGS: [ModelType.TEXT_EMBEDDINGS_INFERENCE],
+        ENDPOINT__AUDIO_TRANSCRIPTIONS: [ModelType.AUTOMATIC_SPEECH_RECOGNITION],
+        ENDPOINT__RERANK: [ModelType.TEXT_CLASSIFICATION],
     }
 
     def __init__(
@@ -30,6 +26,8 @@ class ModelRouter:
         aliases: list[str],
         routing_strategy: str,
         clients: list[ModelSettings],
+        *args,
+        **kwargs,
     ):
         vector_sizes, max_context_lengths = list(), list()
 

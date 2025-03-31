@@ -1,5 +1,3 @@
-import time
-
 import bcrypt
 from pydantic import BaseModel
 import requests
@@ -30,13 +28,13 @@ def check_password(password: str, hashed_password: str) -> bool:
 
 def login(user_name: str, user_password: str, session: Session) -> dict:
     # master login flow
-    if user_name == settings.master_username:
-        response = requests.get(url=f"{settings.api_url}/users/me", headers={"Authorization": f"Bearer {user_password}"})
+    if user_name == settings.auth.master_username:
+        response = requests.get(url=f"{settings.playground.api_url}/users/me", headers={"Authorization": f"Bearer {user_password}"})
         if response.status_code != 404:  # only master get 404 on /users/me
             st.error(response.json()["detail"])
             st.stop()
 
-        response = requests.get(url=f"{settings.api_url}/v1/models", headers={"Authorization": f"Bearer {user_password}"})
+        response = requests.get(url=f"{settings.playground.api_url}/v1/models", headers={"Authorization": f"Bearer {user_password}"})
         if response.status_code != 200:
             st.error(response.json()["detail"])
             st.stop()
@@ -50,7 +48,7 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
             limits.append({"model": model["id"], "type": "rpd", "value": None})
 
         role = {"object": "role", "id": 0, "name": "master", "default": False, "permissions": ADMIN_PERMISSIONS, "limits": limits}
-        user = User(id=0, name=settings.master_username, api_key=user_password, user={"expires_at": None}, role=role)
+        user = User(id=0, name=settings.auth.master_username, api_key=user_password, user={"expires_at": None}, role=role)
 
         st.session_state["login_status"] = True
         st.session_state["user"] = user
@@ -66,17 +64,13 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
         st.error("Invalid username or password")
         st.stop()
 
-    response = requests.get(url=f"{settings.api_url}/users/me", headers={"Authorization": f"Bearer {db_user.api_key}"})
+    response = requests.get(url=f"{settings.playground.api_url}/users/me", headers={"Authorization": f"Bearer {db_user.api_key}"})
     if response.status_code != 200:
         st.error(response.json()["detail"])
         st.stop()
     user = response.json()
 
-    if user["expires_at"] and user["expires_at"] < int(time.time()):
-        st.error("Invalid username or password")
-        st.stop()
-
-    response = requests.get(url=f"{settings.api_url}/roles/me", headers={"Authorization": f"Bearer {db_user.api_key}"})
+    response = requests.get(url=f"{settings.playground.api_url}/roles/me", headers={"Authorization": f"Bearer {db_user.api_key}"})
     if response.status_code != 200:
         st.error(response.json()["detail"])
         st.stop()

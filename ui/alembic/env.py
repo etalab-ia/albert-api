@@ -1,18 +1,13 @@
 from logging.config import fileConfig
-import os
-import sys
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-
-os.environ["config_file"] = os.path.join("..", os.environ.get("CONFIG_FILE", "config.yml"))
-sys.path.append("..")
 
 from ui.settings import settings
 from ui.backend.sql.models import Base
 
 config = context.config
-config.set_main_option(name="sqlalchemy.url", value=settings.database.url.replace("+asyncpg", ""))
+config.set_main_option(name="sqlalchemy.url", value=settings.playground.database_url.replace("+asyncpg", ""))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

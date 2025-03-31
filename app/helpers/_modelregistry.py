@@ -10,8 +10,6 @@ class ModelRegistry:
     def __init__(self, routers: List[ModelRouter]) -> None:
         self.models = list()
         self.aliases = dict()
-        self.internet_default_language_model = None
-        self.internet_default_embeddings_model = None
 
         for model in routers:
             if "id" not in model.__dict__:  # no clients available

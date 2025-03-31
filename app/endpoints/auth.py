@@ -18,7 +18,6 @@ from app.schemas.auth import (
     Users,
     UserUpdateRequest,
 )
-from app.schemas.core.auth import UserInfo
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 
@@ -58,13 +57,13 @@ async def update_role(request: Request, role: int = Path(description="The ID of 
     return Response(status_code=204)
 
 
-@router.get(path=ENDPOINT__ROLES + "/me")
-async def get_current_role(request: Request, user: UserInfo = Security(dependency=Authorization())) -> Role:
+@router.get(path=ENDPOINT__ROLES + "/me", dependencies=[Security(dependency=Authorization())])
+async def get_current_role(request: Request) -> Role:
     """
     Get the current role.
     """
 
-    roles = await context.iam.get_roles(role_id=user.role_id)
+    roles = await context.iam.get_roles(role_id=request.app.state.user.role)
 
     return roles[0]
 
@@ -105,7 +104,7 @@ async def create_user(request: Request, body: UserRequest = Body(description="Th
     return JSONResponse(status_code=201, content={"id": user_id})
 
 
-@router.delete(path=ENDPOINT__USERS + "/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_USER]))])  # fmt: off
+@router.delete(path=ENDPOINT__USERS + "/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_USER]))])
 async def delete_user(request: Request, user: int = Path(description="The ID of the user to delete.")) -> Response:
     """
     Delete a user.
@@ -126,13 +125,13 @@ async def update_user(request: Request, user: int = Path(description="The ID of 
     return Response(status_code=204)
 
 
-@router.get(path=ENDPOINT__USERS + "/me")
-async def get_current_user(request: Request, user: UserInfo = Security(dependency=Authorization())) -> User:
+@router.get(path=ENDPOINT__USERS + "/me", dependencies=[Security(dependency=Authorization())])
+async def get_current_user(request: Request) -> User:
     """
     Get the current user.
     """
 
-    users = await context.iam.get_users(user_id=user.user_id)
+    users = await context.iam.get_users(user_id=request.app.state.user.id)
 
     return users[0]
 
@@ -164,51 +163,50 @@ async def get_users(
     return Users(data=data)
 
 
-@router.post(path=ENDPOINT__TOKENS)
-async def create_token(request: Request, body: TokenRequest = Body(description="The token creation request."), user: UserInfo = Security(dependency=Authorization())) -> JSONResponse:  # fmt: off
+@router.post(path=ENDPOINT__TOKENS, dependencies=[Security(dependency=Authorization())])
+async def create_token(request: Request, body: TokenRequest = Body(description="The token creation request.")) -> JSONResponse:
     """
     Create a new token.
     """
 
-    user_id = body.user if body.user else user.user_id
+    user_id = body.user if body.user else request.app.state.user.id
     token_id, token = await context.iam.create_token(user_id=user_id, name=body.name, expires_at=body.expires_at)
 
     return JSONResponse(status_code=201, content={"id": token_id, "token": token})
 
 
-@router.delete(path=ENDPOINT__TOKENS + "/{token:path}")
-async def delete_token(request: Request, token: int = Path(description="The token ID of the token to delete."), user: UserInfo = Security(dependency=Authorization())) -> Response:  # fmt: off
+@router.delete(path=ENDPOINT__TOKENS + "/{token:path}", dependencies=[Security(dependency=Authorization())])
+async def delete_token(request: Request, token: int = Path(description="The token ID of the token to delete.")) -> Response:
     """
     Delete a token.
     """
 
-    await context.iam.delete_token(user_id=user.user_id, token_id=token)
+    await context.iam.delete_token(user_id=request.app.state.user.id, token_id=token)
 
     return Response(status_code=204)
 
 
-@router.get(path=ENDPOINT__TOKENS + "/{token:path}")
-async def get_token(request: Request, token: int = Path(description="The token ID of the token to get."), user: UserInfo = Security(dependency=Authorization())) -> Token:  # fmt: off
+@router.get(path=ENDPOINT__TOKENS + "/{token:path}", dependencies=[Security(dependency=Authorization())])
+async def get_token(request: Request, token: int = Path(description="The token ID of the token to get.")) -> Token:
     """
     Get your token by id.
     """
 
-    tokens = await context.iam.get_tokens(user_id=user.user_id, token_id=token)
+    tokens = await context.iam.get_tokens(user_id=request.app.state.user.id, token_id=token)
 
     return tokens[0]
 
 
-@router.get(path=ENDPOINT__TOKENS)
+@router.get(path=ENDPOINT__TOKENS, dependencies=[Security(dependency=Authorization())])
 async def get_tokens(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the tokens to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the tokens to get."),
-    user: UserInfo = Security(dependency=Authorization()),
 ) -> Tokens:
     """
     Get all your tokens.
     """
 
-    data = await context.iam.get_tokens(user_id=user.user_id, offset=offset, limit=limit)
+    data = await context.iam.get_tokens(user_id=request.app.state.user.id, offset=offset, limit=limit)
 
     return Tokens(data=data)

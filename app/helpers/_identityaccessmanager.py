@@ -83,8 +83,8 @@ class IdentityAccessManager:
     async def delete_role(self, role_id: int) -> None:
         async with self.sql.session() as session:
             # check if role exists
+            result = await session.execute(statement=select(RoleTable).where(RoleTable.id == role_id))
             try:
-                result = await session.execute(statement=select(RoleTable).where(RoleTable.id == role_id))
                 result.scalar_one()
             except NoResultFound:
                 raise RoleNotFoundException()
@@ -107,8 +107,8 @@ class IdentityAccessManager:
     ) -> None:
         async with self.sql.session() as session:
             # check if role exists
+            result = await session.execute(statement=select(RoleTable).where(RoleTable.id == role_id))
             try:
-                result = await session.execute(statement=select(RoleTable).where(RoleTable.id == role_id))
                 role = result.scalar_one()
             except NoResultFound:
                 raise RoleNotFoundException()
@@ -227,8 +227,8 @@ class IdentityAccessManager:
 
         async with self.sql.session() as session:
             # check if role exists
+            result = await session.execute(statement=select(RoleTable.id).where(RoleTable.id == role_id))
             try:
-                result = await session.execute(statement=select(RoleTable.id).where(RoleTable.id == role_id))
                 result.scalar_one()
             except NoResultFound:
                 raise RoleNotFoundException()
@@ -255,8 +255,8 @@ class IdentityAccessManager:
     async def delete_user(self, user_id: int) -> None:
         async with self.sql.session() as session:
             # check if user exists
+            result = await session.execute(statement=select(UserTable.id).where(UserTable.id == user_id))
             try:
-                result = await session.execute(statement=select(UserTable.id).where(UserTable.id == user_id))
                 result.scalar_one()
             except NoResultFound:
                 raise UserNotFoundException()
@@ -406,7 +406,7 @@ class IdentityAccessManager:
 
             return tokens
 
-    async def check_token(self, token: str) -> Optional[int]:
+    async def check_token(self, token: str) -> Optional[Tuple[int, int]]:
         async with self.sql.session() as session:
             try:
                 claims = self._decode_token(token=token)
@@ -420,4 +420,4 @@ class IdentityAccessManager:
             except TokenNotFoundException:
                 return
 
-            return claims["user_id"]
+            return claims["user_id"], claims["token_id"]

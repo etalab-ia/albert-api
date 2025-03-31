@@ -24,17 +24,18 @@ services:
       context: .
       dockerfile: ui/Dockerfile
     restart: always
-    environment:
-      - BASE_URL=http://api:8000/v1
-      - DOCUMENTS_EMBEDDINGS_MODEL=
-      - EXCLUDE_MODELS=
     ports:
       - 8501:8501
+    volumes:
+      - ./config.example.yml:/config.yml:ro
     develop:
       watch:
         - action: sync+restart
           path: ./ui
           target: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   redis:
     image: redis/redis-stack-server:7.2.0-v11

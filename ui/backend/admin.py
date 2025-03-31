@@ -14,7 +14,7 @@ from ui.backend.sql.session import get_session
 
 def create_role(name: str, default: bool, permissions: list, limits: list):
     response = requests.post(
-        url=f"{settings.api_url}/roles",
+        url=f"{settings.playground.api_url}/roles",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
         json={"name": name, "default": default, "permissions": permissions, "limits": limits},
     )
@@ -29,7 +29,9 @@ def create_role(name: str, default: bool, permissions: list, limits: list):
 
 
 def delete_role(role: int):
-    response = requests.delete(url=f"{settings.api_url}/roles/{role}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
+    response = requests.delete(
+        url=f"{settings.playground.api_url}/roles/{role}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+    )
     if response.status_code != 204:
         st.toast(response.json()["detail"], icon="❌")
         return
@@ -44,7 +46,7 @@ def update_role(
     role: int, name: Optional[str] = None, default: Optional[bool] = None, permissions: Optional[list] = None, limits: Optional[list] = None
 ):
     response = requests.patch(
-        url=f"{settings.api_url}/roles/{role}",
+        url=f"{settings.playground.api_url}/roles/{role}",
         json={"name": name, "default": default, "permissions": permissions, "limits": limits},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
@@ -63,7 +65,7 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
         return
 
     response = requests.post(
-        url=f"{settings.api_url}/users",
+        url=f"{settings.playground.api_url}/users",
         json={"name": name, "role": role, "expires_at": expires_at},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
@@ -76,7 +78,7 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
 
     # create token
     response = requests.post(
-        url=f"{settings.api_url}/tokens",
+        url=f"{settings.playground.api_url}/tokens",
         json={"user": user_id, "name": "playground"},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
@@ -108,7 +110,9 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
 
 
 def delete_user(user: int):
-    response = requests.delete(url=f"{settings.api_url}/users/{user}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
+    response = requests.delete(
+        url=f"{settings.playground.api_url}/users/{user}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+    )
     if response.status_code != 204:
         st.toast(response.json()["detail"], icon="❌")
         return
@@ -127,7 +131,7 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
         return
 
     response = requests.patch(
-        url=f"{settings.api_url}/users/{user}",
+        url=f"{settings.playground.api_url}/users/{user}",
         json={"name": name, "role": role, "expires_at": expires_at},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )

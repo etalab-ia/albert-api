@@ -24,7 +24,7 @@ class AlbertModelClient(AsyncOpenAI, BaseModelClient):
         ENDPOINT__RERANK: "/v1/rerank",
     }
 
-    def __init__(self, model: str, api_url: str, api_key: str, timeout: int) -> None:
+    def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
         Initialize the Albert model client and check if the model is available.
         """

@@ -24,7 +24,7 @@ class OpenaiModelClient(AsyncOpenAI, BaseModelClient):
         ENDPOINT__RERANK: None,
     }
 
-    def __init__(self, model: str, api_url: str, api_key: str, timeout: int) -> None:
+    def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
         Initialize the OpenAI model client and check if the model is available.
         """

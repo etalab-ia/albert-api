@@ -65,6 +65,6 @@ class HTMLParser(BaseParser):
 
         content = self.clean("\n".join(extracted_text).strip())
         metadata = {"title": title}
-        output = [ParserOutput(contents=[content], metadata=metadata)]
+        output = ParserOutput(contents=[content], metadata=metadata)
 
         return output

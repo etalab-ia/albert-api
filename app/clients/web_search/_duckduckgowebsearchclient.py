@@ -3,11 +3,11 @@ from typing import List
 
 import httpx
 
-from app.clients.internet._baseinternetclient import BaseInternetClient
+from app.clients.web_search._basewebsearchclient import BaseWebSearchClient
 from app.utils.logging import logger
 
 
-class DuckduckgoInternetClient(BaseInternetClient):
+class DuckduckgoWebSearchClient(BaseWebSearchClient):
     URL = "https://api.duckduckgo.com/"
     DEFAULT_TIMEOUT = 5
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -15,10 +15,7 @@ class DuckduckgoInternetClient(BaseInternetClient):
     def __init__(self, *args, **kwargs) -> None:
         self.headers = {"User-Agent": self.USER_AGENT}
 
-    async def get_result_urls(self, query: str, n: int = 3) -> List[str]:
-        """
-        See BaseInternetClient.get_result_urls for more information.
-        """
+    async def search(self, query: str, n: int = 3) -> List[str]:
         params = {
             "q": query,
             "format": "json",

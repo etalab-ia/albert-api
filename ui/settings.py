@@ -1,8 +1,8 @@
 from functools import lru_cache
 import os
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 from pydantic_settings import BaseSettings
 import yaml
 
@@ -12,16 +12,20 @@ class ConfigBaseModel(BaseModel):
         extra = "allow"
 
 
-class Database(ConfigBaseModel):
-    url: str = "postgresql+asyncpg://postgres:changeme@postgres:5432/ui"
+class Auth(ConfigBaseModel):
+    master_username: str = "master"
+
+
+class Playground(ConfigBaseModel):
+    api_url: str = "http://localhost:8080"
+    max_api_key_expiration_days: Optional[int] = None
+    cache_ttl: int = 1800  # 30 minutes
+    database_url: str = "postgresql+asyncpg://postgres:changeme@localhost:5432/ui"
 
 
 class Config(ConfigBaseModel):
-    cache_ttl: int = 1800  # 30 minutes
-    api_url: str = "http://localhost:8080"
-    max_token_expiration_days: int = 60  # days
-    database: Database = Field(default_factory=Database)
-    master_username: str = "master"
+    auth: Auth
+    playground: Playground
 
 
 class Settings(BaseSettings):
@@ -39,13 +43,11 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def setup_config(cls, values) -> Any:
         stream = open(file=values.config_file, mode="r")
-        config = Config(**yaml.safe_load(stream=stream)["ui"])
+        config = Config(**yaml.safe_load(stream=stream))
         stream.close()
 
-        # Merge config values with existing values
-        for key, value in config.__dict__.items():
-            if key not in values.__dict__.keys():
-                setattr(values, key, value)
+        values.auth = config.auth
+        values.playground = config.playground
 
         return values
 

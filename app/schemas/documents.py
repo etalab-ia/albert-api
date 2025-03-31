@@ -1,6 +1,6 @@
 from typing import Literal, List, Optional
 
-from pydantic import BaseModel
+from app.schemas import BaseModel
 
 
 class Document(BaseModel):

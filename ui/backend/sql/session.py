@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 
 from ui.settings import settings
 
-engine = create_engine(**settings.database.model_dump())
+engine = create_engine(url=settings.playground.database_url.replace("+asyncpg", ""))
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

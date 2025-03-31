@@ -6,19 +6,19 @@ import pytest
 
 from app.schemas.chunks import Chunks
 from app.schemas.collections import CollectionVisibility
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS
+from app.schemas.models import ModelType
 
 
 @pytest.fixture(scope="module")
 def setup(client: TestClient):
     # Get embedding model
-    response = client.get_user(url="/v1/models", timeout=10)
+    response = client.get_without_permissions(url="/v1/models", timeout=10)
     models = response.json()
-    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
+    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]["id"]
     logging.info(f"test embeddings model ID: {EMBEDDINGS_MODEL_ID}")
 
     # Create a collection
-    response = client.post_user(
+    response = client.post_without_permissions(
         url="/v1/collections", json={"name": "pytest", "model": EMBEDDINGS_MODEL_ID, "visibility": CollectionVisibility.PRIVATE}
     )
     assert response.status_code == 201
@@ -28,22 +28,22 @@ def setup(client: TestClient):
     file_path = "app/tests/assets/json.json"
     files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
     data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
-    response = client.post_user(url="/v1/files", data=data, files=files)
+    response = client.post_without_permissions(url="/v1/files", data=data, files=files)
     assert response.status_code == 201, response.text
 
     # Retrieve the document ID
-    response = client.get_user(url=f"/v1/documents/{COLLECTION_ID}")
+    response = client.get_without_permissions(url="/v1/documents", params={"collection": COLLECTION_ID})
     assert response.status_code == 200, response.text
     DOCUMENT_ID = response.json()["data"][0]["id"]
 
     yield COLLECTION_ID, DOCUMENT_ID
 
 
-@pytest.mark.usefixtures("client", "setup", "cleanup")
+@pytest.mark.usefixtures("client", "setup")
 class TestChunks:
     def test_get_chunks(self, client: TestClient, setup):
         COLLECTION_ID, DOCUMENT_ID = setup
-        response = client.get_user(url=f"/v1/chunks/{COLLECTION_ID}/{DOCUMENT_ID}")
+        response = client.get_without_permissions(url=f"/v1/chunks/{DOCUMENT_ID}")
         assert response.status_code == 200, response.text
 
         chunks = Chunks(**response.json())  # test output format
@@ -53,10 +53,8 @@ class TestChunks:
 
     def test_delete_chunks(self, client: TestClient, setup):
         COLLECTION_ID, DOCUMENT_ID = setup
-        response = client.delete_user(url=f"/v1/documents/{COLLECTION_ID}/{DOCUMENT_ID}")
+        response = client.delete_without_permissions(url=f"/v1/documents/{DOCUMENT_ID}")
         assert response.status_code == 204, response.text
 
-        response = client.get_user(url=f"/v1/chunks/{COLLECTION_ID}/{DOCUMENT_ID}")
-        data = response.json()["data"]
-
-        assert len(data) == 0
+        response = client.get_without_permissions(url=f"/v1/chunks/{DOCUMENT_ID}")
+        assert response.status_code == 404, response.text

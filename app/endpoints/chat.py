@@ -7,14 +7,13 @@ from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletion
 from app.schemas.search import Search
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.lifespan import context
-from app.utils.settings import settings
-from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS
+from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__CHAT_COMPLETIONS)
-async def chat_completions(request: Request, body: ChatCompletionRequest, user: str = Security(dependency=Authorization())) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
+@router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=Authorization())])
+async def chat_completions(request: Request, body: ChatCompletionRequest) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
     """Creates a model response for the given chat conversation.
 
     **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional
@@ -29,18 +28,14 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, user: 
             if not context.documents:
                 raise CollectionNotFoundException()
 
-            model = context.models(model=settings.general.documents_model)
-            client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
-
             results = await context.documents.search(
-                model_client=client,
-                collection_ids=body.collections,
+                collection_ids=body.search_args.collections,
                 prompt=body.messages[-1]["content"],
                 method=body.search_args.method,
                 k=body.search_args.k,
                 rff_k=body.search_args.rff_k,
-                web_search=body.search.args.web_search,
-                user_id=user.user_id,
+                web_search=body.search_args.web_search,
+                user_id=request.app.state.user.id,
             )
             if results:
                 chunks = "\n".join([result.chunk.content for result in results])

@@ -1,9 +1,16 @@
+from enum import Enum
 from typing import List, Literal, Optional
 
 from openai.types import Model
-from pydantic import BaseModel
 
-from app.schemas.core.models import ModelType
+from app.schemas import BaseModel
+
+
+class ModelType(str, Enum):
+    AUTOMATIC_SPEECH_RECOGNITION = "automatic-speech-recognition"
+    TEXT_EMBEDDINGS_INFERENCE = "text-embeddings-inference"
+    TEXT_GENERATION = "text-generation"
+    TEXT_CLASSIFICATION = "text-classification"
 
 
 class Model(Model):

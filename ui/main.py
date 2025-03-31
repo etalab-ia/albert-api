@@ -21,7 +21,7 @@ st.set_page_config(
 
 st.logo(
     image="https://upload.wikimedia.org/wikipedia/fr/thumb/5/50/Bloc_Marianne.svg/1200px-Bloc_Marianne.svg.png",
-    link=f"{settings.api_url}/playground",
+    link=f"{settings.playground.api_url}/playground",
     size="large",
 )
 

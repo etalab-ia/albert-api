@@ -1,3 +1,5 @@
+import time
+
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
@@ -50,4 +52,6 @@ def header():
 
         if st.session_state.get("user") and st.session_state["user"].role["name"] == "master":
             st.warning("You are logged in as the master user. This is not recommended for production use, please use a regular user instead.")
+        if st.session_state.get("user") and st.session_state["user"].user["expires_at"] and st.session_state["user"].user["expires_at"] < int(time.time()):  # fmt: off
+            st.warning("**Your account has expired. Please contact support to renew your account.**")
         st.markdown("***")

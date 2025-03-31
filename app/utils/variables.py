@@ -1,5 +1,3 @@
-COLLECTION_DISPLAY_ID__INTERNET = "internet"
-
 DEFAULT_APP_NAME = "Albert API"
 ROOT_ROLE = "root"
 DEFAULT_TIMEOUT = 300
@@ -36,7 +34,7 @@ ROUTER__CHUNKS = "chunks"
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
 
 # Supported language from https://github.com/huggingface/transformers/blob/main/src/transformers/models/whisper/tokenization_whisper.py
-SUPPORTED_LANGUAGES = {
+AUDIO_SUPPORTED_LANGUAGES = {
     "afrikaans": "af",
     "albanian": "sq",
     "amharic": "am",
@@ -150,3 +148,5 @@ SUPPORTED_LANGUAGES = {
     "yiddish": "yi",
     "yoruba": "yo",
 }
+
+AUDIO_SUPPORTED_LANGUAGES_VALUES = sorted(set(AUDIO_SUPPORTED_LANGUAGES.values())) + sorted(set(AUDIO_SUPPORTED_LANGUAGES.keys()))

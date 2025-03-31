@@ -10,10 +10,13 @@ from ui.backend.sql.session import get_session
 from ui.variables import MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
 
 
-@st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
+@st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
 def get_models(type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]] = None) -> list:
-    response = requests.get(url=f"{settings.api_url}/v1/models", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
-    assert response.status_code == 200, response.text
+    response = requests.get(url=f"{settings.playground.api_url}/v1/models", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
+
     models = response.json()["data"]
     if type is None:
         models = sorted([model["id"] for model in models])
@@ -23,13 +26,13 @@ def get_models(type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS
     return models
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
+@st.cache_data(show_spinner="Retrieving data...", ttl=settings.playground.cache_ttl)
 def get_collections() -> list:
     offset, limit = 0, 100
     data = list()
     while True:
         response = requests.get(
-            url=f"{settings.api_url}/v1/collections?offset={offset}&limit={limit}",
+            url=f"{settings.playground.api_url}/v1/collections?offset={offset}&limit={limit}",
             headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
         )
 
@@ -46,13 +49,13 @@ def get_collections() -> list:
     return data
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
+@st.cache_data(show_spinner="Retrieving data...", ttl=settings.playground.cache_ttl)
 def get_documents(collection_ids: List[str]) -> dict:
     offset, limit = 0, 100
     data = list()
     while True:
         response = requests.get(
-            url=f"{settings.api_url}/v1/documents?offset={offset}&limit={limit}",
+            url=f"{settings.playground.api_url}/v1/documents?offset={offset}&limit={limit}",
             headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
         )
 
@@ -69,10 +72,10 @@ def get_documents(collection_ids: List[str]) -> dict:
     return data
 
 
-@st.cache_data(show_spinner=False, ttl=settings.cache_ttl)
+@st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
 def get_tokens() -> list:
     response = requests.get(
-        url=f"{settings.api_url}/tokens",
+        url=f"{settings.playground.api_url}/tokens",
         params={"user": st.session_state["user"].id},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
@@ -84,13 +87,14 @@ def get_tokens() -> list:
     return response.json()["data"]
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
+@st.cache_data(show_spinner="Retrieving data...", ttl=settings.playground.cache_ttl)
 def get_roles():
     offset, limit = 0, 100
     data = list()
     while True:
         response = requests.get(
-            url=f"{settings.api_url}/roles?offset={offset}&limit={limit}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+            url=f"{settings.playground.api_url}/roles?offset={offset}&limit={limit}",
+            headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
         )
         if response.status_code != 200:
             st.error(response.json()["detail"])
@@ -105,14 +109,15 @@ def get_roles():
     return data
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=settings.cache_ttl)
+@st.cache_data(show_spinner="Retrieving data...", ttl=settings.playground.cache_ttl)
 def get_users():
     offset, limit = 0, 100
     data = list()
 
     while True:
         response = requests.get(
-            url=f"{settings.api_url}/users?offset={offset}&limit={limit}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+            url=f"{settings.playground.api_url}/users?offset={offset}&limit={limit}",
+            headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
         )
         if response.status_code != 200:
             st.error(response.json()["detail"])
