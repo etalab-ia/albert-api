@@ -17,7 +17,7 @@ ENDPOINT__COMPLETIONS = "/completions"
 ENDPOINT__EMBEDDINGS = "/embeddings"
 ENDPOINT__MODELS = "/models"
 ENDPOINT__RERANK = "/rerank"
-ENDPOINT__OCR = "/ocr"
+ENDPOINT__OCR = "/ocr-beta"
 
 FILE_TYPE__PDF = "application/pdf"
 FILE_TYPE__JSON = "application/json"
