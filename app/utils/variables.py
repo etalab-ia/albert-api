@@ -17,6 +17,7 @@ ENDPOINT__COMPLETIONS = "/completions"
 ENDPOINT__EMBEDDINGS = "/embeddings"
 ENDPOINT__MODELS = "/models"
 ENDPOINT__RERANK = "/rerank"
+ENDPOINT__OCR = "/ocr-beta"
 
 FILE_TYPE__PDF = "application/pdf"
 FILE_TYPE__JSON = "application/json"
@@ -63,5 +64,6 @@ ROUTER__COLLECTIONS = "collections"
 ROUTER__FILES = "files"
 ROUTER__DOCUMENTS = "documents"
 ROUTER__CHUNKS = "chunks"
+ROUTER__OCR = "ocr"
 
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]

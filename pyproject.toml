@@ -33,6 +33,7 @@ app = [
     "slowapi==0.1.9",
     "psycopg2==2.9.10",
     "alembic==1.15.1",
+    "pdf2image==1.17.0",
 ]
 dev = [
     "ruff==0.6.5",
