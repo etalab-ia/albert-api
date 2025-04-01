@@ -7,7 +7,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./config.example.yml:/config.yml:ro
+      - ./config.yml:/config.yml:ro
     develop:
       watch:
         - action: sync+restart
