@@ -28,7 +28,7 @@ async def ocr(
     dpi: int = Form(default=150),
     prompt: str = Form(
         default=(
-            "Tu es un système d'OCR très précis. Extrait tout le texte visible de cette image. "
+            "Tu es un système d'OCR très précis. Extrais tout le texte visible de cette image. "
             "Ne décris pas l'image, n'ajoute pas de commentaires. Réponds uniquement avec le texte brut extrait, "
             "en préservant les paragraphes, la mise en forme et la structure du document. "
             "Si aucun texte n'est visible, réponds avec 'Aucun texte détecté'. "
