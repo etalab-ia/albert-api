@@ -85,6 +85,14 @@ L'API Albert permet de transcrire un fichier audio à l'aide d'un modèle Whispe
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
+### OCR d'un fichier pdf vers un fichier texte
+
+L'API Albert permet de faire de l'OCR via son modèle de vision `mistralai/Mistral-Small-3.1-24B-Instruct-2503`.
+
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/pdf_ocr.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
+
 ## 📚 Documentation
 
 Vous trouverez ici des ressources de documentation : 
