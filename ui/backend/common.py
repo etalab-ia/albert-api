@@ -13,7 +13,10 @@ from ui.variables import MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_LAN
 @st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
 def get_models(type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]] = None) -> list:
     response = requests.get(url=f"{settings.playground.api_url}/v1/models", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
-    assert response.status_code == 200, response.text
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
+
     models = response.json()["data"]
     if type is None:
         models = sorted([model["id"] for model in models])

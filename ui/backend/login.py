@@ -1,5 +1,3 @@
-import time
-
 import bcrypt
 from pydantic import BaseModel
 import requests
@@ -71,10 +69,6 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
         st.error(response.json()["detail"])
         st.stop()
     user = response.json()
-
-    if user["expires_at"] and user["expires_at"] < int(time.time()):
-        st.error("Invalid username or password")
-        st.stop()
 
     response = requests.get(url=f"{settings.playground.api_url}/roles/me", headers={"Authorization": f"Bearer {db_user.api_key}"})
     if response.status_code != 200:

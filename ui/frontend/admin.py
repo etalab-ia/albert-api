@@ -222,7 +222,7 @@ with tab2:
 
     expires_at = pd.to_datetime(user["expires_at"], unit="s") if user["expires_at"] else None
     no_expiration = st.toggle(label="No expiration", key="create_user_no_expiration", value=expires_at is None)
-    new_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", min_value=pd.Timestamp.now(), value=expires_at, disabled=no_expiration)  # fmt: off
+    new_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", value=expires_at, disabled=no_expiration)
     new_expires_at = None if no_expiration or pd.isna(new_expires_at) else int(pd.Timestamp(new_expires_at).timestamp())
 
     col1, col2, col3 = st.columns(spec=3)

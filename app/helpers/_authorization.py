@@ -1,12 +1,12 @@
 import json
 import time
-from typing import Annotated, List, Optional, Dict
+from typing import Annotated, Dict, List, Optional
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from app.schemas.auth import Limit, Role, User
+
+from app.schemas.auth import Limit, LimitType, PermissionType, Role, User
 from app.schemas.collections import CollectionVisibility
-from app.schemas.auth import LimitType, PermissionType
 from app.schemas.core.auth import UserModelLimits
 from app.utils.exceptions import (
     InsufficientPermissionException,
@@ -21,8 +21,10 @@ from app.utils.variables import (
     ENDPOINT__COLLECTIONS,
     ENDPOINT__EMBEDDINGS,
     ENDPOINT__RERANK,
+    ENDPOINT__ROLES,
     ENDPOINT__SEARCH,
     ENDPOINT__TOKENS,
+    ENDPOINT__USERS,
 )
 
 
@@ -32,6 +34,11 @@ class Authorization:
 
     async def __call__(self, request: Request, api_key: Annotated[HTTPAuthorizationCredentials, Depends(dependency=HTTPBearer(scheme_name="API key"))]) -> User:  # fmt: off
         user, role, limits, token_id = await self._check_api_key(api_key=api_key)
+
+        if not request.url.path.startswith(f"{ENDPOINT__ROLES}/me") and not request.url.path.startswith(f"{ENDPOINT__USERS}/me"):
+            # invalid token if user is expired, except for /v1/roles/me and /v1/users/me endpoints
+            if user.expires_at and user.expires_at < time.time():
+                raise InvalidAPIKeyException()
 
         await self._check_permissions(role=role)
 
@@ -106,9 +113,6 @@ class Authorization:
 
         users = await context.iam.get_users(user_id=user_id)
         user = users[0]
-
-        if user.expires_at and user.expires_at < time.time():
-            raise InvalidAPIKeyException()
 
         roles = await context.iam.get_roles(role_id=user.role)
         role = roles[0]
