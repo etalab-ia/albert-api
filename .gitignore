@@ -194,7 +194,7 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-**/config**.yml
+**/config.yml
 .DS_Store
 .idea
 .vscode
@@ -203,5 +203,5 @@ terraform.rc
 /docs/tutorials/*.pdf
 /docs/tutorials/*.wav
 /docs/tutorials/*.mp3
-app/tests/cassettes/
 uv.lock
+app/tests/cassetes

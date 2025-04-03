@@ -7,7 +7,7 @@ import traceback
 from typing import List, Optional
 
 import aiohttp
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from redis.asyncio import Redis
 import requests
 
@@ -67,6 +67,7 @@ class AuthenticationClient(AsyncGristDocAPI):
         ROLE: str = Role.USER
         EXPIRATION: int = dt.datetime.now().timestamp()
         KEY: Optional[str] = "EMPTY"
+        USER: Optional[str] = ""
 
         class Config:
             extra = "allow"
@@ -98,10 +99,13 @@ class AuthenticationClient(AsyncGristDocAPI):
 
         if cache_user:
             cache_user = json.loads(cache_user)
-            user = User(id=cache_user["id"], role=Role.get(cache_user["role"]))
-            ttl = await self.redis.ttl(redis_key)
-            if ttl > 300:
-                return user
+            try:
+                user = User(id=cache_user["id"], role=Role.get(cache_user["role"]), name=cache_user.get("name"))
+                ttl = await self.redis.ttl(redis_key)
+                if ttl > 300:
+                    return user
+            except ValidationError as e:
+                logger.warning(msg="Invalid User in cache: %s" % e)
 
         try:
             # fetch from grist
@@ -115,9 +119,9 @@ class AuthenticationClient(AsyncGristDocAPI):
                 await self.update_records(table_name=self.table_id, record_dicts=[record.model_dump()])
 
             if record.KEY == key and record.EXPIRATION > dt.datetime.now().timestamp():
-                cache_user = {"id": record.ID2, "role": Role.get(name=record.ROLE.upper(), default=Role.USER)._name_}
+                cache_user = {"id": record.ID2, "role": Role.get(name=record.ROLE.upper(), default=Role.USER)._name_, "name": record.USER}
                 await self.redis.setex(redis_key, self.CACHE_EXPIRATION, json.dumps(cache_user))
-                user = User(id=cache_user["id"], role=Role.get(cache_user["role"]))
+                user = User(id=cache_user["id"], role=Role.get(cache_user["role"]), name=cache_user.get("name"))
                 return user
 
         except Exception as e:

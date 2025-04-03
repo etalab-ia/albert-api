@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Generator
 from sqlalchemy import create_engine
-from sqlalchemy_utils import database_exists, create_database, drop_database
+from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.orm import sessionmaker
 
 from fastapi.testclient import TestClient
@@ -13,6 +13,44 @@ import vcr
 from app.clients import AuthenticationClient
 from app.utils.variables import COLLECTION_TYPE__PRIVATE
 from app.sql.models import Base
+
+# Define global VCR instance and cassette
+VCR_INSTANCE = None
+VCR_GLOBAL_CASSETTE = None
+VCR_DISABLED = os.environ.get("DISABLE_VCR", "").lower() in ("true", "1", "yes")
+
+
+def is_vcr_enabled():
+    """Helper function to check if VCR is enabled"""
+    return not VCR_DISABLED
+
+
+def pytest_configure(config):
+    """Called after command line options have been parsed and all plugins and initial conftest files loaded.
+    This is the earliest pytest hook we can use to set up VCR globally.
+    """
+    global VCR_INSTANCE, VCR_GLOBAL_CASSETTE
+
+    # Skip VCR setup if disabled
+    if VCR_DISABLED:
+        logging.info("VCR is disabled via DISABLE_VCR environment variable")
+        return
+
+    cassette_library_dir = Path(__file__).parent / "cassettes"
+    os.makedirs(cassette_library_dir, exist_ok=True)
+
+    VCR_INSTANCE = vcr.VCR(
+        cassette_library_dir=str(cassette_library_dir),
+        record_mode="once",
+        match_on=["method", "scheme", "host", "port", "path", "query"],
+        filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
+        before_record_request=lambda request: None if request.host == "testserver" else request,
+        decode_compressed_response=True,
+    )
+
+    # Store the cassette object so we can properly close it later
+    VCR_GLOBAL_CASSETTE = VCR_INSTANCE.use_cassette("global_setup_cassette.yaml")
+    VCR_GLOBAL_CASSETTE.__enter__()
 
 
 def pytest_addoption(parser):
@@ -46,6 +84,7 @@ def get_test_db_url(worker_id):
 def engine(worker_id):
     """Create database engine for tests"""
     db_url = get_test_db_url(worker_id)
+    db_url = db_url.replace("+asyncpg", "")
 
     # Create database if it doesn't exist
     if not database_exists(db_url):
@@ -60,7 +99,6 @@ def engine(worker_id):
 
     # Cleanup after all tests
     Base.metadata.drop_all(_engine)
-    drop_database(db_url)
 
 
 @pytest.fixture(scope="session")
@@ -77,11 +115,18 @@ def app_with_test_db(engine, db_session):
     """Create FastAPI app with test database"""
     from app.main import create_app
 
+    global VCR_GLOBAL_CASSETTE, VCR_INSTANCE
+
     def get_test_db():
         yield db_session
 
     # Create app with test config
     app = create_app(db_func=get_test_db, disabled_middleware=False)
+
+    # Exit the global cassette, requests done by app initialization
+    # are recorded in the global cassette
+    if not VCR_DISABLED and VCR_GLOBAL_CASSETTE is not None:
+        VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
 
     return app
 
@@ -93,7 +138,7 @@ def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture(scope="session")
-def cleanup_collections(args, test_client):
+def cleanup_collections(args, app_with_test_db):  # Changed dependency to app_with_test_db
     USER = AuthenticationClient.api_key_to_user_id(input=args["api_key_user"])
     ADMIN = AuthenticationClient.api_key_to_user_id(input=args["api_key_admin"])
 
@@ -101,47 +146,36 @@ def cleanup_collections(args, test_client):
 
     logging.info("cleanup collections")
 
-    # delete private collections
-    response = test_client.get("/v1/collections", headers={"Authorization": f"Bearer {args["api_key_user"]}"})
-    response.raise_for_status()
-    collections = response.json()["data"]
-    collection_ids = [collection["id"] for collection in collections if collection["type"] == COLLECTION_TYPE__PRIVATE and collection["user"] == USER]
+    # Create a fresh test client for cleanup
+    with TestClient(app=app_with_test_db) as cleanup_client:
+        # delete private collections
+        response = cleanup_client.get("/v1/collections", headers={"Authorization": f"Bearer {args['api_key_user']}"})
+        response.raise_for_status()
+        collections = response.json()["data"]
+        collection_ids = [
+            collection["id"] for collection in collections if collection["type"] == COLLECTION_TYPE__PRIVATE and collection["user"] == USER
+        ]
 
-    for collection_id in collection_ids:
-        test_client.delete(f"/v1/collections/{collection_id}", headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+        for collection_id in collection_ids:
+            cleanup_client.delete(f"/v1/collections/{collection_id}", headers={"Authorization": f"Bearer {args['api_key_user']}"})
 
-    # delete public collections
-    test_client.headers = {"Authorization": f"Bearer {args["api_key_admin"]}"}
-    response = test_client.get("/v1/collections", headers={"Authorization": f"Bearer {args["api_key_admin"]}"})
-    response.raise_for_status()
-    collections = response.json()["data"]
-    collection_ids = [collection["id"] for collection in collections if collection["user"] == ADMIN]
+        # delete public collections
+        response = cleanup_client.get("/v1/collections", headers={"Authorization": f"Bearer {args['api_key_admin']}"})
+        response.raise_for_status()
+        collections = response.json()["data"]
+        collection_ids = [collection["id"] for collection in collections if collection["user"] == ADMIN]
 
-    for collection_id in collection_ids:
-        test_client.delete(f"/v1/collections/{collection_id}", headers={"Authorization": f"Bearer {args["api_key_admin"]}"})
-
-
-@pytest.fixture(autouse=True)
-def vcr_config():
-    """Global VCR configuration"""
-    cassette_library_dir = Path(__file__).parent / "cassettes"
-    os.makedirs(cassette_library_dir, exist_ok=True)
-
-    custom_vcr = vcr.VCR(
-        cassette_library_dir=str(cassette_library_dir),
-        record_mode="once",
-        match_on=["method", "scheme", "host", "port", "path", "query"],
-        filter_headers=["authorization"],
-        before_record_request=lambda request: None if request.host == "testserver" else request,
-        decode_compressed_response=True,
-    )
-
-    return custom_vcr
+        for collection_id in collection_ids:
+            cleanup_client.delete(f"/v1/collections/{collection_id}", headers={"Authorization": f"Bearer {args['api_key_admin']}"})
 
 
 @pytest.fixture(autouse=True)
-def vcr_cassette(request, vcr_config):
-    """Automatically use VCR for each test"""
+def vcr_cassette(request):
+    """Use VCR for specific tests, with per-test cassettes"""
+    # Skip if VCR is disabled via environment variable
+    if VCR_DISABLED:
+        yield
+        return
 
     # Skip VCR for tests that does not support it
     def module_to_skip(request):
@@ -153,8 +187,9 @@ def vcr_cassette(request, vcr_config):
         yield
         return
 
+    # Use a test-specific cassette
     test_name = request.node.name.replace("[", "_").replace("]", "_")
     cassette_path = f"{request.module.__name__}.{test_name}"
 
-    with vcr_config.use_cassette(cassette_path + ".yaml"):
+    with VCR_INSTANCE.use_cassette(cassette_path + ".yaml"):
         yield
