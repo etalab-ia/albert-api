@@ -1,6 +1,8 @@
 from datetime import datetime
 import json
+import traceback
 from typing import Callable, Optional
+import os
 
 from fastapi import Request, Response
 from sqlalchemy.orm import Session
@@ -8,8 +10,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.sql.models import Usage
 from app.sql.session import get_db
-from app.utils.logging import logger
 from app.utils import variables
+from app.utils.logging import logger
 
 
 class UsagesMiddleware(BaseHTTPMiddleware):
@@ -60,40 +62,11 @@ class UsagesMiddleware(BaseHTTPMiddleware):
             response.body_iterator = new_body_iterator()
         return usage_data, response
 
-    async def _log_usage(
-        self,
-        db: Session,
-        start_time: datetime,
-        duration: int,
-        user_id: str,
-        endpoint: str,
-        model: str,
-        usage_data: dict,
-        status: int,
-        method: str,
-    ):
-        try:
-            log = Usage(
-                datetime=start_time,
-                duration=duration,
-                user=user_id,
-                endpoint=endpoint,
-                model=model,
-                prompt_tokens=usage_data.get("prompt_tokens"),
-                completion_tokens=usage_data.get("completion_tokens"),
-                total_tokens=usage_data.get("total_tokens"),
-                status=status,
-                method=method,
-            )
-            db.add(log)
-            db.commit()
-        except Exception as e:
-            logger.error(f"Failed to log usage: {str(e)}")
-            db.rollback()
-        finally:
-            db.close()
-
     async def dispatch(self, request: Request, call_next) -> Response:
+        # Skip if middleware is disabled via environment variable
+        if os.environ.get("MIDDLEWARE", "true").lower() == "false":
+            return await call_next(request)
+
         endpoint = request.url.path
         if not any(endpoint.endswith(model_endpoint) for model_endpoint in self.MODELS_ENDPOINTS):
             return await call_next(request)
@@ -125,28 +98,36 @@ class UsagesMiddleware(BaseHTTPMiddleware):
         if not model:
             return response
 
+        if not hasattr(request.app.state, "user") or request.app.state.user.id == 0:  # master key
+            return response
+
+        if not hasattr(request.app.state, "sql"):
+            return response
+
         try:
-            authorization = request.headers.get("Authorization")
-            # Access auth client through app.state.databases
-            if hasattr(request.app.state, "databases") and hasattr(request.app.state.databases, "auth"):
-                user = await request.app.state.databases.auth.check_api_key(key=authorization.split(sep=" ")[1])
-                usage_data, response = await self._handle_streaming_response(response)
-
-                # Log usage
-                db = next(self.db_func())
-                await self._log_usage(
-                    db,
-                    start_time,
-                    duration,
-                    user.name if user else "UNKNOWN",
-                    endpoint,
-                    model,
-                    usage_data,
-                    response.status_code,
-                    method,
-                )
-
+            usage_data, response = await self._handle_streaming_response(response)
+            # Log usage
+            db = next(self.db_func())
+            log = Usage(
+                datetime=start_time,
+                duration=duration,
+                user_id=request.app.state.user.id,
+                token_id=request.app.state.token_id,
+                endpoint=endpoint,
+                model=model,
+                prompt_tokens=usage_data.get("prompt_tokens"),
+                completion_tokens=usage_data.get("completion_tokens"),
+                total_tokens=usage_data.get("total_tokens"),
+                status=response.status_code,
+                method=method,
+            )
+            db.add(log)
+            db.commit()
         except Exception as e:
-            logger.error(f"Error in UsagesMiddleware: {str(e)}")
+            logger.debug(traceback.format_exc())
+            logger.error(f"Failed to log usage: {str(e)}")
+            db.rollback()
+        finally:
+            db.close()
 
         return response

@@ -7,7 +7,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./config.yml:/config.yml:ro
+      - ./config.example.yml:/config.yml:ro
     develop:
       watch:
         - action: sync+restart
@@ -24,17 +24,18 @@ services:
       context: .
       dockerfile: ui/Dockerfile
     restart: always
-    environment:
-      - BASE_URL=http://api:8000/v1
-      - DOCUMENTS_EMBEDDINGS_MODEL=
-      - EXCLUDE_MODELS=
     ports:
       - 8501:8501
+    volumes:
+      - ./config.example.yml:/config.yml:ro
     develop:
       watch:
         - action: sync+restart
           path: ./ui
           target: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   redis:
     image: redis/redis-stack-server:7.2.0-v11
@@ -48,8 +49,6 @@ services:
       interval: 4s
       timeout: 10s
       retries: 5
-    ports:
-      - 6379:6379
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
@@ -67,11 +66,13 @@ services:
     restart: always
     user: postgres
     environment:
+      - CREATE_DB=api,ui
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=changeme
       - POSTGRES_DB=postgres
     volumes:
       - postgres:/var/lib/postgresql/data
+      - ./scripts/postgres_entrypoint.sh:/docker-entrypoint-initdb.d/postgres_entrypoint.sh
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready", "-U", "postgres" ]
       interval: 4s

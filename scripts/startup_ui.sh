@@ -5,6 +5,9 @@ set -e
 MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE:-20}
 STREAMLIT_CMD_ARGS=${STREAMLIT_CMD_ARGS:-""}  # ex: --server.baseUrlPath=/playground
 
+# Run database migrations
+python -m alembic -c ui/alembic.ini upgrade head
+
 # Start the application server
 exec streamlit run /app/main.py \
     --server.port=8501 \

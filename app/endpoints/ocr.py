@@ -1,26 +1,20 @@
 import base64
-from enum import Enum
 from io import BytesIO
 
-from fastapi import APIRouter, File, HTTPException, Security, UploadFile, Request, Form
+from fastapi import APIRouter, File, Form, HTTPException, Request, Security, UploadFile
 from pdf2image import convert_from_bytes
 
-from app.schemas.ocr import OCRResponse
-from app.schemas.security import User
+from app.helpers import Authorization
+from app.schemas.core.data import FileType
+from app.schemas.ocr import OCR, OCRs
 from app.utils.exceptions import FileSizeLimitExceededException
-from app.utils.lifespan import limiter, models
-from app.utils.security import check_api_key, check_rate_limit
+from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__OCR
 
 router = APIRouter()
 
 
-class FileTypes(Enum):
-    PDF = "application/pdf"
-
-
-@router.post(path=ENDPOINT__OCR, response_model=OCRResponse)
-@limiter.limit(limit_value="10/minute", key_func=lambda request: check_rate_limit(request=request))
+@router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=Authorization())])
 async def ocr(
     request: Request,
     file: UploadFile = File(...),
@@ -35,13 +29,12 @@ async def ocr(
             "Je veux une sortie au format markdown. Tu dois respecter le format de sortie pour bien conserver les tableaux."
         )
     ),
-    user: User = Security(check_api_key),
-):
+) -> OCRs:
     """
     Extracts text from PDF files using OCR.
     """
     # check if file is a pdf
-    if file.content_type != FileTypes.PDF.value:
+    if file.content_type != FileType.PDF:
         raise HTTPException(status_code=400, detail="File must be a PDF")
 
     # check file size
@@ -53,7 +46,7 @@ async def ocr(
     data = []  # Initialize data list to store results
 
     # call model
-    model = models.registry[model]
+    model = context.models(model=model)
     client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     for i, image in enumerate(images):
@@ -66,28 +59,19 @@ async def ocr(
             {"type": "text", "text": prompt},
             {
                 "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/png;base64,{base64.b64encode(img_byte_arr).decode("utf-8")}",
-                },
+                "image_url": {"url": f"data:image/png;base64,{base64.b64encode(img_byte_arr).decode("utf-8")}"},
             },
         ]
 
         # forward request
-        payload = {
-            "model": model,
-            "messages": [{"role": "user", "content": content}],
-            "n": 1,
-        }
+        payload = {"model": model, "messages": [{"role": "user", "content": content}], "n": 1, "stream": False}
 
-        response = await client.forward_request(
-            method="POST",
-            json=payload,
-        )
+        response = await client.forward_request(method="POST", json=payload)
 
         data_response = response.json()
         extracted_text = data_response.get("choices", [{}])[0].get("message", {}).get("content", "Erreur: Aucun contenu reçu")
 
         # format response
-        data.append({"page": i + 1, "text": extracted_text})
+        data.append(OCR(page=i + 1, text=extracted_text))
 
-    return OCRResponse(data=data)
+    return OCRs(data=data)

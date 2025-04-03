@@ -1,14 +1,10 @@
 import re
-import time
 from typing import List, Optional, Tuple
-import uuid
 
-from bs4 import BeautifulSoup
 from fastapi import UploadFile
 
-from app.schemas.data import ParserOutput, ParserOutputMetadata
+from app.schemas.core.data import ParserOutput
 
-from . import HTMLParser
 from ._baseparser import BaseParser
 
 
@@ -62,12 +58,7 @@ class MarkdownParser(BaseParser):
 
         content = self.clean("\n".join(extracted_text).strip())
 
-        name = file.filename.strip()
-
-        metadata = ParserOutputMetadata(
-            collection_id=self.collection_id, document_id=str(uuid.uuid4()), document_name=name, document_created_at=round(time.time()), title=title
-        )
-
-        output = [ParserOutput(content=content, metadata=metadata)]
+        metadata = {"title": title}
+        output = ParserOutput(contents=[content], metadata=metadata)
 
         return output

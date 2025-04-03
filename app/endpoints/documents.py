@@ -3,47 +3,57 @@ from uuid import UUID
 
 from fastapi import APIRouter, Path, Query, Request, Response, Security
 
-from app.schemas.documents import Documents
-from app.schemas.security import User
-from app.utils.lifespan import databases
-from app.utils.security import check_api_key
-from app.utils.exceptions import NoVectorStoreAvailableException
+from app.helpers import Authorization
+from app.schemas.documents import Document, Documents
+from app.utils.exceptions import CollectionNotFoundException, DocumentNotFoundException
+from app.utils.lifespan import context
+from app.utils.variables import ENDPOINT__DOCUMENTS
 
 router = APIRouter()
 
 
-@router.get(path="/documents/{collection}")
+@router.get(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=Authorization())])
+async def get_document(request: Request, document: int = Path(description="The document ID")) -> Document:  # fmt: off
+    """
+    Get a document by ID.
+    """
+    if not context.documents:  # no vector store available
+        raise DocumentNotFoundException()
+
+    documents = await context.documents.get_documents(document_id=document, user_id=request.app.state.user.id)
+
+    return documents[0]
+
+
+@router.get(path=ENDPOINT__DOCUMENTS, dependencies=[Security(dependency=Authorization())])
 async def get_documents(
     request: Request,
-    collection: UUID = Path(description="The collection ID"),
+    collection: Optional[int] = Query(default=None, description="Filter documents by collection ID"),
     limit: Optional[int] = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
-    user: User = Security(check_api_key),
 ) -> Documents:
     """
     Get all documents ID from a collection.
     """
-    if not databases.search:
-        raise NoVectorStoreAvailableException()
-    collection = str(collection)
-    data = databases.search.get_documents(collection_id=collection, limit=limit, offset=offset, user=user)
+
+    if not context.documents:  # no vector store available
+        if collection:
+            raise CollectionNotFoundException()
+        data = []
+    else:
+        data = await context.documents.get_documents(collection_id=collection, limit=limit, offset=offset, user_id=request.app.state.user.id)
 
     return Documents(data=data)
 
 
-@router.delete(path="/documents/{collection}/{document}")
-async def delete_document(
-    request: Request,
-    collection: UUID = Path(description="The collection ID"),
-    document: UUID = Path(description="The document ID"),
-    user: User = Security(check_api_key),
-) -> Response:
+@router.delete(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=Authorization())])
+async def delete_document(request: Request, document: int = Path(description="The document ID")) -> Response:  # fmt: off
     """
     Delete a document and relative collections.
     """
-    if not databases.search:
-        raise NoVectorStoreAvailableException()
-    collection, document = str(collection), str(document)
-    databases.search.delete_document(collection_id=collection, document_id=document, user=user)
+    if not context.documents:  # no vector store available
+        raise DocumentNotFoundException()
+
+    await context.documents.delete_document(document_id=document, user_id=request.app.state.user.id)
 
     return Response(status_code=204)
