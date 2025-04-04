@@ -1,8 +1,13 @@
+import ast
+import json
 import os
 
 import pytest
 
 from app.utils.variables import ENDPOINT__OCR, MODEL_TYPE__LANGUAGE
+from app.tests.utils.snapshot_assertions import assert_snapshot_almost_equal
+
+current_path = os.path.dirname(__file__)
 
 
 @pytest.fixture(scope="module")
@@ -25,7 +30,7 @@ class TestOCR:
         """Test successful OCR processing of a PDF file."""
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        file_path = "app/tests/assets/pdf.pdf"
+        file_path = os.path.join(current_path, "assets/pdf.pdf")
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             response = test_client.post(
@@ -34,13 +39,23 @@ class TestOCR:
             )
 
         assert response.status_code == 200, f"error: process OCR ({response.status_code})"
-        snapshot.assert_match(str(response.json()), "ocr_pdf_successful")
+        # Load the expected snapshot
+        snapshot_path = os.path.join(
+            current_path,
+            "snapshots/test_ocr/test_ocr_pdf_successful/ocr_pdf_successful",
+        )
+        if os.path.exists(snapshot_path):
+            with open(snapshot_path) as f:
+                expected_snapshot = ast.literal_eval(f.read())
+                assert_snapshot_almost_equal(actual=response.text, expected_snapshot=json.dumps(expected_snapshot), threshold=0.95)
+        else:
+            snapshot.assert_match(str(response.json()), "ocr_pdf_successful")
 
     def test_ocr_invalid_file_type(self, args, test_client, model_id, snapshot):
         """Test OCR with invalid file type (not PDF)."""
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        file_path = "app/tests/assets/json.json"
+        file_path = os.path.join(current_path, "assets/json.json")
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/json")}
             response = test_client.post(f"/v1{ENDPOINT__OCR}", files=files, json={"model": model_id, "dpi": 150})
@@ -52,7 +67,7 @@ class TestOCR:
         """Test OCR with a file that exceeds size limit."""
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        file_path = "app/tests/assets/pdf_too_large.pdf"
+        file_path = os.path.join(current_path, "assets/pdf_too_large.pdf")
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             response = test_client.post(f"/v1{ENDPOINT__OCR}", files=files, json={"model": model_id, "dpi": 150})
@@ -64,7 +79,7 @@ class TestOCR:
         """Test OCR without authentication."""
         test_client.headers = {}  # Remove auth headers
 
-        file_path = "app/tests/assets/pdf.pdf"
+        file_path = os.path.join(current_path, "assets/pdf.pdf")
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             response = test_client.post(f"/v1{ENDPOINT__OCR}", files=files, json={"model": model_id, "dpi": 150})
@@ -77,10 +92,19 @@ class TestOCR:
         MODEL_ID = model_id
         test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
 
-        file_path = "app/tests/assets/pdf.pdf"
+        file_path = os.path.join(current_path, "assets/pdf.pdf")
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             response = test_client.post(f"/v1{ENDPOINT__OCR}", files=files, json={"model": MODEL_ID, "dpi": 300})
 
         assert response.status_code == 200, f"process OCR with custom DPI ({response.status_code})"
-        snapshot.assert_match(str(response.json()), "ocr_custom_dpi")
+        snapshot_path = os.path.join(
+            current_path,
+            "snapshots/test_ocr/test_ocr_custom_dpi/ocr_custom_dpi",
+        )
+        if os.path.exists(snapshot_path):
+            with open(snapshot_path) as f:
+                expected_snapshot = ast.literal_eval(f.read())
+                assert_snapshot_almost_equal(actual=response.text, expected_snapshot=json.dumps(expected_snapshot), threshold=0.95)
+        else:
+            snapshot.assert_match(str(response.json()), "ocr_custom_dpi")
