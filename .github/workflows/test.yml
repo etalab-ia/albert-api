@@ -18,24 +18,6 @@ jobs:
       run: |
         docker compose up -d
 
-    - name: Wait for services to be ready
-      run: |
-        # Wait for Postgres
-        until docker exec $(docker ps -qf "name=postgres-ci") pg_isready -U postgres; do
-          echo "Waiting for Postgres to be ready..."
-          sleep 2
-        done
-        # Wait for Redis
-        until docker exec $(docker ps -qf "name=redis-ci") redis-cli ping | grep PONG; do
-          echo "Waiting for Redis to be ready..."
-          sleep 2
-        done
-        # Wait for Qdrant
-        until curl -s http://localhost:6333/health | grep "\"status\":\"ok\""; do
-          echo "Waiting for Qdrant to be ready..."
-          sleep 2
-        done
-
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -92,4 +74,4 @@ jobs:
     - name: Tear down Docker Compose
       if: always()
       run: |
-        docker compose -f compose.ci.yml down
+        docker compose down
