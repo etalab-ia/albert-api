@@ -1,0 +1,35 @@
+name: Scanning
+
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Secret Scanning with TruffleHog
+      uses: trufflesecurity/trufflehog@main
+      with:
+        extra_args: --results=verified,unknown
+        
+    - name: Install git-secrets
+      run: |
+        git clone https://github.com/awslabs/git-secrets.git
+        cd git-secrets
+        sudo make install
+        
+    - name: Setup git-secrets
+      run: |
+        git secrets --install
+        git secrets --add 'api.key.{1,5}[a-zA-Z0-9_-]{32,}'
+        
+    - name: Scan with git-secrets
+      run: |
+        git secrets --scan
