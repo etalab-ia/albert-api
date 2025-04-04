@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 174, tests-CI-CD ]
   pull_request:
     branches: [ main ]
   workflow_call: # Add this to make the workflow reusable
