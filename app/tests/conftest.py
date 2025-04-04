@@ -22,12 +22,7 @@ from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOK
 # Define global VCR instance and cassette
 VCR_INSTANCE = None
 VCR_GLOBAL_CASSETTE = None
-VCR_DISABLED = os.environ.get("DISABLE_VCR", "").lower() in ("true", "1", "yes")
-
-
-def is_vcr_enabled():
-    """Helper function to check if VCR is enabled"""
-    return not VCR_DISABLED
+VCR_ENABLED = os.environ.get("VCR_ENABLED", "").lower() in ("true", "1", "yes")
 
 
 def pytest_configure(config):
@@ -37,8 +32,8 @@ def pytest_configure(config):
     global VCR_INSTANCE, VCR_GLOBAL_CASSETTE
 
     # Skip VCR setup if disabled
-    if VCR_DISABLED:
-        logging.info("VCR is disabled via DISABLE_VCR environment variable")
+    if not VCR_ENABLED:
+        logging.info("VCR is disabled via VCR_ENABLED environment variable")
         return
 
     cassette_library_dir = Path(__file__).parent / "cassettes"
@@ -119,7 +114,7 @@ def app_with_test_db(engine, db_session):
 
     # Exit the global cassette, requests done by app initialization
     # are recorded in the global cassette
-    if not VCR_DISABLED and VCR_GLOBAL_CASSETTE is not None:
+    if VCR_ENABLED and VCR_GLOBAL_CASSETTE is not None:
         VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
 
     return app
@@ -136,7 +131,7 @@ def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
 def vcr_cassette(request):
     """Use VCR for specific tests, with per-test cassettes"""
     # Skip if VCR is disabled via environment variable
-    if VCR_DISABLED:
+    if not VCR_ENABLED:
         yield
         return  # Use a test-specific cassette
 
