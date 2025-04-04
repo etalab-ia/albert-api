@@ -13,7 +13,7 @@ current_path = os.path.dirname(__file__)
 @pytest.fixture(scope="module")
 def model_id(args, test_client):
     """Fixture to get model ID for OCR tests. Should be the second model in config.yml."""
-    test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+    test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
     # get a language model
     response = test_client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
@@ -28,7 +28,7 @@ def model_id(args, test_client):
 class TestOCR:
     def test_ocr_pdf_successful(self, args, test_client, snapshot):
         """Test successful OCR processing of a PDF file."""
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
         file_path = os.path.join(current_path, "assets/pdf.pdf")
         with open(file_path, "rb") as file:
@@ -39,7 +39,7 @@ class TestOCR:
             )
 
         assert response.status_code == 200, f"error: process OCR ({response.status_code})"
-        # Load the expected snapshot
+        # # Load the expected snapshot
         snapshot_path = os.path.join(
             current_path,
             "snapshots/test_ocr/test_ocr_pdf_successful/ocr_pdf_successful",
@@ -47,13 +47,13 @@ class TestOCR:
         if os.path.exists(snapshot_path):
             with open(snapshot_path) as f:
                 expected_snapshot = ast.literal_eval(f.read())
-                assert_snapshot_almost_equal(actual=response.text, expected_snapshot=json.dumps(expected_snapshot), threshold=0.95)
+                assert_snapshot_almost_equal(actual=json.dumps(response.json()), expected_snapshot=json.dumps(expected_snapshot), threshold=0.95)
         else:
             snapshot.assert_match(str(response.json()), "ocr_pdf_successful")
 
     def test_ocr_invalid_file_type(self, args, test_client, model_id, snapshot):
         """Test OCR with invalid file type (not PDF)."""
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
         file_path = os.path.join(current_path, "assets/json.json")
         with open(file_path, "rb") as file:
@@ -65,7 +65,7 @@ class TestOCR:
 
     def test_ocr_too_large_file(self, args, test_client, model_id, snapshot):
         """Test OCR with a file that exceeds size limit."""
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
         file_path = os.path.join(current_path, "assets/pdf_too_large.pdf")
         with open(file_path, "rb") as file:
@@ -90,7 +90,7 @@ class TestOCR:
     def test_ocr_custom_dpi(self, args, test_client, model_id, snapshot):
         """Test OCR with custom DPI setting."""
         MODEL_ID = model_id
-        test_client.headers = {"Authorization": f"Bearer {args['api_key_user']}"}
+        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
         file_path = os.path.join(current_path, "assets/pdf.pdf")
         with open(file_path, "rb") as file:
@@ -105,6 +105,6 @@ class TestOCR:
         if os.path.exists(snapshot_path):
             with open(snapshot_path) as f:
                 expected_snapshot = ast.literal_eval(f.read())
-                assert_snapshot_almost_equal(actual=response.text, expected_snapshot=json.dumps(expected_snapshot), threshold=0.95)
+                assert_snapshot_almost_equal(actual=json.dumps(response.json()), expected_snapshot=json.dumps(expected_snapshot), threshold=0.95)
         else:
             snapshot.assert_match(str(response.json()), "ocr_custom_dpi")
