@@ -406,18 +406,18 @@ class IdentityAccessManager:
 
             return tokens
 
-    async def check_token(self, token: str) -> Optional[Tuple[int, int]]:
+    async def check_token(self, token: str) -> Tuple[Optional[int], Optional[int]]:
         async with self.sql.session() as session:
             try:
                 claims = self._decode_token(token=token)
             except JWTError:
-                return
+                return None, None
             except IndexError:  # malformed token (no token prefix)
-                return
+                return None, None
 
             try:
                 tokens = await self.get_tokens(user_id=claims["user_id"], token_id=claims["token_id"], exclude_expired=True)
             except TokenNotFoundException:
-                return
+                return None, None
 
             return claims["user_id"], claims["token_id"]
