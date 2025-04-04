@@ -1,7 +1,38 @@
+playground:
+  api_url: http://localhost:8000
+  max_api_key_expiration_days: 365
+  cache_ttl: 1800 # seconds
+  database_url: postgresql://postgres:changeme@postgres:5432/ui
+
+auth:
+  master_username: master
+  master_key: changeme
+
+databases:
+  - type: qdrant
+    model: my-embeddings-model
+    args:
+      url: http://qdrant
+      api_key: changeme
+      timeout: 10
+
+  - type: redis
+    args:
+      host: redis
+      password: changeme
+
+  - type: sql
+    args:
+      url: postgresql+asyncpg://postgres:changeme@postgres:5432/api
+      echo: False
+      pool_size: 5
+      max_overflow: 10
+      pool_pre_ping: True
+      connect_args: {"server_settings": {"statement_timeout": "60"}}
+
 models:
-  - id: turbo
+  - id: my-language-model
     type: text-generation
-    default_internet: True
     clients:
       - model: gpt-3.5-turbo
         type: openai
@@ -10,9 +41,8 @@ models:
           api_key: sk-...aB
           timeout: 60
 
-  - id: embeddings-small
+  - id: my-embeddings-model
     type: text-embeddings-inference
-    default_internet: True
     clients:
       - model: text-embedding-3-small
         type: openai
@@ -20,19 +50,3 @@ models:
           api_url: https://api.openai.com
           api_key: sk-...aB
           timeout: 60
-
-  - type: qdrant
-    args:
-      url: http://qdrant
-      api_key: changeme
-      prefer_grpc: True
-      timeout: 10
-
-  - type: redis
-    args:
-      host: redis
-      password: changeme
-  
-  - type: sql
-    args:
-      url: postgresql://postgres:changeme@postgres:5432/postgres

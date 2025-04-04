@@ -1,13 +1,12 @@
 from io import BytesIO
 from typing import List
-import time
-import uuid
 
 from fastapi import UploadFile
 from pdfminer.high_level import extract_text_to_fp
 from pdfminer.layout import LAParams
 
-from app.schemas.data import ParserOutput, ParserOutputMetadata
+from app.schemas.core.data import ParserOutput
+
 from ._baseparser import BaseParser
 
 
@@ -29,15 +28,8 @@ class PDFParser(BaseParser):
         output = BytesIO()
         extract_text_to_fp(BytesIO(file.file.read()), output, laparams=LAParams(), output_type="text", codec="utf-8")
         content = output.getvalue().decode("utf-8").strip()
-
-        content = self.clean(content)
-        metadata = ParserOutputMetadata(
-            collection_id=self.collection_id,
-            document_id=str(uuid.uuid4()),
-            document_name=file.filename,
-            document_created_at=round(time.time()),
-        )
-
-        output = [ParserOutput(content=content, metadata=metadata)]
+        content = self.clean(text=content)
+        metadata = {}
+        output = ParserOutput(contents=[content], metadata=metadata)
 
         return output

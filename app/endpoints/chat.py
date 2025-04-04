@@ -2,26 +2,18 @@ from typing import List, Tuple, Union
 
 from fastapi import APIRouter, Request, Security
 
-from app.clients.internet import BaseInternetClient as InternetClient
-from app.clients.search import BaseSearchClient as SearchClient
-from app.helpers import ModelRegistry, SearchManager, StreamingResponseWithStatusCode
+from app.helpers import Authorization, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search
-from app.schemas.security import User
-from app.utils.lifespan import databases, internet, limiter, models
-from app.utils.security import check_api_key, check_rate_limit
-from app.utils.settings import settings
+from app.utils.exceptions import CollectionNotFoundException
+from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
-from app.utils.exceptions import NoVectorStoreAvailableException
 
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__CHAT_COMPLETIONS)
-@limiter.limit(limit_value=settings.rate_limit.by_user, key_func=lambda request: check_rate_limit(request=request))
-async def chat_completions(
-    request: Request, body: ChatCompletionRequest, user: User = Security(dependency=check_api_key)
-) -> Union[ChatCompletion, ChatCompletionChunk]:
+@router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=Authorization())])
+async def chat_completions(request: Request, body: ChatCompletionRequest) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
     """Creates a model response for the given chat conversation.
 
     **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional
@@ -30,38 +22,36 @@ async def chat_completions(
     """
 
     # retrieval augmentation generation
-    async def retrieval_augmentation_generation(
-        body: ChatCompletionRequest, models: ModelRegistry, search: SearchClient, internet: InternetClient
-    ) -> Tuple[ChatCompletionRequest, List[Search]]:
-        searches = []
+    async def retrieval_augmentation_generation(body: ChatCompletionRequest) -> Tuple[ChatCompletionRequest, List[Search]]:
+        results = []
         if body.search:
-            if not search:
-                raise NoVectorStoreAvailableException()
-            search_manager = SearchManager(models=models, search=search, internet=internet)
-            searches = await search_manager.query(
-                collections=body.search_args.collections,
+            if not context.documents:
+                raise CollectionNotFoundException()
+
+            results = await context.documents.search(
+                collection_ids=body.search_args.collections,
                 prompt=body.messages[-1]["content"],
                 method=body.search_args.method,
                 k=body.search_args.k,
                 rff_k=body.search_args.rff_k,
-                user=user,
+                web_search=body.search_args.web_search,
+                user_id=request.app.state.user.id,
             )
-            if searches:
-                body.messages[-1]["content"] = body.search_args.template.format(
-                    prompt=body.messages[-1]["content"], chunks="\n".join([search.chunk.content for search in searches])
-                )
+            if results:
+                chunks = "\n".join([result.chunk.content for result in results])
+                body.messages[-1]["content"] = body.search_args.template.format(prompt=body.messages[-1]["content"], chunks=chunks)
 
         body = body.model_dump()
         body.pop("search", None)
         body.pop("search_args", None)
 
-        searches = [search.model_dump() for search in searches]
-        return body, searches
+        results = [result.model_dump() for result in results]
+        return body, results
 
-    body, searches = await retrieval_augmentation_generation(body=body, models=models.registry, search=databases.search, internet=internet.search)
+    body, results = await retrieval_augmentation_generation(body=body)
 
     # select client
-    model = models.registry[body["model"]]
+    model = context.models(model=body["model"])
     client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case
@@ -69,7 +59,7 @@ async def chat_completions(
         response = await client.forward_request(
             method="POST",
             json=body,
-            additional_data_value=searches,
+            additional_data_value=results,
             additional_data_key="search_results",
         )
         return ChatCompletion(**response.json())
@@ -79,7 +69,7 @@ async def chat_completions(
         content=client.forward_stream(
             method="POST",
             json=body,
-            additional_data_value=searches,
+            additional_data_value=results,
             additional_data_key="search_results",
         ),
         media_type="text/event-stream",

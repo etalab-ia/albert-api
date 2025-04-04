@@ -1,145 +1,202 @@
-import logging
+from uuid import uuid4
 
+from fastapi.testclient import TestClient
 import pytest
 
-from app.schemas.collections import Collection, Collections
-from app.clients._authenticationclient import AuthenticationClient
-from app.utils.variables import (
-    MODEL_TYPE__EMBEDDINGS,
-    MODEL_TYPE__LANGUAGE,
-    COLLECTION_TYPE__PRIVATE,
-    COLLECTION_TYPE__PUBLIC,
-)
+from app.schemas.collections import Collection, Collections, CollectionVisibility
+from app.utils.variables import ENDPOINT__COLLECTIONS
 
 
-@pytest.fixture(scope="module")
-def setup(args, test_client):
-    USER = AuthenticationClient.api_key_to_user_id(input=args["api_key_user"])
-    ADMIN = AuthenticationClient.api_key_to_user_id(input=args["api_key_admin"])
-    logging.info(f"test user ID: {USER}")
-    logging.info(f"test admin ID: {ADMIN}")
-
-    response = test_client.get("/v1/models", timeout=10, headers={"Authorization": f"Bearer {args['api_key_user']}"})
-    models = response.json()
-    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
-    LANGUAGE_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]["id"]
-    logging.info(f"test embedings model ID: {EMBEDDINGS_MODEL_ID}")
-    logging.info(f"test language model ID: {LANGUAGE_MODEL_ID}")
-
-    PUBLIC_COLLECTION_NAME = "pytest-public"
-    PRIVATE_COLLECTION_NAME = "pytest-private"
-
-    yield PUBLIC_COLLECTION_NAME, PRIVATE_COLLECTION_NAME, ADMIN, USER, EMBEDDINGS_MODEL_ID, LANGUAGE_MODEL_ID
-
-
-@pytest.mark.usefixtures("args", "setup", "cleanup_collections", "test_client")
+@pytest.mark.usefixtures("client")
 class TestCollections:
-    def test_create_private_collection_with_user(self, args, test_client, setup):
-        _, PRIVATE_COLLECTION_NAME, _, _, EMBEDDINGS_MODEL_ID, _ = setup
-
-        params = {"name": PRIVATE_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
-        response = test_client.post("/v1/collections", json=params, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
+    def test_create_private_collection_with_user(self, client: TestClient):
+        params = {"name": f"test_collection_{str(uuid4())}", "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
         assert response.status_code == 201, response.text
-        assert "id" in response.json().keys()
 
-    def test_create_public_collection_with_user(self, args, test_client, setup):
-        PUBLIC_COLLECTION_NAME, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
+        collection_id = response.json()["id"]
 
-        params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC}
-        response = test_client.post("/v1/collections", json=params, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
-        assert response.status_code == 403, response.text
-
-    def test_create_public_collection_with_admin(self, args, test_client, setup):
-        PUBLIC_COLLECTION_NAME, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
-
-        params = {"name": PUBLIC_COLLECTION_NAME, "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PUBLIC}
-        response = test_client.post("/v1/collections", json=params, headers={"Authorization": f"Bearer {args["api_key_admin"]}"})
-        assert response.status_code == 201, response.text
-        assert "id" in response.json().keys()
-
-    def test_create_private_collection_with_language_model_with_user(self, args, test_client, setup):
-        _, PRIVATE_COLLECTION_NAME, _, _, _, LANGUAGE_MODEL_ID = setup
-
-        params = {"name": PRIVATE_COLLECTION_NAME, "model": LANGUAGE_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
-        response = test_client.post("/v1/collections", json=params, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
-        assert response.status_code == 422, response.text
-
-    def test_create_private_collection_with_unknown_model_with_user(self, args, test_client, setup):
-        _, PRIVATE_COLLECTION_NAME, _, _, _, _ = setup
-
-        params = {"name": PRIVATE_COLLECTION_NAME, "model": "unknown-model", "type": COLLECTION_TYPE__PRIVATE}
-        response = test_client.post("/v1/collections", json=params, headers={"Authorization": f"Bearer {args["api_key_user"]}"})
-        assert response.status_code == 404, response.text
-
-    def test_get_collections(self, args, test_client, setup):
-        PUBLIC_COLLECTION_NAME, PRIVATE_COLLECTION_NAME, ADMIN, USER, _, _ = setup
-
-        response = test_client.get("/v1/collections", headers={"Authorization": f"Bearer {args['api_key_user']}"})
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
         assert response.status_code == 200, response.text
 
         collections = response.json()
-        collections["data"] = [Collection(**collection) for collection in collections["data"]]  # test output format
-        collections = Collections(**collections)  # test output format
+        Collections(**collections)  # test output format
 
-        assert "collections" not in [collection.id for collection in collections.data]
-        assert "documents" not in [collection.id for collection in collections.data]
+        collections = [collection for collection in collections["data"] if collection["id"] == collection_id]
+        assert len(collections) == 1
 
-        assert PRIVATE_COLLECTION_NAME in [collection.name for collection in collections.data]
-        assert PUBLIC_COLLECTION_NAME in [collection.name for collection in collections.data]
+        collection = collections[0]
+        assert collection["name"] == params["name"]
+        assert collection["visibility"] == CollectionVisibility.PRIVATE
 
-        assert [collection.user for collection in collections.data if collection.name == PRIVATE_COLLECTION_NAME][0] == USER
-        assert [collection.user for collection in collections.data if collection.name == PUBLIC_COLLECTION_NAME][0] == ADMIN
+    def test_format_collection_with_user(self, client: TestClient):
+        params = {"name": f"test_collection_{str(uuid4())}", "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+        collection_id = response.json()["id"]
 
-    def test_get_collection_of_other_user(self, args, test_client, setup):
-        _, PRIVATE_COLLECTION_NAME, _, _, _, _ = setup
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        assert response.status_code == 200, response.text
 
-        response = test_client.get("/v1/collections", headers={"Authorization": f"Bearer {args['api_key_admin']}"})
         collections = response.json()
-        collections = [collection["name"] for collection in collections["data"]]
+        Collections(**collections)  # test output format
 
-        assert PRIVATE_COLLECTION_NAME not in collections
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
+        assert response.status_code == 200, response.text
 
-    def test_delete_private_collection_with_user(self, args, test_client, setup):
-        _, PRIVATE_COLLECTION_NAME, _, _, _, _ = setup
-        test_client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
+        collection = response.json()
+        Collection(**collection)  # test output format
 
-        response = test_client.get("/v1/collections")
-        collection_id = [collection["id"] for collection in response.json()["data"] if collection["name"] == PRIVATE_COLLECTION_NAME][0]
-        response = test_client.delete(f"/v1/collections/{collection_id}")
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
+        assert response.status_code == 200, response.text
+
+        collection = response.json()
+        Collection(**collection)  # test output format
+
+    def test_create_public_collection_with_user(self, client: TestClient):
+        params = {"name": f"test_collection_{str(uuid4())}", "visibility": CollectionVisibility.PUBLIC}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 403, response.text
+
+    def test_create_public_collection_with_admin(self, client: TestClient):
+        collection_name = f"test_collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PUBLIC}
+        response = client.post_with_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        collection_id = response.json()["id"]
+
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        assert response.status_code == 200, response.text
+
+        collections = response.json()
+        collections = [collection for collection in collections["data"] if collection["id"] == collection_id]
+        assert len(collections) == 1
+
+        collection = collections[0]
+        assert collection["name"] == collection_name
+        assert collection["visibility"] == CollectionVisibility.PUBLIC
+
+    def test_create_already_existing_collection_with_user(self, client: TestClient):
+        collection_name = f"test_collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 400, response.text
+
+    def test_view_collection_of_other_user(self, client: TestClient):
+        collection_name = f"test-collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_with_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        collection_id = response.json()["id"]
+
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        collections = response.json()
+        assert response.status_code == 200, response.text
+
+        collections = [collection["id"] for collection in collections["data"] if collection["id"] == collection_id]
+        assert len(collections) == 0
+
+    def test_view_public_collection_of_other_user(self, client: TestClient):
+        collection_name = f"test-collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PUBLIC}
+        response = client.post_with_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        collection_id = response.json()["id"]
+
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        collections = response.json()
+        assert response.status_code == 200, response.text
+
+        collections = [collection for collection in collections["data"] if collection["id"] == collection_id]
+        assert len(collections) == 1
+
+        collection = collections[0]
+        assert collection["name"] == collection_name
+        assert collection["owner"] == "test-user-admin"
+        assert collection["visibility"] == CollectionVisibility.PUBLIC
+
+    def test_delete_private_collection_with_user(self, client: TestClient):
+        collection_name = f"test-collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        collection_id = response.json()["id"]
+
+        response = client.delete_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
         assert response.status_code == 204
 
-    def test_delete_public_collection_with_user(self, args, test_client, setup):
-        PUBLIC_COLLECTION_NAME, _, _, _, _, _ = setup
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        collections = response.json()
+        assert response.status_code == 200, response.text
 
-        response = test_client.get("/v1/collections", headers={"Authorization": f"Bearer {args['api_key_user']}"})
-        collection_id = [collection["id"] for collection in response.json()["data"] if collection["name"] == PUBLIC_COLLECTION_NAME][0]
-        response = test_client.delete(f"/v1/collections/{collection_id}", headers={"Authorization": f"Bearer {args['api_key_user']}"})
-        assert response.status_code == 403, response.text
+        collections = [collection for collection in collections["data"] if collection["id"] == collection_id]
+        assert len(collections) == 0
 
-    def test_delete_public_collection_with_admin(self, args, test_client, setup):
-        PUBLIC_COLLECTION_NAME, _, _, _, _, _ = setup
-
-        response = test_client.get("/v1/collections", headers={"Authorization": f"Bearer {args['api_key_admin']}"})
-        collection_id = [collection["id"] for collection in response.json()["data"] if collection["name"] == PUBLIC_COLLECTION_NAME][0]
-        response = test_client.delete(f"/v1/collections/{collection_id}", headers={"Authorization": f"Bearer {args['api_key_admin']}"})
-        assert response.status_code == 204, response.text
-
-    def test_create_collection_with_empty_name(self, args, test_client, setup):
-        _, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
-
-        params = {"name": " ", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
-        response = test_client.post("/v1/collections", json=params, headers={"Authorization": f"Bearer {args['api_key_user']}"})
-        assert response.status_code == 422, response.text
-
-    def test_create_collection_with_description(self, args, test_client, setup):
-        _, _, _, _, EMBEDDINGS_MODEL_ID, _ = setup
-
-        params = {"name": "pytest-description", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE, "description": "pytest-description"}
-        response = test_client.post("/v1/collections", json=params, headers={"Authorization": f"Bearer {args['api_key_user']}"})
+    def test_delete_public_collection_with_user(self, client: TestClient):
+        collection_name = f"test-collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PUBLIC}
+        response = client.post_with_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
         assert response.status_code == 201, response.text
 
-        # retrieve collection
-        response = test_client.get("/v1/collections", headers={"Authorization": f"Bearer {args['api_key_user']}"})
+        collection_id = response.json()["id"]
+
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        collections = response.json()
         assert response.status_code == 200, response.text
-        description = [collection["description"] for collection in response.json()["data"] if collection["name"] == "pytest-description"][0]
-        assert description == "pytest-description"
+
+        collections = [collection for collection in collections["data"] if collection["id"] == collection_id]
+        assert len(collections) == 1
+
+        response = client.delete_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
+        assert response.status_code == 404, response.text
+
+    def test_delete_public_collection_with_admin(self, client: TestClient):
+        collection_name = f"test-collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PUBLIC}
+        response = client.post_with_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        collection_id = response.json()["id"]
+
+        response = client.delete_with_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
+        assert response.status_code == 204, response.text
+
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        collections = response.json()
+        assert response.status_code == 200, response.text
+
+        collections = [collection["id"] for collection in collections["data"] if collection["id"] == collection_id]
+        assert len(collections) == 0
+
+    def test_create_collection_with_empty_name(self, client: TestClient):
+        collection_name = " "
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 422, response.text
+
+    def test_create_collection_with_description(self, client: TestClient):
+        collection_name = "test-description"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE, "description": "test-description"}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        collection_id = response.json()["id"]
+
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        assert response.status_code == 200, response.text
+
+        collections = response.json()
+        collections = [collection for collection in collections["data"] if collection["id"] == collection_id]
+        assert len(collections) == 1
+
+        collection = collections[0]
+        assert collection["name"] == collection_name
+        assert collection["description"] == "test-description"

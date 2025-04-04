@@ -1,5 +1,5 @@
 from functools import lru_cache
-from app.schemas.settings import Settings
+from app.schemas.core.settings import Settings
 
 
 @lru_cache

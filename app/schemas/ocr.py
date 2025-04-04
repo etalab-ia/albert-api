@@ -1,8 +1,14 @@
 from typing import List, Literal
 
-from pydantic import BaseModel
+from app.schemas import BaseModel
 
 
-class OCRResponse(BaseModel):
+class OCR(BaseModel):
+    object: Literal["ocr"] = "ocr"
+    page: int
+    text: str
+
+
+class OCRs(BaseModel):
     object: Literal["list"] = "list"
-    data: List[dict]
+    data: List[OCR]

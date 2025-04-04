@@ -1,23 +1,32 @@
-from typing import Optional, Union
+from typing import Union
 
-from fastapi import APIRouter, Request, Security
+from fastapi import APIRouter, Path, Request, Security
 
+from app.helpers import Authorization
 from app.schemas.models import Model, Models
-from app.schemas.security import User
-from app.utils.lifespan import models
-from app.utils.security import check_api_key
+from app.utils.lifespan import context
+from app.utils.variables import ENDPOINT__MODELS
 
 router = APIRouter()
 
 
-@router.get(path="/models/{model:path}")
-@router.get(path="/models")
-async def get_models(request: Request, model: Optional[str] = None, user: User = Security(check_api_key)) -> Union[Models, Model]:
+@router.get(path=ENDPOINT__MODELS + "/{model:path}", dependencies=[Security(dependency=Authorization())])
+async def get_model(request: Request, model: str = Path(description="The name of the model to get.")) -> Model:
     """
-    Lists the currently available models, and provides basic informations.
+    Get a model by name and provide basic informations.
     """
 
-    data = models.registry.list(model=model)
-    response = data[0] if model else Models(data=data)
+    model = context.models.list(model=model)[0]
 
-    return response
+    return model
+
+
+@router.get(path=ENDPOINT__MODELS, dependencies=[Security(dependency=Authorization())])
+async def get_models(request: Request) -> Union[Models, Model]:
+    """
+    Lists the currently available models and provides basic informations.
+    """
+
+    data = context.models.list()
+
+    return Models(data=data)

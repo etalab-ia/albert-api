@@ -1,59 +1,76 @@
 from contextlib import asynccontextmanager
+import traceback
 from types import SimpleNamespace
 
+from coredis import ConnectionPool
 from fastapi import FastAPI
-from redis.asyncio.connection import ConnectionPool
-from slowapi import Limiter
-from slowapi.util import get_ipaddr
+from qdrant_client import AsyncQdrantClient
 
-from app.clients import AuthenticationClient, CacheClient
-from app.clients.internet import BaseInternetClient as InternetClient
-from app.clients.search import BaseSearchClient as SearchClient
-from app.helpers import ModelRegistry
+from app.clients.database import SQLDatabaseClient
+from app.clients.web_search import BaseWebSearchClient as WebSearchClient
+from app.clients.model import BaseModelClient as ModelClient
+from app.helpers import DocumentManager, IdentityAccessManager, WebSearchManager, Limiter, ModelRegistry, ModelRouter
+from app.utils.logging import logger
 from app.utils.settings import settings
 
-models = SimpleNamespace()
-databases = SimpleNamespace()
-internet = SimpleNamespace()
-
-limiter = Limiter(
-    key_func=get_ipaddr,
-    storage_uri=f"redis://{settings.databases.redis.args.get("username", "")}:{settings.databases.redis.args.get("password", "")}@{settings.databases.redis.args.get("host", "localhost")}:{settings.databases.redis.args.get("port", 6379)}",
-    default_limits=[settings.rate_limit.by_ip],
+context = SimpleNamespace(
+    models=None,
+    iam=None,
+    limiter=None,
+    documents=None,
 )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
+    # setup clients
+    sql = SQLDatabaseClient(**settings.databases.sql.args) if settings.databases.sql else None
+    qdrant = AsyncQdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
+    redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
+    web_search = WebSearchClient.import_module(type=settings.web_search.type)(**settings.web_search.args) if settings.web_search else None
+    routers = []
+    for model in settings.models:
+        clients = []
+        for client in model.clients:
+            try:
+                # model client can be not reatachable to API start up
+                client = ModelClient.import_module(type=client.type)(model=client.model, **client.args.model_dump())
+                clients.append(client)
+            except Exception as e:
+                logger.debug(msg=traceback.format_exc())
+                continue
+        if not clients:
+            logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
+            if settings.web_search:
+                assert model.id != settings.web_search.model, f"Web search model ({model.id}) must be reachable."
+            if settings.databases.qdrant:
+                assert model.id != settings.databases.qdrant.model, f"Qdrant model ({model.id}) must be reachable."
+            continue
 
-    app.state.limiter = limiter
+        logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
+        model = model.model_dump()
+        model["clients"] = clients
+        routers.append(ModelRouter(**model))
 
-    models.registry = ModelRegistry(settings=settings.models)
-    if settings.internet:
-        internet.search = InternetClient.import_module(type=settings.internet.type)(**settings.internet.args)
-    else:
-        internet.search = None
+    # setup context
+    context.models = ModelRegistry(routers=routers)
+    context.iam = IdentityAccessManager(sql=sql) if sql else None
+    context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
 
-    # databases
-    if settings.databases.qdrant:
-        type = settings.databases.qdrant.type
-        args = settings.databases.qdrant.args
-    elif settings.databases.elastic:
-        type = settings.databases.elastic.type
-        args = settings.databases.elastic.args
-    else:
-        type = None
-        args = None
+    web_search = WebSearchManager(web_search=web_search) if settings.web_search else None
+    web_search_model = context.models(model=settings.web_search.model) if settings.web_search else None
+    qdrant_model = context.models(model=settings.databases.qdrant.model) if settings.databases.qdrant else None
 
-    databases.search = SearchClient.import_module(type=type)(models=models.registry, **args) if type and args else None
-    databases.cache = CacheClient(connection_pool=ConnectionPool(**settings.databases.redis.args))
-    databases.auth = AuthenticationClient(cache=databases.cache, **settings.databases.grist.args) if settings.databases.grist else None
+    context.documents = DocumentManager(sql=sql, qdrant=qdrant, qdrant_model=qdrant_model, web_search=web_search, web_search_model=web_search_model) if qdrant else None  # fmt: off
 
-    # Store databases in app.state for middleware access
-    app.state.databases = databases
+    # Store sql in app.state for middleware access
+    app.state.sql = sql  # @TODO: the middleware have to recreate a sql client from settings
+
+    assert await context.limiter.redis.check(), "Redis database is not reachable."
 
     yield
 
-    if databases.search:
-        databases.search.close()
+    # cleanup resources when app shuts down
+    await qdrant.close()
+    await sql.engine.dispose()
