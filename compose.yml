@@ -11,6 +11,8 @@ services:
       interval: 4s
       timeout: 10s
       retries: 5
+    ports:
+      - 6379:6379
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
