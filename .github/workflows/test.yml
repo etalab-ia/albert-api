@@ -25,8 +25,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        apt update -y
-        apt install -y poppler-utils
+        sudo apt update -y
+        sudo apt install -y poppler-utils
         python -m pip install --upgrade pip
         pip install ".[app,test]"
 
