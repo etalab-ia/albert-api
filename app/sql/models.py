@@ -16,7 +16,7 @@ class Usage(Base):
     datetime = Column(DateTime, nullable=False, default=func.now())
     duration = Column(Integer, nullable=True)
     user_id = Column(ForeignKey(column="user.id", ondelete="CASCADE"), nullable=True)
-    token_id = Column(ForeignKey(column="token.id", ondelete="CASCADE"), nullable=True)
+    token_id = Column(ForeignKey(column="token.id", ondelete="SET NULL"), nullable=True)
     endpoint = Column(String, nullable=False)
     method = Column(Enum(HTTPMethod), nullable=True)
     model = Column(String, nullable=True)
@@ -26,7 +26,7 @@ class Usage(Base):
     status = Column(Integer, nullable=True)
 
     user = relationship(argument="User", backref=backref(name="usage", cascade="all, delete-orphan"))
-    token = relationship(argument="Token", backref=backref(name="usage", cascade="all, delete-orphan"))
+    token = relationship(argument="Token", backref=backref(name="usage"))
 
     def __repr__(self):
         return f"<Usage (id={self.id}, datetime={self.datetime}, user_id={self.user_id}, token_id={self.token_id}, endpoint={self.endpoint}, duration={self.duration})>"

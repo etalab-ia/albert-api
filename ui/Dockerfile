@@ -34,6 +34,7 @@ RUN groupadd --gid 1100 albert && \
 RUN apt-get update && apt-get install -y \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
+
 COPY scripts/startup_ui.sh /startup.sh
 RUN chown albert:albert /startup.sh
 RUN chmod u+x /startup.sh

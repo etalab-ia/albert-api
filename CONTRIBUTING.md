@@ -2,14 +2,11 @@
 
 Pour contribuer au projet, merci de suivre les instructions suivantes.
 
-
-
-
 # Développement en environnement Docker
 
 > ⚠️ **Attention : Vous devez disposer d'une API de modèle de language.**
 
-1. Editez le fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* avec vos modèles.
+1. Créez un fichier *config.yml* à partir du fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* avec vos modèles.
 
     Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
 

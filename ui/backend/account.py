@@ -49,7 +49,7 @@ def create_token(name: str, expires_at: int):
 
         @st.dialog(title="Token", width="large")
         def display_token():
-            st.warning("**⚠️ Copy the token to your clipboard, it will not be displayed again.**")
+            st.warning("**⚠️ Copy the following API key to your clipboard, it will not be displayed again. Refresh the page after saving the API key.**")  # fmt: off
             st.code(response.json()["token"], language="text")
 
         st.toast("Create succeed", icon="✅")
