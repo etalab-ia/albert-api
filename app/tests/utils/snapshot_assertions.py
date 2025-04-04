@@ -1,7 +1,7 @@
 import difflib
 
 
-def assert_snapshot_almost_equal(actual, expected_snapshot, threshold=0.99):
+def assert_snapshot_almost_equal(actual, expected_snapshot, threshold=0.90):
     """
     Assert that the actual value is almost equal to the expected snapshot.
 

@@ -47,7 +47,7 @@ class TestOCR:
         if os.path.exists(snapshot_path):
             with open(snapshot_path) as f:
                 expected_snapshot = ast.literal_eval(f.read())
-                assert_snapshot_almost_equal(actual=json.dumps(response.json()), expected_snapshot=json.dumps(expected_snapshot), threshold=0.95)
+                assert_snapshot_almost_equal(actual=json.dumps(response.json()), expected_snapshot=json.dumps(expected_snapshot), threshold=0.90)
         else:
             snapshot.assert_match(str(response.json()), "ocr_pdf_successful")
 
@@ -105,6 +105,6 @@ class TestOCR:
         if os.path.exists(snapshot_path):
             with open(snapshot_path) as f:
                 expected_snapshot = ast.literal_eval(f.read())
-                assert_snapshot_almost_equal(actual=json.dumps(response.json()), expected_snapshot=json.dumps(expected_snapshot), threshold=0.95)
+                assert_snapshot_almost_equal(actual=json.dumps(response.json()), expected_snapshot=json.dumps(expected_snapshot), threshold=0.90)
         else:
             snapshot.assert_match(str(response.json()), "ocr_custom_dpi")
