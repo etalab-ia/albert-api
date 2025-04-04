@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
+from app.schemas import BaseModel
 from app.schemas.search import Search, SearchArgs
 
 DEFAULT_RAG_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"

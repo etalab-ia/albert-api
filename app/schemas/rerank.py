@@ -1,6 +1,8 @@
 from typing import List
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.schemas import BaseModel
 
 
 class RerankRequest(BaseModel):

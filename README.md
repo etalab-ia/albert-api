@@ -26,12 +26,12 @@ Si vous êtes un organisme public, vous pouvez demander une clé d'accès à Alb
 
 L'API Albert permet d'être un proxy entre des clients API d'IA générative et d'assurer du load balancing entre les différents clients :
 
-| Client                                                                                                  | Supported version | Supported model types                                        |
-| ------------------------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------ |
-| [OpenAI](https://platform.openai.com/docs/api-reference)                                                | latest            | • language<br>• embeddings<br>• reranking<br>• transcription |
-| [vLLM](https://github.com/vllm-project/vllm)                                                            | v0.6.6.post1      | • language                                                   |
-| [HuggingFace Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) | v1.5              | • embeddings<br>• reranking                                  |
-| [Albert](https://github.com/etalab-ia/albert-api)                                                       | latest            | • language<br>• embeddings<br>• reranking<br>• transcription |
+| Client | Supported version | Supported model types |
+| --- | --- | --- |
+| [OpenAI](https://platform.openai.com/docs/api-reference) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
+| [vLLM](https://github.com/vllm-project/vllm) | v0.8.2 | • language |
+| [HuggingFace Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) | v1.6 | • embeddings<br>• reranking |
+| [Albert](https://github.com/etalab-ia/albert-api) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
 
 
 ## ⚙️ Fonctionnalités avancées
@@ -63,7 +63,7 @@ L'API Albert permet d'accéder à un ensemble de modèles de langage et d'embedd
 
 ### Interroger des documents (search - retrieval augmented generation)
 
-L'API Albert permet d'interroger des documents dans une base vectorielle. Ces documents sont classés dans des collections. Vous pouvez créer vos collections privées et utiliser les collections publiques déjà existantes. Enfin, une collection "internet" permet d'effectuer une recherche sur internet pour compléter la réponse du modèle.
+L'API Albert permet d'interroger des documents dans une base vectorielle. Ces documents sont classés dans des collections. Vous pouvez créer vos collections privées et utiliser les collections publiques déjà existantes.
 
 <a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/retrieval_augmented_generation.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>

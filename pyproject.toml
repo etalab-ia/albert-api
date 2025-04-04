@@ -1,6 +1,6 @@
 [project]
 name = "albert-api"
-version = "1.0.0"
+version = "0.0.4"
 description = "Albert API projects"
 requires-python = ">=3.12"
 license = { text = "MIT" }
@@ -17,25 +17,37 @@ ui = [
     "streamlit-extras==0.5.0", 
 ]
 app = [
+    # authentication
+    "alembic==1.15.1",
+    "asyncpg==0.30.0",
+    "bcrypt==4.3.0",
+    "python-jose==3.4.0",
+    "sqlalchemy[asyncio]==2.0.38",
+    "sqlalchemy-utils==0.41.2",
+    "limits==4.1",
+    "coredis==4.20.0",
+    "psycopg2==2.9.10",
+
+    # files
     "elasticsearch==8.17.1",
     "langchain==0.2.15",
     "qdrant-client==1.10.1",
     "redis==5.2.1",
+    "six==1.17.0",
+    "pdfminer.six==20240706",
+    "beautifulsoup4==4.13.3",
+    "pdf2image==1.17.0",
+
+    # app
     "gunicorn==23.0.0",
     "fastapi==0.115.8",
     "prometheus-fastapi-instrumentator==7.0.2",
     "pyyaml==6.0.2",
-    "six==1.17.0",
-    "pdfminer.six==20240706",
-    "beautifulsoup4==4.13.3",
-    "python-multipart==0.0.20",
     "uvicorn==0.34.0",
-    "slowapi==0.1.9",
-    "psycopg2==2.9.10",
-    "alembic==1.15.1",
-    "pdf2image==1.17.0",
+    "python-multipart==0.0.20",
 ]
 dev = [
+    "uvicorn==0.34.0",
     "ruff==0.6.5",
     "pre-commit==4.1.0",
     "jupyter==1.1.1",

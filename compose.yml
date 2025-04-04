@@ -11,8 +11,6 @@ services:
       interval: 4s
       timeout: 10s
       retries: 5
-    ports:
-      - 6379:6379
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
@@ -30,11 +28,13 @@ services:
     restart: always
     user: postgres
     environment:
+      - CREATE_DB=api,ui
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=changeme
       - POSTGRES_DB=postgres
     volumes:
       - postgres:/var/lib/postgresql/data
+      - ./scripts/postgres_entrypoint.sh:/docker-entrypoint-initdb.d/postgres_entrypoint.sh
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready", "-U", "postgres" ]
       interval: 4s
