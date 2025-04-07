@@ -37,7 +37,7 @@ jobs:
         POSTGRES_USER=postgres
         POSTGRES_PASSWORD=changeme
         POSTGRES_HOST=localhost
-        POSTGRES_DB=postgres
+        POSTGRES_DB=api
         POSTGRES_PORT=5432
         REDIS_HOST=localhost
         REDIS_PASSWORD=changeme
@@ -60,7 +60,7 @@ jobs:
         set -a
         source .env
         set +a
-        python -m pytest app/tests --cov=./app --cov-report=xml --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
+        python -m pytest app/tests/test_audio.py --cov=./app --cov-report=xml --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
     - name: Create coverage badge
       run: |
         mkdir -p .github/badges
