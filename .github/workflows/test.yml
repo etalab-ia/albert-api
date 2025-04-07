@@ -40,7 +40,7 @@ jobs:
         POSTGRES_DB=postgres
         POSTGRES_PORT=5432
         REDIS_HOST=localhost
-        REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+        REDIS_PASSWORD=changeme
         QDRANT_HOST=localhost
         QDRANT__SERVICE__API_KEY: changeme
         GRIST_API_KEY=${{ secrets.GRIST_API_KEY }}
@@ -57,8 +57,10 @@ jobs:
 
     - name: Run tests
       run: |
+        set -a
+        source .env
+        set +a
         python -m pytest app/tests --cov=./app --cov-report=xml --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
-
     - name: Create coverage badge
       run: |
         mkdir -p .github/badges
