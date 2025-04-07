@@ -55,6 +55,10 @@ jobs:
         GRIST_API_KEY: ${{ secrets.GRIST_API_KEY }}
         ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
 
+    - name: Debug database URL
+      run: |
+        python -c "from app.utils.settings import settings; print('Database URL:', settings.databases.sql.args.get('url'))"
+
     - name: Run tests
       run: |
         set -a
