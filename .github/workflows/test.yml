@@ -70,7 +70,7 @@ jobs:
         set -a
         source .env
         set +a
-        python -m pytest app/tests --cov=./app --cov-report=xml  --cov-exclude=app/tests --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
+        python -m pytest app/tests --cov=./app --cov-report=xml  --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
     - name: Create coverage badge
       run: |
         mkdir -p .github/badges
