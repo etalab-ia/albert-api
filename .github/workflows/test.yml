@@ -59,6 +59,12 @@ jobs:
       run: |
         python -c "from app.utils.settings import settings; print('Database URL:', settings.databases.sql.args.get('url'))"
 
+    - name: Wait for PostgreSQL
+      run: |
+        for i in {1..30}; do
+          nc -z localhost 5432 && echo "PostgreSQL is ready" && break || echo "Waiting for PostgreSQL..." && sleep 2;
+        done
+
     - name: Run tests
       run: |
         set -a
