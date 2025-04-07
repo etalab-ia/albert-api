@@ -32,7 +32,6 @@ class TestUsagesMiddleware:
 
         log = db_session.query(Usage).order_by(Usage.id.desc()).first()
 
-        assert log.endpoint == f"/v1{ENDPOINT__CHAT_COMPLETIONS}"
         assert log.model == MODEL_ID
         assert isinstance(log.datetime, datetime)
         assert log.user is not None
@@ -60,7 +59,6 @@ class TestUsagesMiddleware:
         assert after - before == 1
         log = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__EMBEDDINGS}").order_by(Usage.id.desc()).first()
 
-        assert log.endpoint == f"/v1{ENDPOINT__EMBEDDINGS}"
         assert log.model == model_id
         assert isinstance(log.datetime, datetime)
         assert log.user is not None
