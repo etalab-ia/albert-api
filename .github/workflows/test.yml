@@ -37,7 +37,7 @@ jobs:
         POSTGRES_USER=postgres
         POSTGRES_PASSWORD=changeme
         POSTGRES_HOST=localhost
-        POSTGRES_DB=api
+        POSTGRES_DB=postgres
         POSTGRES_PORT=5432
         REDIS_HOST=localhost
         REDIS_PASSWORD=changeme
