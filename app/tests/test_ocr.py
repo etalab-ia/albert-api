@@ -81,7 +81,6 @@ class TestOCR:
 
     def test_ocr_custom_dpi(self, args, client, model_id, snapshot):
         """Test OCR with custom DPI setting."""
-        model_id = model_id
         client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
 
         file_path = os.path.join(current_path, "assets/pdf.pdf")
