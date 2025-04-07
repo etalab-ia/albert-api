@@ -42,7 +42,7 @@ jobs:
         REDIS_HOST=localhost
         REDIS_PASSWORD=changeme
         QDRANT_HOST=localhost
-        QDRANT__SERVICE__API_KEY: changeme
+        QDRANT__SERVICE__API_KEY=changeme
         GRIST_API_KEY=${{ secrets.GRIST_API_KEY }}
         GRIST_DOC_ID=${{ secrets.GRIST_DOC_ID }}
         ALBERT_API_KEY=${{ secrets.ALBERT_API_KEY }}
