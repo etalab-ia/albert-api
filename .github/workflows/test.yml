@@ -1,0 +1,87 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_call: # Add this to make the workflow reusable
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Docker Compose
+      run: |
+        docker compose up -d
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        sudo apt update -y
+        sudo apt install -y poppler-utils
+        python -m pip install --upgrade pip
+        pip install ".[app,test]"
+
+    - name: Setup environment
+      run: |
+        # Create .env file from GitHub secrets
+        cat > .env << EOF
+        POSTGRES_USER=postgres
+        POSTGRES_PASSWORD=changeme
+        POSTGRES_HOST=localhost
+        POSTGRES_DB=postgres
+        POSTGRES_PORT=5432
+        REDIS_HOST=localhost
+        REDIS_PASSWORD=changeme
+        QDRANT_HOST=localhost
+        QDRANT_API_KEY=changeme
+        GRIST_API_KEY=${{ secrets.GRIST_API_KEY }}
+        GRIST_DOC_ID=${{ secrets.GRIST_DOC_ID }}
+        ALBERT_API_KEY=${{ secrets.ALBERT_API_KEY }}
+        EOF
+
+    - name: Create config from template
+      run: |
+        echo "${{ secrets.CONFIG_YML }}" > config.yml
+      env:
+        GRIST_API_KEY: ${{ secrets.GRIST_API_KEY }}
+        ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
+
+    - name: Wait for PostgreSQL
+      run: |
+        for i in {1..30}; do
+          nc -z localhost 5432 && echo "PostgreSQL is ready" && break || echo "Waiting for PostgreSQL..." && sleep 2;
+        done
+
+    - name: Run tests
+      run: |
+        set -a
+        source .env
+        set +a
+        python -m pytest app/tests --cov=./app --cov-report=xml  --api-key-user=${{ secrets.API_KEY_USER }} --api-key-admin=${{ secrets.API_KEY_ADMIN }}
+    - name: Create coverage badge
+      run: |
+        mkdir -p .github/badges
+        # Extract coverage percentage from coverage.xml
+        COVERAGE=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('coverage.xml').getroot().get('line-rate'))")
+        COVERAGE_PCT=$(printf "%.2f" $(echo "${COVERAGE} * 100" | bc))
+        echo "{\"schemaVersion\":1,\"label\":\"Coverage\",\"message\":\"${COVERAGE_PCT}%\",\"color\":\"$(if (( $(echo "${COVERAGE_PCT} >= 80" | bc -l) )); then echo "green"; elif (( $(echo "${COVERAGE_PCT} >= 70" | bc -l) )); then echo "yellow"; else echo "red"; fi)\"}" > .github/badges/coverage.json
+
+    - name: Commit coverage badge
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: Update coverage badge
+        file_pattern: .github/badges/coverage.json
+
+    - name: Tear down Docker Compose
+      if: always()
+      run: |
+        docker compose down

@@ -1,42 +1,4 @@
 services:
-  api:
-    build:
-      context: .
-      dockerfile: app/Dockerfile
-    restart: always
-    ports:
-      - 8000:8000
-    volumes:
-      - ./config.yml:/config.yml:ro
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./app
-          target: /app
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-
-  ui:
-    build:
-      context: .
-      dockerfile: ui/Dockerfile
-    restart: always
-    ports:
-      - 8501:8501
-    volumes:
-      - ./config.yml:/config.yml:ro
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./ui
-          target: /app
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   redis:
     image: redis/redis-stack-server:7.2.0-v11
     restart: always
@@ -49,6 +11,8 @@ services:
       interval: 4s
       timeout: 10s
       retries: 5
+    ports:
+      - 6379:6379
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged

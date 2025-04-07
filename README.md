@@ -1,7 +1,9 @@
 <div id="toc"><ul align="center" style="list-style: none">
 <summary><h1>Albert API</h1></summary>
 
-![](https://img.shields.io/badge/version-0.1.0-yellow) ![](https://img.shields.io/badge/Python-3.12-green)<br>
+![](https://img.shields.io/badge/version-0.0.3-yellow) ![](https://img.shields.io/badge/Python-3.12-green) ![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/albert-api/174-tests-CI-CD/.github/badges/coverage.json)
+
+<br>
 <a href="https://github.com/etalab-ia/albert-api/blob/main/CHANGELOG.md"><b>Changelog</b></a> | <a href="https://albert.api.etalab.gouv.fr/documentation"><b>Documentation</b></a> | <a href="https://albert.api.etalab.gouv.fr/playground"><b>Playground</b></a> | <a href="https://albert.api.etalab.gouv.fr/status"><b>Status</b></a> | <a href="https://albert.api.etalab.gouv.fr/swagger"><b>Swagger</b></a> <br><br>
 </ul></div>
 

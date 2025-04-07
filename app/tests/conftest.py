@@ -1,5 +1,7 @@
 from functools import partial
 import logging
+import os
+from pathlib import Path
 import time
 from typing import Generator
 
@@ -9,12 +11,60 @@ from qdrant_client import QdrantClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists
+import vcr
 
 from app.main import create_app
 from app.schemas.auth import LimitType, PermissionType
 from app.sql.models import Base
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
+
+# Define global VCR instance and cassette
+VCR_INSTANCE = None
+VCR_GLOBAL_CASSETTE = None
+VCR_ENABLED = os.environ.get("VCR_ENABLED", "").lower() in ("true", "1", "yes")
+
+
+def pytest_configure(config):
+    """Called after command line options have been parsed and all plugins and initial conftest files loaded.
+    This is the earliest pytest hook we can use to set up VCR globally.
+    """
+    global VCR_INSTANCE, VCR_GLOBAL_CASSETTE
+
+    # Skip VCR setup if disabled
+    if not VCR_ENABLED:
+        logging.info("VCR is disabled via VCR_ENABLED environment variable")
+        return
+
+    cassette_library_dir = Path(__file__).parent / "cassettes"
+    os.makedirs(cassette_library_dir, exist_ok=True)
+
+    VCR_INSTANCE = vcr.VCR(
+        cassette_library_dir=str(cassette_library_dir),
+        record_mode="once",
+        match_on=["method", "scheme", "host", "port", "path", "query"],
+        filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
+        before_record_request=lambda request: None if request.host == "testserver" else request,
+        decode_compressed_response=True,
+    )
+
+    # Store the cassette object so we can properly close it later
+    VCR_GLOBAL_CASSETTE = VCR_INSTANCE.use_cassette("global_setup_cassette.yaml")
+    VCR_GLOBAL_CASSETTE.__enter__()
+
+
+def pytest_addoption(parser):
+    parser.addoption("--api-key-user", action="store", default="EMPTY")
+    parser.addoption("--api-key-admin", action="store", default="EMPTY")
+
+
+@pytest.fixture(scope="session")
+def args(request):
+    args = {"api_key_user": request.config.getoption("--api-key-user"), "api_key_admin": request.config.getoption("--api-key-admin")}
+    assert args["api_key_user"] != "EMPTY", "--api-key-user argument is required."
+    assert args["api_key_admin"] != "EMPTY", "--api-key-admin argument is required."
+
+    return args
 
 
 @pytest.fixture(scope="session")
@@ -54,11 +104,18 @@ def db_session(engine):
 def app_with_test_db(engine, db_session):
     """Create FastAPI app with test database"""
 
+    global VCR_GLOBAL_CASSETTE, VCR_INSTANCE
+
     def get_test_db():
         yield db_session
 
     # Create app with test config
     app = create_app(db_func=get_test_db, disabled_middleware=False)
+
+    # Exit the global cassette, requests done by app initialization
+    # are recorded in the global cassette
+    if VCR_ENABLED and VCR_GLOBAL_CASSETTE is not None:
+        VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
 
     return app
 
@@ -68,6 +125,21 @@ def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
     with TestClient(app=app_with_test_db) as client:
         client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
         yield client
+
+
+@pytest.fixture(autouse=True)
+def vcr_cassette(request):
+    """Use VCR for specific tests, with per-test cassettes"""
+    # Skip if VCR is disabled via environment variable
+    if not VCR_ENABLED:
+        yield
+        return  # Use a test-specific cassette
+
+    test_name = request.node.name.replace("[", "_").replace("]", "_")
+    cassette_path = f"{request.module.__name__}.{test_name}"
+
+    with VCR_INSTANCE.use_cassette(cassette_path + ".yaml"):
+        yield
 
 
 @pytest.fixture(scope="session")
@@ -195,42 +267,3 @@ def client(test_client: TestClient, tokens: tuple[dict, dict]) -> Generator[Test
     client.patch_master = partial(client.patch, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
 
     yield client
-
-
-# @pytest.fixture(autouse=True)
-# def vcr_config():
-#     """Global VCR configuration"""
-#     cassette_library_dir = Path(__file__).parent / "cassettes"
-#     os.makedirs(cassette_library_dir, exist_ok=True)
-
-#     custom_vcr = vcr.VCR(
-#         cassette_library_dir=str(cassette_library_dir),
-#         record_mode="once",
-#         match_on=["method", "scheme", "host", "port", "path", "query"],
-#         filter_headers=["authorization"],
-#         before_record_request=lambda request: None if request.host == "testserver" else request,
-#         decode_compressed_response=True,
-#     )
-
-#     return custom_vcr
-
-
-# @pytest.fixture(autouse=True)
-# def vcr_cassette(request, vcr_config):
-#     """Automatically use VCR for each test"""
-
-#     # Skip VCR for tests that does not support it
-#     def module_to_skip(request):
-#         for module in ["test_audio", "test_documents", "test_files", "test_ocr"]:
-#             if request.module.__name__.endswith(module):
-#                 return True
-
-#     if module_to_skip(request):
-#         yield
-#         return
-
-#     test_name = request.node.name.replace("[", "_").replace("]", "_")
-#     cassette_path = f"{request.module.__name__}.{test_name}"
-
-#     with vcr_config.use_cassette(cassette_path + ".yaml"):
-#         yield

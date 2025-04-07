@@ -6,9 +6,13 @@ on:
       - main
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml # Use the reusable test workflow
+
   build-and-push:
     name: Build and push from ${{ github.ref_name }}/${{ github.sha }}
     runs-on: ubuntu-latest
+    needs: test # Wait for the test job to complete
     env:
       APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app
       UI_IMAGE_NAME: ghcr.io/${{ github.repository }}/ui
