@@ -1,6 +1,6 @@
 [project]
 name = "albert-api"
-version = "0.0.4"
+version = "0.1.0"
 description = "Albert API projects"
 requires-python = ">=3.12"
 license = { text = "MIT" }
@@ -9,26 +9,26 @@ dependencies = [
     "requests==2.32.3",
     "pydantic==2.10.6",
     "pydantic-settings==2.7.1",
+    "alembic==1.15.1",
+    "psycopg2==2.9.10",
+    "asyncpg==0.30.0",
+    "sqlalchemy[asyncio]==2.0.38",
+    "sqlalchemy-utils==0.41.2",
 ]
 
 [project.optional-dependencies]
 ui = [
     "streamlit==1.42.0",
     "streamlit-extras==0.5.0", 
+    "bcrypt==4.3.0",
 ]
 app = [
-    # authentication
-    "alembic==1.15.1",
-    "asyncpg==0.30.0",
-    "bcrypt==4.3.0",
+    # auth
     "python-jose==3.4.0",
-    "sqlalchemy[asyncio]==2.0.38",
-    "sqlalchemy-utils==0.41.2",
     "limits==4.1",
     "coredis==4.20.0",
-    "psycopg2==2.9.10",
 
-    # files
+    # data
     "elasticsearch==8.17.1",
     "langchain==0.2.15",
     "qdrant-client==1.10.1",

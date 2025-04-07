@@ -81,7 +81,7 @@ def create_app(*, db_func=get_db, disabled_middleware=False) -> FastAPI:
             return Response(status_code=200)
 
     if ROUTER__OCR not in settings.disabled_routers:
-        app.include_router(router=ocr.router, tags=[ROUTER__OCR.title()], prefix="/v1")
+        app.include_router(router=ocr.router, tags=[ROUTER__OCR.capitalize()], prefix="/v1")
 
     if ROUTER__RERANK not in settings.disabled_routers:
         app.include_router(router=rerank.router, tags=[ROUTER__RERANK.title()], prefix="/v1")
