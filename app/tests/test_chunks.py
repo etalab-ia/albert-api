@@ -1,23 +1,20 @@
-import logging
 import os
+from uuid import uuid4
 
+from fastapi.testclient import TestClient
 import pytest
 
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS, COLLECTION_TYPE__PRIVATE
-from app.schemas.chunks import Chunks, Chunk
+from app.schemas.chunks import Chunks
+from app.schemas.collections import CollectionVisibility
+from app.utils.variables import ENDPOINT__CHUNKS, ENDPOINT__COLLECTIONS, ENDPOINT__DOCUMENTS, ENDPOINT__FILES
 
 
 @pytest.fixture(scope="module")
-def setup(args, session_user):
-    # Get embedding model
-    response = session_user.get(f"{args['base_url']}/models", timeout=10)
-    models = response.json()
-    EMBEDDINGS_MODEL_ID = [model for model in models["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]["id"]
-    logging.info(f"test embeddings model ID: {EMBEDDINGS_MODEL_ID}")
-
+def setup(client: TestClient):
     # Create a collection
-    response = session_user.post(
-        f"{args['base_url']}/collections", json={"name": "pytest", "model": EMBEDDINGS_MODEL_ID, "type": COLLECTION_TYPE__PRIVATE}
+    response = client.post_without_permissions(
+        url=f"/v1{ENDPOINT__COLLECTIONS}",
+        json={"name": f"test_collection_{uuid4()}", "visibility": CollectionVisibility.PRIVATE},
     )
     assert response.status_code == 201
     COLLECTION_ID = response.json()["id"]
@@ -26,36 +23,33 @@ def setup(args, session_user):
     file_path = "app/tests/assets/json.json"
     files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
     data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
-    response = session_user.post(f"{args['base_url']}/files", data=data, files=files)
-    assert response.status_code == 201
+    response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+    assert response.status_code == 201, response.text
 
     # Retrieve the document ID
-    response = session_user.get(f"{args['base_url']}/documents/{COLLECTION_ID}")
-    assert response.status_code == 200
+    response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}", params={"collection": COLLECTION_ID})
+    assert response.status_code == 200, response.text
     DOCUMENT_ID = response.json()["data"][0]["id"]
 
     yield COLLECTION_ID, DOCUMENT_ID
 
 
-@pytest.mark.usefixtures("args", "session_user", "setup", "cleanup_collections")
+@pytest.mark.usefixtures("client", "setup")
 class TestChunks:
-    def test_get_chunks(self, args, session_user, setup):
+    def test_get_chunks(self, client: TestClient, setup):
         COLLECTION_ID, DOCUMENT_ID = setup
-        response = session_user.get(f"{args['base_url']}/chunks/{COLLECTION_ID}/{DOCUMENT_ID}")
-        assert response.status_code == 200
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__CHUNKS}/{DOCUMENT_ID}")
+        assert response.status_code == 200, response.text
 
-        chunks = Chunks(**response.json())
-        assert isinstance(chunks, Chunks)
-        assert all(isinstance(chunk, Chunk) for chunk in chunks.data)
+        chunks = Chunks(**response.json())  # test output format
 
         assert len(chunks.data) > 0
-        assert chunks.data[0].metadata.document_id == DOCUMENT_ID
+        assert chunks.data[0].metadata["document_id"] == DOCUMENT_ID
 
-    def test_delete_chunks(self, args, session_user, setup):
+    def test_delete_chunks(self, client: TestClient, setup):
         COLLECTION_ID, DOCUMENT_ID = setup
+        response = client.delete_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}/{DOCUMENT_ID}")
+        assert response.status_code == 204, response.text
 
-        response = session_user.delete(f"{args['base_url']}/documents/{COLLECTION_ID}/{DOCUMENT_ID}")
-        assert response.status_code == 204
-        response = session_user.get(f"{args['base_url']}/chunks/{COLLECTION_ID}/{DOCUMENT_ID}")
-        data = response.json()["data"]
-        assert len(data) == 0
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__CHUNKS}/{DOCUMENT_ID}")
+        assert response.status_code == 404, response.text

@@ -1,31 +1,4 @@
 services:
-  api:
-    image: ghcr.io/etalab-ia/albert-api/app:latest
-    command: gunicorn app.main:app --workers 1 --worker-connections 1000 --timeout 30 --worker-class uvicorn.workers.UvicornWorker
-    environment:
-      - PORT=8000
-      - CONFIG_FILE=/home/albert/conf/config.yml
-    restart: always
-    ports:
-      - 8000:8000
-    volumes:
-      - ./config.example.yml:/home/albert/conf/config.yml:ro
-    depends_on:
-      redis:
-        condition: service_healthy
-
-  ui:
-    image: ghcr.io/etalab-ia/albert-api/ui:latest
-    command: streamlit run ui/main.py --server.port=8501 --browser.gatherUsageStats false --theme.base=light --theme.primaryColor=#6a6af4 --server.maxUploadSize=20
-    restart: always
-    environment:
-      - BASE_URL=http://api:8000/v1
-      - DOCUMENTS_EMBEDDINGS_MODEL=
-      - SUMMARIZE_TOC_MODEL=
-      - SUMMARIZE_SUMMARY_MODEL=
-    ports:
-      - 8501:8501
-
   redis:
     image: redis/redis-stack-server:7.2.0-v11
     restart: always
@@ -34,10 +7,12 @@ services:
     volumes:
       - redis:/data
     healthcheck:
-        test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-        interval: 4s
-        timeout: 10s
-        retries: 5
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 4s
+      timeout: 10s
+      retries: 5
+    ports:
+      - 6379:6379
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
@@ -46,7 +21,32 @@ services:
       - QDRANT__SERVICE__API_KEY=changeme
     volumes:
       - qdrant:/qdrant/storage
+    ports:
+      - 6333:6333
+      - 6334:6334
+
+  postgres:
+    image: postgres:16.5
+    restart: always
+    user: postgres
+    environment:
+      - CREATE_DB=api,ui
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./scripts/postgres_entrypoint.sh:/docker-entrypoint-initdb.d/postgres_entrypoint.sh
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-U", "postgres" ]
+      interval: 4s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    ports:
+      - "5432:5432"
 
 volumes:
   qdrant:
   redis:
+  postgres:

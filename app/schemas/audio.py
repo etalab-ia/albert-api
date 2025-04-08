@@ -1,7 +1,8 @@
 from typing import List
 
 from openai.types.audio import Transcription
-from pydantic import BaseModel
+
+from app.schemas import BaseModel
 
 
 class AudioTranscription(Transcription):

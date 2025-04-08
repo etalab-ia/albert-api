@@ -1,45 +1,153 @@
 DEFAULT_APP_NAME = "Albert API"
 DEFAULT_TIMEOUT = 300
 
-COLLECTION_DISPLAY_ID__INTERNET = "internet"
-COLLECTION_TYPE__PUBLIC = "public"
-COLLECTION_TYPE__PRIVATE = "private"
+ENDPOINT__AUDIO_TRANSCRIPTIONS = "/audio/transcriptions"
+ENDPOINT__CHAT_COMPLETIONS = "/chat/completions"
+ENDPOINT__CHUNKS = "/chunks"
+ENDPOINT__COLLECTIONS = "/collections"
+ENDPOINT__COMPLETIONS = "/completions"
+ENDPOINT__DOCUMENTS = "/documents"
+ENDPOINT__EMBEDDINGS = "/embeddings"
+ENDPOINT__FILES = "/files"
+ENDPOINT__MODELS = "/models"
+ENDPOINT__OCR = "/ocr-beta"
+ENDPOINT__RERANK = "/rerank"
+ENDPOINT__ROLES = "/roles"
+ENDPOINT__SEARCH = "/search"
+ENDPOINT__TOKENS = "/tokens"
+ENDPOINT__USERS = "/users"
 
-INTERNET_TYPE__BRAVE = "brave"
-INTERNET_TYPE__DUCKDUCKGO = "duckduckgo"
+ROUTER__AUDIO = "audio"
+ROUTER__AUTH = "auth"
+ROUTER__CHAT = "chat"
+ROUTER__CHUNKS = "chunks"
+ROUTER__COLLECTIONS = "collections"
+ROUTER__COMPLETIONS = "completions"
+ROUTER__DOCUMENTS = "documents"
+ROUTER__EMBEDDINGS = "embeddings"
+ROUTER__FILES = "files"
+ROUTER__MODELS = "models"
+ROUTER__MONITORING = "monitoring"
+ROUTER__OCR = "ocr"
+ROUTER__RERANK = "rerank"
+ROUTER__SEARCH = "search"
 
-DATABASE_TYPE__REDIS = "redis"
-DATABASE_TYPE__QDRANT = "qdrant"
-DATABASE_TYPE__GRIST = "grist"
-DATABASE_TYPE__ELASTIC = "elastic"
+ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
 
-SEARCH_TYPE__HYBRID = "hybrid"
-SEARCH_TYPE__LEXICAL = "lexical"
-SEARCH_TYPE__SEMANTIC = "semantic"
+# Supported language from https://github.com/huggingface/transformers/blob/main/src/transformers/models/whisper/tokenization_whisper.py
+AUDIO_SUPPORTED_LANGUAGES = {
+    "afrikaans": "af",
+    "albanian": "sq",
+    "amharic": "am",
+    "arabic": "ar",
+    "armenian": "hy",
+    "assamese": "as",
+    "azerbaijani": "az",
+    "bashkir": "ba",
+    "basque": "eu",
+    "belarusian": "be",
+    "bengali": "bn",
+    "bosnian": "bs",
+    "breton": "br",
+    "bulgarian": "bg",
+    "burmese": "my",
+    "cantonese": "yue",
+    "castilian": "es",
+    "catalan": "ca",
+    "chinese": "zh",
+    "croatian": "hr",
+    "czech": "cs",
+    "danish": "da",
+    "dutch": "nl",
+    "english": "en",
+    "estonian": "et",
+    "faroese": "fo",
+    "finnish": "fi",
+    "flemish": "nl",
+    "french": "fr",
+    "galician": "gl",
+    "georgian": "ka",
+    "german": "de",
+    "greek": "el",
+    "gujarati": "gu",
+    "haitian": "ht",
+    "haitian creole": "ht",
+    "hausa": "ha",
+    "hawaiian": "haw",
+    "hebrew": "he",
+    "hindi": "hi",
+    "hungarian": "hu",
+    "icelandic": "is",
+    "indonesian": "id",
+    "italian": "it",
+    "japanese": "ja",
+    "javanese": "jw",
+    "kannada": "kn",
+    "kazakh": "kk",
+    "khmer": "km",
+    "korean": "ko",
+    "lao": "lo",
+    "latin": "la",
+    "latvian": "lv",
+    "letzeburgesch": "lb",
+    "lingala": "ln",
+    "lithuanian": "lt",
+    "luxembourgish": "lb",
+    "macedonian": "mk",
+    "malagasy": "mg",
+    "malay": "ms",
+    "malayalam": "ml",
+    "maltese": "mt",
+    "mandarin": "zh",
+    "maori": "mi",
+    "marathi": "mr",
+    "moldavian": "ro",
+    "moldovan": "ro",
+    "mongolian": "mn",
+    "myanmar": "my",
+    "nepali": "ne",
+    "norwegian": "no",
+    "nynorsk": "nn",
+    "occitan": "oc",
+    "panjabi": "pa",
+    "pashto": "ps",
+    "persian": "fa",
+    "polish": "pl",
+    "portuguese": "pt",
+    "punjabi": "pa",
+    "pushto": "ps",
+    "romanian": "ro",
+    "russian": "ru",
+    "sanskrit": "sa",
+    "serbian": "sr",
+    "shona": "sn",
+    "sindhi": "sd",
+    "sinhala": "si",
+    "sinhalese": "si",
+    "slovak": "sk",
+    "slovenian": "sl",
+    "somali": "so",
+    "spanish": "es",
+    "sundanese": "su",
+    "swahili": "sw",
+    "swedish": "sv",
+    "tagalog": "tl",
+    "tajik": "tg",
+    "tamil": "ta",
+    "tatar": "tt",
+    "telugu": "te",
+    "thai": "th",
+    "tibetan": "bo",
+    "turkish": "tr",
+    "turkmen": "tk",
+    "ukrainian": "uk",
+    "urdu": "ur",
+    "uzbek": "uz",
+    "valencian": "ca",
+    "vietnamese": "vi",
+    "welsh": "cy",
+    "yiddish": "yi",
+    "yoruba": "yo",
+}
 
-MODEL_TYPE__AUDIO = "automatic-speech-recognition"
-MODEL_TYPE__EMBEDDINGS = "text-embeddings-inference"
-MODEL_TYPE__LANGUAGE = "text-generation"
-MODEL_TYPE__RERANK = "text-classification"
-
-MODEL_CLIENT_TYPE__VLLM = "vllm"
-MODEL_CLIENT_TYPE__TEI = "tei"
-MODEL_CLIENT_TYPE__OPENAI = "openai"
-
-SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS = [MODEL_CLIENT_TYPE__OPENAI, MODEL_CLIENT_TYPE__TEI]
-SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE = [MODEL_CLIENT_TYPE__OPENAI, MODEL_CLIENT_TYPE__VLLM]
-SUPPORTED_MODEL_CLIENT_TYPES__RERANK = [MODEL_CLIENT_TYPE__TEI]
-SUPPORTED_MODEL_CLIENT_TYPES__AUDIO = [MODEL_CLIENT_TYPE__OPENAI]
-
-ROUTER_STRATEGY__SHUFFLE = "shuffle"
-ROUTER_STRATEGY__ROUND_ROBIN = "round_robin"
-
-CHUNKERS = ["LangchainRecursiveCharacterTextSplitter", "NoChunker"]
-DEFAULT_CHUNKER = "LangchainRecursiveCharacterTextSplitter"  # TODO: rename RecursiveCharacterTextSplitter and remove from variables ?
-
-FILE_TYPE__PDF = "application/pdf"
-FILE_TYPE__JSON = "application/json"
-FILE_TYPE__TXT = "text/plain"
-FILE_TYPE__HTML = "text/html"
-FILE_TYPE__MD = "text/markdown"
-# @TODO : add DOCX_TYPE (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+AUDIO_SUPPORTED_LANGUAGES_VALUES = sorted(set(AUDIO_SUPPORTED_LANGUAGES.values())) + sorted(set(AUDIO_SUPPORTED_LANGUAGES.keys()))

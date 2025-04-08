@@ -1,7 +1,31 @@
+from functools import lru_cache
+import os
 from typing import Any, Literal, Optional
 
-from pydantic import model_validator
+from pydantic import BaseModel, field_validator, model_validator
 from pydantic_settings import BaseSettings
+import yaml
+
+
+class ConfigBaseModel(BaseModel):
+    class Config:
+        extra = "allow"
+
+
+class Auth(ConfigBaseModel):
+    master_username: str = "master"
+
+
+class Playground(ConfigBaseModel):
+    api_url: str = "http://localhost:8080"
+    max_api_key_expiration_days: Optional[int] = None
+    cache_ttl: int = 1800  # 30 minutes
+    database_url: str = "postgresql+asyncpg://postgres:changeme@localhost:5432/ui"
+
+
+class Config(ConfigBaseModel):
+    auth: Auth
+    playground: Playground
 
 
 class Settings(BaseSettings):
@@ -10,21 +34,49 @@ class Settings(BaseSettings):
     base_url: str = "http://localhost:8080/v1"
 
     # models
-    exclude_models: str
-    documents_embeddings_model: str
-    summarize_toc_model: str
-    summarize_summary_model: str
-    default_chat_model: Optional[str] = None
+    # exclude_models: str
+    # documents_embeddings_model: str
+    # summarize_toc_model: str
+    # summarize_summary_model: str
+    # default_chat_model: Optional[str] = None
+
+    # @model_validator(mode="after")
+    # def validate_models(cls, values) -> Any:
+    #     values.exclude_models = values.exclude_models.split(",")
+
+    #     if values.default_chat_model:
+    #         assert values.default_chat_model not in values.exclude_models, "Default chat model is in the exclude models"
+
+    #     assert values.documents_embeddings_model not in values.exclude_models, "Documents embeddings model is in the exclude models"
+    #     assert values.summarize_toc_model not in values.exclude_models, "Summarize toc model is in the exclude models"
+    #     assert values.summarize_summary_model not in values.exclude_models, "Summarize summary model is in the exclude models"
+
+    #     return values
+    config_file: str = "config.yml"
+
+    class Config:
+        extra = "allow"
+
+    @field_validator("config_file", mode="before")
+    def config_file_exists(cls, config_file):
+        assert os.path.exists(path=config_file), "Config file not found."
+        return config_file
 
     @model_validator(mode="after")
-    def validate_models(cls, values) -> Any:
-        values.exclude_models = values.exclude_models.split(",")
+    def setup_config(cls, values) -> Any:
+        stream = open(file=values.config_file, mode="r")
+        config = Config(**yaml.safe_load(stream=stream))
+        stream.close()
 
-        if values.default_chat_model:
-            assert values.default_chat_model not in values.exclude_models, "Default chat model is in the exclude models"
-
-        assert values.documents_embeddings_model not in values.exclude_models, "Documents embeddings model is in the exclude models"
-        assert values.summarize_toc_model not in values.exclude_models, "Summarize toc model is in the exclude models"
-        assert values.summarize_summary_model not in values.exclude_models, "Summarize summary model is in the exclude models"
+        values.auth = config.auth
+        values.playground = config.playground
 
         return values
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

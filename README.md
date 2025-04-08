@@ -1,7 +1,9 @@
 <div id="toc"><ul align="center" style="list-style: none">
 <summary><h1>Albert API</h1></summary>
 
-![](https://img.shields.io/badge/version-0.0.3-yellow) ![](https://img.shields.io/badge/Python-3.12-green)<br>
+![](https://img.shields.io/badge/version-0.0.3-yellow) ![](https://img.shields.io/badge/Python-3.12-green) ![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/albert-api/174-tests-CI-CD/.github/badges/coverage.json)
+
+<br>
 <a href="https://github.com/etalab-ia/albert-api/blob/main/CHANGELOG.md"><b>Changelog</b></a> | <a href="https://albert.api.etalab.gouv.fr/documentation"><b>Documentation</b></a> | <a href="https://albert.api.etalab.gouv.fr/playground"><b>Playground</b></a> | <a href="https://albert.api.etalab.gouv.fr/status"><b>Status</b></a> | <a href="https://albert.api.etalab.gouv.fr/swagger"><b>Swagger</b></a> <br><br>
 </ul></div>
 
@@ -25,10 +27,11 @@ Si vous êtes un organisme public, vous pouvez demander une clé d'accès à Alb
 L'API Albert permet d'être un proxy entre des clients API d'IA générative et d'assurer du load balancing entre les différents clients :
 
 | Client | Supported version | Supported model types |
-|--- | --- | --- |
+| --- | --- | --- |
 | [OpenAI](https://platform.openai.com/docs/api-reference) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
-| [vLLM](https://github.com/vllm-project/vllm) | v0.6.6.post1 | • language |
-| [HuggingFace Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) | v1.5 | • embeddings<br>• reranking |
+| [vLLM](https://github.com/vllm-project/vllm) | v0.8.2 | • language |
+| [HuggingFace Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) | v1.6 | • embeddings<br>• reranking |
+| [Albert](https://github.com/etalab-ia/albert-api) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
 
 
 ## ⚙️ Fonctionnalités avancées
@@ -60,7 +63,7 @@ L'API Albert permet d'accéder à un ensemble de modèles de langage et d'embedd
 
 ### Interroger des documents (search - retrieval augmented generation)
 
-L'API Albert permet d'interroger des documents dans une base vectorielle. Ces documents sont classés dans des collections. Vous pouvez créer vos collections privées et utiliser les collections publiques déjà existantes. Enfin, une collection "internet" permet d'effectuer une recherche sur internet pour compléter la réponse du modèle.
+L'API Albert permet d'interroger des documents dans une base vectorielle. Ces documents sont classés dans des collections. Vous pouvez créer vos collections privées et utiliser les collections publiques déjà existantes.
 
 <a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/retrieval_augmented_generation.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
@@ -79,6 +82,14 @@ L'API Albert permet d'importer sa base de connaissances dans une base vectoriell
 L'API Albert permet de transcrire un fichier audio à l'aide d'un modèle Whisper.
 
 <a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/audio_transcriptions.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
+
+### OCR d'un fichier pdf vers un fichier texte
+
+L'API Albert permet de faire de l'OCR via son modèle de vision `mistralai/Mistral-Small-3.1-24B-Instruct-2503`.
+
+<a target="_blank" href="https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/pdf_ocr.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 

@@ -1,7 +1,9 @@
 from typing import List, Literal, Optional, Union
 
 from openai.types import CreateEmbeddingResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
+
+from app.schemas import BaseModel
 
 
 class OpenAIBaseModel(BaseModel):

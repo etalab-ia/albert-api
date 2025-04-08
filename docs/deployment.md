@@ -1,19 +1,21 @@
-# Déploiement
+# Deployment
 
-### Variables d'environnements
+### Environment Variables
 
 #### API
 
-| Variable | Requis | Description |
-| --- | --- | --- |
-| APP_NAME | Optionnel | Nom de l'application (défaut : "Albert API"). Ce nom sera utilisé la réponse du endpoint `/v1/models` pour la clef `owned_by` des modèles. |
-| APP_CONTACT_URL | Optionnel | URL pour les informations de contact de l'application (défaut : None) |
-| APP_CONTACT_EMAIL | Optionnel | Email de contact pour l'application (défaut : None) |
-| APP_VERSION | Optionnel | Version de l'application (défaut : "0.0.0") |
-| APP_DESCRIPTION | Optionnel | Description de l'application (défaut : None) |
-| CONFIG_FILE | Optionnel | Chemin vers le fichier de configuration (défaut : "config.yml") |
-| ENABLE_METRICS | Optionnel | Active ou désactive les métriques Prometheus (défaut : True) |
-| LOG_LEVEL | Optionnel | Niveau de journalisation (défaut : INFO) |
+
+| Variable | Required | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| APP_NAME | Optional | str | "Albert API" | Application name (default: "Albert API"). This name will be used in the response of the `/v1/models` endpoint for the `owned_by` key of the models. |
+| APP_CONTACT_URL | Optional | str | None | URL for application contact information |
+| APP_CONTACT_EMAIL | Optional | str | None | Contact email for the application |
+| APP_VERSION | Optional | str | "0.0.0" | Application version |
+| APP_DESCRIPTION | Optional | str | None | Application description |
+| CONFIG_FILE | Optional | str | "config.yml" | Path to the configuration file |
+| MIDDLEWARES | Optional | bool | True | Enable or disable middlewares |
+| LOG_LEVEL | Optional | str | "INFO" | Logging level, displays `/health` and `/metrics` endpoints in the Swagger schema if set to `DEBUG` |
+| DISABLED_ROUTERS | Optional | List of disabled API routers (default: []). Enter as a Python list, example `DISABLED_ROUTERS='["embeddings", "audio"]'` |
 
 
 #### UI
@@ -27,62 +29,62 @@
 | SUMMARIZE_SUMMARY_MODEL | Requis | Modèle de résumé de sommaire |
 | DEFAULT_CHAT_MODEL | Optionnel | Modèle de chat par défaut (défaut : None) |
 
-
-
-
 ### Configuration
 
-Pour fonctionner, l'API Albert nécessite configurer le fichier de configuration (config.yml). Celui-ci définit les clients tiers et des paramètres de configuration.
+To function, the Albert API requires configuring the configuration file (config.yml). This defines third-party clients and configuration parameters.
 
-Vous pouvez consulter le schéma Pydantic de la configuration [ici](../app/schemas/settings.py).
+You can consult the Pydantic schema of the configuration [here](../app/schemas/settings.py).
 
 #### Sections
 
-Les sections du fichier de configuration sont les suivantes :
+The configuration file has the following sections:
 
-| Section | Requis | Description |
+| Section | Required | Description |
 | --- | --- | --- |
-| rate_limit | Optionnel | Définit les limites de fréquence d'accès à l'API. |
-| models | Requis | Définit les modèles. |
-| internet | Optionel | Définit l'API de moteur de recherche internet. |
-| databases | Requis | Définit les bases de données. |
+| auth | Optional | Authentication parameters. |
+| playground | Optional | Playground parameters. |
+| models | Required | Defines model APIs. |
+| web_search | Optional | Defines the internet search engine API. |
+| databases | Required | Defines database APIs. |
 
-#### rate_limit
+#### auth
+  
+| Argument | Required | Description | Type | Values | Default |
+| --- | --- | --- | --- | --- | --- |
+| master_username | Optional | Master username for the playground. This user can connect to the playground and create users and roles when the SQL database is empty. | str |  | `"master"` | 
+| master_key | Optional | API key and password (on playground) for the master user. This key has all permissions and cannot be modified or deleted. This key is also used to encrypt user tokens.  | str |  | `"changeme"` |
 
-| Argument | Requis | Description | Type | Valeurs |
-| --- | --- | --- | --- | --- |
-| by_ip | Optionnel | Définit la limite de fréquence d'accès à l'API par adresse IP. | str |  | 
-| by_user | Optionnel | Définit la limite de fréquence d'accès à l'API par utilisateur. | str | |
+> [!NOTE] If you modify the master key, you'll need to update all user API keys.
 
-**Exemple**
+**Example**
 ```yaml
-rate_limit:
-  by_ip: "100/minute"
-  by_user: "1000/minute"
+auth:
+  master_username: "master"
+  master_key: "changeme"
 ```
 
 #### models
 
-| Argument | Requis | Description | Type | Valeurs |
-| --- | --- | --- | --- | --- |
-| id | Requis | ID du modèle affiché par l'API. | str | | 
-| type | Requis | Type de modèle. | str | `text-generation`,`text-embeddings-inference`,`automatic-speech-recognition`,`text-classification` (1) |
-| default_internet | Optionnel | Indique si le modèle sera le modèle utilisé pour la recherche sur internet (default : False). | bool | (2) |
-| aliases | Optionnel | Alias du modèle. | list[str] |  |
-| routing_strategy | Optionnel | Stratégie de routage du modèle (default : `suffle`). | str | (3) |
-| clients | Requis | Définit les clients tiers nécessaires pour le modèle. | list[dict] | |
-| clients.model | Requis | ID du modèle tiers. | str | (4) |
-| clients.type | Requis | Type du client tiers. | str | `openai`,`vllm`,`tei` (5) |
-| clients.args | Requis | Arguments du client tiers. | dict | (6) |
-| clients.args.base_url | Requis | URL de l'API du client tiers. | str | (7) |
-| clients.args.api_key | Requis | Clé API du client tiers. | str | |
-| clients.args.timeout | Optionnel | Timeout (en secoundes) de la requête au client tiers (default : 120). | int | |
+| Argument | Required | Description | Type | Values | Default |
+| --- | --- | --- | --- | --- | --- |
+| id | Required | Model ID displayed by the API. | str | | | 
+| type | Required | Model type. | str | (1) |
+| aliases | Optional | Model aliases. | list[str] |  | `[]` | 
+| owned_by | Optional | Model owner displayed by the `/v1/models` endpoint. | str | | `"Albert API"` |
+| routing_strategy | Optional | Model routing strategy | str | (2) | `"shuffle"` |
+| clients | Required | Defines the third-party clients required for the model. | list[dict] | |
+| clients.model | Required | Third-party model ID. | str | (3) |
+| clients.type | Required | Third-party client type. | str | (4) |
+| clients.args | Required | Third-party client arguments. | dict | |
+| clients.args.api_url | Required | Third-party client API URL. | str | (5) |
+| clients.args.api_key | Required | Third-party client API key. | str | |
+| clients.args.timeout | Optional | Timeout (in seconds) for the request to the third-party client | int | | `300` |
 
-**Exemple**
+**Example**
 
 ```yaml
-models:
-  - id: turbo
+models: 
+  - id: my-language-model
     type: text-generation
     aliases: ["turbo-alias"]
     default_internet: True
@@ -91,85 +93,81 @@ models:
       - model: gpt-3.5-turbo 
         type: openai
         args:
-          base_url: https://api.openai.com/v1
+          api_url: https://api.openai.com
           api_key: sk-...sA
           timeout: 60
       - model: meta-llama/Llama-3.1-8B-Instruct
         type: vllm
         args:
-          base_url: http://.../v1
+          api_url: http://localhost:8000
           api_key: sf...Df
           timeout: 60
 
-  - id: embeddings
+  - id: my-embeddings-model
     type: text-embeddings-inference
-    default_internet: True
     clients:
       - model: text-embedding-ada-003
         type: openai
         args:
-          base_url: https://api.openai.com/v1
+          api_url: https://api.openai.com
           api_key: sk-...sA
+          timeout: 60
+      - model: bge-m3
+        type: tei
+        args:
+          api_url: http://localhost:8001
+          api_key: sf...Df
           timeout: 60
 ```
 
-**(1) Type de modèle**
+**(1) Model Types**
 
-Les types de modèles correspondent à la convention proposé par HuggingFace Hub. Le fichier de configuration doit obligatoirement déclaré a minima un modèle de type `text-generation` et un modèle de type `text-embeddings-inference`.
+Model types correspond to the convention proposed by HuggingFace Hub. The configuration file must declare at least one model of type `text-generation` and one model of type `text-embeddings-inference`.
 
-| Type | Equivalent |Exemple|
+| Type | Equivalent | Example |
 | --- | --- | --- |
 | `text-generation`| Large language model | [meta-llama/Llama-3.1-8B-Instruct](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct)
 | `text-embeddings-inference`| Embeddings model | [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3)
 | `text-classification`| Reranking model | [BAAI/bge-reranker-v2-m3](https://huggingface.co/BAAI/bge-reranker-v2-m3)
 | `automatic-speech-recognition`| Audio transcription | [openai/whisper-large-v3](https://huggingface.co/openai/whisper-large-v3)
 
-**(2) Modèles par défaut pour la recherche sur internet**
+**(2) Routing Strategy**
 
-Voir section [internet](#internet).
+See [routing - Routing Strategies](routing.md#stratégies-de-routage).
 
-**(3) Argument acceptées par le client de modèle**
+**(3) Model**
 
-En plus de `base_url`, `api_key`, `timeout`, les clients de modèle acceptent tous les arguments du client python OpenAI ([voir les arguments](https://github.com/openai/openai-python/blob/7193688e364bd726594fe369032e813ced1bdfe2/src/openai/_client.py#L74)).
+See [routing - Configuration Example](routing.md#exemple-de-configuration).
 
-**(4) Model**
-
-Voir [routing - Exemple de configuration](routing.md#exemple-de-configuration).
-
-**(5) Stratégie de routage**
-
-Voir [routing - Les stratégies-de-routage](routing.md#stratégies-de-routage).
-
-**(6) Types de client de modèle**
+**(4) Model Client Types**
 
 | Type | Documentation |
 | --- | --- |
 | `openai` | [OpenAI](https://openai.com/) |
 | `vllm` | [vLLM](https://github.com/vllm-project/vllm) |
 | `tei` | [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference) |
+| `albert` | [Albert API](https://github.com/etalab/albert-api) |
 
-Pour plus d'informations, voir [models](./models.md).
+For more information, see [models](./models.md).
 
-**(7) Format de `base_url` par type de client**
+**(5) `api_url` format by client type**
 
-| Client | Format |
-| --- | --- |
-| OpenAI | `http(s)://.../v1` |
-| vLLM | `http(s)://.../v1` |
-| TEI | `http(s)://...` |
+Only the root of the URL should be provided, do not include `/v1` in the URL.
 
 #### databases
 
-| Argument | Requis | Description | Type | Valeurs |
+| Argument | Required | Description | Type | Values |
 | --- | --- | --- | --- | --- |
-| type | Requis | Définit le type de base de données. | str | `redis`, `qdrant`, `grist` (1) |
-| args | Requis | Arguments de la base de données. | dict | (2) |
+| type | Required | Defines the database type. | str | `redis`, `qdrant`, `sql` (1) |
+| model | Optional | A text-embeddings-inference model ID if required for Qdrant. | str | (2) |
+| args | Required | Database arguments. | dict | (3) |
 
-**Exemple**
+**Example**
 
 ```yaml
 databases:
   - type: qdrant
+    model: my-embeddings-model
     args:
       url: http://localhost:6333
       api_key: yU..SB
@@ -183,53 +181,91 @@ databases:
       port: 6379
       password: changeme
   
-  - type: grist
+  - type: sql
     args:
-      api_key: 12..9c
-      server: https://grist.numerique.gouv.fr
-      doc_id: 4fBA12fFpHuxn38G6sLPMr
-      table_id: DEV
+      url: postgresql://postgres:changeme@localhost:5432/api
+      echo: False
+      pool_size: 5
+      max_overflow: 10
+      pool_pre_ping: True
+      connect_args: {"server_settings": {"statement_timeout": "60"}}
 ```   
 
-**(1) Les types de bases de données**
+**(1) Database Types**
 
-| Type | Requis | Utilisation | Documentation |
+| Type | Required | Usage | Documentation |
 | --- | --- | --- | --- |
-| `redis` | Requis | Cache et rate limiting | [Redis](https://redis.io/) |
-| `qdrant` | Requis | Vector store | [Qdrant](https://qdrant.tech/) |
-| `grist` | Optionnel | Auth | [Grist](https://www.getgrist.com/) |
+| `redis` | Required | Cache and rate limiting | [Redis](https://redis.io/) |
+| `qdrant` | Required | Vector store | [Qdrant](https://qdrant.tech/) |
+| `sql` | Required | Relational database | [SQLAlchemy](https://www.sqlalchemy.org/) |
 
-Si grist n'est pas configuré, l'API Albert est ouverte sans authentification.
+**(2) Qdrant Database Model**
 
-**(2) Les arguments des clients de bases de données**
+Qdrant is a vector database that allows you to store and retrieve vectors. The `model` argument is the ID of a text-embeddings-inference model defined in the `models` section. This model is used to embed the queries when performing a similarity search.
 
-Les arguments des bases de données sont tous ceux acceptés les clients python respectifs de ces bases de données :
-- [client Redis](https://github.com/redis/redis-py)
-- [client Qdrant](https://github.com/qdrant/qdrant-client)
-- [client Grist](https://github.com/gristlabs/py_grist_api)
+> [!NOTE] If you change the model of a Qdrant database, you need to re-embed the database.
 
-#### internet
+**(3) Database Client Arguments**
 
-L'API Albert permet de rechercher sur internet pour enrichir les réponses de l'API. Pour cela, il est nécessaire de configurer un client d'une API de moteur de recherche internet. De plus, afin de pouvoir rechercher sur internet, il est nécessaire de configurer au moins un modèle de type `text-generation` et un modèle de type `text-embeddings-inference` avec le paramètre `default_internet` à `True`.
+The database arguments are those accepted by the respective Python clients of these databases:
+- [Redis client](https://github.com/redis/redis-py)
+- [Qdrant client](https://github.com/qdrant/qdrant-client)
+- [SQLAlchemy client](https://www.sqlalchemy.org/)
 
-| Argument | Requis | Description | Type | Valeurs |
-| --- | --- | --- | --- | --- |
-| type | Requis | Type de moteur de recherche internet. | str | `brave`, `duckduckgo` |
-| args | Requis | Arguments du client du moteur de recherche internet. | dict | |
+#### playground
 
-**(1) Types de moteurs de recherche internet**
+The `playground` section allows you to configure the playground.
+
+| Argument | Required | Description | Type | Values | Default |
+| --- | --- | --- | --- | --- | --- |
+| api_url | Required | Playground API URL. | str | |
+| max_api_key_expiration_days | Required | Maximum days a user can keep an API key. | int | | `365` |
+| cache_ttl | Required | Cache TTL (in seconds). | int | | `1800` |
+| database_url | Required | Database URL. | str | | |
+
+**Example**
+
+```yaml
+playground:
+  api_url: http://localhost:8081
+  max_api_key_expiration_days: 365
+  cache_ttl: 1800
+  database_url: postgresql://postgres:changeme@localhost:5432/ui
+```
+
+#### web_search
+
+The Albert API allows searching the internet to enrich API responses. For this, it is necessary to configure a search engine API client in the `web_search` section.
+
+Prerequisites:
+- Qdrant database
+- SQL database
+- A text-generation model
+- A text-embeddings-inference model
+
+| Argument | Required | Description | Type | Values | Default |
+| --- | --- | --- | --- | --- | --- |
+| type | Required | Internet search engine type. | str | (1) | `duckduckgo` | 
+| model | Required | A text-generation model ID if required for web search. | str | (2) |
+| args | Required | Search engine client arguments. | dict | |
+
+**Example**
+
+```yaml
+internet:
+  - type: brave
+    model: my-language-model
+    args:
+      api_key: xP...Df
+```
+
+**(1) Web Search Engine Types**
 
 | Type | Documentation |
 | --- | --- |
 | `brave` | [Brave](https://brave.com/) |
 | `duckduckgo` | [DuckDuckGo](https://duckduckgo.com/) |
 
+**(2) Web Search Model**
 
-**Exemple**
-
-```yaml
-internet:
-  - type: brave
-    args:
-      api_key: xP...Df
-```
+The user prompt will be converted into a search query using a text-generation model. The `model` argument is the ID of a text-generation model defined in the `models` section.

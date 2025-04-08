@@ -1,20 +1,21 @@
 from typing import List
-import uuid
-from app.schemas.chunks import Chunk, ChunkMetadata
-from app.schemas.data import ParserOutput
+from app.schemas.chunks import Chunk
+from app.schemas.core.data import ParserOutput
 
 
 class NoChunker:
     def __init__(self, chunk_min_size: int = 0, *args, **kwargs):
         self.chunk_min_size = chunk_min_size
 
-    def split(self, input: List[ParserOutput]) -> List[Chunk]:
-        for document in input:
-            document.metadata.document_part = 1
-            if len(document.content) < self.chunk_min_size:
-                continue
-            metadata = ChunkMetadata(**document.metadata.model_dump())
+    def split(self, document: ParserOutput) -> List[Chunk]:
+        chunks = list()
+        metadata = document.metadata
+        contents = document.contents  # no split
 
-            chunks = [Chunk(content=document.content, id=str(uuid.uuid4()), metadata=metadata)]
+        for i, content in enumerate(contents):
+            if len(content) < self.chunk_min_size:
+                continue
+
+            chunks.append(Chunk(content=content, id=i + 1, metadata=metadata))
 
         return chunks

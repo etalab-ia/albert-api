@@ -1,63 +1,52 @@
 import logging
 
+from fastapi.testclient import TestClient
 import pytest
 
+from app.schemas.models import ModelType
 from app.schemas.rerank import Reranks
-from app.utils.variables import MODEL_TYPE__EMBEDDINGS, MODEL_TYPE__LANGUAGE, MODEL_TYPE__RERANK
+from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__RERANK
 
 
 @pytest.fixture(scope="module")
-def setup(args, session_user):
-    response = session_user.get(f"{args["base_url"]}/models")
+def setup(client: TestClient):
+    response = client.get_without_permissions(url=f"/v1{ENDPOINT__MODELS}")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
 
-    LANGUAGE_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__LANGUAGE][0]
-    logging.info(f"test model ID: {LANGUAGE_MODEL_ID}")
-
-    RERANK_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__RERANK][0]
+    RERANK_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == ModelType.TEXT_CLASSIFICATION][0]
     logging.info(f"test model ID: {RERANK_MODEL_ID}")
 
-    EMBEDDINGS_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == MODEL_TYPE__EMBEDDINGS][0]
+    EMBEDDINGS_MODEL_ID = [model["id"] for model in response_json["data"] if model["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]
     logging.info(f"test model ID: {EMBEDDINGS_MODEL_ID}")
 
-    yield LANGUAGE_MODEL_ID, RERANK_MODEL_ID, EMBEDDINGS_MODEL_ID
+    yield RERANK_MODEL_ID, EMBEDDINGS_MODEL_ID
 
 
-@pytest.mark.usefixtures("args", "session_user", "setup")
+@pytest.mark.usefixtures("client", "setup")
 class TestRerank:
-    def test_rerank_with_language_model(self, args, session_user, setup):
-        """Test the POST /rerank with a language model."""
-        LANGUAGE_MODEL_ID, _, _ = setup
-        params = {"model": LANGUAGE_MODEL_ID, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
-        response = session_user.post(f"{args["base_url"]}/rerank", json=params)
-        assert response.status_code == 200, f"error: rerank with language model ({response.status_code})"
-
-        response_json = response.json()
-        reranks = Reranks(**response_json)
-        assert isinstance(reranks, Reranks)
-
-    def test_rerank_with_rerank_model(self, args, session_user, setup):
+    def test_rerank_with_rerank_model(self, client: TestClient, setup):
         """Test the POST /rerank with a rerank model."""
-        _, RERANK_MODEL_ID, _ = setup
+        RERANK_MODEL_ID, _ = setup
+
         params = {"model": RERANK_MODEL_ID, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
-        response = session_user.post(f"{args["base_url"]}/rerank", json=params)
-        assert response.status_code == 200, f"error: rerank with rerank model ({response.status_code})"
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__RERANK}", json=params)
+        assert response.status_code == 200, response.text
 
-        response_json = response.json()
-        reranks = Reranks(**response_json)
-        assert isinstance(reranks, Reranks)
+        Reranks(**response.json())  # test output format
 
-    def test_rerank_with_wrong_model_type(self, args, session_user, setup):
+    def test_rerank_with_wrong_model_type(self, client: TestClient, setup):
         """Test the POST /rerank with a wrong model type."""
-        _, _, EMBEDDINGS_MODEL_ID = setup
-        params = {"model": EMBEDDINGS_MODEL_ID, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
-        response = session_user.post(f"{args["base_url"]}/rerank", json=params)
-        assert response.status_code == 422, f"error: rerank with wrong model type ({response.status_code})"
+        _, EMBEDDINGS_MODEL_ID = setup
 
-    def test_rerank_with_unknown_model(self, args, session_user, setup):
+        params = {"model": EMBEDDINGS_MODEL_ID, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__RERANK}", json=params)
+        assert response.status_code == 422, response.text
+
+    def test_rerank_with_unknown_model(self, client: TestClient, setup):
         """Test the POST /rerank with an unknown model."""
-        _, _, _ = setup
+        _, _ = setup
+
         params = {"model": "unknown", "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
-        response = session_user.post(f"{args["base_url"]}/rerank", json=params)
-        assert response.status_code == 404, f"error: rerank with unknown model ({response.status_code})"
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__RERANK}", json=params)
+        assert response.status_code == 404, response.text
