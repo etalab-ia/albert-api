@@ -163,16 +163,17 @@ async def audio_transcriptions(
     # @TODO: Implement verbose response format
 
     file_content = await file.read()
+
+    model = models.registry[model]
+    client = model.get_client(endpoint=ENDPOINT__AUDIO_TRANSCRIPTIONS)
+
     data = {
-        "model": model,
+        "model": client.model,
         "language": language,
         "response_format": response_format,
         "temperature": temperature,
         "timestamp_granularities": timestamp_granularities,
     }
-
-    model = models.registry[model]
-    client = model.get_client(endpoint=ENDPOINT__AUDIO_TRANSCRIPTIONS)
     response = await client.forward_request(method="POST", files={"file": (file.filename, file_content, file.content_type)}, data=data)
 
     if response_format == "text":
