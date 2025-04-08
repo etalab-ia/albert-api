@@ -101,13 +101,10 @@ class UsagesMiddleware(BaseHTTPMiddleware):
         if not hasattr(request.app.state, "user") or request.app.state.user.id == 0:  # master key
             return response
 
-        if not hasattr(request.app.state, "sql"):
-            return response
-
         try:
             usage_data, response = await self._handle_streaming_response(response)
             # Log usage
-            async for db in self.db_func():
+            async for session in self.db_func():
                 log = Usage(
                     datetime=start_time,
                     duration=duration,
@@ -121,13 +118,13 @@ class UsagesMiddleware(BaseHTTPMiddleware):
                     status=response.status_code,
                     method=method,
                 )
-                db.add(log)
-                await db.commit()
+                session.add(log)
+                await session.commit()
         except Exception as e:
             logger.debug(traceback.format_exc())
             logger.error(f"Failed to log usage: {str(e)}")
-            await db.rollback()
+            await session.rollback()
         finally:
-            await db.close()
+            await session.close()
 
         return response
