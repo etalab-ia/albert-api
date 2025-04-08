@@ -1,6 +1,7 @@
 from enum import Enum
 import logging
 import os
+import re
 from types import SimpleNamespace
 from typing import Any, List, Literal, Optional
 
@@ -105,7 +106,19 @@ class Auth(ConfigBaseModel):
     limiting_strategy: LimitingStrategy = LimitingStrategy.FIXED_WINDOW
 
 
+class General(ConfigBaseModel):
+    app_name: str = DEFAULT_APP_NAME
+    app_contact_url: Optional[str] = None
+    app_contact_email: Optional[str] = None
+    app_version: str = "0.0.0"
+    app_description: str = "[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"
+    disabled_routers: List[Literal[*ROUTERS]] = Field(default_factory=list)
+    disabled_middleware: bool = False
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+
+
 class Config(ConfigBaseModel):
+    general: General = Field(default_factory=General)
     auth: Auth = Field(default_factory=Auth)
     models: List[Model] = Field(min_length=1)
     databases: List[Database] = Field(min_length=1)
@@ -130,24 +143,8 @@ class Config(ConfigBaseModel):
 
 
 class Settings(BaseSettings):
-    # logging
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
-
-    # middleware on/off
-    disabled_middleware: bool = False
-
     # config
     config_file: str = "config.yml"
-
-    # disabled endpoints
-    disabled_routers: List[Literal[*ROUTERS]] = Field(default_factory=list)
-
-    # app
-    app_name: str = DEFAULT_APP_NAME
-    app_contact_url: Optional[str] = None
-    app_contact_email: Optional[str] = None
-    app_version: str = "0.0.0"
-    app_description: str = "[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"
 
     class Config:
         extra = "allow"
@@ -159,10 +156,21 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def setup_config(cls, values) -> Any:
-        stream = open(file=values.config_file, mode="r")
-        config = Config(**yaml.safe_load(stream=stream))
-        stream.close()
+        with open(file=values.config_file, mode="r") as f:
+            file_content = f.read()
+            f.close()
 
+        # replace environment variables (pattern: ${VARIABLE_NAME})
+        for match in set(re.findall(pattern=r"\${[A-Z_]+}", string=file_content)):
+            variable = match.replace("${", "").replace("}", "")
+            try:
+                file_content = file_content.replace(match, os.environ[variable])
+            except KeyError:
+                raise Exception(f"Environment variable {variable} not found to replace {match}.")
+
+        config = Config(**yaml.safe_load(file_content))
+
+        values.general = config.general
         values.auth = config.auth
         values.web_search = config.web_search[0]
         values.models = config.models

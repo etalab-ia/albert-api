@@ -4,15 +4,7 @@
 
 | Variable | Required | Type | Default | Description |
 | --- | --- | --- | --- | --- |
-| APP_NAME | Optional | str | "Albert API" | Application name (default: "Albert API"). This name will be used in the response of the `/v1/models` endpoint for the `owned_by` key of the models. |
-| APP_CONTACT_URL | Optional | str | None | URL for application contact information |
-| APP_CONTACT_EMAIL | Optional | str | None | Contact email for the application |
-| APP_VERSION | Optional | str | "0.0.0" | Application version |
-| APP_DESCRIPTION | Optional | str | None | Application description |
 | CONFIG_FILE | Optional | str | "config.yml" | Path to the configuration file |
-| MIDDLEWARES | Optional | bool | True | Enable or disable middlewares |
-| LOG_LEVEL | Optional | str | "INFO" | Logging level, displays `/health` and `/metrics` endpoints in the Swagger schema if set to `DEBUG` |
-| DISABLED_ROUTERS | Optional | List of disabled API routers (default: []). Enter as a Python list, example `DISABLED_ROUTERS='["embeddings", "audio"]'` |
 
 ### Configuration
 
@@ -20,17 +12,54 @@ To function, the Albert API requires configuring the configuration file (config.
 
 You can consult the Pydantic schema of the configuration [here](../app/schemas/settings.py).
 
+#### Secrets
+
+You can pass environment variables in configuration file with pattern `${ENV_VARIABLE_NAME}`. All environment variables will be loaded in the configuration file.
+
+**Example**
+
+```yaml
+databases:
+  - type: sql
+    args:
+      url: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+```
+
 #### Sections
 
 The configuration file has the following sections:
 
 | Section | Required | Description |
 | --- | --- | --- |
+| general | Required | General configuration. |
 | auth | Optional | Authentication parameters. |
 | playground | Optional | Playground parameters. |
 | models | Required | Defines model APIs. |
 | web_search | Optional | Defines the internet search engine API. |
 | databases | Required | Defines database APIs. |
+
+#### general
+
+| Argument | Required | Description | Type | Values | Default |
+| --- | --- | --- | --- | --- | --- |
+| app_name | Required | Application name. | str | | `"Albert API"` |
+| app_version | Required | Application version. | str | | `"0.0.0"` |
+| app_description | Required | Application description. | str | | `"[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"` |
+| app_contact_url | Required | Application contact URL. | str | | `None` |
+| app_contact_email | Required | Application contact email. | str | | `None` |
+| log_level | Required | Logging level. | str | `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`, `"CRITICAL"` | `"INFO"` |
+| disabled_routers | Required | List of disabled API routers. | List[str] | `["audio", "auth", "chat", "chunks", "collections", "documents", "embeddings", "files", "models", "monitoring", "ocr", "rerank", "search"]` | `[]` |
+| disabled_middleware | Required | Enable or disable middlewares. | bool |  | `False` |
+
+**Example**
+```yaml
+general:
+  app_name: "Test"
+  app_version: "0.0.1"
+  disabled_routers: ["documents", "chunks", "collections", "rerank", "search"]
+  disabled_middleware: False
+  log_level: "DEBUG"
+```
 
 #### auth
   
