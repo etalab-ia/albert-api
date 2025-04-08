@@ -4,6 +4,7 @@ from typing import Annotated, Dict, List, Optional
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.auth import Limit, LimitType, PermissionType, Role, User
 from app.schemas.collections import CollectionVisibility
@@ -28,14 +29,20 @@ from app.utils.variables import (
     ENDPOINT__TOKENS,
     ENDPOINT__USERS,
 )
+from app.sql.session import get_db as get_session
 
 
 class Authorization:
     def __init__(self, permissions: List[PermissionType] = []):
         self.permissions = permissions
 
-    async def __call__(self, request: Request, api_key: Annotated[HTTPAuthorizationCredentials, Depends(dependency=HTTPBearer(scheme_name="API key"))]) -> User:  # fmt: off
-        user, role, limits, token_id = await self._check_api_key(api_key=api_key)
+    async def __call__(
+        self, 
+        request: Request, 
+        api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())],
+        session: AsyncSession = Depends(get_session)
+    ) -> User:  # fmt: off
+        user, role, limits, token_id = await self._check_api_key(api_key=api_key, session=session)
 
         if not request.url.path.startswith(f"{ENDPOINT__ROLES}/me") and not request.url.path.startswith(f"{ENDPOINT__USERS}/me"):
             # invalid token if user is expired, except for /v1/roles/me and /v1/users/me endpoints
@@ -95,7 +102,7 @@ class Authorization:
 
         return limits
 
-    async def _check_api_key(self, api_key: HTTPAuthorizationCredentials) -> tuple[User, Role, Dict[str, UserModelLimits]]:
+    async def _check_api_key(self, api_key: HTTPAuthorizationCredentials, session: AsyncSession) -> tuple[User, Role, Dict[str, UserModelLimits]]:
         # @TODO: add cache
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
@@ -115,14 +122,14 @@ class Authorization:
 
             return master_user, master_role, master_limits, None
 
-        user_id, token_id = await context.iam.check_token(token=api_key.credentials)
+        user_id, token_id = await context.iam.check_token(session=session, token=api_key.credentials)
         if not user_id:
             raise InvalidAPIKeyException()
 
-        users = await context.iam.get_users(user_id=user_id)
+        users = await context.iam.get_users(session=session, user_id=user_id)
         user = users[0]
 
-        roles = await context.iam.get_roles(role_id=user.role)
+        roles = await context.iam.get_roles(session=session, role_id=user.role)
         role = roles[0]
 
         limits = self.__get_user_limits(role=role)

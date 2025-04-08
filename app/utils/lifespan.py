@@ -6,7 +6,6 @@ from coredis import ConnectionPool
 from fastapi import FastAPI
 from qdrant_client import AsyncQdrantClient
 
-from app.clients.database import SQLDatabaseClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers import DocumentManager, IdentityAccessManager, WebSearchManager, Limiter, ModelRegistry, ModelRouter
@@ -25,7 +24,6 @@ context = SimpleNamespace(
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
     # setup clients
-    sql = SQLDatabaseClient(**settings.databases.sql.args) if settings.databases.sql else None
     qdrant = AsyncQdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
     redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
     web_search = WebSearchClient.import_module(type=settings.web_search.type)(**settings.web_search.args) if settings.web_search else None
@@ -55,17 +53,14 @@ async def lifespan(app: FastAPI):
 
     # setup context
     context.models = ModelRegistry(routers=routers)
-    context.iam = IdentityAccessManager(sql=sql) if sql else None
+    context.iam = IdentityAccessManager()
     context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
 
     web_search = WebSearchManager(web_search=web_search) if settings.web_search else None
     web_search_model = context.models(model=settings.web_search.model) if settings.web_search else None
     qdrant_model = context.models(model=settings.databases.qdrant.model) if settings.databases.qdrant else None
 
-    context.documents = DocumentManager(sql=sql, qdrant=qdrant, qdrant_model=qdrant_model, web_search=web_search, web_search_model=web_search_model) if qdrant else None  # fmt: off
-
-    # Store sql in app.state for middleware access
-    app.state.sql = sql  # @TODO: the middleware have to recreate a sql client from settings
+    context.documents = DocumentManager(qdrant=qdrant, qdrant_model=qdrant_model, web_search=web_search, web_search_model=web_search_model) if qdrant else None  # fmt: off
 
     assert await context.limiter.redis.check(), "Redis database is not reachable."
 
@@ -73,4 +68,3 @@ async def lifespan(app: FastAPI):
 
     # cleanup resources when app shuts down
     await qdrant.close()
-    await sql.engine.dispose()

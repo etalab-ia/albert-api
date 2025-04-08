@@ -17,6 +17,8 @@ ENDPOINT__SEARCH = "/search"
 ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
 
+ENDPOINTS = [value for name, value in locals().items() if name.startswith("ENDPOINT__")]
+
 ROUTER__AUDIO = "audio"
 ROUTER__AUTH = "auth"
 ROUTER__CHAT = "chat"
