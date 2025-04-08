@@ -2,11 +2,16 @@ from openai import OpenAI
 import requests
 import streamlit as st
 
-from ui import settings
+from ui.settings import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def get_chunks(collection_id: str, document_id: str, api_key: str) -> list:
-    response = requests.get(f"{settings.base_url}/chunks/{collection_id}/{document_id}", headers={"Authorization": f"Bearer {api_key}"})
+def get_chunks(collection_id: str, document_id: str) -> list:
+    response = requests.get(
+        f"{settings.playground.api_url}/v1/chunks/{document_id}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+    )
     assert response.status_code == 200, f"{response.status_code} - {response.json()}"
     chunks = response.json()["data"]
     chunks = sorted(chunks, key=lambda x: x["metadata"]["document_part"])
@@ -15,7 +20,7 @@ def get_chunks(collection_id: str, document_id: str, api_key: str) -> list:
 
 
 def generate_toc(chunks: list, model: str):
-    client = OpenAI(base_url=settings.api_url + "/v1", api_key=st.session_state["user"].api_key)
+    client = OpenAI(base_url=settings.playground.api_url + "/v1", api_key=st.session_state["user"].api_key)
     text = "\n".join([chunk["content"] for chunk in chunks])
 
     system_prompt = """Tu es un agent de l'administration française qui fait des synthèses de textes. Tu sais en particulier faire des plans de synthèses. Tu parles en français. Tu ne réponds que des chapitres."""
@@ -47,6 +52,7 @@ Réponds uniquement avec le plan, pas de commentaires et en français.
     try:
         response = client.chat.completions.create(model=model, stream=False, temperature=0.2, messages=messages)
     except Exception:
+        logger.exception("Error while generating TOC")
         st.error(body="Generation failed, please try again.")
         st.stop()
 
@@ -56,7 +62,7 @@ Réponds uniquement avec le plan, pas de commentaires et en français.
 
 
 def generate_summary(toc: str, chunks: list, model: str):
-    client = OpenAI(base_url=settings.api_url + "/v1", api_key=st.session_state["user"].api_key)
+    client = OpenAI(base_url=settings.playground.api_url + "/v1", api_key=st.session_state["user"].api_key)
 
     system_prompt = """Tu es un agent de l'administration française qui fait des synthèses de textes. Tu sais en particulier faire des plans de synthèses. Tu parles en français. Tu ne réponds que des chapitres."""
     sumarize_prompt = """Génère un résumé du texte suivant :
@@ -104,6 +110,7 @@ Instructions :
     try:
         response = client.chat.completions.create(model=model, stream=False, temperature=0.2, messages=messages)
     except Exception:
+        logger.exception("Error while generating summary")
         st.error(body="Generation failed, please try again.")
         st.stop()
 
@@ -114,8 +121,8 @@ Instructions :
     return output
 
 
-def summary_with_feedback(feedback: str, summary: str, api_key: str, model: str):
-    client = OpenAI(base_url=settings.base_url, api_key=api_key)
+def summary_with_feedback(feedback: str, summary: str, model: str):
+    client = OpenAI(base_url=settings.playground.api_url + "/v1", api_key=st.session_state["user"].api_key)
 
     system_prompt = """Tu es un agent de l'administration française qui fait des synthèses de textes. Tu sais en particulier faire des plans de synthèses. Tu parles en français. Tu ne réponds que des chapitres."""
 
@@ -141,6 +148,7 @@ Instructions :
     try:
         response = client.chat.completions.create(model=model, stream=False, temperature=0.2, messages=messages)
     except Exception:
+        logger.exception("Error while generating summary with feedback")
         st.error(body="Generation failed, please try again.")
         st.stop()
 

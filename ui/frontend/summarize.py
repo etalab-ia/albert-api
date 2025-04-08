@@ -3,26 +3,25 @@ import time
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
-from ui import settings
 from ui.backend.common import get_collections, get_documents
 from ui.backend.summarize import generate_summary, generate_toc, get_chunks, summary_with_feedback
 from ui.frontend.header import header
-from ui.variables import COLLECTION_TYPE_PRIVATE
+from ui.variables import COLLECTION_TYPE_PRIVATE, MODEL_TYPE_LANGUAGE
+from ui.frontend.utils import setup_selected_model
+import logging
 
+logger = logging.getLogger(__name__)
 header()
 
 # Data
 try:
     collections = get_collections()
-    collections = [collection for collection in collections if collection["type"] == COLLECTION_TYPE_PRIVATE]
+    collections = [collection for collection in collections if "type" in collection and collection["type"] == COLLECTION_TYPE_PRIVATE]
     documents = get_documents(collection_ids=[collection["id"] for collection in collections])
 except Exception as e:
-    st.error(body="Error to fetch user data.")
+    logger.exception("Error while loading collections and documents")
+    st.error(body=f"Error while loading collections and documents: {str(e)}")
     st.stop()
-
-# State
-if "selected_model" not in st.session_state:
-    st.session_state.selected_model = settings.summarize_summary_model
 
 # Sidebar
 with st.sidebar:
@@ -35,6 +34,8 @@ with st.sidebar:
         st.session_state.pop("summary", None)
         st.rerun()
 
+    st.session_state["selected_model"] = setup_selected_model(model_type=MODEL_TYPE_LANGUAGE)
+
 # Main
 ## Document
 st.session_state.collection_id = None if "collection_id" not in st.session_state else st.session_state.collection_id
@@ -43,7 +44,7 @@ st.session_state.document_id = None if "document_id" not in st.session_state els
 st.subheader(body=":material/counter_1: Select a document")
 st.info(body="Please select a document to generate a summary.")
 document = st.selectbox(label="Document", options=[f"{document["id"]} - {document["name"]}" for document in documents])
-document_id = document.split(" - ")[0]
+document_id = int(document.split(" - ")[0])
 collection_id = [document["collection_id"] for document in documents if document["id"] == document_id][0]
 
 with stylable_container(
@@ -95,7 +96,7 @@ with stylable_container(
     with col1:
         if st.button(label="✨ Generate", key="generate_toc", use_container_width=True):
             with st.spinner(text="✨ Generate..."):
-                st.session_state.toc = generate_toc(chunks=chunks, model=settings.summarize_toc_model)
+                st.session_state.toc = generate_toc(chunks=chunks, model=st.session_state["selected_model"])
                 st.toast(body="Table of content generated !", icon="✅")
                 time.sleep(2)
                 st.rerun()
@@ -134,7 +135,7 @@ with stylable_container(
     """,
 ):
     if st.button(label="✨ Generate", key="generate_summary"):
-        st.session_state.summary = generate_summary(toc=st.session_state.toc, chunks=chunks, model=settings.summarize_summary_model)
+        st.session_state.summary = generate_summary(toc=st.session_state.toc, chunks=chunks, model=st.session_state["selected_model"])
         st.toast(body="Summary generated !", icon="✅")
         time.sleep(2)
         st.rerun()
@@ -153,7 +154,7 @@ with stylable_container(
         if st.session_state.summary:
             with st.spinner(text="✨ Generate..."):
                 st.session_state.summary = summary_with_feedback(
-                    feedback=feedback, summary=st.session_state.summary, model=settings.summarize_summary_model
+                    feedback=feedback, summary=st.session_state.summary, model=st.session_state["selected_model"]
                 )
                 st.toast(body="Summary generated with feedback !", icon="✅")
                 time.sleep(2)
