@@ -90,7 +90,6 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
     api_key = response.json()["token"]
 
     session = next(get_session())
-    expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
     session.execute(
         insert(UserTable).values(
             name=name,
@@ -98,7 +97,8 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
             api_user_id=user_id,
             api_role_id=role,
             api_key=api_key,
-            expires_at=expires_at,
+            created_at=func.now(),
+            updated_at=func.now(),
         )
     )
     session.commit()
@@ -145,7 +145,6 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
     name = name or db_user.name
     password = get_hashed_password(password) if password else db_user.password
     role = role or db_user.api_role_id
-    expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
     session.execute(
         update(UserTable)
@@ -153,7 +152,7 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
             name=name,
             password=password,
             api_role_id=role,
-            expires_at=expires_at,
+            updated_at=func.now(),
         )
         .where(UserTable.api_user_id == user)
     )

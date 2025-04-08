@@ -20,7 +20,13 @@ L'API et l'UI seront disponibles respectivement sur les ports 8000 et 8501.
 
 # Développement hors environnement Docker
 
-> ⚠️ **Attention : Vous devez disposer d'une API de modèle de language et d'une base de données SQL.**
+## Les bases de de données
+
+Vous pouvez lancer les services de base de données nécéssaires avec docker compose :
+
+```bash
+docker compose up --detach postgres qdrant redis
+```
 
 ## API (FastAPI)
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Path, Query, Request, Response, Security
 from fastapi.responses import JSONResponse
 
 from app.helpers import Authorization
-from app.schemas.collections import Collection, CollectionRequest, Collections
+from app.schemas.collections import Collection, CollectionRequest, CollectionUpdateRequest, Collections
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__COLLECTIONS
@@ -39,7 +39,7 @@ async def get_collection(request: Request, collection: int = Path(..., descripti
     if not context.documents:  # no vector store available
         raise CollectionNotFoundException()
 
-    collections = await context.documents.get_collections(user_id=request.app.state.user.id, include_public=True)
+    collections = await context.documents.get_collections(collection_id=collection, user_id=request.app.state.user.id, include_public=True)
 
     return collections[0]
 
@@ -70,5 +70,28 @@ async def delete_collections(request: Request, collection: int = Path(..., descr
         raise CollectionNotFoundException()
 
     await context.documents.delete_collection(user_id=request.app.state.user.id, collection_id=collection)
+
+    return Response(status_code=204)
+
+
+@router.patch(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())])
+async def update_collection(
+    request: Request,
+    collection: int = Path(..., description="The collection ID"),
+    body: CollectionUpdateRequest = None,
+) -> Response:
+    """
+    Update a collection.
+    """
+    if not context.documents:  # no vector store available
+        raise CollectionNotFoundException()
+
+    await context.documents.update_collection(
+        user_id=request.app.state.user.id,
+        collection_id=collection,
+        name=body.name if body else None,
+        visibility=body.visibility if body else None,
+        description=body.description if body else None,
+    )
 
     return Response(status_code=204)

@@ -29,6 +29,49 @@ class TestCollections:
         assert collection["name"] == params["name"]
         assert collection["visibility"] == CollectionVisibility.PRIVATE
 
+    def test_get_one_collection_with_user(self, client: TestClient):
+        collection_name = f"test_collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        collection_id = response.json()["id"]
+
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
+        assert response.status_code == 200, response.text
+
+        collection = response.json()
+        assert collection["name"] == collection_name
+
+    def test_create_private_collection_already_existing_name(self, client: TestClient):
+        collection_name = f"test_collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 400, response.text
+
+    def test_patch_collection_name(self, client: TestClient):
+        collection_name = f"test_collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+
+        collection_id = response.json()["id"]
+        new_collection_name = f"test_collection_{str(uuid4())}"
+        params = {"name": new_collection_name}
+        response = client.patch_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}", json=params)
+        assert response.status_code == 204, response.text
+
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
+        assert response.status_code == 200, response.text
+
+        collection = response.json()
+        assert collection["name"] == new_collection_name
+
     def test_format_collection_with_user(self, client: TestClient):
         params = {"name": f"test_collection_{str(uuid4())}", "visibility": CollectionVisibility.PRIVATE}
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
@@ -153,7 +196,7 @@ class TestCollections:
         assert response.status_code == 200, response.text
 
         collections = [collection for collection in collections["data"] if collection["id"] == collection_id]
-        assert len(collections) == 1
+        assert len(collections) == 1, "Public collection not found in user's collections"
 
         response = client.delete_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
         assert response.status_code == 404, response.text

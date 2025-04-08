@@ -26,6 +26,21 @@ class CollectionRequest(BaseModel):
         return name
 
 
+class CollectionUpdateRequest(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, description="The name of the collection.")
+    description: Optional[str] = Field(default=None, description="The description of the collection.")
+    visibility: Optional[CollectionVisibility] = Field(default=None, description="The type of the collection. Public collections are available to all users, private collections are only available to the user who created them.")  # fmt: off
+
+    @field_validator("name", mode="after")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+            if not name:  # empty string
+                raise ValueError("Name cannot be empty.")
+
+        return name
+
+
 class Collection(BaseModel):
     object: Literal["collection"] = "collection"
     id: int

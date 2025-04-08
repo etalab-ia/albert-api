@@ -406,6 +406,21 @@ class IdentityAccessManager:
 
             return tokens
 
+    async def _legacy_check_token(self, token: str) -> Tuple[Optional[int], Optional[int]]:
+        async with self.sql.session() as session:
+            statement = (
+                select(TokenTable.id, TokenTable.user_id)
+                .where(TokenTable.token == token)
+                .where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
+            )
+            result = await session.execute(statement=statement)
+            results = result.all()
+            if results:
+                token_id, user_id = results[0]
+                return user_id, token_id
+            else:
+                return None, None
+
     async def check_token(self, token: str) -> Tuple[Optional[int], Optional[int]]:
         async with self.sql.session() as session:
             try:
@@ -413,7 +428,8 @@ class IdentityAccessManager:
             except JWTError:
                 return None, None
             except IndexError:  # malformed token (no token prefix)
-                return None, None
+                user_id, token_id = await self._legacy_check_token(token=token)  # @ TODO: remove after migration
+                return user_id, token_id
 
             try:
                 tokens = await self.get_tokens(user_id=claims["user_id"], token_id=claims["token_id"], exclude_expired=True)

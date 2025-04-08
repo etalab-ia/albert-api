@@ -53,3 +53,9 @@ class TestChunks:
 
         response = client.get_without_permissions(url=f"/v1{ENDPOINT__CHUNKS}/{DOCUMENT_ID}")
         assert response.status_code == 404, response.text
+
+    def test_chunk_not_found(self, client: TestClient, setup):
+        COLLECTION_ID, DOCUMENT_ID = setup
+        document_id = 1000
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__CHUNKS}/{document_id}")
+        assert response.status_code == 404, response.text

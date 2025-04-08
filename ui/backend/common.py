@@ -130,7 +130,7 @@ def get_users():
         offset += limit
 
     session = next(get_session())
-    db_data = session.execute(select(UserTable).offset(offset).limit(limit)).scalars().all()
+    db_data = session.execute(select(UserTable)).scalars().all()
 
     # Convert SQLAlchemy User objects to dictionaries
     db_data = [user.api_user_id for user in db_data]
