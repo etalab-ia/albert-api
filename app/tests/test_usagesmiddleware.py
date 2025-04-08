@@ -7,32 +7,22 @@ from app.sql.models import Usage
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS, ENDPOINT__MODELS
 
 
-@pytest.fixture(scope="module")
-def setup(client):
-    # Get a language model for testing
-    response = client.get_without_permissions(f"/v1{ENDPOINT__MODELS}")
-    models = response.json()
-    MODEL_ID = [model for model in models["data"] if model["type"] == ModelType.TEXT_GENERATION][0]["id"]
-    yield MODEL_ID
-
-
-@pytest.mark.usefixtures("setup", "client")
+@pytest.mark.usefixtures("client")
 class TestUsagesMiddleware:
-    def test_log_chat_completion(self, client, setup, db_session):
+    def test_log_chat_completion(self, client, db_session):
         """Test logging of chat completion request"""
-        MODEL_ID = setup
+        # Get language model
+        response = client.get_without_permissions(f"/v1{ENDPOINT__MODELS}")
+        models = response.json()
+        model_id = [model for model in models["data"] if model["type"] == ModelType.TEXT_GENERATION][0]["id"]
 
-        params = {
-            "model": MODEL_ID,
-            "messages": [{"role": "user", "content": "Hello"}],
-            "stream": False,
-        }
+        params = {"model": model_id, "messages": [{"role": "user", "content": "Hello"}], "stream": False}
         response = client.post_without_permissions(f"/v1{ENDPOINT__CHAT_COMPLETIONS}", json=params)
         assert response.status_code == 200
 
         log = db_session.query(Usage).order_by(Usage.id.desc()).first()
 
-        assert log.model == MODEL_ID
+        assert log.model == model_id
         assert isinstance(log.datetime, datetime)
         assert log.user is not None
         assert log.prompt_tokens is not None
@@ -48,7 +38,7 @@ class TestUsagesMiddleware:
         # Get embeddings model
         response = client.get_without_permissions(f"/v1{ENDPOINT__MODELS}")
         models = response.json()["data"]
-        model_id = [m for m in models if m["type"] == "text-embeddings-inference"][0]["id"]
+        model_id = [m for m in models if m["type"] == ModelType.TEXT_EMBEDDINGS_INFERENCE][0]["id"]
 
         params = {"model": model_id, "input": "Test embeddings"}
         response = client.post_without_permissions(f"/v1{ENDPOINT__EMBEDDINGS}", json=params)

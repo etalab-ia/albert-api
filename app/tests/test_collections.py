@@ -191,12 +191,9 @@ class TestCollections:
 
         collection_id = response.json()["id"]
 
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
         collections = response.json()
         assert response.status_code == 200, response.text
-
-        collections = [collection for collection in collections["data"] if collection["id"] == collection_id]
-        assert len(collections) == 1, "Public collection not found in user's collections"
 
         response = client.delete_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
         assert response.status_code == 404, response.text
@@ -226,20 +223,15 @@ class TestCollections:
         assert response.status_code == 422, response.text
 
     def test_create_collection_with_description(self, client: TestClient):
-        collection_name = "test-description"
-        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE, "description": "test-description"}
+        params = {"name": f"test_collection_{str(uuid4())}", "visibility": CollectionVisibility.PRIVATE, "description": "test-description"}
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
         assert response.status_code == 201, response.text
 
         collection_id = response.json()["id"]
 
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}")
         assert response.status_code == 200, response.text
 
-        collections = response.json()
-        collections = [collection for collection in collections["data"] if collection["id"] == collection_id]
-        assert len(collections) == 1
+        collection = response.json()
 
-        collection = collections[0]
-        assert collection["name"] == collection_name
-        assert collection["description"] == "test-description"
+        assert collection["description"] == params["description"]

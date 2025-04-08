@@ -68,8 +68,8 @@ class TestDocuments:
             data = json.load(f)
             document_count = len(data)
 
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
-        collection = [collection for collection in response.json()["data"] if collection["id"] == COLLECTION_ID][0]
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{COLLECTION_ID}")
+        collection = response.json()
         assert collection["documents"] == document_count
 
     def test_delete_document(self, client: TestClient, setup):

@@ -36,10 +36,7 @@ class TestOCR:
 
         assert response.status_code == 200, f"error: process OCR ({response.status_code})"
         # # Load the expected snapshot
-        snapshot_path = os.path.join(
-            current_path,
-            "snapshots/test_ocr/test_ocr_pdf_successful/ocr_pdf_successful",
-        )
+        snapshot_path = os.path.join(current_path, "snapshots/test_ocr/test_ocr_pdf_successful/ocr_pdf_successful")
         if os.path.exists(snapshot_path):
             with open(snapshot_path) as f:
                 expected_snapshot = ast.literal_eval(f.read())
@@ -79,20 +76,15 @@ class TestOCR:
         assert response.status_code == 403, f"error: should require authentication ({response.status_code})"
         snapshot.assert_match(str(response.json()), "ocr_without_authentication")
 
-    def test_ocr_custom_dpi(self, args, client, model_id, snapshot):
+    def test_ocr_custom_dpi(self, client, model_id, snapshot):
         """Test OCR with custom DPI setting."""
-        client.headers = {"Authorization": f"Bearer {args["api_key_user"]}"}
-
         file_path = os.path.join(current_path, "assets/pdf.pdf")
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             response = client.post_without_permissions(f"/v1{ENDPOINT__OCR}", files=files, json={"model": model_id, "dpi": 300})
 
         assert response.status_code == 200, f"process OCR with custom DPI ({response.status_code})"
-        snapshot_path = os.path.join(
-            current_path,
-            "snapshots/test_ocr/test_ocr_custom_dpi/ocr_custom_dpi",
-        )
+        snapshot_path = os.path.join(current_path, "snapshots/test_ocr/test_ocr_custom_dpi/ocr_custom_dpi")
         if os.path.exists(snapshot_path):
             with open(snapshot_path) as f:
                 expected_snapshot = ast.literal_eval(f.read())
