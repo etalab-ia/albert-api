@@ -43,7 +43,7 @@ class AlbertModelClient(AsyncOpenAI, BaseModelClient):
         assert response.status_code == 200, f"Failed to get models list ({response.status_code})."
 
         response = response.json()["data"]
-        response = [model for model in response if model["id"] == self.model]
+        response = [model for model in response if model["id"] == self.model or self.model in model["aliases"]]
         assert len(response) == 1, "Failed to get models list (model not found)."
 
         # set attributes of the model

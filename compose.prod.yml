@@ -6,7 +6,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./config.example.yml:/config.yml:ro
+      - ./config.yml:/config.yml:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -20,7 +20,7 @@ services:
     ports:
       - 8501:8501
     volumes:
-      - ./config.example.yml:/config.yml:ro
+      - ./config.yml:/config.yml:ro
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,4 +1,4 @@
-name: Tests
+name: Run integration tests
 
 on:
   push:
@@ -10,13 +10,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    #secrets: inherit
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Set up Docker Compose
       run: |
-        docker compose up -d
+        docker compose up --detach
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -30,30 +31,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install ".[app,test]"
 
-    - name: Setup environment
-      run: |
-        # Create .env file from GitHub secrets
-        cat > .env << EOF
-        POSTGRES_USER=postgres
-        POSTGRES_PASSWORD=changeme
-        POSTGRES_HOST=localhost
-        POSTGRES_DB=postgres
-        POSTGRES_PORT=5432
-        REDIS_HOST=localhost
-        REDIS_PASSWORD=changeme
-        QDRANT_HOST=localhost
-        QDRANT_API_KEY=changeme
-        GRIST_API_KEY=${{ secrets.GRIST_API_KEY }}
-        GRIST_DOC_ID=${{ secrets.GRIST_DOC_ID }}
-        ALBERT_API_KEY=${{ secrets.ALBERT_API_KEY }}
-        EOF
-
     - name: Create config from template
       run: |
         echo "${{ secrets.CONFIG_YML }}" > config.yml
-      env:
-        GRIST_API_KEY: ${{ secrets.GRIST_API_KEY }}
-        ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
 
     - name: Wait for PostgreSQL
       run: |
@@ -63,10 +43,14 @@ jobs:
 
     - name: Run tests
       run: |
-        set -a
-        source .env
-        set +a
+        export BRAVE_API_KEY="${{ secrets.BRAVE_API_KEY }}"
+        export ALBERT_API_KEY="${{ secrets.ALBERT_API_KEY }}"
         python -m pytest app/tests --cov=./app --cov-report=xml
+      env: 
+        CONFIG_FILE: config.yml
+        # BRAVE_API_KEY: "${{ secrets.BRAVE_API_KEY }}"
+        # ALBERT_API_KEY: "${{ secrets.ALBERT_API_KEY }}"
+
     - name: Create coverage badge
       run: |
         mkdir -p .github/badges

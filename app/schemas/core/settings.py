@@ -163,10 +163,8 @@ class Settings(BaseSettings):
         # replace environment variables (pattern: ${VARIABLE_NAME})
         for match in set(re.findall(pattern=r"\${[A-Z_]+}", string=file_content)):
             variable = match.replace("${", "").replace("}", "")
-            try:
-                file_content = file_content.replace(match, os.environ[variable])
-            except KeyError:
-                raise Exception(f"Environment variable {variable} not found to replace {match}.")
+            assert os.getenv(variable), f"Environment variable {variable} not found or empty to replace {match}."
+            file_content = file_content.replace(match, os.environ[variable])
 
         config = Config(**yaml.safe_load(file_content))
 
