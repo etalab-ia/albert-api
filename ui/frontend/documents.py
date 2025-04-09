@@ -105,7 +105,7 @@ with col1:
         submit_upload = st.button(label="Upload", disabled=not collection_id or not file_to_upload)
         if file_to_upload and submit_upload and collection_id:
             with st.spinner(text="Downloading and processing the document..."):
-                result = upload_file(file=file_to_upload, collection_id=collection_id)
+                upload_file(file=file_to_upload, collection_id=collection_id)
 
 
 with col2:

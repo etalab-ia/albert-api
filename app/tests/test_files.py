@@ -37,6 +37,7 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+            file.close()
 
         assert response.status_code == 201, response.text
 
@@ -48,6 +49,7 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+            file.close()
 
         assert response.status_code == 201, response.text
 
@@ -59,7 +61,7 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "application/html")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
-
+            file.close()
         assert response.status_code == 201, response.text
 
     def test_upload_html_file_chunker_parameters(self, client: TestClient, setup):
@@ -70,6 +72,7 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "application/html")}
             data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+            file.close()
 
         assert response.status_code == 201, response.text
 
@@ -81,6 +84,7 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "text/mardown")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+            file.close()
 
         assert response.status_code == 201, response.text
 
@@ -92,6 +96,7 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "text/markdown")}
             data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+            file.close()
 
         assert response.status_code == 201, response.text
 
@@ -103,6 +108,7 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "application/json")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+            file.close()
 
         assert response.status_code == 201, response.text
 
@@ -110,11 +116,11 @@ class TestFiles:
         PRIVATE_COLLECTION_ID, PUBLIC_COLLECTION_ID = setup
 
         file_path = "app/tests/assets/json_wrong_format.json"
-        files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/json")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+            file.close()
 
         assert response.status_code == 422, response.text
 
@@ -126,6 +132,7 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+            file.close()
 
         assert response.status_code == 413, response.text
 
@@ -137,7 +144,7 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PUBLIC_COLLECTION_ID}
             response = client.post_with_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
-
+            file.close()
         assert response.status_code == 201, response.text
 
     def test_upload_in_public_collection_with_user(self, client: TestClient, setup):
@@ -148,5 +155,6 @@ class TestFiles:
             files = {"file": (os.path.basename(file_path), file, "application/pdf")}
             data = {"request": '{"collection": "%s"}' % PUBLIC_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+            file.close()
 
         assert response.status_code == 404, response.text

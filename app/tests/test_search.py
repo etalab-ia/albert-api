@@ -11,8 +11,6 @@ from app.utils.variables import ENDPOINT__COLLECTIONS, ENDPOINT__DOCUMENTS, ENDP
 
 @pytest.fixture(scope="module")
 def setup(client: TestClient):
-    COLLECTION_ID = "pytest"
-
     # Create a collection
     response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json={"name": f"test_collection_{uuid4()}"})
     assert response.status_code == 201, response.text
@@ -20,9 +18,11 @@ def setup(client: TestClient):
 
     # Upload the file to the collection
     file_path = "app/tests/assets/json.json"
-    files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
-    data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % COLLECTION_ID}
-    response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+    with open(file_path, "rb") as file:
+        files = {"file": (os.path.basename(file_path), file, "application/json")}
+        data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % COLLECTION_ID}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+        file.close()
     assert response.status_code == 201, response.text
 
     # Get document IDS

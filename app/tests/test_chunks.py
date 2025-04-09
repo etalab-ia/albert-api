@@ -21,9 +21,11 @@ def setup(client: TestClient):
 
     # Upload a file
     file_path = "app/tests/assets/json.json"
-    files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
-    data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
-    response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+    with open(file_path, "rb") as file:
+        files = {"file": (os.path.basename(file_path), file, "application/json")}
+        data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+        file.close()
     assert response.status_code == 201, response.text
 
     # Retrieve the document ID
@@ -52,4 +54,10 @@ class TestChunks:
         assert response.status_code == 204, response.text
 
         response = client.get_without_permissions(url=f"/v1{ENDPOINT__CHUNKS}/{DOCUMENT_ID}")
+        assert response.status_code == 404, response.text
+
+    def test_chunk_not_found(self, client: TestClient, setup):
+        COLLECTION_ID, DOCUMENT_ID = setup
+        document_id = 1000
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__CHUNKS}/{document_id}")
         assert response.status_code == 404, response.text

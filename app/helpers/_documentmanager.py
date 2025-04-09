@@ -20,8 +20,8 @@ from qdrant_client.http.models import (
 )
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.clients.database import SQLDatabaseClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
@@ -62,28 +62,27 @@ class DocumentManager:
 
     def __init__(
         self,
-        sql: SQLDatabaseClient,
         qdrant: AsyncQdrantClient,
         qdrant_model: ModelRouter,
         web_search: Optional[WebSearchManager] = None,
         web_search_model: Optional[ModelRouter] = None,
     ) -> None:
-        self.sql = sql
         self.qdrant = qdrant
         self.qdrant_model = qdrant_model
         self.web_search = web_search
         self.web_search_model = web_search_model
 
-    async def create_collection(self, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:
+    async def create_collection(
+        self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None
+    ) -> int:
         try:
-            async with self.sql.session() as session:
-                result = await session.execute(
-                    statement=insert(table=CollectionTable)
-                    .values(name=name, user_id=user_id, visibility=visibility, description=description)
-                    .returning(CollectionTable.id)
-                )
-                collection_id = result.scalar_one()
-                await session.commit()
+            result = await session.execute(
+                statement=insert(table=CollectionTable)
+                .values(name=name, user_id=user_id, visibility=visibility, description=description)
+                .returning(CollectionTable.id)
+            )
+            collection_id = result.scalar_one()
+            await session.commit()
         except IntegrityError as e:
             raise CollectionAlreadyExistsException()
 
@@ -95,95 +94,91 @@ class DocumentManager:
 
         return collection_id
 
-    async def delete_collection(self, user_id: int, collection_id: int) -> None:
-        async with self.sql.session() as session:
-            # check if collection exists
-            result = await session.execute(
-                statement=select(CollectionTable.id).where(CollectionTable.id == collection_id).where(CollectionTable.user_id == user_id)
-            )
-            try:
-                result.scalar_one()
-            except NoResultFound:
-                raise CollectionNotFoundException()
+    async def delete_collection(self, session: AsyncSession, user_id: int, collection_id: int) -> None:
+        # check if collection exists
+        result = await session.execute(
+            statement=select(CollectionTable.id).where(CollectionTable.id == collection_id).where(CollectionTable.user_id == user_id)
+        )
+        try:
+            result.scalar_one()
+        except NoResultFound:
+            raise CollectionNotFoundException()
 
-            # delete the collection
-            await session.execute(statement=delete(table=CollectionTable).where(CollectionTable.id == collection_id))
-            await session.commit()
+        # delete the collection
+        await session.execute(statement=delete(table=CollectionTable).where(CollectionTable.id == collection_id))
+        await session.commit()
 
-            # delete the collection from qdrant
+        # delete the collection from qdrant
         await self.qdrant.delete_collection(collection_name=str(collection_id))
 
-    async def update_collection(self, user_id: int, collection_id: int, name: Optional[str] = None, visibility: Optional[CollectionVisibility] = None, description: Optional[str] = None) -> None:  # fmt: off
-        async with self.sql.session() as session:
-            # check if collection exists
-            result = await session.execute(
-                statement=select(CollectionTable)
-                .join(target=UserTable, onclause=UserTable.id == CollectionTable.user_id)
-                .where(CollectionTable.id == collection_id)
-                .where(UserTable.id == user_id)
+    async def update_collection(self, session: AsyncSession, user_id: int, collection_id: int, name: Optional[str] = None, visibility: Optional[CollectionVisibility] = None, description: Optional[str] = None) -> None:  # fmt: off
+        # check if collection exists
+        result = await session.execute(
+            statement=select(CollectionTable)
+            .join(target=UserTable, onclause=UserTable.id == CollectionTable.user_id)
+            .where(CollectionTable.id == collection_id)
+            .where(UserTable.id == user_id)
+        )
+        try:
+            collection = result.scalar_one()
+        except NoResultFound:
+            raise CollectionNotFoundException()
+
+        name = name if name is not None else collection.name
+        visibility = visibility if visibility is not None else collection.visibility
+        description = description if description is not None else collection.description
+
+        await session.execute(
+            statement=update(table=CollectionTable)
+            .values(name=name, visibility=visibility, description=description)
+            .where(CollectionTable.id == collection.id)
+        )
+        await session.commit()
+
+    async def get_collections(self, session: AsyncSession, user_id: int, collection_id: Optional[int] = None, include_public: bool = True, offset: int = 0, limit: int = 10) -> List[Collection]:  # fmt: off
+        # Query basic collection data
+        statement = (
+            select(
+                CollectionTable.id,
+                CollectionTable.name,
+                UserTable.name.label("owner"),
+                CollectionTable.visibility,
+                CollectionTable.description,
+                func.count(distinct(DocumentTable.id)).label("documents"),
+                cast(func.extract("epoch", CollectionTable.created_at), Integer).label("created_at"),
+                cast(func.extract("epoch", CollectionTable.updated_at), Integer).label("updated_at"),
             )
-            try:
-                collection = result.scalar_one()
-            except NoResultFound:
-                raise CollectionNotFoundException()
+            .outerjoin(DocumentTable, CollectionTable.id == DocumentTable.collection_id)
+            .outerjoin(UserTable, CollectionTable.user_id == UserTable.id)
+            .group_by(CollectionTable.id, UserTable.name)
+            .offset(offset=offset)
+            .limit(limit=limit)
+        )
 
-            name = name if name is not None else collection.name
-            visibility = visibility if visibility is not None else collection.visibility
-            description = description if description is not None else collection.description
+        if collection_id:
+            statement = statement.where(CollectionTable.id == collection_id)
+        if include_public:
+            statement = statement.where(or_(CollectionTable.user_id == user_id, CollectionTable.visibility == CollectionVisibility.PUBLIC))
+        else:
+            statement = statement.where(CollectionTable.user_id == user_id)
 
-            await session.execute(
-                statement=update(table=CollectionTable)
-                .values(name=name, visibility=visibility, description=description, updated_at=func.now())
-                .where(CollectionTable.id == collection.id)
-            )
-            await session.commit()
+        result = await session.execute(statement=statement)
+        collections = [Collection(**row._asdict()) for row in result.all()]
 
-    async def get_collections(self, user_id: int, collection_id: Optional[int] = None, include_public: bool = True, offset: int = 0, limit: int = 10) -> List[Collection]:  # fmt: off
-        async with self.sql.session() as session:
-            # Query basic collection data
-            statement = (
-                select(
-                    CollectionTable.id,
-                    CollectionTable.name,
-                    UserTable.name.label("owner"),
-                    CollectionTable.visibility,
-                    CollectionTable.description,
-                    func.count(distinct(DocumentTable.id)).label("documents"),
-                    cast(func.extract("epoch", CollectionTable.created_at), Integer).label("created_at"),
-                    cast(func.extract("epoch", CollectionTable.updated_at), Integer).label("updated_at"),
-                )
-                .outerjoin(DocumentTable, CollectionTable.id == DocumentTable.collection_id)
-                .outerjoin(UserTable, CollectionTable.user_id == UserTable.id)
-                .group_by(CollectionTable.id, UserTable.name)
-                .offset(offset=offset)
-                .limit(limit=limit)
-            )
-
-            if collection_id:
-                statement = statement.where(CollectionTable.id == collection_id)
-            if include_public:
-                statement = statement.where(or_(CollectionTable.user_id == user_id, CollectionTable.visibility == CollectionVisibility.PUBLIC))
-            else:
-                statement = statement.where(CollectionTable.user_id == user_id)
-
-            result = await session.execute(statement=statement)
-            collections = [Collection(**row._asdict()) for row in result.all()]
-
-            if collection_id and len(collections) == 0:
-                raise CollectionNotFoundException()
+        if collection_id and len(collections) == 0:
+            raise CollectionNotFoundException()
 
         return collections
 
-    async def create_document(self, user_id: int, collection_id: int, file: UploadFile, chunker_name: ChunkerName, chunker_args: dict) -> int:  # fmt: off
+    async def create_document(self, session: AsyncSession, user_id: int, collection_id: int, file: UploadFile, chunker_name: ChunkerName, chunker_args: dict) -> int:  # fmt: off
         # check if collection exists
-        async with self.sql.session() as session:
-            result = await session.execute(
-                statement=select(CollectionTable).where(CollectionTable.id == collection_id).where(CollectionTable.user_id == user_id)
-            )
-            try:
-                collection = result.scalar_one()
-            except NoResultFound:
-                raise CollectionNotFoundException()
+        result = await session.execute(
+            statement=select(CollectionTable).where(CollectionTable.id == collection_id).where(CollectionTable.user_id == user_id)
+        )
+        try:
+            collection = result.scalar_one()
+        except NoResultFound:
+            raise CollectionNotFoundException()
 
         file_name = file.filename.strip()
         file_extension = file_name.rsplit(".", maxsplit=1)[-1]
@@ -202,12 +197,11 @@ class DocumentManager:
             logger.debug(msg=traceback.format_exc())
             raise ChunkingFailedException(detail=f"Chunking failed: {e}")
 
-        async with self.sql.session() as session:
-            result = await session.execute(
-                statement=insert(table=DocumentTable).values(name=file_name, collection_id=collection_id).returning(DocumentTable.id)
-            )
-            document_id = result.scalar_one()
-            await session.commit()
+        result = await session.execute(
+            statement=insert(table=DocumentTable).values(name=file_name, collection_id=collection_id).returning(DocumentTable.id)
+        )
+        document_id = result.scalar_one()
+        await session.commit()
 
         client = self.qdrant_model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         for i, chunk in enumerate(chunks):
@@ -222,35 +216,34 @@ class DocumentManager:
         except Exception as e:
             logger.error(msg=f"Error during document creation: {e}")
             logger.debug(msg=traceback.format_exc())
-            await self.delete_document(user_id=user_id, document_id=document_id)
+            await self.delete_document(session=session, user_id=user_id, document_id=document_id)
             raise VectorizationFailedException(detail=f"Vectorization failed: {e}")
 
         return document_id
 
-    async def get_documents(self, user_id: int, collection_id: Optional[int] = None, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
-        async with self.sql.session() as session:
-            statement = (
-                select(
-                    DocumentTable.id,
-                    DocumentTable.name,
-                    DocumentTable.collection_id,
-                    cast(func.extract("epoch", DocumentTable.created_at), Integer).label("created_at"),
-                )
-                .offset(offset=offset)
-                .limit(limit=limit)
-                .outerjoin(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
-                .where(CollectionTable.user_id == user_id)
+    async def get_documents(self, session: AsyncSession, user_id: int, collection_id: Optional[int] = None, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
+        statement = (
+            select(
+                DocumentTable.id,
+                DocumentTable.name,
+                DocumentTable.collection_id,
+                cast(func.extract("epoch", DocumentTable.created_at), Integer).label("created_at"),
             )
-            if collection_id:
-                statement = statement.where(DocumentTable.collection_id == collection_id)
-            if document_id:
-                statement = statement.where(DocumentTable.id == document_id)
+            .offset(offset=offset)
+            .limit(limit=limit)
+            .outerjoin(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
+            .where(CollectionTable.user_id == user_id)
+        )
+        if collection_id:
+            statement = statement.where(DocumentTable.collection_id == collection_id)
+        if document_id:
+            statement = statement.where(DocumentTable.id == document_id)
 
-            result = await session.execute(statement=statement)
-            documents = [Document(**row._asdict()) for row in result.all()]
+        result = await session.execute(statement=statement)
+        documents = [Document(**row._asdict()) for row in result.all()]
 
-            if document_id and len(documents) == 0:
-                raise DocumentNotFoundException()
+        if document_id and len(documents) == 0:
+            raise DocumentNotFoundException()
 
         # chunks count
         for document in documents:
@@ -265,40 +258,40 @@ class DocumentManager:
 
         return documents
 
-    async def delete_document(self, user_id: int, document_id: int) -> None:
+    async def delete_document(self, session: AsyncSession, user_id: int, document_id: int) -> None:
         # check if document exists
-        async with self.sql.session() as session:
-            result = await session.execute(
-                statement=select(DocumentTable)
-                .join(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
-                .where(DocumentTable.id == document_id)
-                .where(CollectionTable.user_id == user_id)
-            )
-            try:
-                document = result.scalar_one()
-            except NoResultFound:
-                raise DocumentNotFoundException()
+        result = await session.execute(
+            statement=select(DocumentTable)
+            .join(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
+            .where(DocumentTable.id == document_id)
+            .where(CollectionTable.user_id == user_id)
+        )
+        try:
+            document = result.scalar_one()
+        except NoResultFound:
+            raise DocumentNotFoundException()
 
-            await session.execute(statement=delete(table=DocumentTable).where(DocumentTable.id == document_id))
-            await session.commit()
+        await session.execute(statement=delete(table=DocumentTable).where(DocumentTable.id == document_id))
+        await session.commit()
 
-            # delete the document from qdrant
-            filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-            await self.qdrant.delete(collection_name=str(document.collection_id), points_selector=FilterSelector(filter=filter))
+        # delete the document from qdrant
+        filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
+        await self.qdrant.delete(collection_name=str(document.collection_id), points_selector=FilterSelector(filter=filter))
 
-    async def get_chunks(self, user_id: int, document_id: int, chunk_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Chunk]:
+    async def get_chunks(
+        self, session: AsyncSession, user_id: int, document_id: int, chunk_id: Optional[int] = None, offset: int = 0, limit: int = 10
+    ) -> List[Chunk]:
         # check if document exists
-        async with self.sql.session() as session:
-            result = await session.execute(
-                statement=select(DocumentTable)
-                .join(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
-                .where(DocumentTable.id == document_id)
-                .where(CollectionTable.user_id == user_id)
-            )
-            try:
-                document = result.scalar_one()
-            except NoResultFound:
-                raise DocumentNotFoundException()
+        result = await session.execute(
+            statement=select(DocumentTable)
+            .join(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
+            .where(DocumentTable.id == document_id)
+            .where(CollectionTable.user_id == user_id)
+        )
+        try:
+            document = result.scalar_one()
+        except NoResultFound:
+            raise DocumentNotFoundException()
 
         # check if document exists
         must = [FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))]
@@ -319,6 +312,7 @@ class DocumentManager:
 
     async def search(
         self,
+        session: AsyncSession,
         collection_ids: List[int],
         user_id: int,
         prompt: str,
@@ -332,7 +326,7 @@ class DocumentManager:
         if not self.web_search and web_search:
             raise WebSearchNotAvailableException()
 
-        web_results = []
+        web_collection_id = None
         qdrant_client = self.qdrant_model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         if web_search:
             client = self.web_search_model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
@@ -340,12 +334,14 @@ class DocumentManager:
             web_results = await self.web_search.get_results(query=web_query, n=3)
             if web_results:
                 web_collection_id = await self.create_collection(
+                    session=session,
                     name=f"tmp_web_collection_{uuid4()}",
                     user_id=user_id,
                     visibility=CollectionVisibility.PRIVATE,
                 )
                 for file in web_results:
                     await self.create_document(
+                        session=session,
                         user_id=user_id,
                         collection_id=web_collection_id,
                         file=file,
@@ -355,6 +351,7 @@ class DocumentManager:
                 collection_ids.append(web_collection_id)
 
         searches = await self._query(
+            session=session,
             model_client=qdrant_client,
             prompt=prompt,
             collection_ids=collection_ids,
@@ -364,8 +361,8 @@ class DocumentManager:
             score_threshold=score_threshold,
         )
 
-        if web_results:
-            await self.delete_collection(user_id=user_id, collection_id=web_collection_id)
+        if web_collection_id:
+            await self.delete_collection(session=session, user_id=user_id, collection_id=web_collection_id)
 
         if score_threshold:
             searches = [search for search in searches if search.score >= score_threshold]
@@ -424,6 +421,7 @@ class DocumentManager:
 
     async def _query(
         self,
+        session: AsyncSession,
         model_client: ModelClient,
         prompt: str,
         collection_ids: List[int],
@@ -438,22 +436,22 @@ class DocumentManager:
         response = await self._create_embeddings(input=[prompt], model_client=model_client)
 
         chunks = []
-        async with self.sql.session() as session:
-            for collection_id in collection_ids:
-                result = await session.execute(statement=select(CollectionTable).where(CollectionTable.id == collection_id))
-                try:
-                    collection = result.scalar_one()
-                except NoResultFound:
-                    raise CollectionNotFoundException()
+        # check if collections exist
+        for collection_id in collection_ids:
+            result = await session.execute(statement=select(CollectionTable).where(CollectionTable.id == collection_id))
+            try:
+                result.scalar_one()
+            except NoResultFound:
+                raise CollectionNotFoundException()
 
-                results = await self.qdrant.search(
-                    collection_name=str(collection_id),
-                    query_vector=response[0],
-                    limit=k,
-                    score_threshold=score_threshold,
-                    with_payload=True,
-                )
-                chunks.extend(results)
+            results = await self.qdrant.search(
+                collection_name=str(collection_id),
+                query_vector=response[0],
+                limit=k,
+                score_threshold=score_threshold,
+                with_payload=True,
+            )
+            chunks.extend(results)
 
         # sort by similarity score and get top k
         chunks = sorted(chunks, key=lambda x: x.score, reverse=True)[:k]

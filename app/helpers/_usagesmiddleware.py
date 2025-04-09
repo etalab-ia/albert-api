@@ -1,11 +1,11 @@
 from datetime import datetime
 import json
 import traceback
-from typing import Callable, Optional
+from typing import Callable, Optional, AsyncGenerator
 import os
 
 from fastapi import Request, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.sql.models import Usage
@@ -15,7 +15,7 @@ from app.utils.logging import logger
 
 
 class UsagesMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, db_func: Callable[[], Session] = get_db):
+    def __init__(self, app, db_func: Callable[[], AsyncGenerator[AsyncSession, None]] = get_db):
         super().__init__(app)
         self.db_func = db_func
         # Get all model endpoints from variables.py
@@ -101,33 +101,30 @@ class UsagesMiddleware(BaseHTTPMiddleware):
         if not hasattr(request.app.state, "user") or request.app.state.user.id == 0:  # master key
             return response
 
-        if not hasattr(request.app.state, "sql"):
-            return response
-
         try:
             usage_data, response = await self._handle_streaming_response(response)
             # Log usage
-            db = next(self.db_func())
-            log = Usage(
-                datetime=start_time,
-                duration=duration,
-                user_id=request.app.state.user.id,
-                token_id=request.app.state.token_id,
-                endpoint=endpoint,
-                model=model,
-                prompt_tokens=usage_data.get("prompt_tokens"),
-                completion_tokens=usage_data.get("completion_tokens"),
-                total_tokens=usage_data.get("total_tokens"),
-                status=response.status_code,
-                method=method,
-            )
-            db.add(log)
-            db.commit()
+            async for session in self.db_func():
+                log = Usage(
+                    datetime=start_time,
+                    duration=duration,
+                    user_id=request.app.state.user.id,
+                    token_id=request.app.state.token_id,
+                    endpoint=endpoint,
+                    model=model,
+                    prompt_tokens=usage_data.get("prompt_tokens"),
+                    completion_tokens=usage_data.get("completion_tokens"),
+                    total_tokens=usage_data.get("total_tokens"),
+                    status=response.status_code,
+                    method=method,
+                )
+                session.add(log)
+                await session.commit()
         except Exception as e:
             logger.debug(traceback.format_exc())
             logger.error(f"Failed to log usage: {str(e)}")
-            db.rollback()
+            await session.rollback()
         finally:
-            db.close()
+            await session.close()
 
         return response

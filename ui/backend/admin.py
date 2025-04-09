@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 import requests
-from sqlalchemy import delete, insert, select, update, func
+from sqlalchemy import delete, insert, select, update
 import streamlit as st
 
 from ui.backend.common import check_password, get_roles, get_users
@@ -90,7 +90,6 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
     api_key = response.json()["token"]
 
     session = next(get_session())
-    expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
     session.execute(
         insert(UserTable).values(
             name=name,
@@ -98,7 +97,6 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
             api_user_id=user_id,
             api_role_id=role,
             api_key=api_key,
-            expires_at=expires_at,
         )
     )
     session.commit()
@@ -145,18 +143,8 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
     name = name or db_user.name
     password = get_hashed_password(password) if password else db_user.password
     role = role or db_user.api_role_id
-    expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
-    session.execute(
-        update(UserTable)
-        .values(
-            name=name,
-            password=password,
-            api_role_id=role,
-            expires_at=expires_at,
-        )
-        .where(UserTable.api_user_id == user)
-    )
+    session.execute(update(UserTable).values(name=name, password=password, api_role_id=role).where(UserTable.api_user_id == user))
     session.commit()
 
     st.toast("User updated", icon="✅")

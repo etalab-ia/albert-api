@@ -20,9 +20,11 @@ def setup(client):
     COLLECTION_ID = response.json()["id"]
 
     file_path = "app/tests/assets/json.json"
-    files = {"file": (os.path.basename(file_path), open(file_path, "rb"), "application/json")}
-    data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
-    response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+    with open(file_path, "rb") as file:
+        files = {"file": (os.path.basename(file_path), file, "application/json")}
+        data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
+        file.close()
     assert response.status_code == 201, response.text
 
     DOCUMENT_ID = response.json()["id"]
@@ -68,8 +70,8 @@ class TestDocuments:
             data = json.load(f)
             document_count = len(data)
 
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}")
-        collection = [collection for collection in response.json()["data"] if collection["id"] == COLLECTION_ID][0]
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{COLLECTION_ID}")
+        collection = response.json()
         assert collection["documents"] == document_count
 
     def test_delete_document(self, client: TestClient, setup):

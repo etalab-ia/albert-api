@@ -4,6 +4,8 @@ services:
     restart: always
     environment:
       REDIS_ARGS: --dir /data --requirepass changeme --user username on >password ~* allcommands --save 60 1 --appendonly yes
+    ports:
+      - 6379:6379
     volumes:
       - redis:/data
     healthcheck:
@@ -11,8 +13,6 @@ services:
       interval: 4s
       timeout: 10s
       retries: 5
-    ports:
-      - 6379:6379
 
   qdrant:
     image: qdrant/qdrant:v1.11.5-unprivileged
@@ -30,7 +30,7 @@ services:
     restart: always
     user: postgres
     environment:
-      - CREATE_DB=api,ui
+      - CREATE_DB=api,playground
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=changeme
       - POSTGRES_DB=postgres

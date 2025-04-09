@@ -53,20 +53,6 @@ def pytest_configure(config):
     VCR_GLOBAL_CASSETTE.__enter__()
 
 
-def pytest_addoption(parser):
-    parser.addoption("--api-key-user", action="store", default="EMPTY")
-    parser.addoption("--api-key-admin", action="store", default="EMPTY")
-
-
-@pytest.fixture(scope="session")
-def args(request):
-    args = {"api_key_user": request.config.getoption("--api-key-user"), "api_key_admin": request.config.getoption("--api-key-admin")}
-    assert args["api_key_user"] != "EMPTY", "--api-key-user argument is required."
-    assert args["api_key_admin"] != "EMPTY", "--api-key-admin argument is required."
-
-    return args
-
-
 @pytest.fixture(scope="session")
 def engine(worker_id):
     """Create database engine for tests"""
@@ -78,7 +64,7 @@ def engine(worker_id):
     if not database_exists(url=db_url):
         create_database(url=db_url)
 
-    engine = create_engine(db_url)
+    engine = create_engine(url=db_url)
 
     Base.metadata.drop_all(engine)  # Clean state
     Base.metadata.create_all(engine)

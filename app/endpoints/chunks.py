@@ -1,26 +1,33 @@
 from typing import Union
 from uuid import UUID
 
-from fastapi import APIRouter, Path, Query, Request, Security
+from fastapi import APIRouter, Depends, Path, Query, Request, Security
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import Authorization
 from app.schemas.chunks import Chunk, Chunks
 from app.utils.exceptions import ChunkNotFoundException
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__CHUNKS
+from app.sql.session import get_db as get_session
 
 router = APIRouter()
 
 
 @router.get(path=ENDPOINT__CHUNKS + "/{document:path}/{chunk:path}", dependencies=[Security(dependency=Authorization())])
-async def get_chunk(request: Request, document: int = Path(description="The document ID"), chunk: int = Path(description="The chunk ID")) -> Chunk:
+async def get_chunk(
+    request: Request,
+    document: int = Path(description="The document ID"),
+    chunk: int = Path(description="The chunk ID"),
+    session: AsyncSession = Depends(get_session),
+) -> Chunk:
     """
     Get a chunk of a document.
     """
     if not context.documents:  # no vector store available
         raise ChunkNotFoundException()
 
-    chunks = await context.documents.get_chunks(document_id=document, chunk_id=chunk, user_id=request.app.state.user.id)
+    chunks = await context.documents.get_chunks(session=session, document_id=document, chunk_id=chunk, user_id=request.app.state.user.id)
 
     return chunks[0]
 
@@ -31,6 +38,7 @@ async def get_chunks(
     document: int = Path(description="The document ID"),
     limit: int = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
+    session: AsyncSession = Depends(get_session),
 ) -> Chunks:
     """
     Get chunks of a document.
@@ -38,6 +46,12 @@ async def get_chunks(
     if not context.documents:  # no vector store available
         data = []
     else:
-        data = await context.documents.get_chunks(document_id=document, limit=limit, offset=offset, user_id=request.app.state.user.id)
+        data = await context.documents.get_chunks(
+            session=session,
+            document_id=document,
+            limit=limit,
+            offset=offset,
+            user_id=request.app.state.user.id,
+        )
 
     return Chunks(data=data)

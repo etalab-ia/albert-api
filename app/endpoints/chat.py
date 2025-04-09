@@ -1,10 +1,12 @@
 from typing import List, Tuple, Union
 
-from fastapi import APIRouter, Request, Security
+from fastapi import APIRouter, Depends, Request, Security
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import Authorization, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search
+from app.sql.session import get_db as get_session
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
@@ -13,7 +15,7 @@ router = APIRouter()
 
 
 @router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=Authorization())])
-async def chat_completions(request: Request, body: ChatCompletionRequest) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
+async def chat_completions(request: Request, body: ChatCompletionRequest, session: AsyncSession = Depends(get_session)) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
     """Creates a model response for the given chat conversation.
 
     **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional
@@ -22,13 +24,14 @@ async def chat_completions(request: Request, body: ChatCompletionRequest) -> Uni
     """
 
     # retrieval augmentation generation
-    async def retrieval_augmentation_generation(body: ChatCompletionRequest) -> Tuple[ChatCompletionRequest, List[Search]]:
+    async def retrieval_augmentation_generation(body: ChatCompletionRequest, session: AsyncSession) -> Tuple[ChatCompletionRequest, List[Search]]:
         results = []
         if body.search:
             if not context.documents:
                 raise CollectionNotFoundException()
 
             results = await context.documents.search(
+                session=session,
                 collection_ids=body.search_args.collections,
                 prompt=body.messages[-1]["content"],
                 method=body.search_args.method,
@@ -48,7 +51,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest) -> Uni
         results = [result.model_dump() for result in results]
         return body, results
 
-    body, results = await retrieval_augmentation_generation(body=body)
+    body, results = await retrieval_augmentation_generation(body=body, session=session)
 
     # select client
     model = context.models(model=body["model"])
