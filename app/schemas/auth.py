@@ -111,13 +111,13 @@ class UserUpdateRequest(BaseModel):
     # password: Optional[str] = Field(default=None, description="The new password.")
     expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp.")
 
-    # @field_validator("expires_at", mode="before")
-    # def must_be_future(cls, expires_at):
-    #     if isinstance(expires_at, int):
-    #         if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
-    #             raise ValueError("Wrong timestamp, must be in the future.")
+    @field_validator("expires_at", mode="before")
+    def must_be_future(cls, expires_at):
+        if isinstance(expires_at, int):
+            if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
+                raise ValueError("Wrong timestamp, must be in the future.")
 
-    #     return expires_at
+        return expires_at
 
     @field_validator("name", mode="after")
     def strip_name(cls, name):
