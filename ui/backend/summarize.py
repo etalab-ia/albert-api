@@ -51,14 +51,12 @@ Réponds uniquement avec le plan, pas de commentaires et en français.
 
     try:
         response = client.chat.completions.create(model=model, stream=False, temperature=0.2, messages=messages)
+        output = response.choices[0].message.content
+        return output
     except Exception:
         logger.exception("Error while generating TOC")
         st.error(body="Generation failed, please try again.")
         st.stop()
-
-    output = response.choices[0].message.content
-
-    return output
 
 
 def generate_summary(toc: str, chunks: list, model: str):
@@ -109,16 +107,13 @@ Instructions :
 
     try:
         response = client.chat.completions.create(model=model, stream=False, temperature=0.2, messages=messages)
+        progress_bar.empty()
+        output = response.choices[0].message.content
+        return output
     except Exception:
         logger.exception("Error while generating summary")
         st.error(body="Generation failed, please try again.")
         st.stop()
-
-    progress_bar.empty()
-
-    output = response.choices[0].message.content
-
-    return output
 
 
 def summary_with_feedback(feedback: str, summary: str, model: str):
