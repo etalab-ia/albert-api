@@ -1,3 +1,4 @@
+import time
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -249,6 +250,8 @@ class TestCollections:
         collection = response.json()
         assert collection["updated_at"] is not None
         updated_at = collection["updated_at"]
+
+        time.sleep(1)
 
         response = client.patch_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}", json={"description": "test-description"})
         assert response.status_code == 204, response.text
