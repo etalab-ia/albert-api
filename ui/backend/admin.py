@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 import requests
-from sqlalchemy import delete, insert, select, update, func
+from sqlalchemy import delete, insert, select, update
 import streamlit as st
 
 from ui.backend.common import check_password, get_roles, get_users
@@ -97,8 +97,6 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
             api_user_id=user_id,
             api_role_id=role,
             api_key=api_key,
-            created_at=func.now(),
-            updated_at=func.now(),
         )
     )
     session.commit()
@@ -146,16 +144,7 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
     password = get_hashed_password(password) if password else db_user.password
     role = role or db_user.api_role_id
 
-    session.execute(
-        update(UserTable)
-        .values(
-            name=name,
-            password=password,
-            api_role_id=role,
-            updated_at=func.now(),
-        )
-        .where(UserTable.api_user_id == user)
-    )
+    session.execute(update(UserTable).values(name=name, password=password, api_role_id=role).where(UserTable.api_user_id == user))
     session.commit()
 
     st.toast("User updated", icon="✅")
