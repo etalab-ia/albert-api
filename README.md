@@ -113,9 +113,9 @@ Pour déployer l'API Albert sur votre propre infrastructure, suivez la [document
 
 1. Complétez le fichier *[config.example.yml](./config.example.yml)* à la racine du dépot la configuration de vos API de modèles (voir la [documentation déploiement](./docs/deployment.md) pour plus d'informations).
 
-2. Complétez le fichier *[compose.yml](./compose.yml)* à la racine du dépot avec les variables d'environnement nécessaires pour l'UI.
+2. Complétez le fichier *[compose.yml](./compose.yml)* à la racine du dépot avec les variables d'environnement nécessaires.
 
-3. Déployez l'API avec Docker à l'aide du fichier [compose.yml](../compose.yml) à la racine du dépot.
+2. Déployez l'API avec Docker à l'aide du fichier [compose.yml](../compose.yml) à la racine du dépot.
 
   ```bash
   docker compose up --detach

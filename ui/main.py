@@ -32,6 +32,7 @@ pg = st.navigation(
         st.Page(page="frontend/documents.py", title="Documents", icon=":material/file_copy:"),
         st.Page(page="frontend/transcription.py", title="Transcription", icon=":material/graphic_eq:"),
         st.Page(page="frontend/admin.py", title="Admin", icon=":material/admin_panel_settings:"),
+        st.Page(page="frontend/summarize.py", title="Summarize", icon=":material/contract_edit:"),
     ]
 )
 pg.run()
