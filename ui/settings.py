@@ -30,6 +30,8 @@ class Config(ConfigBaseModel):
 
 class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    cache_ttl: int = 1800  # 30 minutes
+    base_url: str = "http://localhost:8080/v1"
     config_file: str = "config.yml"
 
     class Config:
