@@ -39,7 +39,7 @@ class Role(Base):
     name = Column(String, unique=True, index=True, nullable=False)
     default = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())
 
     __table_args__ = (Index("only_one_default_role", default, unique=True, postgresql_where=default),)
 
@@ -80,7 +80,7 @@ class User(Base):
     role_id = Column(Integer, ForeignKey(column="role.id"), nullable=False)
     expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())
 
 
 class Token(Base):
@@ -107,7 +107,7 @@ class Collection(Base):
     description = Column(String, nullable=True)
     visibility = Column(Enum(CollectionVisibility), nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())
 
     user = relationship(argument="User", backref=backref(name="collection", cascade="all, delete-orphan"))
 

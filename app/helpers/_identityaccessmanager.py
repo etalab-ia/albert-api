@@ -122,9 +122,7 @@ class IdentityAccessManager:
         default = default if default is not None else role.default
 
         try:
-            await session.execute(
-                statement=update(table=RoleTable).values(name=name, default=default, updated_at=func.now()).where(RoleTable.id == role.id)
-            )
+            await session.execute(statement=update(table=RoleTable).values(name=name, default=default).where(RoleTable.id == role.id))
         except IntegrityError:
             raise RoleAlreadyExistsException()
         except NoResultFound:
@@ -295,9 +293,7 @@ class IdentityAccessManager:
 
         role_id = role_id if role_id is not None else user.role_id
         await session.execute(
-            statement=update(table=UserTable)
-            .values(name=name, role_id=role_id, expires_at=expires_at, updated_at=func.now())
-            .where(UserTable.id == user.id)
+            statement=update(table=UserTable).values(name=name, role_id=role_id, expires_at=expires_at).where(UserTable.id == user.id)
         )
         await session.commit()
 
@@ -423,7 +419,7 @@ class IdentityAccessManager:
             return user_id, token_id
 
         try:
-            tokens = await self.get_tokens(session, user_id=claims["user_id"], token_id=claims["token_id"], exclude_expired=True)
+            await self.get_tokens(session, user_id=claims["user_id"], token_id=claims["token_id"], exclude_expired=True)
         except TokenNotFoundException:
             return None, None
 

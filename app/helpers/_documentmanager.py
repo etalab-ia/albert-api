@@ -130,7 +130,7 @@ class DocumentManager:
 
         await session.execute(
             statement=update(table=CollectionTable)
-            .values(name=name, visibility=visibility, description=description, updated_at=func.now())
+            .values(name=name, visibility=visibility, description=description)
             .where(CollectionTable.id == collection.id)
         )
         await session.commit()
@@ -326,7 +326,7 @@ class DocumentManager:
         if not self.web_search and web_search:
             raise WebSearchNotAvailableException()
 
-        web_results = []
+        web_collection_id = None
         qdrant_client = self.qdrant_model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         if web_search:
             client = self.web_search_model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
@@ -361,7 +361,7 @@ class DocumentManager:
             score_threshold=score_threshold,
         )
 
-        if web_results:
+        if web_collection_id:
             await self.delete_collection(session=session, user_id=user_id, collection_id=web_collection_id)
 
         if score_threshold:
@@ -436,10 +436,11 @@ class DocumentManager:
         response = await self._create_embeddings(input=[prompt], model_client=model_client)
 
         chunks = []
+        # check if collections exist
         for collection_id in collection_ids:
             result = await session.execute(statement=select(CollectionTable).where(CollectionTable.id == collection_id))
             try:
-                collection = result.scalar_one()
+                result.scalar_one()
             except NoResultFound:
                 raise CollectionNotFoundException()
 

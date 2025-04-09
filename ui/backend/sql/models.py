@@ -15,4 +15,4 @@ class User(Base):
     api_user_id = Column(Integer, unique=True, nullable=False)
     api_key = Column(String, unique=True, nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())
