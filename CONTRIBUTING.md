@@ -13,7 +13,7 @@ Pour contribuer au projet, merci de suivre les instructions suivantes.
 2. Lancer le docker compose de développement avec le mode watch :
 
     ```bash
-    docker compose --file compose.yml up --watch
+    docker compose --file compose.dev.yml up --watch
     ```
 
 L'API et l'UI seront disponibles respectivement sur les ports 8000 et 8501.
@@ -25,7 +25,7 @@ L'API et l'UI seront disponibles respectivement sur les ports 8000 et 8501.
 Vous pouvez lancer les services de base de données nécéssaires avec docker compose :
 
 ```bash
-docker compose up --detach postgres qdrant redis
+docker compose up --detach
 ```
 
 ## API (FastAPI)

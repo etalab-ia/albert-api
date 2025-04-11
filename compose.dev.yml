@@ -1,9 +1,13 @@
+name: albert-api
 services:
   api:
     build:
       context: .
       dockerfile: app/Dockerfile
+    platform: linux/amd64
     restart: always
+    environment:
+      - COVERAGE_RCFILE=./app/.coveragerc
     ports:
       - 8000:8000
     volumes:
@@ -23,6 +27,7 @@ services:
     build:
       context: .
       dockerfile: ui/Dockerfile
+    platform: linux/amd64
     restart: always
     ports:
       - 8501:8501
@@ -38,17 +43,22 @@ services:
         condition: service_healthy
 
 
-  postgres-ci:
+  postgres:
     extends:
       file: compose.yml
       service: postgres
 
-  redis-ci:
+  redis:
     extends:
       file: compose.yml
       service: redis
 
-  qdrant-ci:
+  qdrant:
     extends:
       file: compose.yml
       service: qdrant
+
+volumes:
+  postgres:
+  redis:
+  qdrant:

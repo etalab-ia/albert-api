@@ -2,7 +2,6 @@ from datetime import datetime
 import json
 import traceback
 from typing import Callable, Optional, AsyncGenerator
-import os
 
 from fastapi import Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -64,9 +63,6 @@ class UsagesMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         # Skip if middleware is disabled via environment variable
-        if os.environ.get("MIDDLEWARE", "true").lower() == "false":
-            return await call_next(request)
-
         endpoint = request.url.path
         if not any(endpoint.endswith(model_endpoint) for model_endpoint in self.MODELS_ENDPOINTS):
             return await call_next(request)

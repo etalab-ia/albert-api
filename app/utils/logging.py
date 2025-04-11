@@ -17,7 +17,7 @@ class ClientIPFilter(Filter):
 
 def setup_logger() -> Logger:
     logger = getLogger(name="app")
-    logger.setLevel(level=settings.log_level)
+    logger.setLevel(level=settings.general.log_level)
     handler = StreamHandler(stream=sys.stdout)
     formatter = Formatter("[%(asctime)s][%(process)d:%(threadName)s][%(levelname)s] %(client_ip)s - %(message)s")
     handler.setFormatter(formatter)

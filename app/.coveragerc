@@ -1,0 +1,5 @@
+[run]
+data_file = ./app/.coverage
+
+[xml]
+output = ./app/coverage.xml
