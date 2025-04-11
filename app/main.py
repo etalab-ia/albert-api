@@ -40,7 +40,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
 
     # Middlewares
     if not settings.general.disabled_middleware:
-        app.add_middleware(middleware_class=UsagesMiddleware, db_func=db_func)
+        app.add_middleware(middleware_class=UsagesMiddleware, db_func=get_db)
         app.instrumentator = Instrumentator().instrument(app=app)
 
     # Routers

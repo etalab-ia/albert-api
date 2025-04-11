@@ -112,7 +112,7 @@ class General(ConfigBaseModel):
     app_contact_email: Optional[str] = None
     app_version: str = "0.0.0"
     app_description: str = "[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"
-    disabled_routers: List[Literal[*ROUTERS]] = Field(default_factory=list)
+    disabled_routers: List[Literal[*ROUTERS]] = []
     disabled_middleware: bool = False
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
@@ -170,7 +170,7 @@ class Settings(BaseSettings):
 
         values.general = config.general
         values.auth = config.auth
-        values.web_search = config.web_search[0]
+        values.web_search = config.web_search[0] if config.web_search else None
         values.models = config.models
 
         values.databases = SimpleNamespace()

@@ -1,3 +1,4 @@
+name: albert-api
 services:
   api:
     build:
@@ -5,6 +6,8 @@ services:
       dockerfile: app/Dockerfile
     platform: linux/amd64
     restart: always
+    environment:
+      - COVERAGE_RCFILE=./app/.coveragerc
     ports:
       - 8000:8000
     volumes:

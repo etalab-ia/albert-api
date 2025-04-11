@@ -10,30 +10,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    #secrets: inherit
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Docker Compose
-      run: |
-        docker compose up --detach
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-
-    - name: Install dependencies
-      run: |
-        sudo apt update -y
-        sudo apt install -y poppler-utils
-        python -m pip install --upgrade pip
-        pip install ".[app,test]"
-
     - name: Create config from template
       run: |
         echo "${{ secrets.CONFIG_YML }}" > config.yml
+  
+    - name: Set up Docker Compose
+      run: |
+        docker compose --file compose.dev.yml up --detach
+        sleep 30
+        echo $(docker logs albert-api-api-1)
 
     - name: Wait for PostgreSQL
       run: |
@@ -43,19 +32,13 @@ jobs:
 
     - name: Run tests
       run: |
-        export BRAVE_API_KEY="${{ secrets.BRAVE_API_KEY }}"
-        export ALBERT_API_KEY="${{ secrets.ALBERT_API_KEY }}"
-        python -m pytest app/tests --cov=./app --cov-report=xml
-      env: 
-        CONFIG_FILE: config.yml
-        # BRAVE_API_KEY: "${{ secrets.BRAVE_API_KEY }}"
-        # ALBERT_API_KEY: "${{ secrets.ALBERT_API_KEY }}"
+        docker exec albert-api-api-1 pytest app/tests --cov=./app --cov-report=xml
 
     - name: Create coverage badge
       run: |
         mkdir -p .github/badges
         # Extract coverage percentage from coverage.xml
-        COVERAGE=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('coverage.xml').getroot().get('line-rate'))")
+        COVERAGE=$(docker exec albert-api-api-1 python -c "import xml.etree.ElementTree as ET; print(ET.parse('app/coverage.xml').getroot().get('line-rate'))")
         COVERAGE_PCT=$(printf "%.2f" $(echo "${COVERAGE} * 100" | bc))
         echo "{\"schemaVersion\":1,\"label\":\"Coverage\",\"message\":\"${COVERAGE_PCT}%\",\"color\":\"$(if (( $(echo "${COVERAGE_PCT} >= 80" | bc -l) )); then echo "green"; elif (( $(echo "${COVERAGE_PCT} >= 70" | bc -l) )); then echo "yellow"; else echo "red"; fi)\"}" > .github/badges/coverage.json
 
