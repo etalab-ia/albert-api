@@ -1,18 +1,18 @@
-name: Build and deploy when pushing on staging or main
+name: Build and deploy when pushing on main
 
 on:
   push:
     branches:
       - main
+  workflow_run:
+    workflows: [Integration tests]
+    types: [completed]
 
 jobs:
-  test:
-    uses: ./.github/workflows/test.yml # Use the reusable test workflow
-
   build-and-push:
     name: Build and push from ${{ github.ref_name }}/${{ github.sha }}
     runs-on: ubuntu-latest
-    needs: test # Wait for the test job to complete
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     env:
       APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app
       UI_IMAGE_NAME: ghcr.io/${{ github.repository }}/ui
@@ -57,6 +57,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy-dev:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Deploy from ${{ github.ref_name }}/${{ github.sha }}
     runs-on: ubuntu-latest
     needs: build-and-push
