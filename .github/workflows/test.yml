@@ -21,6 +21,9 @@ jobs:
     - name: Set up Docker Compose
       run: |
         docker compose --file compose.dev.yml up --detach
+    
+    - name: Wait for API to start
+      run: |
         sleep 30
         echo $(docker logs albert-api-api-1)
 
