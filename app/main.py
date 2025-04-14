@@ -95,7 +95,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
     if ROUTER__SEARCH not in settings.general.disabled_routers:
         app.include_router(router=search.router, tags=[ROUTER__SEARCH.title()], prefix="/v1")
 
-    if ROUTER__MULTIAGENTS not in settings.disabled_routers:
+    if ROUTER__MULTIAGENTS not in settings.general.disabled_routers:
         app.include_router(router=multiagents.router, tags=[ROUTER__MULTIAGENTS.title()], prefix="/v1")
 
     return app
