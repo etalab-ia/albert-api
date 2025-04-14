@@ -1,6 +1,7 @@
 from functools import lru_cache
 import os
-from typing import Any, Literal, Optional
+import re
+from typing import Any, Optional
 
 from pydantic import BaseModel, field_validator, model_validator
 from pydantic_settings import BaseSettings
@@ -30,7 +31,6 @@ class Config(ConfigBaseModel):
 
 
 class Settings(BaseSettings):
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     config_file: str = "config.yml"
 
     class Config:
@@ -43,9 +43,17 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def setup_config(cls, values) -> Any:
-        stream = open(file=values.config_file, mode="r")
-        config = Config(**yaml.safe_load(stream=stream))
-        stream.close()
+        with open(file=values.config_file, mode="r") as f:
+            file_content = f.read()
+            f.close()
+
+        # replace environment variables (pattern: ${VARIABLE_NAME})
+        for match in set(re.findall(pattern=r"\${[A-Z_]+}", string=file_content)):
+            variable = match.replace("${", "").replace("}", "")
+            assert os.getenv(variable), f"Environment variable {variable} not found or empty to replace {match}."
+            file_content = file_content.replace(match, os.environ[variable])
+
+        config = Config(**yaml.safe_load(file_content))
 
         values.auth = config.auth
         values.playground = config.playground
