@@ -50,7 +50,7 @@ docker compose up --detach
 4. Lancez l'API en local
 
     ```bash
-    uvicorn app.main:app --port 8080 --log-level debug --reload
+    uvicorn app.main:app --port 8000 --log-level debug --reload
     ```
 
 ## UI (Streamlit)

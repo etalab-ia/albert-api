@@ -42,11 +42,20 @@ The configuration file has the following sections:
 
 | Argument | Required | Description | Type | Values | Default |
 | --- | --- | --- | --- | --- | --- |
-| app_name | Required | Application name. | str | | `"Albert API"` |
-| app_version | Required | Application version. | str | | `"0.0.0"` |
-| app_description | Required | Application description. | str | | `"[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"` |
-| app_contact_url | Required | Application contact URL. | str | | `None` |
-| app_contact_email | Required | Application contact email. | str | | `None` |
+| title | Optional | API title. | str | | `"Albert API"` |
+| version | Optional | API version. | str | | `"latest"` |
+| summary | Optional | API summary. | str | | `"Albert API connect to your models."` |
+| description | Optional | API description. | str | | `"[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"` |
+| terms_of_service | Optional | API terms of service. | str | | `None` |
+| licence_name | Optional | API licence name. | str | | `"MIT License"` |
+| licence_identifier | Optional | API licence identifier. | str | | `"MIT"` |
+| licence_url | Optional | API licence URL. | str | | `"https://raw.githubusercontent.com/etalab-ia/albert-api/refs/heads/main/LICENSE"` |
+| contact_name | Optional | API contact name. | str | | `None` |
+| contact_url | Optional | API contact URL. | str | | `None` |
+| contact_email | Optional | API contact email. | str | | `None` |
+| docs_url | Optional | API swagger URL. | str | | `"/docs"` |
+| redoc_url | Optional | API redoc URL. | str | | `"/redoc"` |
+| openapi_url | Optional | API openapi URL. | str | | `"/openapi.json"` |
 | log_level | Required | Logging level. | str | `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`, `"CRITICAL"` | `"INFO"` |
 | disabled_routers | Required | List of disabled API routers. | List[str] | `["audio", "auth", "chat", "chunks", "collections", "documents", "embeddings", "files", "models", "monitoring", "ocr", "rerank", "search"]` | `[]` |
 | disabled_middleware | Required | Enable or disable middlewares. | bool |  | `False` |
@@ -232,7 +241,8 @@ The `playground` section allows you to configure the playground.
 
 | Argument | Required | Description | Type | Values | Default |
 | --- | --- | --- | --- | --- | --- |
-| api_url | Required | Playground API URL. | str | |
+| api_url | Required | Playground API URL. | str | "http://localhost:8000" |
+| home_url | Required | Playground home URL to redirect to when user click on the logo. | str | "http://localhost:8501" |
 | max_api_key_expiration_days | Required | Maximum days a user can keep an API key. | int | | `365` |
 | cache_ttl | Required | Cache TTL (in seconds). | int | | `1800` |
 | database_url | Required | Database URL. | str | | |
