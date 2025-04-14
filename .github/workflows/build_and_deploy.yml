@@ -4,15 +4,11 @@ on:
   push:
     branches:
       - main
-  workflow_run:
-    workflows: [Integration tests]
-    types: [completed]
 
 jobs:
   build-and-push:
     name: Build and push from ${{ github.ref_name }}/${{ github.sha }}
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     env:
       APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app
       UI_IMAGE_NAME: ghcr.io/${{ github.repository }}/ui
@@ -57,7 +53,6 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy-dev:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Deploy from ${{ github.ref_name }}/${{ github.sha }}
     runs-on: ubuntu-latest
     needs: build-and-push
