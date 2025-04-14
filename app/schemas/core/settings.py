@@ -168,15 +168,16 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def setup_config(cls, values) -> Any:
-        with open(file=values.config_file, mode="r") as f:
-            file_content = f.read()
-            f.close()
+        with open(file=values.config_file, mode="r") as file:
+            file_content = file.read()
+            file.close()
 
         # replace environment variables (pattern: ${VARIABLE_NAME})
         for match in set(re.findall(pattern=r"\${[A-Z_]+}", string=file_content)):
             variable = match.replace("${", "").replace("}", "")
-            assert os.getenv(variable), f"Environment variable {variable} not found or empty to replace {match}."
-            file_content = file_content.replace(match, os.environ[variable])
+            if not os.getenv(variable):
+                logging.warning(f"Environment variable {variable} not found or empty to replace {match}.")
+            file_content = file_content.replace(match, os.getenv(variable, match))
 
         config = Config(**yaml.safe_load(file_content))
 
