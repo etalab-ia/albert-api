@@ -1,5 +1,6 @@
 from openai import OpenAI
 import requests
+import traceback
 import streamlit as st
 
 from ui.settings import settings
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def get_chunks(collection_id: str, document_id: str) -> list:
     response = requests.get(
-        f"{settings.playground.api_url}/v1/chunks/{document_id}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+        f"{settings.playground.api_url}/v1/chunks/{document_id}", headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"}
     )
     assert response.status_code == 200, f"{response.status_code} - {response.json()}"
     chunks = response.json()["data"]
@@ -53,9 +54,9 @@ Réponds uniquement avec le plan, pas de commentaires et en français.
         response = client.chat.completions.create(model=model, stream=False, temperature=0.2, messages=messages)
         output = response.choices[0].message.content
         return output
-    except Exception:
-        logger.exception("Error while generating TOC")
-        st.error(body="Generation failed, please try again.")
+    except Exception as e:
+        logger.debug(traceback.format_exc())
+        st.error(body=f"Generation failed ({e}), please try again")
         st.stop()
 
 
@@ -110,9 +111,9 @@ Instructions :
         progress_bar.empty()
         output = response.choices[0].message.content
         return output
-    except Exception:
-        logger.exception("Error while generating summary")
-        st.error(body="Generation failed, please try again.")
+    except Exception as e:
+        logger.debug(traceback.format_exc())
+        st.error(body=f"Generation failed ({e}), please try again")
         st.stop()
 
 
@@ -142,9 +143,9 @@ Instructions :
     messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
     try:
         response = client.chat.completions.create(model=model, stream=False, temperature=0.2, messages=messages)
-    except Exception:
-        logger.exception("Error while generating summary with feedback")
-        st.error(body="Generation failed, please try again.")
+    except Exception as e:
+        logger.debug(traceback.format_exc())
+        st.error(body=f"Generation failed ({e}), please try again")
         st.stop()
 
     output = response.choices[0].message.content
