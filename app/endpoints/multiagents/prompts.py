@@ -1,13 +1,17 @@
-import re
-
-from app.helpers._modelclients import ModelClients
-
-
-class RerankClient:
-    PROMPT_LLM_BASED = """Voila un texte : {doc}\n 
-        En se basant uniquement sur ce texte, réponds 1 si ce texte peut donner des éléments de réponse à la question suivante ou 0 si aucun élément de réponse n'est présent dans le texte. Voila la question: {prompt}
-        Le texte n'a pas besoin de répondre parfaitement à la question, juste d'apporter des éléments de réponses et/ou de parler du même thème. Réponds uniquement 0 ou 1."""
-    PROMPT_CHOICER = """
+PROMPT_CONCAT = """
+    Tu es un expert pour rédiger les bonnes réponses et expliquer les choses. 
+    Voila plusieurs réponses générées par des agents : {answers}
+    En te basant sur ces réponses, ne gardes que ce qui est utile pour répondre à la question : {prompt}
+    Cites les sources utilisées s'il y en a, mais ne parle jamais des "réponses des agents".
+    Réponds avec une réponse à cette question de la meilleure qualité possible.
+    Si des éléments de réponses sont contradictoire, donnes les quand même à l'utilisateur en expliquant les informations que tu as.
+    Réponds juste à la question, ne dis rien d'autre. Tu dois faire un mélange de ces informations pour ne sortir que l'utile de la meilleure manière possible. Termines ta réponse avec un emoji.
+    Réponse : 
+    """
+PROMPT_LLM_BASED = """Voila un texte : {doc}\n 
+    En se basant uniquement sur ce texte, réponds 1 si ce texte peut donner des éléments de réponse à la question suivante ou 0 si aucun élément de réponse n'est présent dans le texte. Voila la question: {prompt}
+    Le texte n'a pas besoin de répondre parfaitement à la question, juste d'apporter des éléments de réponses et/ou de parler du même thème. Réponds uniquement 0 ou 1."""
+PROMPT_CHOICER = """
 Tu es un expert en compréhension et en évaluation des besoins en information pour répondre à un message utilisateur. Ton travail est de juger la possibilité de répondre à un message utilisateur en fonction d'un contexte donné.
 Nous sommes en 2024 et ton savoir s'arrete en 2023.
 
@@ -59,57 +63,24 @@ context : {docs}
 question : {prompt}
 reponse :
     """
-
-    def __init__(
-        self,
-        model_clients: ModelClients,
-    ):
-        self.model_clients = model_clients
-
-    def get_rank(self, prompt: str, inputs: list, model: str, rerank_type: str) -> str:
-        if rerank_type == "classic_rerank":
-            # TODO: Add classic reranker
-            return []
-
-        elif rerank_type == "llm_rerank":
-            prompts = []
-            for doc in inputs:
-                prompt_ = self.PROMPT_LLM_BASED.format(prompt=prompt, doc=doc)
-                prompts.append(prompt_)
-
-            results = []
-            for prompt in prompts:
-                response = self.model_clients[model].chat.completions.create(
-                    messages=[{"role": "user", "content": prompt}],
-                    model=self.model_clients[model],
-                    temperature=0.1,
-                    max_tokens=3,
-                    stream=False,
-                )
-                result = response.choices[0].message.content
-
-                match = re.search(r"[0-1]", result)
-                result = int(match.group(0)) if match else 0
-                results.append(result)
-            return results
-        # TODO: choicer
-        elif rerank_type == "choicer":
-            prompt = self.PROMPT_CHOICER.format(prompt=prompt, docs=inputs)
-
-            print("###################")
-            print(prompt)
-            print("###################")
-
-            response = self.model_clients[model].chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model=model,  # self.model_clients[model],
-                temperature=0.1,
-                max_tokens=3,
-                stream=False,
-            )
-            result = response.choices[0].message.content
-            print("YEEEE", result)
-
-            match = re.search(r"[0-4]", result)
-            result = int(match.group(0)) if match else 0
-            return result
+PROMPT_TELLER_1_4 = """
+Tu es un assistant administratif qui réponds a des questions sur le droit et l'administratif en Français. Tes réponses doit être succinctes et claires. Ne détailles pas inutilement.
+Voilà un contexte : \n{doc}\n
+Voilà une question : {question}
+En ne te basant uniquement sur le contexte donné, réponds à la question avec une réponse de la meilleure qualité possible. 
+- Si le contexte ne te permets pas de répondre à la question, réponds juste "Rien ici", ne dis jamais "le texte ne mentionne pas".
+- Si le contexte donne des éléments de réponse, réponds uniquement a la question et n'inventes rien, donnes même juste quelques éléments de réponse si tu n'arrives pas à répondre totalement avec le contexte. Donnes le nom du texte du contexte dans ta réponse.
+- Si la question n'est pas explicite et renvoie à la conversation en cours, et que tu trouve que le contexte est en lien avec la conversation, réponds juste "Ces informations sont interessantes pour la conversation".
+question : {question}
+réponse ("Rien ici" ou ta réponse): 
+            """
+PROMPT_TELLER_2 = """
+Tu es un assistant administratif qui réponds a des questions sur le droit et l'administratif en Français. Nous sommes en 2024. Tes réponses doit être succinctes et claires. Ne détailles pas inutilement.
+Voilà une demande utilisateur : {question}
+Réponds à cette question comme tu peux. 
+Règles à respecter :
+N'inventes pas de référence.
+Si tu as besoin de plus d'information ou que la question n'est pas claire, dis le a l'utilisateur.
+La réponse doit être la plus courte possible.  Mets en forme ta réponse avec des sauts de lignes. Réponds en Français et part du principe que l'interlocuteur est Français et que ses questions concerne la France.
+Réponse : 
+        """
