@@ -44,7 +44,6 @@ services:
       postgres:
         condition: service_healthy
 
-
   postgres:
     extends:
       file: compose.yml
