@@ -3,11 +3,10 @@ import time
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
-from ui.backend.common import get_collections, get_documents
+from ui.backend.common import get_collections, get_documents, get_models
 from ui.backend.summarize import generate_summary, generate_toc, get_chunks, summary_with_feedback
 from ui.frontend.header import header
-from ui.variables import COLLECTION_TYPE_PRIVATE, MODEL_TYPE_LANGUAGE
-from ui.frontend.utils import setup_selected_model
+from ui.variables import COLLECTION_VISIBILITY_PRIVATE, MODEL_TYPE_LANGUAGE
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,8 +14,9 @@ header()
 
 # Data
 try:
+    models = get_models(type=MODEL_TYPE_LANGUAGE)
     collections = get_collections()
-    collections = [collection for collection in collections if "type" in collection and collection["type"] == COLLECTION_TYPE_PRIVATE]
+    collections = [collection for collection in collections if "visibility" in collection and collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE]  # fmt: off
     documents = get_documents(collection_ids=[collection["id"] for collection in collections])
 except Exception as e:
     logger.exception("Error while loading collections and documents")
@@ -34,7 +34,8 @@ with st.sidebar:
         st.session_state.pop("summary", None)
         st.rerun()
 
-    st.session_state["selected_model"] = setup_selected_model(model_type=MODEL_TYPE_LANGUAGE)
+    st.subheader(body="Summarize parameters")
+    selected_model = st.selectbox(label="Language model", options=models)
 
 # Main
 ## Document
@@ -43,7 +44,7 @@ st.session_state.document_id = None if "document_id" not in st.session_state els
 
 st.subheader(body=":material/counter_1: Select a document")
 st.info(body="Please select a document to generate a summary.")
-document = st.selectbox(label="Document", options=[f"{document["id"]} - {document["name"]}" for document in documents])
+document = st.selectbox(label="Document", options=[f"{document['id']} - {document['name']}" for document in documents])
 if not document:
     st.warning(body="First upload a document via the Documents page.")
     st.stop()
@@ -99,7 +100,7 @@ with stylable_container(
     with col1:
         if st.button(label="✨ Generate", key="generate_toc", use_container_width=True):
             with st.spinner(text="✨ Generate..."):
-                st.session_state.toc = generate_toc(chunks=chunks, model=st.session_state["selected_model"])
+                st.session_state.toc = generate_toc(chunks=chunks, model=selected_model)
                 st.toast(body="Table of content generated !", icon="✅")
                 time.sleep(2)
                 st.rerun()
@@ -138,7 +139,7 @@ with stylable_container(
     """,
 ):
     if st.button(label="✨ Generate", key="generate_summary"):
-        st.session_state.summary = generate_summary(toc=st.session_state.toc, chunks=chunks, model=st.session_state["selected_model"])
+        st.session_state.summary = generate_summary(toc=st.session_state.toc, chunks=chunks, model=selected_model)
         st.toast(body="Summary generated !", icon="✅")
         time.sleep(2)
         st.rerun()
@@ -156,9 +157,7 @@ with stylable_container(
     if st.button(label="Give feedback", key="give_feedback"):
         if st.session_state.summary:
             with st.spinner(text="✨ Generate..."):
-                st.session_state.summary = summary_with_feedback(
-                    feedback=feedback, summary=st.session_state.summary, model=st.session_state["selected_model"]
-                )
+                st.session_state.summary = summary_with_feedback(feedback=feedback, summary=st.session_state.summary, model=selected_model)
                 st.toast(body="Summary generated with feedback !", icon="✅")
                 time.sleep(2)
                 st.rerun()

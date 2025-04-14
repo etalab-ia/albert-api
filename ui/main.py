@@ -30,9 +30,9 @@ pg = st.navigation(
         st.Page(page="frontend/account.py", title="My account", icon=":material/account_circle:"),
         st.Page(page="frontend/chat.py", title="Chat", icon=":material/chat:"),
         st.Page(page="frontend/documents.py", title="Documents", icon=":material/file_copy:"),
+        st.Page(page="frontend/summarize.py", title="Summarize", icon=":material/contract_edit:"),
         st.Page(page="frontend/transcription.py", title="Transcription", icon=":material/graphic_eq:"),
         st.Page(page="frontend/admin.py", title="Admin", icon=":material/admin_panel_settings:"),
-        st.Page(page="frontend/summarize.py", title="Summarize", icon=":material/contract_edit:"),
     ]
 )
 pg.run()

@@ -6,7 +6,6 @@ from ui.backend.chat import generate_stream
 from ui.backend.common import get_collections, get_limits, get_models
 from ui.frontend.header import header
 from ui.variables import MODEL_TYPE_LANGUAGE
-from ui.frontend.utils import setup_selected_model
 
 header()
 
@@ -35,9 +34,7 @@ with st.sidebar:
     params = {"sampling_params": dict(), "rag": dict()}
 
     st.subheader(body="Chat parameters")
-    st.session_state["selected_model"] = setup_selected_model(model_type=MODEL_TYPE_LANGUAGE)
-
-    params["sampling_params"]["model"] = st.session_state["selected_model"]
+    params["sampling_params"]["model"] = st.selectbox(label="Language model", options=models)
     params["sampling_params"]["temperature"] = st.slider(label="Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
 
     max_tokens_active = st.toggle(label="Max tokens", value=None)
