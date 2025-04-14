@@ -17,7 +17,7 @@ class Auth(ConfigBaseModel):
 
 
 class Playground(ConfigBaseModel):
-    api_url: str = "http://localhost:8080"
+    api_url: str = "http://localhost:8000"
     home_url: str = "http://localhost:8501"
     max_api_key_expiration_days: Optional[int] = None
     cache_ttl: int = 1800  # 30 minutes

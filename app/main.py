@@ -28,14 +28,16 @@ from app.utils.variables import (
 def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
     """Create FastAPI application."""
     app = FastAPI(
-        title=settings.general.app_name,
-        version=settings.general.app_version,
-        description=settings.general.app_description,
-        contact={"url": settings.general.app_contact_url, "email": settings.general.app_contact_email},
-        licence_info={"name": "MIT License", "identifier": "MIT"},
+        title=settings.general.title,
+        summary=settings.general.summary,
+        version=settings.general.version,
+        description=settings.general.description,
+        terms_of_service=settings.general.terms_of_service,
+        contact={"name": settings.general.contact_name, "url": settings.general.contact_url, "email": settings.general.contact_email},
+        licence_info={"name": settings.general.licence_name, "identifier": settings.general.licence_identifier, "url": settings.general.licence_url},
         lifespan=lifespan,
-        docs_url="/swagger",
-        redoc_url="/documentation",
+        docs_url=settings.general.docs_url,
+        redoc_url=settings.general.redoc_url,
     )
 
     # Middlewares

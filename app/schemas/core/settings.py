@@ -107,11 +107,23 @@ class Auth(ConfigBaseModel):
 
 
 class General(ConfigBaseModel):
-    app_name: str = DEFAULT_APP_NAME
-    app_contact_url: Optional[str] = None
-    app_contact_email: Optional[str] = None
-    app_version: str = "0.0.0"
-    app_description: str = "[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"
+    # FastAPI
+    title: str = DEFAULT_APP_NAME
+    summary: str = "Albert API connect to your models."
+    contact_name: Optional[str] = None
+    contact_url: Optional[str] = None
+    contact_email: Optional[str] = None
+    version: str = "latest"
+    description: str = "[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"
+    terms_of_service: Optional[str] = None
+    licence_name: str = "MIT License"
+    licence_identifier: str = "MIT"
+    licence_url: Optional[str] = "https://raw.githubusercontent.com/etalab-ia/albert-api/refs/heads/main/LICENSE"
+    openapi_url: str = "/openapi.json"
+    docs_url: str = "/docs"
+    redoc_url: str = "/redoc"
+
+    # Others
     disabled_routers: List[Literal[*ROUTERS]] = []
     disabled_middleware: bool = False
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
