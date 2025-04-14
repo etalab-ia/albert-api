@@ -16,6 +16,7 @@ ENDPOINT__ROLES = "/roles"
 ENDPOINT__SEARCH = "/search"
 ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
+ENDPOINT__MULTIAGENTS = "/multiagents"
 
 ENDPOINTS = [value for name, value in locals().items() if name.startswith("ENDPOINT__")]
 
@@ -33,6 +34,7 @@ ROUTER__MONITORING = "monitoring"
 ROUTER__OCR = "ocr"
 ROUTER__RERANK = "rerank"
 ROUTER__SEARCH = "search"
+ROUTER__MULTIAGENTS = "multiagents"
 
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
 
