@@ -1,5 +1,23 @@
 # Deployment
 
+### Run services
+
+1. Create a configuration file (see the following [configuration section](./deployment.md#configuration)) `config.yml` on the root of the project.
+
+2. Deploy the services with the following command:
+
+  ```bash
+  docker compose --file compose.prod.yml up --detach
+  ```
+
+### First authentication
+
+Connect to the playground UI (http://localhost:8501) with the master username as login (`master`) and the master key (`changeme`) as password (see the following [auth section](#auth) to change the default values).
+
+  ![Security](assets/deployment_001.png)
+
+  Go to the *admin* page and create a role with admin appropriate permissions and a user with that role.
+
 ### Environment Variables
 
 | Variable | Required | Type | Default | Description |
@@ -241,8 +259,9 @@ The `playground` section allows you to configure the playground.
 
 | Argument | Required | Description | Type | Values | Default |
 | --- | --- | --- | --- | --- | --- |
-| api_url | Required | Playground API URL. | str | "http://localhost:8000" |
-| home_url | Required | Playground home URL to redirect to when user click on the logo. | str | "http://localhost:8501" |
+| api_url | Required | Playground API URL. | str | `"http://localhost:8000"` |
+| home_url | Required | Playground home URL to redirect to when user click on the logo. | str | `"http://localhost:8501"` |
+| logo | Required | Playground logo URL. | str | | `"https://em-content.zobj.net/source/apple/155/raccoon_1f99d.png"` |
 | max_api_key_expiration_days | Required | Maximum days a user can keep an API key. | int | | `365` |
 | cache_ttl | Required | Cache TTL (in seconds). | int | | `1800` |
 | database_url | Required | Database URL. | str | | |

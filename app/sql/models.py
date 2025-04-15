@@ -95,8 +95,6 @@ class Token(Base):
 
     user = relationship(argument="User", backref=backref(name="token", cascade="all, delete-orphan"))
 
-    __table_args__ = (UniqueConstraint("user_id", "name", name="unique_token_name_per_user"),)
-
 
 class Collection(Base):
     __tablename__ = "collection"
@@ -110,8 +108,6 @@ class Collection(Base):
     updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())
 
     user = relationship(argument="User", backref=backref(name="collection", cascade="all, delete-orphan"))
-
-    __table_args__ = (UniqueConstraint("user_id", "name", name="unique_collection_name_per_user"),)
 
 
 class Document(Base):

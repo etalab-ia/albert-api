@@ -57,6 +57,9 @@ class Authorization:
         if request.url.path.startswith(f"/v1{ENDPOINT__CHAT_COMPLETIONS}") and request.method == "POST":
             await self._check_chat_completions_post(user=user, role=role, limits=limits, request=request)
 
+        if request.url.path.startswith(f"/v1{ENDPOINT__COLLECTIONS}") and request.method == "PATCH":
+            await self._check_collections_patch(user=user, role=role, limits=limits, request=request)
+
         if request.url.path.startswith(f"/v1{ENDPOINT__COLLECTIONS}") and request.method == "POST":
             await self._check_collections_post(user=user, role=role, limits=limits, request=request)
 
@@ -179,6 +182,13 @@ class Authorization:
 
         if body.get("search", False):
             await self._check_limits(user=user, limits=limits, model=body.get("search_args", {}).get("model", None))
+
+    async def _check_collections_patch(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
+        body = await request.body()
+        body = json.loads(body)
+
+        if body.get("visibility") == CollectionVisibility.PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in role.permissions:
+            raise InsufficientPermissionException("Missing permission to update collection visibility to public.")
 
     async def _check_collections_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()

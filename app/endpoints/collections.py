@@ -1,16 +1,15 @@
 from typing import Union
 
-from fastapi import APIRouter, Depends, Path, Query, Request, Response, Security
+from fastapi import APIRouter, Body, Depends, Path, Query, Request, Response, Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import Authorization
-from app.schemas.collections import Collection, CollectionRequest, CollectionUpdateRequest, Collections
+from app.schemas.collections import Collection, CollectionRequest, Collections, CollectionUpdateRequest
 from app.sql.session import get_db as get_session
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__COLLECTIONS
-
 
 router = APIRouter()
 
@@ -101,7 +100,7 @@ async def delete_collections(
 async def update_collection(
     request: Request,
     collection: int = Path(..., description="The collection ID"),
-    body: CollectionUpdateRequest = None,
+    body: CollectionUpdateRequest = Body(..., description="The collection to update."),
     session: AsyncSession = Depends(get_session),
 ) -> Response:
     """
@@ -114,9 +113,9 @@ async def update_collection(
         session=session,
         user_id=request.app.state.user.id,
         collection_id=collection,
-        name=body.name if body else None,
-        visibility=body.visibility if body else None,
-        description=body.description if body else None,
+        name=body.name,
+        visibility=body.visibility,
+        description=body.description,
     )
 
     return Response(status_code=204)
