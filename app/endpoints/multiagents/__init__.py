@@ -137,7 +137,7 @@ async def multiagents(
         user_id=request.app.state.user.id,
     )
     initial_docs = [doc.chunk.content for doc in searches]
-    initial_refs = [doc.chunk.metadata.document_name for doc in searches]
+    initial_refs = [doc.chunk.metadata.get("document_name") for doc in searches]
 
     async def go_multiagents(body, initial_docs, initial_refs, n_retry, max_retry=5, window=5):
         docs_tmp = initial_docs[n_retry * window : (n_retry + 1) * window]
@@ -155,7 +155,7 @@ async def multiagents(
             return await go_multiagents(body, initial_docs, initial_refs, n_retry=n_retry + 1, max_retry=5, window=5)
         elif choice in [1, 2]:
             pass
-        elif choice == 4 or n_retry >= max_retry:  # else ?
+        elif choice == 4 or n_retry >= max_retry:
             searches = await context.documents.search(
                 session=session,
                 collection_ids=body.collections,
@@ -167,7 +167,9 @@ async def multiagents(
                 user_id=request.app.state.user.id,
             )
             docs_tmp = [doc.chunk.content for doc in searches]
-            refs_tmp = [doc.chunk.metadata.document_name for doc in searches]
+            refs_tmp = [doc.chunk.metadata.get("document_name") for doc in searches]
+        else:
+            raise ValueError(f"Unknown choice: {choice}")
         prompts = get_prompt_teller_multi(body.prompt, docs_tmp, choice)
         answers = await ask_in_parallel(model, prompts, user, body.max_tokens_intermediate)
         prompt = PROMPT_CONCAT.format(prompt=body.prompt, answers=answers)
