@@ -75,7 +75,7 @@ Then apply the migration with the following command:
 alembic -c app/alembic.ini upgrade head
 ```
 
-### Modifications du fichier [`ui/sql/models.py`](./ui/sql/models.py)
+### Modifications to the [`ui/sql/models.py`](./ui/sql/models.py) file
 
 If you have modified the UI database tables in the [models.py](./ui/sql/models.py) file, you need to create an Alembic migration with the following command:
 
