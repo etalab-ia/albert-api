@@ -1,11 +1,12 @@
 import pandas as pd
 import streamlit as st
+from streamlit_extras.stylable_container import stylable_container
 
 from ui.backend.common import get_collections, get_documents
 from ui.backend.documents import create_collection, delete_collection, delete_document, upload_file
 from ui.frontend.header import header
-from ui.variables import COLLECTION_VISIBILITY_PRIVATE
 from ui.settings import settings
+from ui.variables import COLLECTION_VISIBILITY_PRIVATE
 
 header()
 with st.sidebar:
@@ -44,8 +45,8 @@ st.dataframe(
 )
 
 ## Pagination
-col1, col2, col3, col4, col5 = st.columns(spec=[20, 1, 1.5, 1, 20])
-with col2:
+_, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
+with left:
     if st.button(
         label="**:material/keyboard_double_arrow_left:**",
         key="pagination-collections-previous",
@@ -55,18 +56,19 @@ with col2:
         st.session_state["collections_offset"] = max(0, st.session_state.get("collections_offset", 0) - 10)
         st.rerun()
 
-with col3:
+with center:
     st.button(label=str(round(st.session_state.get("collections_offset", 0) / 10)), key="pagination-collections-offset", use_container_width=True)
 
-with col4:
-    if st.button(
-        label="**:material/keyboard_double_arrow_right:**",
-        key="pagination-collections-next",
-        disabled=len(collections) < 10,
-        use_container_width=True,
-    ):
-        st.session_state["collections_offset"] = st.session_state.get("collections_offset", 0) + 10
-        st.rerun()
+with right:
+    with stylable_container(key="pagination-collections-next", css_styles="button{float: right;}"):
+        if st.button(
+            label="**:material/keyboard_double_arrow_right:**",
+            key="pagination-collections-next",
+            disabled=len(collections) < 10,
+            use_container_width=True,
+        ):
+            st.session_state["collections_offset"] = st.session_state.get("collections_offset", 0) + 10
+            st.rerun()
 
 
 col1, col2 = st.columns(spec=2)
@@ -97,6 +99,7 @@ if not collections:
     st.stop()
 
 st.divider()
+
 # Documents
 st.subheader(body="Documents")
 
@@ -106,7 +109,6 @@ collection_id = collection_id[0] if collection_id else None
 
 documents = get_documents(collection_id=collection_id, offset=st.session_state.get("documents_offset", 0), limit=10)
 
-st.write(documents)
 st.dataframe(
     data=pd.DataFrame(
         data=[
@@ -128,9 +130,9 @@ st.dataframe(
 )
 
 ## Pagination
-col1, col2, col3, col4, col5 = st.columns(spec=[20, 1, 1.5, 1, 20])
+_, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
 
-with col2:
+with left:
     if st.button(
         label="**:material/keyboard_double_arrow_left:**",
         key="pagination-documents-previous",
@@ -140,18 +142,19 @@ with col2:
         st.session_state["documents_offset"] = max(0, st.session_state.get("documents_offset", 0) - 10)
         st.rerun()
 
-with col3:
+with center:
     st.button(label=str(round(st.session_state.get("documents_offset", 0) / 10)), key="pagination-documents-offset", use_container_width=True)
 
-with col4:
-    if st.button(
-        label="**:material/keyboard_double_arrow_right:**",
-        key="pagination-documents-next",
-        disabled=len(documents) < 10,
-        use_container_width=True,
-    ):
-        st.session_state["documents_offset"] = st.session_state.get("documents_offset", 0) + 10
-        st.rerun()
+with right:
+    with stylable_container(key="pagination-documents-next", css_styles="button{float: right;}"):
+        if st.button(
+            label="**:material/keyboard_double_arrow_right:**",
+            key="pagination-documents-next",
+            disabled=len(documents) < 10,
+            use_container_width=True,
+        ):
+            st.session_state["documents_offset"] = st.session_state.get("documents_offset", 0) + 10
+            st.rerun()
 
 
 col1, col2 = st.columns(spec=2)

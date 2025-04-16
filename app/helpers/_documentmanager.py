@@ -443,7 +443,7 @@ class DocumentManager:
             try:
                 result.scalar_one()
             except NoResultFound:
-                raise CollectionNotFoundException()
+                raise CollectionNotFoundException(detail=f"Collection {collection_id} not found.")
 
             results = await self.qdrant.search(
                 collection_name=str(collection_id),

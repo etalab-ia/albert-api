@@ -23,6 +23,7 @@ context = SimpleNamespace(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
+
     # setup clients
     qdrant = AsyncQdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
     redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None

@@ -229,7 +229,7 @@ databases:
       pool_size: 5
       max_overflow: 10
       pool_pre_ping: True
-      connect_args: {"server_settings": {"statement_timeout": "60"}}
+      connect_args: {"server_settings": {"statement_timeout": "120s"}}
 ```   
 
 **(1) Database Types**
@@ -260,8 +260,8 @@ The `playground` section allows you to configure the playground.
 
 | Argument | Required | Description | Type | Values | Default |
 | --- | --- | --- | --- | --- | --- |
-| api_url | Required | Playground API URL. | str | `"http://localhost:8000"` |
-| home_url | Required | Playground home URL to redirect to when user click on the logo. | str | `"http://localhost:8501"` |
+| api_url | Required | Playground API URL. | str | | `"http://localhost:8000"` |
+| home_url | Required | Playground home URL to redirect to when user click on the logo. | str | | `"http://localhost:8501"` |
 | page_icon | Required | Playground page icon URL. | str | | `"https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"` |
 | logo | Required | Playground logo URL. | str | | `"https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"` |
 | menu_items | Optional | Configure the menu that appears on the top-right side of this app. See [Streamlit st.set_page_config documentation](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config) for more information. | list[dict] | | `[]` |
@@ -277,6 +277,13 @@ The `playground` section allows you to configure the playground.
 ```yaml
 playground:
   api_url: http://localhost:8081
+  home_url: http://localhost:8501/playground
+  page_icon: https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true
+  logo: https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true
+  menu_items:
+    get_help: mailto:contact@example.com
+    report_a_bug: https://github.com/etalab-ia/albert-api/issues
+    about: "This is a playground for the Albert API."
   max_api_key_expiration_days: 365
   cache_ttl: 1800
   database_url: postgresql://postgres:changeme@localhost:5432/ui
@@ -296,7 +303,7 @@ Prerequisites:
 | --- | --- | --- | --- | --- | --- |
 | type | Required | Internet search engine type. | str | (1) | `duckduckgo` | 
 | model | Required | A text-generation model ID if required for web search. | str | (2) |
-| args | Required | Search engine client arguments. | dict | |
+| args | Required | Search engine client arguments (depends on the search engine type). | dict | |
 
 **Example**
 

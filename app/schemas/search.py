@@ -1,11 +1,11 @@
 from enum import Enum
-from typing import List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
 from pydantic import Field, field_validator, model_validator
 
 from app.schemas import BaseModel
 from app.schemas.chunks import Chunk
-from app.utils.exceptions import WrongSearchMethodException
+from app.utils.exceptions import WrongSearchMethodException, CollectionNotFoundException
 
 
 class SearchMethod(str, Enum):
@@ -15,7 +15,7 @@ class SearchMethod(str, Enum):
 
 
 class SearchArgs(BaseModel):
-    collections: List[int] = Field(default=[], description="List of collections ID")
+    collections: List[Any] = Field(default=[], description="List of collections ID")
     rff_k: int = Field(default=20, description="k constant in RFF algorithm")
     k: int = Field(gt=0, default=4, description="Number of results to return")
     method: SearchMethod = Field(default=SearchMethod.SEMANTIC)
@@ -27,6 +27,27 @@ class SearchArgs(BaseModel):
         if values.score_threshold and values.method != SearchMethod.SEMANTIC:
             raise WrongSearchMethodException(detail="Score threshold is only available for semantic search method.")
         return values
+
+    @field_validator("collections", mode="before")
+    def legacy_collections(cls, collections):
+        from app.utils.settings import settings
+
+        _collections = []
+        for collection in collections:
+            if isinstance(collection, int):
+                _collections.append(collection)
+            elif settings.legacy_collections:
+                _collection = settings.legacy_collections.get(collection)
+                if _collection:
+                    _collections.append(_collection)
+                else:
+                    raise CollectionNotFoundException(detail=f"Collection {collection} not found.")
+            else:
+                raise CollectionNotFoundException(detail=f"Collection {collection} not found.")
+
+            collections = _collections
+
+        return collections
 
 
 class SearchRequest(SearchArgs):
