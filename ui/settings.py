@@ -18,10 +18,18 @@ class Auth(ConfigBaseModel):
     master_username: str = "master"
 
 
+class MenuItems(ConfigBaseModel):
+    get_help: Optional[str] = None
+    report_a_bug: Optional[str] = None
+    about: Optional[str] = None
+
+
 class Playground(ConfigBaseModel):
     api_url: str = "http://localhost:8000"
     home_url: str = "http://localhost:8501"
-    logo: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png"
+    page_icon: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"
+    menu_items: MenuItems = MenuItems()
+    logo: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"
     max_api_key_expiration_days: Optional[int] = None
     cache_ttl: int = 1800  # 30 minutes
     database_url: str = "postgresql+asyncpg://postgres:changeme@localhost:5432/ui"

@@ -1,34 +1,34 @@
-# Contributions
+# Contributing
 
-Pour contribuer au projet, merci de suivre les instructions suivantes.
+To contribute to the project, please follow the instructions below.
 
-# Développement en environnement Docker
+# Development in Docker Environment
 
-> ⚠️ **Attention : Vous devez disposer d'une API de modèle de language.**
+> [!WARNING] You must have access to a language model API.
 
-1. Créez un fichier *config.yml* à partir du fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* avec vos modèles.
+1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)* with your models.
 
-    Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
+    For more information on deploying services, please consult the [dedicated documentation](./docs/deployment.md).
 
-    > [!NOTE] Le fichier de configuration pour exécuter les tests est [config.test.yml](./.github/config.test.yml). Vous pouvez vous en inspirer pour configurer votre propre fichier de configuration.
+    > [!NOTE] The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can use it as inspiration to configure your own configuration file.
 
-2. Lancer le docker compose de développement avec le mode watch :
+2. Launch the development docker compose with watch mode:
 
     ```bash
     docker compose --file compose.dev.yml up --watch
     ```
 
-    > [!NOTE] L'API et le playground seront disponibles respectivement sur les ports 8000 et 8501. Pour vous connecter au playground la première fois utilisez le login *master* et le mot de passe *changeme* (définit dans le fichier de configuration).
+    > [!NOTE] The API and playground will be available on ports 8000 and 8501 respectively. To connect to the playground for the first time, use the login *master* and password *changeme* (defined in the configuration file).
 
-# Développement hors environnement Docker
+# Development Outside Docker Environment
 
-1. Créez un fichier *config.yml* à partir du fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* avec vos modèles.
+1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)* with your models.
 
-    Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
+    For more information on deploying services, please consult the [dedicated documentation](./docs/deployment.md).
 
-    > [!NOTE] Le fichier de configuration pour exécuter les tests est [config.test.yml](./.github/config.test.yml). V
+    > [!NOTE] The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can use it as inspiration to configure your own configuration file.
 
-2. Instanciez les dépendances
+2. Set up dependencies
 
     ```bash
     docker compose up --detach # run the databases
@@ -39,33 +39,33 @@ Pour contribuer au projet, merci de suivre les instructions suivantes.
     alembic -c ui/alembic.ini upgrade head # create the Playground tables
     ```
 
-3. Lancez l'API
+3. Launch the API
 
     ```bash
     uvicorn app.main:app --port 8000 --log-level debug --reload # run the API
     ```
 
-4. Lancez le playground
+4. Launch the playground
 
-    Dans un autre terminal, lancez le playground avec la commande suivante :
+    In another terminal, launch the playground with the following command:
 
     ```bash
     streamlit run ui/chat.py --server.port 8501 --browser.gatherUsageStats false --theme.base light # run the playground
     ```
 
-    Pour vous connecter au playground la première fois utilisez le login *master* et le mot de passe *changeme* (définit dans le fichier de configuration).
+    To connect to the playground for the first time, use the login *master* and password *changeme* (defined in the configuration file).
 
-# Modifications de la structure des bases de données SQL
+# Modifications to SQL Database Structure
 
-## Modifications du fichier [`app/sql/models.py`](./app/sql/models.py)
+## Modifications to the [`app/sql/models.py`](./app/sql/models.py) file
 
-Si vous avez modifié les tables de la base de données de l'API dans le fichier [models.py](./app/sql/models.py), vous devez créer une migration Alembic avec la commande suivante :
+If you have modified the API database tables in the [models.py](./app/sql/models.py) file, you need to create an Alembic migration with the following command:
 
 ```bash
 alembic -c app/alembic.ini revision --autogenerate -m "message"
 ```
 
-Puis appliquez la migration avec la commande suivante :
+Then apply the migration with the following command:
 
 ```bash
 alembic -c app/alembic.ini upgrade head
@@ -73,13 +73,13 @@ alembic -c app/alembic.ini upgrade head
 
 ## Modifications du fichier [`ui/sql/models.py`](./ui/sql/models.py)
 
-Si vous avez modifié les tables de la base de données de l'UI dans le fichier [models.py](./ui/sql/models.py), vous devez créer une migration Alembic avec la commande suivante :
+If you have modified the UI database tables in the [models.py](./ui/sql/models.py) file, you need to create an Alembic migration with the following command:
 
 ```bash
 alembic -c ui/alembic.ini revision --autogenerate -m "message"
 ```
 
-Puis appliquez la migration avec la commande suivante :
+Then apply the migration with the following command:
 
 ```bash
 alembic -c ui/alembic.ini upgrade head
@@ -87,15 +87,15 @@ alembic -c ui/alembic.ini upgrade head
 
 # Tests
 
-Merci, avant chaque pull request, de vérifier le bon déploiement de votre API en exécutant les tests prévus à cet effet. Pour exécuter ces tests à la racine du projet, exécutez la commande suivante :
+Before submitting a pull request, please check the proper deployment of your API by running the tests as follows:
 
 ```bash
 CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml
 ```
 
-> [!NOTE] Le fichier de configuration pour exécuter les tests est [config.test.yml](./.github/config.test.yml). Vous pouvez le modifier pour exécuter les tests sur votre machine.
+> [!NOTE] The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can modify it to run the tests on your machine.
 
-Pour mettre à jour les snapshots, exécutez la commande suivante :
+To update the snapshots, run the following command:
 
 ```bash
 PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
@@ -103,9 +103,9 @@ PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
 
 # Notebooks
 
-Il est important de tenir à jour les notebooks de docs/tutorials, afin de montrer des rapides exemples d'utilisation de l'API.
+It is important to keep the notebooks in the docs/tutorials folder up to date, to show quick examples of API usage.
 
-Pour lancer les notebooks en local :
+To launch the notebooks locally:
 
 ```bash
 pip install ".[dev]"
@@ -114,27 +114,24 @@ jupyter notebook docs/tutorials/
 
 # Linter
 
-Le linter du projet est [Ruff](https://beta.ruff.rs/docs/configuration/). Les règles de formatage spécifiques au projet sont dans le fichier *[pyproject.toml](./pyproject.toml)*.
+The project linter is [Ruff](https://beta.ruff.rs/docs/configuration/). The specific project formatting rules are in the *[pyproject.toml](./pyproject.toml)* file.
 
-Merci de bien vouloir installer les hooks de pre-commit :
+Please install the pre-commit hooks:
 
 ```bash
 pip install ".[dev]"
 pre-commit install
 ```
 
-Ruff s'exécutera automatiquement à chaque commit.
+Ruff will run automatically at each commit.
 
-# Commit 
+# Commit
 
-Merci de respecter la convention suivante pour vos commits :
+Please respect the following convention for your commits:
 
 ```
-[doc|feat|fix](*) commit object (in english)
+[doc|feat|fix](theme) commit object (in english)
 
 # example
 feat(collections): collection name retriever
 ```
-
-*Le thème est optionnel et doit correspondre à un thématique de la code base (deploy, collections, models, ...).
-
