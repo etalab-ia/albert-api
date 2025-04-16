@@ -262,7 +262,12 @@ The `playground` section allows you to configure the playground.
 | --- | --- | --- | --- | --- | --- |
 | api_url | Required | Playground API URL. | str | `"http://localhost:8000"` |
 | home_url | Required | Playground home URL to redirect to when user click on the logo. | str | `"http://localhost:8501"` |
-| logo | Required | Playground logo URL. | str | | `"https://em-content.zobj.net/source/apple/155/raccoon_1f99d.png"` |
+| page_icon | Required | Playground page icon URL. | str | | `"https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"` |
+| logo | Required | Playground logo URL. | str | | `"https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"` |
+| menu_items | Optional | Configure the menu that appears on the top-right side of this app. See [Streamlit st.set_page_config documentation](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config) for more information. | list[dict] | | `[]` |
+| menu_items.get_help | Optional | The URL this menu item should point to. If None, hides this menu item. The URL may also refer to an email address e.g. `mailto:john@example.com.` | str | | `None` |
+| menu_items.report_a_bug | Optional | The URL this menu item should point to. If None, hides this menu item. The URL may also refer to an email address e.g. `mailto:john@example.com.` | str | | `None` |
+| menu_items.about | Optional | A markdown string to show in the About dialog. If None, only shows Streamlit's default About text. | str | | `None` |
 | max_api_key_expiration_days | Required | Maximum days a user can keep an API key. | int | | `365` |
 | cache_ttl | Required | Cache TTL (in seconds). | int | | `1800` |
 | database_url | Required | Database URL. | str | | |
