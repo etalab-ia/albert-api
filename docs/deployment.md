@@ -1,5 +1,23 @@
 # Deployment
 
+### Run services
+
+1. Create a configuration file (see the following [configuration section](./deployment.md#configuration)) `config.yml` on the root of the project.
+
+2. Deploy the services with the following command:
+
+  ```bash
+  docker compose --file compose.prod.yml up --detach
+  ```
+
+### First authentication
+
+Connect to the playground UI (http://localhost:8501) with the master username as login (`master`) and the master key (`changeme`) as password (see the following [auth section](#auth) to change the default values).
+
+  ![Security](assets/deployment_001.png)
+
+  Go to the *admin* page and create a role with admin appropriate permissions and a user with that role.
+
 ### Environment Variables
 
 | Variable | Required | Type | Default | Description |
@@ -31,12 +49,12 @@ The configuration file has the following sections:
 
 | Section | Required | Description |
 | --- | --- | --- |
-| general | Required | General configuration. |
-| auth | Optional | Authentication parameters. |
-| playground | Optional | Playground parameters. |
-| models | Required | Defines model APIs. |
-| web_search | Optional | Defines the internet search engine API. |
-| databases | Required | Defines database APIs. |
+| [general](#general) | Required | General configuration. |
+| [auth](#auth) | Optional | Authentication parameters. |
+| [playground](#playground) | Optional | Playground parameters. |
+| [models](#models) | Required | Defines model APIs. |
+| [web_search](#web_search) | Optional | Defines the internet search engine API. |
+| [databases](#databases) | Required | Defines database APIs. |
 
 #### general
 
@@ -58,7 +76,7 @@ The configuration file has the following sections:
 | openapi_url | Optional | API openapi URL. | str | | `"/openapi.json"` |
 | log_level | Required | Logging level. | str | `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`, `"CRITICAL"` | `"INFO"` |
 | disabled_routers | Required | List of disabled API routers. | List[str] | `["audio", "auth", "chat", "chunks", "collections", "documents", "embeddings", "files", "models", "monitoring", "ocr", "rerank", "search"]` | `[]` |
-| disabled_middleware | Required | Enable or disable middlewares. | bool |  | `False` |
+| disabled_middlewares | Required | Enable or disable middlewares. | bool |  | `False` |
 
 **Example**
 ```yaml
@@ -66,7 +84,7 @@ general:
   app_name: "Test"
   app_version: "0.0.1"
   disabled_routers: ["documents", "chunks", "collections", "rerank", "search"]
-  disabled_middleware: False
+  disabled_middlewares: False
   log_level: "DEBUG"
 ```
 
@@ -110,7 +128,6 @@ models:
   - id: my-language-model
     type: text-generation
     aliases: ["turbo-alias"]
-    default_internet: True
     routing_strategy: round_robin
     clients:
       - model: gpt-3.5-turbo 
@@ -241,8 +258,9 @@ The `playground` section allows you to configure the playground.
 
 | Argument | Required | Description | Type | Values | Default |
 | --- | --- | --- | --- | --- | --- |
-| api_url | Required | Playground API URL. | str | "http://localhost:8000" |
-| home_url | Required | Playground home URL to redirect to when user click on the logo. | str | "http://localhost:8501" |
+| api_url | Required | Playground API URL. | str | `"http://localhost:8000"` |
+| home_url | Required | Playground home URL to redirect to when user click on the logo. | str | `"http://localhost:8501"` |
+| logo | Required | Playground logo URL. | str | | `"https://em-content.zobj.net/source/apple/155/raccoon_1f99d.png"` |
 | max_api_key_expiration_days | Required | Maximum days a user can keep an API key. | int | | `365` |
 | cache_ttl | Required | Cache TTL (in seconds). | int | | `1800` |
 | database_url | Required | Database URL. | str | | |
@@ -276,7 +294,7 @@ Prerequisites:
 **Example**
 
 ```yaml
-internet:
+web_search:
   - type: brave
     model: my-language-model
     args:

@@ -44,21 +44,14 @@ st.session_state.document_id = None if "document_id" not in st.session_state els
 
 st.subheader(body=":material/counter_1: Select a document")
 st.info(body="Please select a document to generate a summary.")
-document = st.selectbox(label="Document", options=[f"{document['id']} - {document['name']}" for document in documents])
+document = st.selectbox(label="Document", options=[f"{document["id"]} - {document["name"]}" for document in documents])
 if not document:
     st.warning(body="First upload a document via the Documents page.")
     st.stop()
 document_id = int(document.split(" - ")[0])
 collection_id = [document["collection_id"] for document in documents if document["id"] == document_id][0]
 
-with stylable_container(
-    key="Summarize",
-    css_styles="""
-    button{
-        float: right;
-    }
-    """,
-):
+with stylable_container(key="Summarize", css_styles="button{float: right;}"):
     if st.button(label="Validate", key="validate_document"):
         st.session_state.collection_id = collection_id
         st.session_state.document_id = document_id
@@ -83,19 +76,7 @@ st.info(
 
 toc = st.text_area(label="Table of content", value=st.session_state.toc, height=200)
 
-with stylable_container(
-    key="Toc",
-    css_styles="""
-    .left-button {
-        float: left;
-    }
-    .right-button {
-        float: right;
-    .stButton {
-        width: auto;
-    }
-    """,
-):
+with stylable_container(key="Toc", css_styles=".left-button{float: left;}.right-button{float: right;}.stButton{width: auto;}"):
     col1, col2, col3 = st.columns(spec=[2, 6, 2])
     with col1:
         if st.button(label="✨ Generate", key="generate_toc", use_container_width=True):
@@ -130,14 +111,7 @@ st.info(body="Here is the summary of your document.")
 st.write("**Summary**")
 st.code(body=st.session_state.summary, language="markdown", wrap_lines=True)
 
-with stylable_container(
-    key="Summarize",
-    css_styles="""
-    button{
-        float: right;
-    }
-    """,
-):
+with stylable_container(key="Summarize", css_styles="button{float: right;}"):
     if st.button(label="✨ Generate", key="generate_summary"):
         st.session_state.summary = generate_summary(toc=st.session_state.toc, chunks=chunks, model=selected_model)
         st.toast(body="Summary generated !", icon="✅")
@@ -146,14 +120,7 @@ with stylable_container(
 
 feedback = st.text_area(label="Feedback")
 
-with stylable_container(
-    key="Feedback",
-    css_styles="""
-    button{
-        float: right;
-    }
-    """,
-):
+with stylable_container(key="Feedback", css_styles="button{float: right;}"):
     if st.button(label="Give feedback", key="give_feedback"):
         if st.session_state.summary:
             with st.spinner(text="✨ Generate..."):

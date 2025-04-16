@@ -19,7 +19,7 @@ from qdrant_client.http.models import (
     VectorParams,
 )
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.model import BaseModelClient as ModelClient
@@ -36,7 +36,6 @@ from app.sql.models import Document as DocumentTable
 from app.sql.models import User as UserTable
 from app.utils.exceptions import (
     ChunkingFailedException,
-    CollectionAlreadyExistsException,
     CollectionNotFoundException,
     DocumentNotFoundException,
     NotImplementedException,
@@ -75,16 +74,13 @@ class DocumentManager:
     async def create_collection(
         self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None
     ) -> int:
-        try:
-            result = await session.execute(
-                statement=insert(table=CollectionTable)
-                .values(name=name, user_id=user_id, visibility=visibility, description=description)
-                .returning(CollectionTable.id)
-            )
-            collection_id = result.scalar_one()
-            await session.commit()
-        except IntegrityError as e:
-            raise CollectionAlreadyExistsException()
+        result = await session.execute(
+            statement=insert(table=CollectionTable)
+            .values(name=name, user_id=user_id, visibility=visibility, description=description)
+            .returning(CollectionTable.id)
+        )
+        collection_id = result.scalar_one()
+        await session.commit()
 
         await self.qdrant.create_collection(
             collection_name=str(collection_id),
@@ -180,8 +176,8 @@ class DocumentManager:
         except NoResultFound:
             raise CollectionNotFoundException()
 
-        file_name = file.filename.strip()
-        file_extension = file_name.rsplit(".", maxsplit=1)[-1]
+        document_name = file.filename.strip()
+        file_extension = document_name.rsplit(".", maxsplit=1)[-1]
 
         try:
             document = self._parse(file=file, file_extension=file_extension)
@@ -198,19 +194,18 @@ class DocumentManager:
             raise ChunkingFailedException(detail=f"Chunking failed: {e}")
 
         result = await session.execute(
-            statement=insert(table=DocumentTable).values(name=file_name, collection_id=collection_id).returning(DocumentTable.id)
+            statement=insert(table=DocumentTable).values(name=document_name, collection_id=collection_id).returning(DocumentTable.id)
         )
         document_id = result.scalar_one()
         await session.commit()
 
         client = self.qdrant_model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         for i, chunk in enumerate(chunks):
-            chunk.metadata["document_part"] = f"{i + 1}/{len(chunks)}"
             chunk.metadata["collection_id"] = collection.id
-            chunk.metadata["collection_name"] = collection.name
             chunk.metadata["document_id"] = document_id
-            chunk.metadata["document_name"] = file_name
+            chunk.metadata["document_name"] = document_name
             chunk.metadata["document_created_at"] = round(time.time())
+            chunk.metadata["document_part"] = f"{i + 1}/{len(chunks)}"
         try:
             await self._upsert(chunks=chunks, collection_id=collection_id, model_client=client)
         except Exception as e:
@@ -279,7 +274,13 @@ class DocumentManager:
         await self.qdrant.delete(collection_name=str(document.collection_id), points_selector=FilterSelector(filter=filter))
 
     async def get_chunks(
-        self, session: AsyncSession, user_id: int, document_id: int, chunk_id: Optional[int] = None, offset: int = 0, limit: int = 10
+        self,
+        session: AsyncSession,
+        user_id: int,
+        document_id: int,
+        chunk_id: Optional[int] = None,
+        offset: int = 0,
+        limit: int = 10,
     ) -> List[Chunk]:
         # check if document exists
         result = await session.execute(

@@ -21,7 +21,7 @@ flowchart LR
 
     subgraph **app/clients**
     redisclient[Redis - ConnectionPool]
-    sqlclient[SQLDatabaseClient]
+    sqlclient[SQLAlchemy - AsyncSession]
     qdrantclient[Qrant - AsyncQdrantClient]
     internetclient[BraveInternetClient<br>DuckduckgoInternetClient]
     modelclient@{ shape: processes, label: "VllmModelClient<br>TeiModelClient<br>AlbertModelClient<br>OpenaiModelClient" }

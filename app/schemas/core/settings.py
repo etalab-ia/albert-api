@@ -125,7 +125,7 @@ class General(ConfigBaseModel):
 
     # Others
     disabled_routers: List[Literal[*ROUTERS]] = []
-    disabled_middleware: bool = False
+    disabled_middlewares: bool = False
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 
@@ -175,7 +175,7 @@ class Settings(BaseSettings):
         # replace environment variables (pattern: ${VARIABLE_NAME})
         for match in set(re.findall(pattern=r"\${[A-Z_]+}", string=file_content)):
             variable = match.replace("${", "").replace("}", "")
-            if not os.getenv(variable):
+            if os.getenv(variable) is None or os.getenv(variable) == "":
                 logging.warning(f"Environment variable {variable} not found or empty to replace {match}.")
             file_content = file_content.replace(match, os.getenv(variable, match))
 

@@ -13,20 +13,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Create config from template
-      run: |
-        echo "${{ secrets.CONFIG_YML }}" > config.yml
   
     - name: Set up Docker Compose
       run: |
-        docker compose --file compose.dev.yml up --detach
+        docker compose --file ./.github/compose.test.yml up --detach
+      env:
+        BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+        ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
     
     - name: Wait for API to start
       run: |
-        sleep 30
+        echo $(ls -la)
+        for i in {1..30}; do
+          curl -s http://localhost:8000/health -H "Authorization: Bearer changeme" > /dev/null && echo "API is ready" && break || echo "Waiting for API..." && sleep 2;
+        done
         echo $(docker logs albert-api-api-1)
-
+  
     - name: Wait for PostgreSQL
       run: |
         for i in {1..30}; do

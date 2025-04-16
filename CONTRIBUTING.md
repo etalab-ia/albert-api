@@ -10,77 +10,52 @@ Pour contribuer au projet, merci de suivre les instructions suivantes.
 
     Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
 
+    > [!NOTE] Le fichier de configuration pour exécuter les tests est [config.test.yml](./.github/config.test.yml). Vous pouvez vous en inspirer pour configurer votre propre fichier de configuration.
+
 2. Lancer le docker compose de développement avec le mode watch :
 
     ```bash
     docker compose --file compose.dev.yml up --watch
     ```
 
-L'API et l'UI seront disponibles respectivement sur les ports 8000 et 8501.
+    > [!NOTE] L'API et le playground seront disponibles respectivement sur les ports 8000 et 8501. Pour vous connecter au playground la première fois utilisez le login *master* et le mot de passe *changeme* (définit dans le fichier de configuration).
 
 # Développement hors environnement Docker
 
-## Les bases de de données
+1. Créez un fichier *config.yml* à partir du fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* avec vos modèles.
 
-Vous pouvez lancer les services de base de données nécéssaires avec docker compose :
+    Pour plus d'information sur le déploiement des services, veuillez consulter la [documentation dédiée](./docs/deployment.md).
 
-```bash
-docker compose up --detach
-```
+    > [!NOTE] Le fichier de configuration pour exécuter les tests est [config.test.yml](./.github/config.test.yml). V
 
-## API (FastAPI)
-
-1. Dans un environnement virtuel Python, installez les packages Python présents dans le fichier *[pyproject.toml](./pyproject.toml)*
-
-     ```bash 
-     pip install ".[app,dev,test]"
-     pre-commit install
-     ```
-
-2. Créez un fichier *config.yml* à partir du fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* en configurant votre base de données SQL et vos modèles.
-
-    Pour plus d'information sur la configuration, veuillez consulter la [documentation dédiée](./docs/deployment.md).
-
-3. Créez les tables de la base de données avec Alembic
+2. Instanciez les dépendances
 
     ```bash
-    alembic -c app/alembic.ini upgrade head
+    docker compose up --detach # run the databases
+
+    pip install ".[app,ui,dev,test]" # install the dependencies
+
+    alembic -c app/alembic.ini upgrade head # create the API tables
+    alembic -c ui/alembic.ini upgrade head # create the Playground tables
     ```
 
-4. Lancez l'API en local
+3. Lancez l'API
 
     ```bash
-    uvicorn app.main:app --port 8000 --log-level debug --reload
+    uvicorn app.main:app --port 8000 --log-level debug --reload # run the API
     ```
 
-## UI (Streamlit)
+4. Lancez le playground
 
-1. Dans un environnement virtuel Python, installez les packages Python présents dans le fichier *[pyproject.toml](./pyproject.toml)*
-
-     ```bash
-     pip install ".[ui,dev,test]"
-     pre-commit install
-     ```
-
-2. Créez un fichier *config.yml* à partir du fichier d'exemple de configuration *[config.example.yml](./config.example.yml)* en configurant votre base de données SQL.
-
-    Pour plus d'information sur la configuration, veuillez consulter la [documentation dédiée](./docs/deployment.md).
-
-3. Créez les tables de la base de données avec Alembic
+    Dans un autre terminal, lancez le playground avec la commande suivante :
 
     ```bash
-    alembic -c ui/alembic.ini upgrade head
+    streamlit run ui/chat.py --server.port 8501 --browser.gatherUsageStats false --theme.base light # run the playground
     ```
 
-4. Lancez l'UI en local
+    Pour vous connecter au playground la première fois utilisez le login *master* et le mot de passe *changeme* (définit dans le fichier de configuration).
 
-    ```bash
-    streamlit run ui/chat.py --server.port 8501 --browser.gatherUsageStats false --theme.base light
-    ```
-
-Pour vous connecter à l'UI la première fois utilisez le login *master* et le mot de passe *changeme* (correspondant à la clé master dans le fichier de configuration).
-
-# Migration de la base de données SQL
+# Modifications de la structure des bases de données SQL
 
 ## Modifications du fichier [`app/sql/models.py`](./app/sql/models.py)
 
@@ -113,62 +88,17 @@ alembic -c ui/alembic.ini upgrade head
 # Tests
 
 Merci, avant chaque pull request, de vérifier le bon déploiement de votre API en exécutant les tests prévus à cet effet. Pour exécuter ces tests à la racine du projet, exécutez la commande suivante :
-    
-```bash
-PYTHONPATH=. pytest --config-file=pyproject.toml
-```
-
-Pour n'exécuter qu'une partie des tests, par exemple les test *audio*, exécutez la commande suivante :
 
 ```bash
-PYTHONPATH=. pytest app/tests/test_audio.py --config-file=pyproject.toml
+CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml
 ```
+
+> [!NOTE] Le fichier de configuration pour exécuter les tests est [config.test.yml](./.github/config.test.yml). Vous pouvez le modifier pour exécuter les tests sur votre machine.
 
 Pour mettre à jour les snapshots, exécutez la commande suivante :
 
 ```bash
 PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
-```
-
-## Configurer les tests dans VSCode
-
-Pour utiliser le module testing de VSCode, veuillez la configuration suivante dans votre fichier *.vscode/settings.json* :
-
-```json
-{
-    "python.terminal.activateEnvironment": false,
-    "python.testing.pytestArgs": [
-        "app/tests",
-        "--config-file=pyproject.toml"
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-}
-```
-
-Afin de spéficier les variables d'environnement nécessaires pour les tests, vous devez également créer un fichier *.vscode/launch.json* avec la configuration suivante ou l'ajouter à votre fichier existant :
-
-```json
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Debug Test",
-            "purpose": [
-                "debug-test"
-            ],
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "args": [
-                "--color=yes",
-                "--exitfirst"
-            ],
-            "env": {"CONFIG_FILE": "<path to config file>"},
-            "console": "integratedTerminal",
-        }
-    ]
-}
 ```
 
 # Notebooks
@@ -186,39 +116,14 @@ jupyter notebook docs/tutorials/
 
 Le linter du projet est [Ruff](https://beta.ruff.rs/docs/configuration/). Les règles de formatage spécifiques au projet sont dans le fichier *[pyproject.toml](./pyproject.toml)*.
 
-## Configurer Ruff avec pre-commit
+Merci de bien vouloir installer les hooks de pre-commit :
 
-1. Installez les hooks de pre-commit
+```bash
+pip install ".[dev]"
+pre-commit install
+```
 
-    ```bash
-    pip install ".[dev]"
-    pre-commit install
-    ```
-
-    Ruff s'exécutera automatiquement à chaque commit.
-
-## Configurer Ruff sur VSCode
-
-1. Installez l'extension *Ruff* (charliermarsh.ruff) dans VSCode
-2. Configurez le linter Ruff dans VSCode pour utiliser le fichier *[pyproject.toml](./pyproject.toml)*
-
-    À l'aide de la palette de commandes de VSCode (⇧⌘P), recherchez et sélectionnez *Preferences: Open User Settings (JSON)*.
-
-    Dans le fichier JSON qui s'ouvre, ajoutez à la fin du fichier les lignes suivantes :
-
-    ```json
-    "ruff.configuration": "<path to pyproject.toml>",
-    "ruff.format.preview": true,
-    "ruff.lineLength": 150,
-    "ruff.codeAction.fixViolation": {
-        "enable": false
-    },
-    "ruff.nativeServer": "on"
-    ```
-
-    ⚠️ **Attention** : Assurez-vous que le fichier *[pyproject.toml](./app/pyproject.toml)* est bien spécifié dans la configuration.
-
-3. **Pour exécuter le linter, utilisez la palette de commandes de VSCode (⇧⌘P) depuis le fichier sur lequel vous voulez l'exécuter, puis recherchez et sélectionnez *Ruff: Format document* et *Ruff: Format imports*.**
+Ruff s'exécutera automatiquement à chaque commit.
 
 # Commit 
 
@@ -232,3 +137,4 @@ feat(collections): collection name retriever
 ```
 
 *Le thème est optionnel et doit correspondre à un thématique de la code base (deploy, collections, models, ...).
+

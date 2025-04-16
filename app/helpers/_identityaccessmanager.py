@@ -16,7 +16,6 @@ from app.utils.exceptions import (
     DeleteRoleWithUsersException,
     RoleAlreadyExistsException,
     RoleNotFoundException,
-    TokenAlreadyExistsException,
     TokenNotFoundException,
     UserAlreadyExistsException,
     UserNotFoundException,
@@ -335,12 +334,9 @@ class IdentityAccessManager:
             raise UserNotFoundException()
 
         # create the token
-        try:
-            result = await session.execute(statement=insert(table=TokenTable).values(user_id=user.id, name=name).returning(TokenTable.id))
-            token_id = result.scalar_one()
-            await session.commit()
-        except IntegrityError:
-            raise TokenAlreadyExistsException()
+        result = await session.execute(statement=insert(table=TokenTable).values(user_id=user.id, name=name).returning(TokenTable.id))
+        token_id = result.scalar_one()
+        await session.commit()
 
         # generate the token
         token = self._encode_token(user_id=user.id, token_id=token_id, expires_at=expires_at)

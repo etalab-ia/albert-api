@@ -13,14 +13,15 @@ if not all(perm in st.session_state["user"].role["permissions"] for perm in ADMI
     st.stop()
 
 tab1, tab2 = st.tabs(["Roles", "Users"])
+
+# Roles
 with tab1:
     if not all(perm in st.session_state["user"].role["permissions"] for perm in ADMIN_PERMISSIONS):
         st.info("Access denied.")
         st.stop()
 
-    users = get_users()
-    roles = get_roles()
     models = get_models()
+    roles = get_roles(offset=st.session_state.get("roles_offset", 0), limit=100)  # TODO: handle pagination in user tab
 
     with st.sidebar:
         if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):
@@ -48,6 +49,31 @@ with tab1:
             "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True),
         },
     )
+
+    ## Pagination
+    col1, col2, col3, col4, col5 = st.columns(spec=[20, 1, 1.5, 1, 20])
+    with col2:
+        if st.button(
+            label="**:material/keyboard_double_arrow_left:**",
+            key="pagination-roles-previous",
+            disabled=st.session_state.get("roles_offset", 0) == 0,
+            use_container_width=True,
+        ):
+            st.session_state["roles_offset"] = max(0, st.session_state.get("roles_offset", 0) - 10)
+            st.rerun()
+
+    with col3:
+        st.button(label=str(round(st.session_state.get("roles_offset", 0) / 10)), key="pagination-roles-offset", use_container_width=True)
+
+    with col4:
+        if st.button(
+            label="**:material/keyboard_double_arrow_right:**",
+            key="pagination-roles-next",
+            disabled=len(roles) < 10,
+            use_container_width=True,
+        ):
+            st.session_state["roles_offset"] = st.session_state.get("roles_offset", 0) + 10
+            st.rerun()
 
     name = st.selectbox(label="**Select a role**", options=[role["name"] for role in roles], disabled=st.session_state.get("new_role", False))
     st.button(
@@ -167,7 +193,10 @@ with tab1:
         ):
             delete_role(role=role["id"])
 
+# Users
 with tab2:
+    users = get_users(offset=st.session_state.get("users_offset", 0), limit=10)
+
     roles_dict = {role["id"]: role["name"] for role in roles}
     st.dataframe(
         data=pd.DataFrame(
@@ -193,6 +222,32 @@ with tab2:
             "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
         },
     )
+
+    ## Pagination
+    col1, col2, col3, col4, col5 = st.columns(spec=[20, 1, 1.5, 1, 20])
+
+    with col2:
+        if st.button(
+            label="**:material/keyboard_double_arrow_left:**",
+            key="pagination-users-previous",
+            disabled=st.session_state.get("users_offset", 0) == 0,
+            use_container_width=True,
+        ):
+            st.session_state["users_offset"] = max(0, st.session_state.get("users_offset", 0) - 10)
+            st.rerun()
+
+    with col3:
+        st.button(label=str(round(st.session_state.get("users_offset", 0) / 10)), key="pagination-users-offset", use_container_width=True)
+
+    with col4:
+        if st.button(
+            label="**:material/keyboard_double_arrow_right:**",
+            key="pagination-users-next",
+            disabled=len(users) < 10,
+            use_container_width=True,
+        ):
+            st.session_state["users_offset"] = st.session_state.get("users_offset", 0) + 10
+            st.rerun()
 
     name = st.selectbox(label="**Select a user**", options=[user["name"] for user in users], disabled=st.session_state.get("new_user", False))
     st.button(

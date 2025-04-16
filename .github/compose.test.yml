@@ -1,12 +1,19 @@
+name: albert-api
 services:
   api:
-    image: ghcr.io/etalab-ia/albert-api/app:latest
+    build:
+      context: ..
+      dockerfile: app/Dockerfile
     platform: linux/amd64
     restart: always
+    environment:
+      - COVERAGE_RCFILE=./app/.coveragerc
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+      - ALBERT_API_KEY=${ALBERT_API_KEY}
     ports:
       - 8000:8000
     volumes:
-      - ./config.yml:/config.yml:ro
+      - ./config.test.yml:/config.yml:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -15,31 +22,19 @@ services:
       qdrant:
         condition: service_healthy
 
-  playground:
-    image: ghcr.io/etalab-ia/albert-api/ui:latest
-    platform: linux/amd64
-    restart: always
-    ports:
-      - 8501:8501
-    volumes:
-      - ./config.yml:/config.yml:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   postgres:
     extends:
-      file: compose.yml
+      file: ../compose.yml
       service: postgres
 
   redis:
     extends:
-      file: compose.yml
+      file: ../compose.yml
       service: redis
 
   qdrant:
     extends:
-      file: compose.yml
+      file: ../compose.yml
       service: qdrant
 
 volumes:
