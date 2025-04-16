@@ -31,7 +31,8 @@ auth:
   master_key: "changeme"
 ```
 
-> [!NOTE] The default values `master_username` and `master_key` should be replaced with a strong, unique secret key in production environments.
+> **❗️Note**<br>
+> The default values `master_username` and `master_key` should be replaced with a strong, unique secret key in production environments.
 
 [See configuration documentation for more information](./deployment.md#auth)
 
@@ -42,7 +43,8 @@ The master key serves several critical purposes:
 - Emergency Access: Provides a failsafe way to access the system if regular authentication fails
 - Token Encryption: Used to encrypt all user tokens, ensuring they cannot be compromised
 
-> [!WARNING] If you modify the master key, you'll need to update all user API keys since they're encrypted using this key.
+> **⚠️ Warning**<br>
+> If you modify the master key, you'll need to update all user API keys since they're encrypted using this key.
 
 ## Role Management
 
@@ -55,7 +57,8 @@ Roles define what actions users can perform within the system through permission
 - Permissions: list of actions the role can perform
 - Limits: resource usage limits for users with this role
 
-> [!NOTE] All permissions and limits are managed by the *[Authorization](../app/helpers/_authorization.py)* class.
+> **❗️Note**<br>
+> All permissions and limits are managed by the *[Authorization](../app/helpers/_authorization.py)* class.
 
 ### Available Permissions
 

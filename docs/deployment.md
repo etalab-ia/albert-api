@@ -95,7 +95,8 @@ general:
 | master_username | Optional | Master username for the playground. This user can connect to the playground and create users and roles when the SQL database is empty. | str |  | `"master"` | 
 | master_key | Optional | API key and password (on playground) for the master user. This key has all permissions and cannot be modified or deleted. This key is also used to encrypt user tokens.  | str |  | `"changeme"` |
 
-> [!NOTE] If you modify the master key, you'll need to update all user API keys.
+> **❗️Note**<br>
+> If you modify the master key, you'll need to update all user API keys.
 
 **Example**
 ```yaml
@@ -243,7 +244,8 @@ databases:
 
 Qdrant is a vector database that allows you to store and retrieve vectors. The `model` argument is the ID of a text-embeddings-inference model defined in the `models` section. This model is used to embed the queries when performing a similarity search.
 
-> [!NOTE] If you change the model of a Qdrant database, you need to re-embed the database.
+> **❗️Note**<br>
+> If you change the model of a Qdrant database, you need to re-embed the database.
 
 **(3) Database Client Arguments**
 
