@@ -19,11 +19,6 @@ class WebSearchNotAvailableException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
-class CollectionAlreadyExistsException(HTTPException):
-    def __init__(self, detail: str = "Collection already exists."):
-        super().__init__(status_code=400, detail=detail)
-
-
 class RoleAlreadyExistsException(HTTPException):
     def __init__(self, detail: str = "Role already exists."):
         super().__init__(status_code=400, detail=detail)
@@ -36,11 +31,6 @@ class DeleteRoleWithUsersException(HTTPException):
 
 class UserAlreadyExistsException(HTTPException):
     def __init__(self, detail: str = "User already exists."):
-        super().__init__(status_code=400, detail=detail)
-
-
-class TokenAlreadyExistsException(HTTPException):
-    def __init__(self, detail: str = "Token already exists."):
         super().__init__(status_code=400, detail=detail)
 
 

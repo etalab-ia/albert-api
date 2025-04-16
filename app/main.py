@@ -41,7 +41,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
     )
 
     # Middlewares
-    if not settings.general.disabled_middleware:
+    if not settings.general.disabled_middlewares:
         app.add_middleware(middleware_class=UsagesMiddleware, db_func=get_db)
         app.instrumentator = Instrumentator().instrument(app=app)
 
@@ -77,7 +77,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
         app.include_router(router=models.router, tags=[ROUTER__MODELS.title()], prefix="/v1")
 
     if ROUTER__MONITORING not in settings.general.disabled_routers:
-        if not settings.general.disabled_middleware:
+        if not settings.general.disabled_middlewares:
             app.instrumentator.expose(app=app, should_gzip=True, tags=[ROUTER__MONITORING.title()], dependencies=[Depends(dependency=Authorization(permissions=[PermissionType.READ_METRIC]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 
         @app.get(path="/health", tags=[ROUTER__MONITORING.title()], include_in_schema=settings.general.log_level == "DEBUG", dependencies=[Security(dependency=Authorization())])  # fmt: off

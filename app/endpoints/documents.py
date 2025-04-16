@@ -46,15 +46,16 @@ async def get_documents(
     if not context.documents:  # no vector store available
         if collection:
             raise CollectionNotFoundException()
-        data = []
-    else:
-        data = await context.documents.get_documents(
-            session=session,
-            collection_id=collection,
-            limit=limit,
-            offset=offset,
-            user_id=request.app.state.user.id,
-        )
+
+        return Documents(data=[])
+
+    data = await context.documents.get_documents(
+        session=session,
+        collection_id=collection,
+        limit=limit,
+        offset=offset,
+        user_id=request.app.state.user.id,
+    )
 
     return Documents(data=data)
 

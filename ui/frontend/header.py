@@ -23,15 +23,7 @@ def header():
         if st.session_state.get("login_status") is None:
             login_form()
 
-    with stylable_container(
-        key="Header",
-        css_styles="""
-        button{
-            float: right;
-            
-        }
-    """,
-    ):
+    with stylable_container(key="Header", css_styles="button{float: right;}"):
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("Albert playground")

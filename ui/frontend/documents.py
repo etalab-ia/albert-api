@@ -14,12 +14,12 @@ with st.sidebar:
         st.rerun()
 
 
-collections = get_collections()
-private_collections = [collection for collection in collections if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE]
-documents = get_documents(collection_ids=[collection["id"] for collection in private_collections])
-
 # Collections
 st.subheader(body="Collections")
+
+collections = get_collections(offset=st.session_state.get("collections_offset", 0), limit=10)
+private_collections = [collection for collection in collections if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE]
+
 st.dataframe(
     data=pd.DataFrame(
         data=[
@@ -42,6 +42,32 @@ st.dataframe(
         "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
     },
 )
+
+## Pagination
+col1, col2, col3, col4, col5 = st.columns(spec=[20, 1, 1.5, 1, 20])
+with col2:
+    if st.button(
+        label="**:material/keyboard_double_arrow_left:**",
+        key="pagination-collections-previous",
+        disabled=st.session_state.get("collections_offset", 0) == 0,
+        use_container_width=True,
+    ):
+        st.session_state["collections_offset"] = max(0, st.session_state.get("collections_offset", 0) - 10)
+        st.rerun()
+
+with col3:
+    st.button(label=str(round(st.session_state.get("collections_offset", 0) / 10)), key="pagination-collections-offset", use_container_width=True)
+
+with col4:
+    if st.button(
+        label="**:material/keyboard_double_arrow_right:**",
+        key="pagination-collections-next",
+        disabled=len(collections) < 10,
+        use_container_width=True,
+    ):
+        st.session_state["collections_offset"] = st.session_state.get("collections_offset", 0) + 10
+        st.rerun()
+
 
 col1, col2 = st.columns(spec=2)
 with col1:
@@ -66,13 +92,21 @@ with col2:
         ):
             delete_collection(collection_id=collection_id)
 
-
 if not collections:
     st.info(body="No collection found, create one to start.")
     st.stop()
 
+st.divider()
 # Documents
 st.subheader(body="Documents")
+
+collection_name = st.selectbox(label="Select a collection", options=[collection["name"] for collection in private_collections])
+collection_id = [collection["id"] for collection in private_collections if collection["name"] == collection_name]
+collection_id = collection_id[0] if collection_id else None
+
+documents = get_documents(collection_id=collection_id, offset=st.session_state.get("documents_offset", 0), limit=10)
+
+st.write(documents)
 st.dataframe(
     data=pd.DataFrame(
         data=[
@@ -92,6 +126,33 @@ st.dataframe(
         "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
     },
 )
+
+## Pagination
+col1, col2, col3, col4, col5 = st.columns(spec=[20, 1, 1.5, 1, 20])
+
+with col2:
+    if st.button(
+        label="**:material/keyboard_double_arrow_left:**",
+        key="pagination-documents-previous",
+        disabled=st.session_state.get("documents_offset", 0) == 0,
+        use_container_width=True,
+    ):
+        st.session_state["documents_offset"] = max(0, st.session_state.get("documents_offset", 0) - 10)
+        st.rerun()
+
+with col3:
+    st.button(label=str(round(st.session_state.get("documents_offset", 0) / 10)), key="pagination-documents-offset", use_container_width=True)
+
+with col4:
+    if st.button(
+        label="**:material/keyboard_double_arrow_right:**",
+        key="pagination-documents-next",
+        disabled=len(documents) < 10,
+        use_container_width=True,
+    ):
+        st.session_state["documents_offset"] = st.session_state.get("documents_offset", 0) + 10
+        st.rerun()
+
 
 col1, col2 = st.columns(spec=2)
 with col1:

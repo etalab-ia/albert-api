@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
 import requests
 from sqlalchemy import select
@@ -26,48 +26,31 @@ def get_models(type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS
     return models
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=settings.playground.cache_ttl)
-def get_collections() -> list:
-    offset, limit = 0, 100
-    data = list()
-    while True:
-        response = requests.get(
-            url=f"{settings.playground.api_url}/v1/collections?offset={offset}&limit={limit}",
-            headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
-        )
+def get_collections(offset: int = 0, limit: int = 10) -> list:
+    response = requests.get(
+        url=f"{settings.playground.api_url}/v1/collections?offset={offset}&limit={limit}",
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
+    )
 
-        if response.status_code != 200:
-            st.error(response.json()["detail"])
-            return []
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
 
-        batch = response.json()["data"]
-        data.extend(batch)
-        if len(batch) < limit:
-            break
-        offset += limit
+    data = response.json()["data"]
 
     return data
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=settings.playground.cache_ttl)
-def get_documents(collection_ids: List[str]) -> dict:
-    offset, limit = 0, 100
-    data = list()
-    while True:
-        response = requests.get(
-            url=f"{settings.playground.api_url}/v1/documents?offset={offset}&limit={limit}",
-            headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
-        )
+def get_documents(collection_id: int, offset: int = 0, limit: int = 10) -> dict:
+    response = requests.get(
+        url=f"{settings.playground.api_url}/v1/documents?collection={collection_id}&offset={offset}&limit={limit}",
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
+    )
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
 
-        if response.status_code != 200:
-            st.error(response.json()["detail"])
-            return []
-
-        batch = response.json()["data"]
-        data.extend(batch)
-        if len(batch) < limit:
-            break
-        offset += limit
+    data = response.json()["data"]
 
     return data
 
@@ -87,47 +70,30 @@ def get_tokens() -> list:
     return response.json()["data"]
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=settings.playground.cache_ttl)
-def get_roles():
-    offset, limit = 0, 100
-    data = list()
-    while True:
-        response = requests.get(
-            url=f"{settings.playground.api_url}/roles?offset={offset}&limit={limit}",
-            headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
-        )
-        if response.status_code != 200:
-            st.error(response.json()["detail"])
-            return []
+def get_roles(offset: int = 0, limit: int = 10):
+    response = requests.get(
+        url=f"{settings.playground.api_url}/roles?offset={offset}&limit={limit}",
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
+    )
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
 
-        batch = response.json()["data"]
-        data.extend(batch)
-        if len(batch) < limit:
-            break
-        offset += limit
+    data = response.json()["data"]
 
     return data
 
 
-@st.cache_data(show_spinner="Retrieving data...", ttl=settings.playground.cache_ttl)
-def get_users():
-    offset, limit = 0, 100
-    data = list()
+def get_users(offset: int = 0, limit: int = 100):
+    response = requests.get(
+        url=f"{settings.playground.api_url}/users?offset={offset}&limit={limit}",
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
+    )
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
 
-    while True:
-        response = requests.get(
-            url=f"{settings.playground.api_url}/users?offset={offset}&limit={limit}",
-            headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
-        )
-        if response.status_code != 200:
-            st.error(response.json()["detail"])
-            return []
-
-        batch = response.json()["data"]
-        data.extend(batch)
-        if len(batch) < limit:
-            break
-        offset += limit
+    data = response.json()["data"]
 
     session = next(get_session())
     db_data = session.execute(select(UserTable)).scalars().all()

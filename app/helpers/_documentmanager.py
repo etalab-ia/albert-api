@@ -19,7 +19,7 @@ from qdrant_client.http.models import (
     VectorParams,
 )
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.model import BaseModelClient as ModelClient
@@ -36,7 +36,6 @@ from app.sql.models import Document as DocumentTable
 from app.sql.models import User as UserTable
 from app.utils.exceptions import (
     ChunkingFailedException,
-    CollectionAlreadyExistsException,
     CollectionNotFoundException,
     DocumentNotFoundException,
     NotImplementedException,
@@ -75,16 +74,13 @@ class DocumentManager:
     async def create_collection(
         self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None
     ) -> int:
-        try:
-            result = await session.execute(
-                statement=insert(table=CollectionTable)
-                .values(name=name, user_id=user_id, visibility=visibility, description=description)
-                .returning(CollectionTable.id)
-            )
-            collection_id = result.scalar_one()
-            await session.commit()
-        except IntegrityError as e:
-            raise CollectionAlreadyExistsException()
+        result = await session.execute(
+            statement=insert(table=CollectionTable)
+            .values(name=name, user_id=user_id, visibility=visibility, description=description)
+            .returning(CollectionTable.id)
+        )
+        collection_id = result.scalar_one()
+        await session.commit()
 
         await self.qdrant.create_collection(
             collection_name=str(collection_id),
