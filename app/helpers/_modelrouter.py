@@ -1,7 +1,7 @@
-import random
-
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers._basemodelrouter import BaseModelRouter
+from app.helpers.strategies.roundrobinmodelclientselectionstrategy import RoundRobinModelClientSelectionStrategy
+from app.helpers.strategies.shufflemodelclientselectionstrategy import ShuffleModelClientSelectionStrategy
 from app.schemas.core.models import RoutingStrategy
 from app.schemas.models import ModelType
 from app.schemas.core.settings import Model as ModelSettings
@@ -19,7 +19,15 @@ class ModelRouter(BaseModelRouter):
     }
 
     def __init__(
-        self, id: str, type: ModelType, owned_by: str, aliases: list[str], routing_strategy: str, clients: list[ModelSettings], *args, **kwargs
+        self,
+        id: str,
+        type: ModelType,
+        owned_by: str,
+        aliases: list[str],
+        routing_strategy: str,
+        clients: list[ModelSettings],
+        *args,
+        **kwargs,
     ) -> None:
         super().__init__(id, type, owned_by, aliases, routing_strategy, clients, *args, **kwargs)
 
@@ -28,16 +36,11 @@ class ModelRouter(BaseModelRouter):
             raise WrongModelTypeException()
 
         if self._routing_strategy == RoutingStrategy.ROUND_ROBIN:
-            client = self._routing_strategy_round_robin()
+            strategy = RoundRobinModelClientSelectionStrategy(self._clients, self._cycle)
         else:  # ROUTER_STRATEGY__SHUFFLE
-            client = self._routing_strategy_shuffle()
+            strategy = ShuffleModelClientSelectionStrategy(self._clients)
 
+        client = strategy.choose_model_client()
         client.endpoint = endpoint
 
         return client
-
-    def _routing_strategy_shuffle(self) -> ModelClient:
-        return random.choice(self._clients)
-
-    def _routing_strategy_round_robin(self) -> ModelClient:
-        return next(self._cycle)
