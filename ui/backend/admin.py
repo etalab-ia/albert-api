@@ -5,7 +5,7 @@ import requests
 from sqlalchemy import delete, insert, select, update
 import streamlit as st
 
-from ui.backend.common import check_password, get_roles, get_users
+from ui.backend.common import check_password
 from ui.backend.login import get_hashed_password
 from ui.settings import settings
 from ui.backend.sql.models import User as UserTable
@@ -24,7 +24,6 @@ def create_role(name: str, default: bool, permissions: list, limits: list):
 
     st.toast("Role created", icon="✅")
     time.sleep(0.5)
-    get_roles.clear()
     st.rerun()
 
 
@@ -38,7 +37,6 @@ def delete_role(role: int):
 
     st.toast("Role deleted", icon="✅")
     time.sleep(0.5)
-    get_roles.clear()
     st.rerun()
 
 
@@ -56,7 +54,6 @@ def update_role(
 
     st.toast("Role updated", icon="✅")
     time.sleep(0.5)
-    get_roles.clear()
     st.rerun()
 
 
@@ -103,7 +100,6 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
 
     st.toast("User created", icon="✅")
     time.sleep(0.5)
-    get_users.clear()
     st.rerun()
 
 
@@ -120,7 +116,6 @@ def delete_user(user: int):
     session.commit()
     st.toast("User deleted", icon="✅")
     time.sleep(0.5)
-    get_users.clear()
     st.rerun()
 
 
@@ -149,5 +144,4 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
 
     st.toast("User updated", icon="✅")
     time.sleep(0.5)
-    get_users.clear()
     st.rerun()

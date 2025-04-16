@@ -6,29 +6,20 @@ from streamlit_extras.stylable_container import stylable_container
 from ui.backend.common import get_collections, get_documents, get_models
 from ui.backend.summarize import generate_summary, generate_toc, get_chunks, summary_with_feedback
 from ui.frontend.header import header
-from ui.variables import COLLECTION_VISIBILITY_PRIVATE, MODEL_TYPE_LANGUAGE
+from ui.variables import MODEL_TYPE_LANGUAGE
 import logging
 
 logger = logging.getLogger(__name__)
 header()
-
-# Data
-try:
-    models = get_models(type=MODEL_TYPE_LANGUAGE)
-    collections = get_collections()
-    collections = [collection for collection in collections if "visibility" in collection and collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE]  # fmt: off
-    documents = get_documents(collection_ids=[collection["id"] for collection in collections])
-except Exception as e:
-    logger.exception("Error while loading collections and documents")
-    st.error(body=f"Error while loading collections and documents: {str(e)}")
-    st.stop()
+models = get_models(type=MODEL_TYPE_LANGUAGE)
 
 # Sidebar
 with st.sidebar:
-    new_chat = st.button(label="**:material/refresh: New summarize**", key="new", use_container_width=True)
-    if new_chat:
+    new_summarize = st.button(label="**:material/refresh: New summarize**", key="new", use_container_width=True)
+    if new_summarize:
         st.session_state.pop("collection_id", None)
         st.session_state.pop("document_id", None)
+        st.session_state.pop("document_name", None)
         st.session_state.pop("validate_toc", None)
         st.session_state.pop("toc", None)
         st.session_state.pop("summary", None)
@@ -38,23 +29,87 @@ with st.sidebar:
     selected_model = st.selectbox(label="Language model", options=models)
 
 # Main
-## Document
-st.session_state.collection_id = None if "collection_id" not in st.session_state else st.session_state.collection_id
-st.session_state.document_id = None if "document_id" not in st.session_state else st.session_state.document_id
-
+# Collections
 st.subheader(body=":material/counter_1: Select a document")
-st.info(body="Please select a document to generate a summary.")
-document = st.selectbox(label="Document", options=[f"{document["id"]} - {document["name"]}" for document in documents])
-if not document:
-    st.warning(body="First upload a document via the Documents page.")
+
+collections = get_collections(offset=st.session_state.get("collections_offset", 0), limit=10)
+collection = st.selectbox(label="Select a collection", options=[f"{collection["name"]} ({collection["id"]})" for collection in collections])
+
+## Pagination
+_, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
+with left:
+    if st.button(
+        label="**:material/keyboard_double_arrow_left:**",
+        key="pagination-collections-previous",
+        disabled=st.session_state.get("collections_offset", 0) == 0,
+        use_container_width=True,
+    ):
+        st.session_state["collections_offset"] = max(0, st.session_state.get("collections_offset", 0) - 10)
+        st.rerun()
+with center:
+    st.button(label=str(round(st.session_state.get("collections_offset", 0) / 10)), key="pagination-collections-offset", use_container_width=True)
+with right:
+    with stylable_container(key="pagination-collections-next", css_styles="button{float: right;}"):
+        if st.button(
+            label="**:material/keyboard_double_arrow_right:**",
+            key="pagination-collections-next",
+            disabled=len(collections) < 10,
+            use_container_width=True,
+        ):
+            st.session_state["collections_offset"] = st.session_state.get("collections_offset", 0) + 10
+            st.rerun()
+
+if not collection:
+    st.warning(body="First create a collection on the Documents page.")
     st.stop()
-document_id = int(document.split(" - ")[0])
-collection_id = [document["collection_id"] for document in documents if document["id"] == document_id][0]
+
+collection_id = int(collection.split("(")[-1].split(")")[0])
+
+# Documents
+documents = get_documents(collection_id=collection_id, offset=st.session_state.get("documents_offset", 0), limit=10)
+document = st.selectbox(label="Select a document", options=[f"{document["name"]} ({document["id"]})" for document in documents])
+
+## Pagination
+_, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
+with left:
+    if st.button(
+        label="**:material/keyboard_double_arrow_left:**",
+        key="pagination-documents-previous",
+        disabled=st.session_state.get("documents_offset", 0) == 0,
+        use_container_width=True,
+    ):
+        st.session_state.documents_offset = max(0, st.session_state.get("documents_offset", 0) - 10)
+        st.rerun()
+
+with center:
+    st.button(label=str(round(st.session_state.get("documents_offset", 0) / 10)), key="pagination-documents-offset", use_container_width=True)
+
+with right:
+    with stylable_container(key="pagination-documents-next", css_styles="button{float: right;}"):
+        if st.button(
+            label="**:material/keyboard_double_arrow_right:**",
+            key="pagination-documents-next",
+            disabled=len(documents) < 10,
+            use_container_width=True,
+        ):
+            st.session_state.documents_offset = st.session_state.get("documents_offset", 0) + 10
+            st.rerun()
+
+
+if document:
+    document_name = "(".join(document.split("(")[:-1])
+    document_id = int(document.split("(")[-1].split(")")[0])
+
+if st.session_state.get("document_name"):
+    st.info(body=f"Selected document: {st.session_state.get("document_name")} ({st.session_state.get("document_id")})")
+else:
+    st.info(body="Select document to summarize.")
 
 with stylable_container(key="Summarize", css_styles="button{float: right;}"):
     if st.button(label="Validate", key="validate_document"):
         st.session_state.collection_id = collection_id
         st.session_state.document_id = document_id
+        st.session_state.document_name = document_name
         st.toast("Document validated !", icon="✅")
         time.sleep(2)
         st.rerun()
@@ -66,7 +121,7 @@ st.session_state.validate_toc = False if "validate_toc" not in st.session_state 
 st.markdown(body="***")
 st.subheader(body=":material/counter_2: Create a table of content")
 
-if not st.session_state.document_id:
+if not st.session_state.get("document_id"):
     st.stop()
 chunks = get_chunks(collection_id=collection_id, document_id=document_id)
 

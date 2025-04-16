@@ -155,6 +155,19 @@ class Config(ConfigBaseModel):
 
 
 class Settings(BaseSettings):
+    # legacy collections
+    legacy_collections: Optional[str] = None
+
+    @field_validator("legacy_collections", mode="after")
+    def open_legacy_collections(cls, legacy_collections):
+        if legacy_collections:
+            logging.warning(f"Loading legacy collections from {legacy_collections}.")
+            with open(file=legacy_collections, mode="r") as file:
+                file_content = file.read()
+                file.close()
+            legacy_collections = yaml.safe_load(file_content)
+        return legacy_collections
+
     # config
     config_file: str = "config.yml"
 

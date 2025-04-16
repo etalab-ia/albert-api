@@ -50,7 +50,10 @@ with st.sidebar:
             col1, col2 = st.columns(spec=2)
 
             for collection in collections:
-                if st.checkbox(label=collection["name"], value=False if collection["id"] not in st.session_state.selected_collections else True):
+                if st.checkbox(
+                    label=f"{collection["name"]} ({collection["id"]})",
+                    value=False if collection["id"] not in st.session_state.selected_collections else True,
+                ):
                     selected_collections.append(collection["id"])
                 elif collection["id"] in selected_collections:
                     selected_collections.remove(collection["id"])

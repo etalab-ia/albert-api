@@ -3,7 +3,6 @@ import time
 import requests
 import streamlit as st
 
-from ui.backend.common import get_collections, get_documents
 from ui.settings import settings
 
 
@@ -16,7 +15,6 @@ def create_collection(collection_name: str) -> None:
         return
 
     st.toast("Create succeed", icon="✅")
-    get_collections.clear()
     time.sleep(0.5)
     st.rerun()
 
@@ -30,8 +28,6 @@ def delete_collection(collection_id: int) -> None:
         return
 
     st.toast("Delete succeed", icon="✅")
-    get_collections.clear()
-    get_documents.clear()
     time.sleep(0.5)
     st.rerun()
 
@@ -49,8 +45,6 @@ def upload_file(file, collection_id: str) -> None:
         return
 
     st.toast("Upload succeed", icon="✅")
-    get_collections.clear()
-    get_documents.clear()
     time.sleep(0.5)
     st.rerun()
 
@@ -66,7 +60,5 @@ def delete_document(document_id: str) -> None:
         return
 
     st.toast("Delete succeed", icon="✅")
-    get_collections.clear()
-    get_documents.clear()
     time.sleep(0.5)
     st.rerun()
