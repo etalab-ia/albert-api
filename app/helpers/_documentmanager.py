@@ -5,19 +5,6 @@ from uuid import uuid4
 
 from fastapi import UploadFile
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.exceptions import ResponseHandlingException
-from qdrant_client.http.models import (
-    Distance,
-    FieldCondition,
-    Filter,
-    FilterSelector,
-    IntegerIndexType,
-    MatchAny,
-    MatchValue,
-    OrderBy,
-    PointStruct,
-    VectorParams,
-)
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,7 +25,6 @@ from app.utils.exceptions import (
     ChunkingFailedException,
     CollectionNotFoundException,
     DocumentNotFoundException,
-    NotImplementedException,
     ParsingDocumentFailedException,
     UnsupportedFileTypeException,
     VectorizationFailedException,
@@ -71,9 +57,7 @@ class DocumentManager:
         self.web_search = web_search
         self.web_search_model = web_search_model
 
-    async def create_collection(
-        self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None
-    ) -> int:
+    async def create_collection(self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:  # fmt: off
         result = await session.execute(
             statement=insert(table=CollectionTable)
             .values(name=name, user_id=user_id, visibility=visibility, description=description)
@@ -82,11 +66,7 @@ class DocumentManager:
         collection_id = result.scalar_one()
         await session.commit()
 
-        await self.qdrant.create_collection(
-            collection_name=str(collection_id),
-            vectors_config=VectorParams(size=self.qdrant_model._vector_size, distance=Distance.COSINE),
-        )
-        await self.qdrant.create_payload_index(collection_name=str(collection_id), field_name="id", field_schema=IntegerIndexType.INTEGER)
+        await self.qdrant.create_collection(collection_id=collection_id, vector_size=self.qdrant_model._vector_size)
 
         return collection_id
 
@@ -104,8 +84,8 @@ class DocumentManager:
         await session.execute(statement=delete(table=CollectionTable).where(CollectionTable.id == collection_id))
         await session.commit()
 
-        # delete the collection from qdrant
-        await self.qdrant.delete_collection(collection_name=str(collection_id))
+        # delete the collection from vector store
+        await self.qdrant.delete_collection(collection_id=collection_id)
 
     async def update_collection(self, session: AsyncSession, user_id: int, collection_id: int, name: Optional[str] = None, visibility: Optional[CollectionVisibility] = None, description: Optional[str] = None) -> None:  # fmt: off
         # check if collection exists
@@ -205,7 +185,6 @@ class DocumentManager:
             chunk.metadata["document_id"] = document_id
             chunk.metadata["document_name"] = document_name
             chunk.metadata["document_created_at"] = round(time.time())
-            chunk.metadata["document_part"] = f"{i + 1}/{len(chunks)}"
         try:
             await self._upsert(chunks=chunks, collection_id=collection_id, model_client=client)
         except Exception as e:
@@ -242,14 +221,7 @@ class DocumentManager:
 
         # chunks count
         for document in documents:
-            try:
-                chunks_count = await self.qdrant.count(
-                    collection_name=str(document.collection_id),
-                    count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document.id]))]),
-                )
-                document.chunks = chunks_count.count
-            except ResponseHandlingException as e:
-                document.chunks = None
+            document.chunks = await self.qdrant.get_chunk_count(collection_id=document.collection_id, document_id=document.id)
 
         return documents
 
@@ -269,9 +241,8 @@ class DocumentManager:
         await session.execute(statement=delete(table=DocumentTable).where(DocumentTable.id == document_id))
         await session.commit()
 
-        # delete the document from qdrant
-        filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-        await self.qdrant.delete(collection_name=str(document.collection_id), points_selector=FilterSelector(filter=filter))
+        # delete the document from vector store
+        await self.qdrant.delete_document(collection_id=document.collection_id, document_id=document_id)
 
     async def get_chunks(
         self,
@@ -294,20 +265,13 @@ class DocumentManager:
         except NoResultFound:
             raise DocumentNotFoundException()
 
-        # check if document exists
-        must = [FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))]
-        if chunk_id:
-            must.append(FieldCondition(key="metadata.id", match=MatchValue(value=chunk_id)))
-
-        filter = Filter(must=must)
-        data = await self.qdrant.scroll(
-            collection_name=document.collection_id,
-            scroll_filter=filter,
-            order_by=OrderBy(key="id", start_from=offset),
+        chunks = await self.qdrant.get_chunks(
+            collection_id=document.collection_id,
+            document_id=document_id,
+            offset=offset,
             limit=limit,
+            chunk_id=chunk_id,
         )
-        data = data[0]
-        chunks = [Chunk(id=chunk.payload["id"], content=chunk.payload["content"], metadata=chunk.payload["metadata"]) for chunk in data]
 
         return chunks
 
@@ -365,9 +329,6 @@ class DocumentManager:
         if web_collection_id:
             await self.delete_collection(session=session, user_id=user_id, collection_id=web_collection_id)
 
-        if score_threshold:
-            searches = [search for search in searches if search.score >= score_threshold]
-
         return searches
 
     def _parse(self, file: UploadFile, file_extension: str) -> ParserOutput:
@@ -413,11 +374,9 @@ class DocumentManager:
 
             # insert chunks and vectors
             await self.qdrant.upsert(
-                collection_name=str(collection_id),
-                points=[
-                    PointStruct(id=str(uuid4()), vector=embedding, payload={"id": chunk.id, "content": chunk.content, "metadata": chunk.metadata})
-                    for chunk, embedding in zip(batch, embeddings)
-                ],
+                collection_id=collection_id,
+                chunks=batch,
+                embeddings=embeddings,
             )
 
     async def _query(
@@ -431,12 +390,6 @@ class DocumentManager:
         rff_k: Optional[int] = 20,
         score_threshold: Optional[float] = None,
     ) -> List[Search]:
-        if method != SearchMethod.SEMANTIC:
-            raise NotImplementedException("Lexical and hybrid search are not available for Qdrant database.")
-
-        response = await self._create_embeddings(input=[prompt], model_client=model_client)
-
-        chunks = []
         # check if collections exist
         for collection_id in collection_ids:
             result = await session.execute(statement=select(CollectionTable).where(CollectionTable.id == collection_id))
@@ -445,24 +398,17 @@ class DocumentManager:
             except NoResultFound:
                 raise CollectionNotFoundException(detail=f"Collection {collection_id} not found.")
 
-            results = await self.qdrant.search(
-                collection_name=str(collection_id),
-                query_vector=response[0],
-                limit=k,
-                score_threshold=score_threshold,
-                with_payload=True,
-            )
-            chunks.extend(results)
+        response = await self._create_embeddings(input=[prompt], model_client=model_client)
+        query_vector = response[0]
 
-        # sort by similarity score and get top k
-        chunks = sorted(chunks, key=lambda x: x.score, reverse=True)[:k]
-        searches = [
-            Search(
-                method=method,
-                score=chunk.score,
-                chunk=Chunk(id=chunk.payload["id"], content=chunk.payload["content"], metadata=chunk.payload["metadata"]),
-            )
-            for chunk in chunks
-        ]
+        searches = await self.qdrant.search(
+            method=method,
+            collection_ids=collection_ids,
+            query_prompt=prompt,
+            query_vector=query_vector,
+            k=k,
+            rff_k=rff_k,
+            score_threshold=score_threshold,
+        )
 
         return searches
