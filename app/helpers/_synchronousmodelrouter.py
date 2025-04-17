@@ -4,7 +4,6 @@ from app.helpers.strategies.roundrobinmodelclientselectionstrategy import RoundR
 from app.helpers.strategies.shufflemodelclientselectionstrategy import ShuffleModelClientSelectionStrategy
 from app.schemas.core.models import RoutingStrategy
 from app.schemas.models import ModelType
-from app.schemas.core.settings import Model as ModelSettings
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS, ENDPOINT__OCR, ENDPOINT__RERANK
 
@@ -25,7 +24,7 @@ class ModelRouter(BaseModelRouter):
         owned_by: str,
         aliases: list[str],
         routing_strategy: str,
-        clients: list[ModelSettings],
+        clients: list[ModelClient],
         *args,
         **kwargs,
     ) -> None:

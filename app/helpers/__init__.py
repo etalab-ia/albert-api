@@ -4,7 +4,7 @@ from ._identityaccessmanager import IdentityAccessManager
 from ._websearchmanager import WebSearchManager
 from ._limiter import Limiter
 from ._modelregistry import ModelRegistry
-from ._modelrouter import ModelRouter
+from ._synchronousmodelrouter import ModelRouter
 from ._streamingresponsewithstatuscode import StreamingResponseWithStatusCode
 from ._usagesmiddleware import UsagesMiddleware
 

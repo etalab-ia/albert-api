@@ -28,14 +28,11 @@ class AlbertModelClient(AsyncOpenAI, BaseModelClient):
 
     def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
-        Initialize the Albert model client and check if the model is available.
+        Initialize the OpenAI model client and check if the model is available.
         """
-        self.model = model
-        self.api_url = api_url
-        self.api_key = api_key
-        self.timeout = timeout
+        BaseModelClient.__init__(self, model=model, api_url=api_url, api_key=api_key, timeout=timeout, *args, **kwargs)
 
-        super().__init__(base_url=urljoin(base=self.api_url, url="/v1"), api_key=self.api_key, timeout=self.timeout)
+        AsyncOpenAI.__init__(self, base_url=urljoin(base=self.api_url, url="/v1"), api_key=self.api_key, timeout=self.timeout)
 
         # check if model is available
         url = urljoin(base=str(self.api_url), url=self.ENDPOINT_TABLE[ENDPOINT__MODELS])
