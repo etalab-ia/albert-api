@@ -232,7 +232,7 @@ class AccessController:
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
         if body.get("search", False):  # count the search request as one request to the search model (embeddings)
-            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
+            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
 
         prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__CHAT_COMPLETIONS, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
@@ -265,9 +265,9 @@ class AccessController:
         await self._check_budget(user=user, model=body.get("model"))
 
     async def _check_files_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
 
-        await self._check_budget(user=user, model=global_context.documents.qdrant.model.id)
+        await self._check_budget(user=user, model=global_context.documents.vector_store.model.id)
 
     async def _check_ocr_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
@@ -296,7 +296,7 @@ class AccessController:
         body = json.loads(body) if body else {}
 
         # count the search request as one request to the search model (embeddings)
-        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
 
         prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__SEARCH, body=body)
         await self._check_token_limits(
@@ -304,10 +304,10 @@ class AccessController:
             user=user,
             limits=limits,
             prompt_tokens=prompt_tokens,
-            model=global_context.documents.qdrant.model.id,
+            model=global_context.documents.vector_store.model.id,
         )
 
-        await self._check_budget(user=user, model=global_context.documents.qdrant.model.id)
+        await self._check_budget(user=user, model=global_context.documents.vector_store.model.id)
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
