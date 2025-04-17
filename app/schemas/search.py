@@ -61,6 +61,7 @@ class SearchRequest(SearchArgs):
 
 
 class Search(BaseModel):
+    method: SearchMethod
     score: float
     chunk: Chunk
 

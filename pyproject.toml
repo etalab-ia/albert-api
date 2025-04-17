@@ -29,7 +29,7 @@ app = [
     "coredis==4.20.0",
 
     # data
-    "elasticsearch==8.17.1",
+    "elasticsearch[async]==9.0.0",
     "langchain==0.2.15",
     "qdrant-client==1.10.1",
     "redis==5.2.1",

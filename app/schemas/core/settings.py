@@ -17,6 +17,7 @@ from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
 
 class DatabaseType(str, Enum):
     QDRANT = "qdrant"
+    ELASTICSEARCH = "elasticsearch"
     REDIS = "redis"
     SQL = "sql"
 
@@ -203,8 +204,14 @@ class Settings(BaseSettings):
         values.databases.sql = next((database for database in config.databases if database.type == DatabaseType.SQL), None)
         values.databases.redis = next((database for database in config.databases if database.type == DatabaseType.REDIS), None)
         values.databases.qdrant = next((database for database in config.databases if database.type == DatabaseType.QDRANT), None)
+        values.databases.elasticsearch = next((database for database in config.databases if database.type == DatabaseType.ELASTICSEARCH), None)
 
+        assert values.databases.qdrant is None or values.databases.elasticsearch is None, "Only one vector database (Qdrant or Elasticsearch) is allowed."  # fmt: off
         assert values.databases.sql.args["url"].startswith("postgresql+asyncpg://") or values.databases.sql.args["url"].startswith("sqlite+aiosqlite://"), "SQL connection must be async."  # fmt: off
+
+        if values.databases.elasticsearch:
+            assert values.databases.sql, "SQL database is required to use Elasticsearch features."
+            assert values.databases.elasticsearch.model in [model.id for model in values.models if model.type == ModelType.TEXT_EMBEDDINGS_INFERENCE], f"Elasticsearch model is not defined in models section with type {ModelType.TEXT_EMBEDDINGS_INFERENCE}."  # fmt: off
 
         if values.databases.qdrant:
             assert values.databases.sql, "SQL database is required to use Qdrant features."
