@@ -116,7 +116,7 @@ def wrap_stream_into_usage_extractor(response: StreamingResponse, start_time: da
                     chunk = chunk[0]
                 if time_to_first_token is None:
                     time_to_first_token = datetime.now() - start_time
-                    buffer.append(chunk)
+                buffer.append(chunk)
             except Exception:
                 pass
             yield chunk
@@ -150,6 +150,7 @@ async def perform_log(usage: Usage, start_time: datetime, response):
     """
     # Calculate duration
     usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
+    usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
     # Set status if available
     usage.status = response.status_code if hasattr(response, "status_code") else None
     async for session in get_db():
