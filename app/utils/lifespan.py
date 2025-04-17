@@ -4,11 +4,11 @@ from types import SimpleNamespace
 
 from coredis import ConnectionPool
 from fastapi import FastAPI
-from qdrant_client import AsyncQdrantClient
 
-from app.clients.web_search import BaseWebSearchClient as WebSearchClient
+from app.clients.database import QdrantClient
 from app.clients.model import BaseModelClient as ModelClient
-from app.helpers import DocumentManager, IdentityAccessManager, WebSearchManager, Limiter, ModelRegistry, ModelRouter
+from app.clients.web_search import BaseWebSearchClient as WebSearchClient
+from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRegistry, ModelRouter, WebSearchManager
 from app.utils.logging import logger
 from app.utils.settings import settings
 
@@ -25,7 +25,8 @@ async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
     # setup clients
-    qdrant = AsyncQdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
+    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
+
     redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
     web_search = WebSearchClient.import_module(type=settings.web_search.type)(**settings.web_search.args) if settings.web_search else None
     routers = []
@@ -52,18 +53,22 @@ async def lifespan(app: FastAPI):
         model["clients"] = clients
         routers.append(ModelRouter(**model))
 
-    # setup context
+    # setup context: models, iam, limiter
     context.models = ModelRegistry(routers=routers)
     context.iam = IdentityAccessManager()
     context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
 
-    web_search = WebSearchManager(web_search=web_search) if settings.web_search else None
-    web_search_model = context.models(model=settings.web_search.model) if settings.web_search else None
-    qdrant_model = context.models(model=settings.databases.qdrant.model) if settings.databases.qdrant else None
+    if redis:
+        assert await context.limiter.redis.check(), "Redis database is not reachable."
 
+    # setup context: documents
+    web_search = WebSearchManager(web_search=web_search) if settings.web_search else None
+    web_search_model = context.models(model=settings.web_search.model) if web_search else None
+    qdrant_model = context.models(model=settings.databases.qdrant.model) if qdrant else None
     context.documents = DocumentManager(qdrant=qdrant, qdrant_model=qdrant_model, web_search=web_search, web_search_model=web_search_model) if qdrant else None  # fmt: off
 
-    assert await context.limiter.redis.check(), "Redis database is not reachable."
+    if qdrant:
+        assert await context.documents.qdrant.check(), "Qdrant database is not reachable."
 
     yield
 

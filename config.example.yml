@@ -41,7 +41,7 @@ models:
         type: openai
         args:
           api_url: https://api.openai.com
-          api_key: sk-...aB
+          api_key: ${OPENAI_API_KEY}
           timeout: 60
 
   - id: my-embeddings-model
@@ -51,5 +51,5 @@ models:
         type: openai
         args:
           api_url: https://api.openai.com
-          api_key: sk-...aB
+          api_key: ${OPENAI_API_KEY}
           timeout: 60

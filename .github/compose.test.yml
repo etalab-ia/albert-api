@@ -10,6 +10,9 @@ services:
       - COVERAGE_RCFILE=./app/.coveragerc
       - BRAVE_API_KEY=${BRAVE_API_KEY}
       - ALBERT_API_KEY=${ALBERT_API_KEY}
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - QDRANT_HOST=qdrant
     ports:
       - 8000:8000
     volumes:

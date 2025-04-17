@@ -2,7 +2,7 @@
 
 To contribute to the project, please follow the instructions below.
 
-## Development in Docker Environment
+## Development in Docker environment
 
 > **⚠️ Warning**<br>
 > You must have access to a language model API.
@@ -23,7 +23,7 @@ To contribute to the project, please follow the instructions below.
     > **❗️Note**<br>
     > The API and playground will be available on ports 8000 and 8501 respectively. To connect to the playground for the first time, use the login *master* and password *changeme* (defined in the configuration file).
 
-## Development Outside Docker Environment
+## Development outside Docker environment
 
 1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)* with your models.
 
@@ -59,7 +59,7 @@ To contribute to the project, please follow the instructions below.
 
     To connect to the playground for the first time, use the login *master* and password *changeme* (defined in the configuration file).
 
-## Modifications to SQL Database Structure
+## Modifications to SQL database structure
 
 ### Modifications to the [`app/sql/models.py`](./app/sql/models.py) file
 
@@ -91,20 +91,40 @@ alembic -c ui/alembic.ini upgrade head
 
 ## Tests
 
-Before submitting a pull request, please check the proper deployment of your API by running the tests as follows:
-
-```bash
-CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml
-```
-
 > **❗️Note**<br>
 > The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can modify it to run the tests on your machine.
+> You need set `$BRAVE_API_KEY` and `$ALBERT_API_KEY` environment variables to run the tests.
 
-To update the snapshots, run the following command:
+### In Docker environment
 
 ```bash
-PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
+docker compose --file ./.github/compose.test.yml up --detach
+docker exec -it albert-api-api-1 pytest app/test
 ```
+
+### Outside Docker environment
+
+1. Run the databases services and export environment variables
+
+    ```bash 
+    docker compose --file ./.github/compose.test.yml up redis postgres qdrant --detach
+
+    export POSTGRES_HOST=localhost
+    export REDIS_HOST=localhost
+    export QDRANT_HOST=localhost
+    ```
+
+2. Run the tests
+
+    ```bash
+    CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml
+    ```
+
+    To update the snapshots, run the following command:
+
+    ```bash
+    CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
+    ```
 
 ## Notebooks
 
