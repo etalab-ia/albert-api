@@ -3,7 +3,7 @@ from typing import List, Optional
 from app.schemas.models import Model as ModelSchema
 from app.utils.exceptions import ModelNotFoundException
 
-from ._modelrouter import ModelRouter
+from ._synchronousmodelrouter import ModelRouter
 
 
 class ModelRegistry:

@@ -2,11 +2,10 @@ from typing import Iterator, List
 
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.strategies._basemodelclientselectionstrategy import BaseModelClientSelectionStrategy
-from app.schemas.core.settings import Model as ModelSettings
 
 
 class RoundRobinModelClientSelectionStrategy(BaseModelClientSelectionStrategy):
-    def __init__(self, clients: List[ModelSettings], cycle: Iterator) -> None:
+    def __init__(self, clients: List[ModelClient], cycle: Iterator[ModelClient]) -> None:
         super().__init__(clients)
         self.cycle = cycle
 

@@ -4,7 +4,6 @@ import time
 
 from app.clients.model import BaseModelClient as ModelClient
 from app.schemas.models import ModelType
-from app.schemas.core.settings import Model as ModelSettings
 
 
 class BaseModelRouter(ABC):
@@ -15,7 +14,7 @@ class BaseModelRouter(ABC):
         owned_by: str,
         aliases: list[str],
         routing_strategy: str,
-        clients: list[ModelSettings],
+        clients: list[ModelClient],
         *args,
         **kwargs,
     ) -> None:

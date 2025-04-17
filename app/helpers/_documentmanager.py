@@ -47,7 +47,7 @@ from app.utils.exceptions import (
 from app.utils.logging import logger
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS
 
-from ._modelrouter import ModelRouter
+from ._synchronousmodelrouter import ModelRouter
 from ._websearchmanager import WebSearchManager
 
 
