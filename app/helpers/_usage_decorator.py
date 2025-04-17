@@ -10,8 +10,13 @@ from starlette.responses import StreamingResponse
 
 from app.sql.models import Usage
 from app.sql.session import get_db
+from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
+
+
+class NoUserIdException(Exception):
+    pass
 
 
 def log_usage(func):
@@ -27,11 +32,16 @@ def log_usage(func):
         start_time = datetime.now()
         usage = Usage(datetime=start_time, endpoint="N/A")
 
-        await extract_usage_from_request(args, kwargs, usage)
         response = await func(*args, **kwargs)
 
+        try:
+            await extract_usage_from_request(args, kwargs, usage)
+        except NoUserIdException:
+            logger.exception("No user ID found in request, skipping usage logging.")
+            return response
+
         if isinstance(response, StreamingResponse):
-            return wrap_stream_into_usage_extractor(response, start_time, usage)
+            return wrap_streaming_response_into_usage_extractor(response, start_time, usage)
         else:
             asyncio.create_task(extract_usage_from_response(response, start_time, usage))
             return response
@@ -60,6 +70,8 @@ def log_usage(func):
         usage.method = request.method
         user_obj = getattr(request.app.state, "user", None)
         usage.user_id = getattr(user_obj, "id", None) if user_obj else None
+        if not usage.user_id:
+            raise NoUserIdException("No user ID found in request")
         usage.token_id = getattr(request.app.state, "token_id", None)
 
         try:
@@ -89,16 +101,17 @@ def log_usage(func):
                 logger.warning("Failed to parse JSON request body")
                 return None, None
 
-        if content_type.startswith("multipart/form-data"):
+        if "model" in kwargs:
+            usage.model = kwargs["model"]
+        elif content_type.startswith("multipart/form-data"):
             usage.model = await extract_model_from_multipart(body, content_type)
-            usage.prompt_tokens = None
         else:
             usage.model, usage.prompt_tokens = await model_tokens_from_json(body)
 
     return wrapper
 
 
-def wrap_stream_into_usage_extractor(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponse:
+def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponse:
     """
     Wraps the original StreamingResponse to extract usage information from the stream.
     This function captures the first token from the stream and calculates the completion tokens.
@@ -106,16 +119,15 @@ def wrap_stream_into_usage_extractor(response: StreamingResponse, start_time: da
     """
     original_stream = response.body_iterator
     buffer = []
-    time_to_first_token = None
 
     async def wrapped_stream():
-        nonlocal time_to_first_token, buffer
+        nonlocal usage, buffer
         async for chunk in original_stream:
             try:
                 if isinstance(chunk, tuple):  # if StreamingResponseWithStatusCode
                     chunk = chunk[0]
-                if time_to_first_token is None:
-                    time_to_first_token = datetime.now() - start_time
+                if usage.time_to_first_token is None:
+                    usage.time_to_first_token = int((datetime.now() - start_time).total_seconds() * 1000)
                 buffer.append(chunk)
             except Exception:
                 pass
@@ -138,7 +150,7 @@ async def extract_usage_from_response(response, start_time: datetime, usage: Usa
     try:
         usage.completion_tokens = len(response.choices[0].message.content.split())
     except Exception:
-        logger.exception("Error parsing non-streaming response")
+        logger.debug("Error parsing non-streaming response")
     finally:
         asyncio.create_task(perform_log(usage, start_time, response))
 
@@ -148,11 +160,12 @@ async def perform_log(usage: Usage, start_time: datetime, response):
     Logs the usage information to the database.
     This function captures the duration of the request and sets the status code of the response if available.
     """
-    # Calculate duration
     usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
-    usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
-    # Set status if available
+    if usage.prompt_tokens and usage.completion_tokens:
+        usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
     usage.status = response.status_code if hasattr(response, "status_code") else None
+    if usage.model:
+        usage.model_alias = next((mod.aliases[0] for mod in settings.models if mod.id == usage.model and mod.aliases), None)
     async for session in get_db():
         session.add(usage)
         try:
