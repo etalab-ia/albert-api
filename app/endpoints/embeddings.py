@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Security
 
-from app.helpers import Authorization
+from app.helpers import Authorization, log_usage
 from app.schemas.embeddings import Embeddings, EmbeddingsRequest
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__EMBEDDINGS
@@ -9,6 +9,7 @@ router = APIRouter()
 
 
 @router.post(path=ENDPOINT__EMBEDDINGS, dependencies=[Security(dependency=Authorization())])
+@log_usage
 async def embeddings(request: Request, body: EmbeddingsRequest) -> Embeddings:
     """
     Creates an embedding vector representing the input text.

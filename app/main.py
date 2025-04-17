@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search
-from app.helpers import Authorization, UsagesMiddleware
+from app.helpers import Authorization
 from app.schemas.auth import PermissionType
 from app.sql.session import get_db
 from app.utils.lifespan import lifespan
@@ -41,8 +41,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
     )
 
     # Middlewares
-    if not settings.general.disabled_middlewares:
-        app.add_middleware(middleware_class=UsagesMiddleware, db_func=get_db)
+    if not settings.general.disabled_middleware:
         app.instrumentator = Instrumentator().instrument(app=app)
 
     # Routers

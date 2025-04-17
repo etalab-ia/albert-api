@@ -6,7 +6,7 @@ from ._limiter import Limiter
 from ._modelregistry import ModelRegistry
 from ._modelrouter import ModelRouter
 from ._streamingresponsewithstatuscode import StreamingResponseWithStatusCode
-from ._usagesmiddleware import UsagesMiddleware
+from ._usage_decorator import log_usage
 
 __all__ = [
     "Authorization",
@@ -16,6 +16,6 @@ __all__ = [
     "ModelRegistry",
     "ModelRouter",
     "StreamingResponseWithStatusCode",
-    "UsagesMiddleware",
     "WebSearchManager",
+    "log_usage",
 ]
