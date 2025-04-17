@@ -15,18 +15,36 @@ logger = logging.getLogger(__name__)
 
 
 def log_usage(func):
+    """
+    Extracts usage information from the request and response and logs it to the database.
+    This decorator is designed to be used with FastAPI endpoints.
+    It captures the request method, endpoint, user ID, token ID, model name, prompt tokens,
+    completion tokens, and the duration of the request.
+    """
+
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         start_time = datetime.now()
-        user_id = None
-        token_id = None
-        endpoint = "N/A"
-        model = None
-        prompt_tokens = None
-        completion_tokens = None
-        time_to_first_token = None
-        request: Optional[Request] = None
+        usage = Usage(datetime=start_time, endpoint="N/A")
 
+        await extract_usage_from_request(args, kwargs, usage)
+        response = await func(*args, **kwargs)
+
+        if isinstance(response, StreamingResponse):
+            return wrap_stream_into_usage_extractor(response, start_time, usage)
+        else:
+            asyncio.create_task(extract_usage_from_response(response, start_time, usage))
+            return response
+
+    async def extract_usage_from_request(args, kwargs, usage: Usage):
+        """
+        Extracts usage information from the request and sets it in the Usage object.
+        This function looks for the request object in the arguments and keyword arguments
+        passed to the decorated function.
+        It extracts the request method, endpoint, user ID, token ID, model name, and prompt tokens.
+        """
+        # Find the Request in args or kwargs
+        request: Optional[Request] = None
         for arg in args:
             if isinstance(arg, Request):
                 request = arg
@@ -34,79 +52,15 @@ def log_usage(func):
         if not request:
             request = kwargs.get("request")
 
-        if request:
-            user_id, token_id, endpoint, model, prompt_tokens = await extract_info_from_request(request)
+        if not request:
+            return
 
-        response = await func(*args, **kwargs)
-
-        async def perform_log():
-            duration = int((datetime.now() - start_time).total_seconds() * 1000)
-            async for session in get_db():
-                log = Usage(
-                    datetime=start_time,
-                    duration=duration,
-                    user_id=user_id,
-                    token_id=token_id,
-                    endpoint=endpoint,
-                    model=model,
-                    prompt_tokens=prompt_tokens,
-                    completion_tokens=completion_tokens,
-                    total_tokens=prompt_tokens + completion_tokens if prompt_tokens and completion_tokens else None,
-                    status=response.status_code if hasattr(response, "status_code") else None,
-                    method=request.method if request else None,
-                )
-                session.add(log)
-                try:
-                    await session.commit()
-                except Exception as e:
-                    logger.error(f"Failed to log usage: {e}")
-                    await session.rollback()
-                finally:
-                    await session.close()
-
-        # If the response is a StreamingResponse, wrap the body iterator.
-        if isinstance(response, StreamingResponse):
-            original_stream = response.body_iterator
-            buffer = []
-
-            async def wrapped_stream():
-                nonlocal time_to_first_token
-                nonlocal buffer
-                nonlocal completion_tokens
-                async for chunk in original_stream:
-                    try:
-                        if isinstance(chunk, tuple):  # if StreamingResponseWithStatusCode
-                            chunk = chunk[0]
-                        if time_to_first_token is None:
-                            time_to_first_token = datetime.now() - start_time
-                            buffer.append(chunk)
-                    except Exception:
-                        pass
-                    yield chunk
-
-                if buffer:
-                    body_content = b"".join(buffer).decode("utf-8")
-                    completion_tokens = len([x for x in body_content.split("\n") if x]) - 1
-                    asyncio.create_task(perform_log())
-
-            return StreamingResponse(wrapped_stream(), media_type=response.media_type)
-
-        # Else if response is a non-streaming Response, try to log usage from its body.
-        else:
-            try:
-                completion_tokens = len(response.choices[0].message.content.split())
-            except Exception:
-                logger.exception("Error parsing non-streaming response")
-            finally:
-                asyncio.create_task(perform_log())
-            return response
-
-    async def extract_info_from_request(request):
-        endpoint = request.url.path
+        # Set properties from the request
+        usage.endpoint = request.url.path
+        usage.method = request.method
         user_obj = getattr(request.app.state, "user", None)
-        if user_obj:
-            user_id = getattr(user_obj, "id", None)
-        token_id = getattr(request.app.state, "token_id", None)
+        usage.user_id = getattr(user_obj, "id", None) if user_obj else None
+        usage.token_id = getattr(request.app.state, "token_id", None)
 
         try:
             body = await request.body()
@@ -126,7 +80,7 @@ def log_usage(func):
                 logger.warning(f"Error extracting model from multipart data: {e}")
                 return None
 
-        async def model_tokens_from_json(body: bytes) -> Optional[str]:
+        async def model_tokens_from_json(body: bytes):
             try:
                 json_body = json.loads(body.decode("utf-8"))
                 nb_tokens = sum(len(x["content"].split()) for x in json_body.get("messages", []))
@@ -136,9 +90,74 @@ def log_usage(func):
                 return None, None
 
         if content_type.startswith("multipart/form-data"):
-            model = await extract_model_from_multipart(body, content_type)
+            usage.model = await extract_model_from_multipart(body, content_type)
+            usage.prompt_tokens = None
         else:
-            model, prompt_tokens = await model_tokens_from_json(body)
-        return user_id, token_id, endpoint, model, prompt_tokens
+            usage.model, usage.prompt_tokens = await model_tokens_from_json(body)
 
     return wrapper
+
+
+def wrap_stream_into_usage_extractor(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponse:
+    """
+    Wraps the original StreamingResponse to extract usage information from the stream.
+    This function captures the first token from the stream and calculates the completion tokens.
+    It also logs the usage information to the database.
+    """
+    original_stream = response.body_iterator
+    buffer = []
+    time_to_first_token = None
+
+    async def wrapped_stream():
+        nonlocal time_to_first_token, buffer
+        async for chunk in original_stream:
+            try:
+                if isinstance(chunk, tuple):  # if StreamingResponseWithStatusCode
+                    chunk = chunk[0]
+                if time_to_first_token is None:
+                    time_to_first_token = datetime.now() - start_time
+                    buffer.append(chunk)
+            except Exception:
+                pass
+            yield chunk
+
+        if buffer:
+            body_content = b"".join(buffer).decode("utf-8")
+            usage.completion_tokens = len([x for x in body_content.split("\n") if x]) - 1
+            asyncio.create_task(perform_log(usage, start_time, response))
+
+    return StreamingResponse(wrapped_stream(), media_type=response.media_type)
+
+
+async def extract_usage_from_response(response, start_time: datetime, usage: Usage):
+    """
+    Extracts usage information from the response and logs it to the database.
+    This function captures the completion tokens from the response and calculates the duration of the request.
+    It also sets the status code of the response if available.
+    """
+    try:
+        usage.completion_tokens = len(response.choices[0].message.content.split())
+    except Exception:
+        logger.exception("Error parsing non-streaming response")
+    finally:
+        asyncio.create_task(perform_log(usage, start_time, response))
+
+
+async def perform_log(usage: Usage, start_time: datetime, response):
+    """
+    Logs the usage information to the database.
+    This function captures the duration of the request and sets the status code of the response if available.
+    """
+    # Calculate duration
+    usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
+    # Set status if available
+    usage.status = response.status_code if hasattr(response, "status_code") else None
+    async for session in get_db():
+        session.add(usage)
+        try:
+            await session.commit()
+        except Exception as e:
+            logger.error(f"Failed to log usage: {e}")
+            await session.rollback()
+        finally:
+            await session.close()
