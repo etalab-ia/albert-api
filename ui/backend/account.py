@@ -12,7 +12,7 @@ from ui.backend.sql.session import get_session
 
 
 def change_password(current_password: str, new_password: str, confirm_password: str):
-    session = get_session()
+    session = next(get_session())
     current_password = session.execute(select(UserTable.password).where(UserTable.name == st.session_state["user"].name)).scalar_one()
 
     if not check_password(current_password):
