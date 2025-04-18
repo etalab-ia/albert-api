@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Request, Security
 
-from app.helpers import Authorization, log_usage
+from app.helpers import Authorization
 from app.schemas.embeddings import Embeddings, EmbeddingsRequest
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__EMBEDDINGS
+from app.utils.usage_decorator import log_usage
 
 router = APIRouter()
 

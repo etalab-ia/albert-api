@@ -21,7 +21,7 @@ class Usage(Base):
     endpoint = Column(String, nullable=False)
     method = Column(Enum(HTTPMethod), nullable=True)
     model = Column(String, nullable=True)
-    model_alias = Column(String, nullable=True)
+    request_model = Column(String, nullable=True)
     prompt_tokens = Column(Integer)
     completion_tokens = Column(Float)
     total_tokens = Column(Integer)

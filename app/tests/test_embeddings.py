@@ -110,7 +110,7 @@ class TestEmbeddings:
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__EMBEDDINGS}", json=params)
         assert response.status_code == 422, response.text
 
-    def test_embeddings_model_alias(self, client: TestClient, setup):
+    def test_embeddings_request_model(self, client: TestClient, setup):
         """Test the POST /embeddings endpoint with a model alias."""
         MODEL_ID = setup
 
