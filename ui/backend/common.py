@@ -4,9 +4,9 @@ import requests
 from sqlalchemy import select
 import streamlit as st
 
-from ui.settings import settings
 from ui.backend.sql.models import User as UserTable
 from ui.backend.sql.session import get_session
+from ui.settings import settings
 from ui.variables import MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
 
 
@@ -55,7 +55,6 @@ def get_documents(collection_id: int, offset: int = 0, limit: int = 10) -> dict:
     return data
 
 
-@st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
 def get_tokens() -> list:
     response = requests.get(
         url=f"{settings.playground.api_url}/tokens",

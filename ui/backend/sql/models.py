@@ -13,6 +13,7 @@ class User(Base):
     password = Column(String, nullable=False)
     api_role_id = Column(Integer, nullable=False)
     api_user_id = Column(Integer, unique=True, nullable=False)
-    api_key = Column(String, unique=True, nullable=True)
+    api_key_id = Column(Integer, nullable=False)
+    api_key = Column(String, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())

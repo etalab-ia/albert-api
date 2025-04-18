@@ -1,12 +1,11 @@
 import pandas as pd
 import streamlit as st
-
-from ui.backend.admin import create_role, create_user, delete_role, delete_user, update_role, update_user
-from ui.frontend.header import header
-from ui.backend.common import get_limits, get_models, get_roles, get_users
-from ui.variables import ADMIN_PERMISSIONS
-
 from streamlit_extras.stylable_container import stylable_container
+
+from ui.backend.admin import create_role, create_user, delete_role, delete_user, refresh_playground_api_key, update_role, update_user
+from ui.backend.common import get_limits, get_models, get_roles, get_users
+from ui.frontend.header import header
+from ui.variables import ADMIN_PERMISSIONS
 
 header()
 
@@ -285,7 +284,7 @@ with tab2:
     new_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", value=expires_at, disabled=no_expiration)
     new_expires_at = None if no_expiration or pd.isna(new_expires_at) else int(pd.Timestamp(new_expires_at).timestamp())
 
-    col1, col2, col3 = st.columns(spec=3)
+    col1, col2 = st.columns(spec=2)
 
     with col1:
         if st.button(
@@ -296,6 +295,14 @@ with tab2:
         ):
             create_user(name=new_name, password=new_password, role=new_role, expires_at=new_expires_at)
 
+        if st.button(
+            label="**:material/delete_forever: Delete**",
+            key="delete_user_button",
+            use_container_width=True,
+            disabled=st.session_state.get("new_user", False) or not users,
+        ):
+            delete_user(user=user["id"])
+
     with col2:
         if st.button(
             label="**:material/update: Update**",
@@ -305,11 +312,10 @@ with tab2:
         ):
             update_user(user=user["id"], name=new_name, password=new_password, role=new_role, expires_at=new_expires_at)
 
-    with col3:
         if st.button(
-            label="**:material/delete_forever: Delete**",
-            key="delete_user_button",
+            label="**:material/key: Refresh Playground API key**",
+            key="refresh_playground_api_key_button",
             use_container_width=True,
             disabled=st.session_state.get("new_user", False) or not users,
         ):
-            delete_user(user=user["id"])
+            refresh_playground_api_key(user=user["id"])

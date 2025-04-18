@@ -5,14 +5,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 import streamlit as st
 
-from ui.settings import settings
 from ui.backend.sql.models import User as UserTable
+from ui.settings import settings
 from ui.variables import ADMIN_PERMISSIONS
 
 
 class User(BaseModel):
     id: int
     name: str
+    api_key_id: int
     api_key: str
     role: dict
     user: dict
@@ -48,7 +49,7 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
             limits.append({"model": model["id"], "type": "rpd", "value": None})
 
         role = {"object": "role", "id": 0, "name": "master", "default": False, "permissions": ADMIN_PERMISSIONS, "limits": limits}
-        user = User(id=0, name=settings.auth.master_username, api_key=user_password, user={"expires_at": None}, role=role)
+        user = User(id=0, name=settings.auth.master_username, api_key=user_password, api_key_id=0, user={"expires_at": None}, role=role)
 
         st.session_state["login_status"] = True
         st.session_state["user"] = user
@@ -76,7 +77,7 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
         st.stop()
     role = response.json()
 
-    user = User(id=db_user.id, name=db_user.name, api_key=db_user.api_key, user=user, role=role)
+    user = User(id=db_user.id, name=db_user.name, api_key_id=db_user.api_key_id, api_key=db_user.api_key, user=user, role=role)
 
     st.session_state["login_status"] = True
     st.session_state["user"] = user
