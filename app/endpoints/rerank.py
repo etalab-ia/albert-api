@@ -4,7 +4,7 @@ from app.helpers import Authorization
 from app.schemas.rerank import RerankRequest, Reranks
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__RERANK
-from app.helpers import log_usage
+from app.utils.usage_decorator import log_usage
 
 router = APIRouter()
 

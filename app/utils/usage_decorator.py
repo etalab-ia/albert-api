@@ -3,14 +3,13 @@ from datetime import datetime
 import functools
 import json
 import logging
-from typing import Optional
 
 from fastapi import Request
 from starlette.responses import StreamingResponse
 
 from app.sql.models import Usage
 from app.sql.session import get_db
-from app.utils.settings import settings
+from app.utils.lifespan import context
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +32,14 @@ def log_usage(func):
         usage = Usage(datetime=start_time, endpoint="N/A")
 
         response = await func(*args, **kwargs)
-
+        # Find the Request in args or kwargs
+        request = next((arg for arg in args if isinstance(arg, Request)), None)
+        if not request:
+            request = kwargs.pop("request", None)
+        if not request:
+            raise Exception("No request found in args or kwargs")
         try:
-            await extract_usage_from_request(args, kwargs, usage)
+            await extract_usage_from_request(request, usage, **kwargs)
         except NoUserIdException:
             logger.exception("No user ID found in request, skipping usage logging.")
             return response
@@ -46,69 +50,41 @@ def log_usage(func):
             asyncio.create_task(extract_usage_from_response(response, start_time, usage))
             return response
 
-    async def extract_usage_from_request(args, kwargs, usage: Usage):
-        """
-        Extracts usage information from the request and sets it in the Usage object.
-        This function looks for the request object in the arguments and keyword arguments
-        passed to the decorated function.
-        It extracts the request method, endpoint, user ID, token ID, model name, and prompt tokens.
-        """
-        # Find the Request in args or kwargs
-        request: Optional[Request] = None
-        for arg in args:
-            if isinstance(arg, Request):
-                request = arg
-                break
-        if not request:
-            request = kwargs.get("request")
-
-        if not request:
-            return
-
-        # Set properties from the request
-        usage.endpoint = request.url.path
-        usage.method = request.method
-        user_obj = getattr(request.app.state, "user", None)
-        usage.user_id = getattr(user_obj, "id", None) if user_obj else None
-        if not usage.user_id:
-            raise NoUserIdException("No user ID found in request")
-        usage.token_id = getattr(request.app.state, "token_id", None)
-
-        try:
-            body = await request.body()
-        except Exception:
-            body = b""
-
-        content_type = request.headers.get("Content-Type", "")
-
-        async def extract_model_from_multipart(body: bytes, content_type: str) -> Optional[str]:
-            try:
-                parts = body.split(b"\r\n")
-                for i, part in enumerate(parts):
-                    if b'Content-Disposition: form-data; name="model"' in part and i + 2 < len(parts):
-                        return parts[i + 2].decode("utf-8")
-                return None
-            except Exception as e:
-                logger.warning(f"Error extracting model from multipart data: {e}")
-                return None
-
-        async def model_tokens_from_json(body: bytes):
-            try:
-                json_body = json.loads(body.decode("utf-8"))
-                nb_tokens = sum(len(x["content"].split()) for x in json_body.get("messages", []))
-                return json_body.get("model"), nb_tokens
-            except Exception:
-                logger.warning("Failed to parse JSON request body")
-                return None, None
-
-        if "model" in kwargs:
-            usage.model = kwargs["model"]
-        elif content_type.startswith("multipart/form-data"):
-            usage.model = await extract_model_from_multipart(body, content_type)
-        else:
-            usage.model, usage.prompt_tokens = await model_tokens_from_json(body)
-
     return wrapper
+
+
+async def extract_usage_from_request(request: Request, usage: Usage, **kwargs):
+    """
+    Extracts usage information from the request and sets it in the Usage object.
+    This function looks for the request object in the arguments and keyword arguments
+    passed to the decorated function.
+    It extracts the request method, endpoint, user ID, token ID, model name, and prompt tokens.
+    """
+    # Set properties from the request
+    usage.endpoint = request.url.path
+    usage.method = request.method
+    user_obj = getattr(request.app.state, "user", None)
+    usage.user_id = getattr(user_obj, "id", None) if user_obj else None
+    if not usage.user_id:
+        raise NoUserIdException("No user ID found in request")
+    usage.token_id = getattr(request.app.state, "token_id", None)
+
+    try:
+        body = await request.body()
+    except Exception as e:
+        logger.warning(f"Failed to read request body: {e}")
+        return
+
+    async def get_prompt_tokens(body: bytes):
+        try:
+            json_body = json.loads(body.decode("utf-8"))
+            nb_tokens = sum(len(x["content"].split()) for x in json_body.get("messages", []))
+            return nb_tokens
+        except Exception:
+            logger.warning("Failed to parse JSON request body")
+            return None
+
+    usage.prompt_tokens = await get_prompt_tokens(body)
 
 
 def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponse:
@@ -136,6 +112,15 @@ def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, st
         if buffer:
             body_content = b"".join(buffer).decode("utf-8")
             usage.completion_tokens = len([x for x in body_content.split("\n") if x]) - 1
+            for line in body_content.split("\n"):
+                if line.startswith("data: "):
+                    try:
+                        data = json.loads(line[6:])
+                        if isinstance(data, dict):
+                            usage.model = data.get("model", None)
+                            break
+                    except json.JSONDecodeError:
+                        logger.debug("Failed to decode JSON from streaming response")
             asyncio.create_task(perform_log(usage, start_time, response))
 
     return StreamingResponse(wrapped_stream(), media_type=response.media_type)
@@ -148,6 +133,7 @@ async def extract_usage_from_response(response, start_time: datetime, usage: Usa
     It also sets the status code of the response if available.
     """
     try:
+        usage.model = response.model
         usage.completion_tokens = len(response.choices[0].message.content.split())
     except Exception:
         logger.debug("Error parsing non-streaming response")
@@ -165,7 +151,7 @@ async def perform_log(usage: Usage, start_time: datetime, response):
         usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
     usage.status = response.status_code if hasattr(response, "status_code") else None
     if usage.model:
-        usage.model_alias = next((mod.aliases[0] for mod in settings.models if mod.id == usage.model and mod.aliases), None)
+        usage.request_model = context.models.aliases.get(usage.model, usage.model)
     async for session in get_db():
         session.add(usage)
         try:
