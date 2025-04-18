@@ -8,6 +8,10 @@ services:
     restart: always
     environment:
       - COVERAGE_RCFILE=./app/.coveragerc
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - QDRANT_HOST=qdrant
+      - OPENAI_API_KEY=${OPENAI_API_KEY} # replace with your own key
     ports:
       - 8000:8000
     volumes:
@@ -33,6 +37,9 @@ services:
     restart: always
     ports:
       - 8501:8501
+    environment:
+      - API_HOST=api
+      - POSTGRES_HOST=postgres
     volumes:
       - ./config.yml:/config.yml:ro
     develop:

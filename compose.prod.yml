@@ -3,6 +3,12 @@ services:
     image: ghcr.io/etalab-ia/albert-api/app:latest
     platform: linux/amd64
     restart: always
+    environment:
+      - COVERAGE_RCFILE=./app/.coveragerc
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - QDRANT_HOST=qdrant
+      - OPENAI_API_KEY=${OPENAI_API_KEY} # replace with your own key
     ports:
       - 8000:8000
     volumes:
@@ -19,6 +25,9 @@ services:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
     platform: linux/amd64
     restart: always
+    environment:
+      - API_HOST=api
+      - POSTGRES_HOST=postgres
     ports:
       - 8501:8501
     volumes:
