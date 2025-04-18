@@ -208,7 +208,7 @@ async def delete_token(request: Request, token: int = Path(description="The toke
     Delete a token.
     """
 
-    await context.iam.delete_token(user_id=request.app.state.user.id, token_id=token)
+    await context.iam.delete_token(session=session, user_id=request.app.state.user.id, token_id=token)
 
     return Response(status_code=204)
 
@@ -221,7 +221,7 @@ async def get_token(
     Get your token by id.
     """
 
-    tokens = await context.iam.get_tokens(user_id=request.app.state.user.id, token_id=token)
+    tokens = await context.iam.get_tokens(session=session, user_id=request.app.state.user.id, token_id=token)
 
     return tokens[0]
 

@@ -7,9 +7,9 @@ import streamlit as st
 
 from ui.backend.common import check_password
 from ui.backend.login import get_hashed_password
-from ui.settings import settings
 from ui.backend.sql.models import User as UserTable
 from ui.backend.sql.session import get_session
+from ui.settings import settings
 
 
 def create_role(name: str, default: bool, permissions: list, limits: list):
@@ -85,6 +85,7 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
         return
 
     api_key = response.json()["token"]
+    api_key_id = response.json()["id"]
 
     session = next(get_session())
     session.execute(
@@ -93,6 +94,7 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
             password=get_hashed_password(password=password),
             api_user_id=user_id,
             api_role_id=role,
+            api_key_id=api_key_id,
             api_key=api_key,
         )
     )
@@ -143,5 +145,36 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
     session.commit()
 
     st.toast("User updated", icon="✅")
+    time.sleep(0.5)
+    st.rerun()
+
+
+def refresh_playground_api_key(user: int):
+    # create token
+    response = requests.post(
+        url=f"{settings.playground.api_url}/tokens",
+        json={"user": user, "name": "playground"},
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
+    )
+
+    if response.status_code != 201:
+        st.toast(response.json()["detail"], icon="❌")
+        return
+
+    api_key = response.json()["token"]
+    api_key_id = response.json()["id"]
+
+    session = next(get_session())
+    session.execute(
+        update(UserTable)
+        .values(
+            api_key=api_key,
+            api_key_id=api_key_id,
+        )
+        .where(UserTable.api_user_id == user)
+    )
+    session.commit()
+
+    st.toast("Playground API key refreshed", icon="✅")
     time.sleep(0.5)
     st.rerun()

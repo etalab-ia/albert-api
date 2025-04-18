@@ -4,9 +4,9 @@ import pandas as pd
 import streamlit as st
 
 from ui.backend.account import change_password, create_token, delete_token
-from ui.settings import settings
-from ui.frontend.header import header
 from ui.backend.common import get_limits, get_models, get_tokens
+from ui.frontend.header import header
+from ui.settings import settings
 
 header()
 tokens = get_tokens()
@@ -56,7 +56,9 @@ st.dataframe(
         }
     ).style.apply(
         lambda x: [
-            "background-color: #f0f0f0;color: grey" if (x["Expiration"] and x["Expiration"] < pd.Timestamp.now()) or x["Name"] == "playground" else ""
+            "background-color: #f0f0f0;color: grey"
+            if (x["Expiration"] and x["Expiration"] < pd.Timestamp.now()) or x["ID"] == st.session_state["user"].api_key_id
+            else ""
             for _ in x
         ],
         axis=1,
@@ -81,8 +83,12 @@ with col1:
 
 with col2:
     with st.expander(label="Delete an API key", icon=":material/delete_forever:"):
-        token_name = st.selectbox(label="API key ID", options=[token["name"] for token in tokens], help="Playground API key cannot be deleted.")
-        token_id = [token["id"] for token in tokens if token["name"] == token_name][0] if token_name else None
+        token_name = st.selectbox(
+            label="API key ID",
+            options=[f"{token["name"]} ({token["id"]})" for token in tokens],
+            help="Playground API key cannot be deleted.",
+        )
+        token_id = [token["id"] for token in tokens if f"{token["name"]} ({token["id"]})" == token_name][0] if token_name else None
         if st.button(label="Delete", disabled=not token_id or st.session_state["user"].name == settings.auth.master_username or token_name == "playground", key="delete_token_button"):  # fmt: off
             delete_token(token_id=token_id)
 
