@@ -13,7 +13,7 @@ class ChunkerName(str, Enum):
 
 
 class ChunkerArgs(BaseModel):
-    chunk_size: int = Field(default=512, description="The size of the chunks to use for the file upload.")  # fmt: off
+    chunk_size: int = Field(default=2048, description="The size of the chunks to use for the file upload.")  # fmt: off
     chunk_overlap: int = Field(default=0, description="The overlap of the chunks to use for the file upload.")  # fmt: off
     length_function: Literal["len"] = Field(default="len", description="The function to use to calculate the length of the chunks to use for the file upload.")  # fmt: off
     is_separator_regex: bool = Field(default=False, description="Whether the separator is a regex to use for the file upload.")  # fmt: off
