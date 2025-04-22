@@ -12,10 +12,11 @@ class SearchMethod(str, Enum):
     HYBRID = "hybrid"
     LEXICAL = "lexical"
     SEMANTIC = "semantic"
+    MULTIAGENT = "multiagent"
 
 
 class SearchArgs(BaseModel):
-    collections: List[Any] = Field(default=[], description="List of collections ID")
+    collections: List[Any] = Field(description="List of collections ID", min_length=1)
     rff_k: int = Field(default=20, description="k constant in RFF algorithm")
     k: int = Field(gt=0, default=4, description="Number of results to return")
     method: SearchMethod = Field(default=SearchMethod.SEMANTIC)
