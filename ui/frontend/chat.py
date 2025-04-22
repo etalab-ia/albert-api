@@ -80,7 +80,7 @@ with st.sidebar:
             add_collection(collections=collections)
 
         params["rag"]["collections"] = st.session_state.selected_collections
-        params["rag"]["k"] = st.number_input(label="Number of chunks to retrieve (k)", value=3)
+        params["rag"]["k"] = st.number_input(label="Number of chunks to retrieve (k)", value=5)
 
     if st.session_state.selected_collections:
         rag = st.toggle(label="Activated RAG", value=True, disabled=not bool(params["rag"]["collections"]))
