@@ -55,10 +55,9 @@ def get_documents(collection_id: int, offset: int = 0, limit: int = 10) -> dict:
     return data
 
 
-def get_tokens() -> list:
+def get_tokens(offset: int = 0, limit: int = 10) -> list:
     response = requests.get(
-        url=f"{settings.playground.api_url}/tokens",
-        params={"user": st.session_state["user"].id},
+        url=f"{settings.playground.api_url}/tokens?offset={offset}&limit={limit}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
