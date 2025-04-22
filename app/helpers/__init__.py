@@ -17,6 +17,5 @@ __all__ = [
     "ModelRouter",
     "StreamingResponseWithStatusCode",
     "WebSearchManager",
-    "log_usage",
     "UsagesMiddleware",
 ]
