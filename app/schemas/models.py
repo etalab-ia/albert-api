@@ -7,6 +7,7 @@ from app.schemas import BaseModel
 
 
 class ModelType(str, Enum):
+    IMAGE_TEXT_TO_TEXT = "image-text-to-text"
     AUTOMATIC_SPEECH_RECOGNITION = "automatic-speech-recognition"
     TEXT_EMBEDDINGS_INFERENCE = "text-embeddings-inference"
     TEXT_GENERATION = "text-generation"

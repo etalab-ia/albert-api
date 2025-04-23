@@ -7,14 +7,15 @@ from app.schemas.core.models import RoutingStrategy
 from app.schemas.models import ModelType
 from app.schemas.core.settings import Model as ModelSettings
 from app.utils.exceptions import WrongModelTypeException
-from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS, ENDPOINT__RERANK
+from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS, ENDPOINT__OCR, ENDPOINT__RERANK
 
 
 class ModelRouter:
     ENDPOINT_MODEL_TYPE_TABLE = {
-        ENDPOINT__CHAT_COMPLETIONS: [ModelType.TEXT_GENERATION],
-        ENDPOINT__EMBEDDINGS: [ModelType.TEXT_EMBEDDINGS_INFERENCE],
         ENDPOINT__AUDIO_TRANSCRIPTIONS: [ModelType.AUTOMATIC_SPEECH_RECOGNITION],
+        ENDPOINT__CHAT_COMPLETIONS: [ModelType.TEXT_GENERATION, ModelType.IMAGE_TEXT_TO_TEXT],
+        ENDPOINT__EMBEDDINGS: [ModelType.TEXT_EMBEDDINGS_INFERENCE],
+        ENDPOINT__OCR: [ModelType.IMAGE_TEXT_TO_TEXT],
         ENDPOINT__RERANK: [ModelType.TEXT_CLASSIFICATION],
     }
 

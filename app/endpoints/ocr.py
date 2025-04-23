@@ -9,7 +9,7 @@ from app.schemas.core.data import FileType
 from app.schemas.ocr import OCR, OCRs
 from app.utils.exceptions import FileSizeLimitExceededException
 from app.utils.lifespan import context
-from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__OCR
+from app.utils.variables import ENDPOINT__OCR
 
 router = APIRouter()
 
@@ -47,10 +47,10 @@ async def ocr(
 
     # call model
     model = context.models(model=model)
-    client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+    client = model.get_client(endpoint=ENDPOINT__OCR)
 
     for i, image in enumerate(images):
-        # Convert PpmImageFile to bytes
+        # convert image to bytes
         img_byte_arr = BytesIO()
         image.save(img_byte_arr, format="PNG")
         img_byte_arr = img_byte_arr.getvalue()
@@ -65,7 +65,6 @@ async def ocr(
 
         # forward request
         payload = {"model": model, "messages": [{"role": "user", "content": content}], "n": 1, "stream": False}
-
         response = await client.forward_request(method="POST", json=payload)
 
         data_response = response.json()

@@ -10,6 +10,7 @@ from app.utils.variables import (
     ENDPOINT__COMPLETIONS,
     ENDPOINT__EMBEDDINGS,
     ENDPOINT__MODELS,
+    ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
 
@@ -21,6 +22,7 @@ class OpenaiModelClient(AsyncOpenAI, BaseModelClient):
         ENDPOINT__COMPLETIONS: "/v1/completions",
         ENDPOINT__EMBEDDINGS: "/v1/embeddings",
         ENDPOINT__MODELS: "/v1/models",
+        ENDPOINT__OCR: "/v1/chat/completions",
         ENDPOINT__RERANK: None,
     }
 

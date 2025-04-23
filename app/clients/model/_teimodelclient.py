@@ -12,6 +12,7 @@ from app.utils.variables import (
     ENDPOINT__COMPLETIONS,
     ENDPOINT__EMBEDDINGS,
     ENDPOINT__MODELS,
+    ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
 
@@ -23,6 +24,7 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         ENDPOINT__COMPLETIONS: None,
         ENDPOINT__EMBEDDINGS: "/v1/embeddings",
         ENDPOINT__MODELS: "/info",
+        ENDPOINT__OCR: None,
         ENDPOINT__RERANK: "/rerank",
     }
 
@@ -86,6 +88,7 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         return url, headers, json, files, data
 
     def _format_response(self, response: httpx.Response) -> httpx.Response:
-        response = httpx.Response(status_code=response.status_code, content=dumps({"data": response.json()}))
+        if response.status_code == 200 and "data" not in response.json():  # format response for reranking
+            response = httpx.Response(status_code=response.status_code, content=dumps({"data": response.json()}))
 
         return response

@@ -6,9 +6,9 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.utils.variables import ENDPOINT__OCR
+from app.schemas.models import ModelType
 from app.tests.utils.snapshot_assertions import assert_snapshot_almost_equal
 
-MODEL_TYPE_LANGUAGE = "text-generation"
 current_path = os.path.dirname(__file__)
 
 
@@ -18,7 +18,7 @@ def model_id(client: TestClient):
     response = client.get("/v1/models")
     assert response.status_code == 200, f"error: retrieve models ({response.status_code})"
     response_json = response.json()
-    model = [model for model in response_json["data"] if model["type"] == MODEL_TYPE_LANGUAGE][0]
+    model = [model for model in response_json["data"] if model["type"] == ModelType.IMAGE_TEXT_TO_TEXT][0]
     model_id = model["id"]
 
     yield model_id

@@ -1,5 +1,7 @@
 from enum import Enum
 
+from app.schemas.models import ModelType
+
 
 class ModelClientType(str, Enum):
     ALBERT = "albert"
@@ -7,10 +9,16 @@ class ModelClientType(str, Enum):
     TEI = "tei"
     VLLM = "vllm"
 
-    _SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS = [ALBERT, OPENAI, TEI]
-    _SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE = [ALBERT, OPENAI, VLLM]
-    _SUPPORTED_MODEL_CLIENT_TYPES__RERANK = [ALBERT, TEI]
-    _SUPPORTED_MODEL_CLIENT_TYPES__AUDIO = [ALBERT, OPENAI]
+    @classmethod
+    def get_supported_clients(cls, model_type):
+        mapping = {
+            ModelType.AUTOMATIC_SPEECH_RECOGNITION: [cls.ALBERT.value, cls.OPENAI.value],
+            ModelType.IMAGE_TEXT_TO_TEXT: [cls.ALBERT.value, cls.OPENAI.value, cls.VLLM.value],
+            ModelType.TEXT_EMBEDDINGS_INFERENCE: [cls.ALBERT.value, cls.OPENAI.value, cls.TEI.value],
+            ModelType.TEXT_GENERATION: [cls.ALBERT.value, cls.OPENAI.value, cls.VLLM.value],
+            ModelType.TEXT_CLASSIFICATION: [cls.ALBERT.value, cls.TEI.value],
+        }
+        return mapping.get(model_type, [])
 
 
 class RoutingStrategy(str, Enum):

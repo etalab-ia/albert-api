@@ -14,6 +14,7 @@ from app.utils.variables import (
     ENDPOINT__COMPLETIONS,
     ENDPOINT__EMBEDDINGS,
     ENDPOINT__MODELS,
+    ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
 
@@ -27,6 +28,7 @@ class BaseModelClient(ABC):
         ENDPOINT__COMPLETIONS: None,
         ENDPOINT__EMBEDDINGS: None,
         ENDPOINT__MODELS: None,
+        ENDPOINT__OCR: None,
         ENDPOINT__RERANK: None,
     }
 
@@ -46,10 +48,9 @@ class BaseModelClient(ABC):
 
     def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
         """
-        Format a request to a client model. This method can be overridden by a subclass to add additional headers or parameters.
+        Format a request to a client model. This method can be overridden by a subclass to add additional headers or parameters. This method format the requested endpoint thanks the ENDPOINT_TABLE attribute.
 
         Args:
-            endpoint(str): The endpoint to forward the request to.
             json(dict): The JSON body to use for the request.
             files(dict): The files to use for the request.
             data(dict): The data to use for the request.
@@ -57,6 +58,7 @@ class BaseModelClient(ABC):
         Returns:
             tuple: The formatted request composed of the url, headers, json, files and data.
         """
+        # self.endpoint is set by the ModelRouter
         url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
         headers = {"Authorization": f"Bearer {self.api_key}"}
         if json and "model" in json:
@@ -64,7 +66,7 @@ class BaseModelClient(ABC):
 
         return url, headers, json, files, data
 
-    def _format_response(self, response: httpx.Response, endpoint: Optional[str] = None) -> httpx.Response:
+    def _format_response(self, response: httpx.Response) -> httpx.Response:
         """
         Format a response from a client model. This method can be overridden by a subclass to add additional headers or parameters.
 
@@ -89,7 +91,6 @@ class BaseModelClient(ABC):
         Forward a request to a client model and add additional data to the response if provided.
 
         Args:
-            endpoint(str): The endpoint to forward the request to.
             method(str): The method to use for the request.
             json(dict): The JSON body to use for the request.
             files(dict): The files to use for the request.
@@ -146,7 +147,6 @@ class BaseModelClient(ABC):
         Forward a stream request to a client model and add additional data to the response if provided.
 
         Args:
-            endpoint(str): The endpoint to forward the request to.
             method(str): The method to use for the request.
             json(dict): The JSON body to use for the request.
             files(dict): The files to use for the request.
