@@ -47,6 +47,7 @@ def create_token(name: str, expires_at: int):
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
     if response.status_code == 201:
+        # hind cross close icon to force a reload button
         st.html(
             """
                 <style>
@@ -62,7 +63,7 @@ def create_token(name: str, expires_at: int):
             st.warning("**⚠️ Copy the following API key to your clipboard, it will not be displayed again. Refresh the page after saving the API key.**")  # fmt: off
             st.code(response.json()["token"], language="text")
             with stylable_container(key="close", css_styles="button{float: right;}"):
-                if st.button("**:material/close:**", key="Close"):
+                if st.button("**:material/close:**", key="Close", type="primary"):
                     st.rerun()
 
         st.toast("Create succeed", icon="✅")

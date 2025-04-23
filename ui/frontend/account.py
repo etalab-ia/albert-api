@@ -6,10 +6,10 @@ import streamlit as st
 from ui.backend.account import change_password, create_token, delete_token
 from ui.backend.common import get_limits, get_models, get_tokens
 from ui.frontend.header import header
+from ui.frontend.utils import pagination
 from ui.settings import settings
 
 header()
-tokens = get_tokens()
 models = get_models()
 
 with st.sidebar:
@@ -45,6 +45,8 @@ with st.expander(label="Change password", icon=":material/key:"):
         change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
 
 st.subheader("API keys")
+key, per_page = "token", 10
+tokens = get_tokens(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)
 st.dataframe(
     data=pd.DataFrame(
         data={
@@ -71,6 +73,7 @@ st.dataframe(
         "Created at": st.column_config.DatetimeColumn(label="Created at", format="D MMM YYYY"),
     },
 )
+pagination(key=key, data=tokens, per_page=per_page)
 
 col1, col2 = st.columns(spec=2)
 with col1:

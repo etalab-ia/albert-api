@@ -1,10 +1,10 @@
 import pandas as pd
 import streamlit as st
-from streamlit_extras.stylable_container import stylable_container
 
 from ui.backend.common import get_collections, get_documents
-from ui.backend.documents import create_collection, update_collection, delete_collection, delete_document, upload_file
+from ui.backend.documents import create_collection, delete_collection, delete_document, update_collection, upload_file
 from ui.frontend.header import header
+from ui.frontend.utils import pagination
 from ui.settings import settings
 from ui.variables import COLLECTION_VISIBILITY_PRIVATE
 
@@ -18,7 +18,8 @@ with st.sidebar:
 # Collections
 st.subheader(body="Collections")
 
-collections = get_collections(offset=st.session_state.get("collections_offset", 0), limit=10)
+key, per_page = "collection", 10
+collections = get_collections(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)
 private_collections = [collection for collection in collections if collection["visibility"] == COLLECTION_VISIBILITY_PRIVATE]
 
 st.dataframe(
@@ -44,33 +45,7 @@ st.dataframe(
         "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
     },
 )
-
-## Pagination
-_, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
-with left:
-    if st.button(
-        label="**:material/keyboard_double_arrow_left:**",
-        key="pagination-collections-previous",
-        disabled=st.session_state.get("collections_offset", 0) == 0,
-        use_container_width=True,
-    ):
-        st.session_state["collections_offset"] = max(0, st.session_state.get("collections_offset", 0) - 10)
-        st.rerun()
-
-with center:
-    st.button(label=str(round(st.session_state.get("collections_offset", 0) / 10)), key="pagination-collections-offset", use_container_width=True)
-
-with right:
-    with stylable_container(key="pagination-collections-next", css_styles="button{float: right;}"):
-        if st.button(
-            label="**:material/keyboard_double_arrow_right:**",
-            key="pagination-collections-next",
-            disabled=len(collections) < 10,
-            use_container_width=True,
-        ):
-            st.session_state["collections_offset"] = st.session_state.get("collections_offset", 0) + 10
-            st.rerun()
-
+pagination(key=key, data=collections, per_page=per_page)
 
 col1, col2, col3 = st.columns(spec=3)
 with col1:
@@ -131,7 +106,8 @@ collection_name = st.selectbox(
 collection_id = [collection["id"] for collection in private_collections if f"{collection["name"]} ({collection["id"]})" == collection_name]
 collection_id = collection_id[0] if collection_id else None
 
-documents = get_documents(collection_id=collection_id, offset=st.session_state.get("documents_offset", 0), limit=10)
+key, per_page = "document", 10
+documents = get_documents(collection_id=collection_id, offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)
 
 st.dataframe(
     data=pd.DataFrame(
@@ -152,33 +128,7 @@ st.dataframe(
         "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
     },
 )
-
-## Pagination
-_, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
-
-with left:
-    if st.button(
-        label="**:material/keyboard_double_arrow_left:**",
-        key="pagination-documents-previous",
-        disabled=st.session_state.get("documents_offset", 0) == 0,
-        use_container_width=True,
-    ):
-        st.session_state["documents_offset"] = max(0, st.session_state.get("documents_offset", 0) - 10)
-        st.rerun()
-
-with center:
-    st.button(label=str(round(st.session_state.get("documents_offset", 0) / 10)), key="pagination-documents-offset", use_container_width=True)
-
-with right:
-    with stylable_container(key="pagination-documents-next", css_styles="button{float: right;}"):
-        if st.button(
-            label="**:material/keyboard_double_arrow_right:**",
-            key="pagination-documents-next",
-            disabled=len(documents) < 10,
-            use_container_width=True,
-        ):
-            st.session_state["documents_offset"] = st.session_state.get("documents_offset", 0) + 10
-            st.rerun()
+pagination(key=key, data=documents, per_page=per_page)
 
 col1, col2 = st.columns(spec=2)
 with col1:

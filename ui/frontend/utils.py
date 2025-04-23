@@ -11,7 +11,7 @@ def pagination(key: str, data: list, per_page: int = 10):
             disabled=st.session_state.get(f"{key}-offset", 0) == 0,
             use_container_width=True,
         ):
-            st.session_state[key] = max(0, st.session_state.get(key, 0) - per_page)
+            st.session_state[f"{key}-offset"] = max(0, st.session_state.get(f"{key}-offset", 0) - per_page)
             st.rerun()
 
     with center:
@@ -25,5 +25,5 @@ def pagination(key: str, data: list, per_page: int = 10):
                 disabled=len(data) < per_page,
                 use_container_width=True,
             ):
-                st.session_state[key] = st.session_state.get(key, 0) + per_page
+                st.session_state[f"{key}-offset"] = st.session_state.get(f"{key}-offset", 0) + per_page
                 st.rerun()

@@ -1,10 +1,10 @@
 import pandas as pd
 import streamlit as st
-from streamlit_extras.stylable_container import stylable_container
 
 from ui.backend.admin import create_role, create_user, delete_role, delete_user, refresh_playground_api_key, update_role, update_user
 from ui.backend.common import get_limits, get_models, get_roles, get_users
 from ui.frontend.header import header
+from ui.frontend.utils import pagination
 from ui.variables import ADMIN_PERMISSIONS
 
 header()
@@ -22,7 +22,8 @@ with tab1:
         st.stop()
 
     models = get_models()
-    roles = get_roles(offset=st.session_state.get("roles_offset", 0), limit=100)  # TODO: handle pagination in user tab
+    key, per_page = "role", 100
+    roles = get_roles(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)  # TODO: handle pagination in user tab
 
     with st.sidebar:
         if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):
@@ -50,32 +51,7 @@ with tab1:
             "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True),
         },
     )
-
-    ## Pagination
-    _, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
-    with left:
-        if st.button(
-            label="**:material/keyboard_double_arrow_left:**",
-            key="pagination-roles-previous",
-            disabled=st.session_state.get("roles_offset", 0) == 0,
-            use_container_width=True,
-        ):
-            st.session_state["roles_offset"] = max(0, st.session_state.get("roles_offset", 0) - 10)
-            st.rerun()
-
-    with center:
-        st.button(label=str(round(st.session_state.get("roles_offset", 0) / 10)), key="pagination-roles-offset", use_container_width=True)
-
-    with right:
-        with stylable_container(key="pagination-roles-next", css_styles="button{float: right;}"):
-            if st.button(
-                label="**:material/keyboard_double_arrow_right:**",
-                key="pagination-roles-next",
-                disabled=len(roles) < 10,
-                use_container_width=True,
-            ):
-                st.session_state["roles_offset"] = st.session_state.get("roles_offset", 0) + 10
-                st.rerun()
+    pagination(key=key, data=roles, per_page=per_page)
     st.divider()
 
     name = st.selectbox(label="**Select a role**", options=[role["name"] for role in roles], disabled=st.session_state.get("new_role", False))
@@ -198,7 +174,8 @@ with tab1:
 
 # Users
 with tab2:
-    users = get_users(offset=st.session_state.get("users_offset", 0), limit=10)
+    key, per_page = "user", 10
+    users = get_users(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)
 
     roles_dict = {role["id"]: role["name"] for role in roles}
     st.dataframe(
@@ -225,34 +202,9 @@ with tab2:
             "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
         },
     )
-
-    ## Pagination
-    _, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
-    with left:
-        if st.button(
-            label="**:material/keyboard_double_arrow_left:**",
-            key="pagination-users-previous",
-            disabled=st.session_state.get("users_offset", 0) == 0,
-            use_container_width=True,
-        ):
-            st.session_state["users_offset"] = max(0, st.session_state.get("users_offset", 0) - 10)
-            st.rerun()
-
-    with center:
-        st.button(label=str(round(st.session_state.get("users_offset", 0) / 10)), key="pagination-users-offset", use_container_width=True)
-
-    with right:
-        with stylable_container(key="pagination-users-next", css_styles="button{float: right;}"):
-            if st.button(
-                label="**:material/keyboard_double_arrow_right:**",
-                key="pagination-users-next",
-                disabled=len(users) < 10,
-                use_container_width=True,
-            ):
-                st.session_state["users_offset"] = st.session_state.get("users_offset", 0) + 10
-                st.rerun()
-
+    pagination(key=key, data=users, per_page=per_page)
     st.divider()
+
     name = st.selectbox(label="**Select a user**", options=[user["name"] for user in users], disabled=st.session_state.get("new_user", False))
     st.button(
         label="**Create a new user**",

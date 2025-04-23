@@ -6,10 +6,9 @@ from streamlit_extras.stylable_container import stylable_container
 from ui.backend.common import get_collections, get_documents, get_models
 from ui.backend.summarize import generate_summary, generate_toc, get_chunks, summary_with_feedback
 from ui.frontend.header import header
+from ui.frontend.utils import pagination
 from ui.variables import MODEL_TYPE_LANGUAGE
-import logging
 
-logger = logging.getLogger(__name__)
 header()
 models = get_models(type=MODEL_TYPE_LANGUAGE)
 
@@ -32,32 +31,10 @@ with st.sidebar:
 # Collections
 st.subheader(body=":material/counter_1: Select a document")
 
-collections = get_collections(offset=st.session_state.get("collections_offset", 0), limit=10)
+key, per_page = "collection", 10
+collections = get_collections(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)
 collection = st.selectbox(label="Select a collection", options=[f"{collection["name"]} ({collection["id"]})" for collection in collections])
-
-## Pagination
-_, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
-with left:
-    if st.button(
-        label="**:material/keyboard_double_arrow_left:**",
-        key="pagination-collections-previous",
-        disabled=st.session_state.get("collections_offset", 0) == 0,
-        use_container_width=True,
-    ):
-        st.session_state["collections_offset"] = max(0, st.session_state.get("collections_offset", 0) - 10)
-        st.rerun()
-with center:
-    st.button(label=str(round(st.session_state.get("collections_offset", 0) / 10)), key="pagination-collections-offset", use_container_width=True)
-with right:
-    with stylable_container(key="pagination-collections-next", css_styles="button{float: right;}"):
-        if st.button(
-            label="**:material/keyboard_double_arrow_right:**",
-            key="pagination-collections-next",
-            disabled=len(collections) < 10,
-            use_container_width=True,
-        ):
-            st.session_state["collections_offset"] = st.session_state.get("collections_offset", 0) + 10
-            st.rerun()
+pagination(key=key, data=collections, per_page=per_page)
 
 if not collection:
     st.warning(body="First create a collection on the Documents page.")
@@ -66,35 +43,10 @@ if not collection:
 collection_id = int(collection.split("(")[-1].split(")")[0])
 
 # Documents
-documents = get_documents(collection_id=collection_id, offset=st.session_state.get("documents_offset", 0), limit=10)
+key, per_page = "document", 10
+documents = get_documents(collection_id=collection_id, offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)
 document = st.selectbox(label="Select a document", options=[f"{document["name"]} ({document["id"]})" for document in documents])
-
-## Pagination
-_, left, center, right, _ = st.columns(spec=[10, 1.5, 1.5, 1.5, 10])
-with left:
-    if st.button(
-        label="**:material/keyboard_double_arrow_left:**",
-        key="pagination-documents-previous",
-        disabled=st.session_state.get("documents_offset", 0) == 0,
-        use_container_width=True,
-    ):
-        st.session_state.documents_offset = max(0, st.session_state.get("documents_offset", 0) - 10)
-        st.rerun()
-
-with center:
-    st.button(label=str(round(st.session_state.get("documents_offset", 0) / 10)), key="pagination-documents-offset", use_container_width=True)
-
-with right:
-    with stylable_container(key="pagination-documents-next", css_styles="button{float: right;}"):
-        if st.button(
-            label="**:material/keyboard_double_arrow_right:**",
-            key="pagination-documents-next",
-            disabled=len(documents) < 10,
-            use_container_width=True,
-        ):
-            st.session_state.documents_offset = st.session_state.get("documents_offset", 0) + 10
-            st.rerun()
-
+pagination(key=key, data=documents, per_page=per_page)
 
 if document:
     document_name = "(".join(document.split("(")[:-1])
