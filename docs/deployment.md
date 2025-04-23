@@ -94,7 +94,7 @@ general:
 | --- | --- | --- | --- | --- | --- |
 | master_username | Optional | Master username for the playground. This user can connect to the playground and create users and roles when the SQL database is empty. | str |  | `"master"` | 
 | master_key | Optional | API key and password (on playground) for the master user. This key has all permissions and cannot be modified or deleted. This key is also used to encrypt user tokens.  | str |  | `"changeme"` |
-
+| max_token_expiration_days | Optional | Maximum days a user can keep a token. | int | | `365` |
 > **❗️Note**<br>
 > If you modify the master key, you'll need to update all user API keys.
 
@@ -103,6 +103,7 @@ general:
 auth:
   master_username: "master"
   master_key: "changeme"
+  max_token_expiration_days: 20
 ```
 
 #### models
@@ -268,7 +269,6 @@ The `playground` section allows you to configure the playground.
 | menu_items.get_help | Optional | The URL this menu item should point to. If None, hides this menu item. The URL may also refer to an email address e.g. `mailto:john@example.com.` | str | | `None` |
 | menu_items.report_a_bug | Optional | The URL this menu item should point to. If None, hides this menu item. The URL may also refer to an email address e.g. `mailto:john@example.com.` | str | | `None` |
 | menu_items.about | Optional | A markdown string to show in the About dialog. If None, only shows Streamlit's default About text. | str | | `None` |
-| max_api_key_expiration_days | Required | Maximum days a user can keep an API key. | int | | `365` |
 | cache_ttl | Required | Cache TTL (in seconds). | int | | `1800` |
 | database_url | Required | Database URL. | str | | |
 
@@ -284,7 +284,6 @@ playground:
     get_help: mailto:contact@example.com
     report_a_bug: https://github.com/etalab-ia/albert-api/issues
     about: "This is a playground for the Albert API."
-  max_api_key_expiration_days: 365
   cache_ttl: 1800
   database_url: postgresql://postgres:changeme@localhost:5432/ui
 ```

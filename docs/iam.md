@@ -170,3 +170,6 @@ POST /v1/tokens
   "expires_at": 1704067200  // Optional, Unix timestamp
 }
 ```
+
+> **❗️Note**<br>
+> `CREATE_USER` permission allows to create tokens for other users with `user` field in the request body of POST `/v1/tokens`. These tokens are not subject to the `max_token_expiration_days` limit set in the auth section of the configuration file.

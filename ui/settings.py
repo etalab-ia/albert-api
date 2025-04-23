@@ -4,7 +4,7 @@ import os
 import re
 from typing import Any, Optional
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 import yaml
 
@@ -16,6 +16,7 @@ class ConfigBaseModel(BaseModel):
 
 class Auth(ConfigBaseModel):
     master_username: str = "master"
+    max_token_expiration_days: Optional[int] = Field(default=None, ge=0)
 
 
 class MenuItems(ConfigBaseModel):
@@ -30,7 +31,6 @@ class Playground(ConfigBaseModel):
     page_icon: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"
     menu_items: MenuItems = MenuItems()
     logo: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"
-    max_api_key_expiration_days: Optional[int] = None
     cache_ttl: int = 1800  # 30 minutes
     database_url: str = "postgresql+asyncpg://postgres:changeme@localhost:5432/ui"
 
