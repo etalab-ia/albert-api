@@ -3,6 +3,8 @@ from datetime import datetime
 import functools
 import json
 import logging
+from typing import Optional
+from unittest.mock import AsyncMock
 
 from fastapi import Request
 from starlette.responses import StreamingResponse
@@ -31,19 +33,19 @@ def log_usage(func):
         start_time = datetime.now()
         usage = Usage(datetime=start_time, endpoint="N/A")
 
-        response = await func(*args, **kwargs)
         # Find the Request in args or kwargs
         request = next((arg for arg in args if isinstance(arg, Request)), None)
         if not request:
-            request = kwargs.pop("request", None)
+            request = kwargs.get("request", None)
         if not request:
             raise Exception("No request found in args or kwargs")
         try:
-            await extract_usage_from_request(request, usage, **kwargs)
+            await extract_usage_from_request(usage, **kwargs)
         except NoUserIdException:
             logger.exception("No user ID found in request, skipping usage logging.")
-            return response
+            return func(*args, **kwargs)
 
+        response = await func(*args, **kwargs)
         if isinstance(response, StreamingResponse):
             return wrap_streaming_response_into_usage_extractor(response, start_time, usage)
         else:
@@ -53,7 +55,21 @@ def log_usage(func):
     return wrapper
 
 
-async def extract_usage_from_request(request: Request, usage: Usage, **kwargs):
+def extract_model_from_multipart(body: bytes, content_type: str) -> Optional[str]:
+    try:
+        # Find the model field in the multipart form data
+        parts = body.split(b"\r\n")
+        for i, part in enumerate(parts):
+            if b'Content-Disposition: form-data; name="model"' in part and i + 2 < len(parts):
+                # The value is 2 lines after the Content-Disposition header
+                return parts[i + 2].decode("utf-8")
+        return None
+    except Exception as e:
+        logger.warning(f"Error extracting model from multipart data: {str(e)}")
+        return None
+
+
+async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
     """
     Extracts usage information from the request and sets it in the Usage object.
     This function looks for the request object in the arguments and keyword arguments
@@ -65,26 +81,29 @@ async def extract_usage_from_request(request: Request, usage: Usage, **kwargs):
     usage.method = request.method
     user_obj = getattr(request.app.state, "user", None)
     usage.user_id = getattr(user_obj, "id", None) if user_obj else None
-    if not usage.user_id:
+    if usage.user_id is None:
         raise NoUserIdException("No user ID found in request")
     usage.token_id = getattr(request.app.state, "token_id", None)
 
     try:
         body = await request.body()
+        request.body = AsyncMock(return_value=body)
     except Exception as e:
         logger.warning(f"Failed to read request body: {e}")
         return
 
-    async def get_prompt_tokens(body: bytes):
+    content_type = request.headers.get("Content-Type", "")
+    # Extract model from request
+    if content_type.startswith("multipart/form-data"):
+        usage.model = extract_model_from_multipart(body, content_type)
+    else:
         try:
             json_body = json.loads(body.decode("utf-8"))
-            nb_tokens = sum(len(x["content"].split()) for x in json_body.get("messages", []))
-            return nb_tokens
+            usage.model = json_body.get("model")
+            usage.prompt_tokens = sum(len(x["content"].split()) for x in json_body.get("messages", []))
         except Exception:
             logger.warning("Failed to parse JSON request body")
-            return None
-
-    usage.prompt_tokens = await get_prompt_tokens(body)
+            return
 
 
 def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponse:
