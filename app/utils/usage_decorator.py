@@ -125,6 +125,7 @@ def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, st
                     usage.time_to_first_token = int((datetime.now() - start_time).total_seconds() * 1000)
                 buffer.append(chunk)
             except Exception:
+                logger.warning("Failed to process chunk in streaming response")
                 pass
             yield chunk
 
