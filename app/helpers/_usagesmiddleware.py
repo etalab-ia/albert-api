@@ -14,9 +14,6 @@ from app.utils.usage_decorator import NoUserIdException, extract_usage_from_requ
 
 blacklist = [
     variables.ENDPOINT__CHAT_COMPLETIONS,
-    variables.ENDPOINT__EMBEDDINGS,
-    variables.ENDPOINT__AUDIO_TRANSCRIPTIONS,
-    variables.ENDPOINT__RERANK,
 ]
 
 
@@ -31,12 +28,12 @@ class UsagesMiddleware(BaseHTTPMiddleware):
 
         start_time = datetime.now()
         usage = Usage(datetime=start_time, endpoint="N/A")
-        response = await call_next(request)
         try:
-            await extract_usage_from_request(request, usage)
+            await extract_usage_from_request(usage, request)
         except NoUserIdException:
             logger.exception("No user ID found in request, skipping usage logging.")
-            return response
+            return await call_next(request)
 
+        response = await call_next(request)
         asyncio.create_task(extract_usage_from_response(response, start_time, usage))
         return response
