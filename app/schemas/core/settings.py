@@ -58,16 +58,7 @@ class Model(ConfigBaseModel):
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
-        if values.type == ModelType.TEXT_EMBEDDINGS_INFERENCE:
-            assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__EMBEDDINGS, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
-        elif values.type == ModelType.TEXT_GENERATION:
-            assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__LANGUAGE, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
-        elif values.type == ModelType.AUTOMATIC_SPEECH_RECOGNITION:
-            assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__AUDIO, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
-        elif values.type == ModelType.TEXT_CLASSIFICATION:
-            assert values.clients[0].type in ModelClientType._SUPPORTED_MODEL_CLIENT_TYPES__RERANK, f"Invalid model type for client type {values.clients[0].type}"  # fmt: off
-        else:
-            raise ValueError(f"Invalid model type: {values.type}")
+        assert values.clients[0].type.value in ModelClientType.get_supported_clients(values.type.value), f"Invalid model type: {values.type.value} for client type {values.clients[0].type.value}"  # fmt: off
 
         return values
 
@@ -213,6 +204,6 @@ class Settings(BaseSettings):
 
         if values.web_search:
             assert values.databases.qdrant, "Qdrant database is required to use web_search."
-            assert values.web_search.model in [model.id for model in values.models if model.type == ModelType.TEXT_GENERATION], f"Web search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
+            assert values.web_search.model in [model.id for model in values.models if model.type in [ModelType.TEXT_GENERATION, ModelType.IMAGE_TEXT_TO_TEXT]], f"Web search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
 
         return values

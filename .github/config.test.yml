@@ -35,11 +35,11 @@ databases:
 
 models:
   - id: albert-large
-    type: text-generation
+    type: image-text-to-text
     owned_by: test
     aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
     clients:
-      - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
+      - model: albert-large
         type: albert
         args:
           api_url: https://albert.api.etalab.gouv.fr
@@ -61,7 +61,7 @@ models:
     type: text-embeddings-inference
     aliases: ["BAAI/bge-m3"]
     clients:
-      - model: BAAI/bge-m3
+      - model: embeddings-small
         type: albert
         args:
           api_url: https://albert.api.etalab.gouv.fr
