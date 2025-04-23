@@ -4,7 +4,7 @@ from ._identityaccessmanager import IdentityAccessManager
 from ._websearchmanager import WebSearchManager
 from ._limiter import Limiter
 from ._modelregistry import ModelRegistry
-from ._synchronousmodelrouter import ModelRouter
+from ._immediatemodelrouter import ImmediateModelRouter
 from ._streamingresponsewithstatuscode import StreamingResponseWithStatusCode
 from ._usagesmiddleware import UsagesMiddleware
 
@@ -14,7 +14,7 @@ __all__ = [
     "IdentityAccessManager",
     "Limiter",
     "ModelRegistry",
-    "ModelRouter",
+    "ImmediateModelRouter",
     "StreamingResponseWithStatusCode",
     "WebSearchManager",
     "UsagesMiddleware",

@@ -1,6 +1,9 @@
+import pytest
+
 from app.utils.lifespan import context
 
 
+@pytest.mark.usefixtures("client")
 class TestModels:
     def test_get_model_client(self):
         # Get a language model with more than 1 client
