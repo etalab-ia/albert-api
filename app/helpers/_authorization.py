@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import time
 from typing import Annotated, Dict, List, Optional
@@ -9,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.auth import Limit, LimitType, PermissionType, Role, User
 from app.schemas.collections import CollectionVisibility
 from app.schemas.core.auth import UserModelLimits
+from app.sql.session import get_db as get_session
 from app.utils.exceptions import (
     InsufficientPermissionException,
     InvalidAPIKeyException,
@@ -29,7 +31,6 @@ from app.utils.variables import (
     ENDPOINT__TOKENS,
     ENDPOINT__USERS,
 )
-from app.sql.session import get_db as get_session
 
 
 class Authorization:
@@ -78,7 +79,7 @@ class Authorization:
         if request.url.path.startswith(f"/v1{ENDPOINT__SEARCH}") and request.method == "POST":
             await self._check_search_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__TOKENS}") and request.method == "POST":
+        if request.url.path.startswith(ENDPOINT__TOKENS) and request.method == "POST":
             await self._check_tokens_post(user=user, role=role, limits=limits, request=request)
 
         # add authenticated user to request state for usage logging middleware
@@ -232,3 +233,8 @@ class Authorization:
 
         if body.get("user", None) and PermissionType.CREATE_USER not in role.permissions:
             raise InsufficientPermissionException("Missing permission to create token for another user.")
+
+        elif body.get("expires_at", None) and settings.auth.max_token_expiration_days:
+            # if the token is for another user, we don't check the expiration date
+            if body.get("expires_at") > int(dt.datetime.now(tz=dt.UTC).timestamp()) + settings.auth.max_token_expiration_days * 86400:
+                raise InsufficientPermissionException(f"Token expiration timestamp cannot be greater than {settings.auth.max_token_expiration_days} days from now.")  # fmt: off
