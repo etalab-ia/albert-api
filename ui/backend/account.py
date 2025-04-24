@@ -16,6 +16,9 @@ def change_password(current_password: str, new_password: str, confirm_password: 
     session = next(get_session())
     current_password = session.execute(select(UserTable.password).where(UserTable.name == st.session_state["user"].name)).scalar_one()
 
+    new_password = new_password.strip()
+    confirm_password = confirm_password.strip()
+
     if not check_password(current_password):
         st.toast("Wrong current password", icon="❌")
         return

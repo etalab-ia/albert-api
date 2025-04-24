@@ -3,14 +3,17 @@ import time
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
-from ui.backend.common import get_collections, get_documents, get_models
+from ui.backend.common import get_collections, get_documents, get_limits, get_models
 from ui.backend.summarize import generate_summary, generate_toc, get_chunks, summary_with_feedback
 from ui.frontend.header import header
 from ui.frontend.utils import pagination
-from ui.variables import MODEL_TYPE_LANGUAGE
+from ui.variables import MODEL_TYPE_LANGUAGE, MODEL_TYPE_IMAGE_TEXT_TO_TEXT
 
 header()
-models = get_models(type=MODEL_TYPE_LANGUAGE)
+models = get_models(types=[MODEL_TYPE_LANGUAGE, MODEL_TYPE_IMAGE_TEXT_TO_TEXT])
+limits = get_limits(models=models, role=st.session_state["user"].role)
+limits = [model for model, values in limits.items() if (values["rpd"] is None or values["rpd"] > 0) and (values["rpm"] is None or values["rpm"] > 0)]
+models = [model for model in models if model in limits]
 
 # Sidebar
 with st.sidebar:
@@ -75,7 +78,7 @@ st.subheader(body=":material/counter_2: Create a table of content")
 
 if not st.session_state.get("document_id"):
     st.stop()
-chunks = get_chunks(collection_id=collection_id, document_id=document_id)
+chunks = get_chunks(document_id=document_id)
 
 st.info(
     body="For help the model to generate a summarize, you need to write a table of content of your document. Clic on *generate* button if you need an AI help."

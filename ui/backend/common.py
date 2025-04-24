@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 import requests
 from sqlalchemy import select
@@ -7,21 +7,23 @@ import streamlit as st
 from ui.backend.sql.models import User as UserTable
 from ui.backend.sql.session import get_session
 from ui.settings import settings
-from ui.variables import MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
+from ui.variables import MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_IMAGE_TEXT_TO_TEXT, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
 
 
 @st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
-def get_models(type: Optional[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]] = None) -> list:
+def get_models(
+    types: list[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_IMAGE_TEXT_TO_TEXT, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]] = [],
+) -> list:
     response = requests.get(url=f"{settings.playground.api_url}/v1/models", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
     if response.status_code != 200:
         st.error(response.json()["detail"])
         return []
 
     models = response.json()["data"]
-    if type is None:
-        models = sorted([model["id"] for model in models])
+    if types == []:
+        models = sorted([model["id"] for model in models], key=lambda x: x.lower())
     else:
-        models = sorted([model["id"] for model in models if model["type"] == type])
+        models = sorted([model["id"] for model in models if model["type"] in types], key=lambda x: x.lower())
 
     return models
 
@@ -82,9 +84,9 @@ def get_roles(offset: int = 0, limit: int = 10):
     return data
 
 
-def get_users(offset: int = 0, limit: int = 100):
+def get_users(role: int, offset: int = 0, limit: int = 100):
     response = requests.get(
-        url=f"{settings.playground.api_url}/users?offset={offset}&limit={limit}",
+        url=f"{settings.playground.api_url}/users?offset={offset}&limit={limit}&role={role}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
     if response.status_code != 200:

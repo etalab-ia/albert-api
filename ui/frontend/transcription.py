@@ -12,7 +12,7 @@ header()
 
 # Data
 try:
-    models = get_models(type=MODEL_TYPE_AUDIO)
+    models = get_models(types=[MODEL_TYPE_AUDIO])
 except Exception:
     st.error(body="Error to fetch user data.")
     logging.error(traceback.format_exc())
