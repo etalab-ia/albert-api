@@ -48,13 +48,17 @@ class WebSearchManager:
     GET_WEB_QUERY_PROMPT = """Tu es un spécialiste pour transformer des demandes en requête google. Tu sais écrire les meilleurs types de recherches pour arriver aux meilleurs résultats.
 Voici la demande : {prompt}
 Réponds en donnant uniquement une requête google qui permettrait de trouver des informations pour répondre à la question.
+
 Exemples :
-question: Peut-on avoir des jours de congé pour un mariage ?
-reponse : jour congé mariage conditions
-question : Donnes-moi des informations sur toto et titi
-reponse : toto titi
-Comment refaire une pièce d'identité ?
-reponse : Renouvellement pièce identité France
+- Question: Peut-on avoir des jours de congé pour un mariage ?
+  Réponse: jour de congé mariage conditions
+
+- Question: Donnes-moi des informations sur Jules Verne
+  Réponse: Jules Verne
+
+- Question: Comment refaire une pièce d'identité ?
+  Réponse: renouvellement pièce identité France
+
 Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 

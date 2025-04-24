@@ -16,6 +16,11 @@ def header():
             with st.form(key="login"):
                 user_name = st.text_input(label="Email", type="default", key="user_id")
                 user_password = st.text_input(label="Password", type="password", key="password")
+
+                # strip input
+                user_name = user_name.strip()
+                user_password = user_password.strip()
+
                 submit = st.form_submit_button(label="Submit")
                 if submit:
                     login(user_name, user_password, session)

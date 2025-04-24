@@ -5,12 +5,12 @@ import streamlit as st
 from ui.backend.chat import generate_stream
 from ui.backend.common import get_collections, get_limits, get_models
 from ui.frontend.header import header
-from ui.variables import MODEL_TYPE_LANGUAGE
+from ui.variables import MODEL_TYPE_IMAGE_TEXT_TO_TEXT, MODEL_TYPE_LANGUAGE
 
 header()
 
 # Data
-models = get_models(type=MODEL_TYPE_LANGUAGE)
+models = get_models(types=[MODEL_TYPE_LANGUAGE, MODEL_TYPE_IMAGE_TEXT_TO_TEXT])
 limits = get_limits(models=models, role=st.session_state["user"].role)
 limits = [model for model, values in limits.items() if (values["rpd"] is None or values["rpd"] > 0) and (values["rpm"] is None or values["rpm"] > 0)]
 models = [model for model in models if model in limits]

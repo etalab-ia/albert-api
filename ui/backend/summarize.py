@@ -9,13 +9,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_chunks(collection_id: str, document_id: str) -> list:
+def get_chunks(document_id: str) -> list:
     response = requests.get(
-        f"{settings.playground.api_url}/v1/chunks/{document_id}", headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"}
+        f"{settings.playground.api_url}/v1/chunks/{document_id}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
     )
     assert response.status_code == 200, f"{response.status_code} - {response.json()}"
     chunks = response.json()["data"]
-    chunks = sorted(chunks, key=lambda x: x["metadata"]["document_part"])
+    chunks = sorted(chunks, key=lambda x: x["id"])
 
     return chunks
 

@@ -58,6 +58,9 @@ def update_role(
 
 
 def create_user(name: str, password: str, role: int, expires_at: Optional[int] = None):
+    name = name.strip()
+    password = password.strip()
+
     if not check_password(password):
         return
 
@@ -122,6 +125,9 @@ def delete_user(user: int):
 
 
 def update_user(user: int, name: Optional[str] = None, password: Optional[str] = None, role: Optional[int] = None, expires_at: Optional[int] = None):
+    name = name.strip() if name else None
+    password = password.strip() if password else None
+
     if password and not check_password(password):
         return
 

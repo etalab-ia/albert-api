@@ -1,6 +1,7 @@
-MODEL_TYPE_EMBEDDINGS = "text-embeddings-inference"
-MODEL_TYPE_LANGUAGE = "text-generation"
 MODEL_TYPE_AUDIO = "automatic-speech-recognition"
+MODEL_TYPE_EMBEDDINGS = "text-embeddings-inference"
+MODEL_TYPE_IMAGE_TEXT_TO_TEXT = "image-text-to-text"
+MODEL_TYPE_LANGUAGE = "text-generation"
 MODEL_TYPE_RERANK = "text-classification"
 
 COLLECTION_VISIBILITY_PRIVATE = "private"
