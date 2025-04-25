@@ -1,20 +1,18 @@
 import asyncio
 from datetime import datetime
-from typing import Callable, AsyncGenerator
+from typing import AsyncGenerator, Callable
 
 from fastapi import Request, Response
+from fastapi.routing import APIRoute
+from starlette.routing import Match
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.sql.models import Usage
 from app.sql.session import get_db
-from app.utils import variables
 from app.utils.logging import logger
-from app.utils.usage_decorator import NoUserIdException, extract_usage_from_request, extract_usage_from_response
-
-blacklist = [
-    variables.ENDPOINT__CHAT_COMPLETIONS,
-]
+from app.utils.usage_decorator import NoUserIdException, StreamingRequestException, extract_usage_from_request, extract_usage_from_response
 
 
 class UsagesMiddleware(BaseHTTPMiddleware):
@@ -23,7 +21,10 @@ class UsagesMiddleware(BaseHTTPMiddleware):
         self.db_func = db_func
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        if any(request.url.path.endswith(x) for x in blacklist):
+        route = self.get_route(request)
+
+        if route and getattr(route.endpoint, "is_log_usage_decorated", False):
+            logger.debug("Endpoint is decorated with log_usage, skipping middleware logging.")
             return await call_next(request)
 
         start_time = datetime.now()
@@ -31,9 +32,21 @@ class UsagesMiddleware(BaseHTTPMiddleware):
         try:
             await extract_usage_from_request(usage, request)
         except NoUserIdException:
-            logger.exception("No user ID found in request, skipping usage logging.")
+            logger.info("No user ID found in request, skipping usage logging.")
+            return await call_next(request)
+        except StreamingRequestException:
+            logger.debug("Streaming request, should be handled by decorator.")
             return await call_next(request)
 
         response = await call_next(request)
         asyncio.create_task(extract_usage_from_response(response, start_time, usage))
         return response
+
+    def get_route(self, request):
+        route = None
+        for r in request.app.router.routes:
+            match, _ = r.matches(request.scope)
+            if match == Match.FULL and isinstance(r, APIRoute):
+                route = r
+                break
+        return route
