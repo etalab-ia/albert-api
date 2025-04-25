@@ -16,6 +16,15 @@ from app.utils.lifespan import context
 logger = logging.getLogger(__name__)
 
 
+class StreamingRequestException(Exception):
+    """
+    Exception raised for streaming requests (i.e., requests with stream=True).
+    This exception is used to indicate that the request should be handled accordingly.
+    """
+
+    pass
+
+
 class NoUserIdException(Exception):
     pass
 
@@ -43,7 +52,9 @@ def log_usage(func):
             await extract_usage_from_request(usage, **kwargs)
         except NoUserIdException:
             logger.exception("No user ID found in request, skipping usage logging.")
-            return func(*args, **kwargs)
+            return await func(*args, **kwargs)
+        except StreamingRequestException:
+            logger.debug("Streaming request, OK for decorator to handle.")
 
         response = await func(*args, **kwargs)
         if isinstance(response, StreamingResponse):
@@ -52,6 +63,7 @@ def log_usage(func):
             asyncio.create_task(extract_usage_from_response(response, start_time, usage))
             return response
 
+    wrapper.is_log_usage_decorated = True
     return wrapper
 
 
@@ -100,10 +112,12 @@ async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
         try:
             json_body = json.loads(body.decode("utf-8"))
             usage.model = json_body.get("model")
-            usage.prompt_tokens = sum(len(x["content"].split()) for x in json_body.get("messages", []))
         except Exception:
             logger.warning("Failed to parse JSON request body")
             return
+        else:
+            if "stream" in json_body and json_body["stream"]:
+                raise StreamingRequestException("Streaming request")
 
 
 def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponse:
@@ -131,7 +145,6 @@ def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, st
 
         if buffer:
             body_content = b"".join(buffer).decode("utf-8")
-            usage.completion_tokens = len([x for x in body_content.split("\n") if x]) - 1
             for line in body_content.split("\n"):
                 if line.startswith("data: "):
                     try:
@@ -154,7 +167,6 @@ async def extract_usage_from_response(response, start_time: datetime, usage: Usa
     """
     try:
         usage.model = response.model
-        usage.completion_tokens = len(response.choices[0].message.content.split())
     except Exception:
         logger.debug("Error parsing non-streaming response")
     finally:
@@ -172,6 +184,14 @@ async def perform_log(usage: Usage, start_time: datetime, response):
     usage.status = response.status_code if hasattr(response, "status_code") else None
     if usage.model:
         usage.request_model = context.models.aliases.get(usage.model, usage.model)
+    if hasattr(response, "usage"):
+        """usage is a special field in vLLM responses"""
+        try:
+            usage.prompt_tokens = response.usage.prompt_tokens
+            usage.completion_tokens = response.usage.completion_tokens
+            usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
+        except Exception:
+            logger.warning("Error parsing usage from response")
     async for session in get_db():
         session.add(usage)
         try:

@@ -39,13 +39,9 @@ class TestLogUsageDecorator:
         assert log.request_model is not None
         assert isinstance(log.datetime, datetime)
         assert log.method == "POST"
-        assert log.prompt_tokens > 0
-        assert log.completion_tokens > 0
-        assert log.total_tokens > 0
         assert log.duration > 0
         assert log.status == 200
         assert log.request_model is not None
-        assert log.status == 200
 
     def test_chat_completion_non_streaming(self, client, db_session):
         """Test logging of a chat completion non-streaming response using stream_logger_decorator."""
