@@ -62,7 +62,7 @@ st.button(
 if not st.session_state.get("new_role", False) and roles:
     role = [role for role in roles if role["name"] == name][0]
 else:
-    role = {"name": None, "default": False, "permissions": [], "limits": []}
+    role = {"name": None, "default": False, "permissions": [], "limits": [], "id": None}
 new_name = st.text_input(label="Role name", placeholder="Enter role name", value=role["name"])
 default = st.toggle(label="Default", key="update_role_default", value=role["default"], help="If true, this role will be assigned to new users by default.")  # fmt: off
 

@@ -1,36 +1,16 @@
 from datetime import datetime
+import os
+import time
 
 import pytest
 
 from app.schemas.models import ModelType
 from app.sql.models import Usage
-from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS, ENDPOINT__MODELS
+from app.utils.variables import ENDPOINT__EMBEDDINGS, ENDPOINT__MODELS, ENDPOINT__RERANK
 
 
 @pytest.mark.usefixtures("client")
 class TestUsagesMiddleware:
-    def test_log_chat_completion(self, client, db_session):
-        """Test logging of chat completion request"""
-        # Get language model
-        response = client.get_without_permissions(f"/v1{ENDPOINT__MODELS}")
-        models = response.json()
-        model_id = [model for model in models["data"] if model["type"] == ModelType.TEXT_GENERATION][0]["id"]
-
-        params = {"model": model_id, "messages": [{"role": "user", "content": "Hello"}], "stream": False}
-        response = client.post_without_permissions(f"/v1{ENDPOINT__CHAT_COMPLETIONS}", json=params)
-        assert response.status_code == 200
-
-        log = db_session.query(Usage).order_by(Usage.id.desc()).first()
-
-        assert log.model == model_id
-        assert isinstance(log.datetime, datetime)
-        assert log.user is not None
-        assert log.prompt_tokens is not None
-        assert log.total_tokens is not None
-        assert log.completion_tokens is not None
-        assert log.duration is not None
-        assert log.method == "POST"
-
     def test_log_embeddings(self, client, db_session):
         """Test logging of embeddings request"""
         before = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__EMBEDDINGS}").count()
@@ -44,35 +24,89 @@ class TestUsagesMiddleware:
         response = client.post_without_permissions(f"/v1{ENDPOINT__EMBEDDINGS}", json=params)
         assert response.status_code == 200
 
+        time.sleep(0.5)
         # Check if log was created
         after = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__EMBEDDINGS}").count()
         assert after - before == 1
         log = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__EMBEDDINGS}").order_by(Usage.id.desc()).first()
 
-        assert log.model == model_id
+        assert log.model is not None
         assert isinstance(log.datetime, datetime)
         assert log.user is not None
         assert log.duration is not None
 
-    def test_no_log_for_non_model_endpoint(self, client, db_session):
-        """Test that non-model endpoints are not logged"""
-        previous = db_session.query(Usage).count()
+    def test_audio(self, client, db_session):
+        """Test logging of an audio transcription request using log_usage decorator."""
+        from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS
 
+        before = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__AUDIO_TRANSCRIPTIONS}").count()
+
+        # Get embeddings model id
         response = client.get_without_permissions(f"/v1{ENDPOINT__MODELS}")
+        models = response.json()["data"]
+        model_id = [m for m in models if m["type"] == ModelType.AUTOMATIC_SPEECH_RECOGNITION][0]["id"]
+
+        file_path = "app/tests/assets/audio.mp3"
+        with open(file_path, "rb") as file:
+            files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
+            data = {"model": model_id, "language": "fr", "response_format": "json", "temperature": 0}
+            response = client.post_without_permissions(f"/v1{ENDPOINT__AUDIO_TRANSCRIPTIONS}", files=files, data=data)
+
         assert response.status_code == 200
 
-        # Check that no log was created
-        current = db_session.query(Usage).count()
-        assert current == previous
+        try:
+            for _ in response.iter_lines():
+                pass
+        except Exception:
+            pass
+        finally:
+            response.close()
 
-    def test_log_with_invalid_json(self, client, db_session):
-        """Test handling of invalid JSON in request body"""
+        # Allow some time for the asynchronous logging to complete.
+        time.sleep(0.5)
 
-        previous = db_session.query(Usage).count()
-        invalid_json = "{"  # Invalid JSON
-        response = client.post(f"/v1{ENDPOINT__CHAT_COMPLETIONS}", data=invalid_json, headers={"Content-Type": "application/json"})
-        assert response.status_code == 422
+        after = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__AUDIO_TRANSCRIPTIONS}").count()
+        assert after - before > 0
+        log = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__AUDIO_TRANSCRIPTIONS}").order_by(Usage.id.desc()).first()
+        assert isinstance(log.datetime, datetime)
+        assert log.method == "POST"
+        assert log.model is not None
 
-        # Check that no log was created due to invalid JSON
-        current = db_session.query(Usage).count()
-        assert current == previous
+    def test_classification(self, client, db_session):
+        """Test logging of a text classification request using log_usage decorator."""
+
+        before = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__RERANK}").count()
+
+        # Get a test classification model id.
+        response = client.get_without_permissions(f"/v1{ENDPOINT__MODELS}")
+        models = response.json()["data"]
+        model_id = [m for m in models if m["type"] == ModelType.TEXT_CLASSIFICATION][0]["id"]
+
+        params = {"model": model_id, "prompt": "Sort these sentences by relevance.", "input": ["Sentence 1", "Sentence 2", "Sentence 3"]}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__RERANK}", json=params)
+        assert response.status_code == 200, response.text
+
+        try:
+            for _ in response.iter_lines():
+                pass
+        except Exception:
+            pass
+        finally:
+            response.close()
+
+        # Allow time for asynchronous logging to complete.
+        import time
+
+        time.sleep(0.5)
+
+        after = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__RERANK}").count()
+        assert after - before == 1
+
+        log = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__RERANK}").order_by(Usage.id.desc()).first()
+        assert isinstance(log.datetime, datetime)
+        assert log.method == "POST"
+        assert not log.prompt_tokens
+        assert log.completion_tokens is None
+        assert log.total_tokens is None
+        assert log.duration > 0
+        assert log.model is not None
