@@ -2,6 +2,7 @@ DEFAULT_APP_NAME = "Albert API"
 DEFAULT_TIMEOUT = 300
 
 ENDPOINT__AUDIO_TRANSCRIPTIONS = "/audio/transcriptions"
+# ENDPOINT__CHAT_COMPLETIONS = "/messages"
 ENDPOINT__CHAT_COMPLETIONS = "/chat/completions"
 ENDPOINT__CHUNKS = "/chunks"
 ENDPOINT__COLLECTIONS = "/collections"
