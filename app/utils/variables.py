@@ -16,6 +16,7 @@ ENDPOINT__ROLES = "/roles"
 ENDPOINT__SEARCH = "/search"
 ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
+ENDPOINT__METRICS = "/metrics"
 
 ENDPOINTS = [value for name, value in locals().items() if name.startswith("ENDPOINT__")]
 
