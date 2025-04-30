@@ -12,6 +12,7 @@ from fastapi import HTTPException
 import httpx
 
 from app.schemas.core.settings import ModelClientType
+from app.schemas.modelclientmetrics import ModelClientMetrics
 from app.schemas.usage import Detail, Usage
 from app.utils.context import generate_request_id, global_context, request_context
 from app.utils.variables import (
@@ -22,6 +23,7 @@ from app.utils.variables import (
     ENDPOINT__MODELS,
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
+    ENDPOINT__METRICS,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,6 +38,7 @@ class BaseModelClient(ABC):
         ENDPOINT__MODELS: None,
         ENDPOINT__OCR: None,
         ENDPOINT__RERANK: None,
+        ENDPOINT__METRICS: None,
     }
 
     def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
@@ -313,3 +316,9 @@ class BaseModelClient(ABC):
             except Exception as e:
                 logger.error(traceback.format_exc())
                 yield dumps({"detail": type(e).__name__}).encode(), 500
+
+    async def get_server_metrics(self) -> ModelClientMetrics | None:
+        """
+        Return metrics with harmonized format
+        """
+        return None
