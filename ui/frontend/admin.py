@@ -58,6 +58,7 @@ st.button(
     label="**Create a new role**",
     on_click=lambda: setattr(st.session_state, "new_role", not st.session_state.get("new_role", False)),
     use_container_width=True,
+    type="primary" if st.session_state.get("new_role", False) else "secondary",
 )
 if not st.session_state.get("new_role", False) and roles:
     role = [role for role in roles if role["name"] == name][0]
@@ -172,7 +173,7 @@ with col3:
         delete_role(role=role["id"])
 
 # Users
-if st.session_state.get("new_role", False):
+if not roles or st.session_state.get("new_role", False):
     st.stop()
 
 st.subheader(f"Users of the {"*new*" if st.session_state.get("new_role", False) else f"*{role["name"]}*"} role")
@@ -211,6 +212,7 @@ st.button(
     label="**Create a new user**",
     on_click=lambda: setattr(st.session_state, "new_user", not st.session_state.get("new_user", False)),
     use_container_width=True,
+    type="primary" if st.session_state.get("new_user", False) else "secondary",
 )
 role_names = [role["name"] for role in roles]
 default_role = [role["name"] for role in roles if role["default"]]
