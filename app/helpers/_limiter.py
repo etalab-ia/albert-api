@@ -1,14 +1,15 @@
+import logging
+import traceback
 from typing import Literal, Optional
 
+from coredis import ConnectionPool
 from limits import RateLimitItemPerDay, RateLimitItemPerMinute
 from limits.aio import storage, strategies
-from coredis import ConnectionPool
 
 from app.schemas.auth import LimitType
 from app.schemas.core.auth import LimitingStrategy
 
-from app.utils.logging import logger
-import traceback
+logger = logging.getLogger(__name__)
 
 
 class Limiter:

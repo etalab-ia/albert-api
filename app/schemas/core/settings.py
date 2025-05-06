@@ -69,25 +69,48 @@ class WebSearch(ConfigBaseModel):
     args: dict = {}
 
 
-class DatabaseQdrant(ConfigBaseModel):
-    model: str
-    args: dict = {}
+class DatabaseQdrantArgs(ConfigBaseModel):
+    prefer_grpc: bool = False
+
+    @field_validator("prefer_grpc", mode="after")
+    def force_rest(cls, prefer_grpc):
+        if prefer_grpc:
+            logging.warning("Qdrant does not support grpc for create index payload, force REST connection.")
+            prefer_grpc = False
+
+        return prefer_grpc
+
+
+class DatabaseSQLArgs(ConfigBaseModel):
+    url: str = Field(pattern=r"^postgresql|^sqlite")
+
+    @field_validator("url", mode="after")
+    def force_async(cls, url):
+        if url.startswith("postgresql://"):
+            logging.warning("PostgreSQL connection must be async, force asyncpg connection.")
+            url = url.replace("postgresql://", "postgresql+asyncpg://")
+
+        if url.startswith("sqlite://"):
+            logging.warning("SQLite connection must be async, force aiosqlite connection.")
+            url = url.replace("sqlite://", "sqlite+aiosqlite://")
+
+        return url
 
 
 class Database(ConfigBaseModel):
     type: DatabaseType
+    context: str = "api"
     model: Optional[str] = None
     args: dict = {}
 
     @model_validator(mode="after")
-    def qdrant(cls, values):
-        # Qdrant does not support grpc for create index payload
+    def format(cls, values):
         if values.type == DatabaseType.QDRANT:
-            if values.args.get("prefer_grpc"):
-                logging.warning("Qdrant does not support grpc for create index payload, force REST connection.")
-            values.args["prefer_grpc"] = False
-
+            values.args = DatabaseQdrantArgs(**values.args).model_dump()
             assert values.model, "A text embeddings inference model ID is required for Qdrant database."
+
+        if values.type == DatabaseType.SQL:
+            values.args = DatabaseSQLArgs(**values.args).model_dump()
 
         return values
 
@@ -140,8 +163,22 @@ class Config(ConfigBaseModel):
 
     @model_validator(mode="after")
     def validate_databases(cls, values) -> Any:
-        cache_databases = [database for database in values.databases if database.type == DatabaseType.REDIS]
-        assert len(cache_databases) == 1, "There must be only one cache database."
+        redis_databases = [database for database in values.databases if database.type == DatabaseType.REDIS]
+        assert len(redis_databases) <= 1, "There must be only one redis database."
+
+        qdrant_databases = [database for database in values.databases if database.type == DatabaseType.QDRANT]
+        assert len(qdrant_databases) <= 1, "There must be only one Qdrant database."
+
+        sql_databases = [database for database in values.databases if database.type == DatabaseType.SQL and database.context == "api"]
+        if len(sql_databases) > 1:
+            raise ValueError("There must be only one SQL database with the `api` context. If your configuration files contains multiple SQL databases, please specify the context keyword for other SQL databases.")  # fmt: off
+        if len(sql_databases) == 0:
+            raise ValueError("There must be at least one SQL database.")
+
+        values.databases = SimpleNamespace()
+        values.databases.redis = redis_databases[0]
+        values.databases.qdrant = qdrant_databases[0]
+        values.databases.sql = sql_databases[0]
 
         return values
 
@@ -190,13 +227,7 @@ class Settings(BaseSettings):
         values.auth = config.auth
         values.web_search = config.web_search[0] if config.web_search else None
         values.models = config.models
-
-        values.databases = SimpleNamespace()
-        values.databases.sql = next((database for database in config.databases if database.type == DatabaseType.SQL), None)
-        values.databases.redis = next((database for database in config.databases if database.type == DatabaseType.REDIS), None)
-        values.databases.qdrant = next((database for database in config.databases if database.type == DatabaseType.QDRANT), None)
-
-        assert values.databases.sql.args["url"].startswith("postgresql+asyncpg://") or values.databases.sql.args["url"].startswith("sqlite+aiosqlite://"), "SQL connection must be async."  # fmt: off
+        values.databases = config.databases
 
         if values.databases.qdrant:
             assert values.databases.sql, "SQL database is required to use Qdrant features."

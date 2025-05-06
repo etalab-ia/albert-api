@@ -1,10 +1,12 @@
+import logging
 import traceback
 from typing import List
 
 import httpx
 
 from app.clients.web_search._basewebsearchclient import BaseWebSearchClient
-from app.utils.logging import logger
+
+logger = logging.getLogger(__name__)
 
 
 class DuckduckgoWebSearchClient(BaseWebSearchClient):

@@ -1,3 +1,4 @@
+import logging
 import time
 import traceback
 from typing import List, Optional
@@ -30,11 +31,12 @@ from app.utils.exceptions import (
     VectorizationFailedException,
     WebSearchNotAvailableException,
 )
-from app.utils.logging import logger
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS
 
 from ._modelrouter import ModelRouter
 from ._websearchmanager import WebSearchManager
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentManager:

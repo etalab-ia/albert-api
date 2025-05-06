@@ -1,18 +1,19 @@
 import asyncio
 from datetime import datetime
+import logging
 from typing import AsyncGenerator, Callable
 
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
-from starlette.routing import Match
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.routing import Match
 
 from app.sql.models import Usage
 from app.sql.session import get_db
-from app.utils.logging import logger
 from app.utils.usage_decorator import NoUserIdException, StreamingRequestException, extract_usage_from_request, extract_usage_from_response
+
+logger = logging.getLogger(__name__)
 
 
 class UsagesMiddleware(BaseHTTPMiddleware):
