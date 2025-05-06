@@ -40,8 +40,9 @@ class BaseModelRouter(ABC):
 
         self._vector_size = vector_sizes[0]
         self._routing_strategy = routing_strategy
-        self._cycle = cycle(clients)
         self._clients = clients
+        self._client_urls = list(map(lambda c: c.api_url, self._clients))
+        self._cycle = cycle(self._client_urls)
 
     @abstractmethod
     def get_client(self, endpoint: str) -> ModelClient:

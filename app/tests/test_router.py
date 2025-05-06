@@ -14,5 +14,5 @@ class TestModels:
         client_2 = router.get_client(endpoint="")
         client_3 = router.get_client(endpoint="")
 
-        assert client_1.timeout != client_2.timeout
-        assert client_1.timeout == client_3.timeout
+        assert client_1.api_url != client_2.api_url
+        assert client_1.api_url == client_3.api_url
