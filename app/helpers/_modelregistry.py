@@ -3,11 +3,11 @@ from typing import List, Optional
 from app.schemas.models import Model as ModelSchema
 from app.utils.exceptions import ModelNotFoundException
 
-from ._modelrouter import ModelRouter
+from ._immediatemodelrouter import ImmediateModelRouter
 
 
 class ModelRegistry:
-    def __init__(self, routers: List[ModelRouter]) -> None:
+    def __init__(self, routers: List[ImmediateModelRouter]) -> None:
         self.models = list()
         self.aliases = dict()
 
@@ -21,7 +21,7 @@ class ModelRegistry:
             for alias in model.aliases:
                 self.aliases[alias] = model.id
 
-    def __call__(self, model: str) -> ModelRouter:
+    def __call__(self, model: str) -> ImmediateModelRouter:
         model = self.aliases.get(model, model)
 
         if model in self.models:
