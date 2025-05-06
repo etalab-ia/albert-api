@@ -6,6 +6,7 @@ from app.helpers import Authorization, UsagesMiddleware
 from app.schemas.auth import PermissionType
 from app.sql.session import get_db
 from app.utils.lifespan import lifespan
+import app.utils.logging
 from app.utils.settings import settings
 from app.utils.variables import (
     ROUTER__AUDIO,

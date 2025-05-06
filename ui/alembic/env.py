@@ -7,7 +7,7 @@ from ui.settings import settings
 from ui.backend.sql.models import Base
 
 config = context.config
-config.set_main_option(name="sqlalchemy.url", value=settings.playground.database_url.replace("+asyncpg", ""))
+config.set_main_option(name="sqlalchemy.url", value=settings.databases.sql.args.get("url").replace("+asyncpg", ""))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

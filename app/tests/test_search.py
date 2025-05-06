@@ -1,3 +1,4 @@
+import logging
 import os
 from uuid import uuid4
 
@@ -5,8 +6,9 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.schemas.search import Search, Searches
-from app.utils.logging import logger
 from app.utils.variables import ENDPOINT__COLLECTIONS, ENDPOINT__DOCUMENTS, ENDPOINT__FILES, ENDPOINT__SEARCH
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")

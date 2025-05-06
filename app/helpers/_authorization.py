@@ -177,7 +177,7 @@ class Authorization:
 
     async def _check_chat_completions_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
-        body = json.loads(body)
+        body = json.loads(body) if body else {}
 
         await self._check_limits(user=user, limits=limits, model=body.get("model"))
 
@@ -186,21 +186,21 @@ class Authorization:
 
     async def _check_collections_patch(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
-        body = json.loads(body)
+        body = json.loads(body) if body else {}
 
         if body.get("visibility") == CollectionVisibility.PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in role.permissions:
             raise InsufficientPermissionException("Missing permission to update collection visibility to public.")
 
     async def _check_collections_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
-        body = json.loads(body)
+        body = json.loads(body) if body else {}
 
         if body.get("visibility") == CollectionVisibility.PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in role.permissions:
             raise InsufficientPermissionException("Missing permission to create public collections.")
 
     async def _check_embeddings_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
-        body = json.loads(body)
+        body = json.loads(body) if body else {}
 
         await self._check_limits(user=user, limits=limits, model=body.get("model"))
 
@@ -223,13 +223,13 @@ class Authorization:
 
     async def _check_search_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
-        body = json.loads(body)
+        body = json.loads(body) if body else {}
 
         await self._check_limits(user=user, limits=limits, model=body.get("model"))
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
-        body = json.loads(body)
+        body = json.loads(body) if body else {}
 
         if body.get("user", None) and PermissionType.CREATE_USER not in role.permissions:
             raise InsufficientPermissionException("Missing permission to create token for another user.")
