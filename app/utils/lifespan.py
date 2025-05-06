@@ -13,13 +13,7 @@ from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRe
 from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
-
-context = SimpleNamespace(
-    models=None,
-    iam=None,
-    limiter=None,
-    documents=None,
-)
+context = SimpleNamespace(models=None, iam=None, limiter=None, documents=None)
 
 
 @asynccontextmanager

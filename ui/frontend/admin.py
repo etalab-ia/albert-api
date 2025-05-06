@@ -240,7 +240,6 @@ new_expires_at = st.date_input(label="Expires at", key="create_user_expires_at",
 new_expires_at = None if no_expiration or pd.isna(new_expires_at) else int(pd.Timestamp(new_expires_at).timestamp())
 
 col1, col2 = st.columns(spec=2)
-
 with col1:
     if st.button(
         label="**:material/add: Add user**",

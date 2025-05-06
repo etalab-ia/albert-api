@@ -1,5 +1,5 @@
 from contextvars import ContextVar
-from logging import Logger, Filter, getLogger, StreamHandler, Formatter
+from logging import Filter, Formatter, Logger, StreamHandler, getLogger
 import sys
 from typing import Optional
 
@@ -19,11 +19,12 @@ def setup_logger() -> Logger:
     logger = getLogger(name="app")
     logger.setLevel(level=settings.general.log_level)
     handler = StreamHandler(stream=sys.stdout)
-    formatter = Formatter("[%(asctime)s][%(process)d:%(threadName)s][%(levelname)s] %(client_ip)s - %(message)s")
+    formatter = Formatter("[%(asctime)s][%(process)d:%(name)s][%(levelname)s] %(client_ip)s - %(message)s")
     handler.setFormatter(formatter)
+    handler.addFilter(ClientIPFilter())
 
-    logger.addFilter(ClientIPFilter())
     logger.addHandler(handler)
+    logger.propagate = False  # Prevent propagation to root logger
 
     return logger
 

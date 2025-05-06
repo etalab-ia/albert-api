@@ -23,7 +23,8 @@ def create_role(name: str, default: bool, permissions: list, limits: list):
         return
 
     st.toast("Role created", icon="✅")
-    time.sleep(0.5)
+    time.sleep(1)
+    st.session_state["new_role"] = False
     st.rerun()
 
 
@@ -104,7 +105,8 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
     session.commit()
 
     st.toast("User created", icon="✅")
-    time.sleep(0.5)
+    time.sleep(1)
+    st.session_state["new_user"] = False
     st.rerun()
 
 
