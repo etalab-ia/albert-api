@@ -19,14 +19,15 @@ from app.schemas.auth import (
     Users,
     UserUpdateRequest,
 )
-from app.utils.lifespan import context
-from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 from app.sql.session import get_db as get_session
+from app.utils.lifespan import context
+from app.utils.settings import settings
+from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__ROLES, dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_ROLE]))])
+@router.post(path=ENDPOINT__ROLES, dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_ROLE]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def create_role(request: Request, body: RoleRequest = Body(description="The role creation request."), session: AsyncSession = Depends(get_session)) -> JSONResponse:  # fmt: off
     """
     Create a new role.
@@ -50,7 +51,7 @@ async def delete_role(
     return Response(status_code=204)
 
 
-@router.patch(path=ENDPOINT__ROLES + "/{role:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.UPDATE_ROLE]))])
+@router.patch(path=ENDPOINT__ROLES + "/{role:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.UPDATE_ROLE]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def update_role(
     request: Request,
     role: int = Path(description="The ID of the role to update."),
@@ -73,7 +74,7 @@ async def update_role(
     return Response(status_code=204)
 
 
-@router.get(path=ENDPOINT__ROLES + "/me", dependencies=[Security(dependency=Authorization())])
+@router.get(path=ENDPOINT__ROLES + "/me", dependencies=[Security(dependency=Authorization())], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def get_current_role(request: Request, session: AsyncSession = Depends(get_session)) -> Role:
     """
     Get the current role.
@@ -84,7 +85,7 @@ async def get_current_role(request: Request, session: AsyncSession = Depends(get
     return roles[0]
 
 
-@router.get(path=ENDPOINT__ROLES + "/{role:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))])
+@router.get(path=ENDPOINT__ROLES + "/{role:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def get_role(
     request: Request, role: int = Path(description="The ID of the role to get."), session: AsyncSession = Depends(get_session)
 ) -> Role:
@@ -97,7 +98,7 @@ async def get_role(
     return roles[0]
 
 
-@router.get(path=ENDPOINT__ROLES, dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))])
+@router.get(path=ENDPOINT__ROLES, dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_ROLE]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def get_roles(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the roles to get."),
@@ -112,7 +113,7 @@ async def get_roles(
     return Roles(data=data)
 
 
-@router.post(path=ENDPOINT__USERS, dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_USER]))])
+@router.post(path=ENDPOINT__USERS, dependencies=[Security(dependency=Authorization(permissions=[PermissionType.CREATE_USER]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def create_user(request: Request, body: UserRequest = Body(description="The user creation request."), session: AsyncSession = Depends(get_session)) -> JSONResponse:  # fmt: off
     """
     Create a new user.
@@ -123,7 +124,7 @@ async def create_user(request: Request, body: UserRequest = Body(description="Th
     return JSONResponse(status_code=201, content={"id": user_id})
 
 
-@router.delete(path=ENDPOINT__USERS + "/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_USER]))])
+@router.delete(path=ENDPOINT__USERS + "/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_USER]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def delete_user(request: Request, user: int = Path(description="The ID of the user to delete."), session: AsyncSession = Depends(get_session)) -> Response:  # fmt: off
     """
     Delete a user.
@@ -133,7 +134,7 @@ async def delete_user(request: Request, user: int = Path(description="The ID of 
     return Response(status_code=204)
 
 
-@router.patch(path=ENDPOINT__USERS + "/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.UPDATE_USER]))])
+@router.patch(path=ENDPOINT__USERS + "/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.UPDATE_USER]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def update_user(
     request: Request,
     user: int = Path(description="The ID of the user to update."),
@@ -149,7 +150,7 @@ async def update_user(
     return Response(status_code=204)
 
 
-@router.get(path=ENDPOINT__USERS + "/me", dependencies=[Security(dependency=Authorization())])
+@router.get(path=ENDPOINT__USERS + "/me", dependencies=[Security(dependency=Authorization())], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def get_current_user(request: Request, session: AsyncSession = Depends(get_session)) -> User:
     """
     Get the current user.
@@ -160,7 +161,7 @@ async def get_current_user(request: Request, session: AsyncSession = Depends(get
     return users[0]
 
 
-@router.get(path=ENDPOINT__USERS + "/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_USER]))])
+@router.get(path=ENDPOINT__USERS + "/{user:path}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_USER]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def get_user(
     request: Request, user: int = Path(description="The ID of the user to get."), session: AsyncSession = Depends(get_session)
 ) -> User:
@@ -173,7 +174,7 @@ async def get_user(
     return users[0]
 
 
-@router.get(path=ENDPOINT__USERS, dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_USER]))])
+@router.get(path=ENDPOINT__USERS, dependencies=[Security(dependency=Authorization(permissions=[PermissionType.READ_USER]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def get_users(
     request: Request,
     role: Optional[int] = Query(default=None, description="The ID of the role to filter the users by."),
