@@ -51,7 +51,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
         app.include_router(router=audio.router, tags=[ROUTER__AUDIO.title()], prefix="/v1")
 
     if ROUTER__AUTH not in settings.general.disabled_routers:
-        app.include_router(router=auth.router, tags=[ROUTER__AUTH.title()], include_in_schema=settings.general.log_level == "DEBUG")
+        app.include_router(router=auth.router, tags=[ROUTER__AUTH.title()])
 
     if ROUTER__CHAT not in settings.general.disabled_routers:
         app.include_router(router=chat.router, tags=[ROUTER__CHAT.title()], prefix="/v1")

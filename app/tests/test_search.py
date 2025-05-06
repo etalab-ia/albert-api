@@ -95,3 +95,15 @@ class TestSearch:
             assert search.chunk.metadata["document_name"].startswith("http")
         else:
             logger.info("No web search results.")
+
+    def test_search_access_other_user_collection(self, client: TestClient, setup):
+        """Test search with the web search."""
+
+        # create a private collection with a different user
+        response = client.post_with_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json={"name": f"test_collection_{uuid4()}"})
+        assert response.status_code == 201, response.text
+        COLLECTION_ID = response.json()["id"]
+
+        data = {"prompt": "What is the largest planet in our solar system?", "collections": [COLLECTION_ID], "k": 3}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__SEARCH}", json=data)
+        assert response.status_code == 404, response.text

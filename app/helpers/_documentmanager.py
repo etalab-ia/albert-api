@@ -18,7 +18,7 @@ from app.schemas.collections import Collection, CollectionVisibility
 from app.schemas.core.data import ParserOutput
 from app.schemas.documents import Document
 from app.schemas.files import ChunkerName
-from app.schemas.search import Search, SearchMethod
+from app.schemas.search import Search
 from app.sql.models import Collection as CollectionTable
 from app.sql.models import Document as DocumentTable
 from app.sql.models import User as UserTable
@@ -317,12 +317,26 @@ class DocumentManager:
                     )
                 collection_ids.append(web_collection_id)
 
-        searches = await self._query(
-            session=session,
-            model_client=qdrant_client,
-            prompt=prompt,
-            collection_ids=collection_ids,
+        # check if collections exist
+        for collection_id in collection_ids:
+            result = await session.execute(
+                statement=select(CollectionTable)
+                .where(CollectionTable.id == collection_id)
+                .where(or_(CollectionTable.user_id == user_id, CollectionTable.visibility == CollectionVisibility.PUBLIC))
+            )
+            try:
+                result.scalar_one()
+            except NoResultFound:
+                raise CollectionNotFoundException(detail=f"Collection {collection_id} not found.")
+
+        response = await self._create_embeddings(input=[prompt], model_client=qdrant_client)
+        query_vector = response[0]
+
+        searches = await self.qdrant.search(
             method=method,
+            collection_ids=collection_ids,
+            query_prompt=prompt,
+            query_vector=query_vector,
             k=k,
             rff_k=rff_k,
             score_threshold=score_threshold,
@@ -380,37 +394,3 @@ class DocumentManager:
                 chunks=batch,
                 embeddings=embeddings,
             )
-
-    async def _query(
-        self,
-        session: AsyncSession,
-        model_client: ModelClient,
-        prompt: str,
-        collection_ids: List[int],
-        method: SearchMethod,
-        k: Optional[int] = 4,
-        rff_k: Optional[int] = 20,
-        score_threshold: Optional[float] = None,
-    ) -> List[Search]:
-        # check if collections exist
-        for collection_id in collection_ids:
-            result = await session.execute(statement=select(CollectionTable).where(CollectionTable.id == collection_id))
-            try:
-                result.scalar_one()
-            except NoResultFound:
-                raise CollectionNotFoundException(detail=f"Collection {collection_id} not found.")
-
-        response = await self._create_embeddings(input=[prompt], model_client=model_client)
-        query_vector = response[0]
-
-        searches = await self.qdrant.search(
-            method=method,
-            collection_ids=collection_ids,
-            query_prompt=prompt,
-            query_vector=query_vector,
-            k=k,
-            rff_k=rff_k,
-            score_threshold=score_threshold,
-        )
-
-        return searches
