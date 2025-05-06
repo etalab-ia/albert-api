@@ -101,7 +101,7 @@ models:
       - model: albert-small
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: https://albert.api.etalab.gouv.fr/v2
           api_key: ${ALBERT_API_KEY}
           timeout: 60
 

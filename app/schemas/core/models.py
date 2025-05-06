@@ -24,3 +24,4 @@ class ModelClientType(str, Enum):
 class RoutingStrategy(str, Enum):
     ROUND_ROBIN = "round_robin"
     SHUFFLE = "shuffle"
+    LEAST_BUSY = "least_busy"

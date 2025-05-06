@@ -63,6 +63,7 @@ class Model(ConfigBaseModel):
     aliases: List[str] = []
     owned_by: str = DEFAULT_APP_NAME
     routing_strategy: RoutingStrategy = RoutingStrategy.SHUFFLE
+    enable_queueing: bool = False
     clients: List[ModelClient]
 
     @model_validator(mode="after")

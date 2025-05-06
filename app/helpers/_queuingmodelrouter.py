@@ -25,10 +25,10 @@ class QueuingModelRouter(BaseModelRouter):
 
     def get_client(self, endpoint: str) -> ModelClient | None:
         # TODO: To implement
-        # 1. Call to self.rpc_client.call() to send request to the right queue (one queue per model type) with the params:
-        #   a. the caller's priority
-        #   b. the routing strategy
+        # 1. Call to self.rpc_client.call() to send request to the right queue (one queue per model router) with the params:
+        #   a. the model router id
+        #   b. the caller's priority
         # 2. Wait for message to be processed by consumer
-        # 3. Response is received with either a client's info (url, api_key) or None result meaning no client was available
-        # 4. Return response as the return object of this method
+        # 3. Response is received with either a client's info (url) or None result meaning no client was available
+        # 4. Return client corresponding to the url among the list of ModelClient
         return None

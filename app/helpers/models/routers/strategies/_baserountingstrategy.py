@@ -1,19 +1,17 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from app.clients.model import BaseModelClient as ModelClient
-
 
 class BaseRoutingStrategy(ABC):
-    def __init__(self, clients: List[ModelClient]) -> None:
+    def __init__(self, clients: List[str]) -> None:
         self.clients = clients
 
     @abstractmethod
-    def choose_model_client(self) -> ModelClient:
+    def choose_model_client(self) -> str:
         """
-        Choose a client among the model's clients list
+        Choose a client url among the model's clients urls list
 
         Returns:
-           BaseModelClient: The chosen client
+           str: The chosen client's url
         """
         pass

@@ -36,11 +36,12 @@ class ImmediateModelRouter(BaseModelRouter):
             raise WrongModelTypeException()
 
         if self._routing_strategy == RoutingStrategy.ROUND_ROBIN:
-            strategy = RoundRobinRoutingStrategy(self._clients, self._cycle)
+            strategy = RoundRobinRoutingStrategy(self._client_urls, self._cycle)
         else:  # ROUTER_STRATEGY__SHUFFLE
-            strategy = ShuffleRoutingStrategy(self._clients)
+            strategy = ShuffleRoutingStrategy(self._client_urls)
 
-        client = strategy.choose_model_client()
+        client_url = strategy.choose_model_client()
+        client = next(filter(lambda c: c.api_url == client_url, self._clients), None)
         client.endpoint = endpoint
 
         return client
