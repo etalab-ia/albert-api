@@ -25,6 +25,7 @@ databases:
       password: changeme
 
   - type: sql
+    context: api
     args:
       url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:5432/api
       echo: True
