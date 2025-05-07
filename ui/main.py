@@ -21,6 +21,18 @@ st.set_page_config(
 
 st.logo(image=settings.playground.logo, link=settings.playground.home_url, size="large")
 
+# Set the width of the sidebar to 400px
+st.markdown(
+    """
+    <style>
+        section[data-testid="stSidebar"] {
+            width: 400px !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 pg = st.navigation(
     pages=[
         st.Page(page="frontend/account.py", title="My account", icon=":material/account_circle:"),
