@@ -25,3 +25,16 @@ class RoutingStrategy(str, Enum):
     ROUND_ROBIN = "round_robin"
     SHUFFLE = "shuffle"
     LEAST_BUSY = "least_busy"
+
+
+class RoutingMode(str, Enum):
+    QUEUEING = "queuing"
+    NO_QUEUEING = "no_queuing"
+
+    @classmethod
+    def get_supported_strategies(cls, routing_mode):
+        mapping = {
+            cls.QUEUEING: [RoutingStrategy.LEAST_BUSY.value, RoutingStrategy.ROUND_ROBIN.value, RoutingStrategy.SHUFFLE.value],
+            cls.NO_QUEUEING: [RoutingStrategy.ROUND_ROBIN.value, RoutingStrategy.ROUND_ROBIN.SHUFFLE.value],
+        }
+        return mapping.get(routing_mode, [])
