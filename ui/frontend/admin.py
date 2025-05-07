@@ -20,7 +20,7 @@ key, per_page = "role", 30
 # Roles
 roles = get_roles(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)  # TODO: handle pagination in user tab
 
-with st.expander("**Roles**"):
+with st.expander("**Roles**", expanded=True):
     st.dataframe(
         data=pd.DataFrame(
             data={
