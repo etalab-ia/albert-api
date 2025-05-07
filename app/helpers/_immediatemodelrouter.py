@@ -1,7 +1,7 @@
 from app.clients.model import BaseModelClient as ModelClient
-from app.helpers._basemodelrouter import BaseModelRouter
-from app.helpers.strategies.roundrobinmodelclientselectionstrategy import RoundRobinModelClientSelectionStrategy
-from app.helpers.strategies.shufflemodelclientselectionstrategy import ShuffleModelClientSelectionStrategy
+from _basemodelrouter import BaseModelRouter
+from .strategies.roundrobinmodelclientselectionstrategy import RoundRobinModelClientSelectionStrategy
+from .strategies.shufflemodelclientselectionstrategy import ShuffleModelClientSelectionStrategy
 from app.schemas.core.models import RoutingStrategy
 from app.schemas.models import ModelType
 from app.utils.exceptions import WrongModelTypeException

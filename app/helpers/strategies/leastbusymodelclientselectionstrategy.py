@@ -1,6 +1,6 @@
 from typing import List
 
-from app.helpers.strategies._basemodelclientselectionstrategy import BaseModelClientSelectionStrategy
+from ._basemodelclientselectionstrategy import BaseModelClientSelectionStrategy
 
 
 class LeastBusyModelClientSelectionStrategy(BaseModelClientSelectionStrategy):
