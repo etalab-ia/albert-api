@@ -12,11 +12,11 @@ from ui.backend.sql.session import get_session
 from ui.settings import settings
 
 
-def create_role(name: str, default: bool, permissions: list, limits: list):
+def create_role(name: str, permissions: list, limits: list):
     response = requests.post(
         url=f"{settings.playground.api_url}/roles",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
-        json={"name": name, "default": default, "permissions": permissions, "limits": limits},
+        json={"name": name, "permissions": permissions, "limits": limits},
     )
     if response.status_code != 201:
         st.toast(response.json()["detail"], icon="❌")
@@ -41,12 +41,10 @@ def delete_role(role: int):
     st.rerun()
 
 
-def update_role(
-    role: int, name: Optional[str] = None, default: Optional[bool] = None, permissions: Optional[list] = None, limits: Optional[list] = None
-):
+def update_role(role: int, name: Optional[str] = None, permissions: Optional[list] = None, limits: Optional[list] = None):
     response = requests.patch(
         url=f"{settings.playground.api_url}/roles/{role}",
-        json={"name": name, "default": default, "permissions": permissions, "limits": limits},
+        json={"name": name, "permissions": permissions, "limits": limits},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
     if response.status_code != 204:

@@ -1,10 +1,11 @@
 import pandas as pd
 import streamlit as st
+from streamlit_extras.stylable_container import stylable_container
 
 from ui.backend.admin import create_role, create_user, delete_role, delete_user, refresh_playground_api_key, update_role, update_user
-from ui.backend.common import get_limits, get_models, get_roles, get_users
+from ui.backend.common import get_limits, get_models
 from ui.frontend.header import header
-from ui.frontend.utils import pagination
+from ui.frontend.utils import ressources_selector
 from ui.variables import ADMIN_PERMISSIONS
 
 header()
@@ -15,80 +16,85 @@ if not all(perm in st.session_state["user"].role["permissions"] for perm in ADMI
 
 
 models = get_models()
-key, per_page = "role", 30
 
-# Roles
-roles = get_roles(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)  # TODO: handle pagination in user tab
+with st.expander(label="Roles", expanded=not st.session_state.get("new_role", False)):
+    roles, selected_role = ressources_selector(ressource="role")
 
-with st.expander("**Roles**"):
-    st.dataframe(
-        data=pd.DataFrame(
-            data={
-                "ID": [role["id"] for role in roles],
-                "Name": [role["name"] for role in roles],
-                "Users": [role["users"] for role in roles],
-                "Created at": [pd.to_datetime(role["created_at"], unit="s") for role in roles],
-                "Updated at": [pd.to_datetime(role["updated_at"], unit="s") for role in roles],
-            },
-        ),
-        hide_index=True,
+with st.sidebar:
+    st.subheader("**Roles**")
+
+    st.button(
+        label="**:material/add: Create role**",
+        key="create_new_role",
+        on_click=lambda: setattr(st.session_state, "new_role", not st.session_state.get("new_role", False)),
         use_container_width=True,
-        column_config={
-            "ID": st.column_config.TextColumn(label="ID", width="small"),
-            "Name": st.column_config.ListColumn(label="Name", width="large"),
-            "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True, width="small"),
-            "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True, width="small"),
-        },
-        height=28 * len(roles) + 37,
-        row_height=28,
+        type="primary" if st.session_state.get("new_role", False) else "secondary",
     )
-    pagination(key=key, data=roles, per_page=per_page)
 
-name = st.selectbox(label="**Select a role**", options=[role["name"] for role in roles], disabled=st.session_state.get("new_role", False))
+    if st.button(
+        label="**:material/update: Update selected role**",
+        key="update_role_button",
+        use_container_width=True,
+        disabled=st.session_state.get("new_role", False) or not roles,
+    ):
+        update_role(
+            role=selected_role["id"],
+            name=st.session_state.get("new_name"),
+            permissions=st.session_state.get("permissions"),
+            limits=st.session_state.get("limits"),
+        )
 
-st.divider()
+    if st.button(
+        label="**:material/delete_forever: Delete selected role**",
+        key="delete_role_button",
+        use_container_width=True,
+        disabled=st.session_state.get("new_role", False) or not roles,
+    ):
+        delete_role(role=selected_role["id"])
 
-if not st.session_state.get("new_role", False) and roles:
-    role = [role for role in roles if role["name"] == name][0]
-else:
-    role = {"name": None, "permissions": [], "limits": [], "id": None}
-new_name = st.text_input(label="Role name", placeholder="Enter role name", value=role["name"])
+    st.subheader("**Users**")
 
-st.markdown(f"#### Permissions of the {"*new*" if st.session_state.get("new_role", False) else f"*{role["name"]}*"} role")
+if not roles and not st.session_state.get("new_role", False):
+    st.warning("No roles found. Please create a new role.")
+    st.stop()
+
+new_name = st.text_input(label="Role name", placeholder="Enter role name", value=selected_role["name"])
+
+st.markdown(body=f"#### Permissions of the *{"new" if st.session_state.get("new_role", False) else selected_role["name"]}* role")
 col1, col2, col3 = st.columns(spec=3)
 permissions = []
 with col1:
     st.caption("Roles")
-    if st.checkbox(label="Create role", key="create_role", value="create_role" in role["permissions"]):
+    if st.checkbox(label="Create role", key="create_role", value="create_role" in selected_role["permissions"]):
         permissions.append("create_role")
-    if st.checkbox(label="Read role", key="read_role", value="read_role" in role["permissions"]):
+    if st.checkbox(label="Read role", key="read_role", value="read_role" in selected_role["permissions"]):
         permissions.append("read_role")
-    if st.checkbox(label="Delete role", key="delete_role", value="delete_role" in role["permissions"]):
+    if st.checkbox(label="Delete role", key="delete_role", value="delete_role" in selected_role["permissions"]):
         permissions.append("delete_role")
-    if st.checkbox(label="Update role", key="update_role", value="update_role" in role["permissions"]):
+    if st.checkbox(label="Update role", key="update_role", value="update_role" in selected_role["permissions"]):
         permissions.append("update_role")
 
 with col2:
     st.caption("Users")
-    if st.checkbox(label="Create user", key="create_user", value="create_user" in role["permissions"]):
+    if st.checkbox(label="Create user", key="create_user", value="create_user" in selected_role["permissions"]):
         permissions.append("create_user")
-    if st.checkbox(label="Read user", key="read_user", value="read_user" in role["permissions"]):
+    if st.checkbox(label="Read user", key="read_user", value="read_user" in selected_role["permissions"]):
         permissions.append("read_user")
-    if st.checkbox(label="Delete user", key="delete_user", value="delete_user" in role["permissions"]):
+    if st.checkbox(label="Delete user", key="delete_user", value="delete_user" in selected_role["permissions"]):
         permissions.append("delete_user")
-    if st.checkbox(label="Update user", key="update_user", value="update_user" in role["permissions"]):
+    if st.checkbox(label="Update user", key="update_user", value="update_user" in selected_role["permissions"]):
         permissions.append("update_user")
 
 with col3:
     st.caption("Others")
-    if st.checkbox(label="Read metric", key="read_metric", value="read_metric" in role["permissions"]):
+    if st.checkbox(label="Read metric", key="read_metric", value="read_metric" in selected_role["permissions"]):
         permissions.append("read_metric")
-    create_public_collection = st.checkbox(label="Create public collection", key="create_public_collection", value="create_public_collection" in role["permissions"])  # fmt: off
+    create_public_collection = st.checkbox(label="Create public collection", key="create_public_collection", value="create_public_collection" in selected_role["permissions"])  # fmt: off
     if create_public_collection:
         permissions.append("create_public_collection")
 
-st.markdown(f"#### Rate limits of the {"*new*" if st.session_state.get("new_role", False) else f"*{role["name"]}*"} role")
-limits = get_limits(models=models, role=role)
+st.markdown(body=f"#### Rate limits of the *{"new" if st.session_state.get("new_role", False) else selected_role["name"]}* role")
+limits = get_limits(models=models, role=selected_role)
 initial_limits = pd.DataFrame(
     data={
         "Request per minute": [limits[model]["rpm"] for model in models],
@@ -114,25 +120,23 @@ edited_limits = st.data_editor(
     height=28 * len(models) + 37,
     row_height=28,
 )
+limits = []
+for model, row in edited_limits.iterrows():
+    for type in row.index:
+        value = None if pd.isna(row[type]) else int(row[type])
+        type = "tpm" if type == "Tokens per minute" else type
+        type = "tpd" if type == "Tokens per day" else type
+        type = "rpm" if type == "Request per minute" else type
+        type = "rpd" if type == "Request per day" else type
+        limits.append({"model": model, "type": type, "value": value})
 
-with st.sidebar:
-    st.subheader("**Roles**")
-    col1, col2 = st.columns(spec=2)
-    with col1:
-        st.button(
-            label="**Create a new role**",
-            key="create_new_role",
-            on_click=lambda: setattr(st.session_state, "new_role", not st.session_state.get("new_role", False)),
-            use_container_width=True,
-            type="primary" if st.session_state.get("new_role", False) else "secondary",
-        )
-    with col2:
-        if st.button(
-            label="**:material/add: Add role**",
-            key="add_limits_button",
-            use_container_width=True,
-            disabled=not st.session_state.get("new_role", False),
-        ):
+st.session_state["new_name"] = new_name
+st.session_state["permissions"] = permissions
+st.session_state["limits"] = limits
+
+if st.session_state.get("new_role", False):
+    with stylable_container(key="Header", css_styles="button{float: right;}"):
+        if st.button(label="**Create**", key="validate_role_button"):
             limits = []
             for model, row in edited_limits.iterrows():
                 for type in row.index:
@@ -145,84 +149,64 @@ with st.sidebar:
 
             create_role(name=new_name, permissions=permissions, limits=limits)
 
-    if st.button(
-        label="**:material/update: Update role**",
-        key="update_limits_button",
-        use_container_width=True,
-        disabled=st.session_state.get("new_role", False) or not roles,
-    ):
-        limits = []
-        for model, row in edited_limits.iterrows():
-            for type in row.index:
-                value = None if pd.isna(row[type]) else int(row[type])
-                type = "tpm" if type == "Tokens per minute" else type
-                type = "tpd" if type == "Tokens per day" else type
-                type = "rpm" if type == "Request per minute" else type
-                type = "rpd" if type == "Request per day" else type
-                limits.append({"model": model, "type": type, "value": value})
-        update_role(role=role["id"], name=new_name, permissions=permissions, limits=limits)
-
-    if st.button(
-        label="**:material/delete_forever: Delete role**",
-        key="delete_role_button",
-        use_container_width=True,
-        disabled=st.session_state.get("new_role", False) or not roles,
-    ):
-        delete_role(role=role["id"])
-
-    st.subheader("**Users**")
-
-
 # Users
 if not roles or st.session_state.get("new_role", False):
     st.stop()
 
-st.markdown(f"#### Users of the {"*new*" if st.session_state.get("new_role", False) else f"*{role["name"]}*"} role")
-key, per_page = "user", 30
-users = get_users(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page, role=role["id"])
+st.markdown(body=f"#### Users of the *{"new" if st.session_state.get("new_role", False) else selected_role["name"]}* role")
+with st.expander(label="Users", expanded=not st.session_state.get("new_user", False)):
+    users, selected_user = ressources_selector(ressource="user", filter=selected_role["id"])
 
-st.dataframe(
-    data=pd.DataFrame(
-        data={
-            "ID": [user["id"] for user in users],
-            "Name": [user["name"] for user in users],
-            "Access UI": [user["access_ui"] for user in users],
-            "Expires at": [pd.to_datetime(user["expires_at"], unit="s") if user["expires_at"] else None for user in users],
-            "Created at": [pd.to_datetime(user["created_at"], unit="s") for user in users],
-            "Updated at": [pd.to_datetime(user["updated_at"], unit="s") for user in users],
-        }
-    ),
-    hide_index=True,
-    use_container_width=True,
-    column_config={
-        "ID": st.column_config.TextColumn(label="ID", width="small"),
-        "Name": st.column_config.ListColumn(label="Name", width="large"),
-        "Access UI": st.column_config.CheckboxColumn(label="Access UI", help="If true, the user has created by the admin UI.", width="small"),
-        "Expires at": st.column_config.DatetimeColumn(format="D MMM YYYY", width="small"),
-        "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY", width="small"),
-        "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", width="small"),
-    },
-    height=28 * len(users) + 37,
-    row_height=28,
-)
-pagination(key=key, data=users, per_page=per_page)
+with st.sidebar:
+    st.button(
+        label="**:material/add: Create user**",
+        on_click=lambda: setattr(st.session_state, "new_user", not st.session_state.get("new_user", False)),
+        use_container_width=True,
+        type="primary" if st.session_state.get("new_user", False) else "secondary",
+    )
+    if st.button(
+        label="**:material/update: Update selected user**",
+        key="update_user_button",
+        use_container_width=True,
+        disabled=st.session_state.get("new_user", False) or not users,
+    ):
+        update_user(
+            user=st.session_state.get("new_user_id"),
+            name=st.session_state.get("new_name"),
+            password=st.session_state.get("new_password"),
+            role=st.session_state.get("new_role_id"),
+            expires_at=st.session_state.get("new_expires_at"),
+        )
 
-name = st.selectbox(label="**Select a user**", options=[user["name"] for user in users], disabled=st.session_state.get("new_user", False))
+    if st.button(
+        label="**:material/delete_forever: Delete selected user**",
+        key="delete_user_button",
+        use_container_width=True,
+        disabled=st.session_state.get("new_user", False) or not users,
+    ):
+        delete_user(user=selected_user.get("id"))
 
-if not st.session_state.get("new_user", False) and users:
-    user = [user for user in users if user["name"] == name][0]
-else:
-    user = {"name": None, "role": role["id"], "expires_at": None}
+    if st.button(
+        label="**:material/key: Refresh playground key of selected user**",
+        key="refresh_playground_user_api_key_button",
+        use_container_width=True,
+        disabled=st.session_state.get("new_user", False) or not users,
+    ):
+        refresh_playground_api_key(user=selected_user["id"])
 
-new_name = st.text_input(label="User name", placeholder="Enter user name", value=user["name"])
+
+if not users and not st.session_state.get("new_user", False):
+    st.warning("No users found. Please create a new user.")
+    st.stop()
+
+
+new_name = st.text_input(label="User name", placeholder="Enter user name", value=selected_user["name"])
 new_password = st.text_input(label="Password", placeholder="Enter password", type="password")
 
-user_role = [role for role in roles if role["id"] == user["role"]]
-if user_role:
-    user_role_name, user_role_id = user_role[0]["name"], user_role[0]["id"]
-    user_role_index = [role["name"] for role in roles].index(user_role_name) if user_role_name else None
-else:
-    user_role_name, user_role_id, user_role_index = None, None, None
+user_role = [role for role in roles if role["id"] == selected_user["role"]]
+user_role = user_role[0] if user_role else selected_role
+user_role_name, user_role_id = user_role["name"], user_role["id"]
+user_role_index = [role["name"] for role in roles].index(user_role_name)
 
 new_role_name = st.selectbox(
     label="Role",
@@ -233,49 +217,22 @@ new_role_name = st.selectbox(
 )
 new_role_id = [role["id"] for role in roles if role["name"] == new_role_name][0] if new_role_name else None
 
-expires_at = pd.to_datetime(user["expires_at"], unit="s") if user["expires_at"] else None
+expires_at = pd.to_datetime(selected_user["expires_at"], unit="s") if selected_user["expires_at"] else None
 no_expiration = st.toggle(label="No expiration", key="create_user_no_expiration", value=expires_at is None)
 new_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", value=expires_at, disabled=no_expiration)
 new_expires_at = None if no_expiration or pd.isna(new_expires_at) else int(pd.Timestamp(new_expires_at).timestamp())
 
-with st.sidebar:
-    col1, col2 = st.columns(spec=2)
-    with col1:
-        st.button(
-            label="**Create a new user**",
-            on_click=lambda: setattr(st.session_state, "new_user", not st.session_state.get("new_user", False)),
-            use_container_width=True,
-            type="primary" if st.session_state.get("new_user", False) else "secondary",
-        )
-    with col2:
-        if st.button(
-            label="**:material/add: Add user**",
-            key="add_user_button",
-            use_container_width=True,
-            disabled=not st.session_state.get("new_user", False) or not roles,
-        ):
-            create_user(name=new_name, password=new_password, role=new_role_id, expires_at=new_expires_at)
+st.session_state["new_name"] = new_name
+st.session_state["new_password"] = new_password
+st.session_state["new_role_id"] = new_role_id
+st.session_state["new_expires_at"] = new_expires_at
 
-    if st.button(
-        label="**:material/delete_forever: Delete user**",
-        key="delete_user_button",
-        use_container_width=True,
-        disabled=st.session_state.get("new_user", False) or not users,
-    ):
-        delete_user(user=user["id"])
-
-    if st.button(
-        label="**:material/update: Update user**",
-        key="update_user_button",
-        use_container_width=True,
-        disabled=st.session_state.get("new_user", False) or not users or not user["access_ui"],
-    ):
-        update_user(user=user["id"], name=new_name, password=new_password, role=new_role_id, expires_at=new_expires_at)
-
-    if st.button(
-        label="**:material/key: Refresh playground user key**",
-        key="refresh_playground_user_api_key_button",
-        use_container_width=True,
-        disabled=st.session_state.get("new_user", False) or not users,
-    ):
-        refresh_playground_api_key(user=user["id"])
+if st.session_state.get("new_user", False):
+    with stylable_container(key="Header", css_styles="button{float: right;}"):
+        if st.button(label="**Create**", key="add_user_button"):
+            create_user(
+                name=st.session_state.get("new_name"),
+                password=st.session_state.get("new_password"),
+                role=st.session_state.get("new_role_id"),
+                expires_at=st.session_state.get("new_expires_at"),
+            )

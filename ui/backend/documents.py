@@ -19,6 +19,7 @@ def create_collection(collection_name: str, collection_description: str) -> None
         return
 
     st.toast("Create succeed", icon="✅")
+    st.session_state["new_collection"] = False
     time.sleep(0.5)
     st.rerun()
 

@@ -48,6 +48,7 @@ def get_documents(collection_id: int, offset: int = 0, limit: int = 10) -> dict:
         url=f"{settings.playground.api_url}/v1/documents?collection={collection_id}&offset={offset}&limit={limit}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
+
     if response.status_code != 200:
         st.error(response.json()["detail"])
         return []

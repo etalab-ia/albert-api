@@ -208,7 +208,7 @@ class DocumentManager:
             .offset(offset=offset)
             .limit(limit=limit)
             .outerjoin(CollectionTable, DocumentTable.collection_id == CollectionTable.id)
-            .where(CollectionTable.user_id == user_id)
+            .where(or_(CollectionTable.user_id == user_id, CollectionTable.visibility == CollectionVisibility.PUBLIC))
         )
         if collection_id:
             statement = statement.where(DocumentTable.collection_id == collection_id)
