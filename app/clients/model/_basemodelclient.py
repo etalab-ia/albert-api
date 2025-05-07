@@ -16,9 +16,11 @@ from app.utils.variables import (
     ENDPOINT__MODELS,
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
+    ENDPOINT__METRICS,
 )
 
 from app.schemas.core.settings import ModelClientType
+from app.schemas.modelclientmetrics import ModelClientMetrics
 
 
 class BaseModelClient(ABC):
@@ -30,6 +32,7 @@ class BaseModelClient(ABC):
         ENDPOINT__MODELS: None,
         ENDPOINT__OCR: None,
         ENDPOINT__RERANK: None,
+        ENDPOINT__METRICS: None,
     }
 
     def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
@@ -195,3 +198,9 @@ class BaseModelClient(ABC):
                 yield dumps({"detail": "Request timed out, model is too busy."}).encode(), 504
             except Exception as e:
                 yield dumps({"detail": type(e).__name__}).encode(), 500
+
+    async def get_server_metrics(self) -> ModelClientMetrics | None:
+        """
+        Return metrics with harmonized format
+        """
+        return None
