@@ -177,7 +177,7 @@ if not roles or st.session_state.get("new_role", False):
     st.stop()
 
 st.subheader(f"Users of the {"*new*" if st.session_state.get("new_role", False) else f"*{role["name"]}*"} role")
-key, per_page = "user", 10
+key, per_page = "user", 30
 users = get_users(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page, role=role["id"])
 
 st.dataframe(
