@@ -38,7 +38,7 @@ async def create_role(request: Request, body: RoleRequest = Body(description="Th
     return JSONResponse(status_code=201, content={"id": role_id})
 
 
-@router.delete(path=ENDPOINT__ROLES + "/{role}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_ROLE]))])
+@router.delete(path=ENDPOINT__ROLES + "/{role}", dependencies=[Security(dependency=Authorization(permissions=[PermissionType.DELETE_ROLE]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 async def delete_role(
     request: Request, role: int = Path(description="The ID of the role to delete."), session: AsyncSession = Depends(get_session)
 ) -> Response:
