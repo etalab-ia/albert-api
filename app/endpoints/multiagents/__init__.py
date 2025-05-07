@@ -12,7 +12,7 @@ from app.sql.session import get_db as get_session
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__MULTIAGENTS
 
-from .prompts import PROMPT_CHOICER, PROMPT_CONCAT, PROMPT_LLM_BASED, PROMPT_TELLER_1_4, PROMPT_TELLER_2
+from .prompts import PROMPT_CHOICER, PROMPT_CONCAT, PROMPT_TELLER_1_4, PROMPT_TELLER_2
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ def remove_duplicates(lst):
     return [x for x in lst if not (x in seen or seen.add(x))]
 
 
-async def get_rank(prompt: str, inputs: list, model: str, rerank_type: str) -> list[int]:
+async def get_rank(prompt: str, inputs: list, model: str) -> list[int]:
     async def request_model(prompt, max_choice):
         client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
         response = await client.forward_request(
@@ -91,33 +91,11 @@ async def get_rank(prompt: str, inputs: list, model: str, rerank_type: str) -> l
         result = int(match.group(0)) if match else 0
         return result
 
-    match rerank_type:
-        case "classic_rerank":
-            # TODO: Add classic reranker
-            return []
-
-        case "llm_rerank":
-            prompts = []
-            for doc in inputs:
-                prompt_ = PROMPT_LLM_BASED.format(prompt=prompt, doc=doc)
-                prompts.append(prompt_)
-
-            results = []
-            for prompt in prompts:
-                result = await request_model(prompt, 1)
-                results.append(result)
-            return results
-
-        case "choicer":
-            prompt_str = PROMPT_CHOICER.format(prompt=prompt, docs=inputs)
-            result = await request_model(prompt_str, 4)
-            return [
-                result,
-            ]
-
-        case _:
-            logger.warning(f"Unknown rerank type: {rerank_type}")
-            return []
+    prompt_str = PROMPT_CHOICER.format(prompt=prompt, docs=inputs)
+    result = await request_model(prompt_str, 4)
+    return [
+        result,
+    ]
 
 
 @router.post(ENDPOINT__MULTIAGENTS, dependencies=[Security(dependency=Authorization())])
@@ -145,7 +123,7 @@ async def multiagents(
 
         inputs = ["(Extrait : " + ref + ") " + doc[:250] + "..." for doc, ref in zip(docs_tmp, refs_tmp)]
         model = context.models(model=body.model)
-        choices = await get_rank(prompt=body.prompt, inputs=inputs, model=model, rerank_type="choicer")
+        choices = await get_rank(prompt=body.prompt, inputs=inputs, model=model)
         if not choices:
             logger.warning("No choices returned from get_rank.")
             choices = [0]
