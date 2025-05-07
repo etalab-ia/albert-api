@@ -116,7 +116,8 @@ auth:
 | type | Required | Model type. | str | (1) | |
 | aliases | Optional | Model aliases. | list[str] |  | `[]` | 
 | owned_by | Optional | Model owner displayed by the `/v1/models` endpoint. | str | | `"Albert API"` |
-| routing_strategy | Optional | Model routing strategy | str | (2) | `"shuffle"` |
+| routing_strategy | Optional | Model routing strategy | str | (3) | `"shuffle"` |
+| routing_mode| Optional | Model routing mode | str | (2) | `"no_queueing"` |
 | clients | Required | Defines the third-party clients required for the model. | list[dict] | |
 | clients.model | Required | Third-party model ID. | str | (3) | |
 | clients.type | Required | Third-party client type. | str | (4) | |
@@ -133,6 +134,7 @@ models:
     type: text-generation
     aliases: ["turbo-alias"]
     routing_strategy: round_robin
+    routing_mode: queueing
     clients:
       - model: gpt-3.5-turbo 
         type: openai
@@ -179,11 +181,15 @@ Model types correspond to the convention proposed by HuggingFace Hub. The config
 
 See [routing - Routing Strategies](routing.md#stratégies-de-routage).
 
-**(3) Model**
+**(3) Routing Mode**
+
+See [routing - Routing Modes](routing.md#modes-de-routage).
+
+**(4) Model**
 
 See [routing - Configuration Example](routing.md#exemple-de-configuration).
 
-**(4) Model Client Types**
+**(5) Model Client Types**
 
 | Type | Documentation |
 | --- | --- |
@@ -194,7 +200,7 @@ See [routing - Configuration Example](routing.md#exemple-de-configuration).
 
 For more information, see [models](./models.md).
 
-**(5) `api_url` format by client type**
+**(6) `api_url` format by client type**
 
 Only the root of the URL should be provided, do not include `/v1` in the URL.
 

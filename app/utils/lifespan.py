@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
         clients = []
         for client in model.clients:
             try:
-                # model client can be not reatachable to API start up
+                # model client can be not reachable to API start up
                 client = ModelClient.import_module(type=client.type)(model=client.model, **client.args.model_dump())
                 clients.append(client)
             except Exception as e:

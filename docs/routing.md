@@ -91,3 +91,29 @@ La stratégie `shuffle` distribue les requêtes entre les clients de manière é
 ### Round robin
 
 La stratégie `round_robin` distribue les requêtes entre les clients de manière alternative.
+
+### Least busy
+
+La stratégie `least_busy` distribue les requêtes entre les clients selon leur disponibilité.
+
+## Modes de routage
+
+### No queueing
+
+Le mode de routage `no_queueing` ne fait pas intervenir de système de queueing des requêtes, chaque requête est traitée immédiatement.
+Ce mode est à privilégier dans un cas de faible traffic sur l'application, comme en environnement de dévéloppement par exemple.
+
+### Queueing
+
+Le mode de routage `queueing` fait intervenir un agent de message qui traite les requêtes de manière asynchrone et selon un ordre de priorité si renseigné.
+Une fois qu'une requête est considérée comme traitable, la stratégie de routage renseignée est appliquée.
+
+### Compatibilité entre mode et stratégie de routage
+
+Toutes les stratégies ne sont compatibles avec tous les modes de routage et vice-versa.
+Voici, un tableau résumant les associations possibles:
+
+| Mode de routage                       | Stratégies de routage compatibles                                                                         |
+|---------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| [queueing](routing.md#queueing)       | [least_busy](routing.md#least-busy), [shuffle](routing.md#shuffle), [round_robin](routing.md#round-robin) |
+| [no_queueing](routing.md#no-queueing) | [shuffle](routing.md#shuffle), [round_robin](routing.md#round-robin)                                      |

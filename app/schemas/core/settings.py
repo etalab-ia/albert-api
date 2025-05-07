@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings
 import yaml
 
 from app.schemas.core.auth import LimitingStrategy
-from app.schemas.core.models import ModelClientType, RoutingStrategy
+from app.schemas.core.models import ModelClientType, RoutingStrategy, RoutingMode
 from app.schemas.models import ModelType
 from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS, ROUTER__MONITORING, ROUTER__FILES
 
@@ -63,12 +63,20 @@ class Model(ConfigBaseModel):
     aliases: List[str] = []
     owned_by: str = DEFAULT_APP_NAME
     routing_strategy: RoutingStrategy = RoutingStrategy.SHUFFLE
-    enable_queueing: bool = False
+    routing_mode: RoutingMode = RoutingMode.NO_QUEUEING
     clients: List[ModelClient]
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
         assert values.clients[0].type.value in ModelClientType.get_supported_clients(values.type.value), f"Invalid model type: {values.type.value} for client type {values.clients[0].type.value}"  # fmt: off
+
+        return values
+
+    @model_validator(mode="after")
+    def validate_routing_mode(cls, values):
+        assert values.routing_strategy.value in RoutingMode.get_supported_strategies(
+            values.routing_mode.value
+        ), f"Invalid routing mode: {values.routing_mode.value} for routing strategy {values.routing_strategy.value}"
 
         return values
 

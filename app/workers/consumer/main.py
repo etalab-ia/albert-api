@@ -4,7 +4,7 @@ import logging
 from app.helpers.strategies.roundrobinmodelclientselectionstrategy import RoundRobinModelClientSelectionStrategy
 from app.helpers.strategies.shufflemodelclientselectionstrategy import ShuffleModelClientSelectionStrategy
 from app.helpers.strategies.leastbusymodelclientselectionstrategy import LeastBusyModelClientSelectionStrategy
-from app.schemas.core.models import RoutingStrategy
+from app.schemas.core.models import RoutingStrategy, RoutingMode
 from app.utils.settings import settings
 from app.workers.consumer.rpc_server import RPCServer
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     strategies = {}
     for model in settings.models:
-        if model.enable_queueing:
+        if model.routing_mode == RoutingMode.QUEUEING:
             client_urls = [client.api_url for client in model.clients]
             if model.routing_strategy == RoutingStrategy.LEAST_BUSY:
                 strategy = LeastBusyModelClientSelectionStrategy(client_urls)
