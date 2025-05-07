@@ -1,6 +1,6 @@
 import logging
 
-from app.helpers.strategies._basemodelclientselectionstrategy import BaseModelClientSelectionStrategy
+from app.helpers.strategies import BaseModelClientSelectionStrategy
 
 
 class RPCServer:
