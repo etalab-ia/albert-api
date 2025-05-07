@@ -51,7 +51,7 @@ class Database(ConfigBaseModel):
 
     @model_validator(mode="after")
     def format(cls, values):
-        if values.type == DatabaseType.SQL:
+        if values.type == DatabaseType.SQL and values.context == "playground":
             values.args = DatabaseSQLArgs(**values.args).model_dump()
 
         return values

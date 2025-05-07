@@ -109,7 +109,7 @@ class Database(ConfigBaseModel):
             values.args = DatabaseQdrantArgs(**values.args).model_dump()
             assert values.model, "A text embeddings inference model ID is required for Qdrant database."
 
-        if values.type == DatabaseType.SQL:
+        if values.type == DatabaseType.SQL and values.context == "api":
             values.args = DatabaseSQLArgs(**values.args).model_dump()
 
         return values

@@ -41,9 +41,17 @@ st.dataframe(
     hide_index=True,
     use_container_width=True,
     column_config={
+        "ID": st.column_config.TextColumn(label="ID", width="small"),
+        "Name": st.column_config.TextColumn(label="Name", width="medium"),
+        "Visibility": st.column_config.ListColumn(label="Visibility", width="small"),
+        "Owner": st.column_config.ListColumn(label="Owner", width="small"),
+        "Documents": st.column_config.TextColumn(label="Documents", width="small"),
+        "Description": st.column_config.TextColumn(label="Description", width="small"),
         "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
         "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
     },
+    height=28 * len(collections) + 37,
+    row_height=28,
 )
 pagination(key=key, data=collections, per_page=per_page)
 
@@ -89,8 +97,8 @@ with col3:
         ):
             delete_collection(collection_id=collection_id)
 
-if not collections:
-    st.info(body="No collection found, create one to start.")
+if not private_collections:
+    st.info(body="No private collection found, create one to start.")
     st.stop()
 
 st.divider()

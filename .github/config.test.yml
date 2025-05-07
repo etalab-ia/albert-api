@@ -25,13 +25,16 @@ databases:
       password: changeme
 
   - type: sql
+    context: api
     args:
       url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:5432/api
       echo: True
       pool_size: 5
       max_overflow: 10
       pool_pre_ping: True
-      connect_args: {"server_settings": {"statement_timeout": "120s"}}
+      connect_args:
+        server_settings:
+          statement_timeout: "120s"
 
 models:
   - id: albert-large

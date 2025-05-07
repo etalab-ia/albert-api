@@ -311,6 +311,7 @@ class IdentityAccessManager:
             )
             .offset(offset=offset)
             .limit(limit=limit)
+            .order_by(UserTable.id)
         )
         if user_id is not None:
             statement = statement.where(UserTable.id == user_id)
