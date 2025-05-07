@@ -33,7 +33,7 @@ class TestMultiAgents:
         }
 
         # Post to /multiagents with the new collection
-        response = client.post_with_permissions(f"/v1{ENDPOINT__MULTIAGENTS}", json=payload)
+        response = client.post_without_permissions(f"/v1{ENDPOINT__MULTIAGENTS}", json=payload)
         assert response.status_code == 200, response.text
         data = response.json()
 
@@ -79,7 +79,7 @@ class TestMultiAgents:
             "max_tokens_intermediate": 20,
             "model": "albert-small",
         }
-        response = client.post_with_permissions(f"/v1{ENDPOINT__MULTIAGENTS}", json=payload)
+        response = client.post_without_permissions(f"/v1{ENDPOINT__MULTIAGENTS}", json=payload)
         assert response.status_code == 200, response.text
         data = response.json()
 
