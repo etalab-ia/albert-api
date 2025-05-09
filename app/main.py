@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search, multiagents
+from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search
 from app.helpers import Authorization, UsagesMiddleware
 from app.schemas.auth import PermissionType
 from app.sql.session import get_db
@@ -23,7 +23,6 @@ from app.utils.variables import (
     ROUTER__OCR,
     ROUTER__RERANK,
     ROUTER__SEARCH,
-    ROUTER__MULTIAGENTS,
 )
 
 
@@ -94,9 +93,6 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
 
     if ROUTER__SEARCH not in settings.general.disabled_routers:
         app.include_router(router=search.router, tags=[ROUTER__SEARCH.title()], prefix="/v1")
-
-    if ROUTER__MULTIAGENTS not in settings.general.disabled_routers:
-        app.include_router(router=multiagents.router, tags=[ROUTER__MULTIAGENTS.title()], prefix="/v1")
 
     return app
 

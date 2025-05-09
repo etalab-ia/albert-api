@@ -16,7 +16,7 @@ class SearchMethod(str, Enum):
 
 
 class SearchArgs(BaseModel):
-    collections: List[Any] = Field(description="List of collections ID", min_length=1)
+    collections: List[Any] = Field(default=[], description="List of collections ID")
     rff_k: int = Field(default=20, description="k constant in RFF algorithm")
     k: int = Field(gt=0, default=4, description="Number of results to return")
     method: SearchMethod = Field(default=SearchMethod.SEMANTIC)
@@ -25,8 +25,8 @@ class SearchArgs(BaseModel):
 
     @model_validator(mode="after")
     def score_threshold_filter(cls, values):
-        if values.score_threshold and values.method != SearchMethod.SEMANTIC:
-            raise WrongSearchMethodException(detail="Score threshold is only available for semantic search method.")
+        if values.score_threshold and values.method not in (SearchMethod.SEMANTIC, SearchMethod.MULTIAGENT):
+            raise WrongSearchMethodException(detail="Score threshold is only available for semantic and multiagent search methods.")
         return values
 
     @field_validator("collections", mode="before")
