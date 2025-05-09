@@ -3,7 +3,8 @@ import pytest
 from uuid import uuid4
 from fastapi.testclient import TestClient
 from app.schemas.collections import CollectionVisibility
-from app.utils.variables import ENDPOINT__FILES, ENDPOINT__MULTIAGENTS, ENDPOINT__COLLECTIONS
+from app.schemas.search import SearchMethod
+from app.utils.variables import ENDPOINT__FILES, ENDPOINT__SEARCH, ENDPOINT__COLLECTIONS
 
 
 @pytest.mark.usefixtures("client")
@@ -23,7 +24,7 @@ class TestMultiAgents:
         payload = {
             "prompt": "Qui est Albert ?",
             "collections": [collection_id],
-            "method": "semantic",
+            "method": SearchMethod.MULTIAGENT,
             "k": 3,
             "rff_k": 1,
             "score_threshold": 0.5,
@@ -32,8 +33,8 @@ class TestMultiAgents:
             "model": "albert-small",
         }
 
-        # Post to /multiagents with the new collection
-        response = client.post_without_permissions(f"/v1{ENDPOINT__MULTIAGENTS}", json=payload)
+        # Post to /search with the new collection
+        response = client.post_without_permissions(f"/v1{ENDPOINT__SEARCH}", json=payload)
         assert response.status_code == 200, response.text
         data = response.json()
 
@@ -79,7 +80,7 @@ class TestMultiAgents:
             "max_tokens_intermediate": 20,
             "model": "albert-small",
         }
-        response = client.post_without_permissions(f"/v1{ENDPOINT__MULTIAGENTS}", json=payload)
+        response = client.post_without_permissions(f"/v1{ENDPOINT__SEARCH}", json=payload)
         assert response.status_code == 200, response.text
         data = response.json()
 

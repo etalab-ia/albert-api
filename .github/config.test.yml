@@ -10,6 +10,9 @@ web_search:
     args:
       api_key: ${BRAVE_API_KEY}
 
+multi_agents_search:
+  model: albert-small
+
 databases:
   - type: qdrant
     model: embeddings-small
