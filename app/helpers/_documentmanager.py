@@ -18,10 +18,11 @@ from app.schemas.collections import Collection, CollectionVisibility
 from app.schemas.core.data import ParserOutput
 from app.schemas.documents import Document
 from app.schemas.files import ChunkerName
-from app.schemas.search import Search
+from app.schemas.search import Search, SearchMethod
 from app.sql.models import Collection as CollectionTable
 from app.sql.models import Document as DocumentTable
 from app.sql.models import User as UserTable
+from app.utils import multiagents
 from app.utils.exceptions import (
     ChunkingFailedException,
     CollectionNotFoundException,
@@ -53,11 +54,13 @@ class DocumentManager:
         qdrant_model: ModelRouter,
         web_search: Optional[WebSearchManager] = None,
         web_search_model: Optional[ModelRouter] = None,
+        multi_agents_search_model: Optional[ModelRouter] = None,
     ) -> None:
         self.qdrant = qdrant
         self.qdrant_model = qdrant_model
         self.web_search = web_search
         self.web_search_model = web_search_model
+        self.multi_agents_search_model = multi_agents_search_model
 
     async def create_collection(self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:  # fmt: off
         result = await session.execute(
@@ -332,15 +335,27 @@ class DocumentManager:
         response = await self._create_embeddings(input=[prompt], model_client=qdrant_client)
         query_vector = response[0]
 
-        searches = await self.qdrant.search(
-            method=method,
-            collection_ids=collection_ids,
-            query_prompt=prompt,
-            query_vector=query_vector,
-            k=k,
-            rff_k=rff_k,
-            score_threshold=score_threshold,
-        )
+        if method == SearchMethod.MULTIAGENT:
+            searches = await self.qdrant.search(
+                method=SearchMethod.SEMANTIC,
+                collection_ids=collection_ids,
+                query_prompt=prompt,
+                query_vector=query_vector,
+                k=k,
+                rff_k=rff_k,
+                score_threshold=score_threshold,
+            )
+            searches = await multiagents.search(self.search, searches, prompt, method, collection_ids, session, self.multi_agents_search_model)
+        else:
+            searches = await self.qdrant.search(
+                method=method,
+                collection_ids=collection_ids,
+                query_prompt=prompt,
+                query_vector=query_vector,
+                k=k,
+                rff_k=rff_k,
+                score_threshold=score_threshold,
+            )
 
         if web_collection_id:
             await self.delete_collection(session=session, user_id=user_id, collection_id=web_collection_id)
