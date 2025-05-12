@@ -120,7 +120,7 @@ class Authorization:
             limits = [Limit(model=model, type=type, value=None) for model in context.models.models for type in LimitType]
             permissions = [permission for permission in PermissionType]
 
-            master_role = Role(id=0, name="master", default=False, permissions=permissions, limits=limits)
+            master_role = Role(id=0, name="master", permissions=permissions, limits=limits)
             master_user = User(id=0, name="master", role=0, expires_at=None, created_at=0, updated_at=0)
             master_limits = self.__get_user_limits(role=master_role)
 

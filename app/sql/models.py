@@ -1,6 +1,6 @@
 from http import HTTPMethod
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, Float, ForeignKey, Index, Integer, String, UniqueConstraint, func
+from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import backref, declarative_base, relationship
 
 from app.schemas.auth import LimitType, PermissionType
@@ -39,11 +39,8 @@ class Role(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, unique=True, index=True, nullable=False)
-    default = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())
-
-    __table_args__ = (Index("only_one_default_role", default, unique=True, postgresql_where=default),)
 
 
 class Permission(Base):

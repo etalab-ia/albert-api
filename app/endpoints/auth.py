@@ -33,7 +33,7 @@ async def create_role(request: Request, body: RoleRequest = Body(description="Th
     Create a new role.
     """
 
-    role_id = await context.iam.create_role(session=session, name=body.name, default=body.default, permissions=body.permissions, limits=body.limits)
+    role_id = await context.iam.create_role(session=session, name=body.name, permissions=body.permissions, limits=body.limits)
 
     return JSONResponse(status_code=201, content={"id": role_id})
 
@@ -66,7 +66,6 @@ async def update_role(
         session=session,
         role_id=role,
         name=body.name,
-        default=body.default,
         permissions=body.permissions,
         limits=body.limits,
     )

@@ -43,7 +43,6 @@ class IdentityAccessManager:
         self,
         session: AsyncSession,
         name: str,
-        default: bool = False,
         limits: List[Limit] = [],
         permissions: List[PermissionType] = [],
     ) -> int:
@@ -54,16 +53,6 @@ class IdentityAccessManager:
             await session.commit()
         except IntegrityError:
             raise RoleAlreadyExistsException()
-
-        # set the role as default if needed
-        if default:
-            # change the currently default role to not be default
-            result = await session.execute(statement=select(RoleTable).where(RoleTable.default))
-            existing_default_role = result.scalar_one_or_none()
-            if existing_default_role:
-                await session.execute(statement=update(table=RoleTable).values(default=False).where(RoleTable.id == existing_default_role.id))
-
-        await session.execute(statement=update(table=RoleTable).values(default=default).where(RoleTable.id == role_id))
 
         # create the limits
         for limit in limits:
@@ -98,7 +87,6 @@ class IdentityAccessManager:
         session: AsyncSession,
         role_id: int,
         name: Optional[str] = None,
-        default: Optional[bool] = None,
         limits: Optional[List[Limit]] = None,
         permissions: Optional[List[PermissionType]] = None,
     ) -> None:
@@ -111,21 +99,6 @@ class IdentityAccessManager:
 
         # update the role
         name = name if name is not None else role.name
-        if default:
-            # change the currently default role to not be default
-            result = await session.execute(statement=select(RoleTable).where(RoleTable.default))
-            existing_default_role = result.scalar_one_or_none()
-            if existing_default_role:
-                await session.execute(statement=update(table=RoleTable).values(default=False).where(RoleTable.id == existing_default_role.id))
-
-        default = default if default is not None else role.default
-
-        try:
-            await session.execute(statement=update(table=RoleTable).values(name=name, default=default).where(RoleTable.id == role.id))
-        except IntegrityError:
-            raise RoleAlreadyExistsException()
-        except NoResultFound:
-            raise RoleNotFoundException()
 
         if limits is not None:
             # delete the existing limits
@@ -162,7 +135,6 @@ class IdentityAccessManager:
             select(
                 RoleTable.id,
                 RoleTable.name,
-                RoleTable.default,
                 cast(func.extract("epoch", RoleTable.created_at), Integer).label("created_at"),
                 cast(func.extract("epoch", RoleTable.updated_at), Integer).label("updated_at"),
                 func.count(distinct(UserTable.id)).label("users"),
@@ -184,7 +156,6 @@ class IdentityAccessManager:
             roles[row["id"]] = Role(
                 id=row["id"],
                 name=row["name"],
-                default=row["default"],
                 created_at=row["created_at"],
                 updated_at=row["updated_at"],
                 users=row["users"],
