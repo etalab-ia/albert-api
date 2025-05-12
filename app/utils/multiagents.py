@@ -212,7 +212,7 @@ async def search(
         elif choice == 4 or n_retry >= max_retry:
             searches = doc_search(
                 session=session,
-                collection_ids=collection_ids,
+                collection_ids=[],
                 prompt=prompt,
                 method=SearchMethod.SEMANTIC,
                 k=5,
