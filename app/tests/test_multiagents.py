@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from app.schemas.collections import CollectionVisibility
 from app.schemas.search import SearchMethod
 from app.utils.variables import ENDPOINT__FILES, ENDPOINT__SEARCH, ENDPOINT__COLLECTIONS
+from unittest.mock import patch
 
 
 @pytest.mark.usefixtures("client")
@@ -36,15 +37,13 @@ class TestMultiAgents:
         # Post to /search with the new collection
         response = client.post_without_permissions(f"/v1{ENDPOINT__SEARCH}", json=payload)
         assert response.status_code == 200, response.text
-        data = response.json()
+        data = response.json()["data"][0]
 
         # Check response schema
-        assert "answer" in data
-        assert "choice" in data
-        assert "choice_desc" in data
-        assert "n_retry" in data
-        assert "sources_refs" in data
-        assert "sources_content" in data
+        assert data["method"] == SearchMethod.MULTIAGENT
+        assert data["score"] == 1.0
+        for key in ["choice", "choice_desc", "sources_refs", "sources_content"]:
+            assert key in data["chunk"]["metadata"]
 
     def test_multiagent_rag(self, client: TestClient):
         """
@@ -72,7 +71,7 @@ class TestMultiAgents:
         payload = {
             "prompt": "Quel est le montant maximum des actes dont la signature de la première ministre peut être déléguée ?",
             "collections": [collection_id],
-            "method": "semantic",
+            "method": SearchMethod.MULTIAGENT,
             "k": 3,
             "rff_k": 1,
             "score_threshold": 0.5,
@@ -82,12 +81,45 @@ class TestMultiAgents:
         }
         response = client.post_without_permissions(f"/v1{ENDPOINT__SEARCH}", json=payload)
         assert response.status_code == 200, response.text
-        data = response.json()
-
+        data = response.json()["data"][0]
         # Check response schema
-        assert "answer" in data
-        assert "choice" in data
-        assert "choice_desc" in data
-        assert "n_retry" in data
-        assert "sources_refs" in data
-        assert "sources_content" in data
+        assert data["method"] == SearchMethod.MULTIAGENT
+        assert data["score"] == 1.0
+        for key in ["choice", "choice_desc", "sources_refs", "sources_content"]:
+            assert key in data["chunk"]["metadata"]
+
+    def test_multiagent_internet_search(self, client: TestClient):
+        """
+        Test the /multiagents endpoint with internet search enabled by patching get_rank to return [4].
+        """
+        # Patch get_rank to always return [4]
+        with patch("app.utils.multiagents.get_rank", return_value=[4]):
+            # Create a private collection for the test
+            collection_name = f"test_collection_{str(uuid4())}"
+            params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+            response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+            assert response.status_code == 201, response.text
+            collection_id = response.json()["id"]
+
+            # Test the /multiagents endpoint with a prompt
+            payload = {
+                "prompt": "Recherchez des informations sur la réforme des retraites en France.",
+                "collections": [collection_id],
+                "method": SearchMethod.MULTIAGENT,
+                "k": 3,
+                "rff_k": 1,
+                "score_threshold": 0.5,
+                "max_tokens": 50,
+                "max_tokens_intermediate": 20,
+                "model": "albert-small",
+            }
+            response = client.post_without_permissions(f"/v1{ENDPOINT__SEARCH}", json=payload)
+            assert response.status_code == 200, response.text
+            data = response.json()["data"][0]
+
+            # Check response schema
+            assert data["method"] == SearchMethod.MULTIAGENT
+            assert data["score"] == 1.0
+            assert data["chunk"]["metadata"]["choice"] == 4
+            for key in ["choice", "choice_desc", "sources_refs", "sources_content"]:
+                assert key in data["chunk"]["metadata"]

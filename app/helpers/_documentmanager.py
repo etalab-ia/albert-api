@@ -1,3 +1,4 @@
+from functools import partial
 import logging
 import time
 import traceback
@@ -351,7 +352,7 @@ class DocumentManager:
         )
         if method == SearchMethod.MULTIAGENT:
             searches = await multiagents.search(
-                self.search,
+                partial(self.search, user_id=user_id),
                 searches,
                 prompt,
                 method,
