@@ -9,8 +9,10 @@ from fastapi import FastAPI
 from app.clients.database import QdrantClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
-from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRegistry, ImmediateModelRouter, WebSearchManager
+from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRegistry, ImmediateModelRouter, WebSearchManager, QueuingModelRouter
+from app.schemas.core.models import RoutingMode
 from app.utils.settings import settings
+from app.workers.sender.rpc_client import RPCClient
 
 logger = logging.getLogger(__name__)
 context = SimpleNamespace(models=None, iam=None, limiter=None, documents=None)
@@ -26,6 +28,7 @@ async def lifespan(app: FastAPI):
     redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
     web_search = WebSearchClient.import_module(type=settings.web_search.type)(**settings.web_search.args) if settings.web_search else None
     routers = []
+    rpc_client = None
     for model in settings.models:
         clients = []
         for client in model.clients:
@@ -44,10 +47,21 @@ async def lifespan(app: FastAPI):
                 assert model.id != settings.databases.qdrant.model, f"Qdrant model ({model.id}) must be reachable."
             continue
 
-        logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
+        queuing_enabled = model.routing_mode == RoutingMode.QUEUEING
+        log_message = f"add model {model.id} ({len(clients)}/{len(model.clients)} clients)"
         model = model.model_dump()
         model["clients"] = clients
-        routers.append(ImmediateModelRouter(**model))
+
+        if queuing_enabled:
+            if rpc_client is None:
+                rpc_client = RPCClient()
+            routers.append(QueuingModelRouter(rpc_client, **model))
+            log_message = f"{log_message}, with queuing enabled."
+        else:
+            routers.append(ImmediateModelRouter(**model))
+            log_message = f"{log_message}."
+
+        logger.info(msg=log_message)
 
     # setup context: models, iam, limiter
     context.models = ModelRegistry(routers=routers)
