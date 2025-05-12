@@ -335,17 +335,21 @@ class DocumentManager:
 
         response = await self._create_embeddings(input=[prompt], model_client=qdrant_client)
         query_vector = response[0]
-
         if method == SearchMethod.MULTIAGENT:
-            searches = await self.qdrant.search(
-                method=SearchMethod.SEMANTIC,
-                collection_ids=collection_ids,
-                query_prompt=prompt,
-                query_vector=query_vector,
-                k=k,
-                rff_k=rff_k,
-                score_threshold=score_threshold,
-            )
+            qdrant_method = SearchMethod.SEMANTIC
+        else:
+            qdrant_method = method
+
+        searches = await self.qdrant.search(
+            method=qdrant_method,
+            collection_ids=collection_ids,
+            query_prompt=prompt,
+            query_vector=query_vector,
+            k=k,
+            rff_k=rff_k,
+            score_threshold=score_threshold,
+        )
+        if method == SearchMethod.MULTIAGENT:
             searches = await multiagents.search(
                 self.search,
                 searches,
@@ -356,16 +360,6 @@ class DocumentManager:
                 self.multi_agents_search_model,
                 max_tokens=settings.multi_agents_search.max_tokens,
                 max_tokens_intermediate=settings.multi_agents_search.max_tokens_intermediate,
-            )
-        else:
-            searches = await self.qdrant.search(
-                method=method,
-                collection_ids=collection_ids,
-                query_prompt=prompt,
-                query_vector=query_vector,
-                k=k,
-                rff_k=rff_k,
-                score_threshold=score_threshold,
             )
 
         if web_collection_id:
