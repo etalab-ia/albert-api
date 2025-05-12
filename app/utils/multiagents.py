@@ -5,6 +5,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
@@ -210,7 +211,7 @@ async def search(
         elif choice in [1, 2]:
             pass
         elif choice == 4 or n_retry >= max_retry:
-            searches = doc_search(
+            searches = await doc_search(
                 session=session,
                 collection_ids=[],
                 prompt=prompt,
@@ -233,14 +234,23 @@ async def search(
         prompt, model, method, initial_docs, initial_refs, n_retry=0, max_retry=5, window=5
     )
 
-    response = {}
-    response["answer"] = answer
-    response["choice"] = choice
-    response["choice_desc"] = explain_choice[choice]
-    response["n_retry"] = n_retry
-    response["sources_refs"] = remove_duplicates(refs)
-    response["sources_content"] = remove_duplicates(docs_tmp)
-    if choice == 2:
-        response["sources_refs"] = ["Trust me bro."]
-        response["sources_content"] = []
-    return response
+    # Build a single Search object
+    search_result = Search(
+        method=SearchMethod.MULTIAGENT,
+        score=1.0,  # Assuming a default score of 1.0 for multiagent results
+        chunk=Chunk(
+            id=0,  # Placeholder ID, as this is a synthetic result
+            content=answer,
+            metadata={
+                "choice": choice,
+                "choice_desc": explain_choice[choice],
+                "n_retry": n_retry,
+                "sources_refs": remove_duplicates(refs),
+                "sources_content": remove_duplicates(docs_tmp) if choice != 2 else [],
+            },
+        ),
+    )
+
+    return [
+        search_result,
+    ]
