@@ -30,7 +30,6 @@ with st.sidebar:
         use_container_width=True,
         type="primary" if st.session_state.get("new_role", False) else "secondary",
     )
-
     if st.button(
         label="**:material/update: Update selected role**",
         key="update_role_button",
@@ -58,7 +57,7 @@ if not roles and not st.session_state.get("new_role", False):
     st.warning("No roles found. Please create a new role.")
     st.stop()
 
-new_name = st.text_input(label="Role name", placeholder="Enter role name", value=selected_role["name"])
+new_role_name = st.text_input(label="Role name", placeholder="Enter role name", value=selected_role["name"])
 
 st.markdown(body=f"#### Permissions of the *{"new" if st.session_state.get("new_role", False) else selected_role["name"]}* role")
 col1, col2, col3 = st.columns(spec=3)
@@ -130,7 +129,7 @@ for model, row in edited_limits.iterrows():
         type = "rpd" if type == "Request per day" else type
         limits.append({"model": model, "type": type, "value": value})
 
-st.session_state["new_name"] = new_name
+st.session_state["new_role_name"] = new_role_name
 st.session_state["permissions"] = permissions
 st.session_state["limits"] = limits
 
@@ -146,8 +145,7 @@ if st.session_state.get("new_role", False):
                     type = "rpm" if type == "Request per minute" else type
                     type = "rpd" if type == "Request per day" else type
                     limits.append({"model": model, "type": type, "value": value})
-
-            create_role(name=new_name, permissions=permissions, limits=limits)
+            create_role(name=st.session_state.get("new_role_name"), permissions=permissions, limits=limits)
 
 # Users
 if not roles or st.session_state.get("new_role", False):
@@ -200,32 +198,32 @@ if not users and not st.session_state.get("new_user", False):
     st.stop()
 
 
-new_name = st.text_input(label="User name", placeholder="Enter user name", value=selected_user["name"])
-new_password = st.text_input(label="Password", placeholder="Enter password", type="password")
+new_user_name = st.text_input(label="User name", placeholder="Enter user name", value=selected_user["name"])
+new_user_password = st.text_input(label="Password", placeholder="Enter password", type="password")
 
 user_role = [role for role in roles if role["id"] == selected_user["role"]]
 user_role = user_role[0] if user_role else selected_role
 user_role_name, user_role_id = user_role["name"], user_role["id"]
 user_role_index = [role["name"] for role in roles].index(user_role_name)
 
-new_role_name = st.selectbox(
+new_user_role_name = st.selectbox(
     label="Role",
     options=[role["name"] for role in roles],
     key="create_user_role",
     index=user_role_index,
     disabled=st.session_state.get("new_user", False),
 )
-new_role_id = [role["id"] for role in roles if role["name"] == new_role_name][0] if new_role_name else None
+new_user_role_id = [role["id"] for role in roles if role["name"] == new_user_role_name][0] if new_user_role_name else None
 
 expires_at = pd.to_datetime(selected_user["expires_at"], unit="s") if selected_user["expires_at"] else None
 no_expiration = st.toggle(label="No expiration", key="create_user_no_expiration", value=expires_at is None)
-new_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", value=expires_at, disabled=no_expiration)
-new_expires_at = None if no_expiration or pd.isna(new_expires_at) else int(pd.Timestamp(new_expires_at).timestamp())
+new_user_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", value=expires_at, disabled=no_expiration)
+new_user_expires_at = None if no_expiration or pd.isna(new_user_expires_at) else int(pd.Timestamp(new_user_expires_at).timestamp())
 
-st.session_state["new_name"] = new_name
-st.session_state["new_password"] = new_password
-st.session_state["new_role_id"] = new_role_id
-st.session_state["new_expires_at"] = new_expires_at
+st.session_state["new_user_name"] = new_user_name
+st.session_state["new_user_password"] = new_user_password
+st.session_state["new_user_role_id"] = new_user_role_id
+st.session_state["new_user_expires_at"] = new_user_expires_at
 
 if st.session_state.get("new_user", False):
     with stylable_container(key="Header", css_styles="button{float: right;}"):

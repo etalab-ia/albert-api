@@ -1,7 +1,7 @@
-from typing import List, Optional, Tuple
+from typing import List, Literal, Optional, Tuple
 
 from jose import JWTError, jwt
-from sqlalchemy import Integer, cast, delete, distinct, insert, or_, select, update
+from sqlalchemy import Integer, cast, delete, distinct, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -121,10 +121,18 @@ class IdentityAccessManager:
 
         await session.commit()
 
-    async def get_roles(self, session: AsyncSession, role_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Role]:
+    async def get_roles(
+        self,
+        session: AsyncSession,
+        role_id: Optional[int] = None,
+        offset: int = 0,
+        limit: int = 10,
+        order_by: Literal["id", "name", "created_at", "updated_at"] = "id",
+        order_direction: Literal["asc", "desc"] = "asc",
+    ) -> List[Role]:
         if role_id is None:
             # get the unique role IDs with pagination
-            statement = select(RoleTable.id).offset(offset=offset).limit(limit=limit)
+            statement = select(RoleTable.id).offset(offset=offset).limit(limit=limit).order_by(text(f"{order_by} {order_direction}"))
             result = await session.execute(statement=statement)
             selected_roles = [row[0] for row in result.all()]
         else:
@@ -142,6 +150,7 @@ class IdentityAccessManager:
             .outerjoin(UserTable, RoleTable.id == UserTable.role_id)
             .where(RoleTable.id.in_(selected_roles))
             .group_by(RoleTable.id)
+            .order_by(text(f"{order_by} {order_direction}"))
         )
 
         result = await session.execute(role_query)
@@ -268,9 +277,15 @@ class IdentityAccessManager:
         await session.commit()
 
     async def get_users(
-        self, session: AsyncSession, user_id: Optional[int] = None, role_id: Optional[int] = None, offset: int = 0, limit: int = 10
+        self,
+        session: AsyncSession,
+        user_id: Optional[int] = None,
+        role_id: Optional[int] = None,
+        offset: int = 0,
+        limit: int = 10,
+        order_by: Literal["id", "name", "created_at", "updated_at"] = "id",
+        order_direction: Literal["asc", "desc"] = "asc",
     ) -> List[User]:
-        # then get all the data for these specific user IDs
         statement = (
             select(
                 UserTable.id,
@@ -282,7 +297,7 @@ class IdentityAccessManager:
             )
             .offset(offset=offset)
             .limit(limit=limit)
-            .order_by(UserTable.id)
+            .order_by(text(f"{order_by} {order_direction}"))
         )
         if user_id is not None:
             statement = statement.where(UserTable.id == user_id)
@@ -335,7 +350,15 @@ class IdentityAccessManager:
         await session.commit()
 
     async def get_tokens(
-        self, session: AsyncSession, user_id: int, token_id: Optional[int] = None, exclude_expired: bool = False, offset: int = 0, limit: int = 10
+        self,
+        session: AsyncSession,
+        user_id: int,
+        token_id: Optional[int] = None,
+        exclude_expired: bool = False,
+        offset: int = 0,
+        limit: int = 10,
+        order_by: Literal["id", "name", "created_at"] = "id",
+        order_direction: Literal["asc", "desc"] = "asc",
     ) -> List[Token]:
         statement = (
             select(
@@ -348,6 +371,7 @@ class IdentityAccessManager:
             )
             .offset(offset=offset)
             .limit(limit=limit)
+            .order_by(text(f"{order_by} {order_direction}"))
         ).where(TokenTable.user_id == user_id)
 
         if token_id is not None:

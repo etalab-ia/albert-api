@@ -18,7 +18,7 @@ from app.utils.variables import ENDPOINT__FILES
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__FILES)
+@router.post(path=ENDPOINT__FILES, status_code=201)
 async def upload_file(
     file: UploadFile = File(...),
     request: FilesRequest = Body(...),

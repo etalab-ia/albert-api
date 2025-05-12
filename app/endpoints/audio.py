@@ -18,7 +18,7 @@ AudioTranscriptionTemperature = Form(default=0, description="The sampling temper
 AudioTranscriptionTimestampGranularities = Form(default=["segment"], description="Not implemented.")  # fmt: off
 
 
-@router.post(path=ENDPOINT__AUDIO_TRANSCRIPTIONS, dependencies=[Security(dependency=Authorization())])
+@router.post(path=ENDPOINT__AUDIO_TRANSCRIPTIONS, dependencies=[Security(dependency=Authorization())], status_code=200)
 async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(description="The audio file object (not file name) to transcribe, in one of these formats: mp3 or wav."),

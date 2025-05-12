@@ -14,7 +14,7 @@ from app.sql.session import get_db as get_session
 router = APIRouter()
 
 
-@router.get(path=ENDPOINT__CHUNKS + "/{document:path}/{chunk:path}", dependencies=[Security(dependency=Authorization())])
+@router.get(path=ENDPOINT__CHUNKS + "/{document:path}/{chunk:path}", dependencies=[Security(dependency=Authorization())], status_code=200)
 async def get_chunk(
     request: Request,
     document: int = Path(description="The document ID"),
@@ -32,7 +32,7 @@ async def get_chunk(
     return chunks[0]
 
 
-@router.get(path=ENDPOINT__CHUNKS + "/{document}", dependencies=[Security(dependency=Authorization())])
+@router.get(path=ENDPOINT__CHUNKS + "/{document}", dependencies=[Security(dependency=Authorization())], status_code=200)
 async def get_chunks(
     request: Request,
     document: int = Path(description="The document ID"),

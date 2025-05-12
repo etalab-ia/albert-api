@@ -111,7 +111,7 @@ if not st.session_state.validate_toc:
 
 st.info(body="Here is the summary of your document.")
 
-st.write("**Summary**")
+st.markdown("**Summary**")
 st.code(body=st.session_state.summary, language="markdown", wrap_lines=True)
 
 with stylable_container(key="Summarize", css_styles="button{float: right;}"):

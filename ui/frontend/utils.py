@@ -9,8 +9,15 @@ from ui.backend.common import get_collections, get_documents, get_roles, get_use
 
 def ressources_selector(ressource: Literal["collection", "role", "user", "document"], filter: Any = None, per_page: int = 30):
     key = f"{ressource}-offset"
+
     if ressource == "role":
-        ressources = get_roles(offset=st.session_state.get(key, 0), limit=per_page)
+        col1, col2 = st.columns(2)
+        with col1:
+            order_by = st.selectbox(label="Order by", options=["id", "name", "created_at", "updated_at"], index=0, key=f"order_by-{ressource}")
+        with col2:
+            order_direction = st.selectbox(label="Order direction", options=["asc", "desc"], index=0, key=f"order_direction-{ressource}")
+
+        ressources = get_roles(offset=st.session_state.get(key, 0), limit=per_page, order_by=order_by, order_direction=order_direction)
         new_ressource = {"name": None, "permissions": [], "limits": [], "id": None}
 
         data = pd.DataFrame(
@@ -34,7 +41,13 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
         new_ressource = {"name": None, "permissions": [], "limits": [], "id": None}
 
     elif ressource == "user":
-        ressources = get_users(offset=st.session_state.get(key, 0), limit=per_page, role=filter)
+        col1, col2 = st.columns(2)
+        with col1:
+            order_by = st.selectbox(label="Order by", options=["id", "name", "created_at", "updated_at"], index=0, key=f"order_by-{ressource}")
+        with col2:
+            order_direction = st.selectbox(label="Order direction", options=["asc", "desc"], index=0, key=f"order_direction-{ressource}")
+
+        ressources = get_users(offset=st.session_state.get(key, 0), limit=per_page, role=filter, order_by=order_by, order_direction=order_direction)
         new_ressource = {"name": None, "access_ui": False, "expires_at": None, "id": None, "role": None}
 
         data = pd.DataFrame(

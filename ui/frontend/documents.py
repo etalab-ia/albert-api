@@ -58,8 +58,8 @@ if st.session_state.get("new_collection", False):
     with stylable_container(key="Header", css_styles="button{float: right;}"):
         if st.button(label="**Create**", key="add_collection_button"):
             create_collection(
-                collection_name=st.session_state.get("new_name"),
-                collection_description=st.session_state.get("new_description"),
+                name=st.session_state.get("new_name"),
+                description=st.session_state.get("new_description"),
             )
 
 # Documents

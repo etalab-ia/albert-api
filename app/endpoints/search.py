@@ -11,7 +11,7 @@ from app.utils.variables import ENDPOINT__SEARCH
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__SEARCH, dependencies=[Security(dependency=Authorization())])
+@router.post(path=ENDPOINT__SEARCH, dependencies=[Security(dependency=Authorization())], status_code=200)
 async def search(request: Request, body: SearchRequest, session: AsyncSession = Depends(get_session)) -> Searches:
     """
     Get relevant chunks from the collections and a query.

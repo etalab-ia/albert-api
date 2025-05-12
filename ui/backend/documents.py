@@ -7,10 +7,10 @@ import streamlit as st
 from ui.settings import settings
 
 
-def create_collection(collection_name: str, collection_description: str) -> None:
+def create_collection(name: str, description: str) -> None:
     response = requests.post(
         url=f"{settings.playground.api_url}/v1/collections",
-        json={"name": collection_name, "description": collection_description},
+        json={"name": name, "description": description},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
@@ -24,12 +24,12 @@ def create_collection(collection_name: str, collection_description: str) -> None
     st.rerun()
 
 
-def update_collection(collection_id: int, collection_name: Optional[str] = None, collection_description: Optional[str] = None) -> None:
+def update_collection(collection_id: int, name: Optional[str] = None, description: Optional[str] = None) -> None:
     params = {}
-    if collection_name:
-        params["name"] = collection_name
-    if collection_description:
-        params["description"] = collection_description
+    if name:
+        params["name"] = name
+    if description:
+        params["description"] = description
 
     response = requests.patch(
         url=f"{settings.playground.api_url}/v1/collections/{collection_id}",
