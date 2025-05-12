@@ -24,7 +24,7 @@ class TestUsageModel:
         db_session.add(log)
         db_session.commit()
 
-        saved_log = db_session.query(Usage).order_by(desc(Usage.id)).first()
+        saved_log = db_session.query(Usage).order_by(desc(Usage.datetime)).first()
         assert saved_log.user_id == user_with_permissions["id"]
         assert saved_log.token_id == token_with_permissions["id"]
         assert saved_log.endpoint == "/test/endpoint"
