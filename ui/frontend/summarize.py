@@ -3,10 +3,10 @@ import time
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
-from ui.backend.common import get_collections, get_documents, get_limits, get_models
+from ui.backend.common import get_limits, get_models
 from ui.backend.summarize import generate_summary, generate_toc, get_chunks, summary_with_feedback
 from ui.frontend.header import header
-from ui.frontend.utils import pagination
+from ui.frontend.utils import ressources_selector
 from ui.variables import MODEL_TYPE_LANGUAGE, MODEL_TYPE_IMAGE_TEXT_TO_TEXT
 
 header()
@@ -15,59 +15,52 @@ limits = get_limits(models=models, role=st.session_state["user"].role)
 limits = [model for model, values in limits.items() if (values["rpd"] is None or values["rpd"] > 0) and (values["rpm"] is None or values["rpm"] > 0)]
 models = [model for model in models if model in limits]
 
+
+@st.dialog(title="Select a document", width="large")
+def select_document():
+    collections, selected_collection = ressources_selector(ressource="collection")
+    if not collections:
+        st.warning(body="First create a collection on the *Documents* page.")
+        return
+
+    with st.spinner("Loading documents..."):
+        documents, selected_document = ressources_selector(ressource="document", per_page=10, filter=selected_collection["id"])
+
+    if not documents:
+        st.warning(body="No documents found in this collection, please add a document in *Documents* page.")
+        return
+
+    with stylable_container(key="Header", css_styles="button{float: right;}"):
+        if st.button("**Validate**", key="validate_document"):
+            st.session_state["summarize_collection"] = selected_collection
+            st.session_state["summarize_document"] = selected_document
+            st.rerun()
+
+    return
+
+
 # Sidebar
 with st.sidebar:
-    new_summarize = st.button(label="**:material/refresh: New summarize**", key="new", use_container_width=True)
-    if new_summarize:
-        st.session_state.pop("collection_id", None)
-        st.session_state.pop("document_id", None)
-        st.session_state.pop("document_name", None)
+    if st.button(label="**:material/refresh: New summarize**", use_container_width=True):
+        st.session_state.pop("summarize_collection", None)
+        st.session_state.pop("summarize_document", None)
         st.session_state.pop("validate_toc", None)
         st.session_state.pop("toc", None)
         st.session_state.pop("summary", None)
         st.rerun()
 
+    if st.button(label="**:material/description: Select a document**", use_container_width=True):
+        select_document()
+
     st.subheader(body="Summarize parameters")
     selected_model = st.selectbox(label="Language model", options=models)
 
 # Main
-# Collections
 st.subheader(body=":material/counter_1: Select a document")
-
-key, per_page = "collection", 10
-collections = get_collections(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)
-collection = st.selectbox(label="Select a collection", options=[f"{collection["name"]} ({collection["id"]})" for collection in collections])
-pagination(key=key, data=collections, per_page=per_page)
-
-if not collection:
-    st.warning(body="First create a collection on the Documents page.")
-    st.stop()
-
-collection_id = int(collection.split("(")[-1].split(")")[0])
-
-# Documents
-key, per_page = "document", 10
-documents = get_documents(collection_id=collection_id, offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)
-document = st.selectbox(label="Select a document", options=[f"{document["name"]} ({document["id"]})" for document in documents])
-pagination(key=key, data=documents, per_page=per_page)
-
-if document:
-    document_name = "(".join(document.split("(")[:-1])
-    document_id = int(document.split("(")[-1].split(")")[0])
-
-if st.session_state.get("document_name"):
-    st.info(body=f"Selected document: {st.session_state.get("document_name")} ({st.session_state.get("document_id")})")
+if st.session_state.get("summarize_document"):
+    st.info(body=f"Selected document: {st.session_state["summarize_document"]["name"]} ({st.session_state["summarize_document"]["id"]})")
 else:
     st.info(body="Select document to summarize.")
-
-with stylable_container(key="Summarize", css_styles="button{float: right;}"):
-    if st.button(label="Validate", key="validate_document"):
-        st.session_state.collection_id = collection_id
-        st.session_state.document_id = document_id
-        st.session_state.document_name = document_name
-        st.toast("Document validated !", icon="✅")
-        time.sleep(2)
-        st.rerun()
 
 ## TOC
 st.session_state.toc = "" if "toc" not in st.session_state else st.session_state.toc
@@ -76,9 +69,9 @@ st.session_state.validate_toc = False if "validate_toc" not in st.session_state 
 st.markdown(body="***")
 st.subheader(body=":material/counter_2: Create a table of content")
 
-if not st.session_state.get("document_id"):
+if not st.session_state.get("summarize_document"):
     st.stop()
-chunks = get_chunks(document_id=document_id)
+chunks = get_chunks(document_id=st.session_state["summarize_document"]["id"])
 
 st.info(
     body="For help the model to generate a summarize, you need to write a table of content of your document. Clic on *generate* button if you need an AI help."
