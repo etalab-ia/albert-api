@@ -71,6 +71,8 @@ class WebSearch(ConfigBaseModel):
 
 class MultiAgentsSearch(ConfigBaseModel):
     model: str
+    max_tokens: int = 50
+    max_tokens_intermediate: int = 20
 
 
 class DatabaseQdrantArgs(ConfigBaseModel):

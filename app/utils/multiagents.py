@@ -186,8 +186,8 @@ async def search(
     collection_ids: List[int],
     session: AsyncSession,
     model,
-    max_tokens=50,
-    max_tokens_intermediate=20,
+    max_tokens,
+    max_tokens_intermediate,
 ):
     """Multi Agents researcher."""
 

@@ -10,6 +10,7 @@ from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, selec
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.utils.settings import settings
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
@@ -345,7 +346,17 @@ class DocumentManager:
                 rff_k=rff_k,
                 score_threshold=score_threshold,
             )
-            searches = await multiagents.search(self.search, searches, prompt, method, collection_ids, session, self.multi_agents_search_model)
+            searches = await multiagents.search(
+                self.search,
+                searches,
+                prompt,
+                method,
+                collection_ids,
+                session,
+                self.multi_agents_search_model,
+                max_tokens=settings.multi_agents_search.max_tokens,
+                max_tokens_intermediate=settings.multi_agents_search.max_tokens_intermediate,
+            )
         else:
             searches = await self.qdrant.search(
                 method=method,
