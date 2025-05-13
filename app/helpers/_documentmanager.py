@@ -347,6 +347,7 @@ class DocumentManager:
 
         return searches
 
+    ### Appel à marker ici
     def _parse(self, file: UploadFile, file_extension: str) -> ParserOutput:
         if file_extension == self.FILE_EXTENSION_PDF:
             parser = PDFParser()

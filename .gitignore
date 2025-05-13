@@ -209,3 +209,6 @@ app/tests/cassettes
 
 .envrc
 .direnv/
+
+/test_marker
+./test_marker

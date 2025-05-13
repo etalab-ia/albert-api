@@ -23,6 +23,7 @@ from app.utils.variables import (
     ROUTER__OCR,
     ROUTER__RERANK,
     ROUTER__SEARCH,
+    ROUTER__PARSER,
 )
 
 
@@ -47,6 +48,10 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
         app.instrumentator = Instrumentator().instrument(app=app)
 
     # Routers
+
+    if ROUTER__PARSER not in settings.general.disabled_routers:
+        app.include_router(router=audio.router, tags=[ROUTER__PARSER.title()], prefix="/v1")
+
     if ROUTER__AUDIO not in settings.general.disabled_routers:
         app.include_router(router=audio.router, tags=[ROUTER__AUDIO.title()], prefix="/v1")
 
