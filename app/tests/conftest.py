@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 import pytest
 from qdrant_client import QdrantClient
 from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 import vcr
@@ -78,12 +79,42 @@ def engine(worker_id):
 
 
 @pytest.fixture(scope="session")
+def async_engine(worker_id):
+    """Create asynchronous database engine for tests"""
+    db_url = settings.databases.sql.args.get("url").replace("+asyncpg", "")
+    db_url = f"{db_url}_{worker_id}" if worker_id != "master" else db_url
+
+    # Ensure the URL uses the asyncpg driver
+    async_db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
+
+    # Create database if it doesn't exist
+    if not database_exists(url=db_url):
+        create_database(url=db_url)
+
+    async_engine = create_async_engine(url=async_db_url)
+
+    # Use the async engine directly
+    Base.metadata.drop_all(bind=create_engine(url=db_url))  # Clean state with sync engine
+    Base.metadata.create_all(bind=create_engine(url=db_url))
+
+    yield async_engine
+
+
+@pytest.fixture(scope="session")
 def db_session(engine):
     """Create a database session for tests"""
     Session = sessionmaker(bind=engine)
     session = Session()
     yield session
     session.close()
+
+
+@pytest.fixture(scope="session")
+async def async_db_session(async_engine):
+    """Create an asynchronous database session for tests"""
+    AsyncSessionMaker = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
+    async with AsyncSessionMaker() as session:
+        yield session
 
 
 @pytest.fixture(scope="session")
