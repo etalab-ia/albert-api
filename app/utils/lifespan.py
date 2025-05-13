@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from coredis import ConnectionPool
 from fastapi import FastAPI
-
+from app.clients.parser import MarkerParserClient
 from app.clients.database import QdrantClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
@@ -13,7 +13,7 @@ from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRe
 from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
-context = SimpleNamespace(models=None, iam=None, limiter=None, documents=None)
+context = SimpleNamespace(models=None, iam=None, limiter=None, documents=None, parser=None)
 
 
 @asynccontextmanager
@@ -53,6 +53,7 @@ async def lifespan(app: FastAPI):
     context.models = ModelRegistry(routers=routers)
     context.iam = IdentityAccessManager()
     context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
+    context.parser = MarkerParserClient(**settings.parser.args) if settings.parser else None
 
     if redis:
         assert await context.limiter.redis.check(), "Redis database is not reachable."

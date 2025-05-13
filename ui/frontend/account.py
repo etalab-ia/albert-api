@@ -44,6 +44,7 @@ with st.expander(label="Change password", icon=":material/key:"):
     if submit_change_password:
         change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
 
+
 st.subheader("API keys")
 key, per_page = "token", 10
 tokens = get_tokens(offset=st.session_state.get(f"{key}-offset", 0), limit=per_page)

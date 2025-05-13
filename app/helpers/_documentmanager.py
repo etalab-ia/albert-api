@@ -162,7 +162,7 @@ class DocumentManager:
         file_extension = document_name.rsplit(".", maxsplit=1)[-1]
 
         try:
-            document = self._parse(file=file, file_extension=file_extension)
+            document = await self._parse(file=file, file_extension=file_extension)
         except Exception as e:
             logger.error(msg=f"Error during file parsing: {e}")
             logger.debug(msg=traceback.format_exc())
@@ -347,7 +347,8 @@ class DocumentManager:
 
         return searches
 
-    def _parse(self, file: UploadFile, file_extension: str) -> ParserOutput:
+    ### Appel à marker ici
+    async def _parse(self, file: UploadFile, file_extension: str) -> ParserOutput:
         if file_extension == self.FILE_EXTENSION_PDF:
             parser = PDFParser()
 
@@ -362,8 +363,8 @@ class DocumentManager:
         else:
             raise UnsupportedFileTypeException()
 
-        output = parser.parse(file=file)
-
+        output = await parser.parse(file=file)
+        print(output)
         return output
 
     def _split(self, document: ParserOutput, chunker_name: ChunkerName, chunker_args: dict) -> List[Chunk]:

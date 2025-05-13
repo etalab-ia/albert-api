@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search
+from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search, parser
 from app.helpers import Authorization, UsagesMiddleware
 from app.schemas.auth import PermissionType
 from app.sql.session import get_db
@@ -23,6 +23,7 @@ from app.utils.variables import (
     ROUTER__OCR,
     ROUTER__RERANK,
     ROUTER__SEARCH,
+    ROUTER__PARSER,
 )
 
 
@@ -47,6 +48,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
         app.instrumentator = Instrumentator().instrument(app=app)
 
     # Routers
+
     if ROUTER__AUDIO not in settings.general.disabled_routers:
         app.include_router(router=audio.router, tags=[ROUTER__AUDIO.title()], prefix="/v1")
 
@@ -87,6 +89,9 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
 
     if ROUTER__OCR not in settings.general.disabled_routers:
         app.include_router(router=ocr.router, tags=[ROUTER__OCR.upper()], prefix="/v1")
+
+    if ROUTER__PARSER not in settings.general.disabled_routers:
+        app.include_router(router=parser.router, tags=[ROUTER__PARSER.title()], prefix="/v1")
 
     if ROUTER__RERANK not in settings.general.disabled_routers:
         app.include_router(router=rerank.router, tags=[ROUTER__RERANK.title()], prefix="/v1")
