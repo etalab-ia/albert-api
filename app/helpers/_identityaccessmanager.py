@@ -98,7 +98,8 @@ class IdentityAccessManager:
             raise RoleNotFoundException()
 
         # update the role
-        name = name if name is not None else role.name
+        if name is not None:
+            await session.execute(statement=update(table=RoleTable).values(name=name).where(RoleTable.id == role.id))
 
         if limits is not None:
             # delete the existing limits
