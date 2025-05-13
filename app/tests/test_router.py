@@ -4,7 +4,7 @@ from app.utils.context import global_context
 
 
 @pytest.mark.usefixtures("client")
-class TestModels:
+class TestRouter:
     def test_get_model_client(self):
         # Get a language model with more than 1 client
         router = global_context.models(model="albert-small")
