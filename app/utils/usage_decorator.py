@@ -29,6 +29,10 @@ class NoUserIdException(Exception):
     pass
 
 
+class MasterUserIdException(Exception):
+    pass
+
+
 def log_usage(func):
     """
     Extracts usage information from the request and response and logs it to the database.
@@ -52,6 +56,9 @@ def log_usage(func):
             await extract_usage_from_request(usage, **kwargs)
         except NoUserIdException:
             logger.exception("No user ID found in request, skipping usage logging.")
+            return await func(*args, **kwargs)
+        except MasterUserIdException:
+            logger.warning("Master user ID found in request, skipping usage logging.")
             return await func(*args, **kwargs)
         except StreamingRequestException:
             logger.debug("Streaming request, OK for decorator to handle.")
@@ -95,6 +102,8 @@ async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
     usage.user_id = getattr(user_obj, "id", None) if user_obj else None
     if usage.user_id is None:
         raise NoUserIdException("No user ID found in request")
+    if usage.user_id == 0:
+        raise MasterUserIdException("Master user ID found in request")
     usage.token_id = getattr(request.app.state, "token_id", None)
 
     try:
