@@ -36,9 +36,18 @@ class WebSearchType(str, Enum):
     BRAVE = "brave"
 
 
+class ParserType(str, Enum):
+    MARKER = "marker"
+
+
 class ConfigBaseModel(BaseModel):
     class Config:
         extra = "allow"
+
+
+class Parser(ConfigBaseModel):
+    type: ParserType = ParserType.MARKER
+    args: dict = {}
 
 
 class ModelClientArgs(ConfigBaseModel):
@@ -226,6 +235,7 @@ class Config(ConfigBaseModel):
     databases: List[Database] = Field(min_length=1)
     web_search: List[WebSearch] = Field(default_factory=list, max_length=1)
     multi_agents_search: Optional[MultiAgentsSearch] = None
+    parser: List[Parser] = Field(default_factory=list, max_length=1)
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
@@ -293,6 +303,7 @@ class Settings(BaseSettings):
         values.monitoring = config.monitoring
         values.databases = config.databases
         values.multi_agents_search = config.multi_agents_search
+        values.parser = config.parser[0] if config.parser else None
 
         if values.databases.qdrant:
             assert values.databases.sql, "SQL database is required to use Qdrant features."

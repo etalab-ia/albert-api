@@ -3,7 +3,7 @@ import traceback
 
 from coredis import ConnectionPool
 from fastapi import FastAPI
-
+from app.clients.parser import MarkerParserClient
 from app.clients.database import QdrantClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
@@ -63,6 +63,7 @@ async def lifespan(app: FastAPI):
     global_context.models = ModelRegistry(routers=routers)
     global_context.iam = IdentityAccessManager()
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
+    global_context.parser = MarkerParserClient(**settings.parser.args) if settings.parser else None
 
     # setup context: documents
     qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
