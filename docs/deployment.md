@@ -78,6 +78,7 @@ The configuration file has the following sections:
 | log_level | Required | Logging level. | str | `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`, `"CRITICAL"` | `"INFO"` |
 | disabled_routers | Required | List of disabled API routers. | List[str] | `["audio", "auth", "chat", "chunks", "collections", "documents", "embeddings", "files", "models", "monitoring", "ocr", "rerank", "search"]` | `[]` |
 | disabled_middlewares | Required | Enable or disable middlewares. | bool |  | `False` |
+| sentry_dsn | Optional | URL of Sentry server if you want to monitor your instance (cf. https://sentry.io) | str | | None |
 
 **Example**
 ```yaml
