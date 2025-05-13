@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from app.clients.database import QdrantClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
-from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRegistry, ModelRouter, WebSearchManager
+from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRegistry, ImmediateModelRouter, WebSearchManager
 from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
         logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
         model = model.model_dump()
         model["clients"] = clients
-        routers.append(ModelRouter(**model))
+        routers.append(ImmediateModelRouter(**model))
 
     # setup context: models, iam, limiter
     context.models = ModelRegistry(routers=routers)
