@@ -23,14 +23,16 @@ def create_role(name: str, permissions: list, limits: list):
         return
 
     st.toast("Role created", icon="✅")
-    time.sleep(1)
+    time.sleep(0.5)
     st.session_state["new_role"] = False
+    st.session_state["update_role"] = False
     st.rerun()
 
 
 def delete_role(role: int):
     response = requests.delete(
-        url=f"{settings.playground.api_url}/roles/{role}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+        url=f"{settings.playground.api_url}/roles/{role}",
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
     if response.status_code != 204:
         st.toast(response.json()["detail"], icon="❌")
@@ -38,6 +40,8 @@ def delete_role(role: int):
 
     st.toast("Role deleted", icon="✅")
     time.sleep(0.5)
+    st.session_state["new_role"] = False
+    st.session_state["update_role"] = False
     st.rerun()
 
 
@@ -53,10 +57,20 @@ def update_role(role: int, name: Optional[str] = None, permissions: Optional[lis
 
     st.toast("Role updated", icon="✅")
     time.sleep(0.5)
+    st.session_state["new_role"] = False
+    st.session_state["update_role"] = False
     st.rerun()
 
 
 def create_user(name: str, password: str, role: int, expires_at: Optional[int] = None):
+    if not name:
+        st.toast("User name is required", icon="❌")
+        return
+
+    if not password:
+        st.toast("User password is required", icon="❌")
+        return
+
     name = name.strip()
     password = password.strip()
 
