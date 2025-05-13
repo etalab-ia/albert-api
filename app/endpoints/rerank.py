@@ -8,7 +8,7 @@ from app.utils.variables import ENDPOINT__RERANK
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__RERANK, dependencies=[Security(dependency=Authorization())])
+@router.post(path=ENDPOINT__RERANK, dependencies=[Security(dependency=Authorization())], status_code=200)
 async def rerank(request: Request, body: RerankRequest) -> Reranks:
     """
     Creates an ordered array with each text assigned a relevance score, based on the query.

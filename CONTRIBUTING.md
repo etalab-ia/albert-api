@@ -46,7 +46,7 @@ To contribute to the project, please follow the instructions below.
 3. Launch the API
 
     ```bash
-    uvicorn app.main:app --port 8000 --log-level debug --reload # run the API
+    uvicorn app.main:app --port 8000 --log-level debug --reload
     ```
 
 4. Launch the playground
@@ -54,7 +54,7 @@ To contribute to the project, please follow the instructions below.
     In another terminal, launch the playground with the following command:
 
     ```bash
-    streamlit run ui/chat.py --server.port 8501 --browser.gatherUsageStats false --theme.base light # run the playground
+    streamlit run ui/main.py --server.port 8501 --theme.base light
     ```
 
     To connect to the playground for the first time, use the login *master* and password *changeme* (defined in the configuration file).

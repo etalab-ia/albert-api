@@ -14,7 +14,7 @@ from app.utils.variables import ENDPOINT__OCR
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=Authorization())])
+@router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=Authorization())], status_code=200)
 async def ocr(
     request: Request,
     file: UploadFile = File(...),

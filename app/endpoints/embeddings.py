@@ -8,7 +8,7 @@ from app.utils.variables import ENDPOINT__EMBEDDINGS
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__EMBEDDINGS, dependencies=[Security(dependency=Authorization())])
+@router.post(path=ENDPOINT__EMBEDDINGS, dependencies=[Security(dependency=Authorization())], status_code=200)
 async def embeddings(request: Request, body: EmbeddingsRequest) -> Embeddings:
     """
     Creates an embedding vector representing the input text.

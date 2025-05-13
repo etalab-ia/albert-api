@@ -15,7 +15,7 @@ from app.utils.usage_decorator import log_usage
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=Authorization())])
+@router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=Authorization())], status_code=200)
 @log_usage
 async def chat_completions(request: Request, body: ChatCompletionRequest, session: AsyncSession = Depends(get_session)) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
     """Creates a model response for the given chat conversation.

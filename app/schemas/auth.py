@@ -36,7 +36,6 @@ class Limit(BaseModel):
 
 class RoleUpdateRequest(BaseModel):
     name: Optional[str] = Field(default=None, description="The new role name.")
-    default: Optional[bool] = Field(default=None, description="Whether this role is the default role.")
     permissions: Optional[List[PermissionType]] = Field(default=None, description="The new permissions.")
     limits: Optional[List[Limit]] = Field(default=None, description="The new limits.")
 
@@ -63,7 +62,6 @@ class RoleUpdateRequest(BaseModel):
 
 class RoleRequest(BaseModel):
     name: str
-    default: bool = False
     permissions: Optional[List[PermissionType]] = []
     limits: List[Limit] = []
 
@@ -92,7 +90,6 @@ class Role(BaseModel):
     object: Literal["role"] = "role"
     id: int
     name: str
-    default: bool
     permissions: List[PermissionType]
     limits: List[Limit]
     users: int = 0
@@ -108,7 +105,6 @@ class Roles(BaseModel):
 class UserUpdateRequest(BaseModel):
     name: Optional[str] = Field(default=None, description="The new user name.")
     role: Optional[int] = Field(default=None, description="The new role ID.")
-    # password: Optional[str] = Field(default=None, description="The new password.")
     expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp.")
 
     @field_validator("expires_at", mode="before")

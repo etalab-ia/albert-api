@@ -14,7 +14,7 @@ from app.utils.variables import ENDPOINT__COLLECTIONS
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__COLLECTIONS, dependencies=[Security(dependency=Authorization())])
+@router.post(path=ENDPOINT__COLLECTIONS, dependencies=[Security(dependency=Authorization())], status_code=201)
 async def create_collection(request: Request, body: CollectionRequest, session: AsyncSession = Depends(get_session)) -> JSONResponse:
     """
     Create a new collection.
@@ -33,7 +33,7 @@ async def create_collection(request: Request, body: CollectionRequest, session: 
     return JSONResponse(status_code=201, content={"id": collection_id})
 
 
-@router.get(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())])
+@router.get(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())], status_code=200)
 async def get_collection(
     request: Request, collection: int = Path(..., description="The collection ID"), session: AsyncSession = Depends(get_session)
 ) -> Collection:
@@ -53,7 +53,7 @@ async def get_collection(
     return collections[0]
 
 
-@router.get(path=ENDPOINT__COLLECTIONS, dependencies=[Security(dependency=Authorization())])
+@router.get(path=ENDPOINT__COLLECTIONS, dependencies=[Security(dependency=Authorization())], status_code=200)
 async def get_collections(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the collections to get."),
@@ -77,7 +77,7 @@ async def get_collections(
     return Collections(data=data)
 
 
-@router.delete(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())])
+@router.delete(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())], status_code=204)
 async def delete_collections(
     request: Request, collection: int = Path(..., description="The collection ID"), session: AsyncSession = Depends(get_session)
 ) -> Response:
@@ -96,7 +96,7 @@ async def delete_collections(
     return Response(status_code=204)
 
 
-@router.patch(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())])
+@router.patch(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())], status_code=204)
 async def update_collection(
     request: Request,
     collection: int = Path(..., description="The collection ID"),

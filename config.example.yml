@@ -33,7 +33,9 @@ databases:
       pool_size: 5
       max_overflow: 10
       pool_pre_ping: True
-      connect_args: {"server_settings": {"statement_timeout": "120s"}}
+      connect_args:
+        server_settings:
+          statement_timeout: "120s"
 
   - type: sql # Playground database (sync)
     context: playground

@@ -14,7 +14,7 @@ from app.utils.variables import ENDPOINT__DOCUMENTS
 router = APIRouter()
 
 
-@router.get(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=Authorization())])
+@router.get(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=Authorization())], status_code=200)
 async def get_document(
     request: Request,
     document: int = Path(description="The document ID"),
@@ -31,7 +31,7 @@ async def get_document(
     return documents[0]
 
 
-@router.get(path=ENDPOINT__DOCUMENTS, dependencies=[Security(dependency=Authorization())])
+@router.get(path=ENDPOINT__DOCUMENTS, dependencies=[Security(dependency=Authorization())], status_code=200)
 async def get_documents(
     request: Request,
     collection: Optional[int] = Query(default=None, description="Filter documents by collection ID"),
@@ -60,7 +60,7 @@ async def get_documents(
     return Documents(data=data)
 
 
-@router.delete(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=Authorization())])
+@router.delete(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=Authorization())], status_code=204)
 async def delete_document(
     request: Request,
     document: int = Path(description="The document ID"),
