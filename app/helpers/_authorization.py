@@ -45,10 +45,14 @@ class Authorization:
     ) -> User:  # fmt: off
         user, role, limits, token_id = await self._check_api_key(api_key=api_key, session=session)
 
-        if not request.url.path.startswith(f"{ENDPOINT__ROLES}/me") and not request.url.path.startswith(f"{ENDPOINT__USERS}/me"):
-            # invalid token if user is expired, except for /v1/roles/me and /v1/users/me endpoints
-            if user.expires_at and user.expires_at < time.time():
-                raise InvalidAPIKeyException()
+        # invalid token if user is expired, except for /v1/roles/me and /v1/users/me endpoints
+        if (
+            user.expires_at
+            and user.expires_at < time.time()
+            and not request.url.path.startswith(f"{ENDPOINT__ROLES}/me")
+            and not request.url.path.startswith(f"{ENDPOINT__USERS}/me")
+        ):
+            raise InvalidAPIKeyException()
 
         await self._check_permissions(role=role)
 
@@ -84,6 +88,7 @@ class Authorization:
 
         # add authenticated user to request state for usage logging middleware
         request.app.state.user = user
+        request.app.state.limits = limits
         request.app.state.token_id = token_id
 
         return user
@@ -144,7 +149,7 @@ class Authorization:
         if self.permissions and not all(perm in role.permissions for perm in self.permissions):
             raise InsufficientPermissionException()
 
-    async def _check_limits(self, user: User, limits: Dict[str, UserModelLimits], model: Optional[str] = None, check_only_access: bool = False) -> None:  # fmt: off
+    async def _check_limits(self, user: User, limits: Dict[str, UserModelLimits], model: Optional[str] = None) -> None:
         from app.utils.lifespan import context
 
         if not model:
@@ -155,11 +160,9 @@ class Authorization:
         if model not in limits:
             return
 
+        # TODO: add check for tpm and tpd
         if limits[model].rpm == 0 or limits[model].rpd == 0:
             raise InsufficientPermissionException(detail=f"Insufficient permissions to access the model {model}.")
-
-        if check_only_access:
-            return
 
         check = await context.limiter(user_id=user.id, model=model, type=LimitType.RPM, value=limits[model].rpm)
         if not check:
@@ -168,6 +171,14 @@ class Authorization:
         check = await context.limiter(user_id=user.id, model=model, type=LimitType.RPD, value=limits[model].rpd)
         if not check:
             raise RateLimitExceeded(detail=f"{str(limits[model].rpd)} requests for {model} per day exceeded.")
+
+        check = await context.limiter(user_id=user.id, model=model, type=LimitType.TPM, value=limits[model].tpm, hit=False)
+        if not check:
+            raise RateLimitExceeded(detail=f"{str(limits[model].tpm)} tokens for {model} per minute exceeded.")
+
+        check = await context.limiter(user_id=user.id, model=model, type=LimitType.TPD, value=limits[model].tpd, hit=False)
+        if not check:
+            raise RateLimitExceeded(detail=f"{str(limits[model].tpd)} tokens for {model} per day exceeded.")
 
     async def _check_audio_transcription_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()

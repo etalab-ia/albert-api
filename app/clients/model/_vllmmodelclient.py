@@ -1,3 +1,4 @@
+from typing import Optional
 from urllib.parse import urljoin
 
 from openai import AsyncOpenAI
@@ -54,3 +55,25 @@ class VllmModelClient(AsyncOpenAI, BaseModelClient):
 
         # set vector size
         self.vector_size = None
+
+    def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+        """
+        Format a request to a client model. This method can be overridden by a subclass to add additional headers or parameters. This method format the requested endpoint thanks the ENDPOINT_TABLE attribute.
+        Args:
+            json(dict): The JSON body to use for the request.
+            files(dict): The files to use for the request.
+            data(dict): The data to use for the request.
+        Returns:
+            tuple: The formatted request composed of the url, headers, json, files and data.
+        """
+        # self.endpoint is set by the ModelRouter
+        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
+
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        if json and "model" in json:
+            json["model"] = self.model
+
+        if self.endpoint == ENDPOINT__CHAT_COMPLETIONS and json["stream"]:
+            json["stream_options"] = {"include_usage": True, "continuous_usage_stats": True}
+
+        return url, headers, json, files, data

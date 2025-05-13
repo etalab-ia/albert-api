@@ -9,9 +9,11 @@ from unittest.mock import AsyncMock
 from fastapi import Request
 from starlette.responses import StreamingResponse
 
+from app.helpers import StreamingResponseWithStatusCode
 from app.sql.models import Usage
 from app.sql.session import get_db
 from app.utils.lifespan import context
+from app.schemas.auth import LimitType
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +60,9 @@ def log_usage(func):
 
         response = await func(*args, **kwargs)
         if isinstance(response, StreamingResponse):
-            return wrap_streaming_response_into_usage_extractor(response, start_time, usage)
+            limits = getattr(request.app.state, "limits", None)
+            limit = limits.get(usage.model, None)
+            return wrap_streaming_response_into_usage_extractor(response, start_time, usage, limit=limit)
         else:
             asyncio.create_task(extract_usage_from_response(response, start_time, usage))
             return response
@@ -120,7 +124,7 @@ async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
                 raise StreamingRequestException("Streaming request")
 
 
-def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponse:
+def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, start_time: datetime, usage: Usage, limit: int) -> StreamingResponse:
     """
     Wraps the original StreamingResponse to extract usage information from the stream.
     This function captures the first token from the stream and calculates the completion tokens.
@@ -144,6 +148,9 @@ def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, st
             yield chunk
 
         if buffer:
+            await context.limiter(user_id=usage.user_id, model=usage.model, type=LimitType.TPM, value=limit.tpm, cost=len(buffer))
+            await context.limiter(user_id=usage.user_id, model=usage.model, type=LimitType.TPD, value=limit.tpd, cost=len(buffer))
+
             body_content = b"".join(buffer).decode("utf-8")
             for line in body_content.split("\n"):
                 if line.startswith("data: "):
@@ -156,7 +163,7 @@ def wrap_streaming_response_into_usage_extractor(response: StreamingResponse, st
                         logger.debug("Failed to decode JSON from streaming response")
             asyncio.create_task(perform_log(usage, start_time, response))
 
-    return StreamingResponse(wrapped_stream(), media_type=response.media_type)
+    return StreamingResponseWithStatusCode(content=wrapped_stream(), media_type=response.media_type)
 
 
 async def extract_usage_from_response(response, start_time: datetime, usage: Usage):
