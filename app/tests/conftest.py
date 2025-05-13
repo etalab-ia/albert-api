@@ -90,12 +90,9 @@ def async_engine(worker_id):
     # Create database if it doesn't exist
     if not database_exists(url=db_url):
         create_database(url=db_url)
+        Base.metadata.create_all(bind=create_engine(url=db_url))
 
     async_engine = create_async_engine(url=async_db_url)
-
-    # Use the async engine directly
-    Base.metadata.drop_all(bind=create_engine(url=db_url))  # Clean state with sync engine
-    Base.metadata.create_all(bind=create_engine(url=db_url))
 
     yield async_engine
 
