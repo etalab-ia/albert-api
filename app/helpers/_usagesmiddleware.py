@@ -11,7 +11,13 @@ from starlette.routing import Match
 
 from app.sql.models import Usage
 from app.sql.session import get_db
-from app.utils.usage_decorator import NoUserIdException, StreamingRequestException, extract_usage_from_request, extract_usage_from_response
+from app.utils.usage_decorator import (
+    MasterUserIdException,
+    NoUserIdException,
+    StreamingRequestException,
+    extract_usage_from_request,
+    extract_usage_from_response,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +40,9 @@ class UsagesMiddleware(BaseHTTPMiddleware):
             await extract_usage_from_request(usage, request)
         except NoUserIdException:
             logger.info("No user ID found in request, skipping usage logging.")
+            return await call_next(request)
+        except MasterUserIdException:
+            logger.warning("Master user ID found in request, skipping usage logging.")
             return await call_next(request)
         except StreamingRequestException:
             logger.debug("Streaming request, should be handled by decorator.")
