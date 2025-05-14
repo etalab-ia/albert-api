@@ -3,10 +3,10 @@ from typing import List, Literal
 from fastapi import APIRouter, File, Form, Request, Security, UploadFile
 from fastapi.responses import PlainTextResponse
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.audio import AudioTranscription
 from app.utils.lifespan import context
-from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, AUDIO_SUPPORTED_LANGUAGES_VALUES
+from app.utils.variables import AUDIO_SUPPORTED_LANGUAGES_VALUES, ENDPOINT__AUDIO_TRANSCRIPTIONS
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ AudioTranscriptionTemperature = Form(default=0, description="The sampling temper
 AudioTranscriptionTimestampGranularities = Form(default=["segment"], description="Not implemented.")  # fmt: off
 
 
-@router.post(path=ENDPOINT__AUDIO_TRANSCRIPTIONS, dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.post(path=ENDPOINT__AUDIO_TRANSCRIPTIONS, dependencies=[Security(dependency=AccessController())], status_code=200)
 async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(description="The audio file object (not file name) to transcribe, in one of these formats: mp3 or wav."),
