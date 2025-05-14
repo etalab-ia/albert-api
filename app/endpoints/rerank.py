@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Security
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.rerank import RerankRequest, Reranks
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__RERANK
@@ -8,7 +8,7 @@ from app.utils.variables import ENDPOINT__RERANK
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__RERANK, dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.post(path=ENDPOINT__RERANK, dependencies=[Security(dependency=AccessController())], status_code=200)
 async def rerank(request: Request, body: RerankRequest) -> Reranks:
     """
     Creates an ordered array with each text assigned a relevance score, based on the query.

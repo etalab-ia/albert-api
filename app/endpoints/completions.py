@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Security
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.completions import CompletionRequest, Completions
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__COMPLETIONS
@@ -8,7 +8,7 @@ from app.utils.variables import ENDPOINT__COMPLETIONS
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__COMPLETIONS, dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.post(path=ENDPOINT__COMPLETIONS, dependencies=[Security(dependency=AccessController())], status_code=200)
 async def completions(request: Request, body: CompletionRequest) -> Completions:
     """
     Completion API similar to OpenAI's API.

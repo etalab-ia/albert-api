@@ -33,7 +33,7 @@ from app.utils.variables import (
 )
 
 
-class Authorization:
+class AccessController:
     def __init__(self, permissions: List[PermissionType] = []):
         self.permissions = permissions
 
