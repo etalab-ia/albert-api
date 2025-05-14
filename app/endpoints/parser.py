@@ -6,19 +6,10 @@ from app.helpers import Authorization
 from app.schemas.core.data import FileType
 from app.utils.exceptions import FileSizeLimitExceededException
 from app.utils.variables import ENDPOINT__PARSER
-from pydantic import BaseModel
-from typing import Dict, Any
+from app.schemas.parser import MarkerPDFResponse
 
 
-class MarkerPDFResponse(BaseModel):
-    format: str
-    output: str
-    images: Dict[str, str]
-    metadata: Dict[str, Any]
-    success: bool
-
-
-MARKER_API_URL = "http://51.159.177.46:8000"
+MARKER_API_URL = "http://51.159.177.46:8002"
 router = APIRouter()
 
 
