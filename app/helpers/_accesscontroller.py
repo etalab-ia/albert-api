@@ -156,7 +156,7 @@ class AccessController:
         if self.permissions and not all(perm in role.permissions for perm in self.permissions):
             raise InsufficientPermissionException()
 
-    async def _check_requests_limits(self, user: User, limits: Dict[str, UserModelLimits], model: Optional[str] = None) -> None:  # fmt: off
+    async def _check_request_limits(self, request: Request, user: User, limits: Dict[str, UserModelLimits], model: Optional[str] = None) -> None:  # fmt: off
         from app.utils.lifespan import context
 
         if not model:
@@ -180,7 +180,7 @@ class AccessController:
             remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.RPD, value=limits[model].rpd)
             raise RateLimitExceeded(detail=f"{str(limits[model].rpd)} requests for {model} per day exceeded (remaining: {remaining}).")
 
-    async def _check_tokens_limits(self, user: User, limits: Dict[str, UserModelLimits], content: str, model: Optional[str] = None) -> None:
+    async def _check_token_limits(self, request: Request, user: User, limits: Dict[str, UserModelLimits], content: str, model: Optional[str] = None) -> None:  # fmt: off
         from app.utils.lifespan import context
 
         if not model or not content:
@@ -194,7 +194,7 @@ class AccessController:
         if limits[model].tpm == 0 or limits[model].tpd == 0:
             raise InsufficientPermissionException(detail=f"Insufficient permissions to access the model {model}.")
 
-        cost = len(context.limiter.tokenizer.encode(content))  # compute the cost of the request by the number of tokens
+        cost = len(context.tokenizer.encode(content))  # compute the cost of the request by the number of tokens
         check = await context.limiter.hit(user_id=user.id, model=model, type=LimitType.TPM, value=limits[model].tpm, cost=cost)
 
         if not check:
@@ -206,22 +206,24 @@ class AccessController:
             remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.TPD, value=limits[model].tpd)
             raise RateLimitExceeded(detail=f"{str(limits[model].tpd)} input tokens for {model} per day exceeded (remaining: {remaining}).")
 
+        request.app.state.input_tokens = cost
+
     async def _check_audio_transcription_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
 
-        await self._check_requests_limits(user=user, limits=limits, model=form.get("model"))
+        await self._check_request_limits(request=request, user=user, limits=limits, model=form.get("model"))
 
     async def _check_chat_completions_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        await self._check_requests_limits(user=user, limits=limits, model=body.get("model"))
-
-        for message in body.get("messages", []):
-            await self._check_tokens_limits(user=user, limits=limits, content=message.get("content"), model=body.get("model"))
+        await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
         if body.get("search", False):  # count the search request as one request to the search model (embeddings)
-            await self._check_requests_limits(user=user, limits=limits, model=body.get("search_args", {}).get("model", None))
+            await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("search_args", {}).get("model", None))
+
+        for message in body.get("messages", []):
+            await self._check_token_limits(request=request, user=user, limits=limits, content=message.get("content"), model=body.get("model"))
 
     async def _check_collections_patch(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
@@ -241,30 +243,30 @@ class AccessController:
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        await self._check_requests_limits(user=user, limits=limits, model=body.get("model"))
+        await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
     async def _check_files_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         from app.utils.lifespan import context
 
-        await self._check_requests_limits(user=user, limits=limits, model=context.documents.qdrant_model)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant_model)
 
     async def _check_ocr_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
         model = form.get("model")
 
-        await self._check_requests_limits(user=user, limits=limits, model=model)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=model)
 
     async def _check_rerank_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        await self._check_requests_limits(user=user, limits=limits, model=body.get("model"))
+        await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
     async def _check_search_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        await self._check_requests_limits(user=user, limits=limits, model=body.get("model"))
+        await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
