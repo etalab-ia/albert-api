@@ -45,10 +45,14 @@ class AccessController:
     ) -> User:  # fmt: off
         user, role, limits, token_id = await self._check_api_key(api_key=api_key, session=session)
 
-        if not request.url.path.startswith(f"{ENDPOINT__ROLES}/me") and not request.url.path.startswith(f"{ENDPOINT__USERS}/me"):
-            # invalid token if user is expired, except for /v1/roles/me and /v1/users/me endpoints
-            if user.expires_at and user.expires_at < time.time():
-                raise InvalidAPIKeyException()
+        # invalid token if user is expired, except for /v1/roles/me and /v1/users/me endpoints
+        if (
+            user.expires_at
+            and user.expires_at < time.time()
+            and not request.url.path.startswith(f"{ENDPOINT__ROLES}/me")
+            and not request.url.path.startswith(f"{ENDPOINT__USERS}/me")
+        ):
+            raise InvalidAPIKeyException()
 
         await self._check_permissions(role=role)
 
