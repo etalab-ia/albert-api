@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.auth import User
 from app.schemas.core.data import FileType, JsonFile
 from app.schemas.files import ChunkerArgs, FilesRequest
@@ -22,7 +22,7 @@ router = APIRouter()
 async def upload_file(
     file: UploadFile = File(...),
     request: FilesRequest = Body(...),
-    user: User = Security(dependency=Authorization()),
+    user: User = Security(dependency=AccessController()),
     session: AsyncSession = Depends(get_session),
 ) -> JSONResponse:
     """

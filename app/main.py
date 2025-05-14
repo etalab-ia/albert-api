@@ -4,7 +4,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 
 from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search
-from app.helpers import Authorization, UsagesMiddleware
+from app.helpers import AccessController, UsagesMiddleware
 from app.schemas.auth import PermissionType
 from app.sql.session import get_db
 from app.utils.lifespan import lifespan
@@ -105,9 +105,9 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
 
     if ROUTER__MONITORING not in settings.general.disabled_routers:
         if not settings.general.disabled_middlewares:
-            app.instrumentator.expose(app=app, should_gzip=True, tags=[ROUTER__MONITORING.title()], dependencies=[Depends(dependency=Authorization(permissions=[PermissionType.READ_METRIC]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
+            app.instrumentator.expose(app=app, should_gzip=True, tags=[ROUTER__MONITORING.title()], dependencies=[Depends(dependency=AccessController(permissions=[PermissionType.READ_METRIC]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 
-        @app.get(path="/health", tags=[ROUTER__MONITORING.title()], include_in_schema=settings.general.log_level == "DEBUG", dependencies=[Security(dependency=Authorization())])  # fmt: off
+        @app.get(path="/health", tags=[ROUTER__MONITORING.title()], include_in_schema=settings.general.log_level == "DEBUG", dependencies=[Security(dependency=AccessController())])  # fmt: off
         def health() -> Response:
             return Response(status_code=200)
 

@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Path, Query, Request, Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.chunks import Chunk, Chunks
 from app.utils.exceptions import ChunkNotFoundException
 from app.utils.lifespan import context
@@ -14,7 +14,7 @@ from app.sql.session import get_db as get_session
 router = APIRouter()
 
 
-@router.get(path=ENDPOINT__CHUNKS + "/{document:path}/{chunk:path}", dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.get(path=ENDPOINT__CHUNKS + "/{document:path}/{chunk:path}", dependencies=[Security(dependency=AccessController())], status_code=200)
 async def get_chunk(
     request: Request,
     document: int = Path(description="The document ID"),
@@ -32,7 +32,7 @@ async def get_chunk(
     return chunks[0]
 
 
-@router.get(path=ENDPOINT__CHUNKS + "/{document}", dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.get(path=ENDPOINT__CHUNKS + "/{document}", dependencies=[Security(dependency=AccessController())], status_code=200)
 async def get_chunks(
     request: Request,
     document: int = Path(description="The document ID"),

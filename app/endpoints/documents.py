@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Path, Query, Request, Response, Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.documents import Document, Documents
 from app.sql.session import get_db as get_session
 from app.utils.exceptions import CollectionNotFoundException, DocumentNotFoundException
@@ -14,7 +14,7 @@ from app.utils.variables import ENDPOINT__DOCUMENTS
 router = APIRouter()
 
 
-@router.get(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.get(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=AccessController())], status_code=200)
 async def get_document(
     request: Request,
     document: int = Path(description="The document ID"),
@@ -31,7 +31,7 @@ async def get_document(
     return documents[0]
 
 
-@router.get(path=ENDPOINT__DOCUMENTS, dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.get(path=ENDPOINT__DOCUMENTS, dependencies=[Security(dependency=AccessController())], status_code=200)
 async def get_documents(
     request: Request,
     collection: Optional[int] = Query(default=None, description="Filter documents by collection ID"),
@@ -60,7 +60,7 @@ async def get_documents(
     return Documents(data=data)
 
 
-@router.delete(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=Authorization())], status_code=204)
+@router.delete(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=AccessController())], status_code=204)
 async def delete_document(
     request: Request,
     document: int = Path(description="The document ID"),

@@ -4,7 +4,7 @@ from io import BytesIO
 from fastapi import APIRouter, File, Form, HTTPException, Request, Security, UploadFile
 from pdf2image import convert_from_bytes
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.core.data import FileType
 from app.schemas.ocr import OCR, OCRs
 from app.utils.exceptions import FileSizeLimitExceededException
@@ -14,7 +14,7 @@ from app.utils.variables import ENDPOINT__OCR
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=AccessController())], status_code=200)
 async def ocr(
     request: Request,
     file: UploadFile = File(...),

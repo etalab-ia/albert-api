@@ -3,7 +3,7 @@ from typing import List, Tuple, Union
 from fastapi import APIRouter, Depends, Request, Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import Authorization, StreamingResponseWithStatusCode
+from app.helpers import AccessController, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search, SearchMethod
 from app.sql.session import get_db as get_session
@@ -16,7 +16,7 @@ from app.utils.usage_decorator import log_usage
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=AccessController())], status_code=200)
 @log_usage
 async def chat_completions(request: Request, body: ChatCompletionRequest, session: AsyncSession = Depends(get_session)) -> Union[ChatCompletion, ChatCompletionChunk]:  # fmt: off
     """Creates a model response for the given chat conversation.
