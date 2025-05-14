@@ -61,6 +61,8 @@ test = [
     "vcrpy>=4.2.0",
     "pytest-xdist==3.6.1",
     "pytest-asyncio==0.26.0",
+    "respx",
+    "responses"
 ]
 
 [tool.setuptools]

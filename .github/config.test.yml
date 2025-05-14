@@ -93,7 +93,7 @@ models:
           active_params: 24
           model_zone: FRA
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: https://albert.api.staging.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -112,7 +112,7 @@ models:
           active_params: 8
           model_zone: FRA
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: https://albert.api.staging.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
           timeout: 120
       - model: albert-small
@@ -132,7 +132,7 @@ models:
       - model: embeddings-small
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: https://albert.api.staging.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -143,7 +143,7 @@ models:
       - model: audio-large
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: https://albert.api.staging.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -154,6 +154,6 @@ models:
       - model: rerank-small
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: https://albert.api.staging.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
           timeout: 120

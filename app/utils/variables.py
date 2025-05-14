@@ -2,7 +2,6 @@ DEFAULT_APP_NAME = "Albert API"
 DEFAULT_TIMEOUT = 300
 
 ENDPOINT__AUDIO_TRANSCRIPTIONS = "/audio/transcriptions"
-# ENDPOINT__CHAT_COMPLETIONS = "/messages"
 ENDPOINT__CHAT_COMPLETIONS = "/chat/completions"
 ENDPOINT__CHUNKS = "/chunks"
 ENDPOINT__COLLECTIONS = "/collections"
@@ -19,6 +18,7 @@ ENDPOINT__ROLES_ME = "/roles/me"
 ENDPOINT__SEARCH = "/search"
 ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
+ENDPOINT__MCP = "/mcp"
 ENDPOINT__USERS_ME = "/users/me"
 
 
@@ -33,6 +33,7 @@ ROUTER__COMPLETIONS = "completions"
 ROUTER__DOCUMENTS = "documents"
 ROUTER__EMBEDDINGS = "embeddings"
 ROUTER__FILES = "files"
+ROUTER__MCP = "mcp"
 ROUTER__MODELS = "models"
 ROUTER__MONITORING = "monitoring"
 ROUTER__OCR = "ocr"
