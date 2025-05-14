@@ -12,6 +12,7 @@ class SearchMethod(str, Enum):
     HYBRID = "hybrid"
     LEXICAL = "lexical"
     SEMANTIC = "semantic"
+    MULTIAGENT = "multiagent"
 
 
 class SearchArgs(BaseModel):
@@ -24,8 +25,8 @@ class SearchArgs(BaseModel):
 
     @model_validator(mode="after")
     def score_threshold_filter(cls, values):
-        if values.score_threshold and values.method != SearchMethod.SEMANTIC:
-            raise WrongSearchMethodException(detail="Score threshold is only available for semantic search method.")
+        if values.score_threshold and values.method not in (SearchMethod.SEMANTIC, SearchMethod.MULTIAGENT):
+            raise WrongSearchMethodException(detail="Score threshold is only available for semantic and multiagent search methods.")
         return values
 
     @field_validator("collections", mode="before")

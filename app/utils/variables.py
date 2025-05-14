@@ -33,6 +33,7 @@ ROUTER__MONITORING = "monitoring"
 ROUTER__OCR = "ocr"
 ROUTER__RERANK = "rerank"
 ROUTER__SEARCH = "search"
+ROUTER__MULTIAGENTS = "multiagents"
 
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
 

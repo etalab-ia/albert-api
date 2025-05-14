@@ -69,6 +69,12 @@ class WebSearch(ConfigBaseModel):
     args: dict = {}
 
 
+class MultiAgentsSearch(ConfigBaseModel):
+    model: str
+    max_tokens: int = 50
+    max_tokens_intermediate: int = 20
+
+
 class DatabaseQdrantArgs(ConfigBaseModel):
     prefer_grpc: bool = False
 
@@ -150,6 +156,7 @@ class Config(ConfigBaseModel):
     models: List[Model] = Field(min_length=1)
     databases: List[Database] = Field(min_length=1)
     web_search: List[WebSearch] = Field(default_factory=list, max_length=1)
+    multi_agents_search: Optional[MultiAgentsSearch] = Field(default_factory=MultiAgentsSearch)
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
@@ -228,6 +235,7 @@ class Settings(BaseSettings):
         values.web_search = config.web_search[0] if config.web_search else None
         values.models = config.models
         values.databases = config.databases
+        values.multi_agents_search = config.multi_agents_search
 
         if values.databases.qdrant:
             assert values.databases.sql, "SQL database is required to use Qdrant features."
@@ -236,5 +244,9 @@ class Settings(BaseSettings):
         if values.web_search:
             assert values.databases.qdrant, "Qdrant database is required to use web_search."
             assert values.web_search.model in [model.id for model in values.models if model.type in [ModelType.TEXT_GENERATION, ModelType.IMAGE_TEXT_TO_TEXT]], f"Web search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
+
+        if values.multi_agents_search:
+            assert values.databases.qdrant, "Qdrant database is required to use multi-agents search."
+            assert values.multi_agents_search.model in [model.id for model in values.models if model.type == ModelType.TEXT_GENERATION], f"Multi-agents search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
 
         return values

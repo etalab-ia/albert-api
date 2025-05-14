@@ -1,3 +1,4 @@
+from functools import partial
 import logging
 import time
 import traceback
@@ -10,6 +11,7 @@ from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, selec
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.utils.settings import settings
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
@@ -18,10 +20,11 @@ from app.schemas.collections import Collection, CollectionVisibility
 from app.schemas.core.data import ParserOutput
 from app.schemas.documents import Document
 from app.schemas.files import ChunkerName
-from app.schemas.search import Search
+from app.schemas.search import Search, SearchMethod
 from app.sql.models import Collection as CollectionTable
 from app.sql.models import Document as DocumentTable
 from app.sql.models import User as UserTable
+from app.utils import multiagents
 from app.utils.exceptions import (
     ChunkingFailedException,
     CollectionNotFoundException,
@@ -53,11 +56,13 @@ class DocumentManager:
         qdrant_model: ModelRouter,
         web_search: Optional[WebSearchManager] = None,
         web_search_model: Optional[ModelRouter] = None,
+        multi_agents_search_model: Optional[ModelRouter] = None,
     ) -> None:
         self.qdrant = qdrant
         self.qdrant_model = qdrant_model
         self.web_search = web_search
         self.web_search_model = web_search_model
+        self.multi_agents_search_model = multi_agents_search_model
 
     async def create_collection(self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:  # fmt: off
         result = await session.execute(
@@ -331,9 +336,13 @@ class DocumentManager:
 
         response = await self._create_embeddings(input=[prompt], model_client=qdrant_client)
         query_vector = response[0]
+        if method == SearchMethod.MULTIAGENT:
+            qdrant_method = SearchMethod.SEMANTIC
+        else:
+            qdrant_method = method
 
         searches = await self.qdrant.search(
-            method=method,
+            method=qdrant_method,
             collection_ids=collection_ids,
             query_prompt=prompt,
             query_vector=query_vector,
@@ -341,6 +350,18 @@ class DocumentManager:
             rff_k=rff_k,
             score_threshold=score_threshold,
         )
+        if method == SearchMethod.MULTIAGENT:
+            searches = await multiagents.search(
+                partial(self.search, user_id=user_id),
+                searches,
+                prompt,
+                method,
+                collection_ids,
+                session,
+                self.multi_agents_search_model,
+                max_tokens=settings.multi_agents_search.max_tokens,
+                max_tokens_intermediate=settings.multi_agents_search.max_tokens_intermediate,
+            )
 
         if web_collection_id:
             await self.delete_collection(session=session, user_id=user_id, collection_id=web_collection_id)
