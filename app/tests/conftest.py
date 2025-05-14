@@ -20,6 +20,7 @@ from app.sql.models import Base
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 
+
 # Define global VCR instance and cassette
 VCR_INSTANCE = None
 VCR_GLOBAL_CASSETTE = None
