@@ -6,7 +6,7 @@ from fastapi.responses import PlainTextResponse
 from app.helpers import AccessController
 from app.schemas.audio import AudioTranscription
 from app.utils.lifespan import context
-from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, AUDIO_SUPPORTED_LANGUAGES_VALUES
+from app.utils.variables import AUDIO_SUPPORTED_LANGUAGES_VALUES, ENDPOINT__AUDIO_TRANSCRIPTIONS
 
 router = APIRouter()
 

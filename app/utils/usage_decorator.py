@@ -11,7 +11,7 @@ from starlette.responses import StreamingResponse
 
 from app.sql.models import Usage
 from app.sql.session import get_db
-from app.utils.lifespan import context
+
 
 logger = logging.getLogger(__name__)
 
@@ -187,6 +187,8 @@ async def perform_log(usage: Usage, start_time: datetime, response):
     Logs the usage information to the database.
     This function captures the duration of the request and sets the status code of the response if available.
     """
+    from app.utils.lifespan import context
+
     usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
     if usage.prompt_tokens and usage.completion_tokens:
         usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
