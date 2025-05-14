@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI):
     # setup context: models, iam, limiter
     context.models = ModelRegistry(routers=routers)
     context.iam = IdentityAccessManager()
-    context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
+    context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy, tokenizer=settings.usages.tokenizer) if redis else None
 
     if redis:
         assert await context.limiter.redis.check(), "Redis database is not reachable."

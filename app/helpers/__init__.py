@@ -1,4 +1,4 @@
-from ._authorization import AccessController
+from ._accesscontroller import AccessController
 from ._documentmanager import DocumentManager
 from ._identityaccessmanager import IdentityAccessManager
 from ._limiter import Limiter

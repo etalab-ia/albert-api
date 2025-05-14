@@ -4,6 +4,9 @@ general:
 auth:
   master_key: changeme
 
+usages:
+  tokenizer: "tiktoken_gpt2"
+
 web_search:
   - type: brave
     model: albert-small
@@ -31,7 +34,7 @@ databases:
     context: api
     args:
       url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:5432/api
-      echo: True
+      echo: False
       pool_size: 5
       max_overflow: 10
       pool_pre_ping: True

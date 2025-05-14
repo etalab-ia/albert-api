@@ -53,6 +53,7 @@ The configuration file has the following sections:
 | [general](#general) | Required | General configuration. |
 | [auth](#auth) | Optional | Authentication parameters. |
 | [playground](#playground) | Optional | Playground parameters. |
+| [usages](#usages) | Optional | Usages parameters. |
 | [models](#models) | Required | Defines model APIs. |
 | [web_search](#web_search) | Optional | Defines the internet search engine API. |
 | [databases](#databases) | Required | Defines database APIs. |
@@ -310,6 +311,32 @@ playground:
   cache_ttl: 1800
 ```
 
+#### usages
+
+| Argument | Required | Description | Type | Values | Default |
+| --- | --- | --- | --- | --- | --- |
+| tokenizer | Required | Tokenizer type. | str | (1) | `"tiktoken_o200k_base"` |
+
+**(1) Tokenizer Types**
+
+Tokenizer is used to count the number of tokens sent by users to compute token per minute (TPM) and token per day (TPD) limits.
+
+| Type | Documentation |
+| --- | --- |
+| `tiktoken_cl100k_base` | [tiktoken_cl100k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_gpt2` | [tiktoken_gpt2](https://github.com/openai/tiktoken) |
+| `tiktoken_o200k_base` | [tiktoken_o200k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_o50k_base` | [tiktoken_o50k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_p50k_base` | [tiktoken_p50k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_p50k_edit` | [tiktoken_p50k_edit](https://github.com/openai/tiktoken) |
+| `tiktoken_r50k_base` | [tiktoken_r50k_base](https://github.com/openai/tiktoken) |
+
+**Example**
+
+```yaml
+usages:
+  tokenizer: "tiktoken_gpt2"
+```
 #### web_search
 
 The Albert API allows searching the internet to enrich API responses. For this, it is necessary to configure a search engine API client in the `web_search` section.

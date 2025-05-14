@@ -15,6 +15,15 @@ from app.schemas.models import ModelType
 from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
 
 
+class LimitsTokenizer(str, Enum):
+    TIKTOKEN_GPT2 = "tiktoken_gpt2"
+    TIKTOKEN_R50K_BASE = "tiktoken_r50k_base"
+    TIKTOKEN_P50K_BASE = "tiktoken_p50k_base"
+    TIKTOKEN_P50K_EDIT = "tiktoken_p50k_edit"
+    TIKTOKEN_CL100K_BASE = "tiktoken_cl100k_base"
+    TIKTOKEN_O200K_BASE = "tiktoken_o200k_base"
+
+
 class DatabaseType(str, Enum):
     QDRANT = "qdrant"
     REDIS = "redis"
@@ -123,6 +132,10 @@ class Database(ConfigBaseModel):
         return values
 
 
+class Usages(ConfigBaseModel):
+    tokenizer: LimitsTokenizer = LimitsTokenizer.TIKTOKEN_O200K_BASE
+
+
 class Auth(ConfigBaseModel):
     master_key: str = "changeme"
     limiting_strategy: LimitingStrategy = LimitingStrategy.FIXED_WINDOW
@@ -155,6 +168,7 @@ class General(ConfigBaseModel):
 
 class Config(ConfigBaseModel):
     general: General = Field(default_factory=General)
+    usages: Usages = Field(default_factory=Usages)
     auth: Auth = Field(default_factory=Auth)
     models: List[Model] = Field(min_length=1)
     databases: List[Database] = Field(min_length=1)
@@ -235,6 +249,7 @@ class Settings(BaseSettings):
 
         values.general = config.general
         values.auth = config.auth
+        values.usages = config.usages
         values.web_search = config.web_search[0] if config.web_search else None
         values.models = config.models
         values.databases = config.databases

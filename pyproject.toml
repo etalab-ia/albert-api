@@ -28,6 +28,7 @@ app = [
     "python-jose==3.4.0",
     "limits==5.1.0",
     "coredis==4.20.0",
+    "tiktoken==0.9.0",
 
     # data
     "elasticsearch==8.17.1",
