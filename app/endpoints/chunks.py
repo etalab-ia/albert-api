@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import AccessController
 from app.schemas.chunks import Chunk, Chunks
+from app.sql.session import get_db as get_session
 from app.utils.exceptions import ChunkNotFoundException
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__CHUNKS
-from app.sql.session import get_db as get_session
 
 router = APIRouter()
 

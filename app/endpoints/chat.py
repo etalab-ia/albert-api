@@ -9,8 +9,8 @@ from app.schemas.search import Search
 from app.sql.session import get_db as get_session
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.lifespan import context
-from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 from app.utils.usage_decorator import log_usage
+from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 router = APIRouter()
 
