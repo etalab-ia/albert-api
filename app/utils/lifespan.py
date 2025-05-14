@@ -5,21 +5,37 @@ from types import SimpleNamespace
 
 from coredis import ConnectionPool
 from fastapi import FastAPI
+import tiktoken
 
 from app.clients.database import QdrantClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
-from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRegistry, ImmediateModelRouter, WebSearchManager
+from app.helpers import DocumentManager, IdentityAccessManager, ImmediateModelRouter, Limiter, ModelRegistry, WebSearchManager
+from app.schemas.core.settings import LimitsTokenizer
 from app.utils import multiagents
 from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
-context = SimpleNamespace(models=None, iam=None, limiter=None, documents=None)
+context = SimpleNamespace(models=None, iam=None, limiter=None, documents=None, tokenizer=None)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
+
+    def get_tokenizer(tokenizer: LimitsTokenizer):
+        if tokenizer == LimitsTokenizer.TIKTOKEN_O200K_BASE:
+            return tiktoken.get_encoding("o200k_base")
+        elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_BASE:
+            return tiktoken.get_encoding("p50k_base")
+        elif tokenizer == LimitsTokenizer.TIKTOKEN_R50K_BASE:
+            return tiktoken.get_encoding("r50k_base")
+        elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_EDIT:
+            return tiktoken.get_encoding("p50k_edit")
+        elif tokenizer == LimitsTokenizer.TIKTOKEN_CL100K_BASE:
+            return tiktoken.get_encoding("cl100k_base")
+        elif tokenizer == LimitsTokenizer.TIKTOKEN_GPT2:
+            return tiktoken.get_encoding("gpt2")
 
     # setup clients
     qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
@@ -50,10 +66,11 @@ async def lifespan(app: FastAPI):
         model["clients"] = clients
         routers.append(ImmediateModelRouter(**model))
 
-    # setup context: models, iam, limiter
+    # setup context: models, iam, limiter, tokenizer
+    context.tokenizer = get_tokenizer(settings.usages.tokenizer)
     context.models = ModelRegistry(routers=routers)
     context.iam = IdentityAccessManager()
-    context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy, tokenizer=settings.usages.tokenizer) if redis else None
+    context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
 
     if redis:
         assert await context.limiter.redis.check(), "Redis database is not reachable."

@@ -2,20 +2,18 @@ import logging
 import traceback
 from typing import Optional
 
-import tiktoken
 from coredis import ConnectionPool
 from limits import RateLimitItemPerDay, RateLimitItemPerMinute
 from limits.aio import storage, strategies
 
 from app.schemas.auth import LimitType
 from app.schemas.core.auth import LimitingStrategy
-from app.schemas.core.settings import LimitsTokenizer
 
 logger = logging.getLogger(__name__)
 
 
 class Limiter:
-    def __init__(self, connection_pool: ConnectionPool, strategy: LimitingStrategy, tokenizer: LimitsTokenizer):
+    def __init__(self, connection_pool: ConnectionPool, strategy: LimitingStrategy):
         self.connection_pool = connection_pool
         self.redis_host = self.connection_pool.connection_kwargs.get("host", "localhost")
         self.redis_port = self.connection_pool.connection_kwargs.get("port", 6379)
@@ -28,23 +26,6 @@ class Limiter:
             self.strategy = strategies.FixedWindowRateLimiter(storage=self.redis)
         else:  # SLIDING_WINDOW
             self.strategy = strategies.SlidingWindowCounterRateLimiter(storage=self.redis)
-
-        self.tokenizer = self._get_tokenizer(tokenizer)
-
-    @staticmethod
-    def _get_tokenizer(tokenizer: LimitsTokenizer):
-        if tokenizer == LimitsTokenizer.TIKTOKEN_O200K_BASE:
-            return tiktoken.get_encoding("o200k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_BASE:
-            return tiktoken.get_encoding("p50k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_R50K_BASE:
-            return tiktoken.get_encoding("r50k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_EDIT:
-            return tiktoken.get_encoding("p50k_edit")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_CL100K_BASE:
-            return tiktoken.get_encoding("cl100k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_GPT2:
-            return tiktoken.get_encoding("gpt2")
 
     async def hit(self, user_id: int, model: str, type: LimitType, value: Optional[int] = None, cost: int = 1) -> Optional[bool]:
         """

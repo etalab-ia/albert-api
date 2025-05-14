@@ -2,12 +2,13 @@ from abc import ABC
 import ast
 import importlib
 from json import dumps, loads
-from typing import Literal, Optional, Type
+from typing import Any, Dict, Literal, Optional, Type
 from urllib.parse import urljoin
 
 from fastapi import HTTPException
 import httpx
 
+from app.schemas.core.settings import ModelClientType
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -17,8 +18,6 @@ from app.utils.variables import (
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
-
-from app.schemas.core.settings import ModelClientType
 
 
 class BaseModelClient(ABC):
@@ -92,19 +91,17 @@ class BaseModelClient(ABC):
         json: Optional[dict] = None,
         files: Optional[dict] = None,
         data: Optional[dict] = None,
-        additional_data_value: Optional[list] = None,
-        additional_data_key: Optional[str] = None,
+        additional_data: Dict[str, Any] = {},
     ) -> httpx.Response:
         """
-        Forward a request to a client model and add additional data to the response if provided.
+        Forward a request to a client model and add model name to the response. Optionally, add additional data to the response.
 
         Args:
             method(str): The method to use for the request.
-            json(dict): The JSON body to use for the request.
-            files(dict): The files to use for the request.
-            data(dict): The data to use for the request.
-            additional_data_value(list): The value to add to the response.
-            additional_data_key(str): The key to add the value to.
+            json(Optional[dict]): The JSON body to use for the request.
+            files(Optional[dict]): The files to use for the request.
+            data(Optional[dict]): The data to use for the request.
+            additional_data(Dict[str, Any]): The additional data to add to the response (default: {}).
 
         Returns:
             httpx.Response: The response from the API.
@@ -133,11 +130,12 @@ class BaseModelClient(ABC):
                 raise HTTPException(status_code=response.status_code, detail=message)
 
         # add additional data to the response
-        if additional_data_value and additional_data_key:
-            data = response.json()
-            data[additional_data_key] = additional_data_value
-            response = httpx.Response(status_code=response.status_code, content=dumps(data))
+        data = response.json()
+        data.update({"model": self.model})
+        data.update(additional_data)
+        response = httpx.Response(status_code=response.status_code, content=dumps(data))
 
+        # format response
         response = self._format_response(response=response)
 
         return response
@@ -148,19 +146,17 @@ class BaseModelClient(ABC):
         json: Optional[dict] = None,
         files: Optional[dict] = None,
         data: Optional[dict] = None,
-        additional_data_value: Optional[list] = None,
-        additional_data_key: Optional[str] = None,
+        additional_data: Dict[str, Any] = {},
     ):
         """
-        Forward a stream request to a client model and add additional data to the response if provided.
+        Forward a stream request to a client model and add model name to the response. Optionally, add additional data to the response.
 
         Args:
             method(str): The method to use for the request.
-            json(dict): The JSON body to use for the request.
-            files(dict): The files to use for the request.
-            data(dict): The data to use for the request.
-            additional_data_value(list): The value to add to the response (only on the first chunk).
-            additional_data_key(str): The key to add the value to (only on the first chunk).
+            json(Optional[dict]): The JSON body to use for the request.
+            files(Optional[dict]): The files to use for the request.
+            data(Optional[dict]): The data to use for the request.
+            additional_data(Dict[str, Any]): The additional data to add to the response (default: {}).
         """
 
         url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
@@ -181,10 +177,11 @@ class BaseModelClient(ABC):
                             chunk = dumps(chunks).encode(encoding="utf-8")
 
                         # add additional data to the first chunk
-                        elif first_chunk and additional_data_value and additional_data_key:
+                        elif first_chunk:
                             chunks = chunk.decode(encoding="utf-8").split(sep="\n\n")
                             chunk = loads(chunks[0].lstrip("data: "))
-                            chunk[additional_data_key] = additional_data_value
+                            chunk.update({"model": self.model})
+                            chunk.update(additional_data)
                             chunks[0] = f"data: {dumps(chunk)}"
                             chunk = "\n\n".join(chunks).encode(encoding="utf-8")
 
