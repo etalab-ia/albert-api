@@ -25,7 +25,7 @@ ui = [
 app = [
     # auth
     "python-jose==3.4.0",
-    "limits==4.1",
+    "limits==5.1.0",
     "coredis==4.20.0",
 
     # data
