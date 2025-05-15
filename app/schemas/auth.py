@@ -58,6 +58,10 @@ class RoleUpdateRequest(BaseModel):
         return limits
 
 
+class RolesResponse(BaseModel):
+    id: int
+
+
 class RoleRequest(BaseModel):
     name: str
     permissions: Optional[List[PermissionType]] = []
@@ -122,6 +126,10 @@ class UserUpdateRequest(BaseModel):
         return name
 
 
+class UsersResponse(BaseModel):
+    id: int
+
+
 class UserRequest(BaseModel):
     name: str = Field(description="The user name.")
     role: int = Field(description="The role ID.")
@@ -158,6 +166,11 @@ class User(BaseModel):
 class Users(BaseModel):
     object: Literal["list"] = "list"
     data: List[User]
+
+
+class TokensResponse(BaseModel):
+    id: int
+    token: str
 
 
 class TokenRequest(BaseModel):

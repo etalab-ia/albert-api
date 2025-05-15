@@ -26,6 +26,10 @@ class Chunker(BaseModel):
     args: ChunkerArgs = Field(default_factory=ChunkerArgs, description="The arguments to use for the chunker to use for the file upload.")  # fmt: off
 
 
+class FileResponse(BaseModel):
+    id: int = Field(default=..., description="The ID of the file.")
+
+
 class FilesRequest(BaseModel):
     collection: int = Field(default=..., description="The collection ID to use for the file upload. The file will be vectorized with model defined by the collection.")  # fmt: off
     chunker: Chunker = Field(default_factory=Chunker, description="The chunker to use for the file upload.")  # fmt: off

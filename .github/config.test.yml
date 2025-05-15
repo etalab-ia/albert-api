@@ -33,7 +33,7 @@ databases:
   - type: sql
     context: api
     args:
-      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:5432/api
+      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:5432/test
       echo: False
       pool_size: 5
       max_overflow: 10

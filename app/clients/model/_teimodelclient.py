@@ -1,10 +1,12 @@
 from json import dumps
-from typing import Optional
+from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
+from fastapi import Request
 import httpx
 from openai import AsyncOpenAI
 import requests
+
 from app.clients.model._basemodelclient import BaseModelClient
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
@@ -61,7 +63,7 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         else:
             self.vector_size = None
 
-    def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+    def _format_request(self, request: Request, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
         """
         Format a request to a client model. Overridden base class method to support TEI Reranking.
 
@@ -74,18 +76,47 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         Returns:
             tuple: The formatted request composed of the url, headers, json, files and data.
         """
-        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
+        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[request.url.path.removeprefix("/v1")])
         headers = {"Authorization": f"Bearer {self.api_key}"}
         if json and "model" in json:
             json["model"] = self.model
 
-        if self.endpoint == ENDPOINT__RERANK:
+        if request.url.path.endswith(ENDPOINT__RERANK):
             json = {"query": json["prompt"], "texts": json["input"]}
 
         return url, headers, json, files, data
 
-    def _format_response(self, response: httpx.Response) -> httpx.Response:
-        if response.status_code == 200 and "data" not in response.json():  # format response for reranking
-            response = httpx.Response(status_code=response.status_code, content=dumps({"data": response.json()}))
+    def _format_response(self, request: Request, response: httpx.Response, additional_data: Dict[str, Any] = {}) -> httpx.Response:
+        """
+        Format a response from a client model and add usage data and model ID to the response. This method can be overridden by a subclass to add additional headers or parameters.
+
+        Args:
+            response(httpx.Response): The response from the API.
+
+        Returns:
+            httpx.Response: The formatted response.
+        """
+        content_type = response.headers.get("Content-Type", "")
+        if content_type == "application/json":
+            data = response.json()
+
+            if isinstance(data, list):  # for TEI reranking
+                data = {"data": data}
+
+            if hasattr(request.app.state, "prompt_tokens"):
+                data.update({"usage": {"prompt_tokens": request.app.state.prompt_tokens, "total_tokens": request.app.state.prompt_tokens}})
+
+                if request.url.path.startswith(f"/v1{ENDPOINT__CHAT_COMPLETIONS}"):
+                    from app.utils.lifespan import context
+
+                    contents = [choice.message.content for choice in data.get("choices", [])]
+                    completion_tokens = sum([len(context.tokenizer.encode(content)) for content in contents])
+                    data["usage"].update({"completion_tokens": completion_tokens})
+                    data["usage"].update({"total_tokens": request.app.state.prompt_tokens + completion_tokens})
+
+            data.update({"model": self.model})
+            data.update(additional_data)
+
+            response = httpx.Response(status_code=response.status_code, content=dumps(data), headers=response.headers)
 
         return response

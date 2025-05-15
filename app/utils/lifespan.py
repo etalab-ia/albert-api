@@ -19,23 +19,24 @@ logger = logging.getLogger(__name__)
 context = SimpleNamespace(models=None, iam=None, limiter=None, documents=None, tokenizer=None)
 
 
+def get_tokenizer(tokenizer: LimitsTokenizer):
+    if tokenizer == LimitsTokenizer.TIKTOKEN_O200K_BASE:
+        return tiktoken.get_encoding("o200k_base")
+    elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_BASE:
+        return tiktoken.get_encoding("p50k_base")
+    elif tokenizer == LimitsTokenizer.TIKTOKEN_R50K_BASE:
+        return tiktoken.get_encoding("r50k_base")
+    elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_EDIT:
+        return tiktoken.get_encoding("p50k_edit")
+    elif tokenizer == LimitsTokenizer.TIKTOKEN_CL100K_BASE:
+        return tiktoken.get_encoding("cl100k_base")
+    elif tokenizer == LimitsTokenizer.TIKTOKEN_GPT2:
+        return tiktoken.get_encoding("gpt2")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
-
-    def get_tokenizer(tokenizer: LimitsTokenizer):
-        if tokenizer == LimitsTokenizer.TIKTOKEN_O200K_BASE:
-            return tiktoken.get_encoding("o200k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_BASE:
-            return tiktoken.get_encoding("p50k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_R50K_BASE:
-            return tiktoken.get_encoding("r50k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_EDIT:
-            return tiktoken.get_encoding("p50k_edit")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_CL100K_BASE:
-            return tiktoken.get_encoding("cl100k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_GPT2:
-            return tiktoken.get_encoding("gpt2")
 
     # setup clients
     qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None

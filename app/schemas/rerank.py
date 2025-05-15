@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import Field
 
-from app.schemas import BaseModel
+from app.schemas import BaseModel, Usage
 
 
 class RerankRequest(BaseModel):
@@ -18,3 +18,4 @@ class Rerank(BaseModel):
 
 class Reranks(BaseModel):
     data: List[Rerank]
+    usage: Usage
