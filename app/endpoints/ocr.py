@@ -2,6 +2,7 @@ import base64
 from io import BytesIO
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, Security, UploadFile
+from fastapi.responses import JSONResponse
 from pdf2image import convert_from_bytes
 
 from app.helpers import AccessController
@@ -9,12 +10,14 @@ from app.schemas.core.data import FileType
 from app.schemas.ocr import OCR, OCRs
 from app.utils.exceptions import FileSizeLimitExceededException
 from app.utils.lifespan import context
+from app.utils.usage_decorator import log_usage
 from app.utils.variables import ENDPOINT__OCR
 
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=AccessController())], status_code=200)
+@router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=OCRs)
+@log_usage
 async def ocr(
     request: Request,
     file: UploadFile = File(...),
@@ -29,7 +32,7 @@ async def ocr(
             "Je veux une sortie au format markdown. Tu dois respecter le format de sortie pour bien conserver les tableaux."
         )
     ),
-) -> OCRs:
+) -> JSONResponse:
     """
     Extracts text from PDF files using OCR.
     """
@@ -65,7 +68,7 @@ async def ocr(
 
         # forward request
         payload = {"model": model, "messages": [{"role": "user", "content": content}], "n": 1, "stream": False}
-        response = await client.forward_request(method="POST", json=payload)
+        response = await client.forward_request(request=request, method="POST", json=payload)
 
         data_response = response.json()
         extracted_text = data_response.get("choices", [{}])[0].get("message", {}).get("content", "Erreur: Aucun contenu reçu")
@@ -73,4 +76,4 @@ async def ocr(
         # format response
         data.append(OCR(page=i + 1, text=extracted_text))
 
-    return OCRs(data=data)
+    return JSONResponse(content=OCRs(data=data).model_dump(), status_code=response.status_code)

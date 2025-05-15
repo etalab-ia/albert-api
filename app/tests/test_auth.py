@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 import pytest
 from redis import Redis
 
-from app.helpers import Limiter
+from app.utils.lifespan import get_tokenizer
 from app.schemas.auth import LimitType
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
@@ -156,7 +156,7 @@ class TestAuth:
 
         # Test token limits
         def get_content_len(n: int) -> str:
-            tokenizer = Limiter._get_tokenizer(settings.usages.tokenizer)
+            tokenizer = get_tokenizer(settings.usages.tokenizer)
             content = ("test " * n).strip()
             assert len(tokenizer.encode(content)) == n, "Cost should be equal to the number of tokens, please check the tokenizer for this test."
 
