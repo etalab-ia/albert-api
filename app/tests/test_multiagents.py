@@ -123,3 +123,37 @@ class TestMultiAgents:
             assert data["chunk"]["metadata"]["choice"] == 4
             for key in ["choice", "choice_desc", "sources_refs", "sources_content"]:
                 assert key in data["chunk"]["metadata"]
+
+    def test_multiagents_not_available(self, client: TestClient, monkeypatch):
+        """
+        Test that MultiAgentsSearchNotAvailableException is raised when multi_agents_search setting is None.
+        """
+        # Disable multi-agents search in settings
+        from app.utils.settings import settings
+
+        monkeypatch.setattr(settings, "multi_agents_search", None)
+
+        # Create a private collection for the test
+        collection_name = f"test_collection_{str(uuid4())}"
+        params = {"name": collection_name, "visibility": CollectionVisibility.PRIVATE}
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json=params)
+        assert response.status_code == 201, response.text
+        collection_id = response.json()["id"]
+
+        # Build payload with MULTIAGENT method
+        payload = {
+            "prompt": "Test prompt when disabled",
+            "collections": [collection_id],
+            "method": SearchMethod.MULTIAGENT,
+            "k": 1,
+            "rff_k": 1,
+            "score_threshold": 0.0,
+            "max_tokens": 10,
+            "max_tokens_intermediate": 5,
+            "model": "albert-small",
+        }
+        # Expect 400 error due to disabled multi-agents search
+        response = client.post_without_permissions(f"/v1{ENDPOINT__SEARCH}", json=payload)
+        assert response.status_code == 400, response.text
+        # Verify correct exception detail
+        assert response.json().get("detail") == "Multi agents search is not available."
