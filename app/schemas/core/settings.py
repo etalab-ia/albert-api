@@ -156,7 +156,7 @@ class Config(ConfigBaseModel):
     models: List[Model] = Field(min_length=1)
     databases: List[Database] = Field(min_length=1)
     web_search: List[WebSearch] = Field(default_factory=list, max_length=1)
-    multi_agents_search: Optional[MultiAgentsSearch] = Field(default_factory=MultiAgentsSearch)
+    multi_agents_search: Optional[MultiAgentsSearch] = None
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:

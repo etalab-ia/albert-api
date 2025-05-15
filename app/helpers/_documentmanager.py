@@ -33,6 +33,7 @@ from app.utils.exceptions import (
     UnsupportedFileTypeException,
     VectorizationFailedException,
     WebSearchNotAvailableException,
+    MultiAgentsSearchNotAvailableException,
 )
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS
 
@@ -351,6 +352,8 @@ class DocumentManager:
             score_threshold=score_threshold,
         )
         if method == SearchMethod.MULTIAGENT:
+            if not settings.multi_agents_search:
+                raise MultiAgentsSearchNotAvailableException()
             searches = await multiagents.search(
                 partial(self.search, user_id=user_id),
                 searches,
