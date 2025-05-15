@@ -1,10 +1,11 @@
 from json import dumps
-from typing import Optional
+from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
 import httpx
 from openai import AsyncOpenAI
 import requests
+
 from app.clients.model._basemodelclient import BaseModelClient
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
@@ -87,8 +88,25 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
 
         return url, headers, json, files, data
 
-    def _format_response(self, response: httpx.Response) -> httpx.Response:
-        if response.status_code == 200 and "data" not in response.json():  # format response for reranking
-            response = httpx.Response(status_code=response.status_code, content=dumps({"data": response.json()}))
+    def _format_response(self, response: httpx.Response, additional_data: Dict[str, Any] = {}) -> httpx.Response:
+        """
+        Format a response from a client model. This method can be overridden by a subclass to add additional headers or parameters.
+
+        Args:
+            response(httpx.Response): The response from the API.
+
+        Returns:
+            httpx.Response: The formatted response.
+        """
+        content_type = response.headers.get("Content-Type", "")
+        if content_type == "application/json" and response.status_code == 200:
+            data = response.json()
+            if isinstance(data, list):  # for TEI reranking
+                data = {"data": data}
+
+            data.update({"model": self.model})
+            data.update(additional_data)
+
+            response = httpx.Response(status_code=response.status_code, content=dumps(data), headers=response.headers)
 
         return response

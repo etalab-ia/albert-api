@@ -1,15 +1,18 @@
 from fastapi import APIRouter, Request, Security
+from fastapi.responses import JSONResponse
 
 from app.helpers import AccessController
 from app.schemas.embeddings import Embeddings, EmbeddingsRequest
 from app.utils.lifespan import context
+from app.utils.usage_decorator import log_usage
 from app.utils.variables import ENDPOINT__EMBEDDINGS
 
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__EMBEDDINGS, dependencies=[Security(dependency=AccessController())], status_code=200)
-async def embeddings(request: Request, body: EmbeddingsRequest) -> Embeddings:
+@router.post(path=ENDPOINT__EMBEDDINGS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Embeddings)
+@log_usage
+async def embeddings(request: Request, body: EmbeddingsRequest) -> JSONResponse:
     """
     Creates an embedding vector representing the input text.
     """
@@ -18,4 +21,4 @@ async def embeddings(request: Request, body: EmbeddingsRequest) -> Embeddings:
     client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
     response = await client.forward_request(method="POST", json=body.model_dump())
 
-    return Embeddings(**response.json())
+    return JSONResponse(content=response.json(), status_code=response.status_code)

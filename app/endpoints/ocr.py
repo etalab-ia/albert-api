@@ -10,11 +10,13 @@ from app.schemas.ocr import OCR, OCRs
 from app.utils.exceptions import FileSizeLimitExceededException
 from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__OCR
+from app.utils.usage_decorator import log_usage
 
 router = APIRouter()
 
 
 @router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=AccessController())], status_code=200)
+@log_usage
 async def ocr(
     request: Request,
     file: UploadFile = File(...),

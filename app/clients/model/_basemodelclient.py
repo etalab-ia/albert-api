@@ -65,7 +65,7 @@ class BaseModelClient(ABC):
 
         return url, headers, json, files, data
 
-    def _format_response(self, response: httpx.Response) -> httpx.Response:
+    def _format_response(self, response: httpx.Response, additional_data: Dict[str, Any] = {}) -> httpx.Response:
         """
         Format a response from a client model. This method can be overridden by a subclass to add additional headers or parameters.
 
@@ -75,6 +75,14 @@ class BaseModelClient(ABC):
         Returns:
             httpx.Response: The formatted response.
         """
+        content_type = response.headers.get("Content-Type", "")
+        if content_type == "application/json":
+            data = response.json()
+            data.update({"model": self.model})
+            data.update(additional_data)
+
+            response = httpx.Response(status_code=response.status_code, content=dumps(data), headers=response.headers)
+
         return response
 
     async def forward_request(
@@ -122,12 +130,6 @@ class BaseModelClient(ABC):
                 raise HTTPException(status_code=response.status_code, detail=message)
 
         # add additional data to the response
-        data = response.json()
-        data.update({"model": self.model})
-        data.update(additional_data)
-        response = httpx.Response(status_code=response.status_code, content=dumps(data))
-
-        # format response
         response = self._format_response(response=response)
 
         return response
