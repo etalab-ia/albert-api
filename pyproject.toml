@@ -14,6 +14,7 @@ dependencies = [
     "asyncpg==0.30.0",
     "sqlalchemy[asyncio]==2.0.38",
     "sqlalchemy-utils==0.41.2",
+    "sentry-sdk[fastapi]>=2.28.0",
 ]
 
 [project.optional-dependencies]

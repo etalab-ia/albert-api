@@ -1,5 +1,7 @@
+import logging
 from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
+import sentry_sdk
 
 from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search
 from app.helpers import Authorization, UsagesMiddleware
@@ -24,6 +26,30 @@ from app.utils.variables import (
     ROUTER__RERANK,
     ROUTER__SEARCH,
 )
+
+logger = logging.getLogger(__name__)
+
+if settings.general.sentry_dsn:
+    # If SENTRY_DSN is set, we initialize Sentry SDK
+    # This is useful for error tracking and performance monitoring
+    # See https://docs.sentry.io/platforms/python/guides/fastapi/
+    # for more information on how to configure Sentry with FastAPI
+    sentry_sdk.init(
+        dsn=settings.general.sentry_dsn,
+        # See https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profile_session_sample_rate to 1.0 to profile 100%
+        # of profile sessions.
+        profile_session_sample_rate=1.0,
+        # Set profile_lifecycle to "trace" to automatically
+        # run the profiler on when there is an active transaction
+        profile_lifecycle="trace",
+    )
+else:
+    logger.warning("SENTRY_DSN is not set. Sentry SDK will not be initialized.")
 
 
 def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
