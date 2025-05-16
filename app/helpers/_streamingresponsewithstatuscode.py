@@ -18,7 +18,6 @@ class StreamingResponseWithStatusCode(StreamingResponse):
 
     async def stream_response(self, send: Send) -> None:
         more_body = True
-        print("########## in StreamingResponseWithStatusCode")
         try:
             first_chunk = await self.body_iterator.__anext__()
             if isinstance(first_chunk, tuple):

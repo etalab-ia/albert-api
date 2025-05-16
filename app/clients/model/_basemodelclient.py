@@ -223,36 +223,10 @@ class BaseModelClient(ABC):
 
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
-                # async with async_client.stream(method=method, url=url, headers=headers, json=json, files=files, data=data) as response:
-                #     first_chunk = True
-                #     async for chunk in response.aiter_raw():
-                #         # format error message
-                #         if response.status_code // 100 != 2:
-                #             chunks = loads(chunk.decode(encoding="utf-8"))
-                #             if "message" in chunks:
-                #                 try:
-                #                     chunks["message"] = ast.literal_eval(chunks["message"])
-                #                 except Exception:
-                #                     pass
-                #             chunk = dumps(chunks).encode(encoding="utf-8")
-
-                #         # add additional data to the first chunk
-                #         elif first_chunk:
-                #             chunks = chunk.decode(encoding="utf-8").split(sep="\n\n")
-                #             chunk = loads(chunks[0].lstrip("data: "))
-                #             chunk.update({"model": self.model})
-                #             chunk.update(additional_data)
-                #             chunks[0] = f"data: {dumps(chunk)}"
-                #             chunk = "\n\n".join(chunks).encode(encoding="utf-8")
-
-                #         first_chunk = False
-
-                #         print("#", chunk == b"data: [DONE]\n\n", chunk)
-                #         yield chunk, response.status_code
-
                 async with async_client.stream(method=method, url=url, headers=headers, json=json, files=files, data=data) as response:
                     buffer = list()
                     async for chunk in response.aiter_raw():
+                        # error case
                         if response.status_code // 100 != 2:
                             chunks = loads(chunk.decode(encoding="utf-8"))
                             if "message" in chunks:
@@ -262,20 +236,20 @@ class BaseModelClient(ABC):
                                     pass
                             chunk = dumps(chunks).encode(encoding="utf-8")
 
-                            print("###############", chunk)
+                            yield chunk, response.status_code
+
+                        # normal case
                         elif chunk != b"data: [DONE]\n\n":
                             buffer.append(chunk)
 
                             yield chunk, response.status_code
 
-                        elif buffer:  # end of the stream
+                        # end of the stream
+                        elif buffer:
                             from app.utils.lifespan import context
 
-                            extra = dict()
-
-                            # Inject additional chunk before the end
-                            # try:
-                            contents = dict()
+                            # @TODO: package in a function and add endpoint condition (chat completions)
+                            data, extra, contents = None, dict(), dict()
                             for lines in buffer:
                                 lines = lines.decode(encoding="utf-8").split(sep="\n\n")
                                 for line in lines:
@@ -294,6 +268,11 @@ class BaseModelClient(ABC):
                                     except json.JSONDecodeError as e:
                                         logger.debug(f"Failed to decode JSON from streaming response ({e}) on the following chunk: {line}.")
 
+                            # if error case, yield chunk
+                            if data is None:
+                                yield chunk, response.status_code
+
+                            # normal case
                             extra = data
                             extra.update({"model": self.model})
                             extra.update({"choices": []})
@@ -317,9 +296,6 @@ class BaseModelClient(ABC):
                             extra.update(additional_data)
 
                             yield f"data: {dumps(extra)}\n\n".encode(), response.status_code
-                            yield chunk, response.status_code
-
-                        else:
                             yield chunk, response.status_code
 
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
