@@ -3,7 +3,8 @@ from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 
-from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search
+from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, \
+    ocr, rerank, search, mcp
 from app.helpers import Authorization, UsagesMiddleware
 from app.schemas.auth import PermissionType
 from app.sql.session import get_db
@@ -24,7 +25,7 @@ from app.utils.variables import (
     ROUTER__MONITORING,
     ROUTER__OCR,
     ROUTER__RERANK,
-    ROUTER__SEARCH,
+    ROUTER__SEARCH, ROUTER__MCP,
 )
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
     if ROUTER__CHAT not in settings.general.disabled_routers:
         app.include_router(router=chat.router, tags=[ROUTER__CHAT.title()], prefix="/v1")
 
+
     if ROUTER__CHUNKS not in settings.general.disabled_routers:
         app.include_router(router=chunks.router, tags=[ROUTER__CHUNKS.title()], prefix="/v1")
 
@@ -110,6 +112,9 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
         @app.get(path="/health", tags=[ROUTER__MONITORING.title()], include_in_schema=settings.general.log_level == "DEBUG", dependencies=[Security(dependency=Authorization())])  # fmt: off
         def health() -> Response:
             return Response(status_code=200)
+
+    if ROUTER__MCP not in settings.general.disabled_routers:
+        app.include_router(router=mcp.router, tags=[ROUTER__MCP.title()], prefix="/v1")
 
     if ROUTER__OCR not in settings.general.disabled_routers:
         app.include_router(router=ocr.router, tags=[ROUTER__OCR.upper()], prefix="/v1")
