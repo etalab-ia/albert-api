@@ -201,10 +201,14 @@ class BaseModelClient(ABC):
                             for lines in buffer:
                                 lines = lines.decode(encoding="utf-8").split(sep="\n\n")
                                 for line in lines:
+                                    line = line.strip()
                                     if not line.startswith("data: "):
                                         continue
+                                    line = line.removeprefix("data: ")
+                                    if not line:
+                                        continue
                                     try:
-                                        data = loads(line.removeprefix("data: "))
+                                        data = loads(line)
                                         for choice in data.get("choices", []):
                                             index = choice.get("index", 0)
                                             delta = choice.get("delta", {})

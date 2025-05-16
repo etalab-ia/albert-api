@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request, Security
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import AccessController
@@ -11,8 +12,8 @@ from app.utils.variables import ENDPOINT__SEARCH
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__SEARCH, dependencies=[Security(dependency=AccessController())], status_code=200)
-async def search(request: Request, body: SearchRequest, session: AsyncSession = Depends(get_session)) -> Searches:
+@router.post(path=ENDPOINT__SEARCH, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Searches)
+async def search(request: Request, body: SearchRequest, session: AsyncSession = Depends(get_session)) -> JSONResponse:
     """
     Get relevant chunks from the collections and a query.
     """
@@ -31,4 +32,4 @@ async def search(request: Request, body: SearchRequest, session: AsyncSession = 
         web_search=body.web_search,
     )
 
-    return Searches(data=data)
+    return JSONResponse(content=Searches(data=data).model_dump(), status_code=200)

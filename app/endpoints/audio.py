@@ -7,6 +7,7 @@ from app.helpers import AccessController
 from app.schemas.audio import AudioTranscription
 from app.utils.lifespan import context
 from app.utils.variables import AUDIO_SUPPORTED_LANGUAGES_VALUES, ENDPOINT__AUDIO_TRANSCRIPTIONS
+from app.utils.usage_decorator import log_usage
 
 router = APIRouter()
 
@@ -18,9 +19,8 @@ AudioTranscriptionTemperature = Form(default=0, description="The sampling temper
 AudioTranscriptionTimestampGranularities = Form(default=["segment"], description="Not implemented.")  # fmt: off
 
 
-@router.post(
-    path=ENDPOINT__AUDIO_TRANSCRIPTIONS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=AudioTranscription
-)
+@router.post(path=ENDPOINT__AUDIO_TRANSCRIPTIONS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=AudioTranscription)  # fmt: off
+@log_usage
 async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(description="The audio file object (not file name) to transcribe, in one of these formats: mp3 or wav."),

@@ -65,34 +65,34 @@ class AccessController:
 
         await self._check_permissions(role=role)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__AUDIO_TRANSCRIPTIONS}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__AUDIO_TRANSCRIPTIONS) and request.method == "POST":
             await self._check_audio_transcription_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__CHAT_COMPLETIONS}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS) and request.method == "POST":
             await self._check_chat_completions_post(user=user, role=role, limits=limits, request=request)
 
         if request.url.path.startswith(f"/v1{ENDPOINT__COLLECTIONS}") and request.method == "PATCH":
             await self._check_collections_patch(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__COLLECTIONS}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__COLLECTIONS) and request.method == "POST":
             await self._check_collections_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__EMBEDDINGS}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__EMBEDDINGS) and request.method == "POST":
             await self._check_embeddings_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__FILES}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__FILES) and request.method == "POST":
             await self._check_files_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__OCR}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__OCR) and request.method == "POST":
             await self._check_ocr_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__RERANK}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__RERANK) and request.method == "POST":
             await self._check_rerank_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__SEARCH}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__SEARCH) and request.method == "POST":
             await self._check_search_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(ENDPOINT__TOKENS) and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__TOKENS) and request.method == "POST":
             await self._check_tokens_post(user=user, role=role, limits=limits, request=request)
 
         # add authenticated user to request state for usage logging middleware
@@ -249,9 +249,6 @@ class AccessController:
         body = json.loads(body) if body else {}
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
-
-        for input in body.get("input", []):
-            print("########## input", input)
 
         prompt_tokens = sum([len(context.tokenizer.encode(str(input))) for input in body.get("input", [])])
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))

@@ -6,13 +6,12 @@ import logging
 from typing import Optional
 from unittest.mock import AsyncMock
 
-from fastapi import Request, Response
+from fastapi import Request, Response, HTTPException
 from starlette.responses import StreamingResponse
 
 from app.helpers import StreamingResponseWithStatusCode
 from app.sql.models import Usage
 from app.sql.session import get_db
-from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ def log_usage(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         start_time = datetime.now()
-        usage = Usage(datetime=start_time, endpoint="N/A")
+        usage = Usage(datetime=start_time, endpoint="N/A", model=None, prompt_tokens=None, completion_tokens=None, total_tokens=None)
 
         # find the request object
         request = next((arg for arg in args if isinstance(arg, Request)), None)
@@ -64,17 +63,28 @@ def log_usage(func):
             logger.warning("Master user ID found in request, skipping usage logging.")
             return await func(*args, **kwargs)
 
-        # call the endpoint
-        response = await func(*args, **kwargs)
+        response = None  # Initialize in case of early exception not from func
+        try:
+            # call the endpoint
+            response = await func(*args, **kwargs)
 
-        # extract usage from streaming response
-        if isinstance(response, StreamingResponse):
-            return extract_usage_from_streaming_response(response=response, start_time=start_time, usage=usage)
+            # extract usage from streaming response
+            if isinstance(response, StreamingResponse):
+                # extract_usage_from_streaming_response calls perform_log internally
+                return extract_usage_from_streaming_response(response=response, start_time=start_time, usage=usage)
 
-        # extract usage from non-streaming response
-        else:
-            asyncio.create_task(extract_usage_from_response(response=response, start_time=start_time, usage=usage))
-            return response
+            # extract usage from non-streaming response
+            else:
+                # extract_usage_from_response calls perform_log internally
+                asyncio.create_task(extract_usage_from_response(response=response, start_time=start_time, usage=usage))
+                return response
+
+        except HTTPException as e:
+            usage.status = e.status_code
+            # Pass response=None as there isn't a full FastAPI Response object.
+            # perform_log will use usage.status which we've just set.
+            asyncio.create_task(perform_log(response=None, usage=usage, start_time=start_time))
+            raise e  # Re-raise the exception for FastAPI to handle
 
     wrapper.is_log_usage_decorated = True
     return wrapper
@@ -139,26 +149,19 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
     This function captures the first token from the stream and calculates the completion tokens.
     It also logs the usage information to the database.
     """
-    print("########## in extract_usage_from_streaming_response", response.status_code)
+
     original_stream = response.body_iterator
-    buffer = []  # type: ignore
-    final_response_status_code = None  # Variable to store the status from the first chunk
+    buffer = []
 
     async def wrapped_stream():
-        nonlocal usage, buffer, final_response_status_code  # Add final_response_status_code
-        first_chunk_processed = False
-        async for original_item_from_downstream in original_stream:  # This item is (content, status_from_original_stream)
-            content_for_buffer_and_logging = original_item_from_downstream
-            current_chunk_status_code_for_this_iteration = response.status_code  # Default, overridden if tuple
+        nonlocal usage, buffer  # Add final_response_status_code
+        async for chunk in original_stream:  # This item is (content, status_from_original_stream)
+            content_for_buffer_and_logging = chunk
+            response_status_code = response.status_code  # Default, overridden if tuple
 
-            if isinstance(original_item_from_downstream, tuple):
-                print("########## in wrapped_stream", original_item_from_downstream)
-                content_for_buffer_and_logging = original_item_from_downstream[0]
-                current_chunk_status_code_for_this_iteration = original_item_from_downstream[1]
-
-            if not first_chunk_processed:
-                final_response_status_code = current_chunk_status_code_for_this_iteration
-                first_chunk_processed = True
+            if isinstance(chunk, tuple):
+                content_for_buffer_and_logging = chunk[0]
+                response_status_code = chunk[1]
 
             try:
                 usage.time_to_first_token = int((datetime.now() - start_time).total_seconds() * 1000) if usage.time_to_first_token is None else usage.time_to_first_token  # fmt: off
@@ -171,58 +174,35 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
             # Yield the original item from the downstream iterator.
             # This preserves its structure, e.g., (content, original_status_code),
             # ensuring the correct status code is passed to StreamingResponseWithStatusCode.
-            yield original_item_from_downstream
+            yield chunk
 
         if buffer:
-            from app.utils.lifespan import context
+            for lines in enumerate(buffer):
+                lines = lines.decode(encoding="utf-8").split(sep="\n\n")
+                for line in lines:
+                    line = line.strip()
+                    if not line.startswith("data: "):
+                        continue
+                    line = line.removeprefix("data: ")
+                    if not line:
+                        continue
+                    try:
+                        data = json.loads(line)
+                    except json.JSONDecodeError as e:
+                        logger.debug(f"Failed to decode JSON from streaming response ({e}) on the following chunk: {chunk}.")
+                        continue
 
-            content = dict()
-            body = b"".join(buffer).decode("utf-8").split("\n\n")
-            # process each line that starts with "data: " and contains valid JSON
-            for chunk in body:  # Renamed 'chunk' to 'chunk_str' to avoid conflict
-                # decode and parse chunk_str
-                chunk = chunk.strip()
-                if not chunk.startswith("data: "):
-                    continue
-                chunk = chunk.lstrip("data: ")
-
-                # skip empty JSON strings or ending chunk
-                if not chunk or chunk == "[DONE]":
-                    continue
-
-                # convert chunk_str to dict
-                try:
-                    data = json.loads(chunk)
-                    usage.model = data.get("model", None) if usage.model is None else usage.model
-
-                    if "choices" in data and len(data["choices"]) > 0:
-                        choice = data["choices"][0]
-                        index = choice.get("index", 0)
-                        delta = choice.get("delta", {})
-
-                        # initialize content for this index if it doesn't exist (each index is a different choice)
-                        if index not in content:
-                            content[index] = ""
-
-                        # append the content from this delta
-                        content_part = delta.get("content", "")
-                        if content_part:
-                            content[index] += content_part
-
-                except json.JSONDecodeError as e:
-                    logger.debug(f"Failed to decode JSON from streaming response ({e}) on the following chunk: {chunk}.")
-
-            # calculate completion tokens (sum of all tokens in all choices)
-            if content:
-                try:
-                    usage.completion_tokens = sum([len(context.tokenizer.encode(content[index])) for index in content.keys()])
-                except Exception as e:
-                    logger.warning(f"Failed to calculate completion tokens: {e}")
+                    # last chunk overrides previous chunks
+                    if data.get("model"):
+                        usage.model = data["model"]
+                    if data.get("usage"):
+                        usage.prompt_tokens = data["usage"]["prompt_tokens"]
+                        usage.completion_tokens = data["usage"]["completion_tokens"]
+                        usage.total_tokens = data["usage"]["total_tokens"]
 
         # Set usage.status with the captured status code before calling perform_log
-        if final_response_status_code is not None:
-            usage.status = final_response_status_code
-            # Optional: print(f"########## wrapped_stream: usage.status set to {usage.status}")
+        if response_status_code is not None:
+            usage.status = response_status_code
 
         asyncio.create_task(perform_log(response, usage, start_time))
 
@@ -235,23 +215,24 @@ async def extract_usage_from_response(response: Response, start_time: datetime, 
     This function captures the completion tokens from the response and calculates the duration of the request.
     It also sets the status code of the response if available.
     """
-    from app.utils.lifespan import context
 
-    body = json.loads(response.body)
     try:
+        body = {}
+        if hasattr(response, "body") and response.body:
+            body = json.loads(response.body)
+
         usage.model = body.get("model", None)
-        if usage.endpoint == f"/v1{ENDPOINT__CHAT_COMPLETIONS}":
-            # calculate completion tokens (sum of all tokens in all choices)
-            contents = [choice.message.content for choice in body.get("choices", [])]
-            usage.completion_tokens = sum([len(context.tokenizer.encode(content)) for content in contents])
-
+        usage.prompt_tokens = body.get("usage", {}).get("prompt_tokens", None)
+        usage.completion_tokens = body.get("usage", {}).get("completion_tokens", None)
+        usage.total_tokens = body.get("usage", {}).get("total_tokens", None)
     except Exception as e:
-        logger.debug(f"Error parsing non-streaming response: {e}")
-    finally:
-        asyncio.create_task(perform_log(response, usage, start_time))
+        logger.warning(f"Failed to parse JSON response body: {response.body} ({e})")
+        return
+
+    asyncio.create_task(perform_log(response, usage, start_time))
 
 
-async def perform_log(response: Response, usage: Usage, start_time: datetime):
+async def perform_log(response: Optional[Response], usage: Usage, start_time: datetime):
     """
     Logs the usage information to the database.
     This function captures the duration of the request and sets the status code of the response if available.
@@ -266,8 +247,6 @@ async def perform_log(response: Response, usage: Usage, start_time: datetime):
 
     if usage.request_model:
         usage.request_model = context.models.aliases.get(usage.request_model, usage.request_model)
-    if usage.completion_tokens and usage.prompt_tokens:
-        usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
 
     async for session in get_db():
         session.add(usage)
