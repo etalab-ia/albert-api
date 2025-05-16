@@ -139,23 +139,39 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
     This function captures the first token from the stream and calculates the completion tokens.
     It also logs the usage information to the database.
     """
+    print("########## in extract_usage_from_streaming_response", response.status_code)
     original_stream = response.body_iterator
-    buffer = []
+    buffer = []  # type: ignore
+    final_response_status_code = None  # Variable to store the status from the first chunk
 
     async def wrapped_stream():
-        nonlocal usage, buffer
-        async for chunk in original_stream:
+        nonlocal usage, buffer, final_response_status_code  # Add final_response_status_code
+        first_chunk_processed = False
+        async for original_item_from_downstream in original_stream:  # This item is (content, status_from_original_stream)
+            content_for_buffer_and_logging = original_item_from_downstream
+            current_chunk_status_code_for_this_iteration = response.status_code  # Default, overridden if tuple
+
+            if isinstance(original_item_from_downstream, tuple):
+                print("########## in wrapped_stream", original_item_from_downstream)
+                content_for_buffer_and_logging = original_item_from_downstream[0]
+                current_chunk_status_code_for_this_iteration = original_item_from_downstream[1]
+
+            if not first_chunk_processed:
+                final_response_status_code = current_chunk_status_code_for_this_iteration
+                first_chunk_processed = True
+
             try:
-                if isinstance(chunk, tuple):  # if StreamingResponseWithStatusCode
-                    chunk = chunk[0]
-                if usage.time_to_first_token is None:
-                    usage.time_to_first_token = int((datetime.now() - start_time).total_seconds() * 1000)
-                buffer.append(chunk)
+                usage.time_to_first_token = int((datetime.now() - start_time).total_seconds() * 1000) if usage.time_to_first_token is None else usage.time_to_first_token  # fmt: off
+                buffer.append(content_for_buffer_and_logging)  # Appends only the content part
             except Exception:
-                logger.warning("Failed to process chunk in streaming response")
+                logger.warning("Failed to process chunk in streaming response for usage/buffer calculations")
+                # Continue to yield the original item even if buffer append fails
                 pass
 
-            yield chunk
+            # Yield the original item from the downstream iterator.
+            # This preserves its structure, e.g., (content, original_status_code),
+            # ensuring the correct status code is passed to StreamingResponseWithStatusCode.
+            yield original_item_from_downstream
 
         if buffer:
             from app.utils.lifespan import context
@@ -163,8 +179,8 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
             content = dict()
             body = b"".join(buffer).decode("utf-8").split("\n\n")
             # process each line that starts with "data: " and contains valid JSON
-            for chunk in body:
-                # decode and parse chunk
+            for chunk in body:  # Renamed 'chunk' to 'chunk_str' to avoid conflict
+                # decode and parse chunk_str
                 chunk = chunk.strip()
                 if not chunk.startswith("data: "):
                     continue
@@ -174,7 +190,7 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
                 if not chunk or chunk == "[DONE]":
                     continue
 
-                # convert chunk to dict
+                # convert chunk_str to dict
                 try:
                     data = json.loads(chunk)
                     usage.model = data.get("model", None) if usage.model is None else usage.model
@@ -203,7 +219,12 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
                 except Exception as e:
                     logger.warning(f"Failed to calculate completion tokens: {e}")
 
-            asyncio.create_task(perform_log(response, usage, start_time))
+        # Set usage.status with the captured status code before calling perform_log
+        if final_response_status_code is not None:
+            usage.status = final_response_status_code
+            # Optional: print(f"########## wrapped_stream: usage.status set to {usage.status}")
+
+        asyncio.create_task(perform_log(response, usage, start_time))
 
     return StreamingResponseWithStatusCode(wrapped_stream(), media_type=response.media_type)
 
@@ -238,7 +259,10 @@ async def perform_log(response: Response, usage: Usage, start_time: datetime):
     from app.utils.lifespan import context
 
     usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
-    usage.status = response.status_code if hasattr(response, "status_code") else None
+
+    # Set usage.status based on the response object ONLY if not already set by streaming logic.
+    if usage.status is None:
+        usage.status = response.status_code if hasattr(response, "status_code") else None
 
     if usage.request_model:
         usage.request_model = context.models.aliases.get(usage.request_model, usage.request_model)

@@ -94,7 +94,7 @@ class BaseModelClient(ABC):
             data.update({"model": self.model})
             data.update(additional_data)
 
-            response = httpx.Response(status_code=response.status_code, content=dumps(data), headers=response.headers)
+            response = httpx.Response(status_code=response.status_code, content=dumps(data))
 
         return response
 
@@ -148,57 +148,6 @@ class BaseModelClient(ABC):
 
         return response
 
-    async def _format_stream_response(self, request: Request, response: httpx.Response, additional_data: Dict[str, Any] = {}):
-        """
-        Format a stream response from a client model and add model name to the response. This method can be overridden by a subclass to add additional headers or parameters.
-
-        Args:
-            StreamingResponseWithStatusCode: The streaming response from the API.
-        """
-        from app.helpers import StreamingResponseWithStatusCode
-
-        async def stream_with_injection():
-            buffer = list()
-
-            async for chunk in response.aiter_raw():
-                if response.status_code // 100 != 2:
-                    chunks = loads(chunk.decode(encoding="utf-8"))
-                    if "message" in chunks:
-                        try:
-                            chunks["message"] = ast.literal_eval(chunks["message"])
-                        except Exception:
-                            pass
-                    chunk = dumps(chunks).encode(encoding="utf-8")
-
-                buffer.append(chunk)
-
-                # if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS):
-                if chunk == b"data: [DONE]\n\n" and buffer:
-                    from app.utils.lifespan import context
-
-                    # Inject additional chunk before the end
-                    try:
-                        chunks = [loads(line.removeprefix("data: ")) for chunk in buffer for line in chunk.decode(encoding="utf-8").split(sep="\n\n")]
-                        extra = chunks[-1]
-                        completion_tokens = 0
-                        for line in chunks:
-                            contents = [choice.get("message", {}).get("content", "") for choice in line.get("choices", [])]
-                            completion_tokens += sum([len(context.tokenizer.encode(content)) for content in contents])
-                        extra["usage"].update({"completion_tokens": completion_tokens})
-                        extra["usage"].update({"total_tokens": request.app.state.prompt_tokens + completion_tokens})
-                        extra["model"] = self.model
-                        extra["choices"] = []
-                        extra.update(additional_data)
-
-                        yield f"data: {dumps(extra)}\n\n".encode(), response.status_code
-                        yield chunk, response.status_code
-                    except Exception:
-                        yield chunk, response.status_code
-                else:
-                    yield chunk, response.status_code
-
-        return StreamingResponseWithStatusCode(stream_with_injection(), media_type="text/event-stream")
-
     async def forward_stream(
         self,
         request: Request,
@@ -212,6 +161,7 @@ class BaseModelClient(ABC):
         Forward a stream request to a client model and add model name to the response. Optionally, add additional data to the response.
 
         Args:
+            request(Request): The request to forward.
             method(str): The method to use for the request.
             json(Optional[dict]): The JSON body to use for the request.
             files(Optional[dict]): The files to use for the request.
@@ -235,9 +185,7 @@ class BaseModelClient(ABC):
                                 except Exception:
                                     pass
                             chunk = dumps(chunks).encode(encoding="utf-8")
-
                             yield chunk, response.status_code
-
                         # normal case
                         elif chunk != b"data: [DONE]\n\n":
                             buffer.append(chunk)

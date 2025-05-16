@@ -250,7 +250,10 @@ class AccessController:
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
-        prompt_tokens = sum([len(context.tokenizer.encode(content)) for content in body.get("input", [])])
+        for input in body.get("input", []):
+            print("########## input", input)
+
+        prompt_tokens = sum([len(context.tokenizer.encode(str(input))) for input in body.get("input", [])])
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_files_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
@@ -272,7 +275,7 @@ class AccessController:
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
-        prompt_tokens = sum([len(context.tokenizer.encode(content)) for content in body.get("input", [])])
+        prompt_tokens = sum([len(context.tokenizer.encode(str(input))) for input in body.get("input", [])])
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_search_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
@@ -284,7 +287,7 @@ class AccessController:
         # count the search request as one request to the search model (embeddings)
         await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant_model)
 
-        prompt_tokens = len(context.tokenizer.encode(body.get("prompt", "")))
+        prompt_tokens = len(context.tokenizer.encode(str(body.get("prompt", ""))))
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=context.documents.qdrant_model)
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:

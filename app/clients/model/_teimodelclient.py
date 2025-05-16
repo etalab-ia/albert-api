@@ -84,7 +84,7 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         if json and "model" in json:
             json["model"] = self.model
 
-        if self.endpoint == ENDPOINT__RERANK:
+        if request.url.path.endswith(ENDPOINT__RERANK):
             json = {"query": json["prompt"], "texts": json["input"]}
 
         return url, headers, json, files, data

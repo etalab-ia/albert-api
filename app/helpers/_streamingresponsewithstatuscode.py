@@ -51,7 +51,7 @@ class StreamingResponseWithStatusCode(StreamingResponse):
                 more_body = True
                 await send({"type": "http.response.body", "body": content, "more_body": more_body})
 
-        except Exception as e:
+        except Exception:
             more_body = False
             error_resp = {"error": {"message": "Internal Server Error"}}
             error_event = f"event: error\ndata: {json.dumps(error_resp)}\n\n".encode(self.charset)
