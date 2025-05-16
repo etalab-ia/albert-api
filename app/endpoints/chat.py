@@ -69,11 +69,11 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
 
     # not stream case
     if not body["stream"]:
-        response = await client.forward_request(method="POST", json=body, additional_data=additional_data)
+        response = await client.forward_request(request=request, method="POST", json=body, additional_data=additional_data)
         return JSONResponse(content=response.json(), status_code=response.status_code)
 
     # stream case
     return StreamingResponseWithStatusCode(
-        content=client.forward_stream(method="POST", json=body, additional_data=additional_data),
+        content=client.forward_stream(request=request, method="POST", json=body, additional_data=additional_data),
         media_type="text/event-stream",
     )

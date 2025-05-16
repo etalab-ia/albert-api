@@ -20,6 +20,6 @@ async def rerank(request: Request, body: RerankRequest) -> JSONResponse:
 
     model = context.models(model=body.model)
     client = model.get_client(endpoint=ENDPOINT__RERANK)
-    response = await client.forward_request(method="POST", json=body.model_dump())
+    response = await client.forward_request(request=request, method="POST", json=body.model_dump())
 
-    return JSONResponse(content=response.json(), status_code=response.status_code)
+    return JSONResponse(content=Reranks(**response.json()).model_dump(), status_code=response.status_code)

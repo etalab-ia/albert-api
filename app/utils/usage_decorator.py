@@ -245,10 +245,6 @@ async def perform_log(response: Response, usage: Usage, start_time: datetime):
     if usage.completion_tokens and usage.prompt_tokens:
         usage.total_tokens = usage.prompt_tokens + usage.completion_tokens
 
-    print("#################")
-    print(usage)
-    print("#################")
-
     async for session in get_db():
         session.add(usage)
         try:

@@ -18,6 +18,7 @@ class StreamingResponseWithStatusCode(StreamingResponse):
 
     async def stream_response(self, send: Send) -> None:
         more_body = True
+        print("########## in StreamingResponseWithStatusCode")
         try:
             first_chunk = await self.body_iterator.__anext__()
             if isinstance(first_chunk, tuple):
@@ -51,7 +52,7 @@ class StreamingResponseWithStatusCode(StreamingResponse):
                 more_body = True
                 await send({"type": "http.response.body", "body": content, "more_body": more_body})
 
-        except Exception:
+        except Exception as e:
             more_body = False
             error_resp = {"error": {"message": "Internal Server Error"}}
             error_event = f"event: error\ndata: {json.dumps(error_resp)}\n\n".encode(self.charset)

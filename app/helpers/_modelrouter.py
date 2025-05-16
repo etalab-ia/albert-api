@@ -64,8 +64,6 @@ class ModelRouter:
         else:  # ROUTER_STRATEGY__SHUFFLE
             client = self._routing_strategy_shuffle()
 
-        client.endpoint = endpoint
-
         return client
 
     def _routing_strategy_shuffle(self) -> ModelClient:
