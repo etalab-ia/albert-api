@@ -74,11 +74,10 @@ The configuration file has the following sections:
 | contact_url | Optional | API contact URL. | str | | `None` |
 | contact_email | Optional | API contact email. | str | | `None` |
 | docs_url | Optional | API swagger URL. | str | | `"/docs"` |
-| redoc_url | Optional | API redoc URL. | str | | `"/redoc"` |
+| redoc_url | Optional | API redoc URL. | str | | `"/redoc"` |x
 | openapi_url | Optional | API openapi URL. | str | | `"/openapi.json"` |
 | log_level | Required | Logging level. | str | `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`, `"CRITICAL"` | `"INFO"` |
 | disabled_routers | Required | List of disabled API routers. | List[str] | `["audio", "auth", "chat", "chunks", "collections", "documents", "embeddings", "files", "models", "monitoring", "ocr", "rerank", "search"]` | `[]` |
-| disabled_middlewares | Required | Enable or disable middlewares. | bool |  | `False` |
 | sentry_dsn | Optional | URL of Sentry server if you want to monitor your instance (cf. https://sentry.io) | str | | None |
 
 **Example**

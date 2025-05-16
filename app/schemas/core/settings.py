@@ -162,7 +162,6 @@ class General(ConfigBaseModel):
 
     # Others
     disabled_routers: List[Literal[*ROUTERS]] = []
-    disabled_middlewares: bool = False
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 
