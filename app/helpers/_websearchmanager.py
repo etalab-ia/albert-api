@@ -1,11 +1,16 @@
 from io import BytesIO
 from typing import List
+from urllib.parse import urlparse
 
 from fastapi import UploadFile
 import requests
 
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.clients.model import BaseModelClient as ModelClient
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class WebSearchManager:
@@ -81,11 +86,28 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
         urls = await self.web_search.search(query=query, n=n)
         results = []
         for url in urls:
+            # Parse the URL and extract the hostname
+            parsed = urlparse(url)
+            domain = parsed.hostname
+            if not domain:
+                # Skip invalid URLs
+                continue
+
+            # Check if the domain is authorized
+            if self.LIMITED_DOMAINS:
+                # Allow exact match or subdomains of allowed domains
+                if not any(domain == allowed or domain.endswith(f".{allowed}") for allowed in self.LIMITED_DOMAINS):
+                    # Skip unauthorized domains
+                    continue
+
+            # Fetch the content, skipping on network errors
             try:
-                assert not self.LIMITED_DOMAINS or any([domain in url for domain in self.LIMITED_DOMAINS])
                 response = requests.get(url=url, headers={"User-Agent": self.web_search.USER_AGENT}, timeout=5)
-                assert response.status_code == 200
-            except Exception:
+            except requests.RequestException:
+                logger.exception("Error fetching URL: %s", url)
+                continue
+
+            if response.status_code != 200:
                 continue
 
             file = BytesIO(response.text.encode("utf-8"))
