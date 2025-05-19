@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
+from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 
@@ -135,7 +136,7 @@ async def get_completion(model, prompt, temperature=0.2, max_tokens=200):
             messages=[{"role": "user", "content": prompt}],
             temperature=temperature,
             max_tokens=max_tokens,
-            model="albert-small",
+            model=model,
         ),
     )
     result = response.json()["choices"][0]["message"]["content"]
@@ -143,7 +144,7 @@ async def get_completion(model, prompt, temperature=0.2, max_tokens=200):
 
 
 async def get_completion_async(model, prompt, temperature, max_tokens):
-    return get_completion(model, prompt, temperature, max_tokens)
+    return await get_completion(model, prompt, temperature, max_tokens)
 
 
 async def ask_in_parallel(model, prompts, max_tokens):
@@ -187,6 +188,7 @@ async def search(
     collection_ids: List[int],
     session: AsyncSession,
     model,
+    k,
     max_tokens,
     max_tokens_intermediate,
 ):
@@ -195,11 +197,15 @@ async def search(
     initial_docs = [doc.chunk.content for doc in searches]
     initial_refs = [doc.chunk.metadata.get("document_name") for doc in searches]
 
-    async def go_multiagents(prompt, model, method, initial_docs, initial_refs, n_retry, max_retry=5, window=5):
+    async def go_multiagents(prompt, model, initial_docs, initial_refs, n_retry, max_retry=5, window=5):
+        nonlocal k
         docs_tmp = initial_docs[n_retry * window : (n_retry + 1) * window]
         refs_tmp = initial_refs[n_retry * window : (n_retry + 1) * window]
 
-        inputs = ["(Extrait : " + ref + ") " + doc[:250] + "..." for doc, ref in zip(docs_tmp, refs_tmp)]
+        inputs = [
+            "(Extrait : " + ref + ") " + doc[: min(len(doc), settings.multi_agents_search.extract_length)] + "..."
+            for doc, ref in zip(docs_tmp, refs_tmp)
+        ]
         choices = await get_rank(prompt=prompt, inputs=inputs, model=model)
         if not choices:
             logger.warning("No choices returned from get_rank.")
@@ -216,7 +222,7 @@ async def search(
                 collection_ids=[],
                 prompt=prompt,
                 method=SearchMethod.SEMANTIC,
-                k=5,
+                k=k,
                 rff_k=5,
                 web_search=True,
             )
@@ -230,9 +236,7 @@ async def search(
         answer = await get_completion(model, prompt, temperature=0.2, max_tokens=max_tokens)
         return answer, docs_tmp, refs_tmp, choice, n_retry
 
-    answer, docs_tmp, refs, choice, n_retry = await go_multiagents(
-        prompt, model, method, initial_docs, initial_refs, n_retry=0, max_retry=5, window=5
-    )
+    answer, docs_tmp, refs, choice, n_retry = await go_multiagents(prompt, model, initial_docs, initial_refs, n_retry=0, max_retry=5, window=5)
 
     # Build a single Search object
     search_result = Search(
