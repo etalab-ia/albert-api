@@ -104,7 +104,7 @@ En te basant sur ces réponses, ne gardes que ce qui est utile pour répondre à
 Cites les sources utilisées s'il y en a, mais ne parle jamais des "réponses des agents".
 Réponds avec une réponse à cette question de la meilleure qualité possible.
 Si des éléments de réponses sont contradictoire, donnes les quand même à l'utilisateur en expliquant les informations que tu as.
-Réponds juste à la question, ne dis rien d'autre. Tu dois faire un mélange de ces informations pour ne sortir que l'utile de la meilleure manière possible. Termines ta réponse avec un emoji.
+Réponds juste à la question, ne dis rien d'autre. Tu dois faire un mélange de ces informations pour ne sortir que l'utile de la meilleure manière possible.
 Réponse : 
 """
 
