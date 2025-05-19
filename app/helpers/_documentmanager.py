@@ -362,6 +362,7 @@ class DocumentManager:
                 collection_ids,
                 session,
                 self.multi_agents_search_model,
+                k,
                 max_tokens=settings.multi_agents_search.max_tokens,
                 max_tokens_intermediate=settings.multi_agents_search.max_tokens_intermediate,
             )
