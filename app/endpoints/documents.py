@@ -17,7 +17,6 @@ router = APIRouter()
 
 
 @router.get(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Document)  # fmt: off
-@log_usage
 async def get_document(
     request: Request,
     document: int = Path(description="The document ID"),
@@ -35,7 +34,6 @@ async def get_document(
 
 
 @router.get(path=ENDPOINT__DOCUMENTS, dependencies=[Security(dependency=AccessController())], status_code=200)
-@log_usage
 async def get_documents(
     request: Request,
     collection: Optional[int] = Query(default=None, description="Filter documents by collection ID"),

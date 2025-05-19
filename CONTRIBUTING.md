@@ -107,7 +107,7 @@ docker exec -it albert-api-api-1 pytest app/tests
 1. Run the databases services and export environment variables
 
     ```bash 
-    docker compose --file ./.github/compose.test.yml up redis postgres qdrant --detach
+    docker compose --file .github/compose.test.yml up postgres qdrant redis --detach
 
     export POSTGRES_HOST=localhost
     export REDIS_HOST=localhost

@@ -4,14 +4,12 @@ from fastapi.responses import JSONResponse
 from app.helpers import AccessController
 from app.schemas.models import Model, Models
 from app.utils.lifespan import context
-from app.utils.usage_decorator import log_usage
 from app.utils.variables import ENDPOINT__MODELS
 
 router = APIRouter()
 
 
 @router.get(path=ENDPOINT__MODELS + "/{model:path}", dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Model)
-@log_usage
 async def get_model(request: Request, model: str = Path(description="The name of the model to get.")) -> JSONResponse:
     """
     Get a model by name and provide basic informations.
@@ -23,7 +21,6 @@ async def get_model(request: Request, model: str = Path(description="The name of
 
 
 @router.get(path=ENDPOINT__MODELS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Models)
-@log_usage
 async def get_models(request: Request) -> JSONResponse:
     """
     Lists the currently available models and provides basic informations.

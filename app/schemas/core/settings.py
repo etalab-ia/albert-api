@@ -12,7 +12,7 @@ import yaml
 from app.schemas.core.auth import LimitingStrategy
 from app.schemas.core.models import ModelClientType, RoutingStrategy
 from app.schemas.models import ModelType
-from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
+from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS, ROUTER__MONITORING, ROUTER__FILES
 
 
 class LimitsTokenizer(str, Enum):
@@ -133,7 +133,19 @@ class Database(ConfigBaseModel):
 
 
 class Usages(ConfigBaseModel):
+    routers: List[Literal[*ROUTERS, "all"]] = []
     tokenizer: LimitsTokenizer = LimitsTokenizer.TIKTOKEN_O200K_BASE
+
+    @field_validator("routers", mode="after")
+    def validate_routers(cls, routers):
+        if "all" in routers:
+            assert len(routers) == 1, "`all` can only be used alone."
+            routers = [router for router in ROUTERS]
+
+        # exclude monitoring and files
+        routers = [router for router in routers if router not in [ROUTER__MONITORING, ROUTER__FILES]]
+
+        return routers
 
 
 class Auth(ConfigBaseModel):

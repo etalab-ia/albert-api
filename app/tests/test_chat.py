@@ -161,16 +161,18 @@ class TestChat:
         assert response.status_code == 200, response.text
 
         i = 0
+        chunks = list()
         for line in response.iter_lines():
             if line:
-                chunk = line.split("data: ")[1]
-                if chunk == "[DONE]":
-                    break
-                chunk = json.loads(chunk)
-                chat_completion_chunk = ChatCompletionChunk(**chunk)
-                if i == 0:
-                    assert chat_completion_chunk.search_results[0].chunk.metadata["document_id"] in DOCUMENT_IDS
-                i = 1
+                line = line.lstrip("data: ")
+                if line != "[DONE]":
+                    chunk = json.loads(line)
+                    chunk = ChatCompletionChunk(**chunk)
+                    chunks.append(chunk)
+                    continue
+                # check that the last chunk has a search result
+                assert chunks[i - 1].search_results[0].chunk.metadata["document_id"] in DOCUMENT_IDS
+                break
 
     def test_chat_completions_search_no_args(self, client: TestClient, setup):
         """Test the GET /chat/completions search template not found."""

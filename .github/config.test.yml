@@ -5,6 +5,7 @@ auth:
   master_key: changeme
 
 usages:
+  routers: ["all"]
   tokenizer: "tiktoken_gpt2"
 
 web_search:
@@ -20,20 +21,22 @@ databases:
   - type: qdrant
     model: embeddings-small
     args:
-      url: http://${QDRANT_HOST}
+      url: http://${QDRANT_HOST}:8333
       api_key: changeme
+      grpc_port: 8334
       prefer_grpc: True
       timeout: 10
 
   - type: redis
     args:
       host: ${REDIS_HOST}
+      port: 8335
       password: changeme
 
   - type: sql
     context: api
     args:
-      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:5432/test
+      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:8432/api
       echo: False
       pool_size: 5
       max_overflow: 10

@@ -1,4 +1,4 @@
-name: albert-api
+name: albert-test
 services:
   api:
     build:
@@ -28,17 +28,24 @@ services:
   postgres:
     extends:
       file: ../compose.yml
-      service: postgres
-
-  redis:
-    extends:
-      file: ../compose.yml
-      service: redis
+      service: postgres 
+    ports: !override
+      - 8432:5432
 
   qdrant:
     extends:
       file: ../compose.yml
       service: qdrant
+    ports: !override
+      - 8333:6333
+      - 8334:6334
+
+  redis:
+    extends:
+      file: ../compose.yml
+      service: redis
+    ports: !override
+      - 8335:6379
 
 volumes:
   postgres:

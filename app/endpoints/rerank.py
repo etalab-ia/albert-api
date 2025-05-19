@@ -5,14 +5,12 @@ from fastapi.responses import JSONResponse
 from app.helpers import AccessController
 from app.schemas.rerank import RerankRequest, Reranks
 from app.utils.lifespan import context
-from app.utils.usage_decorator import log_usage
 from app.utils.variables import ENDPOINT__RERANK
 
 router = APIRouter()
 
 
 @router.post(path=ENDPOINT__RERANK, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Reranks)
-@log_usage
 async def rerank(request: Request, body: RerankRequest) -> JSONResponse:
     """
     Creates an ordered array with each text assigned a relevance score, based on the query.

@@ -1,10 +1,12 @@
 from abc import ABC
 import ast
 import importlib
-from json import dumps, loads
+from json import dumps, loads, JSONDecodeError
+import logging
+import re
 from typing import Any, Dict, Literal, Optional, Type
 from urllib.parse import urljoin
-import logging
+
 from fastapi import HTTPException, Request
 import httpx
 
@@ -156,6 +158,71 @@ class BaseModelClient(ABC):
 
         return response
 
+    def _format_stream_response(self, buffer: list, request: Request, additional_data: Dict[str, Any] = {}) -> tuple:
+        """
+        Format streaming response data for chat completions.
+
+        Args:
+            buffer (list): List of response chunks.
+            request (Request): The original request.
+            additional_data (Dict[str, Any]): Additional data to include in the response.
+
+        Returns:
+            tuple: (data, extra) where data is the processed raw data and extra is the formatted response.
+        """
+        from app.utils.lifespan import context
+
+        data, contents = None, dict()
+        for lines in buffer:
+            lines = lines.decode(encoding="utf-8").split(sep="\n\n")
+            for line in lines:
+                line = line.strip()
+                if not line.startswith("data: "):
+                    continue
+                line = line.removeprefix("data: ")
+                if not line:
+                    continue
+                try:
+                    data = loads(line)
+                    for choice in data.get("choices", []):
+                        index = choice.get("index", 0)
+                        delta = choice.get("delta", {})
+                        if index not in contents:
+                            contents[index] = ""
+                        content = delta.get("content", "")
+                        if content:
+                            contents[index] += content
+                except JSONDecodeError as e:
+                    logger.debug(f"Failed to decode JSON from streaming response ({e}) on the following chunk: {line}.")
+
+        if data is None:
+            return None
+
+        # normal case
+        extra_chunk = data
+        extra_chunk.update({"model": self.model})
+        extra_chunk.update({"choices": []})
+        extra_chunk.update(
+            {
+                "usage": {
+                    "prompt_tokens": request.app.state.prompt_tokens,
+                    "completion_tokens": 0,
+                    "total_tokens": request.app.state.prompt_tokens,
+                }
+            }
+        )
+        if contents:
+            try:
+                completion_tokens = sum([len(context.tokenizer.encode(contents[index])) for index in contents.keys()])
+                extra_chunk["usage"].update({"completion_tokens": completion_tokens})
+                extra_chunk["usage"].update({"total_tokens": request.app.state.prompt_tokens + completion_tokens})
+            except Exception as e:
+                logger.warning(f"Failed to calculate completion tokens: {e}")
+
+        extra_chunk.update(additional_data)
+
+        return extra_chunk
+
     async def forward_stream(
         self,
         request: Request,
@@ -195,68 +262,35 @@ class BaseModelClient(ABC):
                             chunk = dumps(chunks).encode(encoding="utf-8")
                             yield chunk, response.status_code
                         # normal case
-                        elif chunk != b"data: [DONE]\n\n":
+                        elif not re.search(b"data: \[DONE\]", chunk):
                             buffer.append(chunk)
 
                             yield chunk, response.status_code
 
                         # end of the stream
-                        elif buffer:
-                            from app.utils.lifespan import context
+                        else:
+                            match = re.search(b"data: \[DONE\]", chunk)
 
-                            # @TODO: package in a function and add endpoint condition (chat completions)
-                            data, extra, contents = None, dict(), dict()
-                            for lines in buffer:
-                                lines = lines.decode(encoding="utf-8").split(sep="\n\n")
-                                for line in lines:
-                                    line = line.strip()
-                                    if not line.startswith("data: "):
-                                        continue
-                                    line = line.removeprefix("data: ")
-                                    if not line:
-                                        continue
-                                    try:
-                                        data = loads(line)
-                                        for choice in data.get("choices", []):
-                                            index = choice.get("index", 0)
-                                            delta = choice.get("delta", {})
-                                            if index not in contents:
-                                                contents[index] = ""
-                                            content = delta.get("content", "")
-                                            if content:
-                                                contents[index] += content
-                                    except json.JSONDecodeError as e:
-                                        logger.debug(f"Failed to decode JSON from streaming response ({e}) on the following chunk: {line}.")
-
-                            # if error case, yield chunk
-                            if data is None:
+                            # error case
+                            if not match:
                                 yield chunk, response.status_code
+                                continue
 
                             # normal case
-                            extra = data
-                            extra.update({"model": self.model})
-                            extra.update({"choices": []})
-                            extra.update(
-                                {
-                                    "usage": {
-                                        "prompt_tokens": request.app.state.prompt_tokens,
-                                        "completion_tokens": 0,
-                                        "total_tokens": request.app.state.prompt_tokens,
-                                    }
-                                }
-                            )
-                            if contents:
-                                try:
-                                    completion_tokens = sum([len(context.tokenizer.encode(contents[index])) for index in contents.keys()])
-                                    extra["usage"].update({"completion_tokens": completion_tokens})
-                                    extra["usage"].update({"total_tokens": request.app.state.prompt_tokens + completion_tokens})
-                                except Exception as e:
-                                    logger.warning(f"Failed to calculate completion tokens: {e}")
+                            last_chunks = chunk[: match.start()]
+                            done_chunk = chunk[match.start() :]
+                            buffer.append(last_chunks)
 
-                            extra.update(additional_data)
+                            extra_chunk = self._format_stream_response(buffer=buffer, request=request, additional_data=additional_data)
 
-                            yield f"data: {dumps(extra)}\n\n".encode(), response.status_code
-                            yield chunk, response.status_code
+                            # if error case, yield chunk
+                            if extra_chunk is None:
+                                yield chunk, response.status_code
+                                continue
+
+                            yield last_chunks, response.status_code
+                            yield f"data: {dumps(extra_chunk)}\n\n".encode(), response.status_code
+                            yield done_chunk, response.status_code
 
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
                 yield dumps({"detail": "Request timed out, model is too busy."}).encode(), 504

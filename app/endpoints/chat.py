@@ -11,14 +11,12 @@ from app.sql.session import get_db as get_session
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.lifespan import context
 from app.utils.multiagents import MultiAgents
-from app.utils.usage_decorator import log_usage
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 router = APIRouter()
 
 
 @router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Union[ChatCompletion, ChatCompletionChunk])  # fmt: off
-@log_usage
 async def chat_completions(request: Request, body: ChatCompletionRequest, session: AsyncSession = Depends(get_session)) -> Union[JSONResponse, StreamingResponseWithStatusCode]:  # fmt: off
     """Creates a model response for the given chat conversation.
 

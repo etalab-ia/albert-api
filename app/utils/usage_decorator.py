@@ -57,10 +57,10 @@ def log_usage(func):
         try:
             await extract_usage_from_request(usage=usage, request=request)
         except NoUserIdException:
-            logger.exception("No user ID found in request, skipping usage logging.")
+            logger.exception(f"No user ID found in request, skipping usage logging ({request.url.path}).")
             return await func(*args, **kwargs)
         except MasterUserIdException:
-            logger.warning("Master user ID found in request, skipping usage logging.")
+            logger.warning(f"Master user ID found in request, skipping usage logging ({request.url.path}).")
             return await func(*args, **kwargs)
 
         response = None  # Initialize in case of early exception not from func
@@ -127,20 +127,21 @@ async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
         body = await request.body()
         request.body = AsyncMock(return_value=body)
     except Exception as e:
-        logger.warning(f"Failed to read request body: {e}")
+        logger.warning(f"Failed to read request body ({request.url.path}): {e}")
         return
 
-    content_type = request.headers.get("Content-Type", "")
-    # Extract model from request
-    if content_type.startswith("multipart/form-data"):
-        usage.request_model = extract_model_from_multipart(body)
-    else:
-        try:
-            json_body = json.loads(body.decode("utf-8"))
-            usage.request_model = json_body.get("model")
-        except Exception:
-            logger.warning("Failed to parse JSON request body")
-            return
+    if body:
+        content_type = request.headers.get("Content-Type", "")
+        # Extract model from request
+        if content_type.startswith("multipart/form-data"):
+            usage.request_model = extract_model_from_multipart(body)
+        else:
+            try:
+                json_body = json.loads(body.decode("utf-8"))
+                usage.request_model = json_body.get("model")
+            except Exception as e:
+                logger.warning(f"Failed to parse JSON request body ({request.url.path}): {e}")
+                return
 
 
 def extract_usage_from_streaming_response(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponse:

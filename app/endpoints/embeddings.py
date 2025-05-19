@@ -4,14 +4,12 @@ from fastapi.responses import JSONResponse
 from app.helpers import AccessController
 from app.schemas.embeddings import Embeddings, EmbeddingsRequest
 from app.utils.lifespan import context
-from app.utils.usage_decorator import log_usage
 from app.utils.variables import ENDPOINT__EMBEDDINGS
 
 router = APIRouter()
 
 
 @router.post(path=ENDPOINT__EMBEDDINGS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Embeddings)
-@log_usage
 async def embeddings(request: Request, body: EmbeddingsRequest) -> JSONResponse:
     """
     Creates an embedding vector representing the input text.
