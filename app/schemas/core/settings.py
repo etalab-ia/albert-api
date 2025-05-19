@@ -70,9 +70,10 @@ class WebSearch(ConfigBaseModel):
 
 
 class MultiAgentsSearch(ConfigBaseModel):
-    model: str
-    max_tokens: int = 50
-    max_tokens_intermediate: int = 20
+    model: str = "albert-large"
+    max_tokens: int = 1024
+    max_tokens_intermediate: int = 512
+    extract_length: int = 512
 
 
 class DatabaseQdrantArgs(ConfigBaseModel):
