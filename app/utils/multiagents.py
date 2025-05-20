@@ -5,7 +5,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.chunks import Chunk
+from app.helpers._modelregistry import ModelRegistry
 from app.schemas.search import Search, SearchMethod
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
@@ -13,7 +13,7 @@ from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 logger = logging.getLogger(__name__)
 
-explain_choice = {
+_explain_choice = {
     0: "Je ne comprends pas la demande.",
     1: "Des informations pertinentes ont été trouvées dans la base de données cherchée.",
     2: "Je n'ai pas trouvé d'informations pertinentes en base de données, mais il me semblait juste de répondre avec mes connaissances générales.",
@@ -21,7 +21,7 @@ explain_choice = {
     4: "La décision d'aller sur internet a été prise pour chercher des informations pertinentes.",
 }
 
-PROMPT_TELLER_1_4 = """
+_PROMPT_TELLER_1_4 = """
 Tu es un assistant administratif qui réponds a des questions sur le droit et l'administratif en Français. Tes réponses doit être succinctes et claires. Ne détailles pas inutilement.
 Voilà un contexte : \n{doc}\n
 Voilà une question : {question}
@@ -33,7 +33,7 @@ question : {question}
 réponse ("Rien ici" ou ta réponse): 
 """
 
-PROMPT_TELLER_2 = """
+_PROMPT_TELLER_2 = """
 Tu es un assistant administratif qui réponds a des questions sur le droit et l'administratif en Français. Nous sommes en 2024. Tes réponses doit être succinctes et claires. Ne détailles pas inutilement.
 Voilà une demande utilisateur : {question}
 Réponds à cette question comme tu peux. 
@@ -44,7 +44,7 @@ La réponse doit être la plus courte possible.  Mets en forme ta réponse avec 
 Réponse : 
 """
 
-PROMPT_CHOICER = """
+_PROMPT_CHOICER = """
 Tu es un expert en compréhension et en évaluation des besoins en information pour répondre à un message utilisateur. Ton travail est de juger la possibilité de répondre à un message utilisateur en fonction d'un contexte donné.
 Nous sommes en 2024 et ton savoir s'arrete en 2023.
 
@@ -97,7 +97,7 @@ question : {prompt}
 reponse :
 """
 
-PROMPT_CONCAT = """
+_PROMPT_CONCAT = """
 Tu es un expert pour rédiger les bonnes réponses et expliquer les choses. 
 Voila plusieurs réponses générées par des agents : {answers}
 En te basant sur ces réponses, ne gardes que ce qui est utile pour répondre à la question : {prompt}
@@ -109,152 +109,110 @@ Réponse :
 """
 
 
-def get_prompt_teller_multi(question, docs_tmp, choice):
-    """
-    Create a batch of prompts based on docs for the writers maker LLMs.
-    If there is no docs (no context needed), only create one prompt.
-    """
-    prompts = []
-    if choice == 1 or choice == 4:
-        for doc in docs_tmp:
-            prompts.append(
-                PROMPT_TELLER_1_4.format(
-                    doc=doc,
-                    question=question,
-                )
-            )
-    elif choice == 2:
-        prompts.append(PROMPT_TELLER_2.format(question=question))
-    return prompts
-
-
-async def get_completion(model, prompt, temperature=0.2, max_tokens=200):
-    client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
-    response = await client.forward_request(
-        method="POST",
-        json=dict(
-            messages=[{"role": "user", "content": prompt}],
-            temperature=temperature,
-            max_tokens=max_tokens,
-            model=model,
-        ),
-    )
-    result = response.json()["choices"][0]["message"]["content"]
-    return result
-
-
-async def get_completion_async(model, prompt, temperature, max_tokens):
-    return await get_completion(model, prompt, temperature, max_tokens)
-
-
-async def ask_in_parallel(model, prompts, max_tokens):
-    tasks = []
-    for prompt in prompts:
-        task = asyncio.create_task(get_completion_async(model, prompt, temperature=0.2, max_tokens=max_tokens))
-        tasks.append(task)
-    answers = await asyncio.gather(*tasks)
-    return answers
-
-
-def remove_duplicates(lst):
-    seen = set()
-    return [x for x in lst if not (x in seen or seen.add(x))]
-
-
-async def get_rank(prompt: str, inputs: list, model: str) -> list[int]:
-    async def request_model(prompt, max_choice):
-        client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
-        response = await client.forward_request(
-            method="POST",
-            json={"messages": [{"role": "user", "content": prompt}], "temperature": 0.1, "max_tokens": 3, "stream": False, "model": model},
-        )
-        result = response.json()["choices"][0]["message"]["content"]
-        match = re.search(f"[0-{max_choice}]", result)
-        result = int(match.group(0)) if match else 0
-        return result
-
-    prompt_str = PROMPT_CHOICER.format(prompt=prompt, docs=inputs)
-    result = await request_model(prompt_str, 4)
-    return [
-        result,
-    ]
-
-
-async def search(
-    doc_search: callable,
-    searches: List[Search],
-    prompt: str,
-    method: str,
-    collection_ids: List[int],
-    session: AsyncSession,
-    model,
-    k,
-    max_tokens,
-    max_tokens_intermediate,
-):
+class MultiAgents:
+    model: ModelRegistry = None
     """Multi Agents researcher."""
+    ranker_model: ModelRegistry = None
+    """Multi Agents ranker model."""
 
-    initial_docs = [doc.chunk.content for doc in searches]
-    initial_refs = [doc.chunk.metadata.get("document_name") for doc in searches]
+    @staticmethod
+    async def search(
+        doc_search: callable,
+        searches: List[Search],
+        prompt: str,
+        method: str,
+        collection_ids: List[int],
+        session: AsyncSession,
+        model,
+        k: int,
+        max_tokens: int,
+        max_tokens_intermediate: int,
+    ) -> List[Search]:
+        """Multi Agents researcher."""
 
-    async def go_multiagents(prompt, model, initial_docs, initial_refs, n_retry, max_retry=5, window=5):
-        nonlocal k
-        docs_tmp = initial_docs[n_retry * window : (n_retry + 1) * window]
-        refs_tmp = initial_refs[n_retry * window : (n_retry + 1) * window]
-
-        inputs = [
-            "(Extrait : " + ref + ") " + doc[: min(len(doc), settings.multi_agents_search.extract_length)] + "..."
-            for doc, ref in zip(docs_tmp, refs_tmp)
-        ]
-        choices = await get_rank(prompt=prompt, inputs=inputs, model=model)
-        if not choices:
-            logger.warning("No choices returned from get_rank.")
-            choices = [0]
-        choice = choices[0]
-
-        if choice in [0, 3] and n_retry < max_retry:
-            return await go_multiagents(prompt, initial_docs, initial_refs, n_retry=n_retry + 1, max_retry=5, window=5)
-        elif choice in [1, 2]:
-            pass
-        elif choice == 4 or n_retry >= max_retry:
-            searches = await doc_search(
-                session=session,
-                collection_ids=[],
-                prompt=prompt,
-                method=SearchMethod.SEMANTIC,
-                k=k,
-                rff_k=5,
-                web_search=True,
-            )
-            docs_tmp = [doc.chunk.content for doc in searches]
-            refs_tmp = [doc.chunk.metadata.get("document_name") for doc in searches]
-        else:
+        async def _go(prompt_text, model_ref, docs, refs, n_retry=0, max_retry=5, window=5):
+            chunk_batch = docs[n_retry * window : (n_retry + 1) * window]
+            inputs = [f"(Extrait : {refs[i]}) {chunk[:settings.multi_agents_search.extract_length]}..." for i, chunk in enumerate(chunk_batch)]
+            choice = (await MultiAgents._get_rank(prompt_text, inputs, model_ref))[0]
+            if choice in (0, 3) and n_retry < max_retry:
+                return await _go(prompt_text, model_ref, docs, refs, n_retry + 1)
+            if choice in (1, 2):
+                return searches, choice, n_retry
+            # internet / fallback
+            if choice == 4 or n_retry >= max_retry:
+                new_searches = await doc_search(
+                    session=session,
+                    collection_ids=[],
+                    prompt=prompt_text,
+                    method=SearchMethod.SEMANTIC,
+                    k=k,
+                    rff_k=5,
+                    web_search=True,
+                )
+                return new_searches, choice, n_retry
             raise ValueError(f"Unknown choice: {choice}")
-        prompts = get_prompt_teller_multi(prompt, docs_tmp, choice)
-        answers = await ask_in_parallel(model, prompts, max_tokens_intermediate)
-        prompt = PROMPT_CONCAT.format(prompt=prompt, answers=answers)
-        answer = await get_completion(model, prompt, temperature=0.2, max_tokens=max_tokens)
-        return answer, docs_tmp, refs_tmp, choice, n_retry
 
-    answer, docs_tmp, refs, choice, n_retry = await go_multiagents(prompt, model, initial_docs, initial_refs, n_retry=0, max_retry=5, window=5)
+        initial_docs = [s.chunk.content for s in searches]
+        initial_refs = [s.chunk.metadata.get("document_name") for s in searches]
+        searches_out, choice, n_retry = await _go(prompt, model, initial_docs, initial_refs)
 
-    # Build a single Search object
-    search_result = Search(
-        method=SearchMethod.MULTIAGENT,
-        score=1.0,  # Assuming a default score of 1.0 for multiagent results
-        chunk=Chunk(
-            id=0,  # Placeholder ID, as this is a synthetic result
-            content=answer,
-            metadata={
-                "choice": choice,
-                "choice_desc": explain_choice[choice],
-                "n_retry": n_retry,
-                "sources_refs": remove_duplicates(refs),
-                "sources_content": remove_duplicates(docs_tmp) if choice != 2 else [],
+        for s in searches_out:
+            s.chunk.metadata["choice"] = choice
+            s.chunk.metadata["choice_desc"] = _explain_choice[choice]
+            s.chunk.metadata["n_retry"] = n_retry
+
+        return searches_out
+
+    @staticmethod
+    async def full_multiagents(searches: List[Search], prompt: str) -> str:
+        prompts = MultiAgents._get_prompts(prompt, searches)
+        answers = await MultiAgents._ask_in_parallel(MultiAgents.model, prompts, settings.multi_agents_search.max_tokens_intermediate)
+        return _PROMPT_CONCAT.format(prompt=prompt, answers=answers)
+
+    # --- private helpers ---
+
+    @staticmethod
+    def _get_prompts(question: str, searches: List[Search]) -> List[str]:
+        choice = searches[0].chunk.metadata["choice"]
+        if choice in (1, 4):
+            return [_PROMPT_TELLER_1_4.format(doc=s.chunk.content, question=question) for s in searches]
+        if choice == 2:
+            return [_PROMPT_TELLER_2.format(question=question)]
+        return []
+
+    @staticmethod
+    async def _get_completion(model, prompt: str, temperature=0.2, max_tokens=200) -> str:
+        client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+        resp = await client.forward_request(
+            method="POST",
+            json={
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "model": model,
             },
-        ),
-    )
+        )
+        return resp.json()["choices"][0]["message"]["content"]
 
-    return [
-        search_result,
-    ]
+    @staticmethod
+    async def _ask_in_parallel(model, prompts: List[str], max_tokens: int) -> List[str]:
+        tasks = [asyncio.create_task(MultiAgents._get_completion(model, prm, temperature=0.2, max_tokens=max_tokens)) for prm in prompts]
+        return await asyncio.gather(*tasks)
+
+    @staticmethod
+    async def _get_rank(prompt: str, inputs: List[str], model) -> List[int]:
+        client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+        query = _PROMPT_CHOICER.format(prompt=prompt, docs=inputs)
+        resp = await client.forward_request(
+            method="POST",
+            json={
+                "messages": [{"role": "user", "content": query}],
+                "temperature": 0.1,
+                "max_tokens": 3,
+                "stream": False,
+                "model": model,
+            },
+        )
+        text = resp.json()["choices"][0]["message"]["content"]
+        m = re.search(r"[0-4]", text)
+        return [int(m.group())] if m else [0]
