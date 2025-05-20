@@ -54,6 +54,7 @@ models:
 
   - id: albert-small
     type: text-generation
+    routing_strategy: round_robin
     aliases: ["meta-llama/Llama-3.1-8B-Instruct"]
     clients:
       - model: albert-small
@@ -62,6 +63,12 @@ models:
           api_url: https://albert.api.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
           timeout: 120
+      - model: albert-small
+        type: albert
+        args:
+          api_url: https://albert.api.etalab.gouv.fr
+          api_key: ${ALBERT_API_KEY}
+          timeout: 60
 
   - id: embeddings-small
     type: text-embeddings-inference

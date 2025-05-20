@@ -32,6 +32,14 @@ class BaseModelClient(ABC):
         ENDPOINT__RERANK: None,
     }
 
+    def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
+        self.model = model
+        self.api_url = api_url
+        self.api_key = api_key
+        self.timeout = timeout
+        self.vector_size = None
+        self.max_context_length = None
+
     @staticmethod
     def import_module(type: Literal[ModelClientType.OPENAI, ModelClientType.VLLM, ModelClientType.TEI]) -> "Type[BaseModelClient]":
         """
