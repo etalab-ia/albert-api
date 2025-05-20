@@ -70,7 +70,8 @@ class WebSearch(ConfigBaseModel):
 
 
 class MultiAgentsSearch(ConfigBaseModel):
-    model: str = "albert-large"
+    model: str = "albert-small"
+    ranker_model: str = "albert-large"
     max_tokens: int = 1024
     max_tokens_intermediate: int = 512
     extract_length: int = 512
