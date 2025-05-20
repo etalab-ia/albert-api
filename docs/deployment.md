@@ -314,9 +314,14 @@ playground:
 
 | Argument | Required | Description | Type | Values | Default |
 | --- | --- | --- | --- | --- | --- |
-| tokenizer | Required | Tokenizer type. | str | (1) | `"tiktoken_o200k_base"` |
+| router | Optional | Log usage of the specified routers. | List[str] |  `["all", "audio", "auth", "chat", "chunks", "collections", "documents", "embeddings", "files", "models", "monitoring", "ocr", "rerank", "search"]` | `[]` (1) |
+| tokenizer | Optional | Tokenizer type. | str | (2) | `"tiktoken_o200k_base"` |
 
-**(1) Tokenizer Types**
+**(1) Router Types**
+
+If `router` is set to `all`, all routers will be logged. This option is exclusive with the `router` argument. `monitoring` and `files` routers can be specified but will be ignored (not implemented yet).
+
+**(2) Tokenizer Types**
 
 Tokenizer is used to count the number of tokens sent by users to compute token per minute (TPM) and token per day (TPD) limits.
 
