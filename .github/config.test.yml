@@ -21,22 +21,22 @@ databases:
   - type: qdrant
     model: embeddings-small
     args:
-      url: http://${QDRANT_HOST}:8333
+      url: http://${QDRANT_HOST}:${QDRANT_PORT}
       api_key: changeme
-      grpc_port: 8334
       prefer_grpc: True
+      grpc_port: ${QDRANT_GRPC_PORT}
       timeout: 10
 
   - type: redis
     args:
       host: ${REDIS_HOST}
-      port: 8335
+      port: ${REDIS_PORT}
       password: changeme
 
   - type: sql
     context: api
     args:
-      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:8432/api
+      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:${POSTGRES_PORT}/api
       echo: False
       pool_size: 5
       max_overflow: 10

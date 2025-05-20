@@ -13,6 +13,10 @@ services:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
       - QDRANT_HOST=qdrant
+      - POSTGRES_PORT=5432
+      - REDIS_PORT=6379
+      - QDRANT_PORT=6333
+      - QDRANT_GRPC_PORT=6334
     ports:
       - 8000:8000
     volumes:

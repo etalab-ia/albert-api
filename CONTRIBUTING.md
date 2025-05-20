@@ -112,6 +112,10 @@ docker exec -it albert-api-api-1 pytest app/tests
     export POSTGRES_HOST=localhost
     export REDIS_HOST=localhost
     export QDRANT_HOST=localhost
+    export POSTGRES_PORT=8432
+    export REDIS_PORT=8335
+    export QDRANT_PORT=8333
+    export QDRANT_GRPC_PORT=8334
     ```
 
 2. Run the tests
