@@ -122,6 +122,29 @@ class TestChat:
         ChatCompletion(**response_json)  # test output format
         assert response_json["search_results"][0]["chunk"]["metadata"]["document_id"] in DOCUMENT_IDS
 
+    def test_chat_completions_search_multi_agents(self, client: TestClient, setup):
+        """Test the GET /chat/completions search unstreamed response."""
+        MODEL_ID, DOCUMENT_IDS, COLLECTION_ID = setup
+
+        params = {
+            "model": MODEL_ID,
+            "messages": [{"role": "user", "content": "Qui est Albert ?"}],
+            "stream": False,
+            "n": 1,
+            "max_tokens": 10,
+            "search": True,
+            "search_args": {"collections": [COLLECTION_ID], "k": 3, "method": "multiagent"},
+        }
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}", json=params)
+
+        assert response.status_code == 200, response.text
+
+        response_json = response.json()
+        ChatCompletion(**response_json)  # test output format
+        assert response_json["search_results"][0]["chunk"]["metadata"]["document_id"] in DOCUMENT_IDS
+        assert "choice" in response_json["search_results"][0]["chunk"]["metadata"]
+        assert "choice_desc" in response_json["search_results"][0]["chunk"]["metadata"]
+
     def test_chat_completions_search_streamed_response(self, client: TestClient, setup):
         """Test the GET /chat/completions search streamed response."""
         MODEL_ID, DOCUMENT_IDS, COLLECTION_ID = setup
