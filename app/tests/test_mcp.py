@@ -4,7 +4,6 @@ from uuid import uuid4
 
 import httpx
 import pytest
-import responses
 import respx
 from fastapi.testclient import TestClient
 

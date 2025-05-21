@@ -14,6 +14,9 @@ from app.helpers.models.routers import ModelRouter
 from app.utils import multiagents
 from app.utils.context import global_context
 from app.utils.logging import init_logger
+from app.mcp.llm_client import LLMClient
+from app.mcp.mcp_bridge_client import MCPBridgeClient
+from app.mcp.mcp_loop import MCPLoop
 from app.utils.settings import settings
 
 logger = init_logger(name=__name__)
@@ -24,6 +27,16 @@ async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
     # setup clients
+    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
+    mcp_bridge = MCPBridgeClient('http://localhost:9000')
+    llm_client = LLMClient()
+    mcp = MCPLoop(mcp_bridge, llm_client)
+    redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
+    web_search = (
+        WebSearchClient.import_module(type=settings.web_search.type)(user_agent=settings.web_search.user_agent, **settings.web_search.args)
+        if settings.web_search
+        else None
+    )
     routers = []
     for model in settings.models:
         clients = []
