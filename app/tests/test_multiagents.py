@@ -84,9 +84,9 @@ class TestMultiAgents:
         Test that MultiAgentsSearchNotAvailableException is raised when multi_agents_search setting is None.
         """
         # Disable multi-agents search in settings
-        from app.utils.settings import settings
+        from app.utils.multiagents import MultiAgents
 
-        monkeypatch.setattr(settings, "multi_agents_search", None)
+        monkeypatch.setattr(MultiAgents, "model", None)
 
         # Build payload with MULTIAGENT method
         payload = {

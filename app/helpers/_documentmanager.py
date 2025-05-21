@@ -11,7 +11,6 @@ from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, selec
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.utils.settings import settings
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
@@ -33,7 +32,6 @@ from app.utils.exceptions import (
     UnsupportedFileTypeException,
     VectorizationFailedException,
     WebSearchNotAvailableException,
-    MultiAgentsSearchNotAvailableException,
 )
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS
 
@@ -57,13 +55,11 @@ class DocumentManager:
         qdrant_model: ImmediateModelRouter,
         web_search: Optional[WebSearchManager] = None,
         web_search_model: Optional[ImmediateModelRouter] = None,
-        multi_agents_search_model: Optional[ImmediateModelRouter] = None,
     ) -> None:
         self.qdrant = qdrant
         self.qdrant_model = qdrant_model
         self.web_search = web_search
         self.web_search_model = web_search_model
-        self.multi_agents_search_model = multi_agents_search_model
 
     async def create_collection(self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:  # fmt: off
         result = await session.execute(
@@ -352,19 +348,12 @@ class DocumentManager:
             score_threshold=score_threshold,
         )
         if method == SearchMethod.MULTIAGENT:
-            if not settings.multi_agents_search:
-                raise MultiAgentsSearchNotAvailableException()
             searches = await MultiAgents.search(
                 partial(self.search, user_id=user_id),
                 searches,
                 prompt,
-                method,
-                collection_ids,
                 session,
-                self.multi_agents_search_model,
                 k,
-                max_tokens=settings.multi_agents_search.max_tokens,
-                max_tokens_intermediate=settings.multi_agents_search.max_tokens_intermediate,
             )
 
         if web_collection_id:
