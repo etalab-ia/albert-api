@@ -8,6 +8,7 @@ import responses
 import respx
 from fastapi.testclient import TestClient
 
+from app.mcp.fixtures import generate_mocked_llm_response, generate_mocked_mcp_bridge_tools
 from app.schemas.chat import ChatCompletion
 from app.schemas.models import ModelType
 from app.utils.variables import ENDPOINT__COLLECTIONS, ENDPOINT__DOCUMENTS, ENDPOINT__FILES, \
@@ -60,8 +61,10 @@ class TestMCP:
         ChatCompletion(**response.json())  # test output format
 
     def test_end_to_end(self, client: TestClient, setup):
-        params = {"model": "albert-large", "messages": [{"role": "user", "content": "Donne moi la météo à Miami"}],
-                  "stream": False, "n": 1, "max_tokens": 1000}
+        MODEL_ID, _, _ = setup
+
+        params = {"model": MODEL_ID, "messages": [{"role": "user", "content": "Donne moi la météo à Miami"}],
+                  "stream": False, "n": 1, "max_tokens": 200}
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__MCP}", json=params)
         assert response.status_code == 200, response.text
 
@@ -72,101 +75,40 @@ class TestMCP:
     def test_mcp_endpoint_returns_answer_with_tool_call(self, client: TestClient, setup):
         params = {"model": "albert-large", "messages": [{"role": "user", "content": "Donne moi la météo à Miami"}],
                   "stream": False, "n": 1, "max_tokens": 1000}
-        tools_response = {
-            "weather": {
-                "_meta": None,
-                "nextCursor": None,
-                "tools": [{
-                    "name": "get_alerts",
-                    "description": "Get weather alerts for a US state.\n\n    Args:\n        state: Two-letter US state code (e.g. CA, NY)\n    ",
-                    "inputSchema": {
-                        "properties": {
-                            "state": {
-                                "title": "State",
-                                "type": "string"
-                            }
-                        },
-                        "required": ["state"],
-                        "title": "get_alertsArguments",
-                        "type": "object"
-                    },
-                    "annotations": None
-                }, {
-                    "name": "get_forecast",
-                    "description": "Get weather forecast for a location.\n\n    Args:\n        latitude: Latitude of the location\n        longitude: Longitude of the location\n    ",
-                    "inputSchema": {
-                        "properties": {
-                            "latitude": {
-                                "title": "Latitude",
-                                "type": "number"
-                            },
-                            "longitude": {
-                                "title": "Longitude",
-                                "type": "number"
-                            }
-                        },
-                        "required": ["latitude", "longitude"],
-                        "title": "get_forecastArguments",
-                        "type": "object"
-                    },
-                    "annotations": None
-                }]
-            }
-        }
+        tools_response = {}
+        llm_response_after_tool_call = generate_mocked_llm_response(choices=[{
+                "finish_reason": "stop",
+                "message": {
+                    "content": "Message après tool call",
+                    "role": "assistant",
+                    "function_call": None,
+                    "tool_calls": [],
+                }
+            }])
 
+        llm_response_triggering_tool_call = generate_mocked_llm_response(choices=[{
+            "finish_reason": "tool_calls",
+            "message": {
+                "role": "assistant",
+                "function_call": None,
+                "tool_calls": [{"id": "CIn3wUdeC",
+                             "function": {"arguments": "{}",
+                                          "name": "get_forecast"},
+                             "type": "function"}]}}])
         tool_call_response = {
             "_meta": None,
             "content": [{
                 "type": "text",
-                "text": "\nToday:\nTemperature: 85°F\nWind: 3 to 8 mph SE\nForecast: Sunny, with a high near 85. Southeast wind 3 to 8 mph.\n\n---\n\nTonight:\nTemperature: 79°F\nWind: 8 mph SE\nForecast: Mostly clear, with a low around 79. Southeast wind around 8 mph.\n\n---\n\nSaturday:\nTemperature: 86°F\nWind: 6 to 9 mph S\nForecast: Mostly sunny, with a high near 86. South wind 6 to 9 mph.\n\n---\n\nSaturday Night:\nTemperature: 79°F\nWind: 6 to 10 mph SE\nForecast: Mostly clear, with a low around 79. Southeast wind 6 to 10 mph.\n\n---\n\nSunday:\nTemperature: 86°F\nWind: 6 to 9 mph SE\nForecast: Sunny, with a high near 86. Southeast wind 6 to 9 mph.\n",
+                "text": "tool call response",
                 "annotations": None
             }],
             "isError": False
         }
-        expected_body = {"id": "chatcmpl-9361ad51d8f04a46a6bb83ea54d2f25c", "choices": [
-            {"finish_reason": "tool_calls", "index": 0, "logprobs": None,
-             "message": {"content": None, "refusal": None, "role": "assistant", "audio": None, "function_call": None,
-                         "tool_calls": [{"id": "CIn3wUdeC",
-                                         "function": {"arguments": "{\"latitude\": 25.7617, \"longitude\": -80.1918}",
-                                                      "name": "get_forecast"}, "type": "function"}],
-                         "reasoning_content": None}, "stop_reason": None}]}
-        expected_body_2 = {
-            "id": "chatcmpl-20c6921dee434f7d8dacff216adbe52e",
-            "choices": [{
-                "finish_reason": "stop",
-                "index": 0,
-                "logprobs": None,
-                "message": {
-                    "content": "Message après tool call",
-                    "refusal": None,
-                    "role": "assistant",
-                    "audio": None,
-                    "function_call": None,
-                    "tool_calls": [],
-                    "reasoning_content": None
-                },
-                "stop_reason": None
-            }],
-            "created": 1747410275,
-            "model": "mistralai/Mistral-Small-3.1-24B-Instruct-2503",
-            "object": "chat.completion",
-            "service_tier": None,
-            "system_fingerprint": None,
-            "usage": {
-                "completion_tokens": 36,
-                "prompt_tokens": 241,
-                "total_tokens": 277,
-                "completion_tokens_details": None,
-                "prompt_tokens_details": None
-            },
-            "search_results": [],
-            "prompt_logprobs": None
-        }
         route = respx.post('https://albert.api.staging.etalab.gouv.fr/v1/chat/completions')
 
         route.side_effect = [
-            httpx.Response(status_code=200, json=expected_body),
-            httpx.Response(status_code=200, json=expected_body_2),
+            httpx.Response(status_code=200, json=llm_response_triggering_tool_call),
+            httpx.Response(status_code=200, json=llm_response_after_tool_call),
         ]
         responses.add(
             responses.GET,
@@ -196,55 +138,13 @@ class TestMCP:
     @respx.mock
     @responses.activate
     def test_mcp_list_tools_return_tool_list(self, client: TestClient, setup):
-        tools_response = {
-            "weather": {
-                "_meta": None,
-                "nextCursor": None,
-                "tools": [{
-                    "name": "get_alerts",
-                    "description": "Get weather alerts for a US state.\n\n    Args:\n        state: Two-letter US state code (e.g. CA, NY)\n    ",
-                    "inputSchema": {
-                        "properties": {
-                            "state": {
-                                "title": "State",
-                                "type": "string"
-                            }
-                        },
-                        "required": ["state"],
-                        "title": "get_alertsArguments",
-                        "type": "object"
-                    },
-                    "annotations": None
-                }, {
-                    "name": "get_forecast",
-                    "description": "Get weather forecast for a location.\n\n    Args:\n        latitude: Latitude of the location\n        longitude: Longitude of the location\n    ",
-                    "inputSchema": {
-                        "properties": {
-                            "latitude": {
-                                "title": "Latitude",
-                                "type": "number"
-                            },
-                            "longitude": {
-                                "title": "Longitude",
-                                "type": "number"
-                            }
-                        },
-                        "required": ["latitude", "longitude"],
-                        "title": "get_forecastArguments",
-                        "type": "object"
-                    },
-                    "annotations": None
-                }]
-            }
-        }
-
+        tools_response = generate_mocked_mcp_bridge_tools()
         responses.add(
             responses.GET,
             "http://localhost:9000/mcp/tools",
             json=tools_response,
             status=200
         )
-
 
         # WHEN
         response = client.get(url=f"/v1{ENDPOINT__MCP}/tool_list")

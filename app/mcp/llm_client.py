@@ -3,8 +3,6 @@ from types import SimpleNamespace
 
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
-
-
 class LLMClient:
     def __init__(self):
         pass

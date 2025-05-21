@@ -48,4 +48,4 @@ class MCPLoop:
                     "content": tool_call_result['content'][0]['text']
                 })
 
-        return "Maximum number of steps exceeded without resolving the query."
+        return llm_response
