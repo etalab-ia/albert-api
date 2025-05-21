@@ -63,7 +63,7 @@ class TestMCP:
     def test_end_to_end(self, client: TestClient, setup):
         MODEL_ID, _, _ = setup
 
-        params = {"model": MODEL_ID, "messages": [{"role": "user", "content": "Donne moi la météo à Miami"}],
+        params = {"model": "albert-large", "messages": [{"role": "user", "content": "Donne moi la météo à Miami"}],
                   "stream": False, "n": 1, "max_tokens": 200}
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__MCP}", json=params)
         assert response.status_code == 200, response.text
@@ -71,7 +71,6 @@ class TestMCP:
         ChatCompletion(**response.json())  # test output format
 
     @respx.mock
-    @responses.activate
     def test_mcp_endpoint_returns_answer_with_tool_call(self, client: TestClient, setup):
         params = {"model": "albert-large", "messages": [{"role": "user", "content": "Donne moi la météo à Miami"}],
                   "stream": False, "n": 1, "max_tokens": 1000}
@@ -92,7 +91,7 @@ class TestMCP:
                 "role": "assistant",
                 "function_call": None,
                 "tool_calls": [{"id": "CIn3wUdeC",
-                             "function": {"arguments": "{}",
+                             "function": {"arguments": '{"latitude": 25.79, "longitude": -80.13}',
                                           "name": "get_forecast"},
                              "type": "function"}]}}])
         tool_call_response = {
@@ -110,19 +109,11 @@ class TestMCP:
             httpx.Response(status_code=200, json=llm_response_triggering_tool_call),
             httpx.Response(status_code=200, json=llm_response_after_tool_call),
         ]
-        responses.add(
-            responses.GET,
-            "http://localhost:9000/mcp/tools",
-            json=tools_response,
-            status=200
-        )
 
-        responses.add(
-            responses.POST,
-            "http://localhost:9000/mcp/tools/get_forecast/call",
-            json=tool_call_response,
-            status=200
-        )
+        mcp_tools_route = respx.get(url="http://localhost:9000/mcp/tools").mock(
+        return_value=httpx.Response(status_code=200, json=tools_response))
+
+        mcp_call_route = respx.post(url="http://localhost:9000/mcp/tools/get_forecast/call").mock(return_value=httpx.Response(status_code=200, json=tool_call_response))
 
         # WHEN
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__MCP}", json=params)
@@ -130,20 +121,18 @@ class TestMCP:
         # THEN
         assert response.status_code == 200, response.text
         assert route.call_count == 2
-        responses.assert_call_count("http://localhost:9000/mcp/tools", 1)
-        responses.assert_call_count("http://localhost:9000/mcp/tools/get_forecast/call", 1)
+        mcp_tools_route.calls.assert_called_once()
+        mcp_call_route.calls.assert_called_once()
+        assert mcp_call_route.calls[0].request.content == b'{"latitude":25.79,"longitude":-80.13}'
         ChatCompletion(**response.json())
 
 
     @respx.mock
-    @responses.activate
     def test_mcp_list_tools_return_tool_list(self, client: TestClient, setup):
+        # GIVEN
         tools_response = generate_mocked_mcp_bridge_tools()
-        responses.add(
-            responses.GET,
-            "http://localhost:9000/mcp/tools",
-            json=tools_response,
-            status=200
+        mcp_tools_route = respx.get(url="http://localhost:9000/mcp/tools").mock(
+            return_value=httpx.Response(status_code=200, json=tools_response)
         )
 
         # WHEN
@@ -151,5 +140,5 @@ class TestMCP:
 
         # THEN
         assert response.status_code == 200, response.text
-        responses.assert_call_count("http://localhost:9000/mcp/tools", 1)
+        mcp_tools_route.calls.assert_called_once()
 

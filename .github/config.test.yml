@@ -49,6 +49,9 @@ web_search:
 multi_agents_search:
   model: albert-small
 
+mcp:
+  mcp_bridge_url: http://localhost:9000/
+
 databases:
   - type: qdrant
     model: embeddings-small

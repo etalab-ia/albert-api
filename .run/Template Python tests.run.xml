@@ -1,0 +1,21 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="true" type="tests" factoryName="Autodetect">
+    <module name="albert-api" />
+    <option name="ENV_FILES" value="$PROJECT_DIR$/.env" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="CONFIG_FILE" value=".github/config.test.yml" />
+    </envs>
+    <option name="SDK_HOME" value="" />
+    <option name="SDK_NAME" value="Python 3.12 virtualenv at ~/Documents/projets/albert/albert-api/.direnv/python-3.12.3" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="IS_MODULE_SDK" value="false" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <option name="_new_additionalArguments" value="&quot;--config-file\u003dpyproject.toml&quot;" />
+    <option name="_new_target" value="&quot;&quot;" />
+    <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+    <method v="2" />
+  </configuration>
+</component>

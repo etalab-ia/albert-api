@@ -10,15 +10,15 @@ class MCPLoop:
         self.llm_client = llm_client
         self.mcp_bridge = mcp_bridge
 
-    def get_tools_from_bridge(self):
-        mcp_bridge_tools = self.mcp_bridge.get_tool_list()
+    async def get_tools_from_bridge(self):
+        mcp_bridge_tools = await self.mcp_bridge.get_tool_list()
         all_tools = [section["tools"] for section in mcp_bridge_tools.values()]
         flat_tools = [tool for tools in all_tools for tool in tools]
         return flat_tools
 
 
     async def process_query(self, body) -> str:
-        tools = self.get_tools_from_bridge()
+        tools = await self.get_tools_from_bridge()
         available_tools = [{
             "type": "function",
             "function":
@@ -40,7 +40,7 @@ class MCPLoop:
                 tool_name = tool_config.name
                 tool_args = tool_config.arguments
 
-                tool_call_result = self.mcp_bridge.call_tool(tool_name, tool_args)
+                tool_call_result = await self.mcp_bridge.call_tool(tool_name, tool_args)
                 final_text.append(f"[Calling tool {tool_name} with args {tool_args}]")
 
                 body.messages.append({
@@ -48,4 +48,4 @@ class MCPLoop:
                     "content": tool_call_result['content'][0]['text']
                 })
 
-        return llm_response
+        return 'Maximum number of steps exceeded without resolving the query.'
