@@ -19,6 +19,7 @@ from app.utils.variables import (
 )
 
 from app.schemas.core.settings import ModelClientType
+from app.schemas.modelclientmetrics import ModelClientMetrics
 
 
 class BaseModelClient(ABC):
@@ -195,3 +196,9 @@ class BaseModelClient(ABC):
                 yield dumps({"detail": "Request timed out, model is too busy."}).encode(), 504
             except Exception as e:
                 yield dumps({"detail": type(e).__name__}).encode(), 500
+
+    async def get_server_metrics(self) -> ModelClientMetrics | None:
+        """
+        Return metrics with harmonized format
+        """
+        return None
