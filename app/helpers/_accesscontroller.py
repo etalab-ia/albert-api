@@ -223,10 +223,9 @@ class AccessController:
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
         if body.get("search", False):  # count the search request as one request to the search model (embeddings)
-            await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant_model)
+            await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant.model.id)
 
-        contents = [message.get("content") for message in body.get("messages", []) if message.get("content")]
-        prompt_tokens = sum([len(context.tokenizer.encode(content)) for content in contents])
+        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__CHAT_COMPLETIONS, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_collections_patch(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
@@ -251,16 +250,17 @@ class AccessController:
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
-        prompt_tokens = sum([len(context.tokenizer.encode(str(input))) for input in body.get("input", [])])
+        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__EMBEDDINGS, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_files_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         from app.utils.lifespan import context
 
-        await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant_model)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant.model.id)
 
     async def _check_ocr_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
+        form = {key: value for key, value in form.items()}
         model = form.get("model")
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=model)
@@ -273,7 +273,7 @@ class AccessController:
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
-        prompt_tokens = sum([len(context.tokenizer.encode(str(input))) for input in body.get("input", [])])
+        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__RERANK, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_search_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
@@ -283,10 +283,16 @@ class AccessController:
         body = json.loads(body) if body else {}
 
         # count the search request as one request to the search model (embeddings)
-        await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant_model)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant.model.id)
 
-        prompt_tokens = len(context.tokenizer.encode(str(body.get("prompt", ""))))
-        await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=context.documents.qdrant_model)
+        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__SEARCH, body=body)
+        await self._check_token_limits(
+            request=request,
+            user=user,
+            limits=limits,
+            prompt_tokens=prompt_tokens,
+            model=context.documents.qdrant.model.id,
+        )
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()

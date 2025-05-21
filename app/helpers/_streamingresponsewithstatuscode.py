@@ -1,8 +1,12 @@
 import json
+import logging
+import traceback
 from typing import AsyncIterator
 
 from fastapi.responses import StreamingResponse
 from starlette.types import Send
+
+logger = logging.getLogger(__name__)
 
 
 class StreamingResponseWithStatusCode(StreamingResponse):
@@ -52,6 +56,7 @@ class StreamingResponseWithStatusCode(StreamingResponse):
                 await send({"type": "http.response.body", "body": content, "more_body": more_body})
 
         except Exception:
+            logger.error(traceback.format_exc())
             more_body = False
             error_resp = {"error": {"message": "Internal Server Error"}}
             error_event = f"event: error\ndata: {json.dumps(error_resp)}\n\n".encode(self.charset)

@@ -4,10 +4,11 @@ import importlib
 from json import dumps, loads, JSONDecodeError
 import logging
 import re
+import traceback
 from typing import Any, Dict, Literal, Optional, Type
 from urllib.parse import urljoin
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException
 import httpx
 
 from app.schemas.core.settings import ModelClientType
@@ -57,7 +58,45 @@ class BaseModelClient(ABC):
         module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
         return getattr(module, f"{type.capitalize()}ModelClient")
 
-    def _format_request(self, request: Request, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+    def _add_usage_in_additional_data(self, additional_data: Dict[str, Any], json: dict, data: dict, stream: bool) -> None:
+        """
+        Add usage data to the additional data.
+
+        Args:
+            additional_data(Dict[str, Any]): The additional data to add usage data to.
+            json(dict): The JSON body of the request.
+            data(dict): The data of the response.
+            stream(bool): Whether the response is a stream.
+
+        Returns:
+            Dict[str, Any]: The additional data with usage data.
+        """
+        from app.utils.lifespan import context
+
+        if self.endpoint in context.tokenizer.USAGE_COMPLETION_ENDPOINTS:
+            try:
+                updated_additional_data = additional_data
+                if "usage" not in updated_additional_data.get("usage", {}):
+                    updated_additional_data["usage"] = {}
+
+                if "prompt_tokens" not in additional_data["usage"]:  # to avoid to recompute this value
+                    additional_data["usage"]["prompt_tokens"] = context.tokenizer.get_prompt_tokens(endpoint=self.endpoint, body=json)
+
+                updated_additional_data["usage"]["total_tokens"] = updated_additional_data["usage"]["prompt_tokens"]
+
+                if context.tokenizer.USAGE_COMPLETION_ENDPOINTS[self.endpoint]:
+                    updated_additional_data["usage"]["completion_tokens"] = context.tokenizer.get_completion_tokens(endpoint=self.endpoint, response=data, stream=stream)  # fmt: off
+                    updated_additional_data["usage"]["total_tokens"] = updated_additional_data["usage"].get("prompt_tokens", 0) + updated_additional_data["usage"]["completion_tokens"]  # fmt: off
+
+                additional_data = updated_additional_data
+
+            except Exception as e:
+                # reset additional_data to its original value
+                logger.warning(f"Failed to compute usage values for endpoint {self.endpoint}: {e}.")
+
+        return additional_data
+
+    def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
         """
         Format a request to a client model. This method can be overridden by a subclass to add additional headers or parameters. This method format the requested endpoint thanks the ENDPOINT_TABLE attribute.
 
@@ -69,39 +108,33 @@ class BaseModelClient(ABC):
         Returns:
             tuple: The formatted request composed of the url, headers, json, files and data.
         """
-        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[request.url.path.removeprefix("/v1")])
+        # self.endpoint is set by the ModelRouter
+        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
         headers = {"Authorization": f"Bearer {self.api_key}"}
         if json and "model" in json:
             json["model"] = self.model
 
         return url, headers, json, files, data
 
-    def _format_response(self, request: Request, response: httpx.Response, additional_data: Dict[str, Any] = {}) -> httpx.Response:
+    def _format_response(self, json: dict, response: httpx.Response, additional_data: Dict[str, Any] = {}) -> httpx.Response:
         """
         Format a response from a client model and add usage data and model ID to the response. This method can be overridden by a subclass to add additional headers or parameters.
 
         Args:
+            json(dict): The JSON body of the request to the API.
             response(httpx.Response): The response from the API.
+            additional_data(Dict[str, Any]): The additional data to add to the response (default: {}).
 
         Returns:
             httpx.Response: The formatted response.
         """
+
         content_type = response.headers.get("Content-Type", "")
         if content_type == "application/json":
             data = response.json()
 
-            if request.app.state.prompt_tokens is not None:
-                data.update({"usage": {"prompt_tokens": request.app.state.prompt_tokens, "total_tokens": request.app.state.prompt_tokens}})
-
-                if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS):
-                    from app.utils.lifespan import context
-
-                    contents = [choice.get("message", {}).get("content", "") for choice in data.get("choices", [])]
-                    completion_tokens = sum([len(context.tokenizer.encode(content)) for content in contents])
-                    data["usage"].update({"completion_tokens": completion_tokens})
-                    data["usage"].update({"total_tokens": request.app.state.prompt_tokens + completion_tokens})
-
-            data.update({"model": self.model})
+            additional_data.update({"model": self.model})
+            additional_data = self._add_usage_in_additional_data(additional_data=additional_data, json=json, data=data, stream=False)
             data.update(additional_data)
 
             response = httpx.Response(status_code=response.status_code, content=dumps(data))
@@ -110,7 +143,6 @@ class BaseModelClient(ABC):
 
     async def forward_request(
         self,
-        request: Request,
         method: str,
         json: Optional[dict] = None,
         files: Optional[dict] = None,
@@ -131,7 +163,7 @@ class BaseModelClient(ABC):
             httpx.Response: The response from the API.
         """
 
-        url, headers, json, files, data = self._format_request(request=request, json=json, files=files, data=data)
+        url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
 
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
@@ -154,26 +186,25 @@ class BaseModelClient(ABC):
                 raise HTTPException(status_code=response.status_code, detail=message)
 
         # add additional data to the response
-        response = self._format_response(request=request, response=response, additional_data=additional_data)
+        response = self._format_response(json=json, response=response, additional_data=additional_data)
 
         return response
 
-    def _format_stream_response(self, buffer: list, request: Request, additional_data: Dict[str, Any] = {}) -> tuple:
+    def _format_stream_response(self, json: dict, response: list, additional_data: Dict[str, Any] = {}) -> tuple:
         """
         Format streaming response data for chat completions.
 
         Args:
-            buffer (list): List of response chunks.
-            request (Request): The original request.
+            json(dict):
+            response (list): List of response chunks (buffer).
             additional_data (Dict[str, Any]): Additional data to include in the response.
 
         Returns:
             tuple: (data, extra) where data is the processed raw data and extra is the formatted response.
         """
-        from app.utils.lifespan import context
 
-        data, contents = None, dict()
-        for lines in buffer:
+        content, data = None, dict()
+        for lines in response:
             lines = lines.decode(encoding="utf-8").split(sep="\n\n")
             for line in lines:
                 line = line.strip()
@@ -183,48 +214,33 @@ class BaseModelClient(ABC):
                 if not line:
                     continue
                 try:
-                    data = loads(line)
-                    for choice in data.get("choices", []):
+                    content = loads(line)
+                    for choice in content.get("choices", []):
                         index = choice.get("index", 0)
                         delta = choice.get("delta", {})
-                        if index not in contents:
-                            contents[index] = ""
-                        content = delta.get("content", "")
-                        if content:
-                            contents[index] += content
+                        if index not in data:
+                            data[index] = ""
+                        delta_content = delta.get("content", "")
+                        if delta_content:
+                            data[index] += delta_content
                 except JSONDecodeError as e:
                     logger.debug(f"Failed to decode JSON from streaming response ({e}) on the following chunk: {line}.")
 
-        if data is None:
+        # error case
+        if content is None:
             return None
 
         # normal case
-        extra_chunk = data
-
+        extra_chunk = content  # based on last chunk to conserve the chunk structure
         extra_chunk.update({"choices": []})
-
-        if request.app.state.prompt_tokens is not None:
-            extra_chunk.update({"usage": {"prompt_tokens": request.app.state.prompt_tokens, "total_tokens": request.app.state.prompt_tokens}})
-
-            if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS):
-                extra_chunk.update({"choices": []})
-                extra_chunk["usage"].update({"completion_tokens": 0})
-                if contents:
-                    try:
-                        completion_tokens = sum([len(context.tokenizer.encode(contents[index])) for index in contents.keys()])
-                        extra_chunk["usage"].update({"completion_tokens": completion_tokens})
-                        extra_chunk["usage"].update({"total_tokens": extra_chunk["usage"]["prompt_tokens"] + completion_tokens})
-                    except Exception as e:
-                        logger.warning(f"Failed to calculate completion tokens: {e}")
-
-        extra_chunk.update({"model": self.model})
+        additional_data.update({"model": self.model})
+        additional_data = self._add_usage_in_additional_data(additional_data=additional_data, json=json, data=data, stream=True)
         extra_chunk.update(additional_data)
 
         return extra_chunk
 
     async def forward_stream(
         self,
-        request: Request,
         method: str,
         json: Optional[dict] = None,
         files: Optional[dict] = None,
@@ -243,7 +259,7 @@ class BaseModelClient(ABC):
             additional_data(Dict[str, Any]): The additional data to add to the response (default: {}).
         """
 
-        url, headers, json, files, data = self._format_request(request=request, json=json, files=files, data=data)
+        url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
 
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
@@ -280,7 +296,7 @@ class BaseModelClient(ABC):
                             done_chunk = chunk[match.start() :]
                             buffer.append(last_chunks)
 
-                            extra_chunk = self._format_stream_response(buffer=buffer, request=request, additional_data=additional_data)
+                            extra_chunk = self._format_stream_response(json=json, response=buffer, additional_data=additional_data)
 
                             # if error case, yield chunk
                             if extra_chunk is None:
@@ -294,4 +310,5 @@ class BaseModelClient(ABC):
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
                 yield dumps({"detail": "Request timed out, model is too busy."}).encode(), 504
             except Exception as e:
+                logger.error(traceback.format_exc())
                 yield dumps({"detail": type(e).__name__}).encode(), 500

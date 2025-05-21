@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -7,5 +9,5 @@ class BaseModel(BaseModel):
 
 
 class Usage(BaseModel):
-    prompt_tokens: int
-    total_tokens: int
+    prompt_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None

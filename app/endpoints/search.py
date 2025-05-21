@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import AccessController
+from app.schemas import Usage
 from app.schemas.search import Searches, SearchRequest
 from app.sql.session import get_db as get_session
 from app.utils.exceptions import CollectionNotFoundException
@@ -31,5 +32,6 @@ async def search(request: Request, body: SearchRequest, session: AsyncSession = 
         user_id=request.app.state.user.id,
         web_search=body.web_search,
     )
+    content = Searches(data=data, usage=Usage(prompt_tokens=request.app.state.prompt_tokens, total_tokens=request.app.state.prompt_tokens))
 
-    return JSONResponse(content=Searches(data=data).model_dump(), status_code=200)
+    return JSONResponse(content=content.model_dump(), status_code=200)

@@ -4,7 +4,6 @@ import functools
 import json
 import logging
 from typing import Optional
-from unittest.mock import AsyncMock
 
 from fastapi import Request, Response, HTTPException
 from starlette.responses import StreamingResponse
@@ -89,20 +88,6 @@ def log_usage(func):
     return wrapper
 
 
-def extract_model_from_multipart(body: bytes) -> Optional[str]:
-    try:
-        # Find the model field in the multipart form data
-        parts = body.split(b"\r\n")
-        for i, part in enumerate(parts):
-            if b'Content-Disposition: form-data; name="model"' in part and i + 2 < len(parts):
-                # The value is 2 lines after the Content-Disposition header
-                return parts[i + 2].decode("utf-8")
-        return None
-    except Exception as e:
-        logger.warning(f"Error extracting model from multipart data: {str(e)}")
-        return None
-
-
 async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
     """
     Extracts usage information from the request and sets it in the Usage object.
@@ -120,27 +105,20 @@ async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
     if usage.user_id == 0:
         raise MasterUserIdException("Master user ID found in request")
     usage.token_id = getattr(request.app.state, "token_id", None)
-    usage.prompt_tokens = getattr(request.app.state, "prompt_tokens", None)
 
-    try:
-        body = await request.body()
-        request.body = AsyncMock(return_value=body)
-    except Exception as e:
-        logger.warning(f"Failed to read request body ({request.url.path}): {e}")
-        return
+    content_type = request.headers.get("Content-Type", "")
 
-    if body:
-        content_type = request.headers.get("Content-Type", "")
-        # Extract model from request
-        if content_type.startswith("multipart/form-data"):
-            usage.request_model = extract_model_from_multipart(body)
-        else:
-            try:
-                json_body = json.loads(body.decode("utf-8"))
-                usage.request_model = json_body.get("model")
-            except Exception as e:
-                logger.warning(f"Failed to parse JSON request body ({request.url.path}): {e}")
-                return
+    if content_type.startswith("multipart/form-data"):
+        body = await request.form()
+        body = {key: value for key, value in body.items()}
+        usage.request_model = body.get("model")
+    else:
+        try:
+            body = await request.body()
+            body = json.loads(body.decode("utf-8")) if body else {}
+            usage.request_model = body.get("model")
+        except Exception as e:
+            logger.warning(f"Failed to parse JSON request body ({request.url.path}): {e}")
 
 
 def extract_usage_from_streaming_response(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponseWithStatusCode:
@@ -181,6 +159,7 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
             for lines in buffer:
                 lines = lines.decode(encoding="utf-8").split(sep="\n\n")
                 for line in lines:
+                    line = line.strip()
                     if not line.startswith("data: "):
                         continue
                     line = line.removeprefix("data: ")

@@ -6,14 +6,14 @@ from fastapi.testclient import TestClient
 import pytest
 from redis import Redis
 
-from app.utils.lifespan import get_tokenizer
+from app.helpers import UsageTokenizer
 from app.schemas.auth import LimitType
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 
 
 @pytest.fixture(scope="module")
-def setup(client: TestClient):
+def clean_redis() -> None:
     """Delete all redis keys for rate limiting conflicts."""
     r = Redis(**settings.databases.redis.args)
     assert r.ping(), "Redis database is not reachable."
@@ -22,7 +22,15 @@ def setup(client: TestClient):
         r.delete(key)
 
 
-@pytest.mark.usefixtures("client", "setup")
+@pytest.fixture(scope="module")
+def tokenizer():
+    tokenizer = UsageTokenizer(settings.usages.tokenizer)
+    tokenizer = tokenizer.tokenizer
+
+    yield tokenizer
+
+
+@pytest.mark.usefixtures("client", "clean_redis", "tokenizer")
 class TestAuth:
     def test_user_account_expiration_format(self, client: TestClient):
         # Create a test user with no expiration
@@ -116,7 +124,9 @@ class TestAuth:
         response = client.get(url=f"{ENDPOINT__ROLES}/me", headers=headers)
         assert response.status_code == 200, response.text
 
-    def test_token_rate_limits(self, client: TestClient):
+    def test_token_rate_limits(self, client: TestClient, tokenizer):
+        tokenizer = tokenizer
+
         # Get a text-generation model
         response = client.get(url=f"/v1{ENDPOINT__MODELS}")
         assert response.status_code == 200, response.text
@@ -156,9 +166,9 @@ class TestAuth:
 
         # Test token limits
         def get_content_len(n: int) -> str:
-            tokenizer = get_tokenizer(settings.usages.tokenizer)
+            nonlocal tokenizer
             content = ("test " * n).strip()
-            assert len(tokenizer.encode(content)) == n, "Cost should be equal to the number of tokens, please check the tokenizer for this test."
+            assert len(tokenizer.encode(content)) == n, "Cost should be equal to the number of tokens, please check the tokenizer for this test."  # fmt: off
 
             return content
 

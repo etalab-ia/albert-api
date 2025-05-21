@@ -11,7 +11,6 @@ from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, selec
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
 from app.helpers.models.routers import ModelRouter
@@ -34,7 +33,7 @@ from app.utils.exceptions import (
     VectorizationFailedException,
     WebSearchNotAvailableException,
 )
-from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS
+from app.utils.variables import ENDPOINT__EMBEDDINGS
 
 from ._websearchmanager import WebSearchManager
 
@@ -52,12 +51,10 @@ class DocumentManager:
     def __init__(
         self,
         qdrant: AsyncQdrantClient,
-        qdrant_model: ModelRouter,
         web_search: Optional[WebSearchManager] = None,
         multi_agents_search_model: Optional[ModelRouter] = None,
     ) -> None:
         self.qdrant = qdrant
-        self.qdrant_model = qdrant_model
         self.web_search = web_search
         self.multi_agents_search_model = multi_agents_search_model
 
@@ -70,7 +67,7 @@ class DocumentManager:
         collection_id = result.scalar_one()
         await session.commit()
 
-        await self.qdrant.create_collection(collection_id=collection_id, vector_size=self.qdrant_model._vector_size)
+        await self.qdrant.create_collection(collection_id=collection_id, vector_size=self.qdrant.model._vector_size)
 
         return collection_id
 
@@ -183,14 +180,13 @@ class DocumentManager:
         document_id = result.scalar_one()
         await session.commit()
 
-        client = self.qdrant_model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         for i, chunk in enumerate(chunks):
             chunk.metadata["collection_id"] = collection.id
             chunk.metadata["document_id"] = document_id
             chunk.metadata["document_name"] = document_name
             chunk.metadata["document_created_at"] = round(time.time())
         try:
-            await self._upsert(chunks=chunks, collection_id=collection_id, model_client=client)
+            await self._upsert(chunks=chunks, collection_id=collection_id)
         except Exception as e:
             logger.error(msg=f"Error during document creation: {e}")
             logger.debug(msg=traceback.format_exc())
@@ -296,10 +292,8 @@ class DocumentManager:
             raise WebSearchNotAvailableException()
 
         web_collection_id = None
-        qdrant_client = self.qdrant_model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
         if web_search:
-            client = self.web_search_model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
-            web_query = await self.web_search.get_web_query(prompt=prompt, model_client=client)
+            web_query = await self.web_search.get_web_query(prompt=prompt)
             web_results = await self.web_search.get_results(query=web_query, n=3)
             if web_results:
                 web_collection_id = await self.create_collection(
@@ -331,7 +325,7 @@ class DocumentManager:
             except NoResultFound:
                 raise CollectionNotFoundException(detail=f"Collection {collection_id} not found.")
 
-        response = await self._create_embeddings(input=[prompt], model_client=qdrant_client)
+        response = await self._create_embeddings(input=[prompt])
         query_vector = response[0]
         if method == SearchMethod.MULTIAGENT:
             qdrant_method = SearchMethod.SEMANTIC
@@ -390,21 +384,18 @@ class DocumentManager:
 
         return chunks
 
-    async def _create_embeddings(self, input: List[str], model_client: ModelClient) -> list[float] | list[list[float]] | dict:
-        response = await model_client.embeddings.create(input=input, model=model_client.model, encoding_format="float")
+    async def _create_embeddings(self, input: List[str]) -> list[float] | list[list[float]] | dict:
+        client = self.qdrant.model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
+        response = await client.forward_request(method="POST", json={"input": input, "model": self.qdrant.model.id, "encoding_format": "float"})
 
-        return [vector.embedding for vector in response.data]
+        return [vector["embedding"] for vector in response.json()["data"]]
 
-    async def _upsert(self, chunks: List[Chunk], collection_id: int, model_client: ModelClient) -> None:
+    async def _upsert(self, chunks: List[Chunk], collection_id: int) -> None:
         for i in range(0, len(chunks), self.BATCH_SIZE):
             batch = chunks[i : i + self.BATCH_SIZE]
             # create embeddings
             texts = [chunk.content for chunk in batch]
-            embeddings = await self._create_embeddings(input=texts, model_client=model_client)
+            embeddings = await self._create_embeddings(input=texts)
 
             # insert chunks and vectors
-            await self.qdrant.upsert(
-                collection_id=collection_id,
-                chunks=batch,
-                embeddings=embeddings,
-            )
+            await self.qdrant.upsert(collection_id=collection_id, chunks=batch, embeddings=embeddings)
