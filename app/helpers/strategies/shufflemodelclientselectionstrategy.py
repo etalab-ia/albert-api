@@ -1,7 +1,7 @@
 import random
 from typing import List
 
-from ._basemodelclientselectionstrategy import BaseModelClientSelectionStrategy
+from app.helpers.strategies._basemodelclientselectionstrategy import BaseModelClientSelectionStrategy
 
 
 class ShuffleModelClientSelectionStrategy(BaseModelClientSelectionStrategy):

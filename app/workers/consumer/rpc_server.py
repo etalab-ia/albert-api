@@ -32,7 +32,7 @@ class RPCServer:
             logging.debug("Message consumed on queue %s", model_router_id)
 
             # Get model client through corresponding strategy
-            model_client = self.strategies[model_router_id].choose_model_client()
-            client_params = {"clientUrl": model_client.api_url}
+            model_client_url = self.strategies[model_router_id].choose_model_client()
+            client_params = {"clientUrl": model_client_url}
 
             # TODO: reply to sender with the model client's information

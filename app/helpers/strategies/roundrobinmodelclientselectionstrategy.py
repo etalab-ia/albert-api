@@ -1,6 +1,6 @@
 from typing import Iterator, List
 
-from ._basemodelclientselectionstrategy import BaseModelClientSelectionStrategy
+from app.helpers.strategies._basemodelclientselectionstrategy import BaseModelClientSelectionStrategy
 
 
 class RoundRobinModelClientSelectionStrategy(BaseModelClientSelectionStrategy):
