@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -18,7 +18,7 @@ def to_namespace(obj):
 class TestMCPLoop:
     @pytest.fixture
     def mock_mcp_bridge(self):
-        return MagicMock()
+        return AsyncMock()
 
     @pytest.fixture
     def mock_llm_client(self):
@@ -32,7 +32,8 @@ class TestMCPLoop:
         pass
 
     class TestGetToolsFromBridge:
-        def test_get_tools_from_bridge_returns_flat_tool_list(self, mcp_client, mock_mcp_bridge):
+        @pytest.mark.asyncio
+        async def test_get_tools_from_bridge_returns_flat_tool_list(self, mcp_client, mock_mcp_bridge):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = {
                 "mcp_server_1": {"tools": [{'name': 'tool 1',
@@ -61,20 +62,21 @@ class TestMCPLoop:
                                'inputSchema': {}
                                }]
             # WHEN
-            actual_tools = mcp_client.get_tools_from_bridge()
+            actual_tools = await mcp_client.get_tools_from_bridge()
             # THEN
             assert actual_tools == expected_tools
-
-        def test_get_tools_from_bridge_with_empty_tools_returns_empty_list(self, mcp_client, mock_mcp_bridge):
+        @pytest.mark.asyncio
+        async def test_get_tools_from_bridge_with_empty_tools_returns_empty_list(self, mcp_client, mock_mcp_bridge):
             mock_mcp_bridge.get_tool_list.return_value = {
                 "section1": {"tools": []},
                 "section2": {"tools": []}
             }
-            assert mcp_client.get_tools_from_bridge() == []
+            assert await mcp_client.get_tools_from_bridge() == []
 
-        def test_get_tools_from_bridge_with_no_sections_returns_empty_list(self, mcp_client, mock_mcp_bridge):
+        @pytest.mark.asyncio
+        async def test_get_tools_from_bridge_with_no_sections_returns_empty_list(self, mcp_client, mock_mcp_bridge):
             mock_mcp_bridge.get_tool_list.return_value = {}
-            assert mcp_client.get_tools_from_bridge() == []
+            assert await mcp_client.get_tools_from_bridge() == []
 
     class TestProcessQuery:
         @pytest.mark.asyncio
@@ -95,8 +97,8 @@ class TestMCPLoop:
 
         @pytest.mark.asyncio
         async def test_process_query_should__return_message_from_llm_without_tool_call_result(self, mcp_client,
-                                                                                    mock_mcp_bridge: MagicMock,
-                                                                                    mock_llm_client: MagicMock):
+                                                                                    mock_mcp_bridge,
+                                                                                    mock_llm_client):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = {
                 "mcp_server_1": {"tools": [{'name': 'tool 1',
