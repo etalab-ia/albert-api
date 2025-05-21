@@ -1,15 +1,15 @@
 from app.clients.model import BaseModelClient as ModelClient
-from ._basemodelrouter import BaseModelRouter
+from app.helpers._basemodelrouter import BaseModelRouter
 from app.schemas.models import ModelType
 
-from app.workers.sender.rpc_client import RPCClient
-from ._metricstracker import MetricsTracker
+from app.helpers.message_producer.rpc_client import RPCClient
+from app.helpers._metricstracker import MetricsTracker
 
 
 class QueuingModelRouter(BaseModelRouter):
     def __init__(
         self,
-        rpc_client: RPCClient,
+        message_producer: RPCClient,
         id: str,
         type: ModelType,
         owned_by: str,
@@ -20,12 +20,12 @@ class QueuingModelRouter(BaseModelRouter):
         **kwargs,
     ) -> None:
         super().__init__(id, type, owned_by, aliases, routing_strategy, clients, *args, **kwargs)
-        self.rpc_client = rpc_client
+        self.message_producer = message_producer
         self.metrics_tracker = MetricsTracker([client.api_url for client in clients], 2, 30)
 
     def get_client(self, endpoint: str) -> ModelClient | None:
         # TODO: To implement
-        # 1. Call to self.rpc_client.call() to send request to the right queue (one queue per model router) with the params:
+        # 1. Call to self.message_producer.call() to send request to the right queue (one queue per model router) with the params:
         #   a. the model router id
         #   b. the caller's priority
         # 2. Wait for message to be processed by consumer

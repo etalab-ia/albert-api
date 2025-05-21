@@ -2,6 +2,7 @@ from urllib.parse import urljoin
 
 from openai import AsyncOpenAI
 import requests
+from httpx import AsyncClient
 
 from app.clients.model._basemodelclient import BaseModelClient
 from app.utils.variables import (
@@ -12,8 +13,9 @@ from app.utils.variables import (
     ENDPOINT__MODELS,
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
-    ENDPOINT__METRICS,
 )
+
+from app.schemas.modelclientmetrics import ModelClientMetrics
 
 
 class VllmModelClient(AsyncOpenAI, BaseModelClient):
@@ -25,8 +27,9 @@ class VllmModelClient(AsyncOpenAI, BaseModelClient):
         ENDPOINT__MODELS: "/v1/models",
         ENDPOINT__OCR: "/v1/chat/completions",
         ENDPOINT__RERANK: None,
-        ENDPOINT__METRICS: None,
     }
+
+    METRICS_ROUTE = "/metrics"
 
     def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
@@ -53,3 +56,16 @@ class VllmModelClient(AsyncOpenAI, BaseModelClient):
 
         # set vector size
         self.vector_size = None
+
+    async def get_server_metrics(self) -> ModelClientMetrics | None:
+        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else None
+
+        async with AsyncClient(base_url=self.api_url, headers=headers, timeout=self.timeout) as http_client:
+            response = await http_client.get(self.METRICS_ROUTE)
+            response.raise_for_status()
+
+            metrics = response.text
+
+            # TODO: Custom mapping of metrics to an harmonized format
+
+            return metrics

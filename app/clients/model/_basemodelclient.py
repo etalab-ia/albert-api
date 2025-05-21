@@ -23,7 +23,6 @@ from app.utils.variables import (
     ENDPOINT__MODELS,
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
-    ENDPOINT__METRICS,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,7 +37,6 @@ class BaseModelClient(ABC):
         ENDPOINT__MODELS: None,
         ENDPOINT__OCR: None,
         ENDPOINT__RERANK: None,
-        ENDPOINT__METRICS: None,
     }
 
     def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:

@@ -3,6 +3,7 @@ from typing import List
 
 
 class BaseRoutingStrategy(ABC):
+    # We pass a list of client's URL instead of a list of ModelClient to manipulate simpler objects in message consumer worker
     def __init__(self, clients: List[str]) -> None:
         self.clients = clients
 
