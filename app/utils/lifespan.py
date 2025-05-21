@@ -62,8 +62,7 @@ async def lifespan(app: FastAPI):
     web_search = WebSearchManager(web_search=web_search) if settings.web_search else None
     web_search_model = context.models(model=settings.web_search.model) if web_search else None
     qdrant_model = context.models(model=settings.databases.qdrant.model) if qdrant else None
-    multi_agents_search_model = context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-    context.documents = DocumentManager(qdrant=qdrant, qdrant_model=qdrant_model, web_search=web_search, web_search_model=web_search_model, multi_agents_search_model=multi_agents_search_model) if qdrant else None  # fmt: off
+    context.documents = DocumentManager(qdrant=qdrant, qdrant_model=qdrant_model, web_search=web_search, web_search_model=web_search_model) if qdrant else None  # fmt: off
 
     multiagents.MultiAgents.model = context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
     multiagents.MultiAgents.ranker_model = context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None
