@@ -1,11 +1,11 @@
 from itertools import cycle
-import random
 import time
 
 from app.clients.model import BaseModelClient as ModelClient
+from app.helpers.models.routers.strategies import RoundRobinRoutingStrategy, ShuffleRoutingStrategy
 from app.schemas.core.models import RoutingStrategy
-from app.schemas.models import ModelType
 from app.schemas.core.settings import Model as ModelSettings
+from app.schemas.models import ModelType
 from app.utils.exceptions import WrongModelTypeException
 from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS, ENDPOINT__OCR, ENDPOINT__RERANK
 
@@ -60,14 +60,10 @@ class ModelRouter:
             raise WrongModelTypeException()
 
         if self._routing_strategy == RoutingStrategy.ROUND_ROBIN:
-            client = self._routing_strategy_round_robin()
+            strategy = RoundRobinRoutingStrategy(self._clients, self._cycle)
         else:  # ROUTER_STRATEGY__SHUFFLE
-            client = self._routing_strategy_shuffle()
+            strategy = ShuffleRoutingStrategy(self._clients)
+
+        client = strategy.choose_model_client()
 
         return client
-
-    def _routing_strategy_shuffle(self) -> ModelClient:
-        return random.choice(self._clients)
-
-    def _routing_strategy_round_robin(self) -> ModelClient:
-        return next(self._cycle)

@@ -16,13 +16,15 @@ class TestLogUsageDecorator:
 
         # Use a test model id string for logging and force a StreamingResponse
         response = client.get_without_permissions(f"/v1{ENDPOINT__MODELS}")
+        assert response.status_code == 200, response.text
         models = response.json()
         model_id = [model for model in models["data"] if model["type"] == ModelType.TEXT_GENERATION][0]["id"]
-        params = {"model": model_id, "messages": [{"role": "user", "content": "Raconte moi une histoire"}], "stream": True}
+        params = {"model": model_id, "messages": [{"role": "user", "content": "Raconte moi une histoire"}], "stream": True, "max_tokens": 30}
         response = client.post_without_permissions(f"/v1{ENDPOINT__CHAT_COMPLETIONS}", json=params)
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
 
         # Consume all lines from the streaming response to trigger the usage logging.
+        t0 = time.time()
         try:
             for line in response.iter_lines():
                 pass
@@ -30,8 +32,10 @@ class TestLogUsageDecorator:
             pass
         finally:
             response.close()
+        t1 = time.time()
+        assert t1 - t0 > 0
 
-        time.sleep(0.5)
+        time.sleep(5)
         after = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__CHAT_COMPLETIONS}").count()
         assert after - before > 0
         log = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__CHAT_COMPLETIONS}").order_by(Usage.id.desc()).first()
@@ -48,11 +52,12 @@ class TestLogUsageDecorator:
         before = db_session.query(Usage).filter_by(endpoint=f"/v1{ENDPOINT__CHAT_COMPLETIONS}").count()
 
         response = client.get_without_permissions(f"/v1{ENDPOINT__MODELS}")
+        assert response.status_code == 200, response.text
         models = response.json()
         model_id = [model for model in models["data"] if model["type"] == ModelType.TEXT_GENERATION][0]["id"]
-        params = {"model": model_id, "messages": [{"role": "user", "content": "Raconte moi une histoire"}], "stream": False}
+        params = {"model": model_id, "messages": [{"role": "user", "content": "Raconte moi une histoire"}], "stream": False, "max_tokens": 30}
         response = client.post_without_permissions(f"/v1{ENDPOINT__CHAT_COMPLETIONS}", json=params)
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
 
         try:
             for line in response.iter_lines():

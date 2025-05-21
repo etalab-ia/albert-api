@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
+from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
 from app.schemas.core.data import ParserOutput
@@ -35,7 +36,6 @@ from app.utils.exceptions import (
 )
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS
 
-from ._immediatemodelrouter import ImmediateModelRouter
 from ._websearchmanager import WebSearchManager
 
 logger = logging.getLogger(__name__)
@@ -52,14 +52,14 @@ class DocumentManager:
     def __init__(
         self,
         qdrant: AsyncQdrantClient,
-        qdrant_model: ImmediateModelRouter,
+        qdrant_model: ModelRouter,
         web_search: Optional[WebSearchManager] = None,
-        web_search_model: Optional[ImmediateModelRouter] = None,
+        multi_agents_search_model: Optional[ModelRouter] = None,
     ) -> None:
         self.qdrant = qdrant
         self.qdrant_model = qdrant_model
         self.web_search = web_search
-        self.web_search_model = web_search_model
+        self.multi_agents_search_model = multi_agents_search_model
 
     async def create_collection(self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:  # fmt: off
         result = await session.execute(

@@ -1,7 +1,6 @@
 from app.clients.model import BaseModelClient as ModelClient
-from app.helpers._basemodelrouter import BaseModelRouter
-from app.helpers.strategies.roundrobinmodelclientselectionstrategy import RoundRobinModelClientSelectionStrategy
-from app.helpers.strategies.shufflemodelclientselectionstrategy import ShuffleModelClientSelectionStrategy
+from app.helpers.models.routers._basemodelrouter import BaseModelRouter
+from app.helpers.models.routers.strategies import RoundRobinRoutingStrategy, ShuffleRoutingStrategy
 from app.schemas.core.models import RoutingStrategy
 from app.schemas.models import ModelType
 from app.utils.exceptions import WrongModelTypeException
@@ -35,9 +34,9 @@ class ImmediateModelRouter(BaseModelRouter):
             raise WrongModelTypeException()
 
         if self._routing_strategy == RoutingStrategy.ROUND_ROBIN:
-            strategy = RoundRobinModelClientSelectionStrategy(self._clients, self._cycle)
+            strategy = RoundRobinRoutingStrategy(self._clients, self._cycle)
         else:  # ROUTER_STRATEGY__SHUFFLE
-            strategy = ShuffleModelClientSelectionStrategy(self._clients)
+            strategy = ShuffleRoutingStrategy(self._clients)
 
         client = strategy.choose_model_client()
         client.endpoint = endpoint

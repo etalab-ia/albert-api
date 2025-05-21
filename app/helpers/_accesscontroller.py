@@ -65,6 +65,11 @@ class AccessController:
 
         await self._check_permissions(role=role)
 
+        # add authenticated user to request state for logging usages
+        request.app.state.user = user
+        request.app.state.token_id = token_id
+        request.app.state.prompt_tokens = None
+
         if request.url.path.endswith(ENDPOINT__AUDIO_TRANSCRIPTIONS) and request.method == "POST":
             await self._check_audio_transcription_post(user=user, role=role, limits=limits, request=request)
 
@@ -94,10 +99,6 @@ class AccessController:
 
         if request.url.path.endswith(ENDPOINT__TOKENS) and request.method == "POST":
             await self._check_tokens_post(user=user, role=role, limits=limits, request=request)
-
-        # add authenticated user to request state for usage logging middleware
-        request.app.state.user = user
-        request.app.state.token_id = token_id
 
         return user
 

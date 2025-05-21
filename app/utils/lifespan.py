@@ -1,5 +1,4 @@
 from contextlib import asynccontextmanager
-import logging
 import traceback
 from types import SimpleNamespace
 
@@ -10,12 +9,15 @@ import tiktoken
 from app.clients.database import QdrantClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
-from app.helpers import DocumentManager, IdentityAccessManager, ImmediateModelRouter, Limiter, ModelRegistry, WebSearchManager
+from app.helpers import DocumentManager, IdentityAccessManager, Limiter, WebSearchManager
+from app.helpers.models import ModelRegistry
+from app.helpers.models.routers import ModelRouter
 from app.schemas.core.settings import LimitsTokenizer
 from app.utils import multiagents
+from app.utils.logging import init_logger
 from app.utils.settings import settings
 
-logger = logging.getLogger(__name__)
+logger = init_logger(name=__name__)
 context = SimpleNamespace(models=None, iam=None, limiter=None, documents=None, tokenizer=None)
 
 
@@ -65,7 +67,7 @@ async def lifespan(app: FastAPI):
         logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
         model = model.model_dump()
         model["clients"] = clients
-        routers.append(ImmediateModelRouter(**model))
+        routers.append(ModelRouter(**model))
 
     # setup context: models, iam, limiter, tokenizer
     context.tokenizer = get_tokenizer(settings.usages.tokenizer)

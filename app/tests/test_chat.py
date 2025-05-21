@@ -8,6 +8,8 @@ import pytest
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk
 from app.schemas.models import ModelType
+from app.utils.lifespan import get_tokenizer
+from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__COLLECTIONS, ENDPOINT__DOCUMENTS, ENDPOINT__FILES, ENDPOINT__MODELS
 
 
@@ -279,3 +281,31 @@ class TestChat:
         }
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}", json=params)
         assert response.status_code == 404, response.text
+
+    def test_chat_completions_usage(self, client: TestClient, setup):
+        """Test the GET /chat/completions usage."""
+        MODEL_ID, DOCUMENT_IDS, COLLECTION_ID = setup
+        prompt = "Hi, write a story."
+        params = {
+            "model": MODEL_ID,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 10,
+        }
+
+        tokenizer = get_tokenizer(settings.usages.tokenizer)
+        prompt_tokens = len(tokenizer.encode(prompt))
+        response = client.post_without_permissions(url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}", json=params)
+        assert response.status_code == 200, response.text
+
+        response_json = response.json()
+        assert response_json.get("usage"), response.text
+        assert response_json["usage"].get("prompt_tokens"), response.text
+        assert response_json["usage"]["prompt_tokens"] == prompt_tokens
+
+        assert response_json["usage"].get("completion_tokens"), response.text
+
+        completion_tokens = sum([len(tokenizer.encode(choice["message"]["content"])) for choice in response_json["choices"]])
+        assert response_json["usage"]["completion_tokens"] == completion_tokens
+
+        assert response_json["usage"].get("total_tokens"), response.text
+        assert response_json["usage"]["total_tokens"] == prompt_tokens + completion_tokens

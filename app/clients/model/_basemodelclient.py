@@ -90,7 +90,7 @@ class BaseModelClient(ABC):
         if content_type == "application/json":
             data = response.json()
 
-            if hasattr(request.app.state, "prompt_tokens"):
+            if request.app.state.prompt_tokens is not None:
                 data.update({"usage": {"prompt_tokens": request.app.state.prompt_tokens, "total_tokens": request.app.state.prompt_tokens}})
 
                 if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS):
@@ -200,25 +200,24 @@ class BaseModelClient(ABC):
 
         # normal case
         extra_chunk = data
-        extra_chunk.update({"model": self.model})
-        extra_chunk.update({"choices": []})
-        extra_chunk.update(
-            {
-                "usage": {
-                    "prompt_tokens": request.app.state.prompt_tokens,
-                    "completion_tokens": 0,
-                    "total_tokens": request.app.state.prompt_tokens,
-                }
-            }
-        )
-        if contents:
-            try:
-                completion_tokens = sum([len(context.tokenizer.encode(contents[index])) for index in contents.keys()])
-                extra_chunk["usage"].update({"completion_tokens": completion_tokens})
-                extra_chunk["usage"].update({"total_tokens": request.app.state.prompt_tokens + completion_tokens})
-            except Exception as e:
-                logger.warning(f"Failed to calculate completion tokens: {e}")
 
+        extra_chunk.update({"choices": []})
+
+        if request.app.state.prompt_tokens is not None:
+            extra_chunk.update({"usage": {"prompt_tokens": request.app.state.prompt_tokens, "total_tokens": request.app.state.prompt_tokens}})
+
+            if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS):
+                extra_chunk.update({"choices": []})
+                extra_chunk["usage"].update({"completion_tokens": 0})
+                if contents:
+                    try:
+                        completion_tokens = sum([len(context.tokenizer.encode(contents[index])) for index in contents.keys()])
+                        extra_chunk["usage"].update({"completion_tokens": completion_tokens})
+                        extra_chunk["usage"].update({"total_tokens": extra_chunk["usage"]["prompt_tokens"] + completion_tokens})
+                    except Exception as e:
+                        logger.warning(f"Failed to calculate completion tokens: {e}")
+
+        extra_chunk.update({"model": self.model})
         extra_chunk.update(additional_data)
 
         return extra_chunk

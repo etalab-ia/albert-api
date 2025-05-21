@@ -4,7 +4,7 @@ from typing import List
 from app.clients.model import BaseModelClient as ModelClient
 
 
-class BaseModelClientSelectionStrategy(ABC):
+class BaseRoutingStrategy(ABC):
     def __init__(self, clients: List[ModelClient]) -> None:
         self.clients = clients
 

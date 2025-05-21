@@ -15,8 +15,8 @@ class ClientIPFilter(Filter):
         return True
 
 
-def setup_logger() -> Logger:
-    logger = getLogger(name="app")
+def init_logger(name) -> Logger:
+    logger = getLogger(name=name)
     logger.setLevel(level=settings.general.log_level)
     handler = StreamHandler(stream=sys.stdout)
     formatter = Formatter("[%(asctime)s][%(process)d:%(name)s][%(levelname)s] %(client_ip)s - %(message)s")
@@ -27,6 +27,3 @@ def setup_logger() -> Logger:
     logger.propagate = False  # Prevent propagation to root logger
 
     return logger
-
-
-logger = setup_logger()

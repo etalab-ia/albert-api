@@ -50,7 +50,10 @@ async def audio_transcriptions(
         "timestamp_granularities": timestamp_granularities,
     }
     response = await client.forward_request(
-        request=request, method="POST", files={"file": (file.filename, file_content, file.content_type)}, data=data
+        request=request,
+        method="POST",
+        files={"file": (file.filename, file_content, file.content_type)},
+        data=data,
     )
 
     if response_format == "text":

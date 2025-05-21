@@ -86,7 +86,6 @@ def log_usage(func):
             asyncio.create_task(perform_log(response=None, usage=usage, start_time=start_time))
             raise e  # Re-raise the exception for FastAPI to handle
 
-    wrapper.is_log_usage_decorated = True
     return wrapper
 
 
@@ -144,29 +143,30 @@ async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
                 return
 
 
-def extract_usage_from_streaming_response(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponse:
+def extract_usage_from_streaming_response(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponseWithStatusCode:
     """
     Wraps the original StreamingResponse to extract usage information from the stream.
     This function captures the first token from the stream and calculates the completion tokens.
     It also logs the usage information to the database.
     """
-
     original_stream = response.body_iterator
     buffer = []
 
     async def wrapped_stream():
         nonlocal usage, buffer  # Add final_response_status_code
-        async for chunk in original_stream:  # This item is (content, status_from_original_stream)
-            content_for_buffer_and_logging = chunk
-            response_status_code = response.status_code  # Default, overridden if tuple
+        response_status_code = None
 
+        async for chunk in original_stream:  # This item is (content, status_from_original_stream)
             if isinstance(chunk, tuple):
-                content_for_buffer_and_logging = chunk[0]
+                content = chunk[0]
                 response_status_code = chunk[1]
+            else:
+                content = chunk
+                response_status_code = response.status_code
 
             try:
                 usage.time_to_first_token = int((datetime.now() - start_time).total_seconds() * 1000) if usage.time_to_first_token is None else usage.time_to_first_token  # fmt: off
-                buffer.append(content_for_buffer_and_logging)  # Appends only the content part
+                buffer.append(content)  # Appends only the content part
             except Exception:
                 logger.warning("Failed to process chunk in streaming response for usage/buffer calculations")
                 # Continue to yield the original item even if buffer append fails
@@ -178,10 +178,9 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
             yield chunk
 
         if buffer:
-            for lines in enumerate(buffer):
+            for lines in buffer:
                 lines = lines.decode(encoding="utf-8").split(sep="\n\n")
                 for line in lines:
-                    line = line.strip()
                     if not line.startswith("data: "):
                         continue
                     line = line.removeprefix("data: ")
@@ -238,6 +237,7 @@ async def perform_log(response: Optional[Response], usage: Usage, start_time: da
     Logs the usage information to the database.
     This function captures the duration of the request and sets the status code of the response if available.
     """
+
     from app.utils.lifespan import context
 
     usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
