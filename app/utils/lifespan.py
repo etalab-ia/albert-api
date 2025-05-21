@@ -10,6 +10,7 @@ from app.clients.database import QdrantClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRegistry, ImmediateModelRouter, WebSearchManager
+from app.utils import multiagents
 from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,9 @@ async def lifespan(app: FastAPI):
     qdrant_model = context.models(model=settings.databases.qdrant.model) if qdrant else None
     multi_agents_search_model = context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
     context.documents = DocumentManager(qdrant=qdrant, qdrant_model=qdrant_model, web_search=web_search, web_search_model=web_search_model, multi_agents_search_model=multi_agents_search_model) if qdrant else None  # fmt: off
+
+    multiagents.MultiAgents.model = context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
+    multiagents.MultiAgents.ranker_model = context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None
 
     if qdrant:
         assert await context.documents.qdrant.check(), "Qdrant database is not reachable."

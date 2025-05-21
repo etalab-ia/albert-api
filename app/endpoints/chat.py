@@ -5,10 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import Authorization, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
-from app.schemas.search import Search
+from app.schemas.search import Search, SearchMethod
 from app.sql.session import get_db as get_session
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.lifespan import context
+from app.utils.multiagents import MultiAgents
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 from app.utils.usage_decorator import log_usage
 
@@ -43,8 +44,11 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
                 user_id=request.app.state.user.id,
             )
             if results:
-                chunks = "\n".join([result.chunk.content for result in results])
-                body.messages[-1]["content"] = body.search_args.template.format(prompt=body.messages[-1]["content"], chunks=chunks)
+                if body.search_args.method == SearchMethod.MULTIAGENT:
+                    body.messages[-1]["content"] = await MultiAgents.full_multiagents(results, body.messages[-1]["content"])
+                else:
+                    chunks = "\n".join([result.chunk.content for result in results])
+                    body.messages[-1]["content"] = body.search_args.template.format(prompt=body.messages[-1]["content"], chunks=chunks)
 
         body = body.model_dump()
         body.pop("search", None)

@@ -24,7 +24,7 @@ from app.schemas.search import Search, SearchMethod
 from app.sql.models import Collection as CollectionTable
 from app.sql.models import Document as DocumentTable
 from app.sql.models import User as UserTable
-from app.utils import multiagents
+from app.utils.multiagents import MultiAgents
 from app.utils.exceptions import (
     ChunkingFailedException,
     CollectionNotFoundException,
@@ -354,7 +354,7 @@ class DocumentManager:
         if method == SearchMethod.MULTIAGENT:
             if not settings.multi_agents_search:
                 raise MultiAgentsSearchNotAvailableException()
-            searches = await multiagents.search(
+            searches = await MultiAgents.search(
                 partial(self.search, user_id=user_id),
                 searches,
                 prompt,
@@ -362,6 +362,7 @@ class DocumentManager:
                 collection_ids,
                 session,
                 self.multi_agents_search_model,
+                k,
                 max_tokens=settings.multi_agents_search.max_tokens,
                 max_tokens_intermediate=settings.multi_agents_search.max_tokens_intermediate,
             )
