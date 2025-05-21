@@ -22,11 +22,11 @@ async def mcp_completion(request: Request, body: ChatCompletionRequest) -> ChatC
 
 
 @router.get(path=ENDPOINT__MCP + "/tool_list", dependencies=[Security(dependency=Authorization())])
-def mcpn_tool_list():
+async def mcpn_tool_list():
     mcp_bridge = MCPBridgeClient('http://localhost:9000')
     llm_client = LLMClient()
     mcp = MCPLoop(mcp_bridge, llm_client)
-    response = mcp.get_tools_from_bridge()
+    response = await mcp.get_tools_from_bridge()
     json_str = json.dumps({'tools': response}, default=lambda o: o.__dict__)
     params = json.loads(json_str)
     return params

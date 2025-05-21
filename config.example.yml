@@ -10,6 +10,11 @@ auth:
   master_username: master
   master_key: changeme
 
+
+mcp:
+  mcp_bridge_url: http://localhost:9000/
+
+
 databases:
   - type: qdrant
     context: api

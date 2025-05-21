@@ -10,6 +10,9 @@ web_search:
     args:
       api_key: ${BRAVE_API_KEY}
 
+mcp:
+  mcp_bridge_url: http://localhost:9000/
+
 databases:
   - type: qdrant
     model: embeddings-small
