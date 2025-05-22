@@ -5,8 +5,7 @@ from fastapi.dependencies.utils import get_dependant
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 
-from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, \
-    ocr, parse, rerank, search, mcp
+from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, parse, rerank, search, mcp
 from app.helpers import AccessController
 from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
@@ -30,7 +29,8 @@ from app.utils.variables import (
     ROUTER__OCR,
     ROUTER__PARSE,
     ROUTER__RERANK,
-    ROUTER__SEARCH, ROUTER__MCP,
+    ROUTER__SEARCH,
+    ROUTER__MCP,
 )
 
 logger = logging.getLogger(__name__)

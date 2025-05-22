@@ -14,7 +14,7 @@ class MCPBridgeClient:
             try:
                 response = await async_client.request(method="GET", url=self.url + "/mcp/tools", headers={})
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
-                raise HTTPException(status_code=504, detail="Request timed out, model is too busy.")
+                raise HTTPException(status_code=504, detail="Request timed out")
             except Exception as e:
                 raise HTTPException(status_code=500, detail=type(e).__name__)
         return response.json()
@@ -29,7 +29,7 @@ class MCPBridgeClient:
             try:
                 response = await async_client.request(method="POST", json=params, url=self.url + f"/mcp/tools/{tool_name}/call", headers={})
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
-                raise HTTPException(status_code=504, detail="Request timed out, model is too busy.")
+                raise HTTPException(status_code=504, detail="Request timed out")
             except Exception as e:
                 raise HTTPException(status_code=500, detail=type(e).__name__)
         return response.json()

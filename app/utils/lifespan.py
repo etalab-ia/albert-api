@@ -5,6 +5,8 @@ from coredis import ConnectionPool
 from fastapi import FastAPI
 
 from app.clients.database import QdrantClient
+from app.clients.mcp.mcp_bridge_client import MCPBridgeClient
+from app.clients.mcp.mcp_llm_client import McpLlmClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.parser import BaseParserClient as ParserClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
@@ -14,9 +16,7 @@ from app.helpers.models.routers import ModelRouter
 from app.utils import multiagents
 from app.utils.context import global_context
 from app.utils.logging import init_logger
-from app.mcp.llm_client import LLMClient
-from app.mcp.mcp_bridge_client import MCPBridgeClient
-from app.mcp.mcp_loop import MCPLoop
+from app.usecase.mcp_usecase import McpUsecase
 from app.utils.settings import settings
 
 logger = init_logger(name=__name__)
@@ -28,9 +28,9 @@ async def lifespan(app: FastAPI):
 
     # setup clients
     qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
-    mcp_bridge = MCPBridgeClient('http://localhost:9000')
-    llm_client = LLMClient()
-    mcp = MCPLoop(mcp_bridge, llm_client)
+    mcp_bridge = MCPBridgeClient("http://localhost:9000")
+    llm_client = McpLlmClient()
+    mcp = McpUsecase(mcp_bridge, llm_client)
     redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
     web_search = (
         WebSearchClient.import_module(type=settings.web_search.type)(user_agent=settings.web_search.user_agent, **settings.web_search.args)
