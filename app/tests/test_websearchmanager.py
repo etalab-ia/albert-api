@@ -27,7 +27,7 @@ class FakeResponse:
 async def test_get_results_success(monkeypatch):
     urls = ["http://service-public.fr/page"]
     web_search = DummyWebSearch(urls)
-    manager = WebSearchManager(web_search)
+    manager = WebSearchManager(web_search, None)
     # restrict to the domain
     manager.limited_domains = ["service-public.fr"]
 
@@ -52,7 +52,7 @@ async def test_get_results_success(monkeypatch):
 async def test_get_results_filters_invalid_url(monkeypatch):
     urls = ["not a url"]
     web_search = DummyWebSearch(urls)
-    manager = WebSearchManager(web_search)
+    manager = WebSearchManager(web_search, None)
 
     # ensure no request is made
     def fake_get(*args, **kwargs):
@@ -67,7 +67,7 @@ async def test_get_results_filters_invalid_url(monkeypatch):
 async def test_get_results_filters_unauthorized_domain(monkeypatch):
     urls = ["http://unauthorized.com/page?injection=service-public.fr"]
     web_search = DummyWebSearch(urls)
-    manager = WebSearchManager(web_search)
+    manager = WebSearchManager(web_search, None)
     # only allow a different domain
     manager.limited_domains = ["allowed.com"]
 
@@ -83,7 +83,7 @@ async def test_get_results_filters_unauthorized_domain(monkeypatch):
 async def test_get_results_handles_request_exception(monkeypatch):
     urls = ["http://allowed.com/page"]
     web_search = DummyWebSearch(urls)
-    manager = WebSearchManager(web_search)
+    manager = WebSearchManager(web_search, None)
     manager.limited_domains = ["allowed.com"]
 
     def fake_get(url, headers, timeout):
@@ -98,7 +98,7 @@ async def test_get_results_handles_request_exception(monkeypatch):
 async def test_get_results_handles_non_200_status(monkeypatch):
     urls = ["http://allowed.com/page"]
     web_search = DummyWebSearch(urls)
-    manager = WebSearchManager(web_search)
+    manager = WebSearchManager(web_search, None)
     manager.limited_domains = ["allowed.com"]
 
     def fake_get(url, headers, timeout):
@@ -113,7 +113,7 @@ async def test_get_results_handles_non_200_status(monkeypatch):
 async def test_get_results_subdomain_allowed(monkeypatch):
     urls = ["http://sub.allowed.com/page"]
     web_search = DummyWebSearch(urls)
-    manager = WebSearchManager(web_search)
+    manager = WebSearchManager(web_search, None)
     manager.limited_domains = ["allowed.com"]
 
     def fake_get(url, headers, timeout):
