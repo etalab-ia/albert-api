@@ -7,12 +7,12 @@ from coredis import ConnectionPool
 from fastapi import FastAPI
 
 from app.clients.database import QdrantClient
+from app.clients.mcp.mcp_bridge_client import MCPBridgeClient
+from app.clients.mcp.mcp_llm_client import McpLlmClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ModelRegistry, ModelRouter, WebSearchManager
-from app.mcp.llm_client import LLMClient
-from app.mcp.mcp_bridge_client import MCPBridgeClient
-from app.mcp.mcp_loop import MCPLoop
+from app.usecase.mcp_usecase import McpUsecase
 from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -25,9 +25,9 @@ async def lifespan(app: FastAPI):
 
     # setup clients
     qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
-    mcp_bridge = MCPBridgeClient('http://localhost:9000')
-    llm_client = LLMClient()
-    mcp = MCPLoop(mcp_bridge, llm_client)
+    context.mcp_bridge = MCPBridgeClient("http://localhost:9000")
+    llm_client = McpLlmClient()
+    mcp = McpUsecase(context.mcp_bridge, llm_client)
     context.mcp = mcp
     redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
     web_search = WebSearchClient.import_module(type=settings.web_search.type)(**settings.web_search.args) if settings.web_search else None

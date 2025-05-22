@@ -1,13 +1,11 @@
 from fastapi import Depends, FastAPI, Response, Security
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, \
-    ocr, rerank, search, mcp
+from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search, mcp
 from app.helpers import Authorization, UsagesMiddleware
 from app.schemas.auth import PermissionType
 from app.sql.session import get_db
 from app.utils.lifespan import lifespan
-import app.utils.logging
 from app.utils.settings import settings
 from app.utils.variables import (
     ROUTER__AUDIO,
@@ -23,7 +21,8 @@ from app.utils.variables import (
     ROUTER__MONITORING,
     ROUTER__OCR,
     ROUTER__RERANK,
-    ROUTER__SEARCH, ROUTER__MCP,
+    ROUTER__SEARCH,
+    ROUTER__MCP,
 )
 
 
@@ -56,7 +55,6 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
 
     if ROUTER__CHAT not in settings.general.disabled_routers:
         app.include_router(router=chat.router, tags=[ROUTER__CHAT.title()], prefix="/v1")
-
 
     if ROUTER__CHUNKS not in settings.general.disabled_routers:
         app.include_router(router=chunks.router, tags=[ROUTER__CHUNKS.title()], prefix="/v1")
