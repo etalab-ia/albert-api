@@ -1,10 +1,12 @@
 from json import dumps
-from typing import Optional
+from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
+from fastapi import Request
 import httpx
 from openai import AsyncOpenAI
 import requests
+
 from app.clients.model._basemodelclient import BaseModelClient
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
@@ -61,7 +63,7 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         else:
             self.vector_size = None
 
-    def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+    def _format_request(self, request: Request, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
         """
         Format a request to a client model. Overridden base class method to support TEI Reranking.
 
@@ -74,18 +76,46 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         Returns:
             tuple: The formatted request composed of the url, headers, json, files and data.
         """
-        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
+        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[request.url.path.removeprefix("/v1")])
         headers = {"Authorization": f"Bearer {self.api_key}"}
         if json and "model" in json:
             json["model"] = self.model
 
-        if self.endpoint == ENDPOINT__RERANK:
+        if request.url.path.endswith(ENDPOINT__RERANK):
             json = {"query": json["prompt"], "texts": json["input"]}
 
         return url, headers, json, files, data
 
-    def _format_response(self, response: httpx.Response) -> httpx.Response:
-        if response.status_code == 200 and "data" not in response.json():  # format response for reranking
-            response = httpx.Response(status_code=response.status_code, content=dumps({"data": response.json()}))
+    def _format_response(self, json: dict, response: httpx.Response, additional_data: Dict[str, Any] = {}) -> httpx.Response:
+        """
+        Override base class method to support TEI reranking.
+
+        Args:
+            json(dict): The JSON body of the request to the API.
+            response(httpx.Response): The response from the API.
+            additional_data(Dict[str, Any]): The additional data to add to the response (default: {}).
+
+        Returns:
+            httpx.Response: The formatted response.
+        """
+        from app.utils.lifespan import context
+
+        content_type = response.headers.get("Content-Type", "")
+        if content_type == "application/json":
+            data = response.json()
+            if isinstance(data, list):  # for TEI reranking
+                data = {"data": data}
+
+            additional_data.update({"model": self.model})
+            additional_data = context.tokenizer.add_usage_in_additional_data(
+                endpoint=self.endpoint,
+                body=json,
+                response=data,
+                additional_data=additional_data,
+                stream=False,
+            )
+            data.update(additional_data)
+
+            response = httpx.Response(status_code=response.status_code, content=dumps(data))
 
         return response

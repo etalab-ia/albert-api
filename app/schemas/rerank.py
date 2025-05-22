@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Literal
 
 from pydantic import Field
 
-from app.schemas import BaseModel
+from app.schemas import BaseModel, Usage
 
 
 class RerankRequest(BaseModel):
@@ -12,9 +12,12 @@ class RerankRequest(BaseModel):
 
 
 class Rerank(BaseModel):
+    object: Literal["rerank"] = "rerank"
     score: float
     index: int
 
 
 class Reranks(BaseModel):
+    object: Literal["list"] = "list"
     data: List[Rerank]
+    usage: Usage

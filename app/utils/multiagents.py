@@ -5,7 +5,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers._modelregistry import ModelRegistry
+from app.helpers.models import ModelRegistry
 from app.schemas.search import Search, SearchMethod
 from app.utils.exceptions import MultiAgentsSearchNotAvailableException
 from app.utils.settings import settings

@@ -5,7 +5,8 @@ from fastapi import UploadFile
 import requests
 
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
-from app.clients.model import BaseModelClient as ModelClient
+from app.helpers.models.routers import ModelRouter
+from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 
 class WebSearchManager:
@@ -53,7 +54,7 @@ Exemples :
 - Question: Peut-on avoir des jours de congé pour un mariage ?
   Réponse: jour de congé mariage conditions
 
-- Question: Donnes-moi des informations sur Jules Verne
+- Question: Donnes-moi des informations sur Jules Verne.
   Réponse: Jules Verne
 
 - Question: Comment refaire une pièce d'identité ?
@@ -62,18 +63,18 @@ Exemples :
 Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 
-    def __init__(self, web_search: WebSearchClient) -> None:
+    def __init__(self, web_search: WebSearchClient, model: ModelRouter) -> None:
         self.web_search = web_search
+        self.model = model
 
-    async def get_web_query(self, prompt: str, model_client: ModelClient) -> str:
+    async def get_web_query(self, prompt: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
-        response = await model_client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
-            model=model_client.model,
-            temperature=0.2,
-            stream=False,
+        client = self.model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+        response = await client.forward_request(
+            method="POST",
+            json={"messages": [{"role": "user", "content": prompt}], "model": self.model.id, "temperature": 0.2, "stream": False},
         )
-        query = response.choices[0].message.content
+        query = response.json()["choices"][0]["message"]["content"]
 
         return query
 

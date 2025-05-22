@@ -4,6 +4,10 @@ general:
 auth:
   master_key: changeme
 
+usages:
+  routers: ["all"]
+  tokenizer: "tiktoken_gpt2"
+
 web_search:
   - type: brave
     model: albert-small
@@ -17,21 +21,23 @@ databases:
   - type: qdrant
     model: embeddings-small
     args:
-      url: http://${QDRANT_HOST}
+      url: http://${QDRANT_HOST}:${QDRANT_PORT}
       api_key: changeme
       prefer_grpc: True
+      grpc_port: ${QDRANT_GRPC_PORT}
       timeout: 10
 
   - type: redis
     args:
       host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       password: changeme
 
   - type: sql
     context: api
     args:
-      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:5432/api
-      echo: True
+      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:${POSTGRES_PORT}/api
+      echo: False
       pool_size: 5
       max_overflow: 10
       pool_pre_ping: True

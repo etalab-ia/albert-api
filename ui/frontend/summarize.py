@@ -58,9 +58,9 @@ with st.sidebar:
 # Main
 st.subheader(body=":material/counter_1: Select a document")
 if st.session_state.get("summarize_document"):
-    st.info(body=f"Selected document: {st.session_state["summarize_document"]["name"]} ({st.session_state["summarize_document"]["id"]})")
+    st.info(body=f"Selected document: {st.session_state['summarize_document']['name']} ({st.session_state['summarize_document']['id']})")
 else:
-    st.info(body="Select document to summarize.")
+    st.info(body="Select a document to summarize.")
 
 ## TOC
 st.session_state.toc = "" if "toc" not in st.session_state else st.session_state.toc
@@ -74,7 +74,7 @@ if not st.session_state.get("summarize_document"):
 chunks = get_chunks(document_id=st.session_state["summarize_document"]["id"])
 
 st.info(
-    body="For help the model to generate a summarize, you need to write a table of content of your document. Clic on *generate* button if you need an AI help."
+    body="To help the model generate a summary, you need to write a table of contents for your document. Click on the *generate* button if you need AI assistance."
 )
 
 toc = st.text_area(label="Table of content", value=st.session_state.toc, height=200)
@@ -97,7 +97,7 @@ with stylable_container(key="Toc", css_styles=".left-button{float: left;}.right-
                 time.sleep(2)
                 st.rerun()
             else:
-                st.toast(body="You have to write a table of content before validate it.", icon="❌")
+                st.toast(body="You have to write a table of contents before validating it.", icon="❌")
 
 
 ## Summary
@@ -132,4 +132,4 @@ with stylable_container(key="Feedback", css_styles="button{float: right;}"):
                 time.sleep(2)
                 st.rerun()
         else:
-            st.toast(body="You have to generate a summary before give feedback.", icon="❌")
+            st.toast(body="You have to generate a summary before giving feedback.", icon="❌")

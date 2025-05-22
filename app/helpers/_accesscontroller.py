@@ -33,7 +33,16 @@ from app.utils.variables import (
 )
 
 
-class Authorization:
+class AccessController:
+    """
+    Access controller ensure user access:
+    - API key validation
+    - rate limiting application (per requests and per tokens)
+    - permissions to access the requested resource
+
+    Access controller is used as a dependency of all endpoints.
+    """
+
     def __init__(self, permissions: List[PermissionType] = []):
         self.permissions = permissions
 
@@ -45,46 +54,51 @@ class Authorization:
     ) -> User:  # fmt: off
         user, role, limits, token_id = await self._check_api_key(api_key=api_key, session=session)
 
-        if not request.url.path.startswith(f"{ENDPOINT__ROLES}/me") and not request.url.path.startswith(f"{ENDPOINT__USERS}/me"):
-            # invalid token if user is expired, except for /v1/roles/me and /v1/users/me endpoints
-            if user.expires_at and user.expires_at < time.time():
-                raise InvalidAPIKeyException()
+        # invalid token if user is expired, except for /v1/roles/me and /v1/users/me endpoints
+        if (
+            user.expires_at
+            and user.expires_at < time.time()
+            and not request.url.path.startswith(f"{ENDPOINT__ROLES}/me")
+            and not request.url.path.startswith(f"{ENDPOINT__USERS}/me")
+        ):
+            raise InvalidAPIKeyException()
 
         await self._check_permissions(role=role)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__AUDIO_TRANSCRIPTIONS}") and request.method == "POST":
+        # add authenticated user to request state for logging usages
+        request.app.state.user = user
+        request.app.state.token_id = token_id
+        request.app.state.prompt_tokens = None
+
+        if request.url.path.endswith(ENDPOINT__AUDIO_TRANSCRIPTIONS) and request.method == "POST":
             await self._check_audio_transcription_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__CHAT_COMPLETIONS}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__CHAT_COMPLETIONS) and request.method == "POST":
             await self._check_chat_completions_post(user=user, role=role, limits=limits, request=request)
 
         if request.url.path.startswith(f"/v1{ENDPOINT__COLLECTIONS}") and request.method == "PATCH":
             await self._check_collections_patch(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__COLLECTIONS}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__COLLECTIONS) and request.method == "POST":
             await self._check_collections_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__EMBEDDINGS}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__EMBEDDINGS) and request.method == "POST":
             await self._check_embeddings_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__FILES}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__FILES) and request.method == "POST":
             await self._check_files_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__OCR}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__OCR) and request.method == "POST":
             await self._check_ocr_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__RERANK}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__RERANK) and request.method == "POST":
             await self._check_rerank_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(f"/v1{ENDPOINT__SEARCH}") and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__SEARCH) and request.method == "POST":
             await self._check_search_post(user=user, role=role, limits=limits, request=request)
 
-        if request.url.path.startswith(ENDPOINT__TOKENS) and request.method == "POST":
+        if request.url.path.endswith(ENDPOINT__TOKENS) and request.method == "POST":
             await self._check_tokens_post(user=user, role=role, limits=limits, request=request)
-
-        # add authenticated user to request state for usage logging middleware
-        request.app.state.user = user
-        request.app.state.token_id = token_id
 
         return user
 
@@ -107,7 +121,6 @@ class Authorization:
         return limits
 
     async def _check_api_key(self, api_key: HTTPAuthorizationCredentials, session: AsyncSession) -> tuple[User, Role, Dict[str, UserModelLimits]]:
-        # @TODO: add cache
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
 
@@ -144,7 +157,7 @@ class Authorization:
         if self.permissions and not all(perm in role.permissions for perm in self.permissions):
             raise InsufficientPermissionException()
 
-    async def _check_limits(self, user: User, limits: Dict[str, UserModelLimits], model: Optional[str] = None, check_only_access: bool = False) -> None:  # fmt: off
+    async def _check_request_limits(self, request: Request, user: User, limits: Dict[str, UserModelLimits], model: Optional[str] = None) -> None:  # fmt: off
         from app.utils.lifespan import context
 
         if not model:
@@ -152,37 +165,68 @@ class Authorization:
 
         model = context.models.aliases.get(model, model)
 
-        if model not in limits:
+        if model not in limits:  # unkown model (404 will be raised by the model client)
             return
 
         if limits[model].rpm == 0 or limits[model].rpd == 0:
             raise InsufficientPermissionException(detail=f"Insufficient permissions to access the model {model}.")
 
-        if check_only_access:
+        check = await context.limiter.hit(user_id=user.id, model=model, type=LimitType.RPM, value=limits[model].rpm)
+        if not check:
+            remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.RPM, value=limits[model].rpm)
+            raise RateLimitExceeded(detail=f"{str(limits[model].rpm)} requests for {model} per minute exceeded (remaining: {remaining}).")
+
+        check = await context.limiter.hit(user_id=user.id, model=model, type=LimitType.RPD, value=limits[model].rpd)
+        if not check:
+            remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.RPD, value=limits[model].rpd)
+            raise RateLimitExceeded(detail=f"{str(limits[model].rpd)} requests for {model} per day exceeded (remaining: {remaining}).")
+
+    async def _check_token_limits(self, request: Request, user: User, limits: Dict[str, UserModelLimits], prompt_tokens: int, model: Optional[str] = None) -> None:  # fmt: off
+        from app.utils.lifespan import context
+
+        if not model or not prompt_tokens:
             return
 
-        check = await context.limiter(user_id=user.id, model=model, type=LimitType.RPM, value=limits[model].rpm)
-        if not check:
-            raise RateLimitExceeded(detail=f"{str(limits[model].rpm)} requests for {model} per minute exceeded.")
+        model = context.models.aliases.get(model, model)
 
-        check = await context.limiter(user_id=user.id, model=model, type=LimitType.RPD, value=limits[model].rpd)
+        if model not in limits:  # unkown model (404 will be raised by the model client)
+            return
+
+        if limits[model].tpm == 0 or limits[model].tpd == 0:
+            raise InsufficientPermissionException(detail=f"Insufficient permissions to access the model {model}.")
+
+        # compute the cost (number of hits) of the request by the number of tokens
+        check = await context.limiter.hit(user_id=user.id, model=model, type=LimitType.TPM, value=limits[model].tpm, cost=prompt_tokens)
+
         if not check:
-            raise RateLimitExceeded(detail=f"{str(limits[model].rpd)} requests for {model} per day exceeded.")
+            remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.TPM, value=limits[model].tpm)
+            raise RateLimitExceeded(detail=f"{str(limits[model].tpm)} input tokens for {model} per minute exceeded (remaining: {remaining}).")
+
+        check = await context.limiter.hit(user_id=user.id, model=model, type=LimitType.TPD, value=limits[model].tpd, cost=prompt_tokens)
+        if not check:
+            remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.TPD, value=limits[model].tpd)
+            raise RateLimitExceeded(detail=f"{str(limits[model].tpd)} input tokens for {model} per day exceeded (remaining: {remaining}).")
+
+        request.app.state.prompt_tokens = prompt_tokens
 
     async def _check_audio_transcription_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
-        model = form.get("model")
 
-        await self._check_limits(user=user, limits=limits, model=model)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=form.get("model"))
 
     async def _check_chat_completions_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
+        from app.utils.lifespan import context
+
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        await self._check_limits(user=user, limits=limits, model=body.get("model"))
+        await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
-        if body.get("search", False):
-            await self._check_limits(user=user, limits=limits, model=body.get("search_args", {}).get("model", None))
+        if body.get("search", False):  # count the search request as one request to the search model (embeddings)
+            await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant.model.id)
+
+        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__CHAT_COMPLETIONS, body=body)
+        await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_collections_patch(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
@@ -199,42 +243,65 @@ class Authorization:
             raise InsufficientPermissionException("Missing permission to create public collections.")
 
     async def _check_embeddings_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
+        from app.utils.lifespan import context
+
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        await self._check_limits(user=user, limits=limits, model=body.get("model"))
+        await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
+
+        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__EMBEDDINGS, body=body)
+        await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_files_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         from app.utils.lifespan import context
 
-        await self._check_limits(user=user, limits=limits, model=context.documents.qdrant_model)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant.model.id)
 
     async def _check_ocr_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
+        form = {key: value for key, value in form.items()}
         model = form.get("model")
 
-        await self._check_limits(user=user, limits=limits, model=model)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=model)
 
     async def _check_rerank_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
+        from app.utils.lifespan import context
+
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        await self._check_limits(user=user, limits=limits, model=body.get("model"))
+        await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
+
+        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__RERANK, body=body)
+        await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_search_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
+        from app.utils.lifespan import context
+
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        await self._check_limits(user=user, limits=limits, model=body.get("model"))
+        # count the search request as one request to the search model (embeddings)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant.model.id)
+
+        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__SEARCH, body=body)
+        await self._check_token_limits(
+            request=request,
+            user=user,
+            limits=limits,
+            prompt_tokens=prompt_tokens,
+            model=context.documents.qdrant.model.id,
+        )
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
         body = json.loads(body) if body else {}
 
-        if body.get("user", None) and PermissionType.CREATE_USER not in role.permissions:
+        # if the token is for another user, we don't check the expiration date
+        if body.get("user") and PermissionType.CREATE_USER not in role.permissions:
             raise InsufficientPermissionException("Missing permission to create token for another user.")
 
-        elif body.get("expires_at", None) and settings.auth.max_token_expiration_days:
-            # if the token is for another user, we don't check the expiration date
+        elif body.get("expires_at") and settings.auth.max_token_expiration_days:
             if body.get("expires_at") > int(dt.datetime.now(tz=dt.UTC).timestamp()) + settings.auth.max_token_expiration_days * 86400:
                 raise InsufficientPermissionException(f"Token expiration timestamp cannot be greater than {settings.auth.max_token_expiration_days} days from now.")  # fmt: off

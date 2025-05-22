@@ -46,18 +46,20 @@ class RoleUpdateRequest(BaseModel):
                 raise ValueError("Name cannot be empty")
         return name
 
-    @field_validator("limits", mode="before")
+    @field_validator("limits", mode="after")
     def check_duplicate_limits(cls, limits):
-        keys = []
+        keys = set()
         if limits is not None:
             for limit in limits:
-                key = (limit["model"], limit["type"])
-                if key not in keys:
-                    keys.append(key)
-                else:
-                    raise ValueError(f"Duplicate limit found: ({limit["model"]}, {limit["type"]})")
-
+                key = (limit.model, limit.type.value)
+                if key in keys:
+                    raise ValueError(f"Duplicate limit found: ({limit.model}, {limit.type}).")
+                keys.add(key)
         return limits
+
+
+class RolesResponse(BaseModel):
+    id: int
 
 
 class RoleRequest(BaseModel):
@@ -73,15 +75,14 @@ class RoleRequest(BaseModel):
                 raise ValueError("Name cannot be empty")
         return name
 
-    @field_validator("limits", mode="before")
+    @field_validator("limits", mode="after")
     def check_duplicate_limits(cls, limits):
-        keys = []
+        keys = set()
         for limit in limits:
-            key = (limit["model"], limit["type"])
-            if key not in keys:
-                keys.append(key)
-            else:
-                raise ValueError(f"Duplicate limit found: ({limit["model"]}, {limit["type"]})")
+            key = (limit.model, limit.type.value)
+            if key in keys:
+                raise ValueError(f"Duplicate limit found: ({limit.model}, {limit.type}).")
+            keys.add(key)
 
         return limits
 
@@ -125,6 +126,10 @@ class UserUpdateRequest(BaseModel):
         return name
 
 
+class UsersResponse(BaseModel):
+    id: int
+
+
 class UserRequest(BaseModel):
     name: str = Field(description="The user name.")
     role: int = Field(description="The role ID.")
@@ -161,6 +166,11 @@ class User(BaseModel):
 class Users(BaseModel):
     object: Literal["list"] = "list"
     data: List[User]
+
+
+class TokensResponse(BaseModel):
+    id: int
+    token: str
 
 
 class TokenRequest(BaseModel):

@@ -3,7 +3,7 @@ from typing import Any, List, Literal, Optional
 
 from pydantic import Field, field_validator, model_validator
 
-from app.schemas import BaseModel
+from app.schemas import BaseModel, Usage
 from app.schemas.chunks import Chunk
 from app.utils.exceptions import WrongSearchMethodException, CollectionNotFoundException
 
@@ -70,3 +70,4 @@ class Search(BaseModel):
 class Searches(BaseModel):
     object: Literal["list"] = "list"
     data: List[Search]
+    usage: Usage

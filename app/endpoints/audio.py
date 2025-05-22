@@ -1,12 +1,13 @@
 from typing import List, Literal
 
 from fastapi import APIRouter, File, Form, Request, Security, UploadFile
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.audio import AudioTranscription
 from app.utils.lifespan import context
-from app.utils.variables import ENDPOINT__AUDIO_TRANSCRIPTIONS, AUDIO_SUPPORTED_LANGUAGES_VALUES
+from app.utils.variables import AUDIO_SUPPORTED_LANGUAGES_VALUES, ENDPOINT__AUDIO_TRANSCRIPTIONS
+from app.utils.usage_decorator import log_usage
 
 router = APIRouter()
 
@@ -18,7 +19,8 @@ AudioTranscriptionTemperature = Form(default=0, description="The sampling temper
 AudioTranscriptionTimestampGranularities = Form(default=["segment"], description="Not implemented.")  # fmt: off
 
 
-@router.post(path=ENDPOINT__AUDIO_TRANSCRIPTIONS, dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.post(path=ENDPOINT__AUDIO_TRANSCRIPTIONS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=AudioTranscription)  # fmt: off
+@log_usage
 async def audio_transcriptions(
     request: Request,
     file: UploadFile = File(description="The audio file object (not file name) to transcribe, in one of these formats: mp3 or wav."),
@@ -52,4 +54,4 @@ async def audio_transcriptions(
     if response_format == "text":
         return PlainTextResponse(content=response.text)
 
-    return AudioTranscription(**response.json())
+    return JSONResponse(content=AudioTranscription(**response.json()).model_dump(), status_code=response.status_code)

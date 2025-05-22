@@ -6,10 +6,10 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.auth import User
 from app.schemas.core.data import FileType, JsonFile
-from app.schemas.files import ChunkerArgs, FilesRequest
+from app.schemas.files import ChunkerArgs, FilesRequest, FileResponse
 from app.sql.session import get_db as get_session
 from app.utils.exceptions import CollectionNotFoundException, FileSizeLimitExceededException, InvalidJSONFileFormatException
 from app.utils.lifespan import context
@@ -18,11 +18,12 @@ from app.utils.variables import ENDPOINT__FILES
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__FILES, status_code=201)
+# TODO: turn into form data endpoint to log usages
+@router.post(path=ENDPOINT__FILES, status_code=201, response_model=FileResponse)
 async def upload_file(
     file: UploadFile = File(...),
     request: FilesRequest = Body(...),
-    user: User = Security(dependency=Authorization()),
+    user: User = Security(dependency=AccessController()),
     session: AsyncSession = Depends(get_session),
 ) -> JSONResponse:
     """

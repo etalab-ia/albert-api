@@ -1,10 +1,8 @@
-from typing import Union
-
 from fastapi import APIRouter, Body, Depends, Path, Query, Request, Response, Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import Authorization
+from app.helpers import AccessController
 from app.schemas.collections import Collection, CollectionRequest, Collections, CollectionUpdateRequest
 from app.sql.session import get_db as get_session
 from app.utils.exceptions import CollectionNotFoundException
@@ -14,7 +12,7 @@ from app.utils.variables import ENDPOINT__COLLECTIONS
 router = APIRouter()
 
 
-@router.post(path=ENDPOINT__COLLECTIONS, dependencies=[Security(dependency=Authorization())], status_code=201)
+@router.post(path=ENDPOINT__COLLECTIONS, dependencies=[Security(dependency=AccessController())], status_code=201)
 async def create_collection(request: Request, body: CollectionRequest, session: AsyncSession = Depends(get_session)) -> JSONResponse:
     """
     Create a new collection.
@@ -33,10 +31,17 @@ async def create_collection(request: Request, body: CollectionRequest, session: 
     return JSONResponse(status_code=201, content={"id": collection_id})
 
 
-@router.get(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.get(
+    path=ENDPOINT__COLLECTIONS + "/{collection}",
+    dependencies=[Security(dependency=AccessController())],
+    status_code=200,
+    response_model=Collection,
+)
 async def get_collection(
-    request: Request, collection: int = Path(..., description="The collection ID"), session: AsyncSession = Depends(get_session)
-) -> Collection:
+    request: Request,
+    collection: int = Path(..., description="The collection ID"),
+    session: AsyncSession = Depends(get_session),
+) -> JSONResponse:
     """
     Get a collection by ID.
     """
@@ -50,16 +55,16 @@ async def get_collection(
         include_public=True,
     )
 
-    return collections[0]
+    return JSONResponse(status_code=200, content=collections[0].model_dump())
 
 
-@router.get(path=ENDPOINT__COLLECTIONS, dependencies=[Security(dependency=Authorization())], status_code=200)
+@router.get(path=ENDPOINT__COLLECTIONS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Collections)
 async def get_collections(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the collections to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the collections to get."),
     session: AsyncSession = Depends(get_session),
-) -> Union[Collection, Collections]:
+) -> JSONResponse:
     """
     Get list of collections.
     """
@@ -74,12 +79,14 @@ async def get_collections(
             limit=limit,
         )
 
-    return Collections(data=data)
+    return JSONResponse(status_code=200, content=Collections(data=data).model_dump())
 
 
-@router.delete(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())], status_code=204)
+@router.delete(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=AccessController())], status_code=204)
 async def delete_collections(
-    request: Request, collection: int = Path(..., description="The collection ID"), session: AsyncSession = Depends(get_session)
+    request: Request,
+    collection: int = Path(..., description="The collection ID"),
+    session: AsyncSession = Depends(get_session),
 ) -> Response:
     """
     Delete a collection.
@@ -96,7 +103,7 @@ async def delete_collections(
     return Response(status_code=204)
 
 
-@router.patch(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=Authorization())], status_code=204)
+@router.patch(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=AccessController())], status_code=204)
 async def update_collection(
     request: Request,
     collection: int = Path(..., description="The collection ID"),

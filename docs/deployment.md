@@ -53,6 +53,7 @@ The configuration file has the following sections:
 | [general](#general) | Required | General configuration. |
 | [auth](#auth) | Optional | Authentication parameters. |
 | [playground](#playground) | Optional | Playground parameters. |
+| [usages](#usages) | Optional | Usages parameters. |
 | [models](#models) | Required | Defines model APIs. |
 | [web_search](#web_search) | Optional | Defines the internet search engine API. |
 | [databases](#databases) | Required | Defines database APIs. |
@@ -73,11 +74,10 @@ The configuration file has the following sections:
 | contact_url | Optional | API contact URL. | str | | `None` |
 | contact_email | Optional | API contact email. | str | | `None` |
 | docs_url | Optional | API swagger URL. | str | | `"/docs"` |
-| redoc_url | Optional | API redoc URL. | str | | `"/redoc"` |
+| redoc_url | Optional | API redoc URL. | str | | `"/redoc"` |x
 | openapi_url | Optional | API openapi URL. | str | | `"/openapi.json"` |
 | log_level | Required | Logging level. | str | `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`, `"CRITICAL"` | `"INFO"` |
 | disabled_routers | Required | List of disabled API routers. | List[str] | `["audio", "auth", "chat", "chunks", "collections", "documents", "embeddings", "files", "models", "monitoring", "ocr", "rerank", "search"]` | `[]` |
-| disabled_middlewares | Required | Enable or disable middlewares. | bool |  | `False` |
 | sentry_dsn | Optional | URL of Sentry server if you want to monitor your instance (cf. https://sentry.io) | str | | None |
 
 **Example**
@@ -310,6 +310,37 @@ playground:
   cache_ttl: 1800
 ```
 
+#### usages
+
+| Argument | Required | Description | Type | Values | Default |
+| --- | --- | --- | --- | --- | --- |
+| router | Optional | Log usage of the specified routers. | List[str] |  `["all", "audio", "auth", "chat", "chunks", "collections", "documents", "embeddings", "files", "models", "monitoring", "ocr", "rerank", "search"]` | `[]` (1) |
+| tokenizer | Optional | Tokenizer type. | str | (2) | `"tiktoken_o200k_base"` |
+
+**(1) Router Types**
+
+If `router` is set to `all`, all routers will be logged. This option is exclusive with the `router` argument. `monitoring` and `files` routers can be specified but will be ignored (not implemented yet).
+
+**(2) Tokenizer Types**
+
+Tokenizer is used to count the number of tokens sent by users to compute token per minute (TPM) and token per day (TPD) limits.
+
+| Type | Documentation |
+| --- | --- |
+| `tiktoken_cl100k_base` | [tiktoken_cl100k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_gpt2` | [tiktoken_gpt2](https://github.com/openai/tiktoken) |
+| `tiktoken_o200k_base` | [tiktoken_o200k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_o50k_base` | [tiktoken_o50k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_p50k_base` | [tiktoken_p50k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_p50k_edit` | [tiktoken_p50k_edit](https://github.com/openai/tiktoken) |
+| `tiktoken_r50k_base` | [tiktoken_r50k_base](https://github.com/openai/tiktoken) |
+
+**Example**
+
+```yaml
+usages:
+  tokenizer: "tiktoken_gpt2"
+```
 #### web_search
 
 The Albert API allows searching the internet to enrich API responses. For this, it is necessary to configure a search engine API client in the `web_search` section.

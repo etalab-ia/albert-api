@@ -12,7 +12,16 @@ import yaml
 from app.schemas.core.auth import LimitingStrategy
 from app.schemas.core.models import ModelClientType, RoutingStrategy
 from app.schemas.models import ModelType
-from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
+from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS, ROUTER__MONITORING, ROUTER__FILES
+
+
+class LimitsTokenizer(str, Enum):
+    TIKTOKEN_GPT2 = "tiktoken_gpt2"
+    TIKTOKEN_R50K_BASE = "tiktoken_r50k_base"
+    TIKTOKEN_P50K_BASE = "tiktoken_p50k_base"
+    TIKTOKEN_P50K_EDIT = "tiktoken_p50k_edit"
+    TIKTOKEN_CL100K_BASE = "tiktoken_cl100k_base"
+    TIKTOKEN_O200K_BASE = "tiktoken_o200k_base"
 
 
 class DatabaseType(str, Enum):
@@ -123,6 +132,22 @@ class Database(ConfigBaseModel):
         return values
 
 
+class Usages(ConfigBaseModel):
+    routers: List[Literal[*ROUTERS, "all"]] = []
+    tokenizer: LimitsTokenizer = LimitsTokenizer.TIKTOKEN_O200K_BASE
+
+    @field_validator("routers", mode="after")
+    def validate_routers(cls, routers):
+        if "all" in routers:
+            assert len(routers) == 1, "`all` can only be used alone."
+            routers = [router for router in ROUTERS]
+
+        # exclude monitoring and files
+        routers = [router for router in routers if router not in [ROUTER__MONITORING, ROUTER__FILES]]
+
+        return routers
+
+
 class Auth(ConfigBaseModel):
     master_key: str = "changeme"
     limiting_strategy: LimitingStrategy = LimitingStrategy.FIXED_WINDOW
@@ -149,12 +174,12 @@ class General(ConfigBaseModel):
 
     # Others
     disabled_routers: List[Literal[*ROUTERS]] = []
-    disabled_middlewares: bool = False
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 
 class Config(ConfigBaseModel):
     general: General = Field(default_factory=General)
+    usages: Usages = Field(default_factory=Usages)
     auth: Auth = Field(default_factory=Auth)
     models: List[Model] = Field(min_length=1)
     databases: List[Database] = Field(min_length=1)
@@ -235,6 +260,7 @@ class Settings(BaseSettings):
 
         values.general = config.general
         values.auth = config.auth
+        values.usages = config.usages
         values.web_search = config.web_search[0] if config.web_search else None
         values.models = config.models
         values.databases = config.databases

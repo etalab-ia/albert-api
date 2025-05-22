@@ -1,4 +1,4 @@
-name: albert-api
+name: albert-test
 services:
   api:
     build:
@@ -13,6 +13,10 @@ services:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
       - QDRANT_HOST=qdrant
+      - POSTGRES_PORT=5432
+      - REDIS_PORT=6379
+      - QDRANT_PORT=6333
+      - QDRANT_GRPC_PORT=6334
     ports:
       - 8000:8000
     volumes:
@@ -28,17 +32,24 @@ services:
   postgres:
     extends:
       file: ../compose.yml
-      service: postgres
-
-  redis:
-    extends:
-      file: ../compose.yml
-      service: redis
+      service: postgres 
+    ports: !override
+      - 8432:5432
 
   qdrant:
     extends:
       file: ../compose.yml
       service: qdrant
+    ports: !override
+      - 8333:6333
+      - 8334:6334
+
+  redis:
+    extends:
+      file: ../compose.yml
+      service: redis
+    ports: !override
+      - 8335:6379
 
 volumes:
   postgres:
