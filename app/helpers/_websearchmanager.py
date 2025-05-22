@@ -1,4 +1,5 @@
 from io import BytesIO
+import logging
 from typing import List
 from urllib.parse import urlparse
 
@@ -9,48 +10,12 @@ from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.helpers.models.routers import ModelRouter
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
-import logging
+from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
 
 
 class WebSearchManager:
-    LIMITED_DOMAINS = [
-        "service-public.fr",
-        ".gouv.fr",
-        "france-identite.gouv.fr",
-        "caf.fr",
-        "info-retraite.fr",
-        "ameli.fr",
-        "education.gouv.fr",
-        "elysee.fr",
-        "vie-publique.fr",
-        "wikipedia.org",
-        "autoritedelaconcurrence.fr",
-        "assemblee-nationale.fr",
-        "amf.asso.fr",
-        "elysee.fr",
-        "conseil-etat.fr",
-        "departements.fr",
-        "courdecassation.fr",
-        "lcp.fr",
-        "archives.assemblee-nationale.fr",
-        "senat.fr",
-        "gouvernement.fr",
-        "vie-publique.fr",
-        "carrefourlocal.senat.fr",
-        "elections-legislatives.fr",
-        "ccomptes.fr",
-        "conseil-constitutionnel.fr",
-        "ladocumentationfrancaise.fr",
-        "franceinfo.fr",
-        "lefigaro.fr",
-        "ouest-france.fr",
-        "lemonde.fr",
-        "leparisien.fr",
-        "refugies.info",
-    ]
-
     GET_WEB_QUERY_PROMPT = """Tu es un spécialiste pour transformer des demandes en requête google. Tu sais écrire les meilleurs types de recherches pour arriver aux meilleurs résultats.
 Voici la demande : {prompt}
 Réponds en donnant uniquement une requête google qui permettrait de trouver des informations pour répondre à la question.
@@ -71,6 +36,8 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
     def __init__(self, web_search: WebSearchClient, model: ModelRouter) -> None:
         self.web_search = web_search
         self.model = model
+        self.limited_domains = settings.web_search.limited_domains if settings.web_search else None
+        self.user_agent = settings.web_search.user_agent if settings.web_search else None
 
     async def get_web_query(self, prompt: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
@@ -95,15 +62,15 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
                 continue
 
             # Check if the domain is authorized
-            if self.LIMITED_DOMAINS:
+            if self.limited_domains:
                 # Allow exact match or subdomains of allowed domains
-                if not any(domain == allowed or domain.endswith(f".{allowed}") for allowed in self.LIMITED_DOMAINS):
+                if not any(domain == allowed or domain.endswith(f".{allowed}") for allowed in self.limited_domains):
                     # Skip unauthorized domains
                     continue
 
             # Fetch the content, skipping on network errors
             try:
-                response = requests.get(url=url, headers={"User-Agent": self.web_search.USER_AGENT}, timeout=5)
+                response = requests.get(url=url, headers={"User-Agent": self.user_agent}, timeout=5)
             except requests.RequestException:
                 logger.exception("Error fetching URL: %s", url)
                 continue

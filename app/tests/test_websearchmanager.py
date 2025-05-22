@@ -29,11 +29,10 @@ async def test_get_results_success(monkeypatch):
     web_search = DummyWebSearch(urls)
     manager = WebSearchManager(web_search)
     # restrict to the domain
-    manager.LIMITED_DOMAINS = ["service-public.fr"]
+    manager.limited_domains = ["service-public.fr"]
 
     def fake_get(url, headers, timeout):
         assert url == urls[0]
-        assert headers["User-Agent"] == web_search.USER_AGENT
         return FakeResponse(200, "hello world")
 
     monkeypatch.setattr(requests, "get", fake_get)
@@ -66,11 +65,11 @@ async def test_get_results_filters_invalid_url(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_get_results_filters_unauthorized_domain(monkeypatch):
-    urls = ["http://unauthorized.com/page"]
+    urls = ["http://unauthorized.com/page?injection=service-public.fr"]
     web_search = DummyWebSearch(urls)
     manager = WebSearchManager(web_search)
     # only allow a different domain
-    manager.LIMITED_DOMAINS = ["allowed.com"]
+    manager.limited_domains = ["allowed.com"]
 
     def fake_get(*args, **kwargs):
         pytest.skip("requests.get should not be called for unauthorized domain")
@@ -85,7 +84,7 @@ async def test_get_results_handles_request_exception(monkeypatch):
     urls = ["http://allowed.com/page"]
     web_search = DummyWebSearch(urls)
     manager = WebSearchManager(web_search)
-    manager.LIMITED_DOMAINS = ["allowed.com"]
+    manager.limited_domains = ["allowed.com"]
 
     def fake_get(url, headers, timeout):
         raise requests.RequestException("network error")
@@ -100,7 +99,7 @@ async def test_get_results_handles_non_200_status(monkeypatch):
     urls = ["http://allowed.com/page"]
     web_search = DummyWebSearch(urls)
     manager = WebSearchManager(web_search)
-    manager.LIMITED_DOMAINS = ["allowed.com"]
+    manager.limited_domains = ["allowed.com"]
 
     def fake_get(url, headers, timeout):
         return FakeResponse(404, "not found")
@@ -115,7 +114,7 @@ async def test_get_results_subdomain_allowed(monkeypatch):
     urls = ["http://sub.allowed.com/page"]
     web_search = DummyWebSearch(urls)
     manager = WebSearchManager(web_search)
-    manager.LIMITED_DOMAINS = ["allowed.com"]
+    manager.limited_domains = ["allowed.com"]
 
     def fake_get(url, headers, timeout):
         return FakeResponse(200, "<html/>")

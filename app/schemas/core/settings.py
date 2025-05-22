@@ -75,6 +75,8 @@ class Model(ConfigBaseModel):
 class WebSearch(ConfigBaseModel):
     type: WebSearchType = WebSearchType.DUCKDUCKGO
     model: str
+    limited_domains: List[str] = []
+    user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
     args: dict = {}
 
 
