@@ -19,7 +19,7 @@ def setup(client):
     assert response.status_code == 201, response.text
     COLLECTION_ID = response.json()["id"]
 
-    file_path = "app/tests/assets/json.json"
+    file_path = "app/tests/integ/assets/json.json"
     with open(file_path, "rb") as file:
         files = {"file": (os.path.basename(file_path), file, "application/json")}
         data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
@@ -66,7 +66,7 @@ class TestDocuments:
     def test_collection_document_count(self, client: TestClient, setup):
         COLLECTION_ID, DOCUMENT_ID = setup
 
-        with open("app/tests/assets/json.json", "r") as f:
+        with open("app/tests/integ/assets/json.json", "r") as f:
             data = json.load(f)
             document_count = len(data)
 

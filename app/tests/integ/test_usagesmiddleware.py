@@ -46,7 +46,7 @@ class TestUsagesMiddleware:
         models = response.json()["data"]
         model_id = [m for m in models if m["type"] == ModelType.AUTOMATIC_SPEECH_RECOGNITION][0]["id"]
 
-        file_path = "app/tests/assets/audio.mp3"
+        file_path = "app/tests/integ/assets/audio.mp3"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
             data = {"model": model_id, "language": "fr", "response_format": "json", "temperature": 0}

@@ -26,7 +26,7 @@ class TestAudio:
         """Test the POST /audio/transcriptions endpoint with MP3 file"""
         MODEL_ID = setup
 
-        file_path = "app/tests/assets/audio.mp3"
+        file_path = "app/tests/integ/assets/audio.mp3"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
             data = {"model": MODEL_ID, "language": "fr", "response_format": "json", "temperature": 0}
@@ -40,7 +40,7 @@ class TestAudio:
         """Test the POST /audio/transcriptions with text output"""
         MODEL_ID = setup
 
-        file_path = "app/tests/assets/audio.mp3"
+        file_path = "app/tests/integ/assets/audio.mp3"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
             data = {"model": MODEL_ID, "language": "fr", "response_format": "text"}
@@ -54,7 +54,7 @@ class TestAudio:
         """Test the POST /audio/transcriptions endpoint with WAV file"""
         MODEL_ID = setup
 
-        file_path = "app/tests/assets/audio.wav"
+        file_path = "app/tests/integ/assets/audio.wav"
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "audio/wav")}
             data = {"model": MODEL_ID, "language": "fr", "response_format": "json", "temperature": 0}
@@ -68,7 +68,7 @@ class TestAudio:
         """Test the POST /audio/transcriptions with invalid model"""
         MODEL_ID = "invalid-model"
 
-        file_path = "app/tests/assets/audio.mp3"
+        file_path = "app/tests/integ/assets/audio.mp3"
 
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "audio/mpeg")}
