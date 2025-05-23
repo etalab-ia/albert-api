@@ -7,7 +7,7 @@ import pytest
 
 from app.utils.variables import ENDPOINT__OCR
 from app.schemas.models import ModelType
-from app.tests.utils.snapshot_assertions import assert_snapshot_almost_equal
+from app.tests.integ.utils.snapshot_assertions import assert_snapshot_almost_equal
 
 current_path = os.path.dirname(__file__)
 
