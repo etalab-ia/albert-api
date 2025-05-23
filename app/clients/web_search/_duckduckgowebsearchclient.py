@@ -12,10 +12,9 @@ logger = logging.getLogger(__name__)
 class DuckduckgoWebSearchClient(BaseWebSearchClient):
     URL = "https://api.duckduckgo.com/"
     DEFAULT_TIMEOUT = 5
-    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-    def __init__(self, *args, **kwargs) -> None:
-        self.headers = {"User-Agent": self.USER_AGENT}
+    def __init__(self, user_agent: str, *args, **kwargs) -> None:
+        self.headers = {"User-Agent": user_agent}
 
     async def search(self, query: str, n: int = 3) -> List[str]:
         params = {

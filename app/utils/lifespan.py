@@ -25,7 +25,11 @@ async def lifespan(app: FastAPI):
 
     # setup clients
     redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
-    web_search = WebSearchClient.import_module(type=settings.web_search.type)(**settings.web_search.args) if settings.web_search else None
+    web_search = (
+        WebSearchClient.import_module(type=settings.web_search.type)(user_agent=settings.web_search.user_agent, **settings.web_search.args)
+        if settings.web_search
+        else None
+    )
     routers = []
     for model in settings.models:
         clients = []
