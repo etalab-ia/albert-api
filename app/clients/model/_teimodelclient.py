@@ -8,6 +8,7 @@ from openai import AsyncOpenAI
 import requests
 
 from app.clients.model._basemodelclient import BaseModelClient
+from app.utils.context import global_context
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -98,8 +99,6 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         Returns:
             httpx.Response: The formatted response.
         """
-        from app.utils.lifespan import context
-
         content_type = response.headers.get("Content-Type", "")
         if content_type == "application/json":
             data = response.json()
@@ -107,7 +106,7 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
                 data = {"data": data}
 
             additional_data.update({"model": self.model})
-            additional_data = context.tokenizer.add_usage_in_additional_data(
+            additional_data = global_context.tokenizer.add_usage_in_additional_data(
                 endpoint=self.endpoint,
                 body=json,
                 response=data,

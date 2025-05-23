@@ -5,12 +5,13 @@ import json
 import logging
 from typing import Optional
 
-from fastapi import Request, Response, HTTPException
+from fastapi import HTTPException, Request, Response
 from starlette.responses import StreamingResponse
 
 from app.helpers import StreamingResponseWithStatusCode
 from app.sql.models import Usage
 from app.sql.session import get_db
+from app.utils.context import global_context
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +57,9 @@ def log_usage(func):
         try:
             await extract_usage_from_request(usage=usage, request=request)
         except NoUserIdException:
-            logger.exception(f"No user ID found in request, skipping usage logging ({request.url.path}).")
+            logger.info(f"No user ID found in request, skipping usage logging ({request.url.path}).")
             return await func(*args, **kwargs)
         except MasterUserIdException:
-            logger.warning(f"Master user ID found in request, skipping usage logging ({request.url.path}).")
             return await func(*args, **kwargs)
 
         response = None  # Initialize in case of early exception not from func
@@ -217,8 +217,6 @@ async def perform_log(response: Optional[Response], usage: Usage, start_time: da
     This function captures the duration of the request and sets the status code of the response if available.
     """
 
-    from app.utils.lifespan import context
-
     usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
 
     # Set usage.status based on the response object ONLY if not already set by streaming logic.
@@ -226,7 +224,7 @@ async def perform_log(response: Optional[Response], usage: Usage, start_time: da
         usage.status = response.status_code if hasattr(response, "status_code") else None
 
     if usage.request_model:
-        usage.request_model = context.models.aliases.get(usage.request_model, usage.request_model)
+        usage.request_model = global_context.models.aliases.get(usage.request_model, usage.request_model)
 
     async for session in get_db():
         session.add(usage)

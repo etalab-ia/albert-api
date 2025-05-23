@@ -6,11 +6,11 @@ from fastapi.responses import JSONResponse
 from pdf2image import convert_from_bytes
 
 from app.helpers import AccessController
-from app.schemas import Usage
 from app.schemas.core.data import FileType
 from app.schemas.ocr import OCR, OCRs
+from app.schemas.usage import Usage
+from app.utils.context import global_context
 from app.utils.exceptions import FileSizeLimitExceededException
-from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__OCR
 
 router = APIRouter()
@@ -42,12 +42,12 @@ async def ocr(
         raise FileSizeLimitExceededException()
 
     # get model client
-    model = context.models(model=model)
+    model = global_context.models(model=model)
     client = model.get_client(endpoint=ENDPOINT__OCR)
 
     # convert pages into images
     images = convert_from_bytes(pdf_file=file.file.read(), dpi=dpi)
-    data = []  # Initialize data list to store results
+    content = OCRs(data=[], usage=Usage())
 
     for i, image in enumerate(images):
         # convert image to bytes
@@ -55,25 +55,27 @@ async def ocr(
         image.save(img_byte_arr, format="PNG")
         img_byte_arr = img_byte_arr.getvalue()
 
-        content = [
-            {"type": "text", "text": prompt},
-            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64.b64encode(img_byte_arr).decode("utf-8")}"}},
-        ]
-
         # forward request
-        payload = {"model": model, "messages": [{"role": "user", "content": content}], "n": 1, "stream": False}
-        response = await client.forward_request(
-            method="POST",
-            json=payload,
-            additional_data={"usage": {"prompt_tokens": request.app.state.prompt_tokens}},
-        )
-
-        data_response = response.json()
-        extracted_text = data_response.get("choices", [{}])[0].get("message", {}).get("content", "Erreur: Aucun contenu reçu")
+        payload = {
+            "model": model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64.b64encode(img_byte_arr).decode("utf-8")}"}},
+                    ],
+                }
+            ],
+            "n": 1,
+            "stream": False,
+        }
+        response = await client.forward_request(method="POST", json=payload)  # error are automatically raised
+        response = response.json()
+        text = response.get("choices", [{}])[0].get("message", {}).get("content", "")
 
         # format response
-        data.append(OCR(page=i + 1, text=extracted_text))
+        content.data.append(OCR(page=i + 1, text=text))
+        content.usage = Usage(**response.get("usage", {}))
 
-    content = OCRs(data=data, usage=Usage(prompt_tokens=request.app.state.prompt_tokens, total_tokens=request.app.state.prompt_tokens))
-
-    return JSONResponse(content=content.model_dump(), status_code=response.status_code)
+    return JSONResponse(content=content.model_dump(), status_code=200)

@@ -1,13 +1,13 @@
 from typing import List, Literal
 
 from fastapi import APIRouter, File, Form, Request, Security, UploadFile
-from fastapi.responses import PlainTextResponse, JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.helpers import AccessController
 from app.schemas.audio import AudioTranscription
-from app.utils.lifespan import context
-from app.utils.variables import AUDIO_SUPPORTED_LANGUAGES_VALUES, ENDPOINT__AUDIO_TRANSCRIPTIONS
+from app.utils.context import global_context
 from app.utils.usage_decorator import log_usage
+from app.utils.variables import AUDIO_SUPPORTED_LANGUAGES_VALUES, ENDPOINT__AUDIO_TRANSCRIPTIONS
 
 router = APIRouter()
 
@@ -40,7 +40,7 @@ async def audio_transcriptions(
     # @TODO: Implement verbose response format
 
     file_content = await file.read()
-    model = context.models(model=model)
+    model = global_context.models(model=model)
     client = model.get_client(endpoint=ENDPOINT__AUDIO_TRANSCRIPTIONS)
     data = {
         "model": client.model,

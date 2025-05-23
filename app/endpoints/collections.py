@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.helpers import AccessController
 from app.schemas.collections import Collection, CollectionRequest, Collections, CollectionUpdateRequest
 from app.sql.session import get_db as get_session
+from app.utils.context import global_context as global_context
 from app.utils.exceptions import CollectionNotFoundException
-from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__COLLECTIONS
 
 router = APIRouter()
@@ -17,10 +17,10 @@ async def create_collection(request: Request, body: CollectionRequest, session: 
     """
     Create a new collection.
     """
-    if not context.documents:  # no vector store available
+    if not global_context.documents:  # no vector store available
         raise CollectionNotFoundException()
 
-    collection_id = await context.documents.create_collection(
+    collection_id = await global_context.documents.create_collection(
         session=session,
         name=body.name,
         visibility=body.visibility,
@@ -45,10 +45,10 @@ async def get_collection(
     """
     Get a collection by ID.
     """
-    if not context.documents:  # no vector store available
+    if not global_context.documents:  # no vector store available
         raise CollectionNotFoundException()
 
-    collections = await context.documents.get_collections(
+    collections = await global_context.documents.get_collections(
         session=session,
         collection_id=collection,
         user_id=request.app.state.user.id,
@@ -68,10 +68,10 @@ async def get_collections(
     """
     Get list of collections.
     """
-    if not context.documents:  # no vector store available
+    if not global_context.documents:  # no vector store available
         data = []
     else:
-        data = await context.documents.get_collections(
+        data = await global_context.documents.get_collections(
             session=session,
             user_id=request.app.state.user.id,
             include_public=True,
@@ -91,10 +91,10 @@ async def delete_collections(
     """
     Delete a collection.
     """
-    if not context.documents:  # no vector store available
+    if not global_context.documents:  # no vector store available
         raise CollectionNotFoundException()
 
-    await context.documents.delete_collection(
+    await global_context.documents.delete_collection(
         session=session,
         user_id=request.app.state.user.id,
         collection_id=collection,
@@ -113,10 +113,10 @@ async def update_collection(
     """
     Update a collection.
     """
-    if not context.documents:  # no vector store available
+    if not global_context.documents:  # no vector store available
         raise CollectionNotFoundException()
 
-    await context.documents.update_collection(
+    await global_context.documents.update_collection(
         session=session,
         user_id=request.app.state.user.id,
         collection_id=collection,

@@ -11,6 +11,7 @@ from app.schemas.auth import Limit, LimitType, PermissionType, Role, User
 from app.schemas.collections import CollectionVisibility
 from app.schemas.core.auth import UserModelLimits
 from app.sql.session import get_db as get_session
+from app.utils.context import global_context
 from app.utils.exceptions import (
     InsufficientPermissionException,
     InvalidAPIKeyException,
@@ -68,7 +69,6 @@ class AccessController:
         # add authenticated user to request state for logging usages
         request.app.state.user = user
         request.app.state.token_id = token_id
-        request.app.state.prompt_tokens = None
 
         if request.url.path.endswith(ENDPOINT__AUDIO_TRANSCRIPTIONS) and request.method == "POST":
             await self._check_audio_transcription_post(user=user, role=role, limits=limits, request=request)
@@ -104,9 +104,8 @@ class AccessController:
 
     def __get_user_limits(self, role: Role) -> Dict[str, UserModelLimits]:
         limits = {}
-        from app.utils.lifespan import context
 
-        for model in context.models.models:
+        for model in global_context.models.models:
             limits[model] = UserModelLimits()
             for limit in role.limits:
                 if limit.model == model and limit.type == LimitType.TPM:
@@ -127,10 +126,8 @@ class AccessController:
         if not api_key.credentials:
             raise InvalidAPIKeyException()
 
-        from app.utils.lifespan import context
-
         if api_key.credentials == settings.auth.master_key:  # master user can do anything
-            limits = [Limit(model=model, type=type, value=None) for model in context.models.models for type in LimitType]
+            limits = [Limit(model=model, type=type, value=None) for model in global_context.models.models for type in LimitType]
             permissions = [permission for permission in PermissionType]
 
             master_role = Role(id=0, name="master", permissions=permissions, limits=limits)
@@ -139,14 +136,14 @@ class AccessController:
 
             return master_user, master_role, master_limits, None
 
-        user_id, token_id = await context.iam.check_token(session=session, token=api_key.credentials)
+        user_id, token_id = await global_context.iam.check_token(session=session, token=api_key.credentials)
         if not user_id:
             raise InvalidAPIKeyException()
 
-        users = await context.iam.get_users(session=session, user_id=user_id)
+        users = await global_context.iam.get_users(session=session, user_id=user_id)
         user = users[0]
 
-        roles = await context.iam.get_roles(session=session, role_id=user.role)
+        roles = await global_context.iam.get_roles(session=session, role_id=user.role)
         role = roles[0]
 
         limits = self.__get_user_limits(role=role)
@@ -158,12 +155,10 @@ class AccessController:
             raise InsufficientPermissionException()
 
     async def _check_request_limits(self, request: Request, user: User, limits: Dict[str, UserModelLimits], model: Optional[str] = None) -> None:  # fmt: off
-        from app.utils.lifespan import context
-
         if not model:
             return
 
-        model = context.models.aliases.get(model, model)
+        model = global_context.models.aliases.get(model, model)
 
         if model not in limits:  # unkown model (404 will be raised by the model client)
             return
@@ -171,23 +166,21 @@ class AccessController:
         if limits[model].rpm == 0 or limits[model].rpd == 0:
             raise InsufficientPermissionException(detail=f"Insufficient permissions to access the model {model}.")
 
-        check = await context.limiter.hit(user_id=user.id, model=model, type=LimitType.RPM, value=limits[model].rpm)
+        check = await global_context.limiter.hit(user_id=user.id, model=model, type=LimitType.RPM, value=limits[model].rpm)
         if not check:
-            remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.RPM, value=limits[model].rpm)
+            remaining = await global_context.limiter.remaining(user_id=user.id, model=model, type=LimitType.RPM, value=limits[model].rpm)
             raise RateLimitExceeded(detail=f"{str(limits[model].rpm)} requests for {model} per minute exceeded (remaining: {remaining}).")
 
-        check = await context.limiter.hit(user_id=user.id, model=model, type=LimitType.RPD, value=limits[model].rpd)
+        check = await global_context.limiter.hit(user_id=user.id, model=model, type=LimitType.RPD, value=limits[model].rpd)
         if not check:
-            remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.RPD, value=limits[model].rpd)
+            remaining = await global_context.limiter.remaining(user_id=user.id, model=model, type=LimitType.RPD, value=limits[model].rpd)
             raise RateLimitExceeded(detail=f"{str(limits[model].rpd)} requests for {model} per day exceeded (remaining: {remaining}).")
 
     async def _check_token_limits(self, request: Request, user: User, limits: Dict[str, UserModelLimits], prompt_tokens: int, model: Optional[str] = None) -> None:  # fmt: off
-        from app.utils.lifespan import context
-
         if not model or not prompt_tokens:
             return
 
-        model = context.models.aliases.get(model, model)
+        model = global_context.models.aliases.get(model, model)
 
         if model not in limits:  # unkown model (404 will be raised by the model client)
             return
@@ -196,36 +189,33 @@ class AccessController:
             raise InsufficientPermissionException(detail=f"Insufficient permissions to access the model {model}.")
 
         # compute the cost (number of hits) of the request by the number of tokens
-        check = await context.limiter.hit(user_id=user.id, model=model, type=LimitType.TPM, value=limits[model].tpm, cost=prompt_tokens)
+        check = await global_context.limiter.hit(user_id=user.id, model=model, type=LimitType.TPM, value=limits[model].tpm, cost=prompt_tokens)
 
         if not check:
-            remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.TPM, value=limits[model].tpm)
+            remaining = await global_context.limiter.remaining(user_id=user.id, model=model, type=LimitType.TPM, value=limits[model].tpm)
             raise RateLimitExceeded(detail=f"{str(limits[model].tpm)} input tokens for {model} per minute exceeded (remaining: {remaining}).")
 
-        check = await context.limiter.hit(user_id=user.id, model=model, type=LimitType.TPD, value=limits[model].tpd, cost=prompt_tokens)
+        check = await global_context.limiter.hit(user_id=user.id, model=model, type=LimitType.TPD, value=limits[model].tpd, cost=prompt_tokens)
         if not check:
-            remaining = await context.limiter.remaining(user_id=user.id, model=model, type=LimitType.TPD, value=limits[model].tpd)
+            remaining = await global_context.limiter.remaining(user_id=user.id, model=model, type=LimitType.TPD, value=limits[model].tpd)
             raise RateLimitExceeded(detail=f"{str(limits[model].tpd)} input tokens for {model} per day exceeded (remaining: {remaining}).")
-
-        request.app.state.prompt_tokens = prompt_tokens
 
     async def _check_audio_transcription_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
+        form = {key: value for key, value in form.items()} if form else {}
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=form.get("model"))
 
     async def _check_chat_completions_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        from app.utils.lifespan import context
-
         body = await request.body()
         body = json.loads(body) if body else {}
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
         if body.get("search", False):  # count the search request as one request to the search model (embeddings)
-            await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant.model.id)
+            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
 
-        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__CHAT_COMPLETIONS, body=body)
+        prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__CHAT_COMPLETIONS, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_collections_patch(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
@@ -243,55 +233,46 @@ class AccessController:
             raise InsufficientPermissionException("Missing permission to create public collections.")
 
     async def _check_embeddings_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        from app.utils.lifespan import context
-
         body = await request.body()
         body = json.loads(body) if body else {}
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
-        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__EMBEDDINGS, body=body)
+        prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__EMBEDDINGS, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_files_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        from app.utils.lifespan import context
-
-        await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant.model.id)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
 
     async def _check_ocr_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
-        form = {key: value for key, value in form.items()}
-        model = form.get("model")
+        form = {key: value for key, value in form.items()} if form else {}
 
-        await self._check_request_limits(request=request, user=user, limits=limits, model=model)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=form.get("model"))
 
     async def _check_rerank_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        from app.utils.lifespan import context
-
         body = await request.body()
         body = json.loads(body) if body else {}
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
-        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__RERANK, body=body)
+        prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__RERANK, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
     async def _check_search_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        from app.utils.lifespan import context
-
         body = await request.body()
         body = json.loads(body) if body else {}
 
         # count the search request as one request to the search model (embeddings)
-        await self._check_request_limits(request=request, user=user, limits=limits, model=context.documents.qdrant.model.id)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
 
-        prompt_tokens = context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__SEARCH, body=body)
+        prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__SEARCH, body=body)
         await self._check_token_limits(
             request=request,
             user=user,
             limits=limits,
             prompt_tokens=prompt_tokens,
-            model=context.documents.qdrant.model.id,
+            model=global_context.documents.qdrant.model.id,
         )
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:

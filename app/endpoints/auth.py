@@ -6,27 +6,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import AccessController
 from app.schemas.auth import (
-    RolesResponse,
-    TokensResponse,
-    UsersResponse,
     PermissionType,
     Role,
     RoleRequest,
     Roles,
+    RolesResponse,
     RoleUpdateRequest,
     Token,
     TokenRequest,
     Tokens,
+    TokensResponse,
     User,
     UserRequest,
     Users,
+    UsersResponse,
     UserUpdateRequest,
 )
 from app.sql.session import get_db as get_session
-from app.utils.lifespan import context
+from app.utils.context import global_context
 from app.utils.settings import settings
-from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 from app.utils.usage_decorator import log_usage
+from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 
 router = APIRouter()
 
@@ -48,7 +48,7 @@ async def create_role(
     Create a new role.
     """
 
-    role_id = await context.iam.create_role(session=session, name=body.name, permissions=body.permissions, limits=body.limits)
+    role_id = await global_context.iam.create_role(session=session, name=body.name, permissions=body.permissions, limits=body.limits)
 
     return JSONResponse(status_code=201, content={"id": role_id})
 
@@ -69,7 +69,7 @@ async def delete_role(
     Delete a role.
     """
 
-    await context.iam.delete_role(session=session, role_id=role)
+    await global_context.iam.delete_role(session=session, role_id=role)
 
     return Response(status_code=204)
 
@@ -91,7 +91,7 @@ async def update_role(
     Update a role.
     """
 
-    await context.iam.update_role(
+    await global_context.iam.update_role(
         session=session,
         role_id=role,
         name=body.name,
@@ -115,7 +115,7 @@ async def get_current_role(request: Request, session: AsyncSession = Depends(get
     Get the current role.
     """
 
-    roles = await context.iam.get_roles(session=session, role_id=request.app.state.user.role)
+    roles = await global_context.iam.get_roles(session=session, role_id=request.app.state.user.role)
 
     return JSONResponse(content=roles[0].model_dump(), status_code=200)
 
@@ -137,7 +137,7 @@ async def get_role(
     Get a role by id.
     """
 
-    roles = await context.iam.get_roles(session=session, role_id=role)
+    roles = await global_context.iam.get_roles(session=session, role_id=role)
 
     return JSONResponse(content=roles[0].model_dump(), status_code=200)
 
@@ -161,7 +161,7 @@ async def get_roles(
     """
     Get all roles.
     """
-    data = await context.iam.get_roles(session=session, offset=offset, limit=limit, order_by=order_by, order_direction=order_direction)
+    data = await global_context.iam.get_roles(session=session, offset=offset, limit=limit, order_by=order_by, order_direction=order_direction)
 
     return JSONResponse(content=Roles(data=data).model_dump(), status_code=200)
 
@@ -183,7 +183,7 @@ async def create_user(
     Create a new user.
     """
 
-    user_id = await context.iam.create_user(session=session, name=body.name, role_id=body.role, expires_at=body.expires_at)
+    user_id = await global_context.iam.create_user(session=session, name=body.name, role_id=body.role, expires_at=body.expires_at)
 
     return JSONResponse(status_code=201, content={"id": user_id})
 
@@ -203,7 +203,7 @@ async def delete_user(
     """
     Delete a user.
     """
-    await context.iam.delete_user(session=session, user_id=user)
+    await global_context.iam.delete_user(session=session, user_id=user)
 
     return Response(status_code=204)
 
@@ -225,7 +225,7 @@ async def update_user(
     Update a user.
     """
 
-    await context.iam.update_user(session=session, user_id=user, name=body.name, role_id=body.role, expires_at=body.expires_at)
+    await global_context.iam.update_user(session=session, user_id=user, name=body.name, role_id=body.role, expires_at=body.expires_at)
 
     return Response(status_code=204)
 
@@ -243,7 +243,7 @@ async def get_current_user(request: Request, session: AsyncSession = Depends(get
     Get the current user.
     """
 
-    users = await context.iam.get_users(session=session, user_id=request.app.state.user.id)
+    users = await global_context.iam.get_users(session=session, user_id=request.app.state.user.id)
 
     return JSONResponse(content=users[0].model_dump(), status_code=200)
 
@@ -262,7 +262,7 @@ async def get_user(
     Get a user by id.
     """
 
-    users = await context.iam.get_users(session=session, user_id=user)
+    users = await global_context.iam.get_users(session=session, user_id=user)
 
     return JSONResponse(content=users[0].model_dump(), status_code=200)
 
@@ -287,7 +287,9 @@ async def get_users(
     Get all users.
     """
 
-    data = await context.iam.get_users(session=session, role_id=role, offset=offset, limit=limit, order_by=order_by, order_direction=order_direction)
+    data = await global_context.iam.get_users(
+        session=session, role_id=role, offset=offset, limit=limit, order_by=order_by, order_direction=order_direction
+    )
 
     return JSONResponse(content=Users(data=data).model_dump(), status_code=200)
 
@@ -304,7 +306,7 @@ async def create_token(
     """
 
     user_id = body.user if body.user else request.app.state.user.id
-    token_id, token = await context.iam.create_token(session=session, user_id=user_id, name=body.name, expires_at=body.expires_at)
+    token_id, token = await global_context.iam.create_token(session=session, user_id=user_id, name=body.name, expires_at=body.expires_at)
 
     return JSONResponse(status_code=201, content={"id": token_id, "token": token})
 
@@ -320,7 +322,7 @@ async def delete_token(
     Delete a token.
     """
 
-    await context.iam.delete_token(session=session, user_id=request.app.state.user.id, token_id=token)
+    await global_context.iam.delete_token(session=session, user_id=request.app.state.user.id, token_id=token)
 
     return Response(status_code=204)
 
@@ -336,7 +338,7 @@ async def get_token(
     Get your token by id.
     """
 
-    tokens = await context.iam.get_tokens(session=session, user_id=request.app.state.user.id, token_id=token)
+    tokens = await global_context.iam.get_tokens(session=session, user_id=request.app.state.user.id, token_id=token)
 
     return JSONResponse(content=tokens[0].model_dump(), status_code=200)
 
@@ -355,7 +357,7 @@ async def get_tokens(
     Get all your tokens.
     """
 
-    data = await context.iam.get_tokens(
+    data = await global_context.iam.get_tokens(
         session=session,
         user_id=request.app.state.user.id,
         offset=offset,
