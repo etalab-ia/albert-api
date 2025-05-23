@@ -1,6 +1,6 @@
 from http import HTTPMethod
 
-from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import JSON, Column, DateTime, Enum, Float, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import backref, declarative_base, relationship
 
 from app.schemas.auth import LimitType, PermissionType
@@ -26,6 +26,7 @@ class Usage(Base):
     completion_tokens = Column(Float)
     total_tokens = Column(Integer)
     status = Column(Integer, nullable=True)
+    cumulative_calls = Column(JSON, nullable=True)
 
     user = relationship(argument="User", backref=backref(name="usage", cascade="all, delete-orphan"))
     token = relationship(argument="Token", backref=backref(name="usage"))

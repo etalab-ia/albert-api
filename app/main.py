@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, FastAPI, Response, Security
+from fastapi import APIRouter, Depends, FastAPI, Request, Response, Security
 from fastapi.dependencies.utils import get_dependant
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
@@ -9,6 +9,7 @@ from app.endpoints import audio, auth, chat, chunks, collections, completions, d
 from app.helpers import AccessController
 from app.schemas.auth import PermissionType
 from app.sql.session import get_db
+from app.utils.context import request_context
 from app.utils.lifespan import lifespan
 from app.utils.settings import settings
 from app.utils.usage_decorator import log_usage
@@ -60,7 +61,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
     def add_usage_decorator(router: APIRouter):
         for route in router.routes:
             route.endpoint = log_usage(route.endpoint)
-            route.dependendant = get_dependant(path=route.path_format, call=route.endpoint)
+            route.dependant = get_dependant(path=route.path_format, call=route.endpoint)
 
     app = FastAPI(
         title=settings.general.title,
@@ -74,6 +75,18 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
         docs_url=settings.general.docs_url,
         redoc_url=settings.general.redoc_url,
     )
+
+    @app.middleware("http")
+    async def inject_request_context(request: Request, call_next):
+        """Middleware to inject request context into the request."""
+        ctx = {
+            "method": request.method,
+            "path": str(request.url.path),
+            "client": request.client.host,
+            "llm_stats": [],  # Store LLM stats here when api.client is called
+        }
+        request_context.set(ctx)
+        return await call_next(request)
 
     # Routers
     if ROUTER__AUDIO not in settings.general.disabled_routers:
@@ -152,4 +165,4 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
     return app
 
 
-app = create_app(db_func=get_db)
+# app = create_app(db_func=get_db)
