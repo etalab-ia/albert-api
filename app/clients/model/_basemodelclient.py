@@ -7,6 +7,7 @@ import re
 import traceback
 from typing import Any, Dict, Literal, Optional, Type
 from urllib.parse import urljoin
+from app.utils.context import request_context
 
 from fastapi import HTTPException
 import httpx
@@ -136,6 +137,7 @@ class BaseModelClient(ABC):
             additional_data.update({"model": self.model})
             additional_data = self._add_usage_in_additional_data(additional_data=additional_data, json=json, data=data, stream=False)
             data.update(additional_data)
+            request_context.get().setdefault("llm_stats", []).append(additional_data)
 
             response = httpx.Response(status_code=response.status_code, content=dumps(data))
 
@@ -236,6 +238,7 @@ class BaseModelClient(ABC):
         additional_data.update({"model": self.model})
         additional_data = self._add_usage_in_additional_data(additional_data=additional_data, json=json, data=data, stream=True)
         extra_chunk.update(additional_data)
+        request_context.get().setdefault("llm_stats", []).append(additional_data)
 
         return extra_chunk
 

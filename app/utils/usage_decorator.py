@@ -11,6 +11,7 @@ from starlette.responses import StreamingResponse
 from app.helpers import StreamingResponseWithStatusCode
 from app.sql.models import Usage
 from app.sql.session import get_db
+from app.utils.context import request_context
 
 logger = logging.getLogger(__name__)
 
@@ -227,6 +228,9 @@ async def perform_log(response: Optional[Response], usage: Usage, start_time: da
 
     if usage.request_model:
         usage.request_model = context.models.aliases.get(usage.request_model, usage.request_model)
+
+    ctx = request_context.get()
+    usage.cumulative_calls = ctx
 
     async for session in get_db():
         session.add(usage)
