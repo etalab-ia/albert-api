@@ -60,7 +60,7 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
     def add_usage_decorator(router: APIRouter):
         for route in router.routes:
             route.endpoint = log_usage(route.endpoint)
-            route.dependendant = get_dependant(path=route.path_format, call=route.endpoint)
+            route.dependant = get_dependant(path=route.path_format, call=route.endpoint)
 
     app = FastAPI(
         title=settings.general.title,
