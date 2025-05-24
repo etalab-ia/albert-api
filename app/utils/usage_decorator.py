@@ -11,26 +11,9 @@ from starlette.responses import StreamingResponse
 from app.helpers import StreamingResponseWithStatusCode
 from app.sql.models import Usage
 from app.sql.session import get_db
-from app.utils.context import global_context
+from app.utils.context import global_context, request_context
 
 logger = logging.getLogger(__name__)
-
-
-class StreamingRequestException(Exception):
-    """
-    Exception raised for streaming requests (i.e., requests with stream=True).
-    This exception is used to indicate that the request should be handled accordingly.
-    """
-
-    pass
-
-
-class NoUserIdException(Exception):
-    pass
-
-
-class MasterUserIdException(Exception):
-    pass
 
 
 def log_usage(func):
@@ -46,6 +29,20 @@ def log_usage(func):
         start_time = datetime.now()
         usage = Usage(datetime=start_time, endpoint="N/A", model=None, prompt_tokens=None, completion_tokens=None, total_tokens=None)
 
+        # get the request context
+        context = request_context.get()
+        if context.user_id is None:
+            logger.info(f"No user ID found in request, skipping usage logging ({context.endpoint}).")
+            return await func(*args, **kwargs)
+        if context.user_id == 0:
+            logger.info(f"Master user ID found in request, skipping usage logging ({context.endpoint}).")
+            return await func(*args, **kwargs)
+
+        usage.user_id = context.user_id
+        usage.token_id = context.token_id
+        usage.endpoint = context.endpoint
+        usage.method = context.method
+
         # find the request object
         request = next((arg for arg in args if isinstance(arg, Request)), None)
         if not request:
@@ -54,15 +51,10 @@ def log_usage(func):
             raise Exception("No request found in args or kwargs")
 
         # extract usage from request
-        try:
-            await extract_usage_from_request(usage=usage, request=request)
-        except NoUserIdException:
-            logger.info(f"No user ID found in request, skipping usage logging ({request.url.path}).")
-            return await func(*args, **kwargs)
-        except MasterUserIdException:
-            return await func(*args, **kwargs)
+        await extract_usage_from_request(usage=usage, request=request)
 
-        response = None  # Initialize in case of early exception not from func
+        # extract usage from response
+        response = None  # initialize in case of early exception not from func
         try:
             # call the endpoint
             response = await func(*args, **kwargs)
@@ -88,24 +80,7 @@ def log_usage(func):
     return wrapper
 
 
-async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
-    """
-    Extracts usage information from the request and sets it in the Usage object.
-    This function looks for the request object in the arguments and keyword arguments
-    passed to the decorated function.
-    It extracts the request method, endpoint, user ID, token ID, model name, and prompt tokens.
-    """
-    # set properties from the request
-    usage.endpoint = request.url.path
-    usage.method = request.method
-    user = getattr(request.app.state, "user", None)
-    usage.user_id = getattr(user, "id", None) if user else None
-    if usage.user_id is None:
-        raise NoUserIdException("No user ID found in request")
-    if usage.user_id == 0:
-        raise MasterUserIdException("Master user ID found in request")
-    usage.token_id = getattr(request.app.state, "token_id", None)
-
+async def extract_usage_from_request(usage: Usage, request: Request):
     content_type = request.headers.get("Content-Type", "")
 
     if content_type.startswith("multipart/form-data"):
@@ -122,11 +97,6 @@ async def extract_usage_from_request(usage: Usage, request: Request, **kwargs):
 
 
 def extract_usage_from_streaming_response(response: StreamingResponse, start_time: datetime, usage: Usage) -> StreamingResponseWithStatusCode:
-    """
-    Wraps the original StreamingResponse to extract usage information from the stream.
-    This function captures the first token from the stream and calculates the completion tokens.
-    It also logs the usage information to the database.
-    """
     original_stream = response.body_iterator
     buffer = []
 

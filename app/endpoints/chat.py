@@ -8,7 +8,7 @@ from app.helpers import AccessController, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search, SearchMethod
 from app.sql.session import get_db as get_session
-from app.utils.context import global_context
+from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.multiagents import MultiAgents
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
@@ -40,7 +40,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
                 k=body.search_args.k,
                 rff_k=body.search_args.rff_k,
                 web_search=body.search_args.web_search,
-                user_id=request.app.state.user.id,
+                user_id=request_context.get().user_id,
             )
             if results:
                 if body.search_args.method == SearchMethod.MULTIAGENT:

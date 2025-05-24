@@ -7,14 +7,13 @@ import re
 import traceback
 from typing import Any, Dict, Literal, Optional, Type
 from urllib.parse import urljoin
-from uuid import uuid4
 
 from fastapi import HTTPException
 import httpx
 
 from app.schemas.core.settings import ModelClientType
 from app.schemas.usage import Detail, Usage
-from app.utils.context import global_context, request_context
+from app.utils.context import generate_request_id, global_context, request_context
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -61,12 +60,6 @@ class BaseModelClient(ABC):
         module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
         return getattr(module, f"{type.capitalize()}ModelClient")
 
-    def _get_default_id(self) -> str:
-        """
-        Get the ID of the request.
-        """
-        return f"request-{str(uuid4()).replace("-", "")}"
-
     def _get_usage(self, json: dict, data: dict, stream: bool) -> Optional[Usage]:
         """
         Get usage data from request and response.
@@ -86,7 +79,7 @@ class BaseModelClient(ABC):
             try:
                 usage = request_context.get().usage
 
-                detail_id = data[0].get("id", self._get_default_id()) if stream else data.get("id", self._get_default_id())
+                detail_id = data[0].get("id", generate_request_id()) if stream else data.get("id", generate_request_id())
                 detail = Detail(id=detail_id, model=self.model)
                 detail.prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=self.endpoint, body=json)
 
@@ -111,7 +104,7 @@ class BaseModelClient(ABC):
         Get additional data from request and response.
         """
         usage = self._get_usage(json=json, data=data, stream=stream)
-        request_id = usage.details[-1].id if usage and usage.details else self._get_default_id()
+        request_id = usage.details[-1].id if usage and usage.details else generate_request_id()
         additional_data = {"model": self.model, "id": request_id}
 
         if usage:
@@ -195,14 +188,16 @@ class BaseModelClient(ABC):
             try:
                 response.raise_for_status()
             except httpx.HTTPStatusError:
-                message = loads(response.text)
-
-                # format error message
-                if "message" in message:
-                    try:
-                        message = ast.literal_eval(message["message"])
-                    except Exception:
-                        message = message["message"]
+                try:
+                    message = loads(response.text)  # format error message
+                    if "message" in message:
+                        try:
+                            message = ast.literal_eval(message["message"])
+                        except Exception:
+                            message = message["message"]
+                except JSONDecodeError:
+                    logger.debug(traceback.format_exc())
+                    message = response.text
                 raise HTTPException(status_code=response.status_code, detail=message)
 
         # add additional data to the response

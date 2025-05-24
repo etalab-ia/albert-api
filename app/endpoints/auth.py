@@ -23,10 +23,9 @@ from app.schemas.auth import (
     UserUpdateRequest,
 )
 from app.sql.session import get_db as get_session
-from app.utils.context import global_context
+from app.utils.context import global_context, request_context
 from app.utils.settings import settings
-from app.utils.usage_decorator import log_usage
-from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
+from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__ROLES_ME, ENDPOINT__TOKENS, ENDPOINT__USERS, ENDPOINT__USERS_ME
 
 router = APIRouter()
 
@@ -38,7 +37,6 @@ router = APIRouter()
     status_code=201,
     response_model=RolesResponse,
 )
-@log_usage
 async def create_role(
     request: Request,
     body: RoleRequest = Body(description="The role creation request."),
@@ -59,7 +57,6 @@ async def create_role(
     include_in_schema=settings.general.log_level == "DEBUG",
     status_code=204,
 )
-@log_usage
 async def delete_role(
     request: Request,
     role: int = Path(description="The ID of the role to delete."),
@@ -80,7 +77,6 @@ async def delete_role(
     include_in_schema=settings.general.log_level == "DEBUG",
     status_code=204,
 )
-@log_usage
 async def update_role(
     request: Request,
     role: int = Path(description="The ID of the role to update."),
@@ -103,19 +99,18 @@ async def update_role(
 
 
 @router.get(
-    path=ENDPOINT__ROLES + "/me",
+    path=ENDPOINT__ROLES_ME,
     dependencies=[Security(dependency=AccessController())],
     include_in_schema=settings.general.log_level == "DEBUG",
     status_code=200,
     response_model=Role,
 )
-@log_usage
 async def get_current_role(request: Request, session: AsyncSession = Depends(get_session)) -> JSONResponse:
     """
     Get the current role.
     """
 
-    roles = await global_context.iam.get_roles(session=session, role_id=request.app.state.user.role)
+    roles = await global_context.iam.get_roles(session=session, role_id=request_context.get().role_id)
 
     return JSONResponse(content=roles[0].model_dump(), status_code=200)
 
@@ -127,7 +122,6 @@ async def get_current_role(request: Request, session: AsyncSession = Depends(get
     status_code=200,
     response_model=Role,
 )
-@log_usage
 async def get_role(
     request: Request,
     role: int = Path(description="The ID of the role to get."),
@@ -149,7 +143,6 @@ async def get_role(
     status_code=200,
     response_model=Roles,
 )
-@log_usage
 async def get_roles(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the roles to get."),
@@ -173,7 +166,6 @@ async def get_roles(
     status_code=201,
     response_model=UsersResponse,
 )
-@log_usage
 async def create_user(
     request: Request,
     body: UserRequest = Body(description="The user creation request."),
@@ -194,7 +186,6 @@ async def create_user(
     include_in_schema=settings.general.log_level == "DEBUG",
     status_code=204,
 )
-@log_usage
 async def delete_user(
     request: Request,
     user: int = Path(description="The ID of the user to delete."),
@@ -214,7 +205,6 @@ async def delete_user(
     include_in_schema=settings.general.log_level == "DEBUG",
     status_code=204,
 )
-@log_usage
 async def update_user(
     request: Request,
     user: int = Path(description="The ID of the user to update."),
@@ -231,19 +221,18 @@ async def update_user(
 
 
 @router.get(
-    path=ENDPOINT__USERS + "/me",
+    path=ENDPOINT__USERS_ME,
     dependencies=[Security(dependency=AccessController())],
     include_in_schema=settings.general.log_level == "DEBUG",
     status_code=200,
     response_model=User,
 )
-@log_usage
 async def get_current_user(request: Request, session: AsyncSession = Depends(get_session)) -> JSONResponse:
     """
     Get the current user.
     """
 
-    users = await global_context.iam.get_users(session=session, user_id=request.app.state.user.id)
+    users = await global_context.iam.get_users(session=session, user_id=request_context.get().user_id)
 
     return JSONResponse(content=users[0].model_dump(), status_code=200)
 
@@ -254,7 +243,6 @@ async def get_current_user(request: Request, session: AsyncSession = Depends(get
     include_in_schema=settings.general.log_level == "DEBUG",
     status_code=200,
 )
-@log_usage
 async def get_user(
     request: Request, user: int = Path(description="The ID of the user to get."), session: AsyncSession = Depends(get_session)
 ) -> JSONResponse:
@@ -273,7 +261,6 @@ async def get_user(
     include_in_schema=settings.general.log_level == "DEBUG",
     status_code=200,
 )
-@log_usage
 async def get_users(
     request: Request,
     role: Optional[int] = Query(default=None, description="The ID of the role to filter the users by."),
@@ -295,7 +282,6 @@ async def get_users(
 
 
 @router.post(path=ENDPOINT__TOKENS, dependencies=[Security(dependency=AccessController())], status_code=201, response_model=TokensResponse)
-@log_usage
 async def create_token(
     request: Request,
     body: TokenRequest = Body(description="The token creation request."),
@@ -305,14 +291,13 @@ async def create_token(
     Create a new token.
     """
 
-    user_id = body.user if body.user else request.app.state.user.id
+    user_id = body.user if body.user else request_context.get().user_id
     token_id, token = await global_context.iam.create_token(session=session, user_id=user_id, name=body.name, expires_at=body.expires_at)
 
     return JSONResponse(status_code=201, content={"id": token_id, "token": token})
 
 
 @router.delete(path=ENDPOINT__TOKENS + "/{token:path}", dependencies=[Security(dependency=AccessController())], status_code=204)
-@log_usage
 async def delete_token(
     request: Request,
     token: int = Path(description="The token ID of the token to delete."),
@@ -322,13 +307,12 @@ async def delete_token(
     Delete a token.
     """
 
-    await global_context.iam.delete_token(session=session, user_id=request.app.state.user.id, token_id=token)
+    await global_context.iam.delete_token(session=session, user_id=request_context.get().user_id, token_id=token)
 
     return Response(status_code=204)
 
 
 @router.get(path=ENDPOINT__TOKENS + "/{token:path}", dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Token)
-@log_usage
 async def get_token(
     request: Request,
     token: int = Path(description="The token ID of the token to get."),
@@ -338,13 +322,12 @@ async def get_token(
     Get your token by id.
     """
 
-    tokens = await global_context.iam.get_tokens(session=session, user_id=request.app.state.user.id, token_id=token)
+    tokens = await global_context.iam.get_tokens(session=session, user_id=request_context.get().user_id, token_id=token)
 
     return JSONResponse(content=tokens[0].model_dump(), status_code=200)
 
 
 @router.get(path=ENDPOINT__TOKENS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Tokens)
-@log_usage
 async def get_tokens(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the tokens to get."),
@@ -359,7 +342,7 @@ async def get_tokens(
 
     data = await global_context.iam.get_tokens(
         session=session,
-        user_id=request.app.state.user.id,
+        user_id=request_context.get().user_id,
         offset=offset,
         limit=limit,
         order_by=order_by,

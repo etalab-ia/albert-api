@@ -1,4 +1,3 @@
-import datetime as dt
 import json
 import time
 from typing import Annotated, Dict, List, Optional
@@ -11,7 +10,7 @@ from app.schemas.auth import Limit, LimitType, PermissionType, Role, User
 from app.schemas.collections import CollectionVisibility
 from app.schemas.core.auth import UserModelLimits
 from app.sql.session import get_db as get_session
-from app.utils.context import global_context
+from app.utils.context import global_context, request_context
 from app.utils.exceptions import (
     InsufficientPermissionException,
     InvalidAPIKeyException,
@@ -27,10 +26,10 @@ from app.utils.variables import (
     ENDPOINT__FILES,
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
-    ENDPOINT__ROLES,
+    ENDPOINT__ROLES_ME,
     ENDPOINT__SEARCH,
     ENDPOINT__TOKENS,
-    ENDPOINT__USERS,
+    ENDPOINT__USERS_ME,
 )
 
 
@@ -59,16 +58,18 @@ class AccessController:
         if (
             user.expires_at
             and user.expires_at < time.time()
-            and not request.url.path.startswith(f"{ENDPOINT__ROLES}/me")
-            and not request.url.path.startswith(f"{ENDPOINT__USERS}/me")
+            and not request.url.path.endswith(ENDPOINT__ROLES_ME)
+            and not request.url.path.endswith(ENDPOINT__USERS_ME)
         ):
             raise InvalidAPIKeyException()
 
         await self._check_permissions(role=role)
 
         # add authenticated user to request state for logging usages
-        request.app.state.user = user
-        request.app.state.token_id = token_id
+        context = request_context.get()
+        context.user_id = user.id
+        context.role_id = role.id
+        context.token_id = token_id
 
         if request.url.path.endswith(ENDPOINT__AUDIO_TRANSCRIPTIONS) and request.method == "POST":
             await self._check_audio_transcription_post(user=user, role=role, limits=limits, request=request)
@@ -282,7 +283,3 @@ class AccessController:
         # if the token is for another user, we don't check the expiration date
         if body.get("user") and PermissionType.CREATE_USER not in role.permissions:
             raise InsufficientPermissionException("Missing permission to create token for another user.")
-
-        elif body.get("expires_at") and settings.auth.max_token_expiration_days:
-            if body.get("expires_at") > int(dt.datetime.now(tz=dt.UTC).timestamp()) + settings.auth.max_token_expiration_days * 86400:
-                raise InsufficientPermissionException(f"Token expiration timestamp cannot be greater than {settings.auth.max_token_expiration_days} days from now.")  # fmt: off

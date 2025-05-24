@@ -3,6 +3,7 @@ general:
 
 auth:
   master_key: changeme
+  max_token_expiration_days: 365
 
 usages:
   routers: ["all"]

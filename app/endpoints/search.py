@@ -28,7 +28,7 @@ async def search(request: Request, body: SearchRequest, session: AsyncSession = 
         method=body.method,
         k=body.k,
         rff_k=body.rff_k,
-        user_id=request.app.state.user.id,
+        user_id=request_context.get().user_id,
         web_search=body.web_search,
     )
     usage = request_context.get().usage
