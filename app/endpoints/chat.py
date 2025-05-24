@@ -8,8 +8,8 @@ from app.helpers import AccessController, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search, SearchMethod
 from app.sql.session import get_db as get_session
+from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
-from app.utils.lifespan import context
 from app.utils.multiagents import MultiAgents
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
@@ -29,10 +29,10 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
     async def retrieval_augmentation_generation(body: ChatCompletionRequest, session: AsyncSession) -> Tuple[ChatCompletionRequest, List[Search]]:
         results = []
         if body.search:
-            if not context.documents:
+            if not global_context.documents:
                 raise CollectionNotFoundException()
 
-            results = await context.documents.search(
+            results = await global_context.documents.search(
                 session=session,
                 collection_ids=body.search_args.collections,
                 prompt=body.messages[-1]["content"],
@@ -40,7 +40,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
                 k=body.search_args.k,
                 rff_k=body.search_args.rff_k,
                 web_search=body.search_args.web_search,
-                user_id=request.app.state.user.id,
+                user_id=request_context.get().user_id,
             )
             if results:
                 if body.search_args.method == SearchMethod.MULTIAGENT:
@@ -59,10 +59,9 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
 
     body, results = await retrieval_augmentation_generation(body=body, session=session)
     additional_data = {"search_results": results} if results else {}
-    additional_data.update({"usage": {"prompt_tokens": request.app.state.prompt_tokens}})
 
     # select client
-    model = context.models(model=body["model"])
+    model = global_context.models(model=body["model"])
     client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case

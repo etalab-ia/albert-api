@@ -88,7 +88,7 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
 
     def _format_response(self, json: dict, response: httpx.Response, additional_data: Dict[str, Any] = {}) -> httpx.Response:
         """
-        Override base class method to support TEI reranking.
+        Format a response from a client model and add usage data and model ID to the response. This method can be overridden by a subclass to add additional headers or parameters.
 
         Args:
             json(dict): The JSON body of the request to the API.
@@ -98,24 +98,14 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         Returns:
             httpx.Response: The formatted response.
         """
-        from app.utils.lifespan import context
 
         content_type = response.headers.get("Content-Type", "")
         if content_type == "application/json":
             data = response.json()
             if isinstance(data, list):  # for TEI reranking
                 data = {"data": data}
-
-            additional_data.update({"model": self.model})
-            additional_data = context.tokenizer.add_usage_in_additional_data(
-                endpoint=self.endpoint,
-                body=json,
-                response=data,
-                additional_data=additional_data,
-                stream=False,
-            )
+            data.update(self._get_additional_data(json=json, data=data, stream=False))
             data.update(additional_data)
-
             response = httpx.Response(status_code=response.status_code, content=dumps(data))
 
         return response

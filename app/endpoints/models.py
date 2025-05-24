@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from app.helpers import AccessController
 from app.schemas.models import Model, Models
-from app.utils.lifespan import context
+from app.utils.context import global_context
 from app.utils.variables import ENDPOINT__MODELS
 
 router = APIRouter()
@@ -15,7 +15,7 @@ async def get_model(request: Request, model: str = Path(description="The name of
     Get a model by name and provide basic informations.
     """
 
-    model = context.models.list(model=model)[0]
+    model = global_context.models.list(model=model)[0]
 
     return JSONResponse(content=model.model_dump(), status_code=200)
 
@@ -26,6 +26,6 @@ async def get_models(request: Request) -> JSONResponse:
     Lists the currently available models and provides basic informations.
     """
 
-    data = context.models.list()
+    data = global_context.models.list()
 
     return JSONResponse(content=Models(data=data).model_dump(), status_code=200)

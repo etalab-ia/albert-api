@@ -1,6 +1,8 @@
 import logging
+from typing import List, Union
 
 import tiktoken
+from app.schemas.chat import ChatCompletionChunk, ChatCompletion
 
 from app.schemas.core.settings import LimitsTokenizer
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS, ENDPOINT__OCR, ENDPOINT__RERANK, ENDPOINT__SEARCH
@@ -32,45 +34,60 @@ class UsageTokenizer:
             self.tokenizer = tiktoken.get_encoding("gpt2")
 
     def get_prompt_tokens(self, endpoint: str, body: dict) -> int:
-        prompt_tokens = 0
+        try:
+            if endpoint == ENDPOINT__CHAT_COMPLETIONS:
+                contents = [message.get("content") for message in body["messages"] if message.get("content")]
+                prompt_tokens = sum([len(self.tokenizer.encode(content)) for content in contents])
 
-        if endpoint == ENDPOINT__CHAT_COMPLETIONS:
-            contents = [message.get("content") for message in body.get("messages", []) if message.get("content")]
-            prompt_tokens = sum([len(self.tokenizer.encode(content)) for content in contents])
+            elif endpoint == ENDPOINT__EMBEDDINGS:
+                prompt_tokens = sum([len(self.tokenizer.encode(str(input))) for input in body.get("input", [])])
 
-        elif endpoint == ENDPOINT__EMBEDDINGS:
-            prompt_tokens = sum([len(self.tokenizer.encode(str(input))) for input in body.get("input", [])])
+            elif endpoint == ENDPOINT__RERANK:
+                prompt_tokens = sum([len(self.tokenizer.encode(str(input))) for input in body.get("input", [])])
 
-        elif endpoint == ENDPOINT__RERANK:
-            prompt_tokens = sum([len(self.tokenizer.encode(str(input))) for input in body.get("input", [])])
+            elif endpoint == ENDPOINT__SEARCH:
+                prompt_tokens = len(self.tokenizer.encode(str(body.get("prompt", ""))))
 
-        elif endpoint == ENDPOINT__SEARCH:
-            prompt_tokens = len(self.tokenizer.encode(str(body.get("prompt", ""))))
+            elif endpoint == ENDPOINT__OCR:
+                prompt_tokens = len(self.tokenizer.encode(str(body.get("prompt", ""))))
 
-        elif endpoint == ENDPOINT__OCR:
-            prompt_tokens = len(self.tokenizer.encode(str(body.get("prompt", ""))))
-
-        else:
-            raise ValueError(f"Endpoint {endpoint} not supported")
+            else:
+                raise ValueError(f"Endpoint {endpoint} not supported")
+        except Exception:  # to avoid request format error before schema validation
+            prompt_tokens = 0
 
         return prompt_tokens
 
-    def get_completion_tokens(self, endpoint: str, response: dict, stream: bool = False) -> int:
+    def get_completion_tokens(self, endpoint: str, response: Union[dict, List[dict]], stream: bool = False) -> int:
         """
         Get the completion tokens for the given endpoint and body.
 
         Args:
             endpoint (str): The endpoint to get the completion tokens for.
-            response (dict): The response of the request. For stream requests, the response must be a dict with the keys being the index of the choice and the values being the content of the choice (concatenated each chunk content).
+            response (Union[dict, List[dict]]): The response of the request (must be a ChatCompletion or a list of ChatCompletionChunk).
             stream (bool): Whether the request is a stream.
         """
         completion_tokens = 0
 
         if endpoint == ENDPOINT__CHAT_COMPLETIONS:
             if stream:
-                completion_tokens = sum([len(self.tokenizer.encode(response[index])) for index in response.keys()])
+                contents = dict()
+                for chunk in response:
+                    chunk = ChatCompletionChunk(**chunk)
+                    for choice in chunk.choices:
+                        index = choice.index
+                        delta = choice.delta
+                        if index not in contents:
+                            contents[index] = ""
+                        content = delta.content
+                        if content:
+                            contents[index] += content
+
+                completion_tokens = sum([len(self.tokenizer.encode(contents[index])) for index in contents.keys()])
+
             else:
-                contents = [choice.get("message", {}).get("content", "") for choice in response.get("choices", [])]
+                response = ChatCompletion(**response)
+                contents = [choice.message.content for choice in response.choices]
                 completion_tokens = sum([len(self.tokenizer.encode(content)) for content in contents])
         else:
             raise ValueError(f"Endpoint {endpoint} not supported")

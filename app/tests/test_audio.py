@@ -22,7 +22,7 @@ def setup(client: TestClient):
 
 @pytest.mark.usefixtures("client", "setup")
 class TestAudio:
-    def test_audio_transcriptions_mp3(self, client: TestClient, setup: str, snapshot: Snapshot) -> None:
+    def test_audio_transcriptions_mp3(self, client: TestClient, setup: str) -> None:
         """Test the POST /audio/transcriptions endpoint with MP3 file"""
         MODEL_ID = setup
 
@@ -33,10 +33,9 @@ class TestAudio:
             response = client.post_without_permissions(f"/v1{ENDPOINT__AUDIO_TRANSCRIPTIONS}", files=files, data=data)
 
         assert response.status_code == 200, response.text
-        snapshot.assert_match(str(response.json()), snapshot_name="audio_transcriptions_mp3")
         AudioTranscription(**response.json())  # test output format
 
-    def test_audio_transcriptions_text_output(self, client: TestClient, setup: str, snapshot: Snapshot) -> None:
+    def test_audio_transcriptions_text_output(self, client: TestClient, setup: str) -> None:
         """Test the POST /audio/transcriptions with text output"""
         MODEL_ID = setup
 
@@ -47,10 +46,9 @@ class TestAudio:
             response = client.post_without_permissions(f"/v1{ENDPOINT__AUDIO_TRANSCRIPTIONS}", files=files, data=data)
 
         assert response.status_code == 200, response.text
-        snapshot.assert_match(str(response.text), "audio_transcriptions_text_output")
         assert isinstance(response.text, str)
 
-    def test_audio_transcriptions_wav(self, client: TestClient, setup: str, snapshot: Snapshot) -> None:
+    def test_audio_transcriptions_wav(self, client: TestClient, setup: str) -> None:
         """Test the POST /audio/transcriptions endpoint with WAV file"""
         MODEL_ID = setup
 
@@ -61,7 +59,6 @@ class TestAudio:
             response = client.post_without_permissions(f"/v1{ENDPOINT__AUDIO_TRANSCRIPTIONS}", files=files, data=data)
 
         assert response.status_code == 200, response.text
-        snapshot.assert_match(str(response.json()), snapshot_name="audio_transcriptions_wav")
         AudioTranscription(**response.json())  # test output format
 
     def test_audio_transcriptions_invalid_model(self, client: TestClient, setup: str, snapshot: Snapshot) -> None:

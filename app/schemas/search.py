@@ -3,9 +3,10 @@ from typing import Any, List, Literal, Optional
 
 from pydantic import Field, field_validator, model_validator
 
-from app.schemas import BaseModel, Usage
+from app.schemas import BaseModel
 from app.schemas.chunks import Chunk
-from app.utils.exceptions import WrongSearchMethodException, CollectionNotFoundException
+from app.schemas.usage import Usage
+from app.utils.exceptions import CollectionNotFoundException, WrongSearchMethodException
 
 
 class SearchMethod(str, Enum):
@@ -70,4 +71,4 @@ class Search(BaseModel):
 class Searches(BaseModel):
     object: Literal["list"] = "list"
     data: List[Search]
-    usage: Usage
+    usage: Usage = Field(default=None, description="Usage information for the request.")

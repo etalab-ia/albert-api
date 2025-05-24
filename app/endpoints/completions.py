@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Request, Security
 from fastapi.responses import JSONResponse
+
 from app.helpers import AccessController
 from app.schemas.completions import CompletionRequest, Completions
-from app.utils.lifespan import context
+from app.utils.context import global_context
 from app.utils.variables import ENDPOINT__COMPLETIONS
 
 router = APIRouter()
@@ -14,7 +15,7 @@ async def completions(request: Request, body: CompletionRequest) -> JSONResponse
     Completion API similar to OpenAI's API.
     """
 
-    model = context.models(model=body.model)
+    model = global_context.models(model=body.model)
     client = model.get_client(endpoint=ENDPOINT__COMPLETIONS)
     response = await client.forward_request(method="POST", json=body.model_dump())
 

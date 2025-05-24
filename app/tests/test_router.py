@@ -1,13 +1,13 @@
 import pytest
 
-from app.utils.lifespan import context
+from app.utils.context import global_context
 
 
 @pytest.mark.usefixtures("client")
 class TestModels:
     def test_get_model_client(self):
         # Get a language model with more than 1 client
-        router = context.models(model="albert-small")
+        router = global_context.models(model="albert-small")
 
         # With roundrobin client should be different at each call
         client_1 = router.get_client(endpoint="")

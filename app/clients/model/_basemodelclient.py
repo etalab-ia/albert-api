@@ -1,7 +1,7 @@
 from abc import ABC
 import ast
 import importlib
-from json import dumps, loads, JSONDecodeError
+from json import JSONDecodeError, dumps, loads
 import logging
 import re
 import traceback
@@ -12,6 +12,8 @@ from fastapi import HTTPException
 import httpx
 
 from app.schemas.core.settings import ModelClientType
+from app.schemas.usage import Detail, Usage
+from app.utils.context import generate_request_id, global_context, request_context
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -58,12 +60,11 @@ class BaseModelClient(ABC):
         module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
         return getattr(module, f"{type.capitalize()}ModelClient")
 
-    def _add_usage_in_additional_data(self, additional_data: Dict[str, Any], json: dict, data: dict, stream: bool) -> None:
+    def _get_usage(self, json: dict, data: dict, stream: bool) -> Optional[Usage]:
         """
-        Add usage data to the additional data.
+        Get usage data from request and response.
 
         Args:
-            additional_data(Dict[str, Any]): The additional data to add usage data to.
             json(dict): The JSON body of the request.
             data(dict): The data of the response.
             stream(bool): Whether the response is a stream.
@@ -71,28 +72,43 @@ class BaseModelClient(ABC):
         Returns:
             Dict[str, Any]: The additional data with usage data.
         """
-        from app.utils.lifespan import context
 
-        if self.endpoint in context.tokenizer.USAGE_COMPLETION_ENDPOINTS:
+        usage = None
+
+        if self.endpoint in global_context.tokenizer.USAGE_COMPLETION_ENDPOINTS:
             try:
-                updated_additional_data = additional_data
-                if "usage" not in updated_additional_data.get("usage", {}):
-                    updated_additional_data["usage"] = {}
+                usage = request_context.get().usage
 
-                if "prompt_tokens" not in additional_data["usage"]:  # to avoid to recompute this value
-                    additional_data["usage"]["prompt_tokens"] = context.tokenizer.get_prompt_tokens(endpoint=self.endpoint, body=json)
+                detail_id = data[0].get("id", generate_request_id()) if stream else data.get("id", generate_request_id())
+                detail = Detail(id=detail_id, model=self.model)
+                detail.prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=self.endpoint, body=json)
 
-                updated_additional_data["usage"]["total_tokens"] = updated_additional_data["usage"]["prompt_tokens"]
+                if global_context.tokenizer.USAGE_COMPLETION_ENDPOINTS[self.endpoint]:
+                    detail.completion_tokens = global_context.tokenizer.get_completion_tokens(endpoint=self.endpoint, response=data, stream=stream)
 
-                if context.tokenizer.USAGE_COMPLETION_ENDPOINTS[self.endpoint]:
-                    updated_additional_data["usage"]["completion_tokens"] = context.tokenizer.get_completion_tokens(endpoint=self.endpoint, response=data, stream=stream)  # fmt: off
-                    updated_additional_data["usage"]["total_tokens"] = updated_additional_data["usage"].get("prompt_tokens", 0) + updated_additional_data["usage"]["completion_tokens"]  # fmt: off
+                detail.total_tokens = detail.prompt_tokens + detail.completion_tokens
 
-                additional_data = updated_additional_data
+                usage.details.append(detail)
+                usage.prompt_tokens += detail.prompt_tokens
+                usage.completion_tokens += detail.completion_tokens
+                usage.total_tokens += detail.total_tokens
 
             except Exception as e:
-                # reset additional_data to its original value
+                logger.debug(traceback.format_exc())
                 logger.warning(f"Failed to compute usage values for endpoint {self.endpoint}: {e}.")
+
+        return usage
+
+    def _get_additional_data(self, json: dict, data: dict, stream: bool) -> dict:
+        """
+        Get additional data from request and response.
+        """
+        usage = self._get_usage(json=json, data=data, stream=stream)
+        request_id = usage.details[-1].id if usage and usage.details else generate_request_id()
+        additional_data = {"model": self.model, "id": request_id}
+
+        if usage:
+            additional_data["usage"] = usage.model_dump()
 
         return additional_data
 
@@ -132,11 +148,8 @@ class BaseModelClient(ABC):
         content_type = response.headers.get("Content-Type", "")
         if content_type == "application/json":
             data = response.json()
-
-            additional_data.update({"model": self.model})
-            additional_data = self._add_usage_in_additional_data(additional_data=additional_data, json=json, data=data, stream=False)
+            data.update(self._get_additional_data(json=json, data=data, stream=False))
             data.update(additional_data)
-
             response = httpx.Response(status_code=response.status_code, content=dumps(data))
 
         return response
@@ -175,14 +188,16 @@ class BaseModelClient(ABC):
             try:
                 response.raise_for_status()
             except httpx.HTTPStatusError:
-                message = loads(response.text)
-
-                # format error message
-                if "message" in message:
-                    try:
-                        message = ast.literal_eval(message["message"])
-                    except Exception:
-                        message = message["message"]
+                try:
+                    message = loads(response.text)  # format error message
+                    if "message" in message:
+                        try:
+                            message = ast.literal_eval(message["message"])
+                        except Exception:
+                            message = message["message"]
+                except JSONDecodeError:
+                    logger.debug(traceback.format_exc())
+                    message = response.text
                 raise HTTPException(status_code=response.status_code, detail=message)
 
         # add additional data to the response
@@ -203,7 +218,7 @@ class BaseModelClient(ABC):
             tuple: (data, extra) where data is the processed raw data and extra is the formatted response.
         """
 
-        content, data = None, dict()
+        content, chunks = None, list()
         for lines in response:
             lines = lines.decode(encoding="utf-8").split(sep="\n\n")
             for line in lines:
@@ -215,14 +230,7 @@ class BaseModelClient(ABC):
                     continue
                 try:
                     content = loads(line)
-                    for choice in content.get("choices", []):
-                        index = choice.get("index", 0)
-                        delta = choice.get("delta", {})
-                        if index not in data:
-                            data[index] = ""
-                        delta_content = delta.get("content", "")
-                        if delta_content:
-                            data[index] += delta_content
+                    chunks.append(content)
                 except JSONDecodeError as e:
                     logger.debug(f"Failed to decode JSON from streaming response ({e}) on the following chunk: {line}.")
 
@@ -233,8 +241,7 @@ class BaseModelClient(ABC):
         # normal case
         extra_chunk = content  # based on last chunk to conserve the chunk structure
         extra_chunk.update({"choices": []})
-        additional_data.update({"model": self.model})
-        additional_data = self._add_usage_in_additional_data(additional_data=additional_data, json=json, data=data, stream=True)
+        extra_chunk.update(self._get_additional_data(json=json, data=chunks, stream=True))
         extra_chunk.update(additional_data)
 
         return extra_chunk
@@ -277,35 +284,29 @@ class BaseModelClient(ABC):
                             chunk = dumps(chunks).encode(encoding="utf-8")
                             yield chunk, response.status_code
                         # normal case
-                        elif not re.search(b"data: \[DONE\]", chunk):
-                            buffer.append(chunk)
-
-                            yield chunk, response.status_code
-
-                        # end of the stream
                         else:
-                            match = re.search(b"data: \[DONE\]", chunk)
-
-                            # error case
+                            match = re.search(rb"data: \[DONE\]", chunk)
                             if not match:
+                                buffer.append(chunk)
+
                                 yield chunk, response.status_code
-                                continue
 
-                            # normal case
-                            last_chunks = chunk[: match.start()]
-                            done_chunk = chunk[match.start() :]
-                            buffer.append(last_chunks)
+                            # end of the stream
+                            else:
+                                last_chunks = chunk[: match.start()]
+                                done_chunk = chunk[match.start() :]
+                                buffer.append(last_chunks)
 
-                            extra_chunk = self._format_stream_response(json=json, response=buffer, additional_data=additional_data)
+                                extra_chunk = self._format_stream_response(json=json, response=buffer, additional_data=additional_data)
 
-                            # if error case, yield chunk
-                            if extra_chunk is None:
-                                yield chunk, response.status_code
-                                continue
+                                # if error case, yield chunk
+                                if extra_chunk is None:
+                                    yield chunk, response.status_code
+                                    continue
 
-                            yield last_chunks, response.status_code
-                            yield f"data: {dumps(extra_chunk)}\n\n".encode(), response.status_code
-                            yield done_chunk, response.status_code
+                                yield last_chunks, response.status_code
+                                yield f"data: {dumps(extra_chunk)}\n\n".encode(), response.status_code
+                                yield done_chunk, response.status_code
 
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
                 yield dumps({"detail": "Request timed out, model is too busy."}).encode(), 504

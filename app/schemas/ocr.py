@@ -1,6 +1,9 @@
 from typing import List, Literal
 
-from app.schemas import BaseModel, Usage
+from pydantic import Field
+
+from app.schemas import BaseModel
+from app.schemas.usage import Usage
 
 
 class OCR(BaseModel):
@@ -12,4 +15,4 @@ class OCR(BaseModel):
 class OCRs(BaseModel):
     object: Literal["list"] = "list"
     data: List[OCR]
-    usage: Usage
+    usage: Usage = Field(default=None, description="Usage information for the request.")

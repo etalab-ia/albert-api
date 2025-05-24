@@ -1,12 +1,13 @@
 from typing import List
 
 from openai.types.audio import Transcription
+from pydantic import Field
 
 from app.schemas import BaseModel
 
 
 class AudioTranscription(Transcription):
-    pass
+    id: str = Field(default=None, description="A unique identifier for the audio transcription.")
 
 
 class Word(BaseModel):

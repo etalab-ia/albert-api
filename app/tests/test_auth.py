@@ -9,7 +9,15 @@ from redis import Redis
 from app.helpers import UsageTokenizer
 from app.schemas.auth import LimitType
 from app.utils.settings import settings
-from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
+from app.utils.variables import (
+    ENDPOINT__CHAT_COMPLETIONS,
+    ENDPOINT__MODELS,
+    ENDPOINT__ROLES,
+    ENDPOINT__ROLES_ME,
+    ENDPOINT__TOKENS,
+    ENDPOINT__USERS,
+    ENDPOINT__USERS_ME,
+)
 
 
 @pytest.fixture(scope="module")
@@ -30,11 +38,16 @@ def tokenizer():
     yield tokenizer
 
 
-@pytest.mark.usefixtures("client", "clean_redis", "tokenizer")
+@pytest.mark.usefixtures("client", "clean_redis", "tokenizer", "roles")
 class TestAuth:
-    def test_user_account_expiration_format(self, client: TestClient):
+    def test_user_account_expiration_format(self, client: TestClient, roles: tuple[dict, dict]):
+        role_with_permissions, role_without_permissions = roles
+
         # Create a test user with no expiration
-        response = client.post_with_permissions(url=ENDPOINT__USERS, json={"name": f"test_user_{str(uuid4())}", "role": 1})
+        response = client.post_with_permissions(
+            url=ENDPOINT__USERS,
+            json={"name": f"test_user_{str(uuid4())}", "role": role_without_permissions["id"]},
+        )
         assert response.status_code == 201, response.text
         user_no_expiration_id = response.json()["id"]
 
@@ -48,7 +61,7 @@ class TestAuth:
         past_expiration = int((datetime.now() - timedelta(minutes=5)).timestamp())
         response = client.post_with_permissions(
             url=f"{ENDPOINT__USERS}",
-            json={"name": f"test_user_{str(uuid4())}", "role": 1, "expires_at": past_expiration},
+            json={"name": f"test_user_{str(uuid4())}", "role": role_without_permissions["id"], "expires_at": past_expiration},
         )
         assert response.status_code == 422, response.text
 
@@ -56,7 +69,7 @@ class TestAuth:
         future_expiration = int((time.time()) + 5 * 60)
         response = client.post_with_permissions(
             url=f"{ENDPOINT__USERS}",
-            json={"name": f"test_user_{str(uuid4())}", "role": 1, "expires_at": future_expiration},
+            json={"name": f"test_user_{str(uuid4())}", "role": role_without_permissions["id"], "expires_at": future_expiration},
         )
         assert response.status_code == 201, response.text
         user_with_expiration_id = response.json()["id"]
@@ -83,12 +96,16 @@ class TestAuth:
         response = client.patch_with_permissions(url=f"{ENDPOINT__USERS}/{user_with_expiration_id}", json={"expires_at": past_expiration})
         assert response.status_code == 422, "Should reject update with past expiration time"
 
-    def test_user_account_expiration_access(self, client: TestClient):
+    def test_user_account_expiration_access(self, client: TestClient, roles: tuple[dict, dict]):
+        role_with_permissions, role_without_permissions = roles
+
         # Create user with expiration set to 2 seconds in the future
         future_expiration = int((time.time()) + 2)
+
+        # Create user
         response = client.post_with_permissions(
             url=f"{ENDPOINT__USERS}",
-            json={"name": f"test_user_{str(uuid4())}", "role": 1, "expires_at": future_expiration},
+            json={"name": f"test_user_{str(uuid4())}", "role": role_without_permissions["id"], "expires_at": future_expiration},
         )
         assert response.status_code == 201, response.text
         user_id = response.json()["id"]
@@ -118,11 +135,33 @@ class TestAuth:
         assert response.status_code == 200, response.text
 
         # Check that /users/me and /roles/me endpoints return 200 for expired user
-        response = client.get(url=f"{ENDPOINT__USERS}/me", headers=headers)
+        response = client.get(url=ENDPOINT__USERS_ME, headers=headers)
         assert response.status_code == 200, response.text
 
-        response = client.get(url=f"{ENDPOINT__ROLES}/me", headers=headers)
+        response = client.get(url=ENDPOINT__ROLES_ME, headers=headers)
         assert response.status_code == 200, response.text
+
+    def test_create_token_after_max_token_expiration_days(self, client: TestClient, roles: tuple[dict, dict]):
+        role_with_permissions, role_without_permissions = roles
+
+        # Create a user with no expiration
+        response = client.post_with_permissions(
+            url=ENDPOINT__USERS,
+            json={"name": f"test_user_{str(uuid4())}", "role": role_without_permissions["id"]},
+        )
+        assert response.status_code == 201, response.text
+        user_id = response.json()["id"]
+
+        # Create a token for this user
+        response = client.post_with_permissions(
+            url=ENDPOINT__TOKENS,
+            json={
+                "name": f"test_token_{str(uuid4())}",
+                "user": user_id,
+                "expires_at": int((time.time()) + (settings.auth.max_token_expiration_days + 10) * 86400 + 1),
+            },
+        )
+        assert response.status_code == 422, response.text
 
     def test_token_rate_limits(self, client: TestClient, tokenizer):
         tokenizer = tokenizer

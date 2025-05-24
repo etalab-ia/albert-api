@@ -1,6 +1,5 @@
 from contextlib import asynccontextmanager
 import traceback
-from types import SimpleNamespace
 
 from coredis import ConnectionPool
 from fastapi import FastAPI
@@ -14,9 +13,9 @@ from app.helpers.models.routers import ModelRouter
 from app.utils import multiagents
 from app.utils.logging import init_logger
 from app.utils.settings import settings
+from app.utils.context import global_context as context
 
 logger = init_logger(name=__name__)
-context = SimpleNamespace(models=None, iam=None, limiter=None, documents=None, tokenizer=None)
 
 
 @asynccontextmanager

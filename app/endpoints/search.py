@@ -3,11 +3,10 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import AccessController
-from app.schemas import Usage
 from app.schemas.search import Searches, SearchRequest
 from app.sql.session import get_db as get_session
+from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
-from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__SEARCH
 
 router = APIRouter()
@@ -19,19 +18,20 @@ async def search(request: Request, body: SearchRequest, session: AsyncSession = 
     Get relevant chunks from the collections and a query.
     """
 
-    if not context.documents:  # no vector store available
+    if not global_context.documents:  # no vector store available
         raise CollectionNotFoundException()
 
-    data = await context.documents.search(
+    data = await global_context.documents.search(
         session=session,
         collection_ids=body.collections,
         prompt=body.prompt,
         method=body.method,
         k=body.k,
         rff_k=body.rff_k,
-        user_id=request.app.state.user.id,
+        user_id=request_context.get().user_id,
         web_search=body.web_search,
     )
-    content = Searches(data=data, usage=Usage(prompt_tokens=request.app.state.prompt_tokens, total_tokens=request.app.state.prompt_tokens))
+    usage = request_context.get().usage
+    content = Searches(data=data, usage=usage)
 
     return JSONResponse(content=content.model_dump(), status_code=200)

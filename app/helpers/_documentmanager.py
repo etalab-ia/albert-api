@@ -325,6 +325,9 @@ class DocumentManager:
             except NoResultFound:
                 raise CollectionNotFoundException(detail=f"Collection {collection_id} not found.")
 
+        if not collection_ids:
+            return []  # to avoid a request to create a query vector
+
         response = await self._create_embeddings(input=[prompt])
         query_vector = response[0]
         if method == SearchMethod.MULTIAGENT:

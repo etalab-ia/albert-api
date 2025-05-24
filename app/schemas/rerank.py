@@ -2,7 +2,8 @@ from typing import List, Literal
 
 from pydantic import Field
 
-from app.schemas import BaseModel, Usage
+from app.schemas import BaseModel
+from app.schemas.usage import Usage
 
 
 class RerankRequest(BaseModel):
@@ -18,6 +19,7 @@ class Rerank(BaseModel):
 
 
 class Reranks(BaseModel):
+    id: str = Field(default=None, description="A unique identifier for the reranking.")
     object: Literal["list"] = "list"
     data: List[Rerank]
-    usage: Usage
+    usage: Usage = Field(default=None, description="Usage information for the request.")
