@@ -6,6 +6,7 @@ from typing import List, Literal, Optional
 from pydantic import Field, field_validator
 
 from app.schemas import BaseModel
+from app.utils.settings import settings
 
 
 class PermissionType(str, Enum):
@@ -192,6 +193,10 @@ class TokenRequest(BaseModel):
         if isinstance(expires_at, int):
             if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
                 raise ValueError("Wrong timestamp, must be in the future.")
+
+        if settings.auth.max_token_expiration_days:
+            if expires_at > int(dt.datetime.now(tz=dt.UTC).timestamp()) + settings.auth.max_token_expiration_days * 86400:
+                raise ValueError(f"Token expiration timestamp cannot be greater than {settings.auth.max_token_expiration_days} days from now.")  # fmt: off
 
         return expires_at
 

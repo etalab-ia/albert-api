@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.helpers import AccessController
 from app.schemas.collections import Collection, CollectionRequest, Collections, CollectionUpdateRequest
 from app.sql.session import get_db as get_session
-from app.utils.context import global_context as global_context
+from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.variables import ENDPOINT__COLLECTIONS
 
@@ -25,7 +25,7 @@ async def create_collection(request: Request, body: CollectionRequest, session: 
         name=body.name,
         visibility=body.visibility,
         description=body.description,
-        user_id=request.app.state.user.id,
+        user_id=request_context.get().user_id,
     )
 
     return JSONResponse(status_code=201, content={"id": collection_id})
@@ -51,7 +51,7 @@ async def get_collection(
     collections = await global_context.documents.get_collections(
         session=session,
         collection_id=collection,
-        user_id=request.app.state.user.id,
+        user_id=request_context.get().user_id,
         include_public=True,
     )
 
@@ -73,7 +73,7 @@ async def get_collections(
     else:
         data = await global_context.documents.get_collections(
             session=session,
-            user_id=request.app.state.user.id,
+            user_id=request_context.get().user_id,
             include_public=True,
             offset=offset,
             limit=limit,
@@ -96,7 +96,7 @@ async def delete_collections(
 
     await global_context.documents.delete_collection(
         session=session,
-        user_id=request.app.state.user.id,
+        user_id=request_context.get().user_id,
         collection_id=collection,
     )
 
@@ -118,7 +118,7 @@ async def update_collection(
 
     await global_context.documents.update_collection(
         session=session,
-        user_id=request.app.state.user.id,
+        user_id=request_context.get().user_id,
         collection_id=collection,
         name=body.name,
         visibility=body.visibility,

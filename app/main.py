@@ -11,7 +11,7 @@ from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
 from app.schemas.usage import Usage
 from app.sql.session import get_db
-from app.utils.context import request_context
+from app.utils.context import generate_request_id, request_context
 from app.utils.lifespan import lifespan
 from app.utils.settings import settings
 from app.utils.usage_decorator import log_usage
@@ -81,7 +81,15 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
     @app.middleware("http")
     async def set_request_context(request: Request, call_next):
         """Middleware to set request context."""
-        request_context.set(RequestContext(method=request.method, path=request.url.path, client=request.client.host, usage=Usage()))
+        request_context.set(
+            RequestContext(
+                id=generate_request_id(),
+                method=request.method,
+                endpoint=request.url.path,
+                client=request.client.host,
+                usage=Usage(),
+            )
+        )
 
         return await call_next(request)
 

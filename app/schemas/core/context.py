@@ -17,8 +17,12 @@ class GlobalContext(BaseModel):
 
 
 class RequestContext(BaseModel):
+    id: Optional[str] = None
+    user_id: Optional[str] = None
+    role_id: Optional[str] = None
+    token_id: Optional[str] = None
     method: Optional[str] = None
-    path: Optional[str] = None
+    endpoint: Optional[str] = None
     client: Optional[str] = None
     usage: Optional[Usage] = None
 

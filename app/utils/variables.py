@@ -13,9 +13,11 @@ ENDPOINT__MODELS = "/models"
 ENDPOINT__OCR = "/ocr-beta"
 ENDPOINT__RERANK = "/rerank"
 ENDPOINT__ROLES = "/roles"
+ENDPOINT__ROLES_ME = "/roles/me"
 ENDPOINT__SEARCH = "/search"
 ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
+ENDPOINT__USERS_ME = "/users/me"
 
 ENDPOINTS = [value for name, value in locals().items() if name.startswith("ENDPOINT__")]
 
