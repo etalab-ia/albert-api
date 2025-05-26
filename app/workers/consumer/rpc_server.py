@@ -1,10 +1,10 @@
 import logging
 
-from app.helpers.strategies import BaseModelClientSelectionStrategy
+from app.helpers.models.routers.strategies import BaseRoutingStrategy
 
 
 class RPCServer:
-    def __init__(self, message_broker_url: str, strategies: {str: BaseModelClientSelectionStrategy}) -> None:
+    def __init__(self, message_broker_url: str, strategies: {str: BaseRoutingStrategy}) -> None:
         self.message_broker_url = message_broker_url
         self.strategies = strategies  # Key: model router id, Value: strategy instance
         self.connection = None  # Instance of aio_pika AbstractConnection

@@ -7,7 +7,7 @@ from fastapi import UploadFile
 import requests
 
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
-from app.helpers.models.routers import ModelRouter
+from app.helpers.models.routers import ImmediateModelRouter
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 from app.utils.settings import settings
@@ -33,7 +33,7 @@ Exemples :
 Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 
-    def __init__(self, web_search: WebSearchClient, model: ModelRouter) -> None:
+    def __init__(self, web_search: WebSearchClient, model: ImmediateModelRouter) -> None:
         self.web_search = web_search
         self.model = model
         self.limited_domains = settings.web_search.limited_domains if settings.web_search else None

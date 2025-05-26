@@ -1,5 +1,6 @@
 from ._basemodelrouter import BaseModelRouter
 from ._immediatemodelrouter import ImmediateModelRouter
-from ._modelrouter import ModelRouter
+from ._queuingmodelrouter import QueuingModelRouter
+from ._metricstracker import MetricsTracker
 
-__all__ = ["BaseModelRouter", "ImmediateModelRouter", "ModelRouter"]
+__all__ = ["BaseModelRouter", "ImmediateModelRouter", "QueuingModelRouter", "MetricsTracker"]

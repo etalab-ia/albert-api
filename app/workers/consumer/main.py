@@ -1,9 +1,7 @@
 from itertools import cycle
 import logging
 
-from app.helpers.strategies.roundrobinmodelclientselectionstrategy import RoundRobinModelClientSelectionStrategy
-from app.helpers.strategies.shufflemodelclientselectionstrategy import ShuffleModelClientSelectionStrategy
-from app.helpers.strategies.leastbusymodelclientselectionstrategy import LeastBusyModelClientSelectionStrategy
+from app.helpers.models.routers.strategies import RoundRobinRoutingStrategy, ShuffleRoutingStrategy, LeastBusyRoutingStrategy
 from app.schemas.core.models import RoutingStrategy, RoutingMode
 from app.utils.settings import settings
 from app.workers.consumer.rpc_server import RPCServer
@@ -26,11 +24,11 @@ if __name__ == "__main__":
         if model.routing_mode == RoutingMode.QUEUEING:
             client_urls = [client.api_url for client in model.clients]
             if model.routing_strategy == RoutingStrategy.LEAST_BUSY:
-                strategy = LeastBusyModelClientSelectionStrategy(client_urls)
+                strategy = LeastBusyRoutingStrategy(client_urls)
             elif model.routing_strategy == RoutingStrategy.ROUND_ROBIN:
-                strategy = RoundRobinModelClientSelectionStrategy(client_urls, cycle(client_urls))
+                strategy = RoundRobinRoutingStrategy(client_urls, cycle(client_urls))
             else:
-                strategy = ShuffleModelClientSelectionStrategy(client_urls)
+                strategy = ShuffleRoutingStrategy(client_urls)
             strategies[model.id] = strategy
 
     rpc_server = RPCServer(settings.RABBITMQ_URL, strategies)

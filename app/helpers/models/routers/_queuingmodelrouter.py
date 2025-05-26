@@ -1,9 +1,9 @@
 from app.clients.model import BaseModelClient as ModelClient
-from app.helpers._basemodelrouter import BaseModelRouter
 from app.schemas.models import ModelType
-
 from app.helpers.message_producer.rpc_client import RPCClient
-from app.helpers._metricstracker import MetricsTracker
+
+from ._basemodelrouter import BaseModelRouter
+from ._metricstracker import MetricsTracker
 
 
 class QueuingModelRouter(BaseModelRouter):

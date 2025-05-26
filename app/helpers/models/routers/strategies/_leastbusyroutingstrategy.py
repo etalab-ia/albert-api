@@ -1,9 +1,9 @@
 from typing import List
 
-from app.helpers.strategies._basemodelclientselectionstrategy import BaseModelClientSelectionStrategy
+from app.helpers.models.routers.strategies import BaseRoutingStrategy
 
 
-class LeastBusyModelClientSelectionStrategy(BaseModelClientSelectionStrategy):
+class LeastBusyRoutingStrategy(BaseRoutingStrategy):
     def __init__(self, clients: List[str]) -> None:
         super().__init__(clients)
 
