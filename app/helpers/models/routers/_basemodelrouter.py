@@ -19,10 +19,13 @@ class BaseModelRouter(ABC):
         **kwargs,
     ) -> None:
         vector_sizes, max_context_lengths = list(), list()
+        is_free = False
 
         for client in clients:
             vector_sizes.append(client.vector_size)
             max_context_lengths.append(client.max_context_length)
+            is_free = True if client.budget.prompt_tokens == 0 and client.budget.completion_tokens == 0 else is_free
+
         # consistency checks
         assert len(set(vector_sizes)) < 2, "All embeddings models in the same model group must have the same vector size."
 
@@ -38,6 +41,7 @@ class BaseModelRouter(ABC):
         self.aliases = aliases
         self.max_context_length = max_context_length
 
+        self._is_free = is_free
         self._vector_size = vector_sizes[0]
         self._routing_strategy = routing_strategy
         self._cycle = cycle(clients)

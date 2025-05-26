@@ -25,6 +25,7 @@ class Usage(Base):
     prompt_tokens = Column(Integer)
     completion_tokens = Column(Float)
     total_tokens = Column(Integer)
+    budget = Column(Float, nullable=True)
     status = Column(Integer, nullable=True)
 
     user = relationship(argument="User", backref=backref(name="usage", cascade="all, delete-orphan"))
@@ -77,6 +78,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, index=True, unique=True, nullable=False)
     role_id = Column(Integer, ForeignKey(column="role.id"), nullable=False)
+    budget = Column(Float, nullable=True)
     expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())

@@ -6,7 +6,7 @@ from pydantic import Field, field_validator, model_validator
 from app.schemas import BaseModel
 from app.schemas.chunks import Chunk
 from app.schemas.usage import Usage
-from app.utils.exceptions import CollectionNotFoundException, WrongSearchMethodException
+from app.utils.exceptions import WrongSearchMethodException
 
 
 class SearchMethod(str, Enum):
@@ -29,27 +29,6 @@ class SearchArgs(BaseModel):
         if values.score_threshold and values.method not in (SearchMethod.SEMANTIC, SearchMethod.MULTIAGENT):
             raise WrongSearchMethodException(detail="Score threshold is only available for semantic and multiagent search methods.")
         return values
-
-    @field_validator("collections", mode="before")
-    def legacy_collections(cls, collections):
-        from app.utils.settings import settings
-
-        _collections = []
-        for collection in collections:
-            if isinstance(collection, int):
-                _collections.append(collection)
-            elif settings.legacy_collections:
-                _collection = settings.legacy_collections.get(collection)
-                if _collection:
-                    _collections.append(_collection)
-                else:
-                    raise CollectionNotFoundException(detail=f"Collection {collection} not found.")
-            else:
-                raise CollectionNotFoundException(detail=f"Collection {collection} not found.")
-
-            collections = _collections
-
-        return collections
 
 
 class SearchRequest(SearchArgs):

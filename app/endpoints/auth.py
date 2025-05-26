@@ -175,7 +175,7 @@ async def create_user(
     Create a new user.
     """
 
-    user_id = await global_context.iam.create_user(session=session, name=body.name, role_id=body.role, expires_at=body.expires_at)
+    user_id = await global_context.iam.create_user(session=session, name=body.name, role_id=body.role, budget=body.budget, expires_at=body.expires_at)
 
     return JSONResponse(status_code=201, content={"id": user_id})
 
@@ -215,7 +215,14 @@ async def update_user(
     Update a user.
     """
 
-    await global_context.iam.update_user(session=session, user_id=user, name=body.name, role_id=body.role, expires_at=body.expires_at)
+    await global_context.iam.update_user(
+        session=session,
+        user_id=user,
+        name=body.name,
+        role_id=body.role,
+        budget=body.budget,
+        expires_at=body.expires_at,
+    )
 
     return Response(status_code=204)
 

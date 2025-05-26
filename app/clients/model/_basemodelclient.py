@@ -11,7 +11,7 @@ from urllib.parse import urljoin
 from fastapi import HTTPException
 import httpx
 
-from app.schemas.core.settings import ModelClientType
+from app.schemas.core.settings import ModelClientBudget, ModelClientType
 from app.schemas.usage import Detail, Usage
 from app.utils.context import generate_request_id, global_context, request_context
 from app.utils.variables import (
@@ -38,8 +38,9 @@ class BaseModelClient(ABC):
         ENDPOINT__RERANK: None,
     }
 
-    def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
+    def __init__(self, model: str, budget: ModelClientBudget, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         self.model = model
+        self.budget = budget
         self.api_url = api_url
         self.api_key = api_key
         self.timeout = timeout
@@ -80,18 +81,24 @@ class BaseModelClient(ABC):
                 usage = request_context.get().usage
 
                 detail_id = data[0].get("id", generate_request_id()) if stream else data.get("id", generate_request_id())
-                detail = Detail(id=detail_id, model=self.model)
-                detail.prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=self.endpoint, body=json)
+                detail = Detail(id=detail_id, model=self.model, usage=Usage())
+                detail.usage.prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=self.endpoint, body=json)
 
                 if global_context.tokenizer.USAGE_COMPLETION_ENDPOINTS[self.endpoint]:
-                    detail.completion_tokens = global_context.tokenizer.get_completion_tokens(endpoint=self.endpoint, response=data, stream=stream)
+                    detail.usage.completion_tokens = global_context.tokenizer.get_completion_tokens(
+                        endpoint=self.endpoint,
+                        response=data,
+                        stream=stream,
+                    )
 
-                detail.total_tokens = detail.prompt_tokens + detail.completion_tokens
+                detail.usage.total_tokens = detail.usage.prompt_tokens + detail.usage.completion_tokens
+                detail.usage.budget = self.budget.prompt_tokens / 1000000 * detail.usage.prompt_tokens + self.budget.completion_tokens / 1000000 * detail.usage.completion_tokens  # fmt: off
 
                 usage.details.append(detail)
-                usage.prompt_tokens += detail.prompt_tokens
-                usage.completion_tokens += detail.completion_tokens
-                usage.total_tokens += detail.total_tokens
+                usage.prompt_tokens += detail.usage.prompt_tokens
+                usage.completion_tokens += detail.usage.completion_tokens
+                usage.total_tokens += detail.usage.total_tokens
+                usage.budget += detail.usage.budget
 
             except Exception as e:
                 logger.debug(traceback.format_exc())

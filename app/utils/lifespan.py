@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
         for client in model.clients:
             try:
                 # model client can be not reatachable to API start up
-                client = ModelClient.import_module(type=client.type)(model=client.model, **client.args.model_dump())
+                client = ModelClient.import_module(type=client.type)(model=client.model, budget=client.budget, **client.args.model_dump())
                 clients.append(client)
             except Exception as e:
                 logger.debug(msg=traceback.format_exc())
@@ -54,26 +54,25 @@ async def lifespan(app: FastAPI):
         routers.append(ModelRouter(**model))
 
     # setup context: models, iam, limiter, tokenizer
-    global_context.tokenizer = UsageTokenizer(tokenizer=settings.usages.tokenizer)
+    global_context.tokenizer = UsageTokenizer(tokenizer=settings.general.tokenizer)
     global_context.models = ModelRegistry(routers=routers)
     global_context.iam = IdentityAccessManager()
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
 
+    # setup context: documents
     qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
     qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
+    web_search = WebSearchManager(web_search=web_search, model=global_context.models(model=settings.web_search.model)) if settings.web_search else None  # fmt: off
+
+    # @TODO: refacto import of multiagents into DocumentManager
+    multi_agents_search_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
+    multiagents.MultiAgents.model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
+    multiagents.MultiAgents.ranker_model = global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
+
+    global_context.documents = DocumentManager(qdrant=qdrant, web_search=web_search, multi_agents_search_model=multi_agents_search_model) if qdrant else None  # fmt: off
 
     if redis:
         assert await global_context.limiter.redis.check(), "Redis database is not reachable."
-
-    # setup context: documents
-    web_search = (
-        WebSearchManager(web_search=web_search, model=global_context.models(model=settings.web_search.model)) if settings.web_search else None
-    )
-    multi_agents_search_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-    global_context.documents = DocumentManager(qdrant=qdrant, web_search=web_search, multi_agents_search_model=multi_agents_search_model) if qdrant else None  # fmt: off
-
-    multiagents.MultiAgents.model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-    multiagents.MultiAgents.ranker_model = global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
 
     if qdrant:
         assert await global_context.documents.qdrant.check(), "Qdrant database is not reachable."

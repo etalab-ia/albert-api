@@ -9,14 +9,14 @@ from fastapi import HTTPException, Request, Response
 from starlette.responses import StreamingResponse
 
 from app.helpers import StreamingResponseWithStatusCode
-from app.sql.models import Usage
+from app.sql.models import Usage, User
 from app.sql.session import get_db
 from app.utils.context import global_context, request_context
 
 logger = logging.getLogger(__name__)
 
 
-def log_usage(func):
+def hooks(func):
     """
     Extracts usage information from the request and response and logs it to the database.
     This decorator is designed to be used with FastAPI endpoints.
@@ -27,7 +27,7 @@ def log_usage(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         start_time = datetime.now()
-        usage = Usage(datetime=start_time, endpoint="N/A", model=None, prompt_tokens=None, completion_tokens=None, total_tokens=None)
+        usage = Usage(datetime=start_time, endpoint="N/A")
 
         # get the request context
         context = request_context.get()
@@ -72,9 +72,7 @@ def log_usage(func):
 
         except HTTPException as e:
             usage.status = e.status_code
-            # Pass response=None as there isn't a full FastAPI Response object.
-            # perform_log will use usage.status which we've just set.
-            asyncio.create_task(perform_log(response=None, usage=usage, start_time=start_time))
+            asyncio.create_task(write_usage(response=None, usage=usage, start_time=start_time))
             raise e  # Re-raise the exception for FastAPI to handle
 
     return wrapper
@@ -148,12 +146,14 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
                         usage.prompt_tokens = data["usage"]["prompt_tokens"]
                         usage.completion_tokens = data["usage"]["completion_tokens"]
                         usage.total_tokens = data["usage"]["total_tokens"]
+                        usage.budget = data["usage"].get("budget", None)
 
-        # Set usage.status with the captured status code before calling perform_log
+        # Set usage.status with the captured status code before calling write_usage
         if response_status_code is not None:
             usage.status = response_status_code
 
-        asyncio.create_task(perform_log(response, usage, start_time))
+        asyncio.create_task(write_usage(response=response, usage=usage, start_time=start_time))
+        asyncio.create_task(update_budget(usage=usage))
 
     return StreamingResponseWithStatusCode(wrapped_stream(), media_type=response.media_type)
 
@@ -171,17 +171,20 @@ async def extract_usage_from_response(response: Response, start_time: datetime, 
             body = json.loads(response.body)
 
         usage.model = body.get("model", None)
-        usage.prompt_tokens = body.get("usage", {}).get("prompt_tokens", None)
-        usage.completion_tokens = body.get("usage", {}).get("completion_tokens", None)
-        usage.total_tokens = body.get("usage", {}).get("total_tokens", None)
+        response_usage = body.get("usage", {})
+        usage.prompt_tokens = response_usage.get("prompt_tokens", None)
+        usage.completion_tokens = response_usage.get("completion_tokens", None)
+        usage.total_tokens = response_usage.get("total_tokens", None)
+        usage.budget = response_usage.get("budget", None)
     except Exception as e:
         logger.warning(f"Failed to parse JSON response body: {response.body} ({e})")
         return
 
-    asyncio.create_task(perform_log(response, usage, start_time))
+    asyncio.create_task(write_usage(response, usage, start_time))
+    asyncio.create_task(update_budget(usage=usage))
 
 
-async def perform_log(response: Optional[Response], usage: Usage, start_time: datetime):
+async def write_usage(response: Optional[Response], usage: Usage, start_time: datetime):
     """
     Logs the usage information to the database.
     This function captures the duration of the request and sets the status code of the response if available.
@@ -203,5 +206,61 @@ async def perform_log(response: Optional[Response], usage: Usage, start_time: da
         except Exception as e:
             logger.error(f"Failed to log usage: {e}")
             await session.rollback()
+        finally:
+            await session.close()
+
+
+async def update_budget(usage: Usage):
+    """
+    Updates the budget of the user by decreasing it by the calculated cost.
+    Retrieves the current user budget, and decreases it by min(usage.budget, current_budget_value).
+    Uses row-level locking to prevent concurrency issues.
+    """
+    # Check if there's a budget cost to deduct
+    if not usage.budget or usage.budget == 0:
+        return
+
+    user_id = usage.user_id
+    cost = usage.budget
+
+    if not user_id:
+        logger.warning("No user_id found in usage object for budget update")
+        return
+
+    # Decrease the user's budget by the calculated cost with proper locking
+    async for session in get_db():
+        try:
+            from sqlalchemy import update, func, select
+
+            # Start an explicit transaction
+            async with session.begin():
+                # Use SELECT FOR UPDATE to lock the user row during the transaction
+                # This prevents concurrent modifications to the budget
+                select_stmt = select(User.budget).where(User.id == user_id).with_for_update()
+                result = await session.execute(select_stmt)
+                current_budget = result.scalar_one_or_none()
+
+                if current_budget is None or current_budget == 0:
+                    logger.warning(f"User {user_id} not found or has no budget for budget update")
+                    return
+
+                # Calculate the actual cost to deduct (minimum of requested cost and available budget)
+                actual_cost = min(cost, current_budget)
+
+                # Update the budget
+                update_stmt = (
+                    update(User).where(User.id == user_id).values(budget=User.budget - actual_cost, updated_at=func.now()).returning(User.budget)
+                )
+
+                result = await session.execute(update_stmt)
+                remaining_budget = result.scalar_one_or_none()
+
+                # Transaction is automatically committed when exiting the async with block
+                logger.info(f"Budget updated for user {user_id}: deducted {actual_cost}, remaining {remaining_budget}")
+
+        except Exception as e:
+            logger.error(f"Failed to update budget for user {user_id}: {e}")
+            # Transaction is automatically rolled back when exiting the async with block on exception
+            return None
         finally:
             await session.close()

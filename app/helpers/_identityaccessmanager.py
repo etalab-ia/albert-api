@@ -196,7 +196,14 @@ class IdentityAccessManager:
 
         return list(roles.values())
 
-    async def create_user(self, session: AsyncSession, name: str, role_id: int, expires_at: Optional[int] = None) -> int:
+    async def create_user(
+        self,
+        session: AsyncSession,
+        name: str,
+        role_id: int,
+        budget: Optional[float] = None,
+        expires_at: Optional[int] = None,
+    ) -> int:
         expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
         # check if role exists
@@ -213,6 +220,7 @@ class IdentityAccessManager:
                 .values(
                     name=name,
                     role_id=role_id,
+                    budget=budget,
                     expires_at=expires_at,
                 )
                 .returning(UserTable.id)
@@ -238,17 +246,31 @@ class IdentityAccessManager:
         await session.commit()
 
     async def update_user(
-        self, session: AsyncSession, user_id: int, name: Optional[str] = None, role_id: Optional[int] = None, expires_at: Optional[int] = None
+        self,
+        session: AsyncSession,
+        user_id: int,
+        name: Optional[str] = None,
+        role_id: Optional[int] = None,
+        budget: Optional[float] = None,
+        expires_at: Optional[int] = None,
     ) -> None:
         """
-        Attention ici car expires_at est toujours remplacé par la valeur passée en paramètre car None est une valeur valide pour expires_at.
+        Update user. Warning: budget and expires_at are always replaced by the values passed as parameters because None is a valid value for budget and expires_at.
+
+        Args:
+            session: The session to use.
+            user_id: The ID of the user to update.
+            name: The new name of the user.
+            role_id: The new role ID of the user.
+            budget: The new budget of the user.
+            expires_at: The new expiration timestamp of the user.
         """
         # check if user exists
         result = await session.execute(
             statement=select(
                 UserTable.id,
                 UserTable.name,
-                # UserTable.password,
+                UserTable.budget,
                 UserTable.expires_at,
                 RoleTable.id.label("role_id"),
                 RoleTable.name.label("role"),
@@ -273,7 +295,7 @@ class IdentityAccessManager:
 
         role_id = role_id if role_id is not None else user.role_id
         await session.execute(
-            statement=update(table=UserTable).values(name=name, role_id=role_id, expires_at=expires_at).where(UserTable.id == user.id)
+            statement=update(table=UserTable).values(name=name, role_id=role_id, budget=budget, expires_at=expires_at).where(UserTable.id == user.id)
         )
         await session.commit()
 
@@ -292,6 +314,7 @@ class IdentityAccessManager:
                 UserTable.id,
                 UserTable.name,
                 UserTable.role_id.label("role"),
+                UserTable.budget,
                 cast(func.extract("epoch", UserTable.expires_at), Integer).label("expires_at"),
                 cast(func.extract("epoch", UserTable.created_at), Integer).label("created_at"),
                 cast(func.extract("epoch", UserTable.updated_at), Integer).label("updated_at"),
@@ -388,28 +411,13 @@ class IdentityAccessManager:
 
         return tokens
 
-    async def _legacy_check_token(self, session: AsyncSession, token: str) -> Tuple[Optional[int], Optional[int]]:
-        statement = (
-            select(TokenTable.id, TokenTable.user_id)
-            .where(TokenTable.token == token)
-            .where(or_(TokenTable.expires_at.is_(None), TokenTable.expires_at >= func.now()))
-        )
-        result = await session.execute(statement=statement)
-        results = result.all()
-        if results:
-            token_id, user_id = results[0]
-            return user_id, token_id
-        else:
-            return None, None
-
     async def check_token(self, session: AsyncSession, token: str) -> Tuple[Optional[int], Optional[int]]:
         try:
             claims = self._decode_token(token=token)
         except JWTError:
             return None, None
         except IndexError:  # malformed token (no token prefix)
-            user_id, token_id = await self._legacy_check_token(session, token=token)  # @ TODO: remove after migration
-            return user_id, token_id
+            return None, None
 
         try:
             await self.get_tokens(session, user_id=claims["user_id"], token_id=claims["token_id"], exclude_expired=True)

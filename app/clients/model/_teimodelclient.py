@@ -3,10 +3,9 @@ from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
 import httpx
-from openai import AsyncOpenAI
 import requests
 
-from app.clients.model._basemodelclient import BaseModelClient
+from app.schemas.core.models import ModelClientBudget
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -17,8 +16,10 @@ from app.utils.variables import (
     ENDPOINT__RERANK,
 )
 
+from ._basemodelclient import BaseModelClient
 
-class TeiModelClient(AsyncOpenAI, BaseModelClient):
+
+class TeiModelClient(BaseModelClient):
     ENDPOINT_TABLE = {
         ENDPOINT__AUDIO_TRANSCRIPTIONS: None,
         ENDPOINT__CHAT_COMPLETIONS: None,
@@ -29,13 +30,11 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         ENDPOINT__RERANK: "/rerank",
     }
 
-    def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
+    def __init__(self, model: str, budget: ModelClientBudget, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
         Initialize the TEI model client and check if the model is available.
         """
-        BaseModelClient.__init__(self, model=model, api_url=api_url, api_key=api_key, timeout=timeout, *args, **kwargs)
-
-        AsyncOpenAI.__init__(self, base_url=urljoin(base=self.api_url, url="/v1"), api_key=self.api_key, timeout=self.timeout)
+        super().__init__(model=model, budget=budget, api_url=api_url, api_key=api_key, timeout=timeout, *args, **kwargs)
 
         # check if model is available
         url = urljoin(base=str(self.api_url), url=self.ENDPOINT_TABLE[ENDPOINT__MODELS])
