@@ -5,6 +5,7 @@ from pydantic import Field, field_validator, model_validator
 
 from app.schemas import BaseModel
 from app.schemas.search import Search, SearchArgs
+from app.schemas.usage import Usage
 
 DEFAULT_RAG_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"
 
@@ -65,7 +66,9 @@ class ChatCompletionRequest(BaseModel):
 
 
 class ChatCompletion(ChatCompletion):
+    id: str = Field(default=None, description="A unique identifier for the chat completion.")
     search_results: List[Search] = []
+    usage: Usage = Field(default=None, description="Usage information for the request.")
 
 
 class ChatCompletionChunk(ChatCompletionChunk):

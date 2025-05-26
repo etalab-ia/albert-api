@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.helpers import AccessController
 from app.schemas.chunks import Chunk, Chunks
 from app.sql.session import get_db as get_session
+from app.utils.context import global_context, request_context
 from app.utils.exceptions import ChunkNotFoundException
-from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__CHUNKS
 
 router = APIRouter()
@@ -24,10 +24,10 @@ async def get_chunk(
     """
     Get a chunk of a document.
     """
-    if not context.documents:  # no vector store available
+    if not global_context.documents:  # no vector store available
         raise ChunkNotFoundException()
 
-    chunks = await context.documents.get_chunks(session=session, document_id=document, chunk_id=chunk, user_id=request.app.state.user.id)
+    chunks = await global_context.documents.get_chunks(session=session, document_id=document, chunk_id=chunk, user_id=request_context.get().user_id)
 
     return chunks[0]
 
@@ -43,15 +43,15 @@ async def get_chunks(
     """
     Get chunks of a document.
     """
-    if not context.documents:  # no vector store available
+    if not global_context.documents:  # no vector store available
         data = []
     else:
-        data = await context.documents.get_chunks(
+        data = await global_context.documents.get_chunks(
             session=session,
             document_id=document,
             limit=limit,
             offset=offset,
-            user_id=request.app.state.user.id,
+            user_id=request_context.get().user_id,
         )
 
     return Chunks(data=data)

@@ -4,6 +4,7 @@ from openai.types import CreateEmbeddingResponse
 from pydantic import Field, field_validator
 
 from app.schemas import BaseModel
+from app.schemas.usage import Usage
 
 
 class OpenAIBaseModel(BaseModel):
@@ -24,4 +25,5 @@ class EmbeddingsRequest(OpenAIBaseModel):
 
 
 class Embeddings(CreateEmbeddingResponse):
-    pass
+    id: str = Field(default=None, description="A unique identifier for the embedding.")
+    usage: Usage = Field(default=None, description="Usage information for the request.")
