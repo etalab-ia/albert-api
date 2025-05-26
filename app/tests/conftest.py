@@ -18,8 +18,7 @@ from app.main import create_app
 from app.schemas.auth import LimitType, PermissionType
 from app.sql.models import Base
 from app.utils.settings import settings
-from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
-
+from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS, ENDPOINT__COLLECTIONS
 
 # Define global VCR instance and cassette
 VCR_INSTANCE = None
@@ -282,3 +281,6 @@ def client(test_client: TestClient, tokens: tuple[dict, dict]) -> Generator[Test
     client.patch_master = partial(client.patch, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
 
     yield client
+
+    response = client.delete_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/1")
+    assert response.status_code == 204, response.text
