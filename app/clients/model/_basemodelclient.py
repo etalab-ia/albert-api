@@ -7,6 +7,7 @@ import re
 import traceback
 from typing import Any, Dict, Literal, Optional, Type
 from urllib.parse import urljoin
+import time
 
 from fastapi import HTTPException
 import httpx
@@ -21,6 +22,7 @@ from app.utils.variables import (
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
+from app.utils.utils_eco import impact_carbon
 
 logger = logging.getLogger(__name__)
 
@@ -116,30 +118,29 @@ class BaseModelClient(ABC):
 
         return url, headers, json, files, data
 
+
     def _format_response(self, json: dict, response: httpx.Response, additional_data: Dict[str, Any] = {}) -> httpx.Response:
-        """
-        Format a response from a client model and add usage data and model ID to the response. This method can be overridden by a subclass to add additional headers or parameters.
-
-        Args:
-            json(dict): The JSON body of the request to the API.
-            response(httpx.Response): The response from the API.
-            additional_data(Dict[str, Any]): The additional data to add to the response (default: {}).
-
-        Returns:
-            httpx.Response: The formatted response.
-        """
-
         content_type = response.headers.get("Content-Type", "")
         if content_type == "application/json":
             data = response.json()
 
             additional_data.update({"model": self.model})
             additional_data = self._add_usage_in_additional_data(additional_data=additional_data, json=json, data=data, stream=False)
-            data.update(additional_data)
 
+            # impact carbon
+            usage = additional_data.get("usage", {})
+            token_count = usage.get("total_tokens", 0)
+            model_name = self.model
+            model_zone = "FRA"
+            request_latency = additional_data.get("inference_time", 0.0)
+            carbon_impact = impact_carbon(model_name, model_zone, token_count, request_latency)
+            additional_data["carbon_impact"] = carbon_impact
+
+            data.update(additional_data)
             response = httpx.Response(status_code=response.status_code, content=dumps(data))
 
         return response
+
 
     async def forward_request(
         self,
@@ -164,10 +165,14 @@ class BaseModelClient(ABC):
         """
 
         url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
-
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
+                start_time = time.perf_counter()
                 response = await async_client.request(method=method, url=url, headers=headers, json=json, files=files, data=data)
+                end_time = time.perf_counter()
+                inference_time = end_time - start_time
+                additional_data["inference_time"] = inference_time
+
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
                 raise HTTPException(status_code=504, detail="Request timed out, model is too busy.")
             except Exception as e:
@@ -184,7 +189,8 @@ class BaseModelClient(ABC):
                     except Exception:
                         message = message["message"]
                 raise HTTPException(status_code=response.status_code, detail=message)
-
+        
+        logger.info(f">>> AUDREY Inference time: {inference_time:.3f} seconds")
         # add additional data to the response
         response = self._format_response(json=json, response=response, additional_data=additional_data)
 
@@ -237,6 +243,17 @@ class BaseModelClient(ABC):
         additional_data = self._add_usage_in_additional_data(additional_data=additional_data, json=json, data=data, stream=True)
         extra_chunk.update(additional_data)
 
+        # impact carbon
+        usage = additional_data.get("usage", {})
+        token_count = usage.get("total_tokens", 0)
+        model_name = self.model
+        model_zone = "FRA"
+        request_latency = additional_data.get("inference_time", 0.0)
+        carbon_impact = impact_carbon(model_name, model_zone, token_count, request_latency)
+        additional_data["carbon_impact"] = carbon_impact
+
+        extra_chunk.update(additional_data)
+
         return extra_chunk
 
     async def forward_stream(
@@ -265,6 +282,7 @@ class BaseModelClient(ABC):
             try:
                 async with async_client.stream(method=method, url=url, headers=headers, json=json, files=files, data=data) as response:
                     buffer = list()
+                    start_time = time.perf_counter() 
                     async for chunk in response.aiter_raw():
                         # error case
                         if response.status_code // 100 != 2:
@@ -296,6 +314,10 @@ class BaseModelClient(ABC):
                             done_chunk = chunk[match.start() :]
                             buffer.append(last_chunks)
 
+                            end_time = time.perf_counter()  # Fin du chrono
+                            inference_time = end_time - start_time
+                            additional_data["inference_time"] = inference_time
+
                             extra_chunk = self._format_stream_response(json=json, response=buffer, additional_data=additional_data)
 
                             # if error case, yield chunk
@@ -306,6 +328,8 @@ class BaseModelClient(ABC):
                             yield last_chunks, response.status_code
                             yield f"data: {dumps(extra_chunk)}\n\n".encode(), response.status_code
                             yield done_chunk, response.status_code
+            
+                logger.info(f">>> AUDREY Inference time: {inference_time:.3f} seconds")
 
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
                 yield dumps({"detail": "Request timed out, model is too busy."}).encode(), 504

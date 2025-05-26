@@ -17,6 +17,7 @@ services:
       - 8000:8000
     volumes:
       - ./config.yml:/config.yml:ro
+      - ./app:/app
     develop:
       watch:
         - action: sync+restart

@@ -29,6 +29,8 @@ app = [
     "limits==5.1.0",
     "coredis==4.20.0",
     "tiktoken==0.9.0",
+    "ecologits==0.6.2",
+    "toml==0.10.2", #TODO : drop when models_extra_infos pass in config files
 
     # data
     "elasticsearch==8.17.1",
