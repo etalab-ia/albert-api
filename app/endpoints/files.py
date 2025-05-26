@@ -9,10 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.helpers import AccessController
 from app.schemas.auth import User
 from app.schemas.core.data import FileType, JsonFile
-from app.schemas.files import ChunkerArgs, FilesRequest, FileResponse
+from app.schemas.files import ChunkerArgs, FileResponse, FilesRequest
 from app.sql.session import get_db as get_session
+from app.utils.context import global_context
 from app.utils.exceptions import CollectionNotFoundException, FileSizeLimitExceededException, InvalidJSONFileFormatException
-from app.utils.lifespan import context
 from app.utils.variables import ENDPOINT__FILES
 
 router = APIRouter()
@@ -39,7 +39,7 @@ async def upload_file(
 
     Max file size is 20MB.
     """
-    if not context.documents:  # no vector store available
+    if not global_context.documents:  # no vector store available
         raise CollectionNotFoundException()
 
     file_size = len(file.file.read())
@@ -74,7 +74,7 @@ async def upload_file(
         files = [file]
 
     for file in files:
-        document_id = await context.documents.create_document(
+        document_id = await global_context.documents.create_document(
             session=session,
             user_id=user.id,
             collection_id=request.collection,

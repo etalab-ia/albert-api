@@ -4,6 +4,7 @@ from openai.types import Completion
 from pydantic import Field
 
 from app.schemas import BaseModel
+from app.schemas.usage import Usage
 
 
 class CompletionRequest(BaseModel):
@@ -27,4 +28,5 @@ class CompletionRequest(BaseModel):
 
 
 class Completions(Completion):
-    pass
+    id: str = Field(default=None, description="A unique identifier for the completion.")
+    usage: Usage = Field(default=None, description="Usage information for the request.")

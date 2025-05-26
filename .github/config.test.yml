@@ -3,6 +3,7 @@ general:
 
 auth:
   master_key: changeme
+  max_token_expiration_days: 365
 
 usages:
   routers: ["all"]
@@ -13,6 +14,34 @@ web_search:
     model: albert-small
     args:
       api_key: ${BRAVE_API_KEY}
+    limited_domains:
+        - service-public.fr
+        - gouv.fr
+        - caf.fr
+        - info-retraite.fr
+        - ameli.fr
+        - elysee.fr
+        - wikipedia.org
+        - autoritedelaconcurrence.fr
+        - assemblee-nationale.fr
+        - elysee.fr
+        - conseil-etat.fr
+        - departements.fr
+        - courdecassation.fr
+        - lcp.fr
+        - senat.fr
+        - gouvernement.fr
+        - vie-publique.fr
+        - elections-legislatives.fr
+        - ccomptes.fr
+        - conseil-constitutionnel.fr
+        - ladocumentationfrancaise.fr
+        - franceinfo.fr
+        - lefigaro.fr
+        - ouest-france.fr
+        - lemonde.fr
+        - leparisien.fr
+        - refugies.info
 
 multi_agents_search:
   model: albert-small
