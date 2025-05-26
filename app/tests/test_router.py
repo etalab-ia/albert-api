@@ -19,7 +19,7 @@ class TestRouter:
         assert client_1.api_url == client_3.api_url and client_1.model == client_3.model
 
     def test_get_model_client_with_queuing(self):
-        router = context.models(model="albert-small-queuing")
+        router = global_context.models(model="albert-small-queuing")
 
         client = router.get_client(endpoint="")
 

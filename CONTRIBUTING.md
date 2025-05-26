@@ -99,7 +99,7 @@ alembic -c ui/alembic.ini upgrade head
 
 ```bash
 docker compose --file ./.github/compose.test.yml up --detach
-docker exec -it albert-api-api-1 pytest app/tests
+docker exec -it albert-test-api-1 pytest app/tests
 ```
 
 ### Outside Docker environment
