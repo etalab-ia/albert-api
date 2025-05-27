@@ -30,17 +30,19 @@ class ImmediateModelRouter(BaseModelRouter):
     ) -> None:
         super().__init__(id, type, owned_by, aliases, routing_strategy, clients, *args, **kwargs)
 
-    def get_client(self, endpoint: str) -> ModelClient:
+    def get_client(self, endpoint: str) -> ModelClient | None:
         if endpoint and self.type not in self.ENDPOINT_MODEL_TYPE_TABLE[endpoint]:
             raise WrongModelTypeException()
 
         if self._routing_strategy == RoutingStrategy.ROUND_ROBIN:
-            strategy = RoundRobinRoutingStrategy(self._client_urls, self._cycle)
+            strategy = RoundRobinRoutingStrategy(self._strategy_clients, self._cycle)
         else:  # ROUTER_STRATEGY__SHUFFLE
-            strategy = ShuffleRoutingStrategy(self._client_urls)
+            strategy = ShuffleRoutingStrategy(self._strategy_clients)
 
-        client_url = strategy.choose_model_client()
-        client = next(filter(lambda c: c.api_url == client_url, self._clients), None)
-        client.endpoint = endpoint
+        strategy_client = strategy.choose_model_client()
+        client = next(filter(lambda c: c.model == strategy_client.model_name and c.api_url == strategy_client.api_url, self._clients), None)
+
+        if isinstance(client, ModelClient):
+            client.endpoint = endpoint
 
         return client

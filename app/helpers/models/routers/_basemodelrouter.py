@@ -4,6 +4,7 @@ import time
 
 from app.clients.model import BaseModelClient as ModelClient
 from app.schemas.models import ModelType
+from app.schemas.strategymodelclient import StrategyModelClient
 
 
 class BaseModelRouter(ABC):
@@ -41,11 +42,11 @@ class BaseModelRouter(ABC):
         self._vector_size = vector_sizes[0]
         self._routing_strategy = routing_strategy
         self._clients = clients
-        self._client_urls = list(map(lambda c: c.api_url, self._clients))
-        self._cycle = cycle(self._client_urls)
+        self._strategy_clients = list(map(lambda c: StrategyModelClient(model_name=c.model, api_url=c.api_url), self._clients))
+        self._cycle = cycle(self._strategy_clients)
 
     @abstractmethod
-    def get_client(self, endpoint: str) -> ModelClient:
+    def get_client(self, endpoint: str) -> ModelClient | None:
         """
         Get a client to handle the request
 
