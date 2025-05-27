@@ -2,7 +2,6 @@ from json import dumps
 from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
-from fastapi import Request
 import httpx
 from openai import AsyncOpenAI
 import requests
@@ -63,12 +62,11 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         else:
             self.vector_size = None
 
-    def _format_request(self, request: Request, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+    def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
         """
         Format a request to a client model. Overridden base class method to support TEI Reranking.
 
         Args:
-            endpoint(str): The endpoint to forward the request to.
             json(dict): The JSON body to use for the request.
             files(dict): The files to use for the request.
             data(dict): The data to use for the request.
@@ -76,12 +74,13 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         Returns:
             tuple: The formatted request composed of the url, headers, json, files and data.
         """
-        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[request.url.path.removeprefix("/v1")])
+        # self.endpoint is set by the ModelRouter
+        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
         headers = {"Authorization": f"Bearer {self.api_key}"}
         if json and "model" in json:
             json["model"] = self.model
 
-        if request.url.path.endswith(ENDPOINT__RERANK):
+        if self.endpoint.endswith(ENDPOINT__RERANK):
             json = {"query": json["prompt"], "texts": json["input"]}
 
         return url, headers, json, files, data
