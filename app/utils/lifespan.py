@@ -9,7 +9,7 @@ from app.clients.model import BaseModelClient as ModelClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.helpers import DocumentManager, IdentityAccessManager, Limiter, WebSearchManager, UsageTokenizer
 from app.helpers.models import ModelRegistry
-from app.helpers.models.routers import ModelRouter
+from app.helpers.models.routers import ImmediateModelRouter
 from app.utils import multiagents
 from app.utils.logging import init_logger
 from app.utils.settings import settings
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
         clients = []
         for client in model.clients:
             try:
-                # model client can be not reatachable to API start up
+                # model client can be not reachable to API start up
                 client = ModelClient.import_module(type=client.type)(model=client.model, **client.args.model_dump())
                 clients.append(client)
             except Exception as e:
@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
         logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
         model = model.model_dump()
         model["clients"] = clients
-        routers.append(ModelRouter(**model))
+        routers.append(ImmediateModelRouter(**model))
 
     # setup context: models, iam, limiter, tokenizer
     global_context.tokenizer = UsageTokenizer(tokenizer=settings.usages.tokenizer)

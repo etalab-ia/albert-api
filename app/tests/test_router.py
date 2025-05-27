@@ -4,7 +4,7 @@ from app.utils.context import global_context
 
 
 @pytest.mark.usefixtures("client")
-class TestModels:
+class TestRouter:
     def test_get_model_client(self):
         # Get a language model with more than 1 client
         router = global_context.models(model="albert-small")
@@ -15,4 +15,5 @@ class TestModels:
         client_3 = router.get_client(endpoint="")
 
         assert client_1.timeout != client_2.timeout
-        assert client_1.timeout == client_3.timeout
+        assert client_1.api_url != client_2.api_url or client_1.model != client_2.model
+        assert client_1.api_url == client_3.api_url and client_1.model == client_3.model
