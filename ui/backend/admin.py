@@ -62,7 +62,7 @@ def update_role(role: int, name: Optional[str] = None, permissions: Optional[lis
     st.rerun()
 
 
-def create_user(name: str, password: str, role: int, expires_at: Optional[int] = None):
+def create_user(name: str, password: str, role: int, expires_at: Optional[int] = None, budget: Optional[float] = None):
     if not name:
         st.toast("User name is required", icon="❌")
         return
@@ -79,7 +79,7 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
 
     response = requests.post(
         url=f"{settings.playground.api_url}/users",
-        json={"name": name, "role": role, "expires_at": expires_at},
+        json={"name": name, "role": role, "expires_at": expires_at, "budget": budget},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
@@ -138,7 +138,14 @@ def delete_user(user: int):
     st.rerun()
 
 
-def update_user(user: int, name: Optional[str] = None, password: Optional[str] = None, role: Optional[int] = None, expires_at: Optional[int] = None):
+def update_user(
+    user: int,
+    name: Optional[str] = None,
+    password: Optional[str] = None,
+    role: Optional[int] = None,
+    expires_at: Optional[int] = None,
+    budget: Optional[float] = None,
+):
     name = name.strip() if name else None
     password = password.strip() if password else None
 
@@ -147,7 +154,7 @@ def update_user(user: int, name: Optional[str] = None, password: Optional[str] =
 
     response = requests.patch(
         url=f"{settings.playground.api_url}/users/{user}",
-        json={"name": name, "role": role, "expires_at": expires_at},
+        json={"name": name, "role": role, "expires_at": expires_at, "budget": budget},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
     if response.status_code != 204:

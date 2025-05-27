@@ -49,7 +49,14 @@ def login(user_name: str, user_password: str, session: Session) -> dict:
             limits.append({"model": model["id"], "type": "rpd", "value": None})
 
         role = {"object": "role", "id": 0, "name": "master", "default": False, "permissions": ADMIN_PERMISSIONS, "limits": limits}
-        user = User(id=0, name=settings.auth.master_username, api_key=user_password, api_key_id=0, user={"expires_at": None}, role=role)
+        user = User(
+            id=0,
+            name=settings.auth.master_username,
+            api_key=user_password,
+            api_key_id=0,
+            user={"expires_at": None, "budget": None},
+            role=role,
+        )
 
         st.session_state["login_status"] = True
         st.session_state["user"] = user

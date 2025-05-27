@@ -92,7 +92,7 @@ class BaseModelClient(ABC):
                     )
 
                 detail.usage.total_tokens = detail.usage.prompt_tokens + detail.usage.completion_tokens
-                detail.usage.budget = self.budget.prompt_tokens / 1000000 * detail.usage.prompt_tokens + self.budget.completion_tokens / 1000000 * detail.usage.completion_tokens  # fmt: off
+                detail.usage.budget = round(self.budget.prompt_tokens / 1000000 * detail.usage.prompt_tokens + self.budget.completion_tokens / 1000000 * detail.usage.completion_tokens, ndigits=4)  # fmt: off
 
                 usage.details.append(detail)
                 usage.prompt_tokens += detail.usage.prompt_tokens

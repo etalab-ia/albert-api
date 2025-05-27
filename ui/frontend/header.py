@@ -14,8 +14,8 @@ def header():
         @st.dialog(title="Login")
         def login_form():
             with st.form(key="login"):
-                user_name = st.text_input(label="Email", type="default", key="user_id")
-                user_password = st.text_input(label="Password", type="password", key="password")
+                user_name = st.text_input(label="Email", type="default", key="user_id", icon=":material/email:")
+                user_password = st.text_input(label="Password", type="password", key="password", icon=":material/lock:")
 
                 # strip input
                 user_name = user_name.strip()

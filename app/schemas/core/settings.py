@@ -135,6 +135,10 @@ class Database(ConfigBaseModel):
         return values
 
 
+class MonitoringPrometheus(ConfigBaseModel):
+    enabled: bool = True
+
+
 class MonitoringPostgres(ConfigBaseModel):
     enabled: bool = True
 
@@ -148,6 +152,7 @@ class MonitoringSentry(ConfigBaseModel):
 
 
 class Monitoring(ConfigBaseModel):
+    prometheus: Optional[MonitoringPrometheus] = None
     postgres: Optional[MonitoringPostgres] = None
     sentry: Optional[MonitoringSentry] = None
 
@@ -183,7 +188,7 @@ class General(ConfigBaseModel):
 
 class Config(ConfigBaseModel):
     general: General = Field(default_factory=General)
-    monitoring: Monitoring = Field(default_factory=Monitoring)
+    monitoring: Optional[Monitoring] = None
     auth: Auth = Field(default_factory=Auth)
     models: List[Model] = Field(min_length=1)
     databases: List[Database] = Field(min_length=1)

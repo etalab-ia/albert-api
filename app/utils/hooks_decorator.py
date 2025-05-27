@@ -3,15 +3,18 @@ from datetime import datetime
 import functools
 import json
 import logging
+import traceback
 from typing import Optional
 
 from fastapi import HTTPException, Request, Response
+from sqlalchemy import func, select, update
 from starlette.responses import StreamingResponse
 
 from app.helpers import StreamingResponseWithStatusCode
 from app.sql.models import Usage, User
 from app.sql.session import get_db
 from app.utils.context import global_context, request_context
+from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +75,7 @@ def hooks(func):
 
         except HTTPException as e:
             usage.status = e.status_code
-            asyncio.create_task(write_usage(response=None, usage=usage, start_time=start_time))
+            asyncio.create_task(log_usage(response=None, usage=usage, start_time=start_time))
             raise e  # Re-raise the exception for FastAPI to handle
 
     return wrapper
@@ -152,7 +155,7 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
         if response_status_code is not None:
             usage.status = response_status_code
 
-        asyncio.create_task(write_usage(response=response, usage=usage, start_time=start_time))
+        asyncio.create_task(log_usage(response=response, usage=usage, start_time=start_time))
         asyncio.create_task(update_budget(usage=usage))
 
     return StreamingResponseWithStatusCode(wrapped_stream(), media_type=response.media_type)
@@ -180,15 +183,18 @@ async def extract_usage_from_response(response: Response, start_time: datetime, 
         logger.warning(f"Failed to parse JSON response body: {response.body} ({e})")
         return
 
-    asyncio.create_task(write_usage(response, usage, start_time))
+    asyncio.create_task(log_usage(response, usage, start_time))
     asyncio.create_task(update_budget(usage=usage))
 
 
-async def write_usage(response: Optional[Response], usage: Usage, start_time: datetime):
+async def log_usage(response: Optional[Response], usage: Usage, start_time: datetime):
     """
     Logs the usage information to the database.
     This function captures the duration of the request and sets the status code of the response if available.
     """
+
+    if settings.monitoring is None or settings.monitoring.postgres is None or settings.monitoring.postgres.enabled is False:
+        return
 
     usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
 
@@ -230,12 +236,8 @@ async def update_budget(usage: Usage):
     # Decrease the user's budget by the calculated cost with proper locking
     async for session in get_db():
         try:
-            from sqlalchemy import update, func, select
-
-            # Start an explicit transaction
             async with session.begin():
-                # Use SELECT FOR UPDATE to lock the user row during the transaction
-                # This prevents concurrent modifications to the budget
+                # Use SELECT FOR UPDATE to lock the user row during the transaction. This prevents concurrent modifications to the budget
                 select_stmt = select(User.budget).where(User.id == user_id).with_for_update()
                 result = await session.execute(select_stmt)
                 current_budget = result.scalar_one_or_none()
@@ -253,14 +255,10 @@ async def update_budget(usage: Usage):
                 )
 
                 result = await session.execute(update_stmt)
-                remaining_budget = result.scalar_one_or_none()
-
-                # Transaction is automatically committed when exiting the async with block
-                logger.info(f"Budget updated for user {user_id}: deducted {actual_cost}, remaining {remaining_budget}")
 
         except Exception as e:
+            logger.debug(traceback.format_exc())
             logger.error(f"Failed to update budget for user {user_id}: {e}")
-            # Transaction is automatically rolled back when exiting the async with block on exception
             return None
         finally:
             await session.close()

@@ -178,6 +178,7 @@ def input_new_collection_name(selected_collection: dict):
         label="**Collection name**",
         placeholder="Enter collection name",
         value=selected_collection.get("name"),
+        icon=":material/folder:",
         disabled=(not st.session_state.get("new_collection", False) and not st.session_state.get("update_collection", False))
         or (st.session_state["no_collections"] and not st.session_state.get("new_collection", False)),
     )
@@ -190,6 +191,7 @@ def input_new_collection_description(selected_collection: dict):
         label="**Collection description**",
         placeholder="Enter collection description",
         value=selected_collection.get("description"),
+        icon=":material/description:",
         disabled=(not st.session_state.get("new_collection", False) and not st.session_state.get("update_collection", False))
         or (st.session_state["no_collections"] and not st.session_state.get("new_collection", False)),
     )
@@ -202,6 +204,7 @@ def input_new_role_name(selected_role: dict):
     new_role_name = st.text_input(
         label="Role name",
         placeholder="Enter role name",
+        icon=":material/group:",
         value=selected_role.get("name"),
         disabled=(not st.session_state.get("update_role", False) and not st.session_state.get("new_role", False))
         or (st.session_state["no_roles"] and not st.session_state.get("new_role", False)),
@@ -356,6 +359,7 @@ def input_new_user_name(selected_user: dict):
     new_user_name = st.text_input(
         label="User name",
         placeholder="Enter user name",
+        icon=":material/person:",
         value=selected_user.get("name"),
         disabled=(not st.session_state.get("update_user", False) and not st.session_state.get("new_user", False))
         or (st.session_state["no_users_in_selected_role"] and not st.session_state.get("new_user", False)),
@@ -369,6 +373,7 @@ def input_new_user_password():
         label="Password",
         placeholder="Enter password",
         type="password",
+        icon=":material/lock:",
         disabled=(not st.session_state.get("update_user", False) and not st.session_state.get("new_user", False))
         or (st.session_state["no_users_in_selected_role"] and not st.session_state.get("new_user", False)),
     )
@@ -391,11 +396,22 @@ def input_new_user_role_id(selected_role: dict, roles: list):
     return new_user_role_id
 
 
+def input_new_user_budget(selected_user: dict):
+    disabled = (not st.session_state.get("update_user", False) and not st.session_state.get("new_user", False)) or (st.session_state["no_users_in_selected_role"] and not st.session_state.get("new_user", False))  # fmt: off
+    no_budget = st.toggle(label="No budget", key="create_user_no_budget", value=selected_user.get("budget") is None, disabled=disabled)
+    new_user_budget = st.number_input(
+        label="Budget", key="create_user_budget", value=selected_user.get("budget"), disabled=disabled or no_budget, icon=":material/paid:"
+    )
+    new_user_budget = None if no_budget else new_user_budget
+
+    return new_user_budget
+
+
 def input_new_user_expires_at(selected_user: dict):
     disabled = (not st.session_state.get("update_user", False) and not st.session_state.get("new_user", False)) or (st.session_state["no_users_in_selected_role"] and not st.session_state.get("new_user", False))  # fmt: off
     expires_at = pd.to_datetime(selected_user["expires_at"], unit="s") if selected_user else None
     no_expiration = st.toggle(label="No expiration", key="create_user_no_expiration", value=expires_at is None, disabled=disabled)
-    new_user_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", value=expires_at, disabled=disabled)
+    new_user_expires_at = st.date_input(label="Expires at", key="create_user_expires_at", value=expires_at, disabled=disabled or no_expiration)
     new_user_expires_at = None if no_expiration or pd.isna(new_user_expires_at) else int(pd.Timestamp(new_user_expires_at).timestamp())
 
     return new_user_expires_at

@@ -214,7 +214,6 @@ async def update_user(
     """
     Update a user.
     """
-
     await global_context.iam.update_user(
         session=session,
         user_id=user,

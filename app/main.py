@@ -11,9 +11,9 @@ from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
 from app.schemas.usage import Usage
 from app.utils.context import generate_request_id, request_context
+from app.utils.hooks_decorator import hooks
 from app.utils.lifespan import lifespan
 from app.utils.settings import settings
-from app.utils.hooks_decorator import hooks
 from app.utils.variables import (
     ROUTER__AUDIO,
     ROUTER__AUTH,
@@ -33,7 +33,7 @@ from app.utils.variables import (
 
 logger = logging.getLogger(__name__)
 
-if settings.monitoring.sentry:
+if settings.monitoring and settings.monitoring.sentry:
     logger.info("Initializing Sentry SDK.")
     sentry_sdk.init(**settings.monitoring.sentry.model_dump())
 
@@ -41,13 +41,7 @@ if settings.monitoring.sentry:
 def create_app(*args, **kwargs) -> FastAPI:
     """Create FastAPI application."""
 
-    def add_hooks(router: APIRouter):
-        if settings.monitoring.postgres is None:
-            return
-
-        if settings.monitoring.postgres.enabled is False:
-            return
-
+    def add_hooks(router: APIRouter) -> None:
         for route in router.routes:
             route.endpoint = hooks(route.endpoint)
             route.dependant = get_dependant(path=route.path_format, call=route.endpoint)
@@ -122,8 +116,9 @@ def create_app(*args, **kwargs) -> FastAPI:
         app.include_router(router=models.router, tags=[ROUTER__MODELS.title()], prefix="/v1")
 
     if ROUTER__MONITORING not in settings.general.disabled_routers:
-        app.instrumentator = Instrumentator().instrument(app=app)
-        app.instrumentator.expose(app=app, should_gzip=True, tags=[ROUTER__MONITORING.title()], dependencies=[Depends(dependency=AccessController(permissions=[PermissionType.READ_METRIC]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
+        if settings.monitoring and settings.monitoring.prometheus and settings.monitoring.prometheus.enabled is True:
+            app.instrumentator = Instrumentator().instrument(app=app)
+            app.instrumentator.expose(app=app, should_gzip=True, tags=[ROUTER__MONITORING.title()], dependencies=[Depends(dependency=AccessController(permissions=[PermissionType.READ_METRIC]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 
         @app.get(path="/health", tags=[ROUTER__MONITORING.title()], include_in_schema=settings.general.log_level == "DEBUG", dependencies=[Security(dependency=AccessController())])  # fmt: off
         def health() -> Response:
