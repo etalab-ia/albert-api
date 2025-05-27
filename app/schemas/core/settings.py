@@ -68,7 +68,20 @@ class Model(ConfigBaseModel):
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
-        assert values.clients[0].type.value in ModelClientType.get_supported_clients(values.type.value), f"Invalid model type: {values.type.value} for client type {values.clients[0].type.value}"  # fmt: off
+        assert values.clients[0].type.value in ModelClientType.get_supported_clients(
+            values.type.value), f"Invalid model type: {values.type.value} for client type {values.clients[0].type.value}"  # fmt: off
+
+        return values
+
+    @model_validator(mode="after")
+    def validate_model_unicity(cls, values):
+        index = 0
+        for client in values.clients:
+            index += 1
+            for other_client in values.clients[index:]:
+                assert (
+                    client.model != other_client.model or client.args.api_url != other_client.args.api_url
+                ), f"Invalid model client, more than one client is associated to the model {client.model} and url {client.args.api_url}"
 
         return values
 

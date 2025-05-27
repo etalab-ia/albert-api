@@ -66,3 +66,38 @@ class TestModelSettings:
         )
 
         assert True
+
+    def test_routing_model_client_unicity_validation(self):
+        with pytest.raises(ValueError) as error_info:
+            Model(
+                id="model_router_1",
+                type="text-generation",
+                clients=[
+                    ModelClient(model="model_1", type="albert", args=ModelClientArgs(api_url="https://model.com")),
+                    ModelClient(model="model_1", type="albert", args=ModelClientArgs(api_url="https://model.com")),
+                ],
+            )
+
+        assert "Invalid model client, more than one client is associated to the model model_1 and url https://model.com" in str(error_info.value)
+
+        Model(
+            id="model_router_1",
+            type="text-generation",
+            clients=[
+                ModelClient(model="model_1", type="albert", args=ModelClientArgs(api_url="https://model.com")),
+                ModelClient(model="model_2", type="albert", args=ModelClientArgs(api_url="https://model.com")),
+            ],
+        )
+
+        assert True
+
+        Model(
+            id="model_router_1",
+            type="text-generation",
+            clients=[
+                ModelClient(model="model_1", type="albert", args=ModelClientArgs(api_url="https://model.com")),
+                ModelClient(model="model_1", type="albert", args=ModelClientArgs(api_url="https://model-2.com")),
+            ],
+        )
+
+        assert True
