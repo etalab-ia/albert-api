@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
-from app.helpers.models.routers import ImmediateModelRouter
+from app.helpers.models.routers import BaseModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
 from app.schemas.core.data import ParserOutput
@@ -52,7 +52,7 @@ class DocumentManager:
         self,
         qdrant: AsyncQdrantClient,
         web_search: Optional[WebSearchManager] = None,
-        multi_agents_search_model: Optional[ImmediateModelRouter] = None,
+        multi_agents_search_model: Optional[BaseModelRouter] = None,
     ) -> None:
         self.qdrant = qdrant
         self.web_search = web_search

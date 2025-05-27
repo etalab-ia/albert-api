@@ -137,3 +137,16 @@ models:
           api_url: https://albert.api.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
           timeout: 120
+
+  - id: albert-small-queuing
+    type: text-generation
+    routing_mode: queuing
+    routing_strategy: least_busy
+    aliases: [ "albert-queuing" ]
+    clients:
+      - model: albert-small
+        type: albert
+        args:
+          api_url: https://albert.api.etalab.gouv.fr
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
