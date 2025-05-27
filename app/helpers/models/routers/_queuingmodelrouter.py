@@ -3,9 +3,6 @@ from app.schemas.models import ModelType
 from app.helpers.message_producer.rpc_client import RPCClient
 
 from ._basemodelrouter import BaseModelRouter
-from ._metricstracker import MetricsTracker
-
-from app.schemas.strategymodelclient import StrategyModelClient
 
 
 class QueuingModelRouter(BaseModelRouter):
@@ -23,7 +20,6 @@ class QueuingModelRouter(BaseModelRouter):
     ) -> None:
         super().__init__(id, type, owned_by, aliases, routing_strategy, clients, *args, **kwargs)
         self.message_producer = message_producer
-        self.metrics_tracker = MetricsTracker([StrategyModelClient(model_name=client.model, api_url=client.api_url) for client in clients], 2, 30)
 
     def get_client(self, endpoint: str) -> ModelClient | None:
         # TODO: To implement

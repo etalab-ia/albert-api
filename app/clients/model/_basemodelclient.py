@@ -12,7 +12,6 @@ from fastapi import HTTPException
 import httpx
 
 from app.schemas.core.settings import ModelClientType
-from app.schemas.modelclientmetrics import ModelClientMetrics
 from app.schemas.usage import Detail, Usage
 from app.utils.context import generate_request_id, global_context, request_context
 from app.utils.variables import (
@@ -314,9 +313,3 @@ class BaseModelClient(ABC):
             except Exception as e:
                 logger.error(traceback.format_exc())
                 yield dumps({"detail": type(e).__name__}).encode(), 500
-
-    async def get_server_metrics(self) -> ModelClientMetrics | None:
-        """
-        Return metrics with harmonized format
-        """
-        return None
