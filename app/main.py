@@ -120,6 +120,8 @@ def create_app(*args, **kwargs) -> FastAPI:
             return Response(status_code=200)
 
     if ROUTER__MCP not in settings.general.disabled_routers:
+        if ROUTER__MCP in settings.usages.routers:
+            add_usage_decorator(router=mcp.router)
         app.include_router(router=mcp.router, tags=[ROUTER__MCP.title()], prefix="/v1")
 
     if ROUTER__OCR not in settings.general.disabled_routers:

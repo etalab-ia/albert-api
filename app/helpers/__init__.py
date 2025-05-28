@@ -1,4 +1,5 @@
 from ._accesscontroller import AccessController
+from ._agentsmanager import AgentsManager
 from ._documentmanager import DocumentManager
 from ._identityaccessmanager import IdentityAccessManager
 from ._limiter import Limiter
@@ -16,4 +17,5 @@ __all__ = [
     "StreamingResponseWithStatusCode",
     "UsageTokenizer",
     "WebSearchManager",
+    "AgentsManager",
 ]

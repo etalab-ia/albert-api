@@ -5,8 +5,7 @@ from coredis import ConnectionPool
 from fastapi import FastAPI
 
 from app.clients.database import QdrantClient
-from app.clients.mcp.mcp_bridge_client import MCPBridgeClient
-from app.clients.mcp.mcp_llm_client import McpLlmClient
+from app.clients.mcp._secretshellbridgeclient import SecretShellMCPBridgeClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.parser import BaseParserClient as ParserClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
@@ -16,7 +15,6 @@ from app.helpers.models.routers import ModelRouter
 from app.utils import multiagents
 from app.utils.context import global_context
 from app.utils.logging import init_logger
-from app.usecase.mcp_usecase import McpUsecase
 from app.utils.settings import settings
 
 logger = init_logger(name=__name__)
@@ -27,10 +25,8 @@ async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
     # setup clients
-    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
-    mcp_bridge = MCPBridgeClient("http://localhost:9000")
-    llm_client = McpLlmClient()
-    mcp = McpUsecase(mcp_bridge, llm_client)
+    mcp_bridge = SecretShellMCPBridgeClient("http://localhost:9876")
+
     redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
     web_search = (
         WebSearchClient.import_module(type=settings.web_search.type)(user_agent=settings.web_search.user_agent, **settings.web_search.args)
@@ -77,7 +73,14 @@ async def lifespan(app: FastAPI):
     global_context.models = ModelRegistry(routers=routers)
     global_context.iam = IdentityAccessManager()
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
+
+    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
+    qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
+
     global_context.parser = ParserManager(parser=parser)
+    global_context.mcp.mcp_bridge = mcp_bridge
+    if redis:
+        assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
     # setup context: documents
     qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None

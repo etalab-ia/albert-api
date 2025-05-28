@@ -4,7 +4,7 @@ import httpx
 from fastapi import HTTPException
 
 
-class MCPBridgeClient:
+class SecretShellMCPBridgeClient:
     def __init__(self, mcp_bridge_url: str):
         self.url = mcp_bridge_url
         self.timeout = 10

@@ -1,9 +1,11 @@
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
 
-from app.usecase.mcp_usecase import McpUsecase
+from app.usecase._agentsmanager import AgentsManager
+# from app.helpers import AgentsManager
 
 
 class TestMCPLoop:
@@ -17,7 +19,7 @@ class TestMCPLoop:
 
     @pytest.fixture
     def mcp_client(self, mock_mcp_bridge, mock_llm_client):
-        return McpUsecase(mock_mcp_bridge, mock_llm_client)
+        return AgentsManager(mock_mcp_bridge, mock_llm_client)
 
     class TestGetToolsFromBridge:
         @pytest.mark.asyncio
@@ -57,35 +59,40 @@ class TestMCPLoop:
         async def test_process_query_loop_does_excess_10_rounds_per_default(self, mcp_client, mock_mcp_bridge, mock_llm_client):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = {}
-            expected_response = {"choices": [{"finish_reason": "max_iterations", "message": {"content": "message from llm"}}]}
-            mock_llm_client.post_on_llm_model.return_value = {
-                "choices": [{"finish_reason": "not stop nor tools_calls", "message": {"content": "message from llm"}}]
-            }
+            raw_response_from_llm = {"choices": [{"finish_reason": "not stop nor tools_calls", "message": {"content": "message from llm"}}]}
+            mock_llm_client.forward_request.return_value = SimpleNamespace(
+                text=json.dumps(raw_response_from_llm), json=lambda: raw_response_from_llm, status_code=200, request="", headers={}
+            )
             number_of_rounds = 10
             # WHEN
-            actual_message = await mcp_client.process_query(SimpleNamespace(messages=[{"content": "Salut", "role": "user"}]))
+            actual_message = await mcp_client.get_completion(
+                SimpleNamespace(messages=[{"content": "Salut", "role": "user"}], model_dump=lambda: None)
+            )
 
             # THEN
-            assert actual_message == expected_response
-            assert mock_llm_client.post_on_llm_model.call_count == number_of_rounds
+            assert actual_message.json()["choices"][0]["finish_reason"] == "max_iterations"
+            assert actual_message.json()["choices"][0]["message"]["content"] == "message from llm"
+            assert mock_llm_client.forward_request.call_count == number_of_rounds
 
         @pytest.mark.asyncio
         async def test_process_query_loop_maximum_iterations_can_be_changed(self, mcp_client, mock_mcp_bridge, mock_llm_client):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = {}
-            expected_response = {"choices": [{"finish_reason": "max_iterations", "message": {"content": "message from llm"}}]}
-            mock_llm_client.post_on_llm_model.return_value = {
-                "choices": [{"finish_reason": "not stop nor tools_calls", "message": {"content": "message from llm"}}]
-            }
+            raw_response_from_llm = {"choices": [{"finish_reason": "not stop nor tools_calls", "message": {"content": "message from llm"}}]}
+            mock_llm_client.forward_request.return_value = SimpleNamespace(
+                text=json.dumps(raw_response_from_llm), json=lambda: raw_response_from_llm, status_code=200, request="", headers={}
+            )
+
             number_of_rounds = 15
             # WHEN
-            actual_message = await mcp_client.process_query(
-                SimpleNamespace(messages=[{"content": "Salut", "role": "user"}], max_iterations=number_of_rounds)
+            actual_message = await mcp_client.get_completion(
+                SimpleNamespace(messages=[{"content": "Salut", "role": "user"}], max_iterations=number_of_rounds, model_dump=lambda: None)
             )
 
             # THEN
-            assert actual_message == expected_response
-            assert mock_llm_client.post_on_llm_model.call_count == number_of_rounds
+            assert actual_message.json()["choices"][0]["finish_reason"] == "max_iterations"
+            assert actual_message.json()["choices"][0]["message"]["content"] == "message from llm"
+            assert mock_llm_client.forward_request.call_count == number_of_rounds
 
         @pytest.mark.asyncio
         async def test_process_query_should__return_message_from_llm_without_tool_call_result(self, mcp_client, mock_mcp_bridge, mock_llm_client):
@@ -95,24 +102,24 @@ class TestMCPLoop:
             }
             message_from_llm_after_tool_call = "message from llm"
 
-            mock_llm_client.post_on_llm_model.side_effect = [
-                {
-                    "choices": [
-                        {
-                            "finish_reason": "tool_calls",
-                            "message": {"tool_calls": [{"function": {"name": "tool_1", "arguments": "arguments for tool call"}}]},
-                        }
-                    ]
-                },
-                {"choices": [{"finish_reason": "stop", "message": {"content": "message from llm"}}]},
+            mock_llm_client.forward_request.side_effect = [
+                SimpleNamespace(
+                    text='{"choices": [{"finish_reason": "tool_calls","message": {"tool_calls": [{"function": {"name": "tool_1", "arguments": "arguments for tool call"}}]}}]}'
+                ),
+                SimpleNamespace(
+                    status_code=200,
+                    text=json.dumps({"choices": [{"finish_reason": "stop", "message": {"content": "message from llm"}}]}),
+                    headers={},
+                    request=None,
+                ),
             ]
             number_of_rounds = 2
             mock_mcp_bridge.call_tool.return_value = {"content": [{"text": "tool call result"}]}
             # WHEN
-            actual_message = await mcp_client.process_query(
-                SimpleNamespace(messages=[{"content": "Je veux que tu fasses une action", "role": "user"}])
+            actual_message = await mcp_client.get_completion(
+                SimpleNamespace(messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model_dump=lambda: None)
             )
 
             # THEN
-            assert actual_message["choices"][0]["message"]["content"] == message_from_llm_after_tool_call
-            assert mock_llm_client.post_on_llm_model.call_count == number_of_rounds
+            assert json.loads(actual_message.text)["choices"][0]["message"]["content"] == message_from_llm_after_tool_call
+            assert mock_llm_client.forward_request.call_count == number_of_rounds
