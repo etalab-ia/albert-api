@@ -5,11 +5,12 @@ from coredis import ConnectionPool
 from fastapi import FastAPI
 
 from app.clients.database import QdrantClient
-from app.clients.mcp._secretshellbridgeclient import SecretShellMCPBridgeClient
+from app.clients.mcp import SecretShellMCPBridgeClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.parser import BaseParserClient as ParserClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
-from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ParserManager, UsageTokenizer, WebSearchManager
+from app.helpers.agents import AgentsManager
+from app.helpers.core import DocumentManager, IdentityAccessManager, Limiter, ParserManager, UsageTokenizer, WebSearchManager
 from app.helpers.models import ModelRegistry
 from app.helpers.models.routers import ModelRouter
 from app.utils import multiagents
@@ -79,6 +80,7 @@ async def lifespan(app: FastAPI):
 
     global_context.parser = ParserManager(parser=parser)
     global_context.mcp.mcp_bridge = mcp_bridge
+    global_context.mcp.agents_manager = AgentsManager(global_context.mcp.mcp_bridge, global_context.models)
     if redis:
         assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Request, Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import AccessController, StreamingResponseWithStatusCode
+from app.helpers.core import AccessController, StreamingResponseWithStatusCode
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search, SearchMethod
 from app.sql.session import get_db as get_session

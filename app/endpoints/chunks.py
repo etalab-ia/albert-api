@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Path, Query, Request, Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import AccessController
+from app.helpers.core import AccessController
 from app.schemas.chunks import Chunk, Chunks
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context

@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.datastructures import Headers
 
-from app.helpers import AccessController
+from app.helpers.core import AccessController
 from app.schemas.core.documents import JsonFile
 from app.schemas.files import ChunkerArgs, FileResponse, FilesRequest
 from app.schemas.parse import Languages, ParsedDocumentOutputFormat

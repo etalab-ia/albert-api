@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 import pytest
 from redis import Redis
 
-from app.helpers import UsageTokenizer
+from app.helpers.core import UsageTokenizer
 from app.schemas.auth import LimitType
 from app.utils.settings import settings
 from app.utils.variables import (

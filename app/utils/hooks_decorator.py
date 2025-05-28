@@ -9,7 +9,7 @@ from fastapi import HTTPException, Request, Response
 from sqlalchemy import func, select, update
 from starlette.responses import StreamingResponse
 
-from app.helpers import StreamingResponseWithStatusCode
+from app.helpers.core import StreamingResponseWithStatusCode
 from app.sql.models import Usage, User
 from app.sql.session import get_db
 from app.utils.context import global_context, request_context

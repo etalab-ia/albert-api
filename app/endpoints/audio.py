@@ -3,7 +3,7 @@ from typing import List, Literal
 from fastapi import APIRouter, File, Form, Request, Security, UploadFile
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-from app.helpers import AccessController
+from app.helpers.core import AccessController
 from app.schemas.audio import AudioTranscription
 from app.utils.context import global_context
 from app.utils.variables import AUDIO_SUPPORTED_LANGUAGES_VALUES, ENDPOINT__AUDIO_TRANSCRIPTIONS

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, Security, UploadFile
 from fastapi.responses import JSONResponse
 import pymupdf
 
-from app.helpers import AccessController
+from app.helpers.core import AccessController
 from app.schemas.core.documents import FileType
 from app.schemas.ocr import DPIForm, ModelForm, PromptForm
 from app.schemas.parse import FileForm, ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage

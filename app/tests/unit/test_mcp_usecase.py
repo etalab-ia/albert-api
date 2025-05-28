@@ -1,11 +1,10 @@
 import json
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.usecase._agentsmanager import AgentsManager
-# from app.helpers import AgentsManager
+from app.helpers.agents import AgentsManager
 
 
 class TestMCPLoop:
@@ -18,8 +17,14 @@ class TestMCPLoop:
         return AsyncMock()
 
     @pytest.fixture
-    def mcp_client(self, mock_mcp_bridge, mock_llm_client):
-        return AgentsManager(mock_mcp_bridge, mock_llm_client)
+    def mock_llm_registry(self, mock_llm_client):
+        mock_llm_registry = MagicMock()
+        mock_llm_registry.return_value = SimpleNamespace(get_client=lambda endpoint: mock_llm_client)
+        return mock_llm_registry
+
+    @pytest.fixture
+    def mcp_client(self, mock_mcp_bridge, mock_llm_registry):
+        return AgentsManager(mock_mcp_bridge, mock_llm_registry)
 
     class TestGetToolsFromBridge:
         @pytest.mark.asyncio
@@ -66,7 +71,7 @@ class TestMCPLoop:
             number_of_rounds = 10
             # WHEN
             actual_message = await mcp_client.get_completion(
-                SimpleNamespace(messages=[{"content": "Salut", "role": "user"}], model_dump=lambda: None)
+                SimpleNamespace(messages=[{"content": "Salut", "role": "user"}], model_dump=lambda: None, model="")
             )
 
             # THEN
@@ -86,7 +91,7 @@ class TestMCPLoop:
             number_of_rounds = 15
             # WHEN
             actual_message = await mcp_client.get_completion(
-                SimpleNamespace(messages=[{"content": "Salut", "role": "user"}], max_iterations=number_of_rounds, model_dump=lambda: None)
+                SimpleNamespace(messages=[{"content": "Salut", "role": "user"}], max_iterations=number_of_rounds, model_dump=lambda: None, model="")
             )
 
             # THEN
@@ -117,7 +122,7 @@ class TestMCPLoop:
             mock_mcp_bridge.call_tool.return_value = {"content": [{"text": "tool call result"}]}
             # WHEN
             actual_message = await mcp_client.get_completion(
-                SimpleNamespace(messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model_dump=lambda: None)
+                SimpleNamespace(messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model_dump=lambda: None, model="")
             )
 
             # THEN

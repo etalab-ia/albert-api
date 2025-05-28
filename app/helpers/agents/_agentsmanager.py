@@ -2,12 +2,13 @@ import json
 import httpx
 
 from app.clients.mcp import SecretShellMCPBridgeClient
-from app.clients.model import BaseModelClient
+from app.helpers.models import ModelRegistry
+from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 
 class AgentsManager:
-    def __init__(self, mcp_bridge: SecretShellMCPBridgeClient, llm_client: BaseModelClient):
-        self.llm_client = llm_client
+    def __init__(self, mcp_bridge: SecretShellMCPBridgeClient, model_registry: ModelRegistry):
+        self.model_registry = model_registry
         self.mcp_bridge = mcp_bridge
 
     async def get_tools_from_bridge(self):
@@ -28,7 +29,9 @@ class AgentsManager:
         number_of_iterations = 0
         max_iterations = getattr(body, "max_iterations", 10)
         while number_of_iterations < max_iterations:
-            http_llm_response = await self.llm_client.forward_request(method="POST", json=body.model_dump())
+            model = self.model_registry(model=body.model)
+            client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+            http_llm_response = await client.forward_request(method="POST", json=body.model_dump())
             llm_response = json.loads(http_llm_response.text)
             finish_reason = llm_response["choices"][0]["finish_reason"]
             number_of_iterations = number_of_iterations + 1
