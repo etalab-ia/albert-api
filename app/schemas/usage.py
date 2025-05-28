@@ -2,6 +2,7 @@ from typing import List
 
 from app.schemas import BaseModel
 
+#TODO : Audrey add impact carbon
 
 class Detail(BaseModel):
     id: str

@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings
 import yaml
 
 from app.schemas.core.auth import LimitingStrategy
-from app.schemas.core.models import ModelClientType, RoutingStrategy
+from app.schemas.core.models import ModelClientType, RoutingStrategy, ModelClientCarbonImpactParams
 from app.schemas.models import ModelType
 from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS, ROUTER__MONITORING, ROUTER__FILES
 
@@ -54,6 +54,7 @@ class ModelClientArgs(ConfigBaseModel):
 class ModelClient(ConfigBaseModel):
     model: str
     type: ModelClientType
+    params: ModelClientCarbonImpactParams = Field(default_factory=ModelClientCarbonImpactParams)
     args: ModelClientArgs
 
 

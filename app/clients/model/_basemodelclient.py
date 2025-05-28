@@ -4,17 +4,19 @@ import importlib
 from json import JSONDecodeError, dumps, loads
 import logging
 import re
+import time
 import traceback
 from typing import Any, Dict, Literal, Optional, Type
 from urllib.parse import urljoin
-import time
 
 from fastapi import HTTPException
 import httpx
 
+from app.schemas.core.models import ModelClientCarbonImpactParams
 from app.schemas.core.settings import ModelClientType
 from app.schemas.usage import Detail, Usage
 from app.utils.context import generate_request_id, global_context, request_context
+from app.utils.utils_eco import impact_carbon
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -24,10 +26,13 @@ from app.utils.variables import (
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
-from app.utils.utils_eco import impact_carbon
 
 logger = logging.getLogger(__name__)
 
+
+#TODO: audrey -- tests unitaires
+#TODO: audrey -- historiser le calcul impact_carbon
+#TODO: audrey -- est-ce qu'on affiche tout le dictionnaire d'ecologits?
 
 class BaseModelClient(ABC):
     ENDPOINT_TABLE = {
@@ -40,8 +45,9 @@ class BaseModelClient(ABC):
         ENDPOINT__RERANK: None,
     }
 
-    def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
+    def __init__(self, model: str, params: ModelClientCarbonImpactParams, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         self.model = model
+        self.params = params
         self.api_url = api_url
         self.api_key = api_key
         self.timeout = timeout
@@ -210,11 +216,12 @@ class BaseModelClient(ABC):
             usage = self._get_usage(json=json, data=response.json(), stream=False)
             if usage and usage.details:
                 detail = usage.details[-1]
-                model_name = self.model
+                active_params = self.params.active
+                total_params = self.params.total
                 model_zone = "FRA"
                 token_count = detail.total_tokens
                 request_latency = additional_data.get("inference_time", 0)
-                additional_data["impact_carbon"] = impact_carbon(model_name, model_zone, token_count, request_latency)
+                additional_data["impact_carbon"] = impact_carbon(active_params, total_params, model_zone, token_count, request_latency)
 
         # add additional data to the response
         response = self._format_response(json=json, response=response, additional_data=additional_data)
@@ -324,11 +331,12 @@ class BaseModelClient(ABC):
                                 usage = self._get_usage(json=json, data=buffer, stream=True)
                                 if usage and usage.details:
                                     detail = usage.details[-1]
-                                    model_name = self.model
+                                    active_params = self.params.active
+                                    total_params = self.params.total
                                     model_zone = "FRA"
                                     token_count = detail.total_tokens
                                     request_latency = additional_data.get("inference_time", 0)
-                                    extra_chunk["impact_carbon"] = impact_carbon(model_name, model_zone, token_count, request_latency)
+                                    extra_chunk["impact_carbon"] = impact_carbon(active_params, total_params, model_zone, token_count, request_latency)
 
                                 # if error case, yield chunk
                                 if extra_chunk is None:

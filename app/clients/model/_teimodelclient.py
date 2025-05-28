@@ -8,6 +8,7 @@ from openai import AsyncOpenAI
 import requests
 
 from app.clients.model._basemodelclient import BaseModelClient
+from app.schemas.core.models import ModelClientCarbonImpactParams
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -30,11 +31,11 @@ class TeiModelClient(AsyncOpenAI, BaseModelClient):
         ENDPOINT__RERANK: "/rerank",
     }
 
-    def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
+    def __init__(self, model: str, params: ModelClientCarbonImpactParams, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
         Initialize the TEI model client and check if the model is available.
         """
-        BaseModelClient.__init__(self, model=model, api_url=api_url, api_key=api_key, timeout=timeout, *args, **kwargs)
+        BaseModelClient.__init__(self, model=model, params=params, api_url=api_url, api_key=api_key, timeout=timeout, *args, **kwargs)
 
         AsyncOpenAI.__init__(self, base_url=urljoin(base=self.api_url, url="/v1"), api_key=self.api_key, timeout=self.timeout)
 
