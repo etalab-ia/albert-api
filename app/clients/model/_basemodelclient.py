@@ -30,9 +30,10 @@ from app.utils.variables import (
 logger = logging.getLogger(__name__)
 
 
-#TODO: audrey -- tests unitaires
-#TODO: audrey -- historiser le calcul impact_carbon
-#TODO: audrey -- est-ce qu'on affiche tout le dictionnaire d'ecologits?
+# TODO: audrey -- tests unitaires
+# TODO: audrey -- historiser le calcul impact_carbon
+# TODO: audrey -- est-ce qu'on affiche tout le dictionnaire d'ecologits?
+
 
 class BaseModelClient(ABC):
     ENDPOINT_TABLE = {
@@ -168,7 +169,7 @@ class BaseModelClient(ABC):
         json: Optional[dict] = None,
         files: Optional[dict] = None,
         data: Optional[dict] = None,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
     ) -> httpx.Response:
         """
         Forward a request to a client model and add model name to the response. Optionally, add additional data to the response.
@@ -185,6 +186,8 @@ class BaseModelClient(ABC):
         """
 
         url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
+        if not additional_data:
+            additional_data = {}
 
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
@@ -211,10 +214,11 @@ class BaseModelClient(ABC):
                     logger.debug(traceback.format_exc())
                     message = response.text
                 raise HTTPException(status_code=response.status_code, detail=message)
-            
+
             # impact carbon
-            usage = self._get_usage(json=json, data=response.json(), stream=False)
-            if usage and usage.details:
+            if json:
+                usage = self._get_usage(json=json, data=response.json(), stream=False)
+            if json and usage and usage.details and self.params.active and self.params.total:
                 detail = usage.details[-1]
                 active_params = self.params.active
                 total_params = self.params.total
@@ -295,7 +299,7 @@ class BaseModelClient(ABC):
             try:
                 async with async_client.stream(method=method, url=url, headers=headers, json=json, files=files, data=data) as response:
                     buffer = list()
-                    start_time = time.perf_counter() 
+                    start_time = time.perf_counter()
                     async for chunk in response.aiter_raw():
                         # error case
                         if response.status_code // 100 != 2:
@@ -321,7 +325,7 @@ class BaseModelClient(ABC):
                                 done_chunk = chunk[match.start() :]
                                 buffer.append(last_chunks)
 
-                                end_time = time.perf_counter() 
+                                end_time = time.perf_counter()
                                 inference_time = end_time - start_time
                                 additional_data["inference_time"] = inference_time
 
@@ -329,14 +333,16 @@ class BaseModelClient(ABC):
 
                                 # impact carbon
                                 usage = self._get_usage(json=json, data=buffer, stream=True)
-                                if usage and usage.details:
+                                if usage and usage.details and self.params.active and self.params.total:
                                     detail = usage.details[-1]
                                     active_params = self.params.active
                                     total_params = self.params.total
                                     model_zone = "FRA"
                                     token_count = detail.total_tokens
                                     request_latency = additional_data.get("inference_time", 0)
-                                    extra_chunk["impact_carbon"] = impact_carbon(active_params, total_params, model_zone, token_count, request_latency)
+                                    extra_chunk["impact_carbon"] = impact_carbon(
+                                        active_params, total_params, model_zone, token_count, request_latency
+                                    )
 
                                 # if error case, yield chunk
                                 if extra_chunk is None:
