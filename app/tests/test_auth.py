@@ -32,13 +32,22 @@ def clean_redis() -> None:
 
 @pytest.fixture(scope="module")
 def tokenizer():
-    tokenizer = UsageTokenizer(settings.usages.tokenizer)
+    tokenizer = UsageTokenizer(settings.general.tokenizer)
     tokenizer = tokenizer.tokenizer
 
     yield tokenizer
 
 
-@pytest.mark.usefixtures("client", "clean_redis", "tokenizer", "roles")
+@pytest.fixture(scope="module")
+def text_generation_model(client: TestClient):
+    response = client.get(url=f"/v1{ENDPOINT__MODELS}")
+    assert response.status_code == 200, response.text
+    model = [model["id"] for model in response.json()["data"] if model["type"] == "text-generation"][0]
+
+    yield model
+
+
+@pytest.mark.usefixtures("client", "clean_redis", "tokenizer", "roles", "text_generation_model")
 class TestAuth:
     def test_user_account_expiration_format(self, client: TestClient, roles: tuple[dict, dict]):
         role_with_permissions, role_without_permissions = roles
@@ -163,24 +172,17 @@ class TestAuth:
         )
         assert response.status_code == 422, response.text
 
-    def test_token_rate_limits(self, client: TestClient, tokenizer):
-        tokenizer = tokenizer
-
-        # Get a text-generation model
-        response = client.get(url=f"/v1{ENDPOINT__MODELS}")
-        assert response.status_code == 200, response.text
-        model = [model["id"] for model in response.json()["data"] if model["type"] == "text-generation"][0]
-
+    def test_token_rate_limits(self, client: TestClient, tokenizer, text_generation_model):
         # Create a role with token limits
         response = client.post_with_permissions(
             url=ENDPOINT__ROLES,
             json={
                 "name": f"test_role_{str(uuid4())}",
                 "limits": [
-                    {"model": model, "type": LimitType.RPM.value, "value": None},
-                    {"model": model, "type": LimitType.RPD.value, "value": None},
-                    {"model": model, "type": LimitType.TPM.value, "value": None},
-                    {"model": model, "type": LimitType.TPD.value, "value": 10},  # 10 tokens per days
+                    {"model": text_generation_model, "type": LimitType.RPM.value, "value": None},
+                    {"model": text_generation_model, "type": LimitType.RPD.value, "value": None},
+                    {"model": text_generation_model, "type": LimitType.TPM.value, "value": None},
+                    {"model": text_generation_model, "type": LimitType.TPD.value, "value": 10},  # 10 tokens per days
                 ],
             },
         )
@@ -219,14 +221,14 @@ class TestAuth:
         response = client.post(
             url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}",
             headers=headers,
-            json={"model": model, "messages": [{"role": "user", "content": content_len_5}], "max_tokens": 1},
+            json={"model": text_generation_model, "messages": [{"role": "user", "content": content_len_5}], "max_tokens": 1},
         )
         assert response.status_code == 200, response.text
 
         response = client.post(
             url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}",
             headers=headers,
-            json={"model": model, "messages": [{"role": "user", "content": content_len_10}], "max_tokens": 1},
+            json={"model": text_generation_model, "messages": [{"role": "user", "content": content_len_10}], "max_tokens": 1},
         )
 
         assert response.status_code == 429, response.text
@@ -237,10 +239,10 @@ class TestAuth:
             json={
                 "name": f"test_role_{str(uuid4())}",
                 "limits": [
-                    {"model": model, "type": "rpm", "value": None},
-                    {"model": model, "type": "rpd", "value": None},
-                    {"model": model, "type": "tpm", "value": None},
-                    {"model": model, "type": "tpd", "value": 50},  # 50 tokens per days
+                    {"model": text_generation_model, "type": "rpm", "value": None},
+                    {"model": text_generation_model, "type": "rpd", "value": None},
+                    {"model": text_generation_model, "type": "tpm", "value": None},
+                    {"model": text_generation_model, "type": "tpd", "value": 50},  # 50 tokens per days
                 ],
             },
         )
@@ -249,7 +251,7 @@ class TestAuth:
         response = client.post(
             url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}",
             headers=headers,
-            json={"model": model, "messages": [{"role": "user", "content": content_len_10}], "max_tokens": 1},
+            json={"model": text_generation_model, "messages": [{"role": "user", "content": content_len_10}], "max_tokens": 1},
         )
         assert response.status_code == 200, response.text
 
@@ -258,9 +260,66 @@ class TestAuth:
             url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}",
             headers=headers,
             json={
-                "model": model,
+                "model": text_generation_model,
                 "messages": [{"role": "assistant", "content": content_len_10}, {"role": "user", "content": content_len_40}],
                 "max_tokens": 1,
             },
         )
         assert response.status_code == 429, response.text
+
+    def test_user_budget(self, client: TestClient, tokenizer, text_generation_model):
+        # Create a user
+        initial_budget = 10
+        response = client.post_with_permissions(
+            url=ENDPOINT__USERS,
+            json={"name": f"test_user_{str(uuid4())}", "role": 1, "budget": initial_budget},
+        )
+        assert response.status_code == 201, response.text
+        user_id = response.json()["id"]
+
+        # Create a token for this user
+        response = client.post_with_permissions(
+            url=ENDPOINT__TOKENS,
+            json={"name": f"test_token_{str(uuid4())}", "user": user_id, "expires_at": int((time.time()) + 60 * 10)},
+        )
+        assert response.status_code == 201, response.text
+        token = response.json()["token"]
+
+        # Test the budget
+        prompt = "Hello, how are you?"
+        prompt_tokens = len(tokenizer.encode(prompt))
+
+        response = client.post(
+            url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"model": text_generation_model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 100},
+        )
+        assert response.status_code == 200, response.text
+
+        completion_tokens = len(tokenizer.encode(response.json()["choices"][0]["message"]["content"]))
+        cost = round(prompt_tokens / 1000000 * 1 + completion_tokens / 1000000 * 3, ndigits=6)
+
+        assert response.json()["usage"]["cost"] == cost, response.text
+
+        # Check that the budget is updated
+        response = client.get_with_permissions(url=f"{ENDPOINT__USERS}/{user_id}")
+        assert response.json()["budget"] < initial_budget, response.text
+
+        # Update the budget
+        response = client.patch_with_permissions(url=f"{ENDPOINT__USERS}/{user_id}", json={"budget": 0})
+        assert response.status_code == 204, response.text
+
+        # Check that the budget is updated
+        response = client.get_with_permissions(url=f"{ENDPOINT__USERS}/{user_id}")
+        assert response.json()["budget"] == 0, response.text
+
+        # Test the budget
+        prompt = "Hello, how are you?"
+        prompt_tokens = len(tokenizer.encode(prompt))
+
+        response = client.post(
+            url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"model": text_generation_model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 100},
+        )
+        assert response.status_code == 400, response.text

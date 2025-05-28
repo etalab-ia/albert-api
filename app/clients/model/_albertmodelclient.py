@@ -1,9 +1,8 @@
 from urllib.parse import urljoin
 
-from openai import AsyncOpenAI
 import requests
 
-from app.clients.model._basemodelclient import BaseModelClient
+from app.schemas.models import ModelCosts
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -14,8 +13,10 @@ from app.utils.variables import (
     ENDPOINT__RERANK,
 )
 
+from ._basemodelclient import BaseModelClient
 
-class AlbertModelClient(AsyncOpenAI, BaseModelClient):
+
+class AlbertModelClient(BaseModelClient):
     ENDPOINT_TABLE = {
         ENDPOINT__AUDIO_TRANSCRIPTIONS: "/v1/audio/transcriptions",
         ENDPOINT__CHAT_COMPLETIONS: "/v1/chat/completions",
@@ -26,13 +27,11 @@ class AlbertModelClient(AsyncOpenAI, BaseModelClient):
         ENDPOINT__RERANK: "/v1/rerank",
     }
 
-    def __init__(self, model: str, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
+    def __init__(self, model: str, costs: ModelCosts, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
         Initialize the OpenAI model client and check if the model is available.
         """
-        BaseModelClient.__init__(self, model=model, api_url=api_url, api_key=api_key, timeout=timeout, *args, **kwargs)
-
-        AsyncOpenAI.__init__(self, base_url=urljoin(base=self.api_url, url="/v1"), api_key=self.api_key, timeout=self.timeout)
+        super().__init__(model=model, costs=costs, api_url=api_url, api_key=api_key, timeout=timeout, *args, **kwargs)
 
         # check if model is available
         url = urljoin(base=str(self.api_url), url=self.ENDPOINT_TABLE[ENDPOINT__MODELS])

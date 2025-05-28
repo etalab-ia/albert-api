@@ -107,6 +107,7 @@ class Roles(BaseModel):
 class UserUpdateRequest(BaseModel):
     name: Optional[str] = Field(default=None, description="The new user name.")
     role: Optional[int] = Field(default=None, description="The new role ID.")
+    budget: Optional[float] = Field(default=None, description="The new budget.")
     expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp.")
 
     @field_validator("expires_at", mode="before")
@@ -134,6 +135,7 @@ class UsersResponse(BaseModel):
 class UserRequest(BaseModel):
     name: str = Field(description="The user name.")
     role: int = Field(description="The role ID.")
+    budget: Optional[float] = Field(default=None, description="The budget.")
     expires_at: Optional[int] = Field(default=None, description="The expiration timestamp.")
 
     @field_validator("expires_at", mode="before")
@@ -159,6 +161,7 @@ class User(BaseModel):
     id: int
     name: str
     role: int
+    budget: Optional[float] = None
     expires_at: Optional[int] = None
     created_at: int
     updated_at: int

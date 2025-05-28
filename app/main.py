@@ -10,11 +10,10 @@ from app.helpers import AccessController
 from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
 from app.schemas.usage import Usage
-from app.sql.session import get_db
 from app.utils.context import generate_request_id, request_context
+from app.utils.hooks_decorator import hooks
 from app.utils.lifespan import lifespan
 from app.utils.settings import settings
-from app.utils.usage_decorator import log_usage
 from app.utils.variables import (
     ROUTER__AUDIO,
     ROUTER__AUTH,
@@ -34,35 +33,17 @@ from app.utils.variables import (
 
 logger = logging.getLogger(__name__)
 
-if settings.general.sentry_dsn:
-    # If SENTRY_DSN is set, we initialize Sentry SDK
-    # This is useful for error tracking and performance monitoring
-    # See https://docs.sentry.io/platforms/python/guides/fastapi/
-    # for more information on how to configure Sentry with FastAPI
-    sentry_sdk.init(
-        dsn=settings.general.sentry_dsn,
-        # See https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-        send_default_pii=True,
-        # Set traces_sample_rate to 1.0 to capture 100%
-        # of transactions for tracing.
-        traces_sample_rate=1.0,
-        # Set profile_session_sample_rate to 1.0 to profile 100%
-        # of profile sessions.
-        profile_session_sample_rate=1.0,
-        # Set profile_lifecycle to "trace" to automatically
-        # run the profiler on when there is an active transaction
-        profile_lifecycle="trace",
-    )
-else:
-    logger.warning("SENTRY_DSN is not set. Sentry SDK will not be initialized.")
+if settings.monitoring.sentry is not None and settings.monitoring.sentry.enabled:
+    logger.info("Initializing Sentry SDK.")
+    sentry_sdk.init(**settings.monitoring.sentry.model_dump())
 
 
-def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
+def create_app(*args, **kwargs) -> FastAPI:
     """Create FastAPI application."""
 
-    def add_usage_decorator(router: APIRouter):
+    def add_hooks(router: APIRouter) -> None:
         for route in router.routes:
-            route.endpoint = log_usage(route.endpoint)
+            route.endpoint = hooks(route.endpoint)
             route.dependant = get_dependant(path=route.path_format, call=route.endpoint)
 
     app = FastAPI(
@@ -95,79 +76,67 @@ def create_app(db_func=get_db, *args, **kwargs) -> FastAPI:
 
     # Routers
     if ROUTER__AUDIO not in settings.general.disabled_routers:
-        if ROUTER__AUDIO in settings.usages.routers:
-            add_usage_decorator(router=audio.router)
+        add_hooks(router=audio.router)
         app.include_router(router=audio.router, tags=[ROUTER__AUDIO.title()], prefix="/v1")
 
     if ROUTER__AUTH not in settings.general.disabled_routers:
-        if ROUTER__AUTH in settings.usages.routers:
-            add_usage_decorator(router=auth.router)
+        add_hooks(router=auth.router)
         app.include_router(router=auth.router, tags=[ROUTER__AUTH.title()])
 
     if ROUTER__CHAT not in settings.general.disabled_routers:
-        if ROUTER__CHAT in settings.usages.routers:
-            add_usage_decorator(router=chat.router)
+        add_hooks(router=chat.router)
         app.include_router(router=chat.router, tags=[ROUTER__CHAT.title()], prefix="/v1")
 
     if ROUTER__CHUNKS not in settings.general.disabled_routers:
-        if ROUTER__CHUNKS in settings.usages.routers:
-            add_usage_decorator(router=chunks.router)
+        add_hooks(router=chunks.router)
         app.include_router(router=chunks.router, tags=[ROUTER__CHUNKS.title()], prefix="/v1")
 
     if ROUTER__COLLECTIONS not in settings.general.disabled_routers:
-        if ROUTER__COLLECTIONS in settings.usages.routers:
-            add_usage_decorator(router=collections.router)
+        add_hooks(router=collections.router)
         app.include_router(router=collections.router, tags=[ROUTER__COLLECTIONS.title()], prefix="/v1")
 
     if ROUTER__COMPLETIONS not in settings.general.disabled_routers:
-        if ROUTER__COMPLETIONS in settings.usages.routers:
-            add_usage_decorator(router=completions.router)
+        add_hooks(router=completions.router)
         app.include_router(router=completions.router, tags=[ROUTER__COMPLETIONS.title()], prefix="/v1")
 
     if ROUTER__DOCUMENTS not in settings.general.disabled_routers:
-        if ROUTER__DOCUMENTS in settings.usages.routers:
-            add_usage_decorator(router=documents.router)
+        add_hooks(router=documents.router)
         app.include_router(router=documents.router, tags=[ROUTER__DOCUMENTS.title()], prefix="/v1")
 
     if ROUTER__EMBEDDINGS not in settings.general.disabled_routers:
-        if ROUTER__EMBEDDINGS in settings.usages.routers:
-            add_usage_decorator(router=embeddings.router)
+        add_hooks(router=embeddings.router)
         app.include_router(router=embeddings.router, tags=[ROUTER__EMBEDDINGS.title()], prefix="/v1")
 
     if ROUTER__FILES not in settings.general.disabled_routers:
-        if ROUTER__FILES in settings.usages.routers:
-            add_usage_decorator(router=files.router)
+        # hooks does not work with files endpoint (request is overwritten by the file upload)
         app.include_router(router=files.router, tags=[ROUTER__FILES.title()], prefix="/v1")
 
     if ROUTER__MODELS not in settings.general.disabled_routers:
-        if ROUTER__MODELS in settings.usages.routers:
-            add_usage_decorator(router=models.router)
+        add_hooks(router=models.router)
         app.include_router(router=models.router, tags=[ROUTER__MODELS.title()], prefix="/v1")
 
     if ROUTER__MONITORING not in settings.general.disabled_routers:
-        app.instrumentator = Instrumentator().instrument(app=app)
-        app.instrumentator.expose(app=app, should_gzip=True, tags=[ROUTER__MONITORING.title()], dependencies=[Depends(dependency=AccessController(permissions=[PermissionType.READ_METRIC]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
+        if settings.monitoring.prometheus is not None and settings.monitoring.prometheus.enabled is True:
+            app.instrumentator = Instrumentator().instrument(app=app)
+            app.instrumentator.expose(app=app, should_gzip=True, tags=[ROUTER__MONITORING.title()], dependencies=[Depends(dependency=AccessController(permissions=[PermissionType.READ_METRIC]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 
         @app.get(path="/health", tags=[ROUTER__MONITORING.title()], include_in_schema=settings.general.log_level == "DEBUG", dependencies=[Security(dependency=AccessController())])  # fmt: off
         def health() -> Response:
             return Response(status_code=200)
 
     if ROUTER__OCR not in settings.general.disabled_routers:
-        if ROUTER__OCR in settings.usages.routers:
-            add_usage_decorator(router=ocr.router)
+        add_hooks(router=ocr.router)
         app.include_router(router=ocr.router, tags=[ROUTER__OCR.upper()], prefix="/v1")
 
     if ROUTER__RERANK not in settings.general.disabled_routers:
-        if ROUTER__RERANK in settings.usages.routers:
-            add_usage_decorator(router=rerank.router)
+        add_hooks(router=rerank.router)
         app.include_router(router=rerank.router, tags=[ROUTER__RERANK.title()], prefix="/v1")
 
     if ROUTER__SEARCH not in settings.general.disabled_routers:
-        if ROUTER__SEARCH in settings.usages.routers:
-            add_usage_decorator(router=search.router)
+        add_hooks(router=search.router)
         app.include_router(router=search.router, tags=[ROUTER__SEARCH.title()], prefix="/v1")
 
     return app
 
 
-app = create_app(db_func=get_db)
+app = create_app()

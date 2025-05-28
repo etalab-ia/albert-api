@@ -48,7 +48,7 @@ def setup(client: TestClient):
 
 @pytest.fixture(scope="module")
 def tokenizer():
-    tokenizer = UsageTokenizer(settings.usages.tokenizer)
+    tokenizer = UsageTokenizer(settings.general.tokenizer)
     tokenizer = tokenizer.tokenizer
 
     yield tokenizer

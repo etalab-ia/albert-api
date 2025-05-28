@@ -1,13 +1,16 @@
 general:
   log_level: DEBUG
+  tokenizer: "tiktoken_gpt2"
 
 auth:
   master_key: changeme
   max_token_expiration_days: 365
 
-usages:
-  routers: ["all"]
-  tokenizer: "tiktoken_gpt2"
+monitoring:
+  postgres:
+    enabled: true
+  prometheus:
+    enabled: true
 
 web_search:
   - type: brave
@@ -82,6 +85,9 @@ models:
     clients:
       - model: albert-large
         type: albert
+        costs:
+          prompt_tokens: 1
+          completion_tokens: 3
         args:
           api_url: https://albert.api.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
@@ -94,12 +100,18 @@ models:
     clients:
       - model: albert-small
         type: albert
+        costs:
+          prompt_tokens: 1
+          completion_tokens: 3
         args:
           api_url: https://albert.api.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
           timeout: 120
       - model: albert-small
         type: albert
+        costs:
+          prompt_tokens: 1
+          completion_tokens: 3
         args:
           api_url: https://albert.api.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}

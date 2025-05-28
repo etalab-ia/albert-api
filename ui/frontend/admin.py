@@ -11,6 +11,7 @@ from ui.frontend.utils import (
     input_new_user_name,
     input_new_user_password,
     input_new_user_role_id,
+    input_new_user_budget,
     ressources_selector,
 )
 from ui.variables import ADMIN_PERMISSIONS
@@ -108,12 +109,14 @@ with st.expander(label="Users", expanded=not st.session_state.get("new_user", Fa
 new_user_name = input_new_user_name(selected_user=selected_user)
 new_user_password = input_new_user_password()
 new_user_role_id = input_new_user_role_id(selected_role=selected_role, roles=roles)
+new_user_budget = input_new_user_budget(selected_user=selected_user)
 new_user_expires_at = input_new_user_expires_at(selected_user=selected_user)
+
 
 if st.session_state.get("new_user", False):
     with stylable_container(key="Header", css_styles="button{float: right;}"):
         if st.button(label="**Create**", key="validate_create_user_button"):
-            create_user(name=new_user_name, password=new_user_password, role=new_user_role_id, expires_at=new_user_expires_at)
+            create_user(name=new_user_name, password=new_user_password, budget=new_user_budget, role=new_user_role_id, expires_at=new_user_expires_at)
 
 if st.session_state.get("update_user", False):
     with stylable_container(key="Header", css_styles="button{float: right;}"):
@@ -122,6 +125,7 @@ if st.session_state.get("update_user", False):
                 user=selected_user["id"],
                 name=new_user_name,
                 password=new_user_password,
+                budget=new_user_budget,
                 role=new_user_role_id,
                 expires_at=new_user_expires_at,
             )
@@ -140,7 +144,7 @@ with st.sidebar:
             disabled=st.session_state.get("update_user", False),
         )
     with col2:
-        if st.button(
+        st.button(
             label="**:material/update: Update**",
             key="update_user_button",
             on_click=lambda: setattr(st.session_state, "update_user", not st.session_state.get("update_user", False))
@@ -148,11 +152,4 @@ with st.sidebar:
             use_container_width=True,
             type="primary" if st.session_state.get("update_user", False) else "secondary",
             disabled=st.session_state.get("new_user", False) or st.session_state["no_users_in_selected_role"],
-        ):
-            update_user(
-                user=selected_user["id"],
-                name=new_user_name,
-                password=new_user_password,
-                role=new_user_role_id,
-                expires_at=new_user_expires_at,
-            )
+        )

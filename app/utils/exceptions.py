@@ -39,6 +39,11 @@ class UserAlreadyExistsException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
+class InsufficientBudgetException(HTTPException):
+    def __init__(self, detail: str = "Insufficient budget."):
+        super().__init__(status_code=400, detail=detail)
+
+
 # 403
 class InvalidPasswordException(HTTPException):
     def __init__(self, detail: str = "Invalid password."):
