@@ -145,11 +145,12 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
                     # last chunk overrides previous chunks
                     if data.get("model"):
                         usage.model = data["model"]
+
                     if data.get("usage"):
                         usage.prompt_tokens = data["usage"]["prompt_tokens"]
                         usage.completion_tokens = data["usage"]["completion_tokens"]
                         usage.total_tokens = data["usage"]["total_tokens"]
-                        usage.budget = data["usage"].get("budget", None)
+                        usage.cost = data["usage"].get("cost", None)
 
         # Set usage.status with the captured status code before calling write_usage
         if response_status_code is not None:
@@ -178,7 +179,7 @@ async def extract_usage_from_response(response: Response, start_time: datetime, 
         usage.prompt_tokens = response_usage.get("prompt_tokens", None)
         usage.completion_tokens = response_usage.get("completion_tokens", None)
         usage.total_tokens = response_usage.get("total_tokens", None)
-        usage.budget = response_usage.get("budget", None)
+        usage.cost = response_usage.get("cost", None)
     except Exception as e:
         logger.warning(f"Failed to parse JSON response body: {response.body} ({e})")
         return
@@ -193,7 +194,7 @@ async def log_usage(response: Optional[Response], usage: Usage, start_time: date
     This function captures the duration of the request and sets the status code of the response if available.
     """
 
-    if settings.monitoring is None or settings.monitoring.postgres is None or settings.monitoring.postgres.enabled is False:
+    if settings.monitoring.postgres is None or settings.monitoring.postgres.enabled is False:
         return
 
     usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
@@ -223,11 +224,11 @@ async def update_budget(usage: Usage):
     Uses row-level locking to prevent concurrency issues.
     """
     # Check if there's a budget cost to deduct
-    if not usage.budget or usage.budget == 0:
+    if usage.cost is None or usage.cost == 0:
         return
 
     user_id = usage.user_id
-    cost = usage.budget
+    cost = usage.cost
 
     if not user_id:
         logger.warning("No user_id found in usage object for budget update")
@@ -243,16 +244,14 @@ async def update_budget(usage: Usage):
                 current_budget = result.scalar_one_or_none()
 
                 if current_budget is None or current_budget == 0:
-                    logger.warning(f"User {user_id} not found or has no budget for budget update")
                     return
 
                 # Calculate the actual cost to deduct (minimum of requested cost and available budget)
                 actual_cost = min(cost, current_budget)
+                new_budget = round(current_budget - actual_cost, ndigits=6)
 
                 # Update the budget
-                update_stmt = (
-                    update(User).where(User.id == user_id).values(budget=User.budget - actual_cost, updated_at=func.now()).returning(User.budget)
-                )
+                update_stmt = update(User).where(User.id == user_id).values(budget=new_budget, updated_at=func.now()).returning(User.budget)
 
                 result = await session.execute(update_stmt)
 

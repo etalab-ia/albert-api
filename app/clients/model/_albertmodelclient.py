@@ -2,7 +2,7 @@ from urllib.parse import urljoin
 
 import requests
 
-from app.schemas.core.models import ModelClientBudget
+from app.schemas.models import ModelCosts
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -27,11 +27,11 @@ class AlbertModelClient(BaseModelClient):
         ENDPOINT__RERANK: "/v1/rerank",
     }
 
-    def __init__(self, model: str, budget: ModelClientBudget, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
+    def __init__(self, model: str, costs: ModelCosts, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
         Initialize the OpenAI model client and check if the model is available.
         """
-        super().__init__(model=model, budget=budget, api_url=api_url, api_key=api_key, timeout=timeout, *args, **kwargs)
+        super().__init__(model=model, costs=costs, api_url=api_url, api_key=api_key, timeout=timeout, *args, **kwargs)
 
         # check if model is available
         url = urljoin(base=str(self.api_url), url=self.ENDPOINT_TABLE[ENDPOINT__MODELS])

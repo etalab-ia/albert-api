@@ -1,32 +1,20 @@
 general:
   log_level: DEBUG
+  # disabled_routers:
+  #   - ocr
+
 
 playground:
   api_url: http://${API_HOST}:8000
-  cache_ttl: 1800 # seconds
 
 auth:
   master_username: master
   master_key: changeme
-  # limiting_strategy: fixed_window
-  # max_api_key_expiration_days: 365
 
-# web_search:
-#   - type: duckduckgo
-#     model: my-language-model
-#     limited_domains:
-#       - google.com
-#       - youtube.com
-#     user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36
+monitoring:
+  postgres:
+    enabled: true
 
-# monitoring:
-#   usage:
-#     routers:
-#       - all
-#     tokenizer: tiktoken_o200k_base
-#   sentry:
-#     dsn: https://${SENTRY_DSN}
-#   prometheus: true
 
 databases:
   - type: qdrant

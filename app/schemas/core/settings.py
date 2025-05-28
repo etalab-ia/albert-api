@@ -10,8 +10,8 @@ from pydantic_settings import BaseSettings
 import yaml
 
 from app.schemas.core.auth import LimitingStrategy
-from app.schemas.core.models import ModelClientBudget, ModelClientType, RoutingStrategy
-from app.schemas.models import ModelType
+from app.schemas.core.models import ModelClientType, RoutingStrategy
+from app.schemas.models import ModelCosts, ModelType
 from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
 
 
@@ -54,7 +54,7 @@ class ModelClientArgs(ConfigBaseModel):
 class ModelClient(ConfigBaseModel):
     model: str
     type: ModelClientType
-    budget: ModelClientBudget = Field(default_factory=ModelClientBudget)
+    costs: ModelCosts = Field(default_factory=ModelCosts)
     args: ModelClientArgs
 
 
@@ -135,6 +135,14 @@ class Database(ConfigBaseModel):
         return values
 
 
+class MonitoringSentryArgs(ConfigBaseModel):
+    dsn: str = Field(description="If Sentry DSN is set, we initialize Sentry SDK. This is useful for error tracking and performance monitoring. See https://docs.sentry.io/platforms/python/guides/fastapi/ for more information on how to configure Sentry with FastAPI.")  # fmt: off
+    send_default_pii: bool = Field(default=True, description="See https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info.")  # fmt: off
+    traces_sample_rate: float = Field(default=1.0, description="Set traces_sample_rate to 1.0 to capture 100% of transactions for tracing.")  # fmt: off
+    profile_session_sample_rate: float = Field(default=1.0, description="Set profile_session_sample_rate to 1.0 to profile 100% of profile sessions.")  # fmt: off
+    profile_lifecycle: str = Field(default="trace", description="Set profile_lifecycle to 'trace' to automatically run the profiler on when there is an active transaction.")  # fmt: off
+
+
 class MonitoringPrometheus(ConfigBaseModel):
     enabled: bool = True
 
@@ -144,11 +152,8 @@ class MonitoringPostgres(ConfigBaseModel):
 
 
 class MonitoringSentry(ConfigBaseModel):
-    dsn: str = Field(description="If Sentry DSN is set, we initialize Sentry SDK. This is useful for error tracking and performance monitoring. See https://docs.sentry.io/platforms/python/guides/fastapi/ for more information on how to configure Sentry with FastAPI.")  # fmt: off
-    send_default_pii: bool = Field(default=True, description="See https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info.")  # fmt: off
-    traces_sample_rate: float = Field(default=1.0, description="Set traces_sample_rate to 1.0 to capture 100% of transactions for tracing.")  # fmt: off
-    profile_session_sample_rate: float = Field(default=1.0, description="Set profile_session_sample_rate to 1.0 to profile 100% of profile sessions.")  # fmt: off
-    profile_lifecycle: str = Field(default="trace", description="Set profile_lifecycle to 'trace' to automatically run the profiler on when there is an active transaction.")  # fmt: off
+    enabled: bool = True
+    args: MonitoringSentryArgs
 
 
 class Monitoring(ConfigBaseModel):
@@ -188,7 +193,7 @@ class General(ConfigBaseModel):
 
 class Config(ConfigBaseModel):
     general: General = Field(default_factory=General)
-    monitoring: Optional[Monitoring] = None
+    monitoring: Monitoring = Field(default_factory=Monitoring)
     auth: Auth = Field(default_factory=Auth)
     models: List[Model] = Field(min_length=1)
     databases: List[Database] = Field(min_length=1)

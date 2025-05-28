@@ -175,7 +175,7 @@ async def create_user(
     Create a new user.
     """
 
-    user_id = await global_context.iam.create_user(session=session, name=body.name, role_id=body.role, budget=body.budget, expires_at=body.expires_at)
+    user_id = await global_context.iam.create_user(session=session, name=body.name, role_id=body.role, budget=body.budget, expires_at=body.expires_at)  # fmt: off
 
     return JSONResponse(status_code=201, content={"id": user_id})
 

@@ -25,7 +25,7 @@ class Usage(Base):
     prompt_tokens = Column(Integer)
     completion_tokens = Column(Float)
     total_tokens = Column(Integer)
-    budget = Column(Float, nullable=True)
+    cost = Column(Float, nullable=True)
     status = Column(Integer, nullable=True)
 
     user = relationship(argument="User", backref=backref(name="usage", cascade="all, delete-orphan"))

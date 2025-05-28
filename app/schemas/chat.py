@@ -68,7 +68,7 @@ class ChatCompletionRequest(BaseModel):
 class ChatCompletion(ChatCompletion):
     id: str = Field(default=None, description="A unique identifier for the chat completion.")
     search_results: List[Search] = []
-    usage: Usage = Field(default=None, description="Usage information for the request.")
+    usage: Usage = Field(default_factory=Usage, description="Usage information for the request.")
 
 
 class ChatCompletionChunk(ChatCompletionChunk):

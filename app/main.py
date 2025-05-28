@@ -33,7 +33,7 @@ from app.utils.variables import (
 
 logger = logging.getLogger(__name__)
 
-if settings.monitoring and settings.monitoring.sentry:
+if settings.monitoring.sentry is not None and settings.monitoring.sentry.enabled:
     logger.info("Initializing Sentry SDK.")
     sentry_sdk.init(**settings.monitoring.sentry.model_dump())
 
@@ -108,7 +108,7 @@ def create_app(*args, **kwargs) -> FastAPI:
         app.include_router(router=embeddings.router, tags=[ROUTER__EMBEDDINGS.title()], prefix="/v1")
 
     if ROUTER__FILES not in settings.general.disabled_routers:
-        add_hooks(router=files.router)
+        # hooks does not work with files endpoint (request is overwritten by the file upload)
         app.include_router(router=files.router, tags=[ROUTER__FILES.title()], prefix="/v1")
 
     if ROUTER__MODELS not in settings.general.disabled_routers:
@@ -116,7 +116,7 @@ def create_app(*args, **kwargs) -> FastAPI:
         app.include_router(router=models.router, tags=[ROUTER__MODELS.title()], prefix="/v1")
 
     if ROUTER__MONITORING not in settings.general.disabled_routers:
-        if settings.monitoring and settings.monitoring.prometheus and settings.monitoring.prometheus.enabled is True:
+        if settings.monitoring.prometheus is not None and settings.monitoring.prometheus.enabled is True:
             app.instrumentator = Instrumentator().instrument(app=app)
             app.instrumentator.expose(app=app, should_gzip=True, tags=[ROUTER__MONITORING.title()], dependencies=[Depends(dependency=AccessController(permissions=[PermissionType.READ_METRIC]))], include_in_schema=settings.general.log_level == "DEBUG")  # fmt: off
 

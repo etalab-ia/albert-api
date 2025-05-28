@@ -11,7 +11,8 @@ from urllib.parse import urljoin
 from fastapi import HTTPException
 import httpx
 
-from app.schemas.core.settings import ModelClientBudget, ModelClientType
+from app.schemas.core.settings import ModelClientType
+from app.schemas.models import ModelCosts
 from app.schemas.usage import Detail, Usage
 from app.utils.context import generate_request_id, global_context, request_context
 from app.utils.variables import (
@@ -38,9 +39,9 @@ class BaseModelClient(ABC):
         ENDPOINT__RERANK: None,
     }
 
-    def __init__(self, model: str, budget: ModelClientBudget, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
+    def __init__(self, model: str, costs: ModelCosts, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         self.model = model
-        self.budget = budget
+        self.costs = costs
         self.api_url = api_url
         self.api_key = api_key
         self.timeout = timeout
@@ -92,13 +93,12 @@ class BaseModelClient(ABC):
                     )
 
                 detail.usage.total_tokens = detail.usage.prompt_tokens + detail.usage.completion_tokens
-                detail.usage.budget = round(self.budget.prompt_tokens / 1000000 * detail.usage.prompt_tokens + self.budget.completion_tokens / 1000000 * detail.usage.completion_tokens, ndigits=4)  # fmt: off
-
+                detail.usage.cost = round(detail.usage.prompt_tokens / 1000000 * self.costs.prompt_tokens + detail.usage.completion_tokens / 1000000 * self.costs.completion_tokens, ndigits=6)  # fmt: off
                 usage.details.append(detail)
                 usage.prompt_tokens += detail.usage.prompt_tokens
                 usage.completion_tokens += detail.usage.completion_tokens
                 usage.total_tokens += detail.usage.total_tokens
-                usage.budget += detail.usage.budget
+                usage.cost += detail.usage.cost
 
             except Exception as e:
                 logger.debug(traceback.format_exc())

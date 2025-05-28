@@ -2,6 +2,8 @@
 
 ## How it works
 
+### User budget
+
 Each user has a budget defined by POST `/v1/users` endpoint. The budget is defined in the `budget` field.
 
 ```bash
@@ -30,7 +32,9 @@ curl -X PATCH http://localhost:8000/v1/users/1 \
 > **❗️Note**<br>
 > If budget is not defined, the user has no limit on the number of requests.
 
-For each client model, is defined a budget in the `config.yml` file for the prompt and completion tokens (per million tokens). Example:
+### Model costs
+
+For each client model, is defined a costs in the `config.yml` file for the prompt and completion tokens (per million tokens). Example:
 
 ```yaml
 models:
@@ -39,7 +43,7 @@ models:
     clients:
       - model: openai/gpt-4o-mini
         type: openai
-        budget:
+        costs:
             prompt_tokens: 0.1
             completion_tokens: 0.3
 ```
@@ -47,7 +51,7 @@ models:
 The compute cost is calculated based on the number of tokens used and the budget defined for the model based on the following formula:
 
 ```python
-cost = round((prompt_tokens / 1000000 * client.budget.prompt_tokens) + (completion_tokens / 1000000 * client.budget.completion_tokens), ndigits=4)
+cost = round((prompt_tokens / 1000000 * client.budget.prompt_tokens) + (completion_tokens / 1000000 * client.budget.completion_tokens), ndigits=6)
 ```
 
 The compute cost returned in the response, in the `usage.budget` field. After the request is processed, the budget amount of the user is updated by the `update_budget` function in the `hooks_decorator.py` file.

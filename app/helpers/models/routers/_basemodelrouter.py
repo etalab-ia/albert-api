@@ -3,7 +3,7 @@ from itertools import cycle
 import time
 
 from app.clients.model import BaseModelClient as ModelClient
-from app.schemas.models import ModelType
+from app.schemas.models import ModelCosts, ModelType
 
 
 class BaseModelRouter(ABC):
@@ -18,13 +18,12 @@ class BaseModelRouter(ABC):
         *args,
         **kwargs,
     ) -> None:
-        vector_sizes, max_context_lengths = list(), list()
-        is_free = False
+        vector_sizes, max_context_lengths, costs = list(), list(), list()
 
         for client in clients:
             vector_sizes.append(client.vector_size)
             max_context_lengths.append(client.max_context_length)
-            is_free = True if client.budget.prompt_tokens == 0 and client.budget.completion_tokens == 0 else is_free
+            costs.append(client.costs)
 
         # consistency checks
         assert len(set(vector_sizes)) < 2, "All embeddings models in the same model group must have the same vector size."
@@ -33,6 +32,11 @@ class BaseModelRouter(ABC):
         max_context_lengths = [value for value in max_context_lengths if value is not None]
         max_context_length = min(max_context_lengths) if max_context_lengths else None
 
+        # if there are several models with different costs, it will return the max value for consistency of /v1/models response
+        prompt_tokens = max(costs.prompt_tokens for costs in costs)
+        completion_tokens = max(costs.completion_tokens for costs in costs)
+        costs = ModelCosts(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+
         # set attributes of the model (returned by /v1/models endpoint)
         self.id = id
         self.type = type
@@ -40,8 +44,8 @@ class BaseModelRouter(ABC):
         self.created = round(time.time())
         self.aliases = aliases
         self.max_context_length = max_context_length
+        self.costs = costs
 
-        self._is_free = is_free
         self._vector_size = vector_sizes[0]
         self._routing_strategy = routing_strategy
         self._cycle = cycle(clients)

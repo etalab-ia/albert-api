@@ -212,7 +212,7 @@ class AccessController:
             return
 
         model = global_context.models(model=model)
-        if model._is_free:
+        if model.costs.prompt_tokens == 0 and model.costs.completion_tokens == 0:  # free model
             return
 
         if user.budget == 0:

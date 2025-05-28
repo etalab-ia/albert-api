@@ -42,6 +42,7 @@ class ModelRegistry:
                     owned_by=model.owned_by,
                     created=model.created,
                     aliases=model.aliases,
+                    costs=model.costs,
                 )
             )
 

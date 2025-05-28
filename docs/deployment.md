@@ -53,7 +53,7 @@ The configuration file has the following sections:
 | [general](#general) | Required | General configuration. |
 | [auth](#auth) | Optional | Authentication parameters. |
 | [playground](#playground) | Optional | Playground parameters. |
-| [usages](#usages) | Optional | Usages parameters. |
+| [monitoring](#monitoring) | Optional | Monitoring parameters. |
 | [models](#models) | Required | Defines model APIs. |
 | [web_search](#web_search) | Optional | Defines the internet search engine API. |
 | [databases](#databases) | Required | Defines database APIs. |
@@ -78,7 +78,7 @@ The configuration file has the following sections:
 | openapi_url | Optional | API openapi URL. | str | | `"/openapi.json"` |
 | log_level | Required | Logging level. | str | `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`, `"CRITICAL"` | `"INFO"` |
 | disabled_routers | Required | List of disabled API routers. | List[str] | `["audio", "auth", "chat", "chunks", "collections", "documents", "embeddings", "files", "models", "monitoring", "ocr", "rerank", "search"]` | `[]` |
-| sentry_dsn | Optional | URL of Sentry server if you want to monitor your instance (cf. https://sentry.io) | str | | None |
+| tokenizer | Optional | Tokenizer type. | str | (1) | `"tiktoken_o200k_base"` |
 
 **Example**
 ```yaml
@@ -89,6 +89,20 @@ general:
   disabled_middlewares: False
   log_level: "DEBUG"
 ```
+
+**(1) Tokenizer Types**
+
+Tokenizer is used to count the number of tokens sent by users to compute token per minute (TPM) and token per day (TPD) limits and costs.
+
+| Type | Documentation |
+| --- | --- |
+| `tiktoken_cl100k_base` | [tiktoken_cl100k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_gpt2` | [tiktoken_gpt2](https://github.com/openai/tiktoken) |
+| `tiktoken_o200k_base` | [tiktoken_o200k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_o50k_base` | [tiktoken_o50k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_p50k_base` | [tiktoken_p50k_base](https://github.com/openai/tiktoken) |
+| `tiktoken_p50k_edit` | [tiktoken_p50k_edit](https://github.com/openai/tiktoken) |
+| `tiktoken_r50k_base` | [tiktoken_r50k_base](https://github.com/openai/tiktoken) |
 
 #### auth
   
@@ -120,6 +134,9 @@ auth:
 | clients | Required | Defines the third-party clients required for the model. | list[dict] | |
 | clients.model | Required | Third-party model ID. | str | (3) | |
 | clients.type | Required | Third-party client type. | str | (4) | |
+| clients.costs | Optional | Third-party client costs. | dict | |
+| clients.costs.prompt_tokens | Optional | Cost per prompt token. | float | | `0.0` |
+| clients.costs.completion_tokens | Optional | Cost per completion token. | float | | `0.0` |
 | clients.args | Required | Third-party client arguments. | dict | |
 | clients.args.api_url | Required | Third-party client API URL. | str | (5) | |
 | clients.args.api_key | Required | Third-party client API key. | str | |
@@ -152,12 +169,16 @@ models:
     clients:
       - model: text-embedding-ada-003
         type: openai
+        costs:
+          prompt_tokens: 0.01
         args:
           api_url: https://api.openai.com
           api_key: sk-...sA
           timeout: 60
       - model: bge-m3
         type: tei
+        costs:
+          prompt_tokens: 0.01
         args:
           api_url: http://localhost:8001
           api_key: sf...Df
@@ -310,7 +331,7 @@ playground:
   cache_ttl: 1800
 ```
 
-#### usages
+#### monitoring
 
 | Argument | Required | Description | Type | Values | Default |
 | --- | --- | --- | --- | --- | --- |
@@ -323,24 +344,7 @@ If `router` is set to `all`, all routers will be logged. This option is exclusiv
 
 **(2) Tokenizer Types**
 
-Tokenizer is used to count the number of tokens sent by users to compute token per minute (TPM) and token per day (TPD) limits.
 
-| Type | Documentation |
-| --- | --- |
-| `tiktoken_cl100k_base` | [tiktoken_cl100k_base](https://github.com/openai/tiktoken) |
-| `tiktoken_gpt2` | [tiktoken_gpt2](https://github.com/openai/tiktoken) |
-| `tiktoken_o200k_base` | [tiktoken_o200k_base](https://github.com/openai/tiktoken) |
-| `tiktoken_o50k_base` | [tiktoken_o50k_base](https://github.com/openai/tiktoken) |
-| `tiktoken_p50k_base` | [tiktoken_p50k_base](https://github.com/openai/tiktoken) |
-| `tiktoken_p50k_edit` | [tiktoken_p50k_edit](https://github.com/openai/tiktoken) |
-| `tiktoken_r50k_base` | [tiktoken_r50k_base](https://github.com/openai/tiktoken) |
-
-**Example**
-
-```yaml
-usages:
-  tokenizer: "tiktoken_gpt2"
-```
 #### web_search
 
 The Albert API allows searching the internet to enrich API responses. For this, it is necessary to configure a search engine API client in the `web_search` section.
