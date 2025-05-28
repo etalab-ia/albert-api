@@ -5,7 +5,7 @@ from fastapi.dependencies.utils import get_dependant
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 
-from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, parser, rerank, search
+from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search
 from app.helpers import AccessController
 from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
@@ -27,7 +27,6 @@ from app.utils.variables import (
     ROUTER__MODELS,
     ROUTER__MONITORING,
     ROUTER__OCR,
-    ROUTER__PARSER,
     ROUTER__RERANK,
     ROUTER__SEARCH,
 )
@@ -129,9 +128,6 @@ def create_app(*args, **kwargs) -> FastAPI:
     if ROUTER__OCR not in settings.general.disabled_routers:
         add_hooks(router=ocr.router)
         app.include_router(router=ocr.router, tags=[ROUTER__OCR.upper()], prefix="/v1")
-
-    if ROUTER__PARSER not in settings.general.disabled_routers:
-        app.include_router(router=parser.router, tags=[ROUTER__PARSER.title()], prefix="/v1")
 
     if ROUTER__RERANK not in settings.general.disabled_routers:
         add_hooks(router=rerank.router)

@@ -7,6 +7,7 @@ ENDPOINT__CHUNKS = "/chunks"
 ENDPOINT__COLLECTIONS = "/collections"
 ENDPOINT__COMPLETIONS = "/completions"
 ENDPOINT__DOCUMENTS = "/documents"
+ENDPOINT__DOCUMENTS_PARSE = "/documents/parse"
 ENDPOINT__EMBEDDINGS = "/embeddings"
 ENDPOINT__FILES = "/files"
 ENDPOINT__MODELS = "/models"
@@ -18,7 +19,6 @@ ENDPOINT__SEARCH = "/search"
 ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
 ENDPOINT__USERS_ME = "/users/me"
-ENDPOINT__PARSER = "/parser"
 
 
 ENDPOINTS = [value for name, value in locals().items() if name.startswith("ENDPOINT__")]
@@ -38,7 +38,6 @@ ROUTER__OCR = "ocr"
 ROUTER__RERANK = "rerank"
 ROUTER__SEARCH = "search"
 ROUTER__MULTIAGENTS = "multiagents"
-ROUTER__PARSER = "parser"
 
 
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
