@@ -79,8 +79,8 @@ async def lifespan(app: FastAPI):
     qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
 
     global_context.parser = ParserManager(parser=parser)
-    global_context.mcp.mcp_bridge = mcp_bridge
-    global_context.mcp.agents_manager = AgentsManager(global_context.mcp.mcp_bridge, global_context.models)
+    mcp_bridge = SecretShellMCPBridgeClient(settings.mcp.mcp_bridge_url)
+    global_context.mcp.agents_manager = AgentsManager(mcp_bridge, global_context.models)
     if redis:
         assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 

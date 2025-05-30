@@ -233,6 +233,10 @@ class General(ConfigBaseModel):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 
+class MCP(ConfigBaseModel):
+    mcp_bridge_url: str = "changeme"
+
+
 class Config(ConfigBaseModel):
     general: General = Field(default_factory=General)
     monitoring: Monitoring = Field(default_factory=Monitoring)
@@ -241,6 +245,7 @@ class Config(ConfigBaseModel):
     databases: List[Database] = Field(min_length=1)
     web_search: List[WebSearch] = Field(default_factory=list, max_length=1)
     multi_agents_search: Optional[MultiAgentsSearch] = None
+    mcp: MCP = Field(default_factory=MCP)
     parser: Optional[Parser] = None
 
     @model_validator(mode="after")
@@ -309,6 +314,7 @@ class Settings(BaseSettings):
         values.monitoring = config.monitoring
         values.databases = config.databases
         values.multi_agents_search = config.multi_agents_search
+        values.mcp = config.mcp
         values.parser = config.parser
 
         if values.databases.qdrant:
