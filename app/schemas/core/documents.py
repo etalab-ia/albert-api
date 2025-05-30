@@ -9,6 +9,7 @@ class FileType(str, Enum):
     HTML = "text/html"
     JSON = "application/json"
     MD = "text/markdown"
+    TXT = "text/plain"
 
 
 class JsonFileDocument(BaseModel):

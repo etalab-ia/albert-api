@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import AccessController
 from app.schemas.auth import User
-from app.schemas.core.data import FileType, JsonFile
+from app.schemas.core.documents import FileType, JsonFile
 from app.schemas.files import ChunkerArgs, FileResponse, FilesRequest
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context

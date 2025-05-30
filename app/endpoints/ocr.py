@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pdf2image import convert_from_bytes
 
 from app.helpers import AccessController
-from app.schemas.core.data import FileType
+from app.schemas.core.documents import FileType
 from app.schemas.ocr import OCR, OCRs
 from app.schemas.usage import Usage
 from app.utils.context import global_context

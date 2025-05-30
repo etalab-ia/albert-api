@@ -1,19 +1,25 @@
-from abc import ABC
-from typing import Optional
+from abc import ABC, abstractmethod
+import importlib
+from typing import Optional, Type
 
 from fastapi import UploadFile
 
-from app.schemas.documents import Languages, ParsedDocument, ParsedDocumentOutputFormat
+from app.schemas.core.settings import ParserType
+from app.schemas.parse import Languages, ParsedDocument, ParsedDocumentOutputFormat
 
 
 class BaseParserClient(ABC):
-    SUPPORTED_FORMAT = []
+    SUPPORTED_FORMATS = []
 
-    def __init__(self, api_url: str, api_key: str, timeout: int = 120):
-        self.api_url = api_url
-        self.api_key = api_key
-        self.timeout = timeout
+    @staticmethod
+    def import_module(type: ParserType) -> "Type[BaseParserClient]":
+        """
+        Import the module for the given parser type.
+        """
+        module = importlib.import_module(f"app.clients.parser._{type.value}parserclient")
+        return getattr(module, f"{type.capitalize()}ParserClient")
 
+    @abstractmethod
     def parse(
         self,
         file: UploadFile,

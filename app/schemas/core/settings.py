@@ -45,9 +45,15 @@ class ConfigBaseModel(BaseModel):
         extra = "allow"
 
 
+class ParserArgs(ConfigBaseModel):
+    api_url: str
+    api_key: Optional[str] = None
+    timeout: int = DEFAULT_TIMEOUT
+
+
 class Parser(ConfigBaseModel):
     type: ParserType = ParserType.MARKER
-    args: dict = {}
+    args: ParserArgs
 
 
 class ModelClientArgs(ConfigBaseModel):
@@ -303,7 +309,7 @@ class Settings(BaseSettings):
         values.monitoring = config.monitoring
         values.databases = config.databases
         values.multi_agents_search = config.multi_agents_search
-        values.parser = config.parser[0] if config.parser else None
+        values.parser = config.parser
 
         if values.databases.qdrant:
             assert values.databases.sql, "SQL database is required to use Qdrant features."

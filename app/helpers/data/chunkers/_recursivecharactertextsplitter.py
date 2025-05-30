@@ -3,15 +3,15 @@ from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from app.schemas.chunks import Chunk
-from app.schemas.core.data import ParserOutput
+from app.schemas.parse import ParsedDocument
 
 
-class LangchainRecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
+class RecursiveCharacterTextSplitter(RecursiveCharacterTextSplitter):
     def __init__(self, chunk_min_size: int = 0, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.chunk_min_size = chunk_min_size
 
-    def split(self, document: ParserOutput) -> List[Chunk]:
+    def split(self, document: ParsedDocument) -> List[Chunk]:
         metadata = document.metadata
 
         _chunks = list()

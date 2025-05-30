@@ -11,28 +11,28 @@ from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, selec
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers.data.chunkers import LangchainRecursiveCharacterTextSplitter, NoChunker
+from app.helpers.data.chunkers import NoChunker, RecursiveCharacterTextSplitter
 from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
-from app.schemas.core.data import ParserOutput
+from app.schemas.core.documents import ParserOutput
 from app.schemas.documents import Document
 from app.schemas.files import ChunkerName
+from app.schemas.parse import ParsedDocument
 from app.schemas.search import Search, SearchMethod
 from app.sql.models import Collection as CollectionTable
 from app.sql.models import Document as DocumentTable
 from app.sql.models import User as UserTable
-from app.utils.multiagents import MultiAgents
 from app.utils.exceptions import (
     ChunkingFailedException,
     CollectionNotFoundException,
     DocumentNotFoundException,
-    ParsingDocumentFailedException,
     UnsupportedFileTypeException,
     VectorizationFailedException,
     WebSearchNotAvailableException,
 )
+from app.utils.multiagents import MultiAgents
 from app.utils.variables import ENDPOINT__EMBEDDINGS
 
 from ._websearchmanager import WebSearchManager
@@ -147,7 +147,7 @@ class DocumentManager:
 
         return collections
 
-    async def create_document(self, session: AsyncSession, user_id: int, collection_id: int, file: UploadFile, chunker_name: ChunkerName, chunker_args: dict) -> int:  # fmt: off
+    async def create_document(self, session: AsyncSession, user_id: int, collection_id: int, document:ParsedDocument, chunker_name: ChunkerName, chunker_args: dict) -> int:  # fmt: off
         # check if collection exists
         result = await session.execute(
             statement=select(CollectionTable).where(CollectionTable.id == collection_id).where(CollectionTable.user_id == user_id)
@@ -157,16 +157,6 @@ class DocumentManager:
         except NoResultFound:
             raise CollectionNotFoundException()
 
-        document_name = file.filename.strip()
-        file_extension = document_name.rsplit(".", maxsplit=1)[-1]
-
-        try:
-            document = await self._parse(file=file, file_extension=file_extension)
-        except Exception as e:
-            logger.error(msg=f"Error during file parsing: {e}")
-            logger.debug(msg=traceback.format_exc())
-            raise ParsingDocumentFailedException(detail=f"Parsing document failed: {e}")
-
         try:
             chunks = self._split(document=document, chunker_name=chunker_name, chunker_args=chunker_args)
         except Exception as e:
@@ -174,6 +164,7 @@ class DocumentManager:
             logger.debug(msg=traceback.format_exc())
             raise ChunkingFailedException(detail=f"Chunking failed: {e}")
 
+        document_name = document.metadata.document_name
         result = await session.execute(
             statement=insert(table=DocumentTable).values(name=document_name, collection_id=collection_id).returning(DocumentTable.id)
         )
@@ -183,8 +174,8 @@ class DocumentManager:
         for i, chunk in enumerate(chunks):
             chunk.metadata["collection_id"] = collection.id
             chunk.metadata["document_id"] = document_id
-            chunk.metadata["document_name"] = document_name
             chunk.metadata["document_created_at"] = round(time.time())
+            chunk.metadata.update(document.metadata.model_dump())
         try:
             await self._upsert(chunks=chunks, collection_id=collection_id)
         except Exception as e:
@@ -308,7 +299,7 @@ class DocumentManager:
                         user_id=user_id,
                         collection_id=web_collection_id,
                         file=file,
-                        chunker_name=ChunkerName.LANGCHAIN_RECURSIVE_CHARACTER_TEXT_SPLITTER,
+                        chunker_name=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER,
                         chunker_args={"chunk_overlap": 0, "chunk_min_size": 20, "chunk_size": 1000},
                     )
                 collection_ids.append(web_collection_id)
@@ -379,8 +370,8 @@ class DocumentManager:
         return output
 
     def _split(self, document: ParserOutput, chunker_name: ChunkerName, chunker_args: dict) -> List[Chunk]:
-        if chunker_name == ChunkerName.LANGCHAIN_RECURSIVE_CHARACTER_TEXT_SPLITTER:
-            chunker = LangchainRecursiveCharacterTextSplitter(**chunker_args)
+        if chunker_name == ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER:
+            chunker = RecursiveCharacterTextSplitter(**chunker_args)
         else:  # ChunkerName.NoChunker
             chunker = NoChunker(**chunker_args)
 

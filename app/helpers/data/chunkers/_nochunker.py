@@ -1,6 +1,6 @@
 from typing import List
 from app.schemas.chunks import Chunk
-from app.schemas.core.data import ParserOutput
+from app.schemas.core.documents import ParserOutput
 
 
 class NoChunker:
