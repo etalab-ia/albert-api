@@ -60,7 +60,7 @@ test = [
     "pytest-snapshot==0.9.0",
     "vcrpy>=4.2.0",
     "pytest-xdist==3.6.1",
-    "pytest-asyncio==0.26.0",
+    "pytest-asyncio==1.0.0",
     "respx",
     "responses"
 ]

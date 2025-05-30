@@ -11,27 +11,13 @@ class AgentsManager:
         self.model_registry = model_registry
         self.mcp_bridge = mcp_bridge
 
-    async def get_tools_from_bridge(self):
-        mcp_bridge_tools = await self.mcp_bridge.get_tool_list()
-        all_tools = [section["tools"] for section in mcp_bridge_tools.values()]
-        flat_tools = [tool for tools in all_tools for tool in tools]
-        return flat_tools
-
     async def get_completion(self, body):
-        tools = await self.get_tools_from_bridge()
-        available_tools = [
-            {"type": "function", "function": {"name": tool["name"], "description": tool["description"], "parameters": tool["inputSchema"]}}
-            for tool in tools
-        ]
-        body.tools = available_tools
-        body.tool_choice = "auto"
+        body = await self.set_tools_for_llm_request(body)
         http_llm_response = None
         number_of_iterations = 0
         max_iterations = getattr(body, "max_iterations", 10)
         while number_of_iterations < max_iterations:
-            model = self.model_registry(model=body.model)
-            client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
-            http_llm_response = await client.forward_request(method="POST", json=body.model_dump())
+            http_llm_response = await self.get_llm_http_response(body)
             llm_response = json.loads(http_llm_response.text)
             finish_reason = llm_response["choices"][0]["finish_reason"]
             number_of_iterations = number_of_iterations + 1
@@ -43,7 +29,6 @@ class AgentsManager:
                 tool_args = tool_config["arguments"]
 
                 tool_call_result = await self.mcp_bridge.call_tool(tool_name, tool_args)
-
                 body.messages.append({"role": "user", "content": tool_call_result["content"][0]["text"]})
         last_llm_response = http_llm_response.json()
         last_llm_response["choices"][0]["finish_reason"] = "max_iterations"
@@ -54,3 +39,40 @@ class AgentsManager:
             request=http_llm_response.request,
         )
         return llm_response_with_new_finish_reason
+
+    async def get_llm_http_response(self, body):
+        model = self.model_registry(model=body.model)
+        client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+        http_llm_response = await client.forward_request(method="POST", json=body.model_dump())
+        return http_llm_response
+
+    async def set_tools_for_llm_request(self, body):
+        if hasattr(body, "agents") and body.agents is not None:
+            tools = await self.get_tools_from_bridge()
+            available_tools = [
+                {"type": "function", "function": {"name": tool["name"], "description": tool["description"], "parameters": tool["inputSchema"]}}
+                for tool in tools
+            ]
+            if "all" in body.agents:
+                body.tools = available_tools
+            else:
+                available_tool_names = [tool["function"]["name"] for tool in available_tools]
+                selected_available_tool_names = list(set(body.agents) & set(available_tool_names))
+                used_tools = [
+                    available_tool
+                    for available_tool in available_tools
+                    if available_tool.get("function").get("name") in selected_available_tool_names
+                ]
+                body.tools = used_tools
+            body.tool_choice = getattr(body, "agents_choice", "auto")
+            if hasattr(body, "agents"):
+                delattr(body, "agents")
+            if hasattr(body, "agents_choice"):
+                delattr(body, "agents_choice")
+        return body
+
+    async def get_tools_from_bridge(self):
+        mcp_bridge_tools = await self.mcp_bridge.get_tool_list()
+        all_tools = [section["tools"] for section in mcp_bridge_tools.values()]
+        flat_tools = [tool for tools in all_tools for tool in tools]
+        return flat_tools

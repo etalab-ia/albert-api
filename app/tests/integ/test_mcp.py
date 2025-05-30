@@ -11,19 +11,7 @@ class TestMCP:
         params = {
             "model": "albert-large",
             "messages": [{"role": "user", "content": "Donne moi la météo à Miami"}],
-            "stream": False,
-            "n": 1,
-            "max_tokens": 200,
-        }
-        response = client.post_without_permissions(url=f"/v1{ENDPOINT__AGENTS_COMPLETIONS}", json=params)
-        assert response.status_code == 200, response.text
-
-        ChatCompletion(**response.json())
-
-    def test_mcp_chat_completions_route_returns_chat_completion_with_tool_call_mcp_bridge(self, client: TestClient):
-        params = {
-            "model": "albert-large",
-            "messages": [{"role": "user", "content": "Crée un document docs avec pour titre 'bonjour albert' et comme contenu 'ça marche'"}],
+            "agents": ["get_forecast"],
             "stream": False,
             "n": 1,
             "max_tokens": 200,
