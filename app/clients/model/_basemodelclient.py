@@ -98,9 +98,9 @@ class BaseModelClient(ABC):
                 detail.total_tokens = detail.prompt_tokens + detail.completion_tokens
 
                 usage.details.append(detail)
-                usage.prompt_tokens += detail.prompt_tokens
-                usage.completion_tokens += detail.completion_tokens
-                usage.total_tokens += detail.total_tokens
+                usage.prompt_tokens = detail.prompt_tokens
+                usage.completion_tokens = detail.completion_tokens
+                usage.total_tokens = detail.total_tokens
 
             except Exception as e:
                 logger.debug(traceback.format_exc())
