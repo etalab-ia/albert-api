@@ -66,7 +66,7 @@ class TestMCPLoop:
 
     class TestGetCompletion:
         @pytest.mark.asyncio
-        async def test_get_completion_loop_does_excess_10_rounds_per_default(self, mcp_client, mock_mcp_bridge, mock_llm_client):
+        async def test_get_completion_loop_does_not_exceed_10_rounds_per_default(self, mcp_client, mock_mcp_bridge, mock_llm_client):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = {}
             raw_response_from_llm = {"choices": [{"finish_reason": "not stop nor tools_calls", "message": {"content": "message from llm"}}]}

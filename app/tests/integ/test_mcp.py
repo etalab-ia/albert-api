@@ -4,7 +4,7 @@ import httpx
 from fastapi.testclient import TestClient
 
 from app.schemas.chat import ChatCompletion
-from app.tests.unit.fixtures import generate_mocked_mcp_bridge_tools, generate_mocked_llm_response
+from app.tests.integ.fixtures.fixtures import generate_mocked_mcp_bridge_tools, generate_mocked_llm_response
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__AGENTS_TOOLS, ENDPOINT__AGENTS_COMPLETIONS
 

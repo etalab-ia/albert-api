@@ -1,0 +1,12 @@
+{
+    "mcp_servers": {
+        "weather": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "/mcp_bridge/weather-server-python",
+                "run",
+                "weather.py"
+            ]
+        }
+}}

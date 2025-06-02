@@ -51,6 +51,23 @@ services:
       retries: 5
       start_period: 60s
 
+  mcp-bridge:
+    image: ghcr.io/etalab-ia/albert-api-mcp-bridge/albert-api-mcp-bridge:latest
+    develop:
+      watch:
+        - path: mcp_bridge
+          action: rebuild
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "9876:8000"
+    environment:
+      - MCP_BRIDGE__CONFIG__FILE=config.json
+    volumes:
+      - ./mcp/config.json:/mcp_bridge/config.json
+      - ./mcp/weather-server-example:/mcp_bridge/weather-server-python
+    restart: unless-stopped
+
 volumes:
   qdrant:
   redis:
