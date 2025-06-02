@@ -20,22 +20,32 @@ with st.sidebar:
 
 st.metric(label="User ID", value=st.session_state["user"].name, border=True)
 
-st.metric(
-    label="Account expiration",
-    value=pd.to_datetime(st.session_state["user"].user["expires_at"], unit="s").strftime("%d %b %Y")
-    if st.session_state["user"].user["expires_at"]
-    else None,
-    border=False,
-)
+col1, col2 = st.columns(spec=2)
+with col1:
+    st.metric(
+        label="Account expiration",
+        value=pd.to_datetime(st.session_state["user"].user["expires_at"], unit="s").strftime("%d %b %Y")
+        if st.session_state["user"].user["expires_at"]
+        else None,
+        border=False,
+    )
+with col2:
+    st.metric(
+        label="Budget",
+        value=round(st.session_state["user"].user["budget"], 2) if st.session_state["user"].user["budget"] else None,
+        border=False,
+    )
+
 with st.expander(label="Change password", icon=":material/key:"):
-    current_password = st.text_input(label="Current password", type="password", key="current_password")
+    current_password = st.text_input(label="Current password", type="password", key="current_password", icon=":material/lock:")
     new_password = st.text_input(
         label="New password",
         type="password",
         key="new_password",
         help="New password must be at least 8 characters long and contain at least one uppercase letter, one special character, and one digit.",
+        icon=":material/lock:",
     )
-    confirm_password = st.text_input(label="Confirm password", type="password", key="confirm_password")
+    confirm_password = st.text_input(label="Confirm password", type="password", key="confirm_password", icon=":material/lock:")
 
     submit_change_password = st.button(
         label="Change",
@@ -78,7 +88,7 @@ pagination(key=key, data=tokens, per_page=per_page)
 col1, col2 = st.columns(spec=2)
 with col1:
     with st.expander(label="Create an API key", icon=":material/add_circle:"):
-        token_name = st.text_input(label="API key name", placeholder="Enter a name for your API key", help="Please refresh data after creating an API key.")  # fmt: off
+        token_name = st.text_input(label="API key name", placeholder="Enter a name for your API key", help="Please refresh data after creating an API key.", icon=":material/key:")  # fmt: off
         max_value = dt.datetime.now() + dt.timedelta(days=settings.auth.max_token_expiration_days) if settings.auth.max_token_expiration_days else None  # fmt: off
         expires_at = st.date_input(label="Expires at",  min_value=dt.datetime.now(), max_value=max_value, value=max_value, help="Expiration date of the API key.")  # fmt: off
         if st.button(label="Create", disabled=not token_name or st.session_state["user"].name == settings.auth.master_username):

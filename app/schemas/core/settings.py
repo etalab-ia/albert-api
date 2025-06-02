@@ -11,8 +11,8 @@ import yaml
 
 from app.schemas.core.auth import LimitingStrategy
 from app.schemas.core.models import ModelClientType, RoutingStrategy, ModelClientCarbonImpactParams
-from app.schemas.models import ModelType
-from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS, ROUTER__MONITORING, ROUTER__FILES
+from app.schemas.models import ModelCosts, ModelType
+from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
 
 
 class LimitsTokenizer(str, Enum):
@@ -54,6 +54,7 @@ class ModelClientArgs(ConfigBaseModel):
 class ModelClient(ConfigBaseModel):
     model: str
     type: ModelClientType
+    costs: ModelCosts = Field(default_factory=ModelCosts)
     params: ModelClientCarbonImpactParams = Field(default_factory=ModelClientCarbonImpactParams)
     args: ModelClientArgs
 
@@ -135,20 +136,31 @@ class Database(ConfigBaseModel):
         return values
 
 
-class Usages(ConfigBaseModel):
-    routers: List[Literal[*ROUTERS, "all"]] = []
-    tokenizer: LimitsTokenizer = LimitsTokenizer.TIKTOKEN_O200K_BASE
+class MonitoringSentryArgs(ConfigBaseModel):
+    dsn: str = Field(description="If Sentry DSN is set, we initialize Sentry SDK. This is useful for error tracking and performance monitoring. See https://docs.sentry.io/platforms/python/guides/fastapi/ for more information on how to configure Sentry with FastAPI.")  # fmt: off
+    send_default_pii: bool = Field(default=True, description="See https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info.")  # fmt: off
+    traces_sample_rate: float = Field(default=1.0, description="Set traces_sample_rate to 1.0 to capture 100% of transactions for tracing.")  # fmt: off
+    profile_session_sample_rate: float = Field(default=1.0, description="Set profile_session_sample_rate to 1.0 to profile 100% of profile sessions.")  # fmt: off
+    profile_lifecycle: str = Field(default="trace", description="Set profile_lifecycle to 'trace' to automatically run the profiler on when there is an active transaction.")  # fmt: off
 
-    @field_validator("routers", mode="after")
-    def validate_routers(cls, routers):
-        if "all" in routers:
-            assert len(routers) == 1, "`all` can only be used alone."
-            routers = [router for router in ROUTERS]
 
-        # exclude monitoring and files
-        routers = [router for router in routers if router not in [ROUTER__MONITORING, ROUTER__FILES]]
+class MonitoringPrometheus(ConfigBaseModel):
+    enabled: bool = True
 
-        return routers
+
+class MonitoringPostgres(ConfigBaseModel):
+    enabled: bool = True
+
+
+class MonitoringSentry(ConfigBaseModel):
+    enabled: bool = True
+    args: MonitoringSentryArgs
+
+
+class Monitoring(ConfigBaseModel):
+    prometheus: Optional[MonitoringPrometheus] = None
+    postgres: Optional[MonitoringPostgres] = None
+    sentry: Optional[MonitoringSentry] = None
 
 
 class Auth(ConfigBaseModel):
@@ -173,16 +185,16 @@ class General(ConfigBaseModel):
     openapi_url: str = "/openapi.json"
     docs_url: str = "/docs"
     redoc_url: str = "/redoc"
-    sentry_dsn: Optional[str] = None
 
     # Others
     disabled_routers: List[Literal[*ROUTERS]] = []
+    tokenizer: LimitsTokenizer = LimitsTokenizer.TIKTOKEN_O200K_BASE
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 
 class Config(ConfigBaseModel):
     general: General = Field(default_factory=General)
-    usages: Usages = Field(default_factory=Usages)
+    monitoring: Monitoring = Field(default_factory=Monitoring)
     auth: Auth = Field(default_factory=Auth)
     models: List[Model] = Field(min_length=1)
     databases: List[Database] = Field(min_length=1)
@@ -222,19 +234,6 @@ class Config(ConfigBaseModel):
 
 
 class Settings(BaseSettings):
-    # legacy collections
-    legacy_collections: Optional[str] = None
-
-    @field_validator("legacy_collections", mode="after")
-    def open_legacy_collections(cls, legacy_collections):
-        if legacy_collections:
-            logging.warning(f"Loading legacy collections from {legacy_collections}.")
-            with open(file=legacy_collections, mode="r") as file:
-                file_content = file.read()
-                file.close()
-            legacy_collections = yaml.safe_load(file_content)
-        return legacy_collections
-
     # config
     config_file: str = "config.yml"
 
@@ -263,9 +262,9 @@ class Settings(BaseSettings):
 
         values.general = config.general
         values.auth = config.auth
-        values.usages = config.usages
         values.web_search = config.web_search[0] if config.web_search else None
         values.models = config.models
+        values.monitoring = config.monitoring
         values.databases = config.databases
         values.multi_agents_search = config.multi_agents_search
 

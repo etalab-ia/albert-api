@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -14,7 +14,7 @@ class FileType(str, Enum):
 class JsonFileDocument(BaseModel):
     title: Optional[str] = None
     text: str
-    metadata: Dict[str, Union[str, int, float, bool]] = {}
+    metadata: Dict[str, Any] = {}
 
 
 class JsonFile(BaseModel):

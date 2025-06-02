@@ -1,19 +1,23 @@
 from typing import List
 
+from pydantic import Field
+
 from app.schemas import BaseModel
 
 #TODO : Audrey add impact carbon
 
+class BaseUsage(BaseModel):
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    cost: float = 0.0
+
+
 class Detail(BaseModel):
     id: str
     model: str
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
+    usage: BaseUsage = Field(default_factory=BaseUsage)
 
 
-class Usage(BaseModel):
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
+class Usage(BaseUsage):
     details: List[Detail] = []

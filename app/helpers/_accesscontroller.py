@@ -12,6 +12,7 @@ from app.schemas.core.auth import UserModelLimits
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import (
+    InsufficientBudgetException,
     InsufficientPermissionException,
     InvalidAPIKeyException,
     InvalidAuthenticationSchemeException,
@@ -201,11 +202,28 @@ class AccessController:
             remaining = await global_context.limiter.remaining(user_id=user.id, model=model, type=LimitType.TPD, value=limits[model].tpd)
             raise RateLimitExceeded(detail=f"{str(limits[model].tpd)} input tokens for {model} per day exceeded (remaining: {remaining}).")
 
+    async def _check_budget(self, user: User, model: Optional[str] = None) -> None:
+        if not model:
+            return
+
+        model = global_context.models.aliases.get(model, model)
+
+        if model not in global_context.models.models:
+            return
+
+        model = global_context.models(model=model)
+        if model.costs.prompt_tokens == 0 and model.costs.completion_tokens == 0:  # free model
+            return
+
+        if user.budget == 0:
+            raise InsufficientBudgetException(detail="Insufficient budget.")
+
     async def _check_audio_transcription_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
         form = {key: value for key, value in form.items()} if form else {}
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=form.get("model"))
+        await self._check_budget(user=user, model=form.get("model"))
 
     async def _check_chat_completions_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
@@ -218,6 +236,8 @@ class AccessController:
 
         prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__CHAT_COMPLETIONS, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
+
+        await self._check_budget(user=user, model=body.get("model"))
 
     async def _check_collections_patch(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
@@ -242,14 +262,23 @@ class AccessController:
         prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__EMBEDDINGS, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
 
+        await self._check_budget(user=user, model=body.get("model"))
+
     async def _check_files_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
+
+        await self._check_budget(user=user, model=global_context.documents.qdrant.model.id)
 
     async def _check_ocr_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
         form = {key: value for key, value in form.items()} if form else {}
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=form.get("model"))
+
+        prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__OCR, body=form)
+        await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=form.get("model"))
+
+        await self._check_budget(user=user, model=form.get("model"))
 
     async def _check_rerank_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
@@ -259,6 +288,8 @@ class AccessController:
 
         prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__RERANK, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
+
+        await self._check_budget(user=user, model=body.get("model"))
 
     async def _check_search_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
@@ -275,6 +306,8 @@ class AccessController:
             prompt_tokens=prompt_tokens,
             model=global_context.documents.qdrant.model.id,
         )
+
+        await self._check_budget(user=user, model=global_context.documents.qdrant.model.id)
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await request.body()
