@@ -2,12 +2,12 @@ from io import BytesIO
 import json
 from typing import List, Optional
 
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException
 import httpx
 import pymupdf
 
-from app.schemas.core.documents import FileType
-from app.schemas.parse import Languages, ParsedDocument, ParsedDocumentMetadata, ParsedDocumentOutputFormat, ParsedDocumentPage
+from app.schemas.core.documents import FileType, ParserParams
+from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage
 
 from ._baseparserclient import BaseParserClient
 
@@ -47,20 +47,13 @@ class MarkerParserClient(BaseParserClient):
 
         return pages
 
-    async def parse(
-        self,
-        file: UploadFile,
-        output_format: Optional[ParsedDocumentOutputFormat] = None,
-        force_ocr: bool = False,
-        languages: Optional[Languages] = None,
-        page_range: Optional[str] = None,
-        paginate_output: bool = False,
-        use_llm: bool = False,
-    ) -> ParsedDocument:
-        if file.content_type not in self.SUPPORTED_FORMATS:
+    async def parse(self, **params: ParserParams) -> ParsedDocument:
+        params = ParserParams(**params)
+
+        if params.file.content_type not in self.SUPPORTED_FORMATS:
             raise HTTPException(status_code=400, detail="File must be a PDF.")
 
-        file_content = await file.read()
+        file_content = await params.file.read()
 
         try:
             # Correct way to open PDF from bytes with PyMuPDF
@@ -70,23 +63,28 @@ class MarkerParserClient(BaseParserClient):
             # Handle corrupted or invalid PDF files
             raise HTTPException(status_code=400, detail=f"Invalid PDF file: {str(e)}")
 
-        contents = []
-        data = {
-            "output_format": output_format.value,
-            "force_ocr": force_ocr,
-            "languages": languages.value,
-            "paginate_output": paginate_output,
-            "use_llm": use_llm,
+        data = []
+        payload = {
+            "output_format": params.output_format.value,
+            "force_ocr": params.force_ocr,
+            "languages": params.languages.value,
+            "paginate_output": params.paginate_output,
+            "use_llm": params.use_llm,
         }
-        pages = self.convert_page_range(page_range=page_range, page_count=page_count)
-
+        pages = self.convert_page_range(page_range=params.page_range, page_count=page_count)
         async with httpx.AsyncClient() as client:
             for i in pages:
                 # Create a fresh BytesIO object for each request to avoid stream consumption issues
-                files = {"file": (file.filename, BytesIO(file_content), "application/pdf")}
-                data["page_range"] = str(i)
+                files = {"file": (params.file.filename, BytesIO(file_content), "application/pdf")}
+                payload["page_range"] = str(i)
 
-                response = await client.post(url=f"{self.api_url}/marker/upload", files=files, data=data, headers=self.headers, timeout=self.timeout)
+                response = await client.post(
+                    url=f"{self.api_url}/marker/upload",
+                    files=files,
+                    data=payload,
+                    headers=self.headers,
+                    timeout=self.timeout,
+                )
                 if response.status_code != 200:
                     raise HTTPException(status_code=response.status_code, detail=json.loads(response.text).get("detail", "Parsing failed."))
 
@@ -94,12 +92,11 @@ class MarkerParserClient(BaseParserClient):
                 if not result.get("success", False):
                     raise HTTPException(status_code=500, detail=result.get("error", "Parsing failed."))
 
-                result["metadata"]["page"] = i + 1
-                contents.append(ParsedDocumentPage(content=result["output"], images=result["images"], metadata=result["metadata"]))
+                metadata = ParsedDocumentMetadata(**result["metadata"], page=i)
+                data.append(ParsedDocumentPage(content=result["output"], images=result["images"], metadata=metadata))
 
         # Close the PDF document to free memory
         pdf.close()
-
-        document = ParsedDocument(contents=contents, format=output_format, metadata=ParsedDocumentMetadata(document_name=file.filename))
+        document = ParsedDocument(data=data)
 
         return document

@@ -15,7 +15,7 @@ from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
 from app.schemas.documents import ChunkerName, Document
-from app.schemas.parse import ParsedDocument
+from app.schemas.parse import Languages, ParsedDocument, ParsedDocumentOutputFormat
 from app.schemas.search import Search, SearchMethod
 from app.sql.models import Collection as CollectionTable
 from app.sql.models import Document as DocumentTable
@@ -312,14 +312,33 @@ class DocumentManager:
                     visibility=CollectionVisibility.PRIVATE,
                 )
                 for file in web_results:
-                    await self.create_document(
-                        session=session,
-                        user_id=user_id,
-                        collection_id=web_collection_id,
-                        file=file,
-                        chunker_name=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER,
-                        chunker_args={"chunk_overlap": 0, "chunk_min_size": 20, "chunk_size": 1000},
-                    )
+                    # @TODO: add all web search paramters in endpoint schema
+                    try:
+                        document = await self.parser.parse_file(
+                            file=file,
+                            output_format=ParsedDocumentOutputFormat.MARKDOWN.value,
+                            force_ocr=False,
+                            languages=Languages.EN.value,
+                            page_range="",
+                            paginate_output=False,
+                            use_llm=False,
+                        )
+                        await self.create_document(
+                            session=session,
+                            user_id=user_id,
+                            collection_id=web_collection_id,
+                            document=document,
+                            chunker_name=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER,
+                            chunk_overlap=0,
+                            chunk_min_size=20,
+                            chunk_size=2048,
+                            length_function=len,
+                            is_separator_regex=False,
+                            separators=["\n\n", "\n", ". ", " "],
+                        )
+                    except Exception as e:
+                        logger.exception(msg=f"Error during web search document creation: {e}")
+
                 collection_ids.append(web_collection_id)
 
         # check if collections exist
@@ -392,7 +411,7 @@ class DocumentManager:
         else:  # ChunkerName.NoChunker
             chunker = NoChunker(chunk_min_size=chunk_min_size, metadata=metadata)
 
-        chunks = chunker.split(document=document)
+        chunks = chunker.split_document(document=document)
 
         return chunks
 

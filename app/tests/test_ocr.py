@@ -3,7 +3,7 @@ import os
 from fastapi.testclient import TestClient
 import pytest
 
-from app.schemas.ocr import OCRs
+from app.schemas.parse import ParsedDocument
 from app.schemas.models import ModelType
 from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__OCR
 
@@ -33,7 +33,7 @@ class TestOCR:
             response = client.post_without_permissions(f"/v1{ENDPOINT__OCR}", files=files, data={"model": model_id, "dpi": 150, "prompt": "test"})
 
         assert response.status_code == 200, response.text
-        OCRs(**response.json())  # validate format
+        ParsedDocument(**response.json())  # validate format
 
     def test_ocr_invalid_file_type(self, client: TestClient, model_id, snapshot):
         """Test OCR with invalid file type (not PDF)."""

@@ -17,13 +17,15 @@ class ChunkerArgs(BaseModel):
 
 
 class Chunker(BaseModel):
-    name: Literal[ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER, ChunkerName.NO_CHUNKER, "LangchainRecursiveCharacterTextSplitter"] = Field(default=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER, description="The name of the chunker to use for the file upload.")  # fmt: off
+    name: Literal[ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER, ChunkerName.NO_SPLITTER, "LangchainRecursiveCharacterTextSplitter", "NoChunker"] = Field(default=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER, description="The name of the chunker to use for the file upload.")  # fmt: off
     args: ChunkerArgs = Field(default_factory=ChunkerArgs, description="The arguments to use for the chunker to use for the file upload.")  # fmt: off
 
     @field_validator("name")
     def validate_name(cls, name):
         if name == "LangchainRecursiveCharacterTextSplitter":
             name = ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER
+        elif name == "NoChunker":
+            name = ChunkerName.NO_SPLITTER
         return name
 
 

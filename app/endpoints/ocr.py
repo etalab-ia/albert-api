@@ -1,13 +1,13 @@
 import base64
-from io import BytesIO
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, Security, UploadFile
+from fastapi import APIRouter, Request, Security, UploadFile
 from fastapi.responses import JSONResponse
-from pdf2image import convert_from_bytes
+import pymupdf
 
 from app.helpers import AccessController
 from app.schemas.core.documents import FileType
-from app.schemas.ocr import OCR, OCRs
+from app.schemas.ocr import DPIForm, ModelForm, PromptForm
+from app.schemas.parse import FileForm, ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage
 from app.schemas.usage import Usage
 from app.utils.context import global_context
 from app.utils.exceptions import FileSizeLimitExceededException
@@ -15,27 +15,14 @@ from app.utils.variables import ENDPOINT__OCR
 
 router = APIRouter()
 
-DEFAULT_PROMPT = """Tu es un système d'OCR très précis. Extrait tout le texte visible de cette image. 
-Ne décris pas l'image, n'ajoute pas de commentaires. Réponds uniquement avec le texte brut extrait, 
-en préservant les paragraphes, la mise en forme et la structure du document. 
-Si aucun texte n'est visible, réponds avec 'Aucun texte détecté'. 
-Je veux une sortie au format markdown. Tu dois respecter le format de sortie pour bien conserver les tableaux."""
 
-
-@router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=OCRs)
-async def ocr(
-    request: Request,
-    file: UploadFile = File(...),
-    model: str = Form(default=...),
-    dpi: int = Form(default=150),
-    prompt: str = Form(default=DEFAULT_PROMPT),
-) -> JSONResponse:
+@router.post(path=ENDPOINT__OCR, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=ParsedDocument)
+async def ocr(request: Request, file: UploadFile = FileForm, model: str = ModelForm, dpi: int = DPIForm, prompt: str = PromptForm) -> JSONResponse:
     """
     Extracts text from PDF files using OCR.
     """
-    # check if file is a pdf
-    if file.content_type != FileType.PDF:
-        raise HTTPException(status_code=400, detail="File must be a PDF")
+    # check if file is a pdf (raises UnsupportedFileTypeException if not a PDF)
+    global_context.parser._detect_file_type(file=file, type=FileType.PDF)
 
     # check file size
     if file.size > FileSizeLimitExceededException.MAX_CONTENT_SIZE:
@@ -45,15 +32,13 @@ async def ocr(
     model = global_context.models(model=model)
     client = model.get_client(endpoint=ENDPOINT__OCR)
 
-    # convert pages into images
-    images = convert_from_bytes(pdf_file=file.file.read(), dpi=dpi)
-    content = OCRs(data=[], usage=Usage())
+    file_content = await file.read()  # open document
+    pdf = pymupdf.open(stream=file_content, filetype="pdf")
+    document = ParsedDocument(data=[], usage=Usage())
 
-    for i, image in enumerate(images):
-        # convert image to bytes
-        img_byte_arr = BytesIO()
-        image.save(img_byte_arr, format="PNG")
-        img_byte_arr = img_byte_arr.getvalue()
+    for i, page in enumerate(pdf):  # iterate through the pages
+        image = page.get_pixmap(dpi=dpi)  # render page to an image
+        img_byte_arr = image.tobytes("png")  # convert pixmap to PNG bytes
 
         # forward request
         payload = {
@@ -75,7 +60,15 @@ async def ocr(
         text = response.get("choices", [{}])[0].get("message", {}).get("content", "")
 
         # format response
-        content.data.append(OCR(page=i + 1, text=text))
-        content.usage = Usage(**response.get("usage", {}))
+        document.data.append(
+            ParsedDocumentPage(
+                content=text,
+                images={},
+                metadata=ParsedDocumentMetadata(page=i, document_name=file.filename, **pdf.metadata),
+            )
+        )
+        document.usage = Usage(**response.get("usage", {}))
 
-    return JSONResponse(content=content.model_dump(), status_code=200)
+    pdf.close()
+
+    return JSONResponse(content=document.model_dump(), status_code=200)

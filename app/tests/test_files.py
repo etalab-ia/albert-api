@@ -76,12 +76,12 @@ class TestFiles:
 
         assert response.status_code == 201, response.text
 
-    def test_upload_mardown_file(self, client: TestClient, setup):
+    def test_upload_markdown_file(self, client: TestClient, setup):
         PRIVATE_COLLECTION_ID, _ = setup
 
         file_path = "app/tests/assets/markdown.md"
         with open(file_path, "rb") as file:
-            files = {"file": (os.path.basename(file_path), file, "text/mardown")}
+            files = {"file": (os.path.basename(file_path), file, "text/markdown")}
             data = {"request": '{"collection": "%s"}' % PRIVATE_COLLECTION_ID}
             response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
             file.close()

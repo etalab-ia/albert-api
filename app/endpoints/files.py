@@ -1,13 +1,15 @@
 from io import BytesIO
 import json
+from pathlib import Path
 
 from fastapi import APIRouter, Body, Depends, File, Security, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.datastructures import Headers
 
 from app.helpers import AccessController
-from app.schemas.core.documents import FileType, JsonFile
+from app.schemas.core.documents import JsonFile
 from app.schemas.files import ChunkerArgs, FileResponse, FilesRequest
 from app.schemas.parse import Languages, ParsedDocumentOutputFormat
 from app.sql.session import get_db as get_session
@@ -54,7 +56,9 @@ async def upload_file(
 
     chunker_args["length_function"] = len if chunker_args["length_function"] == "len" else chunker_args["length_function"]
 
-    if file.content_type == FileType.JSON:
+    filename = file.filename
+    extension = Path(filename).suffix.lower()
+    if extension == ".json" and file.content_type in ["application/json", "application/octet-stream"]:
         try:
             file = JsonFile(documents=json.loads(file.file.read())).documents
         except ValidationError as e:
@@ -62,13 +66,15 @@ async def upload_file(
             raise InvalidJSONFileFormatException(detail=detail)
 
         files = list()
-        filename = file.filename
+
         for document in file:
             document_text = document.model_dump()
             text = document_text.get("text", "")
             metadata = document_text.get("metadata", {})
-            name = document_text.get("title", filename) if document_text.get("title") else filename
-            file = UploadFile(filename=f"{name}.json", file=BytesIO(text.encode("utf-8")), content_type=FileType.TXT.value)
+            name = f"{document_text["title"]}.json" if document_text.get("title") else f"{filename}.json"
+
+            # Convert json into txt file
+            file = UploadFile(filename=name, file=BytesIO(text.encode("utf-8")), headers=Headers({"content-type": "text/txt"}))
             files.append((file, metadata))
     else:
         files = [(file, None)]
