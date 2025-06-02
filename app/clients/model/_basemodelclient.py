@@ -69,7 +69,7 @@ class BaseModelClient(ABC):
         module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
         return getattr(module, f"{type.capitalize()}ModelClient")
 
-    def _get_usage(self, json: dict, data: dict, stream: bool) -> Optional[Usage]:
+    def _get_usage(self, json: dict, data: dict, stream: bool, update=False) -> Optional[Usage]:
         """
         Get usage data from request and response.
 
@@ -87,6 +87,8 @@ class BaseModelClient(ABC):
         if self.endpoint in global_context.tokenizer.USAGE_COMPLETION_ENDPOINTS:
             try:
                 usage = request_context.get().usage
+                if not update:
+                    return usage
 
                 detail_id = data[0].get("id", generate_request_id()) if stream else data.get("id", generate_request_id())
                 detail = Detail(id=detail_id, model=self.model)
@@ -98,9 +100,9 @@ class BaseModelClient(ABC):
                 detail.total_tokens = detail.prompt_tokens + detail.completion_tokens
 
                 usage.details.append(detail)
-                usage.prompt_tokens = detail.prompt_tokens
-                usage.completion_tokens = detail.completion_tokens
-                usage.total_tokens = detail.total_tokens
+                usage.prompt_tokens += detail.prompt_tokens
+                usage.completion_tokens += detail.completion_tokens
+                usage.total_tokens += detail.total_tokens
 
             except Exception as e:
                 logger.debug(traceback.format_exc())
@@ -112,7 +114,7 @@ class BaseModelClient(ABC):
         """
         Get additional data from request and response.
         """
-        usage = self._get_usage(json=json, data=data, stream=stream)
+        usage = self._get_usage(json=json, data=data, stream=stream, update=True)
         request_id = usage.details[-1].id if usage and usage.details else generate_request_id()
         additional_data = {"model": self.model, "id": request_id}
 
