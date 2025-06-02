@@ -110,7 +110,7 @@ class ParserManager:
         if file_type not in self.SUPPORTED_FORMATS:
             raise UnsupportedFileTypeException(f"Type de fichier {file_type} non supporté")
 
-    async def parse(self, **params) -> ParsedDocument:
+    async def parse_file(self, **params) -> ParsedDocument:
         params = ParserParams(**params)
         
         try:
