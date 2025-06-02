@@ -97,10 +97,6 @@ def create_app(*args, **kwargs) -> FastAPI:
         add_hooks(router=collections.router)
         app.include_router(router=collections.router, tags=[ROUTER__COLLECTIONS.title()], prefix="/v1")
 
-    if ROUTER__COMPLETIONS not in settings.general.disabled_routers:
-        add_hooks(router=completions.router)
-        app.include_router(router=completions.router, tags=[ROUTER__COMPLETIONS.title()], prefix="/v1")
-
     if ROUTER__DOCUMENTS not in settings.general.disabled_routers:
         add_hooks(router=documents.router)
         app.include_router(router=documents.router, tags=[ROUTER__DOCUMENTS.title()], prefix="/v1")
@@ -108,10 +104,6 @@ def create_app(*args, **kwargs) -> FastAPI:
     if ROUTER__EMBEDDINGS not in settings.general.disabled_routers:
         add_hooks(router=embeddings.router)
         app.include_router(router=embeddings.router, tags=[ROUTER__EMBEDDINGS.title()], prefix="/v1")
-
-    if ROUTER__FILES not in settings.general.disabled_routers:
-        # hooks does not work with files endpoint (request is overwritten by the file upload)
-        app.include_router(router=files.router, tags=[ROUTER__FILES.title()], prefix="/v1")
 
     if ROUTER__MODELS not in settings.general.disabled_routers:
         add_hooks(router=models.router)
@@ -141,6 +133,15 @@ def create_app(*args, **kwargs) -> FastAPI:
     if ROUTER__SEARCH not in settings.general.disabled_routers:
         add_hooks(router=search.router)
         app.include_router(router=search.router, tags=[ROUTER__SEARCH.title()], prefix="/v1")
+
+    # DEPRECATED LEGACY ENDPOINTS
+    if ROUTER__COMPLETIONS not in settings.general.disabled_routers:
+        add_hooks(router=completions.router)
+        app.include_router(router=completions.router, tags=["Legacy"], prefix="/v1")
+
+    if ROUTER__FILES not in settings.general.disabled_routers:
+        # hooks does not work with files endpoint (request is overwritten by the file upload)
+        app.include_router(router=files.router, tags=["Legacy"], prefix="/v1")
 
     return app
 

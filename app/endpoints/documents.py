@@ -34,7 +34,7 @@ from app.schemas.parse import (
 )
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
-from app.utils.exceptions import CollectionNotFoundException, DocumentNotFoundException
+from app.utils.exceptions import CollectionNotFoundException, DocumentNotFoundException, FileSizeLimitExceededException
 from app.utils.variables import ENDPOINT__DOCUMENTS
 
 router = APIRouter()
@@ -62,11 +62,19 @@ async def create_document(
     metadata: str = MetadataForm,
 ) -> JSONResponse:
     """
-    Create a document.
+    Parse a file and create a document.
     """
+    if not global_context.documents:  # no vector store available
+        raise CollectionNotFoundException()
+
+    file_size = len(file.file.read())
+    if file_size > FileSizeLimitExceededException.MAX_CONTENT_SIZE:
+        raise FileSizeLimitExceededException()
+    file.file.seek(0)  # reset file pointer to the beginning of the file
+
     length_function = len if length_function == "len" else length_function
 
-    document = await global_context.parser.parse(
+    document = await global_context.parser.parse_file(
         file=file,
         collection=collection,
         paginate_output=paginate_output,

@@ -14,7 +14,6 @@ from app.helpers.data.chunkers import NoChunker, RecursiveCharacterTextSplitter
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
-from app.schemas.core.documents import ParserOutput
 from app.schemas.documents import ChunkerName, Document
 from app.schemas.parse import ParsedDocument
 from app.schemas.search import Search, SearchMethod
@@ -370,7 +369,7 @@ class DocumentManager:
 
     def _split(
         self,
-        document: ParserOutput,
+        document: ParsedDocument,
         chunker_name: ChunkerName,
         chunk_size: int,
         chunk_overlap: int,

@@ -26,7 +26,7 @@ class ParserManager:
     def __init__(self, parser: Optional[ParserClient] = None, *args, **kwargs):
         self.parser_client = parser
 
-    async def parse(self, **params: ParserParams) -> ParsedDocument:
+    async def parse_file(self, **params: ParserParams) -> ParsedDocument:
         params = ParserParams(**params)
 
         if params.file.content_type == FileType.PDF:
@@ -58,9 +58,7 @@ class ParserManager:
                 pages.append(ParsedDocumentPage(content=text, images={}, metadata={"page": page_num + 1, **pdf.metadata}))
 
             document = ParsedDocument(
-                format=ParsedDocumentOutputFormat.MARKDOWN,  
-                contents=pages, 
-                metadata=ParsedDocumentMetadata(document_name=params.file.filename)
+                format=ParsedDocumentOutputFormat.MARKDOWN, contents=pages, metadata=ParsedDocumentMetadata(document_name=params.file.filename)
             )
         return document
 
@@ -75,7 +73,7 @@ class ParserManager:
 
                 raise HTTPException(status_code=500, detail=str(e))
 
-        document = params.file.read()
+        document = await params.file.read()
         document = ParsedDocument(
             format=params.output_format,
             contents=[ParsedDocumentPage(content=document, images={}, metadata={})],
@@ -90,7 +88,7 @@ class ParserManager:
             response = await self.parser_client.parse(**params.model_dump())
             return response
 
-        document = params.file.read()
+        document = await params.file.read()
         document = ParsedDocument(
             format=params.output_format,
             contents=[ParsedDocumentPage(content=document, images={}, metadata={})],
@@ -104,7 +102,7 @@ class ParserManager:
             document = await self.parser_client.parse(**params.model_dump())
             return document
 
-        document = params.file.read()
+        document = await params.file.read()
         document = ParsedDocument(
             format=params.output_format,
             contents=[ParsedDocumentPage(content=document, images={}, metadata={})],

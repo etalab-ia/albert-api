@@ -7,27 +7,25 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers import AccessController
-from app.schemas.auth import User
 from app.schemas.core.documents import FileType, JsonFile
 from app.schemas.files import ChunkerArgs, FileResponse, FilesRequest
+from app.schemas.parse import Languages, ParsedDocumentOutputFormat
 from app.sql.session import get_db as get_session
-from app.utils.context import global_context
+from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException, FileSizeLimitExceededException, InvalidJSONFileFormatException
 from app.utils.variables import ENDPOINT__FILES
 
 router = APIRouter()
 
 
-# TODO: turn into form data endpoint to log usages
-@router.post(path=ENDPOINT__FILES, status_code=201, response_model=FileResponse)
+@router.post(path=ENDPOINT__FILES, status_code=201, response_model=FileResponse, dependencies=[Security(dependency=AccessController())])
 async def upload_file(
     file: UploadFile = File(...),
     request: FilesRequest = Body(...),
-    user: User = Security(dependency=AccessController()),
     session: AsyncSession = Depends(get_session),
 ) -> JSONResponse:
     """
-    Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.
+    **[DEPRECATED]** Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.
 
     Supported files types:
     - pdf: Portable Document Format file.
@@ -63,24 +61,42 @@ async def upload_file(
             detail = "; ".join([f"{error["loc"][-1]}: {error["msg"]}" for error in e.errors()])
             raise InvalidJSONFileFormatException(detail=detail)
 
-        files = [
-            UploadFile(
-                filename=f"{document.title}.json",
-                file=BytesIO(json.dumps(document.model_dump()).encode("utf-8")),
-            )
-            for document in file
-        ]
+        files = list()
+        filename = file.filename
+        for document in file:
+            document_text = document.model_dump()
+            text = document_text.get("text", "")
+            metadata = document_text.get("metadata", {})
+            name = document_text.get("title", filename) if document_text.get("title") else filename
+            file = UploadFile(filename=f"{name}.json", file=BytesIO(text.encode("utf-8")), content_type=FileType.TXT.value)
+            files.append((file, metadata))
     else:
-        files = [file]
+        files = [(file, None)]
 
-    for file in files:
-        document_id = await global_context.documents.create_document(
-            session=session,
-            user_id=user.id,
-            collection_id=request.collection,
+    for file, metadata in files:
+        document = await global_context.parser.parse_file(
             file=file,
+            output_format=ParsedDocumentOutputFormat.MARKDOWN.value,
+            force_ocr=False,
+            languages=Languages.FR.value,
+            page_range="",
+            paginate_output=False,
+            use_llm=False,
+        )
+
+        document_id = await global_context.documents.create_document(
+            user_id=request_context.get().user_id,
+            session=session,
+            collection_id=request.collection,
+            document=document,
             chunker_name=chunker_name,
-            chunker_args=chunker_args,
+            chunk_size=chunker_args["chunk_size"],
+            chunk_overlap=chunker_args["chunk_overlap"],
+            length_function=chunker_args["length_function"],
+            is_separator_regex=chunker_args["is_separator_regex"],
+            separators=chunker_args["separators"],
+            chunk_min_size=chunker_args["chunk_min_size"],
+            metadata=metadata,
         )
 
         file.file.close()

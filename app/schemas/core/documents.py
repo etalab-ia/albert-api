@@ -20,8 +20,3 @@ class JsonFileDocument(BaseModel):
 
 class JsonFile(BaseModel):
     documents: List[JsonFileDocument]
-
-
-class ParserOutput(BaseModel):
-    contents: list[str]
-    metadata: Dict[str, Any] = {}
