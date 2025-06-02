@@ -1,15 +1,10 @@
 import json
-from enum import Enum
 from typing import List, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from app.schemas import BaseModel
-
-
-class ChunkerName(str, Enum):
-    LANGCHAIN_RECURSIVE_CHARACTER_TEXT_SPLITTER = "LangchainRecursiveCharacterTextSplitter"
-    NO_CHUNKER = "NoChunker"
+from app.schemas.documents import ChunkerName
 
 
 class ChunkerArgs(BaseModel):
@@ -22,8 +17,14 @@ class ChunkerArgs(BaseModel):
 
 
 class Chunker(BaseModel):
-    name: ChunkerName = Field(default=ChunkerName.LANGCHAIN_RECURSIVE_CHARACTER_TEXT_SPLITTER, description="The name of the chunker to use for the file upload.")  # fmt: off
+    name: Literal[ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER, ChunkerName.NO_CHUNKER, "LangchainRecursiveCharacterTextSplitter"] = Field(default=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER, description="The name of the chunker to use for the file upload.")  # fmt: off
     args: ChunkerArgs = Field(default_factory=ChunkerArgs, description="The arguments to use for the chunker to use for the file upload.")  # fmt: off
+
+    @field_validator("name")
+    def validate_name(cls, name):
+        if name == "LangchainRecursiveCharacterTextSplitter":
+            name = ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER
+        return name
 
 
 class FileResponse(BaseModel):

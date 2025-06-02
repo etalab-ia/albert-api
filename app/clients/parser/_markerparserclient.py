@@ -43,6 +43,8 @@ class MarkerParserClient(BaseParserClient):
                 for i in range(int(page_range[0]), int(page_range[1]) + 1):
                     pages.append(i)
 
+        pages = list(set(pages))
+
         return pages
 
     async def parse(

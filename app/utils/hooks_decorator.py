@@ -3,7 +3,6 @@ from datetime import datetime
 import functools
 import json
 import logging
-import traceback
 from typing import Optional
 
 from fastapi import HTTPException, Request, Response
@@ -256,8 +255,7 @@ async def update_budget(usage: Usage):
                 result = await session.execute(update_stmt)
 
         except Exception as e:
-            logger.debug(traceback.format_exc())
-            logger.error(f"Failed to update budget for user {user_id}: {e}")
+            logger.exception(f"Failed to update budget for user {user_id}: {e}")
             return None
         finally:
             await session.close()

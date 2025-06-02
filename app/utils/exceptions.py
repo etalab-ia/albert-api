@@ -117,7 +117,7 @@ class ParsingDocumentFailedException(HTTPException):
 
 class ChunkingFailedException(HTTPException):
     def __init__(self, detail: str = "Chunking failed.") -> None:
-        super().__init__(status_code=422, detail=detail)
+        super().__init__(status_code=500, detail=detail)
 
 
 class VectorizationFailedException(HTTPException):

@@ -23,14 +23,14 @@ from app.schemas.documents import (
 )
 from app.schemas.parse import (
     FileForm,
-    ForceOcrForm,
+    ForceOCRForm,
     Languages,
     LanguagesForm,
     OutputFormatForm,
     PageRangeForm,
     PaginateOutputForm,
     ParsedDocumentOutputFormat,
-    UseLlmForm,
+    UseLLMForm,
 )
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
@@ -47,11 +47,11 @@ async def create_document(
     file: UploadFile = FileForm,
     collection: int = CollectionForm,
     paginate_output: Optional[bool] = PaginateOutputForm,
-    page_range: Optional[str] = PageRangeForm,
+    page_range: str = PageRangeForm,
     languages: Optional[Languages] = LanguagesForm,
-    force_ocr: bool = ForceOcrForm,
+    force_ocr: bool = ForceOCRForm,
     output_format: ParsedDocumentOutputFormat = OutputFormatForm,
-    use_llm: Optional[bool] = UseLlmForm,
+    use_llm: Optional[bool] = UseLLMForm,
     chunker_name: ChunkerName = ChunkerNameForm,
     chunk_size: int = ChunkSizeForm,
     chunk_overlap: int = ChunkOverlapForm,
@@ -59,11 +59,12 @@ async def create_document(
     is_separator_regex: bool = IsSeparatorRegexForm,
     separators: List[str] = SeparatorsForm,
     chunk_min_size: int = ChunkMinSizeForm,
-    metadata: Optional[dict] = MetadataForm,
+    metadata: str = MetadataForm,
 ) -> JSONResponse:
     """
     Create a document.
     """
+    length_function = len if length_function == "len" else length_function
 
     document = await global_context.parser.parse(
         file=file,
@@ -77,7 +78,9 @@ async def create_document(
     )
 
     document_id = await global_context.documents.create_document(
+        user_id=request_context.get().user_id,
         session=session,
+        collection_id=collection,
         document=document,
         chunker_name=chunker_name,
         chunk_size=chunk_size,
@@ -87,7 +90,6 @@ async def create_document(
         separators=separators,
         chunk_min_size=chunk_min_size,
         metadata=metadata,
-        user_id=request_context.get().user_id,
     )
 
     return JSONResponse(content=DocumentResponse(id=document_id).model_dump(), status_code=201)

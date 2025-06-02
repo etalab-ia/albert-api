@@ -1,5 +1,4 @@
 import logging
-import traceback
 from typing import List
 
 import httpx
@@ -29,8 +28,7 @@ class DuckduckgoWebSearchClient(BaseWebSearchClient):
                 response = await client.get(url=self.URL, headers=self.headers, params=params, follow_redirects=True)
                 results = response.json().get("Results", [])[:n]
         except Exception:
-            logger.error(msg="DuckDuckGo API unreachable.")
-            logger.debug(msg=traceback.format_exc())
+            logger.exception(msg="DuckDuckGo API unreachable.")
             results = []
 
         return [result["FirstURL"].lower() for result in results]

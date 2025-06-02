@@ -1,5 +1,4 @@
 import logging
-import traceback
 from typing import List
 
 import httpx
@@ -25,8 +24,7 @@ class BraveWebSearchClient(BaseWebSearchClient):
                 response = await client.get(url=self.URL, headers=self.headers, params=params)
                 results = response.json().get("web", {}).get("results", [])
         except Exception:
-            logger.error(msg="Brave Search API unreachable.")
-            logger.debug(msg=traceback.format_exc())
+            logger.exception(msg="Brave Search API unreachable.")
             results = []
 
         return [result["url"].lower() for result in results]

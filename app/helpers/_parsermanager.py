@@ -3,10 +3,9 @@ from typing import Optional
 from fastapi import UploadFile
 from pydantic import BaseModel
 
-# import fitz
 from app.clients.parser import BaseParserClient as ParserClient
 from app.schemas.core.documents import FileType
-from app.schemas.parse import Languages, ParsedDocument, ParsedDocumentOutputFormat, ParsedDocumentPage, ParsedDocumentMetadata
+from app.schemas.parse import Languages, ParsedDocument, ParsedDocumentMetadata, ParsedDocumentOutputFormat, ParsedDocumentPage
 from app.utils.exceptions import UnsupportedFileTypeException
 import pymupdf
 
@@ -45,6 +44,7 @@ class ParserManager:
         params = ParserParams(**params)
         if self.parser_client and FileType.PDF in self.parser_client.SUPPORTED_FORMATS:
             document = await self.parser_client.parse(**params.model_dump())
+
         else:
             # Lire le contenu du fichier uploadé
             file_content = await params.file.read()

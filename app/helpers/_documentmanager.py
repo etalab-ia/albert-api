@@ -2,23 +2,20 @@ from functools import partial
 import logging
 import time
 import traceback
-from typing import List, Optional
+from typing import Callable, List, Optional
 from uuid import uuid4
 
-from fastapi import UploadFile
 from qdrant_client import AsyncQdrantClient
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers.data.chunkers import NoChunker, RecursiveCharacterTextSplitter
-from app.helpers.data.parsers import HTMLParser, JSONParser, MarkdownParser, PDFParser
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
 from app.schemas.core.documents import ParserOutput
-from app.schemas.documents import Document
-from app.schemas.files import ChunkerName
+from app.schemas.documents import ChunkerName, Document
 from app.schemas.parse import ParsedDocument
 from app.schemas.search import Search, SearchMethod
 from app.sql.models import Collection as CollectionTable
@@ -28,7 +25,6 @@ from app.utils.exceptions import (
     ChunkingFailedException,
     CollectionNotFoundException,
     DocumentNotFoundException,
-    UnsupportedFileTypeException,
     VectorizationFailedException,
     WebSearchNotAvailableException,
 )
@@ -147,7 +143,21 @@ class DocumentManager:
 
         return collections
 
-    async def create_document(self, session: AsyncSession, user_id: int, collection_id: int, document:ParsedDocument, chunker_name: ChunkerName, chunker_args: dict) -> int:  # fmt: off
+    async def create_document(
+        self,
+        session: AsyncSession,
+        user_id: int,
+        collection_id: int,
+        document: ParsedDocument,
+        chunker_name: ChunkerName,
+        chunk_size: int,
+        chunk_overlap: int,
+        length_function: Callable,
+        is_separator_regex: bool,
+        separators: List[str],
+        chunk_min_size: int,
+        metadata: Optional[dict] = None,
+    ) -> int:
         # check if collection exists
         result = await session.execute(
             statement=select(CollectionTable).where(CollectionTable.id == collection_id).where(CollectionTable.user_id == user_id)
@@ -158,10 +168,19 @@ class DocumentManager:
             raise CollectionNotFoundException()
 
         try:
-            chunks = self._split(document=document, chunker_name=chunker_name, chunker_args=chunker_args)
+            chunks = self._split(
+                document=document,
+                chunker_name=chunker_name,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                length_function=length_function,
+                is_separator_regex=is_separator_regex,
+                separators=separators,
+                chunk_min_size=chunk_min_size,
+                metadata=metadata,
+            )
         except Exception as e:
-            logger.error(msg=f"Error during document splitting: {e}")
-            logger.debug(msg=traceback.format_exc())
+            logger.exception(msg=f"Error during document splitting: {e}")
             raise ChunkingFailedException(detail=f"Chunking failed: {e}")
 
         document_name = document.metadata.document_name
@@ -171,8 +190,8 @@ class DocumentManager:
         document_id = result.scalar_one()
         await session.commit()
 
-        for i, chunk in enumerate(chunks):
-            chunk.metadata["collection_id"] = collection.id
+        for chunk in chunks:
+            chunk.metadata["collection_id"] = collection_id
             chunk.metadata["document_id"] = document_id
             chunk.metadata["document_created_at"] = round(time.time())
             chunk.metadata.update(document.metadata.model_dump())
@@ -349,31 +368,30 @@ class DocumentManager:
 
         return searches
 
-    ### Appel à marker ici
-    async def _parse(self, file: UploadFile, file_extension: str) -> ParserOutput:
-        if file_extension == self.FILE_EXTENSION_PDF:
-            parser = PDFParser()
-
-        elif file_extension == self.FILE_EXTENSION_JSON:
-            parser = JSONParser()
-
-        elif file_extension == self.FILE_EXTENSION_HTML:
-            parser = HTMLParser()
-
-        elif file_extension == self.FILE_EXTENSION_MD:
-            parser = MarkdownParser()
-        else:
-            raise UnsupportedFileTypeException()
-
-        output = await parser.parse(file=file)
-        print(output)
-        return output
-
-    def _split(self, document: ParserOutput, chunker_name: ChunkerName, chunker_args: dict) -> List[Chunk]:
+    def _split(
+        self,
+        document: ParserOutput,
+        chunker_name: ChunkerName,
+        chunk_size: int,
+        chunk_overlap: int,
+        length_function: Callable,
+        is_separator_regex: bool,
+        separators: List[str],
+        chunk_min_size: int,
+        metadata: Optional[dict] = None,
+    ) -> List[Chunk]:
         if chunker_name == ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER:
-            chunker = RecursiveCharacterTextSplitter(**chunker_args)
+            chunker = RecursiveCharacterTextSplitter(
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                length_function=length_function,
+                is_separator_regex=is_separator_regex,
+                separators=separators,
+                chunk_min_size=chunk_min_size,
+                metadata=metadata,
+            )
         else:  # ChunkerName.NoChunker
-            chunker = NoChunker(**chunker_args)
+            chunker = NoChunker(chunk_min_size=chunk_min_size, metadata=metadata)
 
         chunks = chunker.split(document=document)
 
