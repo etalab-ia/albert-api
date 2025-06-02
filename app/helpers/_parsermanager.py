@@ -8,6 +8,7 @@ from app.clients.parser import BaseParserClient as ParserClient
 from app.schemas.core.documents import FileType
 from app.schemas.parse import Languages, ParsedDocument, ParsedDocumentOutputFormat, ParsedDocumentPage, ParsedDocumentMetadata
 from app.utils.exceptions import UnsupportedFileTypeException
+import pymupdf
 
 
 class ParserParams(BaseModel):
@@ -45,17 +46,22 @@ class ParserManager:
         if self.parser_client and FileType.PDF in self.parser_client.SUPPORTED_FORMATS:
             document = await self.parser_client.parse(**params.model_dump())
         else:
-            import pymupdf
+            # Lire le contenu du fichier uploadé
+            file_content = await params.file.read()
+            pdf = pymupdf.open(stream=file_content, filetype="pdf")
 
-            pdf = pymupdf.open(params.file)
             pages = []
             for page_num in range(len(pdf)):
+                print(page_num)
                 page = pdf[page_num]
                 text = page.get_text()
                 pages.append(ParsedDocumentPage(content=text, images={}, metadata={"page": page_num + 1, **pdf.metadata}))
 
-            document = ParsedDocument(contents=pages, metadata=ParsedDocumentMetadata(document_name=params.file.filename))
-
+            document = ParsedDocument(
+                format=ParsedDocumentOutputFormat.MARKDOWN,  
+                contents=pages, 
+                metadata=ParsedDocumentMetadata(document_name=params.file.filename)
+            )
         return document
 
     async def _parse_html(self, **params: ParserParams) -> ParsedDocument:
