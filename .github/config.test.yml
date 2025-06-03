@@ -157,3 +157,9 @@ models:
           api_url: https://albert.api.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
           timeout: 120
+
+parser:
+  type: marker
+  args: 
+    api_url: http://albert.gpu.001.dev.etalab.gouv.fr:8001
+    api_key: 22lKnBdGy1hcSxn8vdxwuI1qgpsnjmTSi0xU8NgzsuWxl0H2i3J5g3IPf4VyN5Ae

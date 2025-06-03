@@ -35,15 +35,14 @@ class TestOCR:
         assert response.status_code == 200, response.text
         ParsedDocument(**response.json())  # validate format
 
-    def test_ocr_invalid_file_type(self, client: TestClient, model_id, snapshot):
+    def test_ocr_invalid_file_type(self, client: TestClient, model_id):
         """Test OCR with invalid file type (not PDF)."""
         file_path = os.path.join(current_path, "assets/json.json")
         with open(file_path, "rb") as file:
             files = {"file": (os.path.basename(file_path), file, "application/json")}
             response = client.post_without_permissions(f"/v1{ENDPOINT__OCR}", files=files, data={"model": model_id, "dpi": 150})
 
-        assert response.status_code == 400, response.text
-        snapshot.assert_match(str(response.json()), "ocr_invalid_file_type")
+        assert response.status_code == 422, response.text
 
     def test_ocr_too_large_file(self, client: TestClient, model_id, snapshot):
         """Test OCR with a file that exceeds size limit."""

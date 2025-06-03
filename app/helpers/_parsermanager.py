@@ -51,7 +51,7 @@ class ParserManager:
 
     def __init__(self, parser: Optional[ParserClient] = None, *args, **kwargs):
         self.parser_client = parser
-
+    
     def _detect_file_type(self, file: UploadFile, type: Optional[FileType] = None) -> FileType:
         """
         Detect file type by extension, then check content-type.

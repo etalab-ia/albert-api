@@ -62,7 +62,6 @@ def delete_collection(collection_id: int) -> None:
 
 
 def upload_document(file, collection_id: str) -> None:
-    print('---------------upload----------------')
     response = requests.post(
         url=f"{settings.playground.api_url}/v1/documents",
         data={"collection": collection_id},
