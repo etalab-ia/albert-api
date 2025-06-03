@@ -1,12 +1,12 @@
 {
     "mcp_servers": {
-        "weather": {
+        "data-gouv": {
             "command": "uv",
             "args": [
                 "--directory",
-                "/mcp_bridge/weather-server-python",
+                "/mcp_bridge/data-gouv-fr-mcp-server",
                 "run",
-                "weather.py"
+                "main.py"
             ]
         }
 }}
