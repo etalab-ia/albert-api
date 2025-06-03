@@ -12,7 +12,7 @@ from ._basesplitter import BaseSplitter
 class RecursiveCharacterTextSplitter(BaseSplitter):
     def __init__(self, chunk_min_size: int = 0, metadata: Optional[dict] = None, language: Optional[Language] = None, *args, **kwargs) -> None:
         super().__init__(chunk_min_size=chunk_min_size, metadata=metadata, language=language)
-        if self.language:
+        if language:
             self.splitter = LangChainRecursiveCharacterTextSplitter.from_language(language=language, *args, **kwargs)
         else:
             self.splitter = LangChainRecursiveCharacterTextSplitter(*args, **kwargs)
@@ -21,7 +21,7 @@ class RecursiveCharacterTextSplitter(BaseSplitter):
         chunks = list()
         i = 1
 
-        for page in document.contents:
+        for page in document.data:
             content = page.model_dump().get("content", "")
             content_chunks = self.splitter.split_text(content)
             for chunk in content_chunks:

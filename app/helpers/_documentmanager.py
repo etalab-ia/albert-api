@@ -182,7 +182,7 @@ class DocumentManager:
             logger.exception(msg=f"Error during document splitting: {e}")
             raise ChunkingFailedException(detail=f"Chunking failed: {e}")
 
-        document_name = document.metadata.document_name
+        document_name = document.data[0].metadata.document_name
         result = await session.execute(
             statement=insert(table=DocumentTable).values(name=document_name, collection_id=collection_id).returning(DocumentTable.id)
         )
@@ -193,7 +193,6 @@ class DocumentManager:
             chunk.metadata["collection_id"] = collection_id
             chunk.metadata["document_id"] = document_id
             chunk.metadata["document_created_at"] = round(time.time())
-            chunk.metadata.update(document.metadata.model_dump())
         try:
             await self._upsert(chunks=chunks, collection_id=collection_id)
         except Exception as e:

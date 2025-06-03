@@ -49,10 +49,6 @@ class MarkerParserClient(BaseParserClient):
 
     async def parse(self, **params: ParserParams) -> ParsedDocument:
         params = ParserParams(**params)
-
-        if params.file.content_type not in self.SUPPORTED_FORMATS:
-            raise HTTPException(status_code=400, detail="File must be a PDF.")
-
         file_content = await params.file.read()
 
         try:
@@ -92,7 +88,7 @@ class MarkerParserClient(BaseParserClient):
                 if not result.get("success", False):
                     raise HTTPException(status_code=500, detail=result.get("error", "Parsing failed."))
 
-                metadata = ParsedDocumentMetadata(**result["metadata"], page=i)
+                metadata = ParsedDocumentMetadata(document_name=params.file.filename, page=i, **result["metadata"])
                 data.append(ParsedDocumentPage(content=result["output"], images=result["images"], metadata=metadata))
 
         # Close the PDF document to free memory

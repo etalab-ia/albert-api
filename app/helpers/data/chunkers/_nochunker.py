@@ -16,7 +16,7 @@ class NoChunker(BaseSplitter):
         chunks = list()
         i = 1
 
-        for page in document.contents:
+        for page in document.data:
             content = page.model_dump().get("content", "")
             if len(content) < self.chunk_min_size:
                 continue
