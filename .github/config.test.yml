@@ -88,6 +88,10 @@ models:
         costs:
           prompt_tokens: 1
           completion_tokens: 3
+        carbon:
+          total_params: 24
+          active_params: 24
+          model_zone: FRA
         args:
           api_url: https://albert.api.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
@@ -103,6 +107,10 @@ models:
         costs:
           prompt_tokens: 1
           completion_tokens: 3
+        carbon:
+          total_params: 8
+          active_params: 8
+          model_zone: FRA
         args:
           api_url: https://albert.api.etalab.gouv.fr
           api_key: ${ALBERT_API_KEY}
