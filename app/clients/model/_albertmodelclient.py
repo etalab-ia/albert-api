@@ -27,7 +27,6 @@ class AlbertModelClient(BaseModelClient):
         ENDPOINT__OCR: "/v1/chat/completions",
         ENDPOINT__RERANK: "/v1/rerank",
     }
-#TODO : AUdrey faire idem pour openai / teimodel / vvlm
     def __init__(self, model: str, costs: ModelCosts, params: ModelClientCarbonImpactParams, api_url: str, api_key: str, timeout: int, *args, **kwargs) -> None:
         """
         Initialize the OpenAI model client and check if the model is available.

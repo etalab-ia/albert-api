@@ -31,11 +31,6 @@ from app.utils.variables import (
 logger = logging.getLogger(__name__)
 
 
-# TODO: audrey -- tests unitaires
-# TODO: audrey -- historiser le calcul impact_carbon
-# TODO: audrey -- est-ce qu'on affiche tout le dictionnaire d'ecologits?
-
-
 class BaseModelClient(ABC):
     ENDPOINT_TABLE = {
         ENDPOINT__AUDIO_TRANSCRIPTIONS: None,

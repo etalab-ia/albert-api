@@ -4,7 +4,6 @@ from pydantic import Field
 
 from app.schemas import BaseModel
 
-#TODO : Audrey add impact carbon
 
 class BaseUsage(BaseModel):
     prompt_tokens: int = 0
