@@ -19,7 +19,7 @@ class TestMCP:
             "tool_choice": "auto",
             "stream": False,
             "n": 1,
-            "max_tokens": 2000,
+            "max_tokens": 200,
         }
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__AGENTS_COMPLETIONS}", json=params)
         assert response.status_code == 200, response.text

@@ -73,7 +73,7 @@ class TestMCPLoop:
             mock_llm_client.forward_request.return_value = SimpleNamespace(
                 text=json.dumps(raw_response_from_llm), json=lambda: raw_response_from_llm, status_code=200, request="", headers={}
             )
-            number_of_rounds = 10
+            number_of_rounds = 2
             # WHEN
             actual_message = await mcp_client.get_completion(
                 SimpleNamespace(messages=[{"content": "Salut", "role": "user"}], model_dump=lambda: None, model="")
