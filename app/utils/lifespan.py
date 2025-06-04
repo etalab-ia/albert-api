@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 import traceback
 
-from coredis import ConnectionPool
+from coredis import ConnectionPool, Redis
 from fastapi import FastAPI
 
 from app.clients.database import QdrantClient
@@ -22,6 +22,13 @@ logger = init_logger(name=__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
+    # setup context: limiter
+    redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
+    global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
+    # check redis database is reachable
+    if redis:
+        assert await global_context.limiter.redis.check(), "Redis database is not reachable."
+        redis_client = Redis(connection_pool=redis)
 
     # setup clients
     routers = []
@@ -40,6 +47,16 @@ async def lifespan(app: FastAPI):
             except Exception as e:
                 logger.debug(msg=traceback.format_exc())
                 continue
+
+            if redis:
+                # create metrics timeseries
+                try:
+                    # Tenter de créer la série temporelle
+                    time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{client.model}:{client.api_url}"
+                    await redis_client.timeseries.create(key=time_to_first_token_ts_key, retention=3600000)
+                except Exception as e:
+                    logger.error(f"Erreur lors de la création de la série temporelle {time_to_first_token_ts_key} : {e}")
+
         if not clients:
             logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
             if settings.web_search:
@@ -53,17 +70,18 @@ async def lifespan(app: FastAPI):
         model["clients"] = clients
         routers.append(ModelRouter(**model))
 
-    redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
+    if redis:
+        redis_client.quit()
+
     # TODO: pass user_agent in args
     web_search = WebSearchClient.import_module(type=settings.web_search.type)(user_agent=settings.web_search.user_agent, **settings.web_search.args) if settings.web_search else None  # fmt: off
     parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
     qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
 
-    # setup context: models, iam, limiter, tokenizer
+    # setup context: models, iam, tokenizer
     global_context.tokenizer = UsageTokenizer(tokenizer=settings.general.tokenizer)
     global_context.models = ModelRegistry(routers=routers)
     global_context.iam = IdentityAccessManager()
-    global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
     global_context.parser = ParserManager(parser=parser)
 
     # setup context: documents
@@ -79,10 +97,7 @@ async def lifespan(app: FastAPI):
 
     global_context.documents = DocumentManager(qdrant=qdrant, web_search=web_search, multi_agents_search_model=multi_agents_search_model) if qdrant else None  # fmt: off
 
-    # check databases are reachable
-    if redis:
-        assert await global_context.limiter.redis.check(), "Redis database is not reachable."
-
+    # check qdrant database is reachable
     if qdrant:
         assert await global_context.documents.qdrant.check(), "Qdrant database is not reachable."
 

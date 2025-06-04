@@ -120,17 +120,3 @@ class Document(Base):
     created_at = Column(DateTime, default=func.now(), nullable=False)
 
     collection = relationship(argument="Collection", backref=backref(name="document", cascade="all, delete-orphan"))
-
-
-class Metrics(Base):
-    __tablename__ = "metrics"
-
-    id = Column(Integer, primary_key=True)
-    datetime = Column(DateTime, nullable=False, default=func.now())
-    model_name = Column(String, nullable=False)
-    api_url = Column(String, nullable=False)
-    latency = Column(Integer, nullable=True)
-    time_to_first_token = Column(Integer, nullable=True)
-
-    def __repr__(self):
-        return f"<Metrics (id={self.id}, datetime={self.datetime}, model_name={self.model_name}, api_url={self.api_url}, latency={self.latency}, time_to_first_token={self.time_to_first_token})>"

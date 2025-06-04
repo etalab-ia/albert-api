@@ -22,7 +22,7 @@ services:
         - action: sync+restart
           path: ./app
           target: /app
-        - action: build+restart
+        - action: rebuild
           path: .
           target: /app
     depends_on:
