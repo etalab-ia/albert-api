@@ -26,6 +26,7 @@ from app.utils.variables import (
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
+from app.utils.metrics_decorator import log_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -204,6 +205,7 @@ class BaseModelClient(ABC):
 
         return response
 
+    @log_metrics
     async def forward_request(
         self,
         method: str,
