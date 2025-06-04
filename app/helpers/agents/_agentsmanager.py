@@ -15,7 +15,7 @@ class AgentsManager:
         body = await self.set_tools_for_llm_request(body)
         http_llm_response = None
         number_of_iterations = 0
-        max_iterations = getattr(body, "max_iterations", 10)
+        max_iterations = 2
         while number_of_iterations < max_iterations:
             http_llm_response = await self.get_llm_http_response(body)
             llm_response = json.loads(http_llm_response.text)
