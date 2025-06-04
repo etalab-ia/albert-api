@@ -5,10 +5,17 @@ from coredis import ConnectionPool
 from fastapi import FastAPI
 
 from app.clients.database import QdrantClient
+from app.clients.mcp import SecretShellMCPBridgeClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.parser import BaseParserClient as ParserClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
-from app.helpers import DocumentManager, IdentityAccessManager, Limiter, ParserManager, UsageTokenizer, WebSearchManager
+from app.helpers._documentmanager import DocumentManager
+from app.helpers._identityaccessmanager import IdentityAccessManager
+from app.helpers._limiter import Limiter
+from app.helpers._parsermanager import ParserManager
+from app.helpers._usagetokenizer import UsageTokenizer
+from app.helpers._websearchmanager import WebSearchManager
+from app.helpers.agents import AgentsManager
 from app.helpers.models import ModelRegistry
 from app.helpers.models.routers import ModelRouter
 from app.utils import multiagents
@@ -24,6 +31,14 @@ async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
     # setup clients
+    mcp_bridge = SecretShellMCPBridgeClient("http://localhost:9876")
+
+    redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
+    web_search = (
+        WebSearchClient.import_module(type=settings.web_search.type)(user_agent=settings.web_search.user_agent, **settings.web_search.args)
+        if settings.web_search
+        else None
+    )
     routers = []
     for model in settings.models:
         clients = []
@@ -64,7 +79,15 @@ async def lifespan(app: FastAPI):
     global_context.models = ModelRegistry(routers=routers)
     global_context.iam = IdentityAccessManager()
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
+
+    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
+    qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
+
     global_context.parser = ParserManager(parser=parser)
+    mcp_bridge = SecretShellMCPBridgeClient(settings.mcp.mcp_bridge_url)
+    global_context.mcp.agents_manager = AgentsManager(mcp_bridge, global_context.models)
+    if redis:
+        assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
     # setup context: documents
     qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None

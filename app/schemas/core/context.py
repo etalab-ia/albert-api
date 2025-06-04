@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from typing import Any, Optional
 
 from pydantic import BaseModel
@@ -12,6 +13,10 @@ class GlobalContext(BaseModel):
     limiter: Optional[Any] = None
     documents: Optional[Any] = None
     parser: Optional[Any] = None
+    mcp: Optional[Any] = SimpleNamespace()
+
+    class Config:
+        extra = "allow"
 
 
 class RequestContext(BaseModel):

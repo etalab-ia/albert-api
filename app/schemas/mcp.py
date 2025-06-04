@@ -1,32 +1,17 @@
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from openai.types.chat import ChatCompletion, ChatCompletionChunk
-from pydantic import Field, field_validator, model_validator
+from openai.types.chat import ChatCompletion
+
+from openai.types.chat.chat_completion import Choice
+from pydantic import Field, model_validator
 
 from app.schemas import BaseModel
-from app.schemas.search import Search, SearchArgs
+from app.schemas.chat import ChatSearchArgs
+from app.schemas.search import Search
 from app.schemas.usage import Usage
 
-DEFAULT_RAG_TEMPLATE = "Réponds à la question suivante en te basant sur les documents ci-dessous : {prompt}\n\nDocuments :\n{chunks}"
 
-
-class ChatSearchArgs(SearchArgs):
-    template: str = Field(
-        description='Template to use for the RAG query. The template must contain "{chunks}" and "{prompt}" placeholders.',
-        default=DEFAULT_RAG_TEMPLATE,
-    )
-
-    @field_validator("template")
-    def validate_template(cls, value):
-        if "{chunks}" not in value:
-            raise ValueError('template must contain "{chunks}" placeholder')
-        if "{prompt}" not in value:
-            raise ValueError('template must contain "{prompt}" placeholder')
-
-        return value
-
-
-class ChatCompletionRequest(BaseModel):
+class McpChatCompletionRequest(BaseModel):
     # only union between OpenAI fields and vLLM fields are defined. See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py#L209
     messages: List = Field(description="A list of messages comprising the conversation so far.")  # fmt: off
     model: str = Field(description="ID of the model to use. Call `/v1/models` endpoint to get the list of available models, only `text-generation` model type is supported.")  # fmt: off
@@ -45,12 +30,13 @@ class ChatCompletionRequest(BaseModel):
     stream_options: Optional[Any] = Field(default=None, description="Options for streaming response. Only set this when you set `stream: true`.")  # fmt: off
     temperature: Optional[float] = Field(default=0.7, description="What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. We generally recommend altering this or `top_p` but not both.")  # fmt: off
     top_p: Optional[float] = Field(default=1, description="An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.<br>We generally recommend altering this or `temperature` but not both.")  # fmt: off
-    tools: Optional[List] = Field(default=None, description="A list of tools the model may call. Currently, only functions are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.")  # fmt: off
-    tool_choice: Any = Field(default="none", description="Controls which (if any) tool is called by the model. `none` means the model will not call any tool and instead generates a message. `auto` means the model can pick between generating a message or calling one or more tools. `required` means the model must call one or more tools. Specifying a particular tool via `{\"type\": \"function\", \"function\": {\"name\": \"my_function\"}}` forces the model to call that tool.<br>`none` is the default when no tools are present. `auto` is the default if tools are present.")  # fmt: off
+
+    tools: Optional[List] = Field(default=["all"], description="A list of tools the model may call. Currently, only functions are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.")  # fmt: off
+    tool_choice: Any = Field(default="auto", description="Controls which (if any) tool is called by the model. `none` means the model will not call any tool and instead generates a message. `auto` means the model can pick between generating a message or calling one or more tools. `required` means the model must call one or more tools. Specifying a particular tool via `{\"type\": \"function\", \"function\": {\"name\": \"my_function\"}}` forces the model to call that tool.<br>`none` is the default when no tools are present. `auto` is the default if tools are present.")  # fmt: off
 
     # search additionnal fields
-    search: bool = Field(default=False)  # fmt: off
-    search_args: Optional[ChatSearchArgs] = Field(default=None)  # fmt: off
+    search: bool = Field(default=False, deprecated=True)  # fmt: off
+    search_args: Optional[ChatSearchArgs] = Field(default=None, deprecated=True)  # fmt: off
 
     class Config:
         extra = "allow"
@@ -64,11 +50,12 @@ class ChatCompletionRequest(BaseModel):
         return values
 
 
-class ChatCompletion(ChatCompletion):
+class McpChoiceChatCompletion(Choice):
+    finish_reason: Literal["stop", "length", "tool_calls", "content_filter", "function_call", "max_iterations"]
+
+
+class McpChatCompletion(ChatCompletion):
     id: str = Field(default=None, description="A unique identifier for the chat completion.")
     search_results: List[Search] = []
-    usage: Usage = Field(default_factory=Usage, description="Usage information for the request.")
-
-
-class ChatCompletionChunk(ChatCompletionChunk):
-    search_results: List[Search] = []
+    usage: Usage = Field(default=None, description="Usage information for the request.")
+    choices: List[McpChoiceChatCompletion]

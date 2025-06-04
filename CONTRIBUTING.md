@@ -118,17 +118,38 @@ docker exec -it albert-api-api-1 pytest app/tests
     export QDRANT_GRPC_PORT=8334
     ```
 
-2. Run the tests
+2. To run the unit and integration tests together:
 
     ```bash
     CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml
     ```
+   
+3. To run the unit tests:
 
-    To update the snapshots, run the following command:
+    ```bash
+    CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest app/tests/unit --config-file=pyproject.toml
+    ```
+ 
+4. To run the integration tests:
+
+    ```bash
+    CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest app/tests/integ --config-file=pyproject.toml
+    ```
+
+
+5. To update the snapshots, run the following command:
 
     ```bash
     CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
     ```
+
+If you want integration tests to use mocked reponse, you need to enable VCR by adding to your .env file:
+
+```
+VCR_ENABLED=true
+```
+
+When you run the integration tests, it will store responses from databases, apis into the app/test/integ/cassettes folder and use them when you rerun the tests
 
 ## Notebooks
 

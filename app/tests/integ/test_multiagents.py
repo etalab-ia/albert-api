@@ -19,7 +19,7 @@ def collection_id(client: TestClient):
     assert response.status_code == 201, response.text
     collection_id = response.json()["id"]
     # Upload pdf.pdf into the new collection
-    file_path = "app/tests/assets/pdf.pdf"
+    file_path = "app/tests/integ/assets/pdf.pdf"
     with open(file_path, "rb") as file:
         files = {"file": (os.path.basename(file_path), file, "application/pdf")}
         data = {"request": '{"collection": "%s"}' % collection_id}

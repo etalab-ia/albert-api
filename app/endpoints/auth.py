@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, Depends, Path, Query, Request, Security
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import AccessController
+from app.helpers._accesscontroller import AccessController
 from app.schemas.auth import (
     PermissionType,
     Role,

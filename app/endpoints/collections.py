@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, Depends, Path, Query, Request, Response, Se
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers import AccessController
+from app.helpers._accesscontroller import AccessController
 from app.schemas.collections import Collection, CollectionRequest, Collections, CollectionUpdateRequest
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context

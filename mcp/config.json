@@ -1,0 +1,12 @@
+{
+    "mcp_servers": {
+        "data-gouv": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "/mcp_bridge/data-gouv-fr-mcp-server",
+                "run",
+                "main.py"
+            ]
+        }
+}}

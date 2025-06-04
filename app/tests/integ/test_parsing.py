@@ -1,17 +1,15 @@
 # Test à faire, regarder le test ocr
-# Faire des tests pour le endpoint parse, le client marker ? la classe parse ? 
+# Faire des tests pour le endpoint parse, le client marker ? la classe parse ?
 
 
 import os
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
-from app.schemas.parse import ParsedDocument
 from app.utils.variables import ENDPOINT__PARSE
 
 current_path = os.path.dirname(__file__)
-
 
 
 @pytest.mark.usefixtures("client")

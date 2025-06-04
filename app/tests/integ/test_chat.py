@@ -6,7 +6,8 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 import pytest
 
-from app.helpers import UsageTokenizer
+from app.helpers._usagetokenizer import UsageTokenizer
+
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk
 from app.schemas.models import ModelType
 from app.utils.settings import settings
@@ -31,7 +32,7 @@ def setup(client: TestClient):
     COLLECTION_ID = response.json()["id"]
 
     # Upload the file to the collection
-    file_path = "app/tests/assets/json.json"
+    file_path = "app/tests/integ/assets/json.json"
     with open(file_path, "rb") as file:
         files = {"file": (os.path.basename(file_path), file, "application/json")}
         data = {"request": '{"collection": "%s", "chunker": {"args": {"chunk_size": 1000}}}' % COLLECTION_ID}

@@ -196,7 +196,6 @@ class TokenRequest(BaseModel):
         if isinstance(expires_at, int):
             if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
                 raise ValueError("Wrong timestamp, must be in the future.")
-
         if settings.auth.max_token_expiration_days:
             if expires_at > int(dt.datetime.now(tz=dt.UTC).timestamp()) + settings.auth.max_token_expiration_days * 86400:
                 raise ValueError(f"Token expiration timestamp cannot be greater than {settings.auth.max_token_expiration_days} days from now.")  # fmt: off
