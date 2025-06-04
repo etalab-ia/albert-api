@@ -1,4 +1,7 @@
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel
 
 from app.schemas.models import ModelType
 
@@ -24,3 +27,7 @@ class ModelClientType(str, Enum):
 class RoutingStrategy(str, Enum):
     ROUND_ROBIN = "round_robin"
     SHUFFLE = "shuffle"
+
+class ModelClientCarbonImpactParams(BaseModel):
+    total: Optional[int] = None 
+    active: Optional[int] = None 

@@ -11,6 +11,7 @@ import yaml
 
 from app.schemas.core.auth import LimitingStrategy
 from app.schemas.core.models import ModelClientType, RoutingStrategy
+from app.schemas.core.usage import CountryCodes
 from app.schemas.models import ModelCosts, ModelType
 from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
 
@@ -48,13 +49,30 @@ class ModelClientArgs(ConfigBaseModel):
     @field_validator("api_url", mode="before")
     def validate_api_url(cls, api_url):
         api_url = api_url.rstrip("/") + "/"
+
         return api_url
+
+
+class ModelClientCarbonFootprint(ConfigBaseModel):
+    model_zone: CountryCodes = CountryCodes.WOR  # world is the default zone
+    total_params: Optional[int] = None
+    active_params: Optional[int] = None
+
+    @model_validator(mode="after")
+    def complete_params(cls, values):
+        if values.total_params is None and values.active_params is not None:
+            values.total_params = values.active_params
+        if values.active_params is None and values.total_params is not None:
+            values.active_params = values.total_params
+
+        return values
 
 
 class ModelClient(ConfigBaseModel):
     model: str
     type: ModelClientType
     costs: ModelCosts = Field(default_factory=ModelCosts)
+    carbon: ModelClientCarbonFootprint = Field(default_factory=ModelClientCarbonFootprint)
     args: ModelClientArgs
 
 
@@ -69,6 +87,15 @@ class Model(ConfigBaseModel):
     @model_validator(mode="after")
     def validate_model_type(cls, values):
         assert values.clients[0].type.value in ModelClientType.get_supported_clients(values.type.value), f"Invalid model type: {values.type.value} for client type {values.clients[0].type.value}"  # fmt: off
+
+        if values.type not in [ModelType.TEXT_GENERATION, ModelType.IMAGE_TEXT_TO_TEXT]:
+            for client in values.clients:
+                if client.carbon.active_params is not None:
+                    logging.warning(f"Carbon footprint is not supported for {values.type.value} models, set active params to None.")
+                    client.carbon.active_params = None
+                if client.carbon.total_params is not None:
+                    logging.warning(f"Carbon footprint is not supported for {values.type.value} models, set total params to None.")
+                    client.carbon.total_params = None
 
         return values
 

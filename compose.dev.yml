@@ -22,6 +22,9 @@ services:
         - action: sync+restart
           path: ./app
           target: /app
+        - action: build+restart
+          path: .
+          target: /app
     depends_on:
       redis:
         condition: service_healthy

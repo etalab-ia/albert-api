@@ -29,6 +29,8 @@ app = [
     "limits==5.1.0",
     "coredis==4.20.0",
     "tiktoken==0.9.0",
+    "ecologits==0.6.2",
+    "pycountry==24.6.1",
 
     # data
     "elasticsearch==8.17.1",
