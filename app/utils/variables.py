@@ -39,9 +39,6 @@ ROUTER__MULTIAGENTS = "multiagents"
 
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
 
-# For carbon footprint
-
-
 # Supported language from https://github.com/huggingface/transformers/blob/main/src/transformers/models/whisper/tokenization_whisper.py
 AUDIO_SUPPORTED_LANGUAGES = {
     "afrikaans": "af",
