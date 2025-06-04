@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, File, Request, Security, UploadFile
 from fastapi.responses import JSONResponse
 
-from app.helpers import AccessController
+from app.helpers._accesscontroller import AccessController
 from app.schemas.parse import (
     ForceOCRForm,
     Languages,

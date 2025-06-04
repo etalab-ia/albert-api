@@ -12,6 +12,7 @@ from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.helpers._documentmanager import DocumentManager
 from app.helpers._identityaccessmanager import IdentityAccessManager
 from app.helpers._limiter import Limiter
+from app.helpers._parsermanager import ParserManager
 from app.helpers._usagetokenizer import UsageTokenizer
 from app.helpers._websearchmanager import WebSearchManager
 from app.helpers.agents import AgentsManager
