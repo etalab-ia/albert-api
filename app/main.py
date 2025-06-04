@@ -5,7 +5,7 @@ from fastapi.dependencies.utils import get_dependant
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 
-from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, rerank, search
+from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, parse, rerank, search
 from app.helpers import AccessController
 from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
@@ -27,6 +27,7 @@ from app.utils.variables import (
     ROUTER__MODELS,
     ROUTER__MONITORING,
     ROUTER__OCR,
+    ROUTER__PARSE,
     ROUTER__RERANK,
     ROUTER__SEARCH,
 )
@@ -75,6 +76,7 @@ def create_app(*args, **kwargs) -> FastAPI:
         return await call_next(request)
 
     # Routers
+
     if ROUTER__AUDIO not in settings.general.disabled_routers:
         add_hooks(router=audio.router)
         app.include_router(router=audio.router, tags=[ROUTER__AUDIO.title()], prefix="/v1")
@@ -95,10 +97,6 @@ def create_app(*args, **kwargs) -> FastAPI:
         add_hooks(router=collections.router)
         app.include_router(router=collections.router, tags=[ROUTER__COLLECTIONS.title()], prefix="/v1")
 
-    if ROUTER__COMPLETIONS not in settings.general.disabled_routers:
-        add_hooks(router=completions.router)
-        app.include_router(router=completions.router, tags=[ROUTER__COMPLETIONS.title()], prefix="/v1")
-
     if ROUTER__DOCUMENTS not in settings.general.disabled_routers:
         add_hooks(router=documents.router)
         app.include_router(router=documents.router, tags=[ROUTER__DOCUMENTS.title()], prefix="/v1")
@@ -106,10 +104,6 @@ def create_app(*args, **kwargs) -> FastAPI:
     if ROUTER__EMBEDDINGS not in settings.general.disabled_routers:
         add_hooks(router=embeddings.router)
         app.include_router(router=embeddings.router, tags=[ROUTER__EMBEDDINGS.title()], prefix="/v1")
-
-    if ROUTER__FILES not in settings.general.disabled_routers:
-        # hooks does not work with files endpoint (request is overwritten by the file upload)
-        app.include_router(router=files.router, tags=[ROUTER__FILES.title()], prefix="/v1")
 
     if ROUTER__MODELS not in settings.general.disabled_routers:
         add_hooks(router=models.router)
@@ -128,6 +122,10 @@ def create_app(*args, **kwargs) -> FastAPI:
         add_hooks(router=ocr.router)
         app.include_router(router=ocr.router, tags=[ROUTER__OCR.upper()], prefix="/v1")
 
+    if ROUTER__PARSE not in settings.general.disabled_routers:
+        add_hooks(router=parse.router)
+        app.include_router(router=parse.router, tags=[ROUTER__PARSE.title()], prefix="/v1")
+
     if ROUTER__RERANK not in settings.general.disabled_routers:
         add_hooks(router=rerank.router)
         app.include_router(router=rerank.router, tags=[ROUTER__RERANK.title()], prefix="/v1")
@@ -135,6 +133,15 @@ def create_app(*args, **kwargs) -> FastAPI:
     if ROUTER__SEARCH not in settings.general.disabled_routers:
         add_hooks(router=search.router)
         app.include_router(router=search.router, tags=[ROUTER__SEARCH.title()], prefix="/v1")
+
+    # DEPRECATED LEGACY ENDPOINTS
+    if ROUTER__COMPLETIONS not in settings.general.disabled_routers:
+        add_hooks(router=completions.router)
+        app.include_router(router=completions.router, tags=["Legacy"], prefix="/v1")
+
+    if ROUTER__FILES not in settings.general.disabled_routers:
+        # hooks does not work with files endpoint (request is overwritten by the file upload)
+        app.include_router(router=files.router, tags=["Legacy"], prefix="/v1")
 
     return app
 

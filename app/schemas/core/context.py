@@ -11,9 +11,7 @@ class GlobalContext(BaseModel):
     iam: Optional[Any] = None
     limiter: Optional[Any] = None
     documents: Optional[Any] = None
-
-    class Config:
-        extra = "allow"
+    parser: Optional[Any] = None
 
 
 class RequestContext(BaseModel):

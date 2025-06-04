@@ -11,6 +11,7 @@ ENDPOINT__EMBEDDINGS = "/embeddings"
 ENDPOINT__FILES = "/files"
 ENDPOINT__MODELS = "/models"
 ENDPOINT__OCR = "/ocr-beta"
+ENDPOINT__PARSE = "/parse"
 ENDPOINT__RERANK = "/rerank"
 ENDPOINT__ROLES = "/roles"
 ENDPOINT__ROLES_ME = "/roles/me"
@@ -18,6 +19,7 @@ ENDPOINT__SEARCH = "/search"
 ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
 ENDPOINT__USERS_ME = "/users/me"
+
 
 ENDPOINTS = [value for name, value in locals().items() if name.startswith("ENDPOINT__")]
 
@@ -33,9 +35,11 @@ ROUTER__FILES = "files"
 ROUTER__MODELS = "models"
 ROUTER__MONITORING = "monitoring"
 ROUTER__OCR = "ocr"
+ROUTER__PARSE = "parse"
 ROUTER__RERANK = "rerank"
 ROUTER__SEARCH = "search"
 ROUTER__MULTIAGENTS = "multiagents"
+
 
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
 

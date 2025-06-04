@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
-from ui.backend.documents import create_collection, delete_collection, delete_document, update_collection, upload_file
+from ui.backend.documents import create_collection, delete_collection, delete_document, update_collection, upload_document
 from ui.frontend.header import header
 from ui.frontend.utils import input_new_collection_description, input_new_collection_name, ressources_selector
 
@@ -79,4 +79,4 @@ file_to_upload = st.file_uploader(label="File", type=["pdf", "html", "json", "md
 with stylable_container(key="Header", css_styles="button{float: right;}"):
     if st.button(label="**:material/upload_file: Upload a new document**", disabled=not selected_collection["id"] or not file_to_upload):
         with st.spinner(text="Downloading and processing the document..."):
-            upload_file(file=file_to_upload, collection_id=selected_collection["id"])
+            upload_document(file=file_to_upload, collection_id=selected_collection["id"])

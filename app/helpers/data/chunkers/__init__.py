@@ -1,4 +1,5 @@
-from ._langchainrecursivecharactertextsplitter import LangchainRecursiveCharacterTextSplitter
+from ._basesplitter import BaseSplitter
 from ._nochunker import NoChunker
+from ._recursivecharactertextsplitter import RecursiveCharacterTextSplitter
 
-__all__ = ["LangchainRecursiveCharacterTextSplitter", "NoChunker"]
+__all__ = ["BaseSplitter", "NoChunker", "RecursiveCharacterTextSplitter"]
