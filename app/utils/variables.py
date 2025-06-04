@@ -18,8 +18,8 @@ ENDPOINT__ROLES_ME = "/roles/me"
 ENDPOINT__SEARCH = "/search"
 ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
-ENDPOINT__AGENTS_COMPLETIONS = "/agents/completions"
-ENDPOINT__AGENTS_TOOLS = "/agents/tools"
+ENDPOINT__AGENTS_COMPLETIONS = "/mcp/completions"
+ENDPOINT__AGENTS_TOOLS = "/mcp/tools"
 ENDPOINT__USERS_ME = "/users/me"
 
 

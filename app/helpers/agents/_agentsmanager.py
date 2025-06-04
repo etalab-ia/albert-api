@@ -47,28 +47,24 @@ class AgentsManager:
         return http_llm_response
 
     async def set_tools_for_llm_request(self, body):
-        if hasattr(body, "agents") and body.agents is not None:
+        if hasattr(body, "tools") and body.tools is not None:
             tools = await self.get_tools_from_bridge()
             available_tools = [
                 {"type": "function", "function": {"name": tool["name"], "description": tool["description"], "parameters": tool["inputSchema"]}}
                 for tool in tools
             ]
-            if "all" in body.agents:
+            if "all" in body.tools:
                 body.tools = available_tools
             else:
                 available_tool_names = [tool["function"]["name"] for tool in available_tools]
-                selected_available_tool_names = list(set(body.agents) & set(available_tool_names))
+                selected_available_tool_names = list(set(body.tools) & set(available_tool_names))
                 used_tools = [
                     available_tool
                     for available_tool in available_tools
                     if available_tool.get("function").get("name") in selected_available_tool_names
                 ]
                 body.tools = used_tools
-            body.tool_choice = getattr(body, "agents_choice", "auto")
-            if hasattr(body, "agents"):
-                delattr(body, "agents")
-            if hasattr(body, "agents_choice"):
-                delattr(body, "agents_choice")
+            body.tool_choice = getattr(body, "tool_choice", "auto")
         return body
 
     async def get_tools_from_bridge(self):

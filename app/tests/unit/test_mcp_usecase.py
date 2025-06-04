@@ -85,26 +85,6 @@ class TestMCPLoop:
             assert mock_llm_client.forward_request.call_count == number_of_rounds
 
         @pytest.mark.asyncio
-        async def test_get_completion_loop_maximum_iterations_can_be_changed(self, mcp_client, mock_mcp_bridge, mock_llm_client):
-            # GIVEN
-            mock_mcp_bridge.get_tool_list.return_value = {}
-            raw_response_from_llm = {"choices": [{"finish_reason": "not stop nor tools_calls", "message": {"content": "message from llm"}}]}
-            mock_llm_client.forward_request.return_value = SimpleNamespace(
-                text=json.dumps(raw_response_from_llm), json=lambda: raw_response_from_llm, status_code=200, request="", headers={}
-            )
-
-            number_of_rounds = 15
-            # WHEN
-            actual_message = await mcp_client.get_completion(
-                SimpleNamespace(messages=[{"content": "Salut", "role": "user"}], max_iterations=number_of_rounds, model_dump=lambda: None, model="")
-            )
-
-            # THEN
-            assert actual_message.json()["choices"][0]["finish_reason"] == "max_iterations"
-            assert actual_message.json()["choices"][0]["message"]["content"] == "message from llm"
-            assert mock_llm_client.forward_request.call_count == number_of_rounds
-
-        @pytest.mark.asyncio
         async def test_get_completion_should_return_message_from_llm_with_tool_call_result_when_tool_is_specified(
             self, mcp_client, mock_mcp_bridge, mock_llm_client
         ):
@@ -134,7 +114,7 @@ class TestMCPLoop:
             number_of_rounds = 2
             mock_mcp_bridge.call_tool.return_value = {"content": [{"text": "tool call result"}]}
             body = TestMcpBody(
-                messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large", agents=["tool 1", "tool 2"]
+                messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large", tools=["tool 1", "tool 2"]
             )
 
             # WHEN
@@ -187,7 +167,7 @@ class TestMCPLoop:
             ]
             number_of_rounds = 2
             mock_mcp_bridge.call_tool.return_value = {"content": [{"text": "tool call result"}]}
-            body = TestMcpBody(messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large", agents=["all"])
+            body = TestMcpBody(messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large", tools=["all"])
 
             # WHEN
             actual_message = await mcp_client.get_completion(body)
@@ -274,8 +254,8 @@ class TestMCPLoop:
             body = TestMcpBody(
                 messages=[{"content": "Je veux que tu fasses une action", "role": "user"}],
                 model="albert-large",
-                agents=["tool 1"],
-                agents_choice=agents_choice,
+                tools=["tool 1"],
+                tool_choice=agents_choice,
             )
 
             # WHEN

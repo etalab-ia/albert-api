@@ -6,7 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 
 from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, parse, rerank, search, mcp
-from app.helpers.core import AccessController
+from app.helpers._accesscontroller import AccessController
 from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
 from app.schemas.usage import Usage

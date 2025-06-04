@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Path, Request, Security
 from fastapi.responses import JSONResponse
 
-from app.helpers.core import AccessController
+from app.helpers._accesscontroller import AccessController
 from app.schemas.models import Model, Models
 from app.utils.context import global_context
 from app.utils.variables import ENDPOINT__MODELS

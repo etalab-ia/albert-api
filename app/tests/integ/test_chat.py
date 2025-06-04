@@ -6,7 +6,8 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 import pytest
 
-from app.helpers.core import UsageTokenizer
+from app.helpers._usagetokenizer import UsageTokenizer
+
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk
 from app.schemas.models import ModelType
 from app.utils.settings import settings

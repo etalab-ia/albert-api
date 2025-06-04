@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Path, Query, Request, Response, Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers.core import AccessController
+from app.helpers._accesscontroller import AccessController
 from app.schemas.documents import (
     ChunkerName,
     ChunkerNameForm,

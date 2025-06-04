@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request, Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers.core import AccessController
+from app.helpers._accesscontroller import AccessController
 from app.schemas.search import Searches, SearchRequest
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
