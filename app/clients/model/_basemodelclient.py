@@ -111,14 +111,32 @@ class BaseModelClient(ABC):
                 usage.details.append(detail)
 
                 # compute total usage
+
+                # add token usage to the total usage
                 usage.prompt_tokens += detail.usage.prompt_tokens
                 usage.completion_tokens += detail.usage.completion_tokens
                 usage.total_tokens += detail.usage.total_tokens
+
+                # add cost to the total usage
                 usage.cost += detail.usage.cost
-                usage.carbon.kgCO2eq.min += detail.usage.carbon.kgCO2eq.min
-                usage.carbon.kgCO2eq.max += detail.usage.carbon.kgCO2eq.max
-                usage.carbon.kwh.min += detail.usage.carbon.kwh.min
-                usage.carbon.kwh.max += detail.usage.carbon.kwh.max
+
+                # add carbon usage to the total usage
+                if detail.usage.carbon.kgCO2eq.min is not None:
+                    if usage.carbon.kgCO2eq.min is None:
+                        usage.carbon.kgCO2eq.min = 0.0
+                    usage.carbon.kgCO2eq.min += detail.usage.carbon.kgCO2eq.min
+                if detail.usage.carbon.kgCO2eq.max is not None:
+                    if usage.carbon.kgCO2eq.max is None:
+                        usage.carbon.kgCO2eq.max = 0.0
+                    usage.carbon.kgCO2eq.max += detail.usage.carbon.kgCO2eq.max
+                if detail.usage.carbon.kWh.min is not None:
+                    if usage.carbon.kWh.min is None:
+                        usage.carbon.kWh.min = 0.0
+                    usage.carbon.kWh.min += detail.usage.carbon.kWh.min
+                if detail.usage.carbon.kWh.max is not None:
+                    if usage.carbon.kWh.max is None:
+                        usage.carbon.kWh.max = 0.0
+                    usage.carbon.kWh.max += detail.usage.carbon.kWh.max
 
             except Exception as e:
                 logger.exception(msg=f"Failed to compute usage values for endpoint {self.endpoint}: {e}.")

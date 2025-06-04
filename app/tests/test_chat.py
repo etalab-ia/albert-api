@@ -305,15 +305,16 @@ class TestChat:
         assert response.status_code == 200, response.text
 
         response_json = response.json()
-        assert response_json.get("usage"), response.text
-        assert response_json["usage"].get("prompt_tokens"), response.text
+        print(response_json)
+        assert response_json.get("usage") is not None, response.text
+        assert response_json["usage"].get("prompt_tokens") is not None, response.text
         assert response_json["usage"]["prompt_tokens"] == prompt_tokens
 
-        assert response_json["usage"].get("completion_tokens"), response.text
+        assert response_json["usage"].get("completion_tokens") is not None, response.text
 
         contents = [choice.get("message", {}).get("content", "") for choice in response_json.get("choices", [])]
         completion_tokens = sum([len(tokenizer.encode(content)) for content in contents])
         assert response_json["usage"]["completion_tokens"] == completion_tokens
 
-        assert response_json["usage"].get("total_tokens"), response.text
+        assert response_json["usage"].get("total_tokens") is not None, response.text
         assert response_json["usage"]["total_tokens"] == prompt_tokens + completion_tokens

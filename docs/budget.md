@@ -51,7 +51,7 @@ models:
 The compute cost is calculated based on the number of tokens used and the budget defined for the model based on the following formula:
 
 ```python
-cost = round((prompt_tokens / 1000000 * client.budget.prompt_tokens) + (completion_tokens / 1000000 * client.budget.completion_tokens), ndigits=6)
+cost = round((prompt_tokens / 1000000 * client.costs.prompt_tokens) + (completion_tokens / 1000000 * client.costs.completion_tokens), ndigits=6)
 ```
 
-The compute cost returned in the response, in the `usage.budget` field. After the request is processed, the budget amount of the user is updated by the `update_budget` function in the `hooks_decorator.py` file.
+The compute cost returned in the response, in the `usage.cost` field. After the request is processed, the budget amount of the user is updated by the `update_budget` function in the `hooks_decorator.py` file.

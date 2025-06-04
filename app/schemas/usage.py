@@ -1,30 +1,30 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import Field
 
 from app.schemas import BaseModel
 
 
-class CarbonFootprintUsageKwh(BaseModel):
-    min: float = 0.0
-    max: float = 0.0
+class CarbonFootprintUsageKWh(BaseModel):
+    min: Optional[float] = Field(default=None, description="Minimum carbon footprint in kWh.")
+    max: Optional[float] = Field(default=None, description="Maximum carbon footprint in kWh.")
 
 
 class CarbonFootprintUsageKgCO2eq(BaseModel):
-    min: float = 0.0
-    max: float = 0.0
+    min: Optional[float] = Field(default=None, description="Minimum carbon footprint in kgCO2eq (global warming potential).")
+    max: Optional[float] = Field(default=None, description="Maximum carbon footprint in kgCO2eq (global warming potential).")
 
 
 class CarbonFootprintUsage(BaseModel):
-    kwh: CarbonFootprintUsageKwh = Field(default_factory=CarbonFootprintUsageKwh)
+    kWh: CarbonFootprintUsageKWh = Field(default_factory=CarbonFootprintUsageKWh)
     kgCO2eq: CarbonFootprintUsageKgCO2eq = Field(default_factory=CarbonFootprintUsageKgCO2eq)
 
 
 class BaseUsage(BaseModel):
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
-    cost: float = 0.0
+    prompt_tokens: int = Field(default=0, description="Number of prompt tokens (e.g. input tokens).")
+    completion_tokens: int = Field(default=0, description="Number of completion tokens (e.g. output tokens).")
+    total_tokens: int = Field(default=0, description="Total number of tokens (e.g. input and output tokens).")
+    cost: float = Field(default=0.0, description="Total cost of the request.")
     carbon: CarbonFootprintUsage = Field(default_factory=CarbonFootprintUsage)
 
 
