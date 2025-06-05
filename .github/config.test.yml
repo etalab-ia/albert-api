@@ -50,7 +50,7 @@ multi_agents_search:
   model: albert-small
 
 mcp:
-  mcp_bridge_url: http://localhost:9875
+  mcp_bridge_url: http://albert-test-mcp-bridge-1:8000
 
 databases:
   - type: qdrant
