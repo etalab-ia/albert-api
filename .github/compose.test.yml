@@ -50,7 +50,7 @@ services:
       service: redis
     ports: !override
       - 8335:6379
-      -
+
   mcp-bridge:
     extends:
       file: ../compose.yml
