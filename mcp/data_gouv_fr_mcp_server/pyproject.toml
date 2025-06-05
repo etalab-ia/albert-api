@@ -1,0 +1,15 @@
+[project]
+name = "data-gouv-fr-mcp-server"
+version = "0.1.0"
+description = "A simple MCP data gouv fr server"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.2.0",
+    "pytest-asyncio==1.0.0"
+]
+
+[project.scripts]
+weather = "main:main"
+
