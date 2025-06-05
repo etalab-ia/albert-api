@@ -65,8 +65,7 @@ services:
       - MCP_BRIDGE__CONFIG__FILE=config.json
     volumes:
       - ./mcp/config.json:/mcp_bridge/config.json
-#      - ./mcp/weather-server-example:/mcp_bridge/weather-server-python
-      - /home/bepi/Documents/projets/albert/data_gouv_fr_mcp_server:/mcp_bridge/data-gouv-fr-mcp-server
+      - ./mcp/data_gouv_fr_mcp_server:/mcp_bridge/data-gouv-fr-mcp-server
     restart: unless-stopped
 
 volumes:

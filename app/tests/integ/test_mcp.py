@@ -16,10 +16,10 @@ class TestMCP:
             "model": "albert-large",
             "messages": [{"role": "user", "content": "Quelles sont les données sur les accidents de la route ?"}],
             "tools": ["search_datasets", "get_dataset_details"],
-            "tool_choice": "auto",
+            "tool_choice": "required",
             "stream": False,
             "n": 1,
-            "max_tokens": 200,
+            "max_tokens": 2000,
         }
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__AGENTS_COMPLETIONS}", json=params)
         assert response.status_code == 200, response.text
