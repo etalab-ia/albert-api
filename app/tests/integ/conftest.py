@@ -71,7 +71,7 @@ def engine(worker_id):
     Base.metadata.drop_all(engine)  # Clean state
     Base.metadata.create_all(engine)
 
-    qdrant_client = QdrantClient(**settings.databases.qdrant.args)
+    qdrant_client = QdrantClient(**settings.databases.vector_store.args)
     collections = qdrant_client.get_collections().collections
     for collection in collections:
         qdrant_client.delete_collection(collection_name=collection.name)

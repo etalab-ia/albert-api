@@ -27,6 +27,7 @@ class LimitsTokenizer(str, Enum):
 
 class DatabaseType(str, Enum):
     QDRANT = "qdrant"
+    ELASTICSEARCH = "elasticsearch"
     REDIS = "redis"
     SQL = "sql"
 
@@ -266,6 +267,11 @@ class Config(ConfigBaseModel):
         qdrant_databases = [database for database in values.databases if database.type == DatabaseType.QDRANT]
         assert len(qdrant_databases) <= 1, "There must be only one Qdrant database."
 
+        elasticsearch_databases = [database for database in values.databases if database.type == DatabaseType.ELASTICSEARCH]
+        assert len(elasticsearch_databases) <= 1, "There must be only one Elasticsearch database."
+
+        assert elasticsearch_databases == [] or qdrant_databases == [], "Only one vector database (Qdrant or Elasticsearch) is allowed."  # fmt: off
+
         sql_databases = [database for database in values.databases if database.type == DatabaseType.SQL and database.context == "api"]
         if len(sql_databases) > 1:
             raise ValueError("There must be only one SQL database with the `api` context. If your configuration files contains multiple SQL databases, please specify the context keyword for other SQL databases.")  # fmt: off
@@ -273,9 +279,16 @@ class Config(ConfigBaseModel):
             raise ValueError("There must be at least one SQL database.")
 
         values.databases = SimpleNamespace()
-        values.databases.redis = redis_databases[0]
-        values.databases.qdrant = qdrant_databases[0]
-        values.databases.sql = sql_databases[0]
+        values.databases.redis = redis_databases[0] if redis_databases else None
+        values.databases.sql = sql_databases[0] if sql_databases else None
+
+        # vector store
+        if qdrant_databases:
+            values.databases.vector_store = qdrant_databases[0]
+        elif elasticsearch_databases:
+            values.databases.vector_store = elasticsearch_databases[0]
+        else:
+            values.databases.vector_store = None
 
         return values
 
@@ -317,16 +330,16 @@ class Settings(BaseSettings):
         values.mcp = config.mcp
         values.parser = config.parser
 
-        if values.databases.qdrant:
-            assert values.databases.sql, "SQL database is required to use Qdrant features."
-            assert values.databases.qdrant.model in [model.id for model in values.models if model.type == ModelType.TEXT_EMBEDDINGS_INFERENCE], f"Qdrant model is not defined in models section with type {ModelType.TEXT_EMBEDDINGS_INFERENCE}."  # fmt: off
+        if values.databases.vector_store:
+            assert values.databases.sql, "SQL database is required to use vector store features."
+            assert values.databases.vector_store.model in [model.id for model in values.models if model.type == ModelType.TEXT_EMBEDDINGS_INFERENCE], f"Vector store model is not defined in models section with type {ModelType.TEXT_EMBEDDINGS_INFERENCE}."  # fmt: off
 
         if values.web_search:
-            assert values.databases.qdrant, "Qdrant database is required to use web_search."
+            assert values.databases.vector_store, "Vector store database is required to use web_search."
             assert values.web_search.model in [model.id for model in values.models if model.type in [ModelType.TEXT_GENERATION, ModelType.IMAGE_TEXT_TO_TEXT]], f"Web search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
 
         if values.multi_agents_search:
-            assert values.databases.qdrant, "Qdrant database is required to use multi-agents search."
+            assert values.databases.vector_store, "Vector store database is required to use multi-agents search."
             assert values.multi_agents_search.model in [model.id for model in values.models if model.type == ModelType.TEXT_GENERATION], f"Multi-agents search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
 
         return values
