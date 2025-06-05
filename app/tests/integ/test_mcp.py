@@ -16,7 +16,7 @@ class TestMCP:
             "model": "albert-large",
             "messages": [{"role": "user", "content": "Quelles sont les données sur les accidents de la route ?"}],
             "tools": ["search_datasets", "get_dataset_details"],
-            "tool_choice": "required",
+            "tool_choice": "auto",
             "stream": False,
             "n": 1,
             "max_tokens": 200,
