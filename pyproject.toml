@@ -34,7 +34,7 @@ app = [
 
     # data
     "langchain-text-splitters==0.3.8",
-    "elasticsearch[async]==9.0.0",
+    "elasticsearch[async]==9.0.1",
     "qdrant-client==1.10.1",
     "redis==5.2.1",
     "beautifulsoup4==4.13.3",

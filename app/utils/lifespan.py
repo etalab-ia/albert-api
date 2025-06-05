@@ -4,7 +4,7 @@ import traceback
 from coredis import ConnectionPool
 from fastapi import FastAPI
 
-from app.clients.database import ElasticsearchClient, QdrantClient
+from app.clients.database import get_vector_store
 from app.clients.mcp import SecretShellMCPBridgeClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.parser import BaseParserClient as ParserClient
@@ -18,7 +18,6 @@ from app.helpers._websearchmanager import WebSearchManager
 from app.helpers.agents import AgentsManager
 from app.helpers.models import ModelRegistry
 from app.helpers.models.routers import ModelRouter
-from app.schemas.core.settings import DatabaseType
 from app.utils import multiagents
 from app.utils.context import global_context
 from app.utils.logging import init_logger
@@ -86,15 +85,7 @@ async def lifespan(app: FastAPI):
         assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
     # setup context: documents
-    if settings.databases.vector_store.type == DatabaseType.QDRANT:
-        vector_store = QdrantClient(**settings.databases.vector_store.args)
-        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
-
-    elif settings.databases.vector_store.type == DatabaseType.ELASTICSEARCH:
-        vector_store = ElasticsearchClient(**settings.databases.vector_store.args)
-        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
-    else:
-        vector_store = None
+    vector_store = get_vector_store(settings)
 
     # TODO: pass domains in websearchmanager arguments
     web_search = WebSearchManager(web_search=web_search, model=global_context.models(model=settings.web_search.model)) if settings.web_search else None  # fmt: off
@@ -116,7 +107,4 @@ async def lifespan(app: FastAPI):
     yield
 
     # cleanup resources when app shuts down
-    if settings.databases.vector_store.type == DatabaseType.QDRANT:
-        await vector_store.close()
-    elif settings.databases.vector_store.type == DatabaseType.ELASTICSEARCH:
-        await vector_store.transport.close()
+    await vector_store.close()

@@ -32,6 +32,9 @@ class QdrantClient(AsyncQdrantClient):
         except Exception:
             return False
 
+    async def close(self):
+        await super().close()
+
     async def create_collection(self, collection_id: int, vector_size: int) -> None:
         await super().create_collection(
             collection_name=str(collection_id),
@@ -41,6 +44,10 @@ class QdrantClient(AsyncQdrantClient):
 
     async def delete_collection(self, collection_id: int) -> None:
         await super().delete_collection(collection_name=str(collection_id))
+
+    async def get_collections(self) -> list[int]:
+        collections = await super().get_collections()
+        return [int(collection.name) for collection in collections.collections]
 
     async def get_chunk_count(self, collection_id: int, document_id: int) -> Optional[int]:
         try:

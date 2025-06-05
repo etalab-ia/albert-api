@@ -1,3 +1,4 @@
+import asyncio
 from functools import partial
 import logging
 import os
@@ -7,13 +8,13 @@ from typing import Generator
 
 from fastapi.testclient import TestClient
 import pytest
-from qdrant_client import QdrantClient
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 import vcr
 
+from app.clients.database import get_vector_store
 from app.main import create_app
 from app.schemas.auth import LimitType, PermissionType
 from app.sql.models import Base
@@ -71,10 +72,15 @@ def engine(worker_id):
     Base.metadata.drop_all(engine)  # Clean state
     Base.metadata.create_all(engine)
 
-    qdrant_client = QdrantClient(**settings.databases.vector_store.args)
-    collections = qdrant_client.get_collections().collections
-    for collection in collections:
-        qdrant_client.delete_collection(collection_name=collection.name)
+    # CLean the vector store
+    vector_store = get_vector_store(settings)
+
+    async def delete_all_collections():
+        collections = await vector_store.get_collections()
+        for collection in collections:
+            await vector_store.delete_collection(collection)
+
+    asyncio.run(delete_all_collections())
 
     yield engine
 

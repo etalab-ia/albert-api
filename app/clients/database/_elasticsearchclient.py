@@ -17,6 +17,9 @@ class ElasticsearchClient(AsyncElasticsearch):
         except Exception:
             return False
 
+    async def close(self):
+        await super().transport.close()
+
     async def create_collection(self, collection_id: int, vector_size: int) -> None:
         settings = {
             "similarity": {"default": {"type": "BM25"}},
@@ -51,23 +54,27 @@ class ElasticsearchClient(AsyncElasticsearch):
             },
         }
 
-        await self.super().indices.create(index=collection_id, mappings=mappings, settings=settings)
+        await self.super().indices.create(index=str(collection_id), mappings=mappings, settings=settings)
 
     async def delete_collection(self, collection_id: int) -> None:
-        await self.super().indices.delete(index=collection_id)
+        await self.super().indices.delete(index=str(collection_id))
+
+    async def get_collections(self) -> list[int]:
+        collections = await super().indices.get_alias()
+        return [int(collection) for collection in collections]
 
     async def get_chunk_count(self, collection_id: int, document_id: int) -> Optional[int]:
         try:
             body = {"query": {"match": {"metadata.document_id": document_id}}}
-            result = await self.super().count(index=collection_id, body=body)
+            result = await self.super().count(index=str(collection_id), body=body)
             return result["count"]
         except Exception:
             return None
 
     async def delete_document(self, collection_id: int, document_id: int) -> None:
         body = {"query": {"match": {"metadata.document_id": document_id}}}
-        await self.super().delete_by_query(index=collection_id, body=body)
-        await self.super().indices.refresh(index=collection_id)
+        await self.super().delete_by_query(index=str(collection_id), body=body)
+        await self.super().indices.refresh(index=str(collection_id))
 
     async def get_chunks(self, collection_id: int, document_id: int, offset: int = 0, limit: int = 10, chunk_id: Optional[int] = None) -> List[Chunk]:
         body = {"query": {"match": {"metadata.document_id": document_id}}, "_source": ["body", "metadata"]}
@@ -75,7 +82,7 @@ class ElasticsearchClient(AsyncElasticsearch):
             body["query"]["match"]["id"] = chunk_id
 
         # TODO: vérifier le offset et le limit
-        results = await self.super().search(index=collection_id, body=body, from_=offset, size=limit)
+        results = await self.super().search(index=str(collection_id), body=body, from_=offset, size=limit)
 
         chunks = []
         for hit in results["hits"]["hits"]:
@@ -86,7 +93,7 @@ class ElasticsearchClient(AsyncElasticsearch):
     async def upsert(self, collection_id: int, chunks: List[Chunk], embeddings: List[list[float]]) -> None:
         actions = [
             {
-                "_index": collection_id,
+                "_index": str(collection_id),
                 "_source": {
                     "id": chunk.id,
                     "body": chunk.content,
@@ -97,7 +104,7 @@ class ElasticsearchClient(AsyncElasticsearch):
             for chunk, embedding in zip(chunks, embeddings)
         ]
         await helpers.async_bulk(client=self, actions=actions, index=collection_id)
-        await self.super().indices.refresh(index=collection_id)
+        await self.super().indices.refresh(index=str(collection_id))
 
     async def search(
         self,

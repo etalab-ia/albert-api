@@ -53,14 +53,23 @@ mcp:
   mcp_bridge_url: http://albert-test-mcp-bridge-1:8000
 
 databases:
-  - type: qdrant
+  #- type: qdrant
+  #  model: embeddings-small
+  #  args:
+  #    url: http://${QDRANT_HOST}:${QDRANT_PORT}
+  #    api_key: changeme
+  #    prefer_grpc: True
+  #    grpc_port: ${QDRANT_GRPC_PORT}
+  #    timeout: 10
+
+  - type: elasticsearch
+    context: api
     model: embeddings-small
     args:
-      url: http://${QDRANT_HOST}:${QDRANT_PORT}
-      api_key: changeme
-      prefer_grpc: True
-      grpc_port: ${QDRANT_GRPC_PORT}
-      timeout: 10
+      hosts: http://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}
+      basic_auth:
+        - "elastic"
+        - ""
 
   - type: redis
     args:

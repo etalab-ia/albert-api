@@ -26,7 +26,9 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      qdrant:
+      #qdrant:
+      #  condition: service_healthy
+      elasticsearch:
         condition: service_healthy
 
   postgres:
@@ -36,13 +38,20 @@ services:
     ports: !override
       - 8432:5432
 
-  qdrant:
+  #qdrant:
+  #  extends:
+  #    file: ../compose.yml
+  #    service: qdrant
+  #  ports: !override
+  #    - 8333:6333
+  #    - 8334:6334
+
+  elasticsearch:
     extends:
       file: ../compose.yml
-      service: qdrant
+      service: elasticsearch
     ports: !override
-      - 8333:6333
-      - 8334:6334
+      - 9200:9200
 
   redis:
     extends:
@@ -61,4 +70,4 @@ services:
 volumes:
   postgres:
   redis:
-  qdrant:
+  elasticsearch:
