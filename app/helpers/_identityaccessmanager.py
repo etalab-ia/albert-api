@@ -355,7 +355,7 @@ class IdentityAccessManager:
         # update the token
         expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
         await session.execute(
-            statement=update(table=TokenTable).values(token=f"{token[:8]}...{token[-8:]}", expires_at=expires_at).where(TokenTable.name == name)
+            statement=update(table=TokenTable).values(token=f"{token[:8]}...{token[-8:]}", expires_at=expires_at).where(TokenTable.id == token_id)
         )
         await session.commit()
 
