@@ -31,8 +31,6 @@ async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
     # setup clients
-    mcp_bridge = SecretShellMCPBridgeClient("http://localhost:9876")
-
     redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
     web_search = (
         WebSearchClient.import_module(type=settings.web_search.type)(user_agent=settings.web_search.user_agent, **settings.web_search.args)

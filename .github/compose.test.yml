@@ -17,6 +17,8 @@ services:
       - REDIS_PORT=6379
       - QDRANT_PORT=6333
       - QDRANT_GRPC_PORT=6334
+      - MCP_BRIDGE_HOST=albert-test-mcp-bridge-1
+      - MCP_BRIDGE_PORT=9875
     ports:
       - 8000:8000
     volumes:
