@@ -142,14 +142,16 @@ def app_with_test_db(engine, db_session):
 @pytest.fixture(scope="session")
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
     # Lifespan requests API to get models and initialize the app
-    VCR_GLOBAL_CASSETTE = VCR_INSTANCE.use_cassette("lifespan_init.yaml")
-    if VCR_ENABLED and VCR_GLOBAL_CASSETTE is not None:
+    global VCR_INSTANCE, VCR_GLOBAL_CASSETTE
+
+    if VCR_ENABLED:
+        VCR_GLOBAL_CASSETTE = VCR_INSTANCE.use_cassette("lifespan_init.yaml")
         VCR_GLOBAL_CASSETTE.__enter__()
     with TestClient(app=app_with_test_db) as client:
         client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
         # Exit the global cassette, requests done by app initialization
         # are recorded in the global cassette
-        if VCR_ENABLED and VCR_GLOBAL_CASSETTE is not None:
+        if VCR_ENABLED:
             VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
         yield client
 
