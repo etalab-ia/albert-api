@@ -48,6 +48,17 @@ class TestGetCarbonFootprint:
         # Then
         assert expected_carbon_footprint == result
 
+    def test_get_carbon_footprint_return_error_when_token_count_is_not_int_or_float(self):
+        # Given
+        active_params = 0
+        total_params = 0
+        model_zone = CountryCodes.WOR
+        token_count = "10"
+        request_latency = 0.01
+        # When-Then
+        with pytest.raises(ValueError, match="token_count must be a positive number"):
+            get_carbon_footprint(active_params, total_params, model_zone, token_count, request_latency)
+    
     def test_get_carbon_footprint_return_error_when_token_count_is_negative(self):
         # Given
         active_params = 0
@@ -57,6 +68,28 @@ class TestGetCarbonFootprint:
         request_latency = 0.01
         # When-Then
         with pytest.raises(ValueError, match="token_count must be a positive number"):
+            get_carbon_footprint(active_params, total_params, model_zone, token_count, request_latency)
+
+    def test_get_carbon_footprint_return_error_when_request_latency_is_not_int_or_float(self):
+        # Given
+        active_params = 0
+        total_params = 0
+        model_zone = CountryCodes.WOR
+        token_count = 10
+        request_latency = "0.01"
+        # When-Then
+        with pytest.raises(ValueError, match="request_latency must be a positive number"):
+            get_carbon_footprint(active_params, total_params, model_zone, token_count, request_latency)
+    
+    def test_get_carbon_footprint_return_error_when_request_latency_is_negative(self):
+        # Given
+        active_params = 0
+        total_params = 0
+        model_zone = CountryCodes.WOR
+        token_count = 10
+        request_latency = -0.01
+        # When-Then
+        with pytest.raises(ValueError, match="request_latency must be a positive number"):
             get_carbon_footprint(active_params, total_params, model_zone, token_count, request_latency)
 
     # TODO: AUDREY faire les 3 tests d'erreur
