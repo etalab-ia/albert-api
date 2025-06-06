@@ -23,9 +23,8 @@ from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 
 
-# Define global VCR instance and cassette
+# Define global VCR instance
 VCR_INSTANCE = None
-VCR_GLOBAL_CASSETTE = None
 VCR_ENABLED = os.environ.get("VCR_ENABLED", "").lower() in ("true", "1", "yes")
 
 
@@ -33,7 +32,7 @@ def pytest_configure(config):
     """Called after command line options have been parsed and all plugins and initial conftest files loaded.
     This is the earliest pytest hook we can use to set up VCR globally.
     """
-    global VCR_INSTANCE, VCR_GLOBAL_CASSETTE
+    global VCR_INSTANCE
 
     # Skip VCR setup if disabled
     if not VCR_ENABLED:
@@ -142,18 +141,15 @@ def app_with_test_db(engine, db_session):
 @pytest.fixture(scope="session")
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
     # Lifespan requests API to get models and initialize the app
-    global VCR_INSTANCE, VCR_GLOBAL_CASSETTE
-
     if VCR_ENABLED:
-        VCR_GLOBAL_CASSETTE = VCR_INSTANCE.use_cassette("lifespan_init.yaml")
-        VCR_GLOBAL_CASSETTE.__enter__()
-    with TestClient(app=app_with_test_db) as client:
-        client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
-        # Exit the global cassette, requests done by app initialization
-        # are recorded in the global cassette
-        if VCR_ENABLED:
-            VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
-        yield client
+        with VCR_INSTANCE.use_cassette("lifespan_init.yaml"):
+            with TestClient(app=app_with_test_db) as client:
+                client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+                yield client
+    else:
+        with TestClient(app=app_with_test_db) as client:
+            client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+            yield client
 
 
 @pytest.fixture(scope="module")
