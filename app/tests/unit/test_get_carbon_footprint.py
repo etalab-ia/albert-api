@@ -92,8 +92,6 @@ class TestGetCarbonFootprint:
         with pytest.raises(ValueError, match="request_latency must be a positive number"):
             get_carbon_footprint(active_params, total_params, model_zone, token_count, request_latency)
 
-    # TODO: AUDREY faire les 3 tests d'erreur
-
     def test_get_carbon_footprint_return_footprint(self, mocker):
         # Given
         mocked_electricity_mix = mocker.patch("app.utils.carbon.electricity_mixes.find_electricity_mix")
