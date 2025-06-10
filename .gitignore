@@ -205,7 +205,6 @@ terraform.rc
 /docs/tutorials/*.wav
 /docs/tutorials/*.mp3
 uv.lock
-app/tests/integ/cassettes
 
 .envrc
 .direnv/

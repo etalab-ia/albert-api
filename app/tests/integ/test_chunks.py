@@ -10,7 +10,7 @@ from app.utils.variables import ENDPOINT__CHUNKS, ENDPOINT__COLLECTIONS, ENDPOIN
 
 
 @pytest.fixture(scope="module")
-def setup(client: TestClient):
+def setup(client: TestClient, record_with_vcr):
     # Create a collection
     response = client.post_without_permissions(
         url=f"/v1{ENDPOINT__COLLECTIONS}",

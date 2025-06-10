@@ -1,0 +1,486 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: https://albert.api.etalab.gouv.fr/v1/models
+  response:
+    body:
+      string: '{"object":"list","data":[{"id":"albert-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":64000,"type":"text-generation","aliases":["meta-llama/Llama-3.1-8B-Instruct"]},{"id":"embeddings-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-embeddings-inference","aliases":["BAAI/bge-m3"]},{"id":"audio-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":null,"type":"automatic-speech-recognition","aliases":["openai/whisper-large-v3"]},{"id":"AgentPublic/llama3-instruct-guillaumetell","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-generation","aliases":[]},{"id":"AgentPublic/albert-spp-8b","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":46000,"type":"text-generation","aliases":[]},{"id":"rerank-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-classification","aliases":["BAAI/bge-reranker-v2-m3"]},{"id":"albert-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":128000,"type":"image-text-to-text","aliases":["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]},{"id":"neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":24000,"type":"text-generation","aliases":[]}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:47 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '1465'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"model": "albert-large", "input": "hello world"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '49'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.32.3
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"detail":"Wrong model type."}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '30'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:48 GMT
+      Server:
+      - nginx/1.27.4
+    status:
+      code: 422
+      message: Unprocessable Entity
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: https://albert.api.etalab.gouv.fr/v1/models
+  response:
+    body:
+      string: '{"object":"list","data":[{"id":"albert-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":64000,"type":"text-generation","aliases":["meta-llama/Llama-3.1-8B-Instruct"]},{"id":"embeddings-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-embeddings-inference","aliases":["BAAI/bge-m3"]},{"id":"audio-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":null,"type":"automatic-speech-recognition","aliases":["openai/whisper-large-v3"]},{"id":"AgentPublic/llama3-instruct-guillaumetell","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-generation","aliases":[]},{"id":"AgentPublic/albert-spp-8b","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":46000,"type":"text-generation","aliases":[]},{"id":"rerank-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-classification","aliases":["BAAI/bge-reranker-v2-m3"]},{"id":"albert-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":128000,"type":"image-text-to-text","aliases":["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]},{"id":"neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":24000,"type":"text-generation","aliases":[]}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:48 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '1465'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"model": "albert-small", "input": "hello world"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '49'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.32.3
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"detail":"Wrong model type."}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '30'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:48 GMT
+      Server:
+      - nginx/1.27.4
+    status:
+      code: 422
+      message: Unprocessable Entity
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: https://albert.api.etalab.gouv.fr/v1/models
+  response:
+    body:
+      string: '{"object":"list","data":[{"id":"albert-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":64000,"type":"text-generation","aliases":["meta-llama/Llama-3.1-8B-Instruct"]},{"id":"embeddings-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-embeddings-inference","aliases":["BAAI/bge-m3"]},{"id":"audio-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":null,"type":"automatic-speech-recognition","aliases":["openai/whisper-large-v3"]},{"id":"AgentPublic/llama3-instruct-guillaumetell","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-generation","aliases":[]},{"id":"AgentPublic/albert-spp-8b","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":46000,"type":"text-generation","aliases":[]},{"id":"rerank-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-classification","aliases":["BAAI/bge-reranker-v2-m3"]},{"id":"albert-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":128000,"type":"image-text-to-text","aliases":["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]},{"id":"neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":24000,"type":"text-generation","aliases":[]}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:48 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '1465'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"model": "albert-small", "input": "hello world"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '49'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.32.3
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"detail":"Wrong model type."}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '30'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:48 GMT
+      Server:
+      - nginx/1.27.4
+    status:
+      code: 422
+      message: Unprocessable Entity
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: https://albert.api.etalab.gouv.fr/v1/models
+  response:
+    body:
+      string: '{"object":"list","data":[{"id":"albert-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":64000,"type":"text-generation","aliases":["meta-llama/Llama-3.1-8B-Instruct"]},{"id":"embeddings-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-embeddings-inference","aliases":["BAAI/bge-m3"]},{"id":"audio-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":null,"type":"automatic-speech-recognition","aliases":["openai/whisper-large-v3"]},{"id":"AgentPublic/llama3-instruct-guillaumetell","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-generation","aliases":[]},{"id":"AgentPublic/albert-spp-8b","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":46000,"type":"text-generation","aliases":[]},{"id":"rerank-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-classification","aliases":["BAAI/bge-reranker-v2-m3"]},{"id":"albert-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":128000,"type":"image-text-to-text","aliases":["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]},{"id":"neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":24000,"type":"text-generation","aliases":[]}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:48 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '1465'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"model": "embeddings-small", "input": "hello world"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '53'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.32.3
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"data":[{"embedding":[-0.04022304,0.036899447,-0.029062564,0.01620252,-0.035785288,-0.040751796,-0.05525475,-0.040978402,0.0032740233,0.001996989,-0.006666072,0.011623137,0.021584477,-0.013398238,0.030290026,0.00423475,0.020489201,-0.022906361,-0.022056578,-0.031083157,-0.05087365,-0.01745831,0.012284079,-0.014078064,0.015390506,0.04120501,-0.036899447,-0.00063084555,0.00038181202,-0.060995504,0.037163824,0.0800684,-0.017939854,-0.049816143,-0.034199025,-0.035728637,0.0044377535,0.000828538,-0.0688135,0.010896101,0.015900375,0.022490911,0.023208506,-0.05888049,0.0021492417,-0.04426423,-0.040525187,-0.0024336828,0.0032905468,-0.06481008,0.009083231,0.032065127,0.037768114,-0.001052196,0.003477027,0.022226535,-0.016872905,-0.023019666,-0.062128548,0.001978105,-0.020564739,-0.009324003,-0.0035549237,-0.007893535,0.002993123,0.15484926,0.030648824,-0.01331326,-0.0048532025,-0.015088362,-0.018072043,-0.012123564,-0.0009253188,0.022320956,-0.06575429,0.047096837,-0.015050593,-0.011330434,0.013520985,0.036295157,0.07953965,-0.004286681,-0.00014605638,0.017666034,-0.013303818,0.047889967,0.014946731,0.036805026,-0.004352775,-0.013577637,-0.037314896,-0.023132969,0.027778447,-0.05147794,-0.028477158,0.016769042,-0.005533029,0.01960165,0.03625739,0.03314152,0.048947476,0.018770752,0.009248467,-0.013020557,0.0026083603,0.0041190847,0.026720941,0.026834244,0.022830825,0.01321884,0.048758633,0.027381882,0.020054867,0.02201881,0.013228281,-0.008275938,0.00283969,-0.01661797,-0.0039868965,-0.022264304,-0.00768109,0.026683172,0.023397347,0.009715848,0.028968142,-0.04966507,0.008880228,0.03491662,-0.017552732,-0.026796477,0.06386588,0.006902123,-0.034236796,0.004501487,-0.006373369,-0.030611057,-0.0026508495,-0.025871158,-0.013322702,-0.028458273,0.022490911,0.06851136,-0.021490056,-0.015003383,-0.013672058,-0.052497678,-0.028571578,0.014163042,0.018685775,-0.041469388,-0.003965652,-0.02145229,0.033632506,0.046794694,0.03253723,0.0032456974,-0.04290458,0.032140665,-0.0054244455,-0.014408535,0.013738152,-0.0054952605,-0.040751796,-0.013728709,-0.0023959146,0.0043268097,0.03635181,0.024832536,0.0036375416,0.00381694,-0.012860043,-0.009923572,0.026588753,-0.0200171,-0.015475485,0.023302926,0.056841012,0.024360433,0.017920969,-0.03663507,-0.04282904,0.006585815,-0.00043580862,-0.023189621,-0.044792984,0.034784433,-0.029761273,-0.0095506115,0.023944983,0.010858333,0.0013395877,-0.009220141,0.031706333,-0.038712315,0.0075536226,0.00795963,0.0040671537,-0.011887514,-0.030233376,-0.0009282694,-0.033273708,-0.004324449,-0.0041875397,0.07070191,-0.06303498,0.0006214035,-0.012066912,-0.009857478,0.0309132,-0.019110665,0.021433404,0.03374581,0.025984462,-0.021886623,-0.060580052,0.013228281,-0.042413592,0.0018093287,-0.0047398983,-0.01777934,0.012652318,-0.016419688,-0.004938181,0.018846288,0.014219695,0.006094829,0.009040742,0.004274878,0.023378462,0.013653173,0.037220474,-0.007671648,0.0033826067,-0.028061708,-0.008847181,-0.019025687,-0.055745736,-0.0011902857,0.03699387,0.008700829,-0.003715438,-0.009810268,-0.0114909485,-0.0072089885,-0.0426402,0.053668488,-0.009366492,0.013152746,0.003691833,0.0054810974,0.012472919,-0.02541794,-0.0034699454,0.026324375,0.06616973,0.0005815699,-0.01047121,-0.010169065,-0.005325304,-0.024473738,0.023435114,-0.060240142,0.013624847,0.052384373,0.02741965,0.009848036,-0.023302926,-0.014776775,0.018374188,0.0085450355,0.015711535,-0.06768046,-0.010650608,-0.019771608,-0.007969072,0.016296942,-0.012765623,-0.046945766,0.020375898,0.012822274,0.042942345,-0.0031866846,0.036144085,-0.017835991,-0.0012888368,0.017118398,-0.06802037,0.014691796,0.029799042,-0.04724791,0.016126985,0.056350026,0.030648824,-0.008913275,0.021206796,-0.003328315,-0.010272927,-0.16270503,0.003337757,0.013473774,-0.048494257,0.007284525,-0.032499462,-0.032272853,0.04724791,-0.0014080425,0.020054867,-0.026041115,-0.0010303614,-0.037598155,0.03276384,-0.020791346,0.026947549,0.009234304,-0.035313185,0.05880495,-0.05627449,0.0047965506,-0.010669492,0.07081521,-0.030082302,0.022679752,0.0021752072,0.035407607,-0.043168955,-0.05340411,0.0022365805,-0.03244281,0.011660905,-0.0064725103,0.021093491,0.024096057,0.05087365,0.02303855,-0.037824765,0.00442123,0.019998217,0.0044991267,0.015692651,0.0051364633,0.023548419,-0.018072043,-0.04600156,-0.0365973,0.0041308873,-0.013974202,-0.001759758,-0.014474629,-0.004123806,-0.022037694,-0.05627449,-0.018147578,0.013020557,-0.03202736,0.017996507,-0.01261455,-0.010716702,-0.014399094,-0.03793807,0.018411955,0.0030733803,-0.01401197,0.018496934,0.018175906,-0.029855695,0.016004238,-0.015154456,0.020262593,0.0023935542,0.0033920486,-0.03187629,0.016929558,-0.01047121,0.034746666,-0.009951898,-0.03644623,-0.14910851,-0.028269432,0.0029246684,-0.028269432,-0.00033076605,-0.028552694,-0.015626557,-0.0032881864,0.03924107,0.07364782,0.30561957,0.03336813,0.03240504,-0.030138955,0.07372336,-0.03253723,0.005320583,0.0048437607,0.00030775112,-0.021792201,-0.018534701,-0.03187629,0.0061986917,0.032933794,0.018279767,0.051326867,-0.06020237,-0.015418832,0.04807881,0.02602223,0.008039887,0.01777934,0.0048059924,-0.023189621,-0.02075358,-0.011925282,-0.004961786,0.030932086,0.0072184308,0.021565592,0.007940746,0.0045628604,0.021943275,-0.0030474146,-0.040109735,0.007279804,0.0068265866,-0.03927884,-0.016787926,0.022415375,-0.03002565,-0.021074608,0.030176723,0.01927118,0.041544925,0.025531245,0.024605926,-0.02592781,-0.037352663,0.029119216,-0.037163824,-0.004255994,-0.0044566374,0.014342441,-0.009154047,-0.016438572,0.0027617933,-0.051100258,0.024983607,0.033387013,0.020885767,0.062392924,-0.021055723,-0.041091707,-0.023132969,-0.008922717,0.015720977,-0.004716293,-0.008148471,0.03816468,0.008318427,-0.04105394,-0.019752724,0.019960448,0.029345823,0.014502956,0.0041002007,0.030743245,0.018317536,0.019847143,0.0026461284,-0.02300078,-0.040109735,-0.03285826,-0.0096875215,-0.017345006,-0.0046997694,0.07281692,0.029062564,-0.027835099,0.030894317,0.0038971973,-0.05242214,0.020413665,-0.04728568,-0.055896807,0.028760418,-0.016561318,-0.015447158,0.017911527,-0.030875433,0.00038476265,-0.044113155,0.06465901,0.021867737,-0.036616188,0.0064253,-0.00015461321,0.0133604705,0.019054012,0.027079737,-0.021074608,0.02602223,0.039354373,0.010669492,0.012265195,0.018648006,-0.0094797965,0.030063419,0.0083798,-0.029270288,-0.046114866,-0.016702948,0.05147794,-0.0004431852,0.019233411,-0.026475448,0.014729564,-0.01941281,0.018374188,-0.0013738151,-0.018723542,-0.000535245,0.05363072,0.06548991,0.005702985,0.05423501,-0.002011152,-0.012992231,0.0452462,0.0061514815,0.025153564,-0.007005985,-0.0096875215,-0.013143304,0.019903796,-0.020375898,-0.012907253,-0.0014540724,0.018090926,0.0055613546,-0.014691796,-4.1792964e-06,-0.023151854,-0.0167596,0.0016629773,-0.03225397,-0.0352943,0.02471923,-0.009333445,0.014880637,0.029799042,0.07549846,0.12637211,0.026456563,-0.0038735922,0.010320137,0.043811012,0.007558344,-0.008875507,0.0057785213,-0.034841083,-0.035671983,0.00893688,0.016976766,-0.021848854,-0.008143749,0.023793912,-0.027872868,0.036502883,0.065565445,0.006359206,0.00670384,-0.013029999,0.024133824,-0.017864319,0.0131905135,-0.011443739,0.016136426,-0.017448869,0.014823984,0.053781793,-0.0020182335,-0.021848854,0.04924962,-0.02611665,0.04199814,0.013284934,-0.017798223,-0.043773245,-0.012982789,0.003831103,0.022037694,-0.030573288,-0.026683172,-0.023529535,0.0011454361,-0.016476339,-0.013936434,0.028005056,0.010225717,-0.038901158,-0.015012825,0.021886623,-0.02033813,-0.028458273,0.01215189,0.046568085,-0.028458273,-0.03831575,-0.0041261665,0.0073695034,0.06326159,-0.05363072,0.013492659,-0.009366492,0.047738895,-0.02974239,-0.017987063,0.024360433,0.00038918862,-0.027778447,0.0062364596,-0.015201665,0.04622817,-0.033084866,-0.026324375,0.01787376,-0.015078919,0.035974126,0.005282815,-0.0039680125,0.004414148,0.05423501,0.0064913947,0.010310695,0.027835099,-0.045548346,0.0077519054,0.006585815,-0.06764269,0.005688822,0.03610632,-0.025569012,-0.042300288,0.018874615,0.02388833,-0.004477882,-0.036672838,0.023661723,0.004425951,0.034784433,-0.0108677745,-0.014899521,-0.018591354,-0.009390097,0.03555868,0.006354485,-0.01642913,-0.024870303,0.021376751,-0.0074639237,0.023661723,-0.0029506339,-0.018043716,0.031215345,-0.022830825,0.034236796,0.019035129,0.0058587785,-0.057369765,0.009597822,-0.035124347,0.039580982,-0.007855767,-0.0013466693,0.025587898,-0.013181072,-0.008403406,-0.008342032,-0.0026886177,-0.034727782,-0.040714025,0.018364746,-0.046756923,0.045170665,-0.009527006,0.013492659,-0.039316606,0.008823575,-0.019157875,0.05000498,-0.013275492,-0.018242,-0.00042577647,-0.00091351627,-0.0082334485,-0.019582767,0.019790491,-0.0022401211,-0.013020557,-0.036465112,-0.002816085,-0.021376751,0.038750086,-0.01852526,0.03142307,-0.062392924,-0.009649753,0.040109735,0.0460771,0.016391361,0.039580982,0.03570975,0.045170665,-0.015437717,-0.006227018,-0.0044755214,-0.023661723,-0.002528103,-0.028061708,0.030346679,0.007577228,-0.053215273,-0.017326122,-0.022245418,0.05408394,0.024417086,-0.029761273,-0.037975837,-0.023586188,0.07175942,0.009130442,-0.019752724,0.0070956843,-0.012133007,-0.00090525445,-0.015333854,0.030327795,0.004756422,-0.016193079,0.030271143,-0.036899447,-0.027816216,0.031611912,0.030611057,-0.037579272,-0.02075358,0.00721371,-0.0034368983,-0.022679752,0.0530642,0.0044377535,0.015116688,0.027060853,0.018581912,-0.03234839,0.053290807,0.0072184308,-0.002401816,-0.004890971,0.040714025,0.008242891,0.004593547,-0.053555187,0.029704621,-0.010896101,0.0022424818,0.025115795,0.014682354,-0.0023770307,-0.05000498,-0.028798187,-0.04388655,0.018884057,-0.033556968,-0.01261455,0.006689677,-0.002169306,0.017694362,-0.032065127,-0.030365564,-0.029024795,-0.004385822,-0.19594097,0.02415271,-0.009607264,-0.012359615,-0.017099513,-0.010811122,-0.019563884,-0.008814134,0.016599085,9.146965e-05,-0.03988313,0.031706333,-6.734822e-05,-0.041469388,0.04743675,-0.0024313224,-0.0075300178,-0.0039278837,0.0043126466,0.038183562,0.017241145,-0.005665217,0.025059143,0.011113267,0.061373185,-0.014512397,-0.020243708,0.0029364708,-0.029666854,-0.02252868,-0.013039441,-0.059937995,0.00023059204,0.009829151,-0.013114978,0.023793912,-0.003779172,-0.0034888296,0.010584514,0.0075725066,-0.017363891,0.007336456,-0.05763414,0.00045793838,-0.046341475,0.021282332,-0.0400342,-0.043017883,-0.036578417,-0.054952607,0.012199101,-0.01782655,0.00087161723,0.024964724,-0.02145229,-0.014417977,-0.009484517,0.014295231,-0.012378499,0.03187629,-0.026041115,-0.01698621,-0.004909855,-0.0705886,-0.06307275,0.00086571596,-0.05850281,0.015305528,0.026645403,0.016193079,-0.0070579164,-0.03197071,0.044641912,-0.0142291365,0.019252297,-0.0054716556,0.01890294,-0.022396492,-0.03737155,0.01331326,-0.025304636,-0.03272607,-0.026041115,-0.015598231,-0.020489201,-0.0022908722,-0.012095238,0.0067982604,-0.07546069,0.0040671537,-0.039354373,-0.027079737,-0.04282904,0.017373333,-0.024171593,-0.0027523513,-0.012897811,-0.038561244,-0.02033813,-0.0023911938,-0.021244563,-0.037390433,0.0058776625,-0.027986173,0.0007140534,0.010575072,-0.00033666732,-0.014493514,0.0073695034,-0.0008574542,-0.035180997,-0.034557823,0.005311141,0.023095202,0.040411882,0.022793056,-0.0020406584,-0.001819951,-0.006670793,0.038901158,-0.043357793,0.0054858187,0.012539013,-0.0418093,-0.010452325,-0.011066058,0.013398238,0.01461626,-0.01401197,-0.04063849,0.03453894,-0.027797332,0.030686593,0.005188395,0.009498681,-0.0023451638,-0.019252297,0.01061284,-0.050609272,-0.031555258,-0.01712784,0.01778878,0.01000855,-0.045397274,-0.01661797,0.0051411847,0.04724791,0.0017160886,-0.036049664,-0.016882347,0.03231062,0.039920896,0.0018518178,0.012935579,-0.034199025,-0.013152746,-0.0061467607,0.014927847,0.048192114,0.026947549,-0.0008267676,0.013709825,-0.02639991,-0.014455745,-0.008592246,0.03603078,0.0034156537,-0.0013407681,-0.009106836,-0.057143155,-0.0020099718,0.035917476,-0.035898592,0.021584477,0.059371475,-0.006302554,0.015796514,0.0478522,0.04267797,0.00047977307,0.03897669,0.00702959,0.034501173,0.027079737,-0.03882562,-0.02233984,-0.003649344,-0.0017090072,0.010688376,0.020923534,-0.018732984,0.022698637,0.006670793,-0.019658303,0.06405472,0.054197244,0.012567339,0.011896956,0.0124257095,0.0039255233,-0.021811085,-0.033160403,0.012142449,-0.035615332,-0.0017810026,0.031083157,-0.017562173,8.269151e-05,-0.014040296,0.007902978,0.02192439,-0.03164968,0.015692651,0.02821278,-0.0031843241,0.038410172,-0.012076355,-0.01834586,-0.015947586,-0.0016075054,-0.049816143,-0.0104145575,-0.046303708,0.0038830342,-0.012331289,0.010811122,-0.024001636,0.025663434,0.018827405,0.00024800078,-0.02164113,-0.00540084,-0.005618007,0.026872013,0.008417568,-0.041695997,0.034368984,0.035955243,0.021508941,-0.0048626447,-0.011113267,0.026418796,-0.03300933,0.016315825],"index":0,"object":"embedding"}],"model":"BAAI/bge-m3","object":"list","usage":{"prompt_tokens":11,"completion_tokens":0,"total_tokens":11,"details":[{"id":"request-8ac680a93c96444e895f772670af2cda","model":"BAAI/bge-m3","prompt_tokens":11,"completion_tokens":0,"total_tokens":11}]},"id":"request-8ac680a93c96444e895f772670af2cda"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:48 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '13136'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: https://albert.api.etalab.gouv.fr/v1/models
+  response:
+    body:
+      string: '{"object":"list","data":[{"id":"albert-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":64000,"type":"text-generation","aliases":["meta-llama/Llama-3.1-8B-Instruct"]},{"id":"embeddings-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-embeddings-inference","aliases":["BAAI/bge-m3"]},{"id":"audio-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":null,"type":"automatic-speech-recognition","aliases":["openai/whisper-large-v3"]},{"id":"AgentPublic/llama3-instruct-guillaumetell","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-generation","aliases":[]},{"id":"AgentPublic/albert-spp-8b","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":46000,"type":"text-generation","aliases":[]},{"id":"rerank-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-classification","aliases":["BAAI/bge-reranker-v2-m3"]},{"id":"albert-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":128000,"type":"image-text-to-text","aliases":["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]},{"id":"neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":24000,"type":"text-generation","aliases":[]}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:48 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '1465'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"model": "audio-large", "input": "hello world"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '48'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.32.3
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"detail":"Wrong model type."}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '30'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:49 GMT
+      Server:
+      - nginx/1.27.4
+    status:
+      code: 422
+      message: Unprocessable Entity
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: https://albert.api.etalab.gouv.fr/v1/models
+  response:
+    body:
+      string: '{"object":"list","data":[{"id":"albert-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":64000,"type":"text-generation","aliases":["meta-llama/Llama-3.1-8B-Instruct"]},{"id":"embeddings-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-embeddings-inference","aliases":["BAAI/bge-m3"]},{"id":"audio-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":null,"type":"automatic-speech-recognition","aliases":["openai/whisper-large-v3"]},{"id":"AgentPublic/llama3-instruct-guillaumetell","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-generation","aliases":[]},{"id":"AgentPublic/albert-spp-8b","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":46000,"type":"text-generation","aliases":[]},{"id":"rerank-small","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":8192,"type":"text-classification","aliases":["BAAI/bge-reranker-v2-m3"]},{"id":"albert-large","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":128000,"type":"image-text-to-text","aliases":["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]},{"id":"neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8","created":1748359120,"object":"model","owned_by":"Albert
+        API","max_context_length":24000,"type":"text-generation","aliases":[]}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:49 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '1465'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"model": "rerank-small", "input": "hello world"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Authorization:
+      - Bearer dummy_token_for_test
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '49'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.32.3
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"detail":"Wrong model type."}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '30'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 12:52:49 GMT
+      Server:
+      - nginx/1.27.4
+    status:
+      code: 422
+      message: Unprocessable Entity
+version: 1

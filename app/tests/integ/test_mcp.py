@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.schemas.chat import ChatCompletion
 from app.tests.integ.fixtures.fixtures import generate_mocked_mcp_bridge_tools, generate_mocked_llm_response
+from app.tests.integ.conftest import VCR_ENABLED
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__AGENTS_TOOLS, ENDPOINT__AGENTS_COMPLETIONS
 
@@ -99,7 +100,8 @@ class TestIntegrationMCP:
 
         # THEN
         assert response.status_code == 200, response.text
-        assert route.call_count == 2
+        if not VCR_ENABLED:  # VCR is not used, so we can check the calls
+            assert route.call_count == 2
         mcp_tools_route.calls.assert_called_once()
         mcp_call_route.calls.assert_called_once()
         assert mcp_call_route.calls[0].request.content == b'{"latitude":25.79,"longitude":-80.13}'

@@ -1,0 +1,45 @@
+interactions:
+- request:
+    body: '{"prompt":"Sort these sentences by relevance.","input":["Sentence 1","Sentence
+      2","Sentence 3"],"model":"rerank-small"}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '119'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/rerank
+  response:
+    body:
+      string: '{"id":"request-0c66a10bf0f84f1998221453fa9f401b","object":"list","data":[{"object":"rerank","score":0.29787827,"index":0},{"object":"rerank","score":0.068537496,"index":2},{"object":"rerank","score":0.037397135,"index":1}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0,"details":[{"id":"request-0c66a10bf0f84f1998221453fa9f401b","model":"BAAI/bge-reranker-v2-m3","prompt_tokens":0,"completion_tokens":0,"total_tokens":0}]},"model":"BAAI/bge-reranker-v2-m3"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:10:37 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '477'
+    status:
+      code: 200
+      message: OK
+version: 1

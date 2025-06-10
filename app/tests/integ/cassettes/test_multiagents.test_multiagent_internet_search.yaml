@@ -1,0 +1,1035 @@
+interactions:
+- request:
+    body: "{\"input\":[\"Recherchez des informations sur la r\xE9forme des retraites
+      en France.\"],\"model\":\"embeddings-small\",\"encoding_format\":\"float\"}"
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '135'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"data":[{"embedding":[-0.01210102,0.04287013,-0.050524227,0.023716921,-0.031730365,-0.009819165,0.058861084,0.043948174,0.023663018,0.01588315,0.014966815,-0.025405854,-0.015964003,0.027382264,-0.022027988,0.019350851,0.02215376,-0.015748395,0.019332884,-0.008107773,0.0059202467,0.020680437,0.019261014,-0.03223345,-0.0266456,-0.0026973505,0.0063245124,0.03715651,-0.0037461955,-0.010681598,0.005718114,-0.0014598484,0.02556756,-0.005902279,-0.045349628,-0.029574282,-0.027040884,-0.06310138,-0.037048705,0.040893722,-0.02583707,-0.0126939425,-0.0009421637,-0.0015889888,0.04649954,-0.022081891,-0.03837829,0.0032184043,0.00583041,-0.00039359758,0.018793862,-0.004729909,0.055806633,-0.06245456,-0.028873555,0.017033061,-0.041396808,-0.06209521,-0.08157183,-0.010600745,-0.0036136862,0.04506215,-0.034479372,-0.018362647,0.041612417,0.073881805,0.023267737,0.04355289,0.0043076756,-0.036617488,0.004914074,-0.020410925,-0.049050905,-0.015317178,-0.016889323,0.02630422,0.019889873,-0.048619688,0.002008976,0.05106325,-0.013035323,0.034946524,-0.022279533,0.038018942,-0.04402004,0.02862201,0.024166105,0.017760739,0.008071839,-0.016862372,-0.0032408633,0.0231779,0.0046715145,-0.0067647127,-0.03059842,-0.021237426,-0.02466919,-0.04764945,0.054908264,0.0024772503,-0.006607498,0.050632033,0.0317663,0.028082991,0.01766192,-0.045565236,-0.038881376,0.027975187,0.01329585,0.011274521,-0.017554116,0.0049410253,0.02952038,0.034317665,0.008884862,-0.015739411,0.00075013743,-0.056884676,0.029286804,-0.04527776,0.0044806115,0.05972352,0.08344044,0.00062605034,0.027148688,0.0073890784,0.020087514,-0.015919086,0.0035710137,-0.028065024,0.0077619012,0.045529302,-0.020213285,-0.023842692,-0.015990954,-0.03027501,0.0222975,0.02535195,0.0022964538,-0.058034588,0.02263888,0.026735438,-0.036940902,0.0021257638,0.021147588,-0.029825825,0.05030862,0.0283525,0.0005586727,-0.03137102,0.01434694,0.034928557,-0.0033711267,0.031388987,-0.043157607,0.024255943,-0.03390442,0.00037113836,-0.020914013,0.018353663,-0.05127886,0.056130048,-0.041253068,0.02515431,-0.01707798,-0.009298111,0.015757378,-0.013879789,-0.028442338,-0.020734338,0.0222975,-0.08545279,0.0162964,0.0080987895,-0.009837132,0.015389048,0.042942002,0.014634418,0.01727562,-0.012406465,-0.03960007,0.02262091,-0.023393508,-0.039887547,-0.016727617,0.0068410737,-0.044559065,-0.011535048,0.011130782,-0.046247996,0.009792213,-0.008336857,0.016197579,-0.017356474,0.016538959,-0.057890847,-0.004662531,0.013628246,0.022081891,-0.020285154,0.002351479,0.020410925,0.0013228472,0.040390637,-0.0076675727,-0.053470876,-0.044415325,-0.020410925,0.027921284,-0.09141795,-0.01397861,0.00042784787,-0.04527776,0.047900993,0.04017503,0.06716201,-0.0141942175,0.05091951,0.058250196,-0.022926357,-0.03390442,0.022261564,-0.009549654,0.008893846,0.02120149,0.011508097,-0.024255943,0.016673714,0.049733665,-0.02896339,-0.011867444,0.042115502,0.029897694,-0.03559335,0.008997158,-0.021165555,-0.017365457,0.03891731,0.0035508003,-0.008884862,-0.0049050907,-0.05023675,0.029107131,0.013412638,-0.011022978,-0.012702927,0.05986726,0.00978323,-0.04779319,-0.047254167,0.012927518,-0.011642852,0.032305323,0.025765201,0.010996027,-0.03367084,-0.013403654,-0.012056101,0.01734749,-0.046319865,-0.017060012,0.023393508,0.020267187,0.019710198,-0.019404754,0.042043634,0.019674264,0.026879176,0.015146488,-0.011894396,-0.007847247,-0.014850027,0.030867932,0.010708549,0.024920734,0.0074474723,0.02849624,-0.018560287,0.08990869,-0.019386787,0.013960642,0.034120023,0.058861084,-0.024866832,0.0274721,-0.028927457,-0.012002199,0.003445242,-0.021596773,-0.036258142,-0.046463605,-0.027166655,0.055519156,-0.028819652,0.015047668,0.021650674,0.013349752,-0.11872835,0.021920184,-0.039851613,-0.012083053,-0.00033464216,0.05228503,-0.0141942175,-0.02359115,-0.043732565,-0.037120573,0.0006743376,-0.04233111,0.0078113116,0.038486093,-0.01983597,0.043840367,-0.028262664,-0.00678268,-0.027166655,-0.019117275,-0.047433842,-0.04527776,0.038845442,0.008574924,-0.026501862,0.0497696,-0.019440688,-0.03491059,0.015721444,0.035988633,-0.030652324,-0.0007394693,0.008107773,-0.016745584,0.003366635,0.036509685,0.04391224,-0.0013273391,-0.005304864,0.008341349,0.004361578,0.012927518,-0.00063671847,-0.0060684774,-0.029915662,-0.0026928587,-0.0150297005,-0.021417098,-0.042798262,-0.028981358,-0.07366619,-0.03395832,-0.016107742,0.052931856,-0.07226474,-0.011579966,0.06389195,0.047613516,0.0061403466,0.015389048,0.0002862145,-0.059759453,0.00035260952,0.017697854,-0.0180033,-0.0030454684,0.041935828,-0.07682845,0.0044806115,0.018254843,0.0650778,-0.021686608,-0.010483957,0.012747845,-0.012118987,0.03027501,-0.045565236,0.009118438,0.010340218,-0.08609961,-0.03618627,0.042977937,-0.040893722,-5.9201062e-05,-0.009926969,-0.0024952178,-0.0061672977,0.0018641141,0.029430542,0.24579355,0.052105356,0.054369245,-0.04150461,-0.0050398456,-0.05487233,-0.0021673134,0.018560287,0.03237719,-0.018632157,0.0036091944,0.010510908,-0.036042534,0.0037776383,-0.017230703,0.042367045,-0.012011183,-0.030454682,0.022854488,-0.008736631,0.047326036,0.02528008,-0.0009073519,0.024381714,-0.07395367,0.013439588,-0.024094235,-0.015505835,-0.044954345,0.031981908,-0.0070297313,-0.013179062,0.032017842,-0.020428894,-0.0047838106,0.0052734213,0.008291938,-0.026501862,0.026214385,0.02596284,0.002627727,-0.026699504,0.020914013,0.02481293,-0.0006872517,0.021093685,-0.0120291505,-0.011193668,0.018039234,0.013861822,-0.018488418,-0.01795838,0.0077888523,-0.03135305,0.006275102,-0.0056148013,-0.02100385,-0.00058899267,-0.012747845,0.059364174,0.010457006,-0.008521022,-0.032484993,0.0136821475,-0.041001525,-0.0636404,0.03974381,-0.041432742,0.060154736,0.049661797,-0.0015889888,0.030975737,0.041576482,0.016143678,0.013421621,-0.009765263,0.00746544,0.028981358,-0.014526614,0.0021830348,-0.04560117,-0.033365395,0.008377284,-0.025890972,0.043984108,-0.03837829,-0.0058349017,0.0073711113,0.00570913,0.01468832,-0.0077529177,-0.009378964,0.02195612,-0.035898793,-0.009909001,-0.07151011,0.024435615,0.002035927,-0.08099688,0.041289,0.02598081,-0.02364505,-0.018317727,-0.02998753,0.04103746,-0.005116207,-0.017760739,0.03115541,-0.023716921,0.002143731,0.02651983,0.013592311,-0.02332164,-0.04649954,-0.036940902,0.018811831,0.06719794,0.024561387,-0.022045957,-0.01315211,-0.028065024,0.03544961,-0.026627634,-0.0030454684,-0.008745614,0.010349202,0.027058851,0.008997158,-0.038486093,0.018317727,-0.0058843116,-0.007874197,0.032287356,0.0017473262,0.021560837,0.0028455814,0.012487318,0.017455295,-0.01588315,-0.0021998791,0.01032225,0.023339607,-0.020770272,-0.08272175,-0.0007832648,0.05303966,-0.01400556,0.014885961,0.006023559,0.058932956,0.025711298,-0.010735501,0.06119684,-0.013304833,-0.011166717,-0.016512008,-0.003818065,0.005030862,0.029843792,-0.010052741,0.019764101,-0.011741673,0.02030312,0.08322483,0.04254672,0.024507485,0.00040482718,0.019386787,0.01510157,-0.016772535,-0.014661369,-0.0309398,-0.041289,0.01588315,-0.005632769,0.005574375,0.010115626,0.004357086,-0.04567304,-0.01724867,0.010367169,0.013080241,0.01803025,-0.010942125,0.0048736474,0.026465928,-0.0159101,-0.011238586,0.02420204,-0.013349752,0.0073127174,0.0489431,0.010349202,-0.035701152,0.018632157,-0.031478822,0.035737086,-0.0009837132,0.037587725,-0.055267613,-0.06791664,0.0083638085,0.019153211,-0.03354507,-0.03381458,0.01659286,0.008260496,0.03708464,-0.011822525,0.01080737,-0.043732565,-0.006248151,0.007375603,-0.018102119,0.015415998,-0.011121798,-8.246739e-05,-0.00075013743,-0.027436165,-0.004119018,0.0017664165,0.012478335,0.029232902,-0.0041437233,-0.014463728,0.01956646,-0.0056103095,-0.0009848361,-0.032556865,0.01661083,-0.015604656,-0.034928557,-0.014140315,-0.023842692,-0.028442338,0.018335694,0.0011746164,0.039096985,0.019207112,-0.031335082,-0.018524352,0.0014205447,0.046787016,0.02127336,-0.034120023,-0.026879176,-0.02256701,0.0051251906,0.041253068,0.030490616,-0.051566336,0.040210962,0.051997554,-0.024184072,-0.039528202,0.04477467,-0.041289,-0.011885411,0.028729815,-0.05656126,-0.011921346,0.006189757,0.026196416,-0.021722544,-0.02930477,-0.002145977,0.033149786,0.02971802,-0.007964035,-0.050847642,-0.030652324,-0.010897206,-0.053327136,0.028747782,0.015604656,0.013089225,-0.035880826,-0.038270485,-0.05986726,-0.001977533,-0.008314398,0.069964916,0.0042268224,-0.010879239,-0.025100408,-0.01141826,0.052680314,-0.038737636,0.0034272748,-0.032880276,-2.8091554e-05,-0.026214385,-0.056273784,-0.001639522,0.01622453,-0.041289,0.008327873,0.043984108,-0.033167753,-0.0143649075,-0.011939313,0.0009803444,-0.0038090812,-0.022243597,0.039564136,-0.034461405,-0.00036692727,-0.03597066,0.0060415263,-0.041432742,0.01834468,-0.06417943,0.0037237362,0.024399681,0.009765263,-0.028604044,0.012424433,-0.032826375,0.006275102,0.018847765,0.008300922,0.011373342,-0.05896889,-0.0030319928,-0.04064218,0.0360066,-0.031263214,0.008395251,-0.01595502,0.015676524,-0.018560287,0.019961743,-0.009747295,-0.0053228317,0.0015418244,-0.035485543,0.046068322,0.036976837,0.020374991,-0.038809508,0.00690396,-0.04254672,0.009882051,-0.009909001,0.028801685,0.013942675,-0.015002749,0.023411475,-0.0351801,0.016772535,-0.03898918,0.007946067,-0.02154287,-0.027220557,-0.018937603,0.0065940227,-0.01656591,0.018973537,0.021183522,0.0463558,-0.033886448,-0.00401346,-0.039240725,0.035000425,0.022171728,0.035665218,0.015065635,-0.026699504,0.00086411793,-0.032305323,0.00914988,-0.014562549,0.011337407,-0.03422783,-0.032359224,0.07000085,-0.0031465348,0.022063924,-0.0039707874,-0.03906105,0.022117825,-0.02120149,-0.031676464,-0.0145895,0.03183817,-0.033850513,0.022387335,0.012873617,-0.030688258,0.015083603,0.01107688,-0.042223305,0.0030746653,-0.011624885,-0.12490912,-0.01107688,-0.026412025,-0.0089522395,-0.02447155,0.018901667,0.026663568,0.006535629,0.020572633,-0.010160545,0.011705738,-0.029735988,0.031263214,-0.021345228,0.005569883,0.007604687,-0.011813542,-0.018991504,-0.017329523,0.07424115,0.026717471,0.0014463728,-0.008305415,0.01407743,0.017401392,0.020357024,0.043373216,0.02481293,-0.021578804,-0.014778157,0.015856199,-0.028675914,0.0325928,0.058789216,0.019692231,-0.0180033,0.0063514635,-0.009181323,0.053255267,-0.025172278,-0.03122728,0.012774796,-0.04423565,0.03081403,-0.0062346756,0.016628796,0.08128436,-0.04265452,-0.03622221,0.010178512,0.012918535,-0.032413125,-0.03927666,0.033976287,0.020734338,-0.028711848,-0.013915724,0.0041819043,0.033563036,0.07176165,0.010448023,0.035413675,-0.019620363,-0.062346753,0.035359774,0.037515856,0.010007822,0.026753405,0.0049589924,0.009729328,-0.012514269,0.0072722905,0.008264988,-0.030831996,-0.0018742207,-0.0248848,0.055842567,-0.006809631,-0.0064323163,-0.046176128,-0.02024922,0.018111104,-0.039384462,0.0056148013,0.0074834074,0.008134725,-0.0034340124,-0.028711848,-0.005533948,0.016772535,-0.03300605,-0.033239625,0.0034497338,0.017967364,-0.007663081,0.039025117,-0.0650778,-0.022513108,-0.00091184373,0.0015923576,-0.012074069,-0.018578256,-0.04750571,-0.0055833585,-0.04437939,0.064251296,0.029394608,-0.009738311,0.017554116,-0.051566336,-0.00717347,0.0018742207,0.024094235,0.049266513,-0.08509344,-0.02869388,-0.040534373,0.024974637,0.02713072,0.003025255,-0.019081341,-0.020896045,0.008916304,-0.011355374,0.048368145,-0.027831448,-0.00026628195,0.021075718,-0.030454682,0.032484993,0.020608567,-0.018847765,0.0081931185,0.03271857,0.006522153,0.01824586,-0.019099308,0.004631088,-0.049194645,0.019961743,0.003815819,-0.03250296,-0.020374991,-0.054836396,-0.035629284,-0.0075148502,-0.017724805,-0.04628393,0.02330367,-0.00978323,-0.007838262,0.0015788821,0.0032386174,-0.005480046,-0.011526064,0.059795387,-0.08947747,0.0054351278,0.008233544,0.05814239,0.015173439,-0.012631057,-0.014616451,-0.041360874,0.03095777,0.021506935,-0.015676524,-0.01363723,-0.0036675883,-0.024363747,-0.015020717,0.015218358,0.0015002749,-0.023878627,0.0034834228,0.010088675,-0.003445242,-0.006791664,0.047577582,0.009873067,-0.0033396839,0.017949397,0.056058176,-0.043984108,0.007964035,-0.018218907,0.0029825824,-0.006962354,-0.022081891,-0.043193545,-0.039384462,-0.056489393,0.008907321,0.022135792,0.03496449,0.07941575,0.0153531125,-0.017051028,-0.00712406,0.0054351278,-0.006463759,0.0037394578,0.025316017,-0.026052678,-0.0137001155,0.02698698,0.015694493,0.009158864,0.021021817,-0.07273189,0.019512558,0.030526552,0.008633318,0.054081768,-0.018470451,0.0063739223,0.04818847,-0.052249096,-0.031263214,0.021363197,0.027579904,0.07539106,-0.011463178,0.008745614,-0.0019213851,-0.012127971,-0.019476622,0.010798386,0.014230153,0.045205887,0.040570308,0.02051873,0.006948878,-0.005821426,0.06504186,0.0034542258,-0.011669803,-0.0018068431,-0.031712398,-0.01622453,-0.0041976254,0.0040853294,-0.041828025,-0.023716921],"index":0,"object":"embedding"}],"model":"BAAI/bge-m3","object":"list","usage":{"prompt_tokens":14,"completion_tokens":0,"total_tokens":14,"details":[{"id":"request-fd9d9156fb3b4d8a9ab821fc9700e754","model":"BAAI/bge-m3","prompt_tokens":14,"completion_tokens":0,"total_tokens":14}]},"id":"request-fd9d9156fb3b4d8a9ab821fc9700e754"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:49:24 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '13062'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: "{\"messages\":[{\"role\":\"user\",\"content\":\"Tu es un sp\xE9cialiste
+      pour transformer des demandes en requ\xEAte google. Tu sais \xE9crire les meilleurs
+      types de recherches pour arriver aux meilleurs r\xE9sultats.\\nVoici la demande
+      : Recherchez des informations sur la r\xE9forme des retraites en France.\\nR\xE9ponds
+      en donnant uniquement une requ\xEAte google qui permettrait de trouver des informations
+      pour r\xE9pondre \xE0 la question.\\n\\nExemples :\\n- Question: Peut-on avoir
+      des jours de cong\xE9 pour un mariage ?\\n  R\xE9ponse: jour de cong\xE9 mariage
+      conditions\\n\\n- Question: Donnes-moi des informations sur Jules Verne.\\n
+      \ R\xE9ponse: Jules Verne\\n\\n- Question: Comment refaire une pi\xE8ce d'identit\xE9
+      ?\\n  R\xE9ponse: renouvellement pi\xE8ce identit\xE9 France\\n\\nNe donnes
+      pas d'explication, ne mets pas de guillemets, r\xE9ponds uniquement avec la
+      requ\xEAte google qui renverra les meilleurs r\xE9sultats pour la demande. Ne
+      mets pas de mots qui ne servent \xE0 rien dans la requ\xEAte Google.\\n\"}],\"model\":\"albert-small\",\"temperature\":0.2,\"stream\":false}"
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1022'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: "{\"id\":\"chatcmpl-e568df40ad694e609c43f59d2381f504\",\"object\":\"chat.completion\",\"created\":1749206964,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning_content\":null,\"content\":\"r\xE9forme
+        des retraites en France\",\"tool_calls\":[]},\"logprobs\":null,\"finish_reason\":\"stop\",\"stop_reason\":null}],\"usage\":{\"prompt_tokens\":191,\"completion_tokens\":7,\"total_tokens\":198,\"details\":[{\"id\":\"chatcmpl-e568df40ad694e609c43f59d2381f504\",\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"prompt_tokens\":191,\"completion_tokens\":7,\"total_tokens\":198}]},\"prompt_logprobs\":null}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:49:24 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '601'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - api.search.brave.com
+      user-agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+      x-subscription-token:
+      - BSAHUAJdQ7ZZTtK8cUhcP5qcK_AKShy
+    method: GET
+    uri: https://api.search.brave.com/res/v1/web/search?q=r%C3%A9forme+des+retraites+en+France&count=3&country=fr&safesearch=strict
+  response:
+    body:
+      string: "{\"query\":{\"original\":\"r\xE9forme des retraites en France\",\"show_strict_warning\":false,\"is_navigational\":false,\"is_news_breaking\":false,\"spellcheck_off\":true,\"country\":\"fr\",\"bad_results\":false,\"should_fallback\":false,\"postal_code\":\"\",\"city\":\"\",\"header_country\":\"\",\"more_results_available\":true,\"state\":\"\"},\"mixed\":{\"type\":\"mixed\",\"main\":[{\"type\":\"web\",\"index\":0,\"all\":false},{\"type\":\"web\",\"index\":1,\"all\":false},{\"type\":\"videos\",\"all\":true},{\"type\":\"web\",\"index\":2,\"all\":false},{\"type\":\"web\",\"index\":3,\"all\":false},{\"type\":\"web\",\"index\":4,\"all\":false},{\"type\":\"web\",\"index\":5,\"all\":false},{\"type\":\"web\",\"index\":6,\"all\":false},{\"type\":\"web\",\"index\":7,\"all\":false},{\"type\":\"web\",\"index\":8,\"all\":false},{\"type\":\"web\",\"index\":9,\"all\":false},{\"type\":\"web\",\"index\":10,\"all\":false},{\"type\":\"web\",\"index\":11,\"all\":false},{\"type\":\"web\",\"index\":12,\"all\":false},{\"type\":\"web\",\"index\":13,\"all\":false},{\"type\":\"web\",\"index\":14,\"all\":false},{\"type\":\"web\",\"index\":15,\"all\":false},{\"type\":\"web\",\"index\":16,\"all\":false},{\"type\":\"web\",\"index\":17,\"all\":false},{\"type\":\"web\",\"index\":18,\"all\":false},{\"type\":\"web\",\"index\":19,\"all\":false}],\"top\":[],\"side\":[]},\"type\":\"search\",\"videos\":{\"type\":\"videos\",\"results\":[{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=EtnAE7HuHKI\",\"title\":\"R\xE9forme
+        des retraites : les d\xE9put\xE9s approuvent son abrogation ...\",\"description\":\"La
+        commission des affaires sociales examine la \\\"proposition de loi d'abrogation
+        de la retraite \xE0 64 ans\\\", d\xE9pos\xE9e par La France insoumise (NFP).
+        Le texte, po...\",\"age\":\"November 20, 2024\",\"page_age\":\"2024-11-20T16:00:23\",\"video\":{\"duration\":\"02:41:51\",\"views\":33386,\"creator\":\"LCP
+        - Assembl\xE9e nationale\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/8bw2dSn0P_jMaL1zSKhEQoLRHjXrePa6LHHEyXvYcR0/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9F/dG5BRTdIdUhLSS9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/EtnAE7HuHKI/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=ECw8WgfFttA\",\"title\":\"Le
+        S\xE9nat rejette largement deux propositions d'abrogation de ...\",\"description\":\"Enjoy
+        the videos and music you love, upload original content, and share it all with
+        friends, family, and the world on YouTube.\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/DJjRpWUPZ8F9sr7-m5hi-2f5heiawkaPqKiciHQSDWQ/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9F/Q3c4V2dmRnR0QS9o/cWRlZmF1bHQuanBn\",\"original\":\"https://i.ytimg.com/vi/ECw8WgfFttA/hqdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=B0a5jXfL32w\",\"title\":\"Abrogation
+        de la r\xE9forme des retraites : comment la gauche a ...\",\"description\":\"Enjoy
+        the videos and music you love, upload original content, and share it all with
+        friends, family, and the world on YouTube.\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/FfzjfqeWskYrrunRfbJthwEiryVrp5ljqqQd0lhMEZE/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9C/MGE1alhmTDMydy9o/cWRlZmF1bHQuanBn\",\"original\":\"https://i.ytimg.com/vi/B0a5jXfL32w/hqdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=pUu3RLWkXmY\",\"title\":\"R\xE9forme
+        des retraites : examen d'une proposition de loi d\xE9pos\xE9e ...\",\"description\":\"La
+        commission des affaires sociales examine la \\\"proposition de loi visant
+        \xE0 restaurer un syst\xE8me de retraite plus juste\\\", d\xE9pos\xE9e par
+        le Rassemblement Nation...\",\"age\":\"October 24, 2024\",\"page_age\":\"2024-10-24T12:01:03\",\"video\":{\"duration\":\"02:34:25\",\"views\":7564,\"creator\":\"LCP
+        - Assembl\xE9e nationale\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/wCZMFZWh6PvPi9j-1wygefeGXDrWUD1BjhWXXHLlHSE/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9w/VXUzUkxXa1htWS9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/pUu3RLWkXmY/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=l8wuOaoFj0s\",\"title\":\"Abrogation
+        de la r\xE9forme des retraites : le Rassemblement national ...\",\"description\":\"Alors
+        que le Rassemblement national proposait d\u2019abroger la r\xE9forme des retraites
+        lors de sa niche parlementaire le 31 octobre prochain, pour fixer \xE0 nouveau
+        ...\",\"age\":\"October 24, 2024\",\"page_age\":\"2024-10-24T10:25:16\",\"video\":{\"duration\":\"19:21\",\"views\":54088,\"creator\":\"Public
+        S\xE9nat\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/Dd3jB4tuUa_AkIzpxU3OPcHCmXoIzlifSoGvOVmyurs/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9s/OHd1T2FvRmowcy9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/l8wuOaoFj0s/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.tf1info.fr/conso-argent/videos/video-reforme-des-retraites-la-revalorisation-enfin-versee-1956-2309807.html\",\"title\":\"R\xE9forme
+        des retraites : la revalorisation enfin vers\xE9e | TF1 INFO\",\"description\":\"\u25B6\uFE0F
+        Les retrait\xE9s attendaient la revalorisation de leur pension, qui va augmenter
+        d\xE8s septembre prochain avec un an de retard. En effet, 60 euros par mois,
+        en moyenne, seront vers\xE9s de mani\xE8re r\xE9troactive aux personnes concern\xE9es.
+        (Mon argent et mes droits). TF1 INFO\",\"age\":\"July 22, 2024\",\"page_age\":\"2024-07-22T12:00:01\",\"video\":{\"duration\":\"01:36\",\"creator\":\"TF1
+        Info\",\"publisher\":\"Tf1info\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"tf1info.fr\",\"hostname\":\"www.tf1info.fr\",\"favicon\":\"https://imgs.search.brave.com/TKtTc6djpKVeYmDZjKqw-Iefx7eEy0Yw1jjLcuogQyo/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZDBkZDUyMzg2/OTQ2NmU5ZDZiYzkw/OGJiNTc2ZmNiNTQ5/MjgxYWFiMmEwYjYz/MmJlNzExOTc3MTc2/NWQ3MTlhYS93d3cu/dGYxaW5mby5mci8\",\"path\":\"\u203A
+        conso-argent  \u203A videos  \u203A video-reforme-des-retraites-la-revalorisation-enfin-versee-1956-2309807.html\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/hH-E8cnsq5O1Rdu0UTKancA-KSoJPAp4IyZbWFwUvvU/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9waG90/b3MudGYxaW5mby5m/ci9pbWFnZXMvMTI4/MC83MjAvcmVmb3Jt/ZS1kZXMtcmV0cmFp/dGVzLWxhLXJldmFs/b3Jpc2F0aW9uLWVu/ZmluLXZlcnNlZS0y/LTNhNjczNC0wQDF4/LmpwZWc_b3Zlcmxh/eUltYWdlPWJHOW5i/eTEwWmpGcGJtWnZM/V1JsWm1GMWJIUXVj/RzVuJmFtcDtvdmVy/bGF5V2lkdGg9MTgm/YW1wO292ZXJsYXlH/cmF2aXR5PW5vcnRo/d2VzdCZhbXA7cz03/OGM4MDI\",\"original\":\"https://photos.tf1info.fr/images/1280/720/reforme-des-retraites-la-revalorisation-enfin-versee-2-3a6734-0@1x.jpeg?overlayImage=bG9nby10ZjFpbmZvLWRlZmF1bHQucG5n&amp;overlayWidth=18&amp;overlayGravity=northwest&amp;s=78c802\"}}],\"mutated_by_goggles\":false},\"web\":{\"type\":\"search\",\"results\":[{\"title\":\"R\xE9forme
+        des retraites - \xC2ge l\xE9gal de d\xE9part\",\"url\":\"https://www.info-retraite.fr/portail-info/sites/PortailInformationnel/home/reforme-des-retraites---age-lega.html\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Salari\xE9,
+        fonctionnaire, ind\xE9pendant, ch\xF4meur, <strong>retrait\xE9</strong> :
+        quels que soient votre parcours et votre situation, retrouvez tous vos droits
+        avec Info <strong>Retraite</strong>.\",\"profile\":{\"name\":\"Info-retraite\",\"url\":\"https://www.info-retraite.fr/portail-info/sites/PortailInformationnel/home/reforme-des-retraites---age-lega.html\",\"long_name\":\"info-retraite.fr\",\"img\":\"https://imgs.search.brave.com/Yk2rtilXUZ_kws-pWHPX5Ro_KpsuF3-BiJX2-7nXJ6k/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWQ5ZDA2N2Ux/MTU2ZGNmY2Y0OThl/NmQ5OTg0NzhiNDM4/YjBhOTYyZjc1ZjVi/NzUzZTdmNTBiYjJk/MTViZmUwMy93d3cu/aW5mby1yZXRyYWl0/ZS5mci8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"info-retraite.fr\",\"hostname\":\"www.info-retraite.fr\",\"favicon\":\"https://imgs.search.brave.com/Yk2rtilXUZ_kws-pWHPX5Ro_KpsuF3-BiJX2-7nXJ6k/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWQ5ZDA2N2Ux/MTU2ZGNmY2Y0OThl/NmQ5OTg0NzhiNDM4/YjBhOTYyZjc1ZjVi/NzUzZTdmNTBiYjJk/MTViZmUwMy93d3cu/aW5mby1yZXRyYWl0/ZS5mci8\",\"path\":\"\u203A
+        portail-info  \u203A sites  \u203A PortailInformationnel  \u203A home  \u203A
+        reforme-des-retraites---age-lega.html\"}},{\"title\":\"Les r\xE9formes des
+        r\xE9gimes de retraite de 1982 \xE0 2023\",\"url\":\"https://www.vie-publique.fr/eclairage/19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"page_age\":\"2023-10-10T00:00:00\",\"profile\":{\"name\":\"Vie-publique\",\"url\":\"https://www.vie-publique.fr/eclairage/19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie\",\"long_name\":\"vie-publique.fr\",\"img\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\"},\"language\":\"unk\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"vie-publique.fr\",\"hostname\":\"www.vie-publique.fr\",\"favicon\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\",\"path\":\"\u203A
+        eclairage  \u203A 19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie\"},\"age\":\"October
+        10, 2023\"},{\"title\":\"R\xE9forme des retraites en France en 2023 \u2014
+        Wikip\xE9dia\",\"url\":\"https://fr.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_France_en_2023\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"La
+        r\xE9forme des retraites en France de 2023 <strong>consiste en un ensemble
+        de mesures r\xE9visant le syst\xE8me de retraite fran\xE7ais r\xE9alis\xE9es
+        pendant la mandature d&#x27;Emmanuel Macron</strong>, et port\xE9es par la
+        Premi\xE8re Ministre \xC9lisabeth Borne et le ministre du travail Olivier
+        Dussopt, dont le report de ...\",\"page_age\":\"2025-06-05T12:30:02\",\"profile\":{\"name\":\"Wikipedia\",\"url\":\"https://fr.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_France_en_2023\",\"long_name\":\"fr.wikipedia.org\",\"img\":\"https://imgs.search.brave.com/9hcXszQtxFqKhmv5bxBm9G2EFNIcGvLx34pvPEqARmw/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTMzMDhhNDdi/YjBhOTk2ZTM1MTBm/ODZlNjc3Y2Q5ZjBj/MTFmOTQ5ZWIzNmRh/NjI4ZTI0NGRhZDgx/MmE4ZTJjNi9mci53/aWtpcGVkaWEub3Jn/Lw\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"fr.wikipedia.org\",\"hostname\":\"fr.wikipedia.org\",\"favicon\":\"https://imgs.search.brave.com/9hcXszQtxFqKhmv5bxBm9G2EFNIcGvLx34pvPEqARmw/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTMzMDhhNDdi/YjBhOTk2ZTM1MTBm/ODZlNjc3Y2Q5ZjBj/MTFmOTQ5ZWIzNmRh/NjI4ZTI0NGRhZDgx/MmE4ZTJjNi9mci53/aWtpcGVkaWEub3Jn/Lw\",\"path\":\"\u203A
+        wiki  \u203A R\xE9forme_des_retraites_en_France_en_2023\"},\"age\":\"1 day
+        ago\"}],\"family_friendly\":true}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:49:25 GMT
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User
+      X-Content-Type-Options:
+      - nosniff
+      X-Download-Options:
+      - noopen
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '13033'
+      server-timing:
+      - search-roundtrip;dur=682.778
+      x-ratelimit-limit:
+      - 1, 2000
+      x-ratelimit-policy:
+      - 1;w=1, 2000;w=2592000,
+      x-ratelimit-remaining:
+      - 0, 1978
+      x-ratelimit-reset:
+      - 1, 2121034
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+    method: GET
+    uri: https://www.info-retraite.fr/portail-info/sites/portailinformationnel/home/reforme-des-retraites---age-lega.html
+  response:
+    body:
+      string: '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+
+        <html><head>
+
+        <title>302 Found</title>
+
+        </head><body>
+
+        <h1>Found</h1>
+
+        <p>The document has moved <a href="https://www.info-retraite.fr/browsers.html">here</a>.</p>
+
+        </body></html>
+
+        '
+    headers:
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '227'
+      Content-Type:
+      - text/html; charset=iso-8859-1
+      Date:
+      - Fri, 06 Jun 2025 10:49:25 GMT
+      Keep-Alive:
+      - timeout=5, max=300
+      Location:
+      - https://www.info-retraite.fr/browsers.html
+    status:
+      code: 302
+      message: Found
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+    method: GET
+    uri: https://www.vie-publique.fr/eclairage/19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie
+  response:
+    body:
+      string: "<!doctypehtml><meta name=\"viewport\"content=\"width=device-width\"><meta
+        charset=\"utf-8\"><script></script><script>var __blnChallengeStore={\"checkChallengeParams\":{\"bot_category\":\"unknown\",\"tracking_id\":\"\",\"request_fate\":\"challengejs\",\"rule_id\":\"\"},\"cookie\":{\"maxAge\":900,\"sameSite\":\"None\",\"name\":\"bln_challengejs\",\"path\":\"\\/\",\"secure\":true,\"value\":\"slJLk6tLgyiTUtVDrE3FKQAaXYJr-L1ZBhYvPp2a5vjiwaYDIcjcmUobWBUlhTwI2O3fAEq2LzC8R_GO2dLTHEFcn9ICXXvPMZUVrpfxMZ9rc4RxkzHNcbGfQ8TUK5pUPWhTAPfl9AG2mzSaHEI2_upiIGKyFRQtN3kDIvifL4FstmpjWXTHa_iBByyclshTtIHSiYei6jQ1m4q0iYBWkXVQNmMoz7356Ns1DWsHO16URg7BRFxl-oSUO24xen20ujWo35C-K5k0HkXZUV3k9q8fktBEJxhOjbKFbuDxfnKwAvmVc2EOzAgVnaWY0AYu\"},\"domain\":\".vie-publique.fr\",\"unregisterServiceWorker\":false};(()=>{\"use
+        strict\";const e=function*({domain:e,maxAge:n,name:o,path:t,secure:a,sameSite:i,value:r}){yield`${o}=${r}`,void
+        0!==e&&\"\"!==e&&(yield`Domain=${e}`),void 0!==t&&\"\"!==t&&(yield`Path=${t}`),void
+        0!==n&&(yield`Max-Age=${n}`),void 0!==i&&(yield`SameSite=${i}`),a&&(yield\"Secure\")},n=e=>{const
+        n=document.cookie.match(`${e}=([a-zA-Z0-9-_]*);?`);if(n)return{name:e,value:n[1]}},o=n=>{const
+        o=[...e(n)].join(\"; \");document.cookie=o},t=(e,n)=>{if(!e||!e.name)return
+        n;const o=new RegExp(`([?&])(${e.name})=([^&#]*)`,\"u\");if(!n.match(o)){const
+        o=n.startsWith(\"?\")?\"&\":\"?\";return`${n}${o}${e.name}=${e.value}`}return
+        n.replace(o,`$1$2=${e.value}`)},a=()=>{const{cookie:e,checkChallengeParams:n={}}=__blnChallengeStore,{name:o,value:t}=e,a=new
+        XMLHttpRequest,i=`/.well-known/baleen/challengejs/check?${o}=${t}`,r=Object.entries(n).map((([e,n])=>`${e}=${n}`)).join(\"&\");a.open(\"POST\",i),a.send(r)},i=e=>setTimeout((()=>{e?window.location=e:window.location.reload()}),2),r=()=>{if(!(()=>{const{cookie:t,cookieReferer:r,domain:c}=__blnChallengeStore;return!!(()=>{const
+        t={name:\"tst_bln_cookie_enabled\",sameSite:\"None\",secure:!0,value:\"1\"};o(t);const
+        a=n(t.name);return!!a&&((({name:n})=>{const o=[...e({maxAge:-1,name:n,value:\"\"})].join(\";
+        \");document.cookie=o})(a),!0)})()&&(o({domain:c,...t}),!!n(t.name)&&(r&&o({domain:c,...r}),a(),i(),!0))})()){const
+        e=(()=>{const{cookie:e,cookieReferer:n}=__blnChallengeStore||{},{origin:o,pathname:a,search:i,hash:r}=window.location;return`${o}${a}${t(n,t(e,i))}${r}`})();setTimeout((()=>{a(),i(e)}),1e3)}};(()=>{const{unregisterServiceWorker:e}=__blnChallengeStore||{};e&&navigator&&navigator.serviceWorker?navigator.serviceWorker.getRegistrations().then((e=>Promise.all(e.map((e=>e.unregister()))))).then((()=>r())).catch((()=>r())):r()})()})();</script><link
+        href=\"https://fonts.googleapis.com/css2?family=Roboto:wght@100;400;500&display=swap\"rel=\"stylesheet\"><link
+        href=\"/.well-known/baleen/challengejs/assets/style.css\"rel=\"stylesheet\"><body><noscript><div
+        class=\"challengejs-container\"><div class=\"container\"><div class=\"challengejs-body\"><div
+        class=\"challengejs-card\"><img src=\"/.well-known/baleen/challengejs/assets/logo.svg\"><div
+        class=\"challengejs-message-1\">Le JavaScript n'est pas activ\xE9 sur votre
+        navigateur.</div><div class=\"separator\"></div><div class=\"challengejs-message-2\">Le
+        JavaScript n'est pas activ\xE9 sur votre navigateur. Pour vous permettre de
+        naviguer correctement sur notre site, il est n\xE9cessaire qu'il soit activ\xE9.</div><div
+        class=\"challengejs-message-3\"><div class=\"how\"><span>Comment activer le
+        JavaScript ?</span></div><div class=\"drop\"><div class=\"how-to chrome\"><div>Chrome</div><a
+        href=\"https://support.google.com/chrome\">https://support.google.com/chrome</a></div><div
+        class=\"how-to firefox\"><div>Mozilla Firefox</div><a href=\"https://support.mozilla.org/fr/home\">https://support.mozilla.org/fr/home</a></div><div
+        class=\"how-to safari\"><div>Safari</div><a href=\"https://www.apple.com/support/safari/\">https://www.apple.com/support/safari/</a></div><div
+        class=\"how-to opera\"><div>Opera</div><a href=\"https://support.google.com/adsense/answer/12654?hl=fr\">https://support.google.com/adsense/answer/12654?hl=fr</a></div><div
+        class=\"how-to explorer\"><div>Internet Explorer</div><a href=\"https://support.microsoft.com/product/internet-explorer\">https://support.microsoft.com/product/internet-explorer</a></div></div></div></div></div></div></div></noscript>"
+    headers:
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/html
+      Date:
+      - Fri, 06 Jun 2025 10:49:26 GMT
+      Referrer-Policy:
+      - no-referrer
+      Strict-Transport-Security:
+      - max-age=63072000
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '4156'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+    method: GET
+    uri: https://fr.wikipedia.org/wiki/r%C3%A9forme_des_retraites_en_france_en_2023
+  response:
+    body:
+      string: ''
+    headers:
+      age:
+      - '1133'
+      cache-control:
+      - private, s-maxage=0, max-age=0, must-revalidate, no-transform
+      content-length:
+      - '0'
+      content-type:
+      - text/html; charset=UTF-8
+      date:
+      - Fri, 06 Jun 2025 10:30:33 GMT
+      last-modified:
+      - Fri, 06 Jun 2025 10:30:33 GMT
+      location:
+      - https://fr.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_france_en_2023
+      nel:
+      - '{ "report_to": "wm_nel", "max_age": 604800, "failure_fraction": 0.05, "success_fraction":
+        0.0}'
+      report-to:
+      - '{ "group": "wm_nel", "max_age": 604800, "endpoints": [{ "url": "https://intake-logging.wikimedia.org/v1/events?stream=w3c.reportingapi.network_error&schema_uri=/w3c/reportingapi/network_error/1.0.0"
+        }] }'
+      server:
+      - mw-web.eqiad.main-58f94c7789-jksbf
+      server-timing:
+      - cache;desc="hit-local", host;desc="cp6013"
+      set-cookie:
+      - WMF-Last-Access=06-Jun-2025;Path=/;HttpOnly;secure;Expires=Tue, 08 Jul 2025
+        00:00:00 GMT
+      - WMF-Last-Access-Global=06-Jun-2025;Path=/;Domain=.wikipedia.org;HttpOnly;secure;Expires=Tue,
+        08 Jul 2025 00:00:00 GMT
+      - GeoIP=FR:BFC:Besan__on:47.25:6.02:v4; Path=/; secure; Domain=.wikipedia.org
+      - NetworkProbeLimit=0.001;Path=/;Secure;SameSite=None;Max-Age=3600
+      - WMF-Uniq=KfgPIceCvwyAwRzIc1InewIKAAAAAFvd6FqnTgSM33Hh2JCKaCtt-wQwHLEGL69q;Domain=.wikipedia.org;Path=/;HttpOnly;secure;SameSite=None;Expires=Sat,
+        06 Jun 2026 00:00:00 GMT
+      strict-transport-security:
+      - max-age=106384710; includeSubDomains; preload
+      vary:
+      - Accept-Encoding,X-Forwarded-Proto,Cookie,Authorization
+      x-cache:
+      - cp6012 hit, cp6013 miss
+      x-cache-status:
+      - hit-local
+      x-client-ip:
+      - 2001:861:4f80:84d0:b9cd:428e:3906:2338
+      x-content-type-options:
+      - nosniff
+    status:
+      code: 301
+      message: Moved Permanently
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Cookie:
+      - WMF-Last-Access=06-Jun-2025; NetworkProbeLimit=0.001; WMF-Last-Access-Global=06-Jun-2025;
+        GeoIP=FR:BFC:Besan__on:47.25:6.02:v4; WMF-Uniq=KfgPIceCvwyAwRzIc1InewIKAAAAAFvd6FqnTgSM33Hh2JCKaCtt-wQwHLEGL69q
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+    method: GET
+    uri: https://fr.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_france_en_2023
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html class=\"client-nojs vector-feature-language-in-header-enabled
+        vector-feature-language-in-main-page-header-disabled vector-feature-page-tools-pinned-disabled
+        vector-feature-toc-pinned-clientpref-1 vector-feature-main-menu-pinned-disabled
+        vector-feature-limited-width-clientpref-1 vector-feature-limited-width-content-enabled
+        vector-feature-custom-font-size-clientpref-1 vector-feature-appearance-pinned-clientpref-1
+        vector-feature-night-mode-enabled skin-theme-clientpref-day vector-sticky-header-enabled
+        vector-toc-not-available\" lang=\"fr\" dir=\"ltr\">\n<head>\n<meta charset=\"UTF-8\">\n<title>R\xE9forme
+        des retraites en france en 2023 \u2014 Wikip\xE9dia</title>\n<script>(function(){var
+        className=\"client-js vector-feature-language-in-header-enabled vector-feature-language-in-main-page-header-disabled
+        vector-feature-page-tools-pinned-disabled vector-feature-toc-pinned-clientpref-1
+        vector-feature-main-menu-pinned-disabled vector-feature-limited-width-clientpref-1
+        vector-feature-limited-width-content-enabled vector-feature-custom-font-size-clientpref-1
+        vector-feature-appearance-pinned-clientpref-1 vector-feature-night-mode-enabled
+        skin-theme-clientpref-day vector-sticky-header-enabled vector-toc-not-available\";var
+        cookie=document.cookie.match(/(?:^|; )frwikimwclientpreferences=([^;]+)/);if(cookie){cookie[1].split('%2C').forEach(function(pref){className=className.replace(new
+        RegExp('(^| )'+pref.replace(/-clientpref-\\w+$|[^\\w-]+/g,'')+'-clientpref-\\\\w+(
+        |$)'),'$1'+pref+'$2');});}document.documentElement.className=className;}());RLCONF={\"wgBreakFrames\":false,\"wgSeparatorTransformTable\":[\",\\t.\",\"\_\\t,\"],\"wgDigitTransformTable\":[\"\",\"\"],\"wgDefaultDateFormat\":\"dmy\",\"wgMonthNames\":[\"\",\"janvier\",\"f\xE9vrier\",\"mars\",\"avril\",\"mai\",\"juin\",\"juillet\",\"ao\xFBt\",\"septembre\",\"octobre\",\"novembre\",\"d\xE9cembre\"],\"wgRequestId\":\"0237295e-43eb-4aa3-84b4-10a1ceef95fe\",\"wgCanonicalNamespace\":\"\",\"wgCanonicalSpecialPageName\":false,\"wgNamespaceNumber\":0,\"wgPageName\":\"R\xE9forme_des_retraites_en_france_en_2023\",\"wgTitle\":\"R\xE9forme
+        des retraites en france en 2023\",\"wgCurRevisionId\":0,\"wgRevisionId\":0,\"wgArticleId\":0,\"wgIsArticle\":true,\"wgIsRedirect\":false,\"wgAction\":\"view\",\"wgUserName\":null,\"wgUserGroups\":[\"*\"],\"wgCategories\":[],\"wgPageViewLanguage\":\"fr\",\"wgPageContentLanguage\":\"fr\",\"wgPageContentModel\":\"wikitext\",\"wgRelevantPageName\":\"R\xE9forme_des_retraites_en_france_en_2023\",\"wgRelevantArticleId\":0,\"wgIsProbablyEditable\":true,\"wgRelevantPageIsProbablyEditable\":true,\"wgRestrictionCreate\":[],\"wgNoticeProject\":\"wikipedia\",\"wgCiteReferencePreviewsActive\":true,\"wgMediaViewerOnClick\":true,\"wgMediaViewerEnabledByDefault\":true,\"wgPopupsFlags\":0,\"wgVisualEditor\":{\"pageLanguageCode\":\"fr\",\"pageLanguageDir\":\"ltr\",\"pageVariantFallbacks\":\"fr\"},\"wgMFDisplayWikibaseDescriptions\":{\"search\":true,\"watchlist\":true,\"tagline\":true,\"nearby\":true},\"wgWMESchemaEditAttemptStepOversample\":false,\"wgWMEPageLength\":0,\"wgMetricsPlatformUserExperiments\":{\"active_experiments\":[],\"overrides\":[],\"enrolled\":[],\"assigned\":[],\"subject_ids\":[],\"sampling_units\":[]},\"wgEditSubmitButtonLabelPublish\":true,\"wgULSPosition\":\"interlanguage\",\"wgULSisCompactLinksEnabled\":false,\"wgVector2022LanguageInHeader\":true,\"wgULSisLanguageSelectorEmpty\":true,\"wgCheckUserClientHintsHeadersJsApi\":[\"brands\",\"architecture\",\"bitness\",\"fullVersionList\",\"mobile\",\"model\",\"platform\",\"platformVersion\"],\"GEHomepageSuggestedEditsEnableTopics\":true,\"wgGETopicsMatchModeEnabled\":false,\"wgGELevelingUpEnabledForUser\":false};\nRLSTATE={\"ext.globalCssJs.user.styles\":\"ready\",\"site.styles\":\"ready\",\"user.styles\":\"ready\",\"ext.globalCssJs.user\":\"ready\",\"user\":\"ready\",\"user.options\":\"loading\",\"skins.vector.search.codex.styles\":\"ready\",\"skins.vector.styles\":\"ready\",\"skins.vector.icons\":\"ready\",\"ext.wikimediamessages.styles\":\"ready\",\"ext.visualEditor.desktopArticleTarget.noscript\":\"ready\",\"ext.uls.interlanguage\":\"ready\"};RLPAGEMODULES=[\"ext.xLab\",\"site\",\"mediawiki.page.ready\",\"skins.vector.js\",\"ext.centralNotice.geoIP\",\"ext.centralNotice.startUp\",\"ext.gadget.ArchiveLinks\",\"ext.urlShortener.toolbar\",\"ext.centralauth.centralautologin\",\"mmv.bootstrap\",\"ext.popups\",\"ext.visualEditor.desktopArticleTarget.init\",\"ext.visualEditor.targetLoader\",\"ext.echo.centralauth\",\"ext.eventLogging\",\"ext.wikimediaEvents\",\"ext.navigationTiming\",\"ext.uls.interface\",\"ext.cx.eventlogging.campaigns\",\"ext.checkUser.clientHints\",\"ext.growthExperiments.SuggestedEditSession\"];</script>\n<script>(RLQ=window.RLQ||[]).push(function(){mw.loader.impl(function(){return[\"user.options@12s5i\",function($,jQuery,require,module){mw.user.tokens.set({\"patrolToken\":\"+\\\\\",\"watchToken\":\"+\\\\\",\"csrfToken\":\"+\\\\\"});\n}];});});</script>\n<link
+        rel=\"stylesheet\" href=\"/w/load.php?lang=fr&amp;modules=ext.uls.interlanguage%7Cext.visualEditor.desktopArticleTarget.noscript%7Cext.wikimediamessages.styles%7Cskins.vector.icons%2Cstyles%7Cskins.vector.search.codex.styles&amp;only=styles&amp;skin=vector-2022\">\n<script
+        async=\"\" src=\"/w/load.php?lang=fr&amp;modules=startup&amp;only=scripts&amp;raw=1&amp;skin=vector-2022\"></script>\n<meta
+        name=\"ResourceLoaderDynamicStyles\" content=\"\">\n<link rel=\"stylesheet\"
+        href=\"/w/load.php?lang=fr&amp;modules=site.styles&amp;only=styles&amp;skin=vector-2022\">\n<meta
+        name=\"generator\" content=\"MediaWiki 1.45.0-wmf.4\">\n<meta name=\"referrer\"
+        content=\"origin\">\n<meta name=\"referrer\" content=\"origin-when-cross-origin\">\n<meta
+        name=\"robots\" content=\"noindex,nofollow,max-image-preview:standard\">\n<meta
+        name=\"format-detection\" content=\"telephone=no\">\n<meta name=\"viewport\"
+        content=\"width=1120\">\n<meta property=\"og:title\" content=\"R\xE9forme
+        des retraites en france en 2023 \u2014 Wikip\xE9dia\">\n<meta property=\"og:type\"
+        content=\"website\">\n<link rel=\"preconnect\" href=\"//upload.wikimedia.org\">\n<link
+        rel=\"alternate\" media=\"only screen and (max-width: 640px)\" href=\"//fr.m.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_france_en_2023\">\n<link
+        rel=\"alternate\" type=\"application/x-wiki\" title=\"Modifier\" href=\"/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;action=edit\">\n<link
+        rel=\"apple-touch-icon\" href=\"/static/apple-touch/wikipedia.png\">\n<link
+        rel=\"icon\" href=\"/static/favicon/wikipedia.ico\">\n<link rel=\"search\"
+        type=\"application/opensearchdescription+xml\" href=\"/w/rest.php/v1/search\"
+        title=\"Wikip\xE9dia (fr)\">\n<link rel=\"EditURI\" type=\"application/rsd+xml\"
+        href=\"//fr.wikipedia.org/w/api.php?action=rsd\">\n<link rel=\"canonical\"
+        href=\"https://fr.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_france_en_2023\">\n<link
+        rel=\"license\" href=\"https://creativecommons.org/licenses/by-sa/4.0/deed.fr\">\n<link
+        rel=\"alternate\" type=\"application/atom+xml\" title=\"Flux Atom de Wikip\xE9dia\"
+        href=\"/w/index.php?title=Sp%C3%A9cial:Modifications_r%C3%A9centes&amp;feed=atom\">\n<link
+        rel=\"dns-prefetch\" href=\"//meta.wikimedia.org\" />\n<link rel=\"dns-prefetch\"
+        href=\"auth.wikimedia.org\">\n</head>\n<body class=\"skin--responsive skin-vector
+        skin-vector-search-vue mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject
+        mw-editable page-R\xE9forme_des_retraites_en_france_en_2023 rootpage-R\xE9forme_des_retraites_en_france_en_2023
+        skin-vector-2022 action-view\"><a class=\"mw-jump-link\" href=\"#bodyContent\">Aller
+        au contenu</a>\n<div class=\"vector-header-container\">\n\t<header class=\"vector-header
+        mw-header no-font-mode-scale\">\n\t\t<div class=\"vector-header-start\">\n\t\t\t<nav
+        class=\"vector-main-menu-landmark\" aria-label=\"Site\">\n\t\t\t\t\n<div id=\"vector-main-menu-dropdown\"
+        class=\"vector-dropdown vector-main-menu-dropdown vector-button-flush-left
+        vector-button-flush-right\"  title=\"Menu principal\" >\n\t<input type=\"checkbox\"
+        id=\"vector-main-menu-dropdown-checkbox\" role=\"button\" aria-haspopup=\"true\"
+        data-event-name=\"ui.dropdown-vector-main-menu-dropdown\" class=\"vector-dropdown-checkbox
+        \"  aria-label=\"Menu principal\"  >\n\t<label id=\"vector-main-menu-dropdown-label\"
+        for=\"vector-main-menu-dropdown-checkbox\" class=\"vector-dropdown-label cdx-button
+        cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet
+        cdx-button--icon-only \" aria-hidden=\"true\"  ><span class=\"vector-icon
+        mw-ui-icon-menu mw-ui-icon-wikimedia-menu\"></span>\n\n<span class=\"vector-dropdown-label-text\">Menu
+        principal</span>\n\t</label>\n\t<div class=\"vector-dropdown-content\">\n\n\n\t\t\t\t<div
+        id=\"vector-main-menu-unpinned-container\" class=\"vector-unpinned-container\">\n\t\t\n<div
+        id=\"vector-main-menu\" class=\"vector-main-menu vector-pinnable-element\">\n\t<div\n\tclass=\"vector-pinnable-header
+        vector-main-menu-pinnable-header vector-pinnable-header-unpinned\"\n\tdata-feature-name=\"main-menu-pinned\"\n\tdata-pinnable-element-id=\"vector-main-menu\"\n\tdata-pinned-container-id=\"vector-main-menu-pinned-container\"\n\tdata-unpinned-container-id=\"vector-main-menu-unpinned-container\"\n>\n\t<div
+        class=\"vector-pinnable-header-label\">Menu principal</div>\n\t<button class=\"vector-pinnable-header-toggle-button
+        vector-pinnable-header-pin-button\" data-event-name=\"pinnable-header.vector-main-menu.pin\">d\xE9placer
+        vers la barre lat\xE9rale</button>\n\t<button class=\"vector-pinnable-header-toggle-button
+        vector-pinnable-header-unpin-button\" data-event-name=\"pinnable-header.vector-main-menu.unpin\">masquer</button>\n</div>\n\n\t\n<div
+        id=\"p-navigation\" class=\"vector-menu mw-portlet mw-portlet-navigation\"
+        \ >\n\t<div class=\"vector-menu-heading\">\n\t\tNavigation\n\t</div>\n\t<div
+        class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t<li
+        id=\"n-mainpage-description\" class=\"mw-list-item\"><a href=\"/wiki/Wikip%C3%A9dia:Accueil_principal\"
+        title=\"Accueil g\xE9n\xE9ral [z]\" accesskey=\"z\"><span>Page d\u2019accueil</span></a></li><li
+        id=\"n-thema\" class=\"mw-list-item\"><a href=\"/wiki/Portail:Accueil\" title=\"Regroupements
+        d&#039;articles par th\xE9matiques\"><span>Portails th\xE9matiques</span></a></li><li
+        id=\"n-randompage\" class=\"mw-list-item\"><a href=\"/wiki/Sp%C3%A9cial:Page_au_hasard\"
+        title=\"Affiche un article au hasard [x]\" accesskey=\"x\"><span>Article au
+        hasard</span></a></li><li id=\"n-contact\" class=\"mw-list-item\"><a href=\"/wiki/Wikip%C3%A9dia:Contact\"
+        title=\"Qui contacter\"><span>Contact</span></a></li>\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n\t\n\t\n<div
+        id=\"p-Contribuer\" class=\"vector-menu mw-portlet mw-portlet-Contribuer\"
+        \ >\n\t<div class=\"vector-menu-heading\">\n\t\tContribuer\n\t</div>\n\t<div
+        class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t<li
+        id=\"n-aboutwp\" class=\"mw-list-item\"><a href=\"/wiki/Aide:D%C3%A9buter\"
+        title=\"Guide pour apprendre \xE0 contribuer \xE0 Wikip\xE9dia\"><span>D\xE9buter
+        sur Wikip\xE9dia</span></a></li><li id=\"n-help\" class=\"mw-list-item\"><a
+        href=\"/wiki/Aide:Accueil\" title=\"Acc\xE8s \xE0 l\u2019aide\"><span>Aide</span></a></li><li
+        id=\"n-portal\" class=\"mw-list-item\"><a href=\"/wiki/Wikip%C3%A9dia:Accueil_de_la_communaut%C3%A9\"
+        title=\"\xC0 propos du projet, ce que vous pouvez faire, o\xF9 trouver les
+        informations\"><span>Communaut\xE9</span></a></li><li id=\"n-specialpages\"
+        class=\"mw-list-item\"><a href=\"/wiki/Sp%C3%A9cial:Pages_sp%C3%A9ciales\"
+        title=\"Outils pour contribuer \xE0 Wikip\xE9dia\"><span>Pages sp\xE9ciales</span></a></li><li
+        id=\"n-recentchanges\" class=\"mw-list-item\"><a href=\"/wiki/Sp%C3%A9cial:Modifications_r%C3%A9centes\"
+        title=\"Liste des modifications r\xE9centes sur le wiki [r]\" accesskey=\"r\"><span>Modifications
+        r\xE9centes</span></a></li>\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n</div>\n\n\t\t\t\t</div>\n\n\t</div>\n</div>\n\n\t\t</nav>\n\t\t\t\n<a
+        href=\"/wiki/Wikip%C3%A9dia:Accueil_principal\" class=\"mw-logo\">\n\t<img
+        class=\"mw-logo-icon\" src=\"/static/images/icons/wikipedia.png\" alt=\"\"
+        aria-hidden=\"true\" height=\"50\" width=\"50\">\n\t<span class=\"mw-logo-container
+        skin-invert\">\n\t\t<img class=\"mw-logo-wordmark\" alt=\"Wikip\xE9dia\" src=\"/static/images/mobile/copyright/wikipedia-wordmark-fr.svg\"
+        style=\"width: 7.4375em; height: 1.125em;\">\n\t\t<img class=\"mw-logo-tagline\"
+        alt=\"l&#039;encyclop\xE9die libre\" src=\"/static/images/mobile/copyright/wikipedia-tagline-fr.svg\"
+        width=\"120\" height=\"13\" style=\"width: 7.5em; height: 0.8125em;\">\n\t</span>\n</a>\n\n\t\t</div>\n\t\t<div
+        class=\"vector-header-end\">\n\t\t\t\n<div id=\"p-search\" role=\"search\"
+        class=\"vector-search-box-vue  vector-search-box-collapses vector-search-box-show-thumbnail
+        vector-search-box-auto-expand-width vector-search-box\">\n\t<a href=\"/wiki/Sp%C3%A9cial:Recherche\"
+        class=\"cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only search-toggle\" title=\"Rechercher
+        sur Wikip\xE9dia [f]\" accesskey=\"f\"><span class=\"vector-icon mw-ui-icon-search
+        mw-ui-icon-wikimedia-search\"></span>\n\n<span>Rechercher</span>\n\t</a>\n\t<div
+        class=\"vector-typeahead-search-container\">\n\t\t<div class=\"cdx-typeahead-search
+        cdx-typeahead-search--show-thumbnail cdx-typeahead-search--auto-expand-width\">\n\t\t\t<form
+        action=\"/w/index.php\" id=\"searchform\" class=\"cdx-search-input cdx-search-input--has-end-button\">\n\t\t\t\t<div
+        id=\"simpleSearch\" class=\"cdx-search-input__input-wrapper\"  data-search-loc=\"header-moved\">\n\t\t\t\t\t<div
+        class=\"cdx-text-input cdx-text-input--has-start-icon\">\n\t\t\t\t\t\t<input\n\t\t\t\t\t\t\tclass=\"cdx-text-input__input
+        mw-searchInput\"\n\t\t\t\t\t\t\t type=\"search\" name=\"search\" placeholder=\"Rechercher
+        sur Wikip\xE9dia\" aria-label=\"Rechercher sur Wikip\xE9dia\" autocapitalize=\"sentences\"
+        spellcheck=\"false\" title=\"Rechercher sur Wikip\xE9dia [f]\" accesskey=\"f\"
+        id=\"searchInput\"\n\t\t\t\t\t\t\t>\n\t\t\t\t\t\t<span class=\"cdx-text-input__icon
+        cdx-text-input__start-icon\"></span>\n\t\t\t\t\t</div>\n\t\t\t\t\t<input type=\"hidden\"
+        name=\"title\" value=\"Sp\xE9cial:Recherche\">\n\t\t\t\t</div>\n\t\t\t\t<button
+        class=\"cdx-button cdx-search-input__end-button\">Rechercher</button>\n\t\t\t</form>\n\t\t</div>\n\t</div>\n</div>\n\n\t\t\t<nav
+        class=\"vector-user-links vector-user-links-wide\" aria-label=\"Outils personnels\">\n\t<div
+        class=\"vector-user-links-main\">\n\t\n<div id=\"p-vector-user-menu-preferences\"
+        class=\"vector-menu mw-portlet emptyPortlet\"  >\n\t<div class=\"vector-menu-content\">\n\t\t\n\t\t<ul
+        class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n\t\n<div
+        id=\"p-vector-user-menu-userpage\" class=\"vector-menu mw-portlet emptyPortlet\"
+        \ >\n\t<div class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n\t<nav
+        class=\"vector-appearance-landmark\" aria-label=\"Apparence\">\n\t\t\n<div
+        id=\"vector-appearance-dropdown\" class=\"vector-dropdown \"  title=\"Modifier
+        l&#039;apparence de la taille, de la largeur et de la couleur de la police
+        de la page\" >\n\t<input type=\"checkbox\" id=\"vector-appearance-dropdown-checkbox\"
+        role=\"button\" aria-haspopup=\"true\" data-event-name=\"ui.dropdown-vector-appearance-dropdown\"
+        class=\"vector-dropdown-checkbox \"  aria-label=\"Apparence\"  >\n\t<label
+        id=\"vector-appearance-dropdown-label\" for=\"vector-appearance-dropdown-checkbox\"
+        class=\"vector-dropdown-label cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only \" aria-hidden=\"true\"  ><span
+        class=\"vector-icon mw-ui-icon-appearance mw-ui-icon-wikimedia-appearance\"></span>\n\n<span
+        class=\"vector-dropdown-label-text\">Apparence</span>\n\t</label>\n\t<div
+        class=\"vector-dropdown-content\">\n\n\n\t\t\t<div id=\"vector-appearance-unpinned-container\"
+        class=\"vector-unpinned-container\">\n\t\t\t\t\n\t\t\t</div>\n\t\t\n\t</div>\n</div>\n\n\t</nav>\n\t\n<div
+        id=\"p-vector-user-menu-notifications\" class=\"vector-menu mw-portlet emptyPortlet\"
+        \ >\n\t<div class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n\t\n<div
+        id=\"p-vector-user-menu-overflow\" class=\"vector-menu mw-portlet\"  >\n\t<div
+        class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t<li
+        id=\"pt-sitesupport-2\" class=\"user-links-collapsible-item mw-list-item user-links-collapsible-item\"><a
+        data-mw=\"interface\" href=\"https://donate.wikimedia.org/?wmf_source=donate&amp;wmf_medium=sidebar&amp;wmf_campaign=fr.wikipedia.org&amp;uselang=fr\"
+        class=\"\"><span>Faire un don</span></a>\n</li>\n<li id=\"pt-createaccount-2\"
+        class=\"user-links-collapsible-item mw-list-item user-links-collapsible-item\"><a
+        data-mw=\"interface\" href=\"/w/index.php?title=Sp%C3%A9cial:Cr%C3%A9er_un_compte&amp;returnto=R%C3%A9forme+des+retraites+en+france+en+2023\"
+        title=\"Nous vous encourageons \xE0 cr\xE9er un compte utilisateur et vous
+        connecter\u202F; ce n\u2019est cependant pas obligatoire.\" class=\"\"><span>Cr\xE9er
+        un compte</span></a>\n</li>\n<li id=\"pt-login-2\" class=\"user-links-collapsible-item
+        mw-list-item user-links-collapsible-item\"><a data-mw=\"interface\" href=\"/w/index.php?title=Sp%C3%A9cial:Connexion&amp;returnto=R%C3%A9forme+des+retraites+en+france+en+2023\"
+        title=\"Nous vous encourageons \xE0 vous connecter\u202F; ce n\u2019est cependant
+        pas obligatoire. [o]\" accesskey=\"o\" class=\"\"><span>Se connecter</span></a>\n</li>\n\n\t\t\t\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n\t</div>\n\t\n<div
+        id=\"vector-user-links-dropdown\" class=\"vector-dropdown vector-user-menu
+        vector-button-flush-right vector-user-menu-logged-out\"  title=\"Plus d\u2019options\"
+        >\n\t<input type=\"checkbox\" id=\"vector-user-links-dropdown-checkbox\" role=\"button\"
+        aria-haspopup=\"true\" data-event-name=\"ui.dropdown-vector-user-links-dropdown\"
+        class=\"vector-dropdown-checkbox \"  aria-label=\"Outils personnels\"  >\n\t<label
+        id=\"vector-user-links-dropdown-label\" for=\"vector-user-links-dropdown-checkbox\"
+        class=\"vector-dropdown-label cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only \" aria-hidden=\"true\"  ><span
+        class=\"vector-icon mw-ui-icon-ellipsis mw-ui-icon-wikimedia-ellipsis\"></span>\n\n<span
+        class=\"vector-dropdown-label-text\">Outils personnels</span>\n\t</label>\n\t<div
+        class=\"vector-dropdown-content\">\n\n\n\t\t\n<div id=\"p-personal\" class=\"vector-menu
+        mw-portlet mw-portlet-personal user-links-collapsible-item\"  title=\"Menu
+        utilisateur\" >\n\t<div class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t<li
+        id=\"pt-sitesupport\" class=\"user-links-collapsible-item mw-list-item\"><a
+        href=\"https://donate.wikimedia.org/?wmf_source=donate&amp;wmf_medium=sidebar&amp;wmf_campaign=fr.wikipedia.org&amp;uselang=fr\"><span>Faire
+        un don</span></a></li><li id=\"pt-createaccount\" class=\"user-links-collapsible-item
+        mw-list-item\"><a href=\"/w/index.php?title=Sp%C3%A9cial:Cr%C3%A9er_un_compte&amp;returnto=R%C3%A9forme+des+retraites+en+france+en+2023\"
+        title=\"Nous vous encourageons \xE0 cr\xE9er un compte utilisateur et vous
+        connecter\u202F; ce n\u2019est cependant pas obligatoire.\"><span class=\"vector-icon
+        mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd\"></span> <span>Cr\xE9er un
+        compte</span></a></li><li id=\"pt-login\" class=\"user-links-collapsible-item
+        mw-list-item\"><a href=\"/w/index.php?title=Sp%C3%A9cial:Connexion&amp;returnto=R%C3%A9forme+des+retraites+en+france+en+2023\"
+        title=\"Nous vous encourageons \xE0 vous connecter\u202F; ce n\u2019est cependant
+        pas obligatoire. [o]\" accesskey=\"o\"><span class=\"vector-icon mw-ui-icon-logIn
+        mw-ui-icon-wikimedia-logIn\"></span> <span>Se connecter</span></a></li>\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n<div
+        id=\"p-user-menu-anon-editor\" class=\"vector-menu mw-portlet mw-portlet-user-menu-anon-editor\"
+        \ >\n\t<div class=\"vector-menu-heading\">\n\t\tPages pour les contributeurs
+        d\xE9connect\xE9s <a href=\"/wiki/Aide:Premiers_pas\" aria-label=\"En savoir
+        plus sur la contribution\"><span>en savoir plus</span></a>\n\t</div>\n\t<div
+        class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t<li
+        id=\"pt-anoncontribs\" class=\"mw-list-item\"><a href=\"/wiki/Sp%C3%A9cial:Mes_contributions\"
+        title=\"Une liste des modifications effectu\xE9es depuis cette adresse IP
+        [y]\" accesskey=\"y\"><span>Contributions</span></a></li><li id=\"pt-anontalk\"
+        class=\"mw-list-item\"><a href=\"/wiki/Sp%C3%A9cial:Mes_discussions\" title=\"La
+        page de discussion pour les contributions depuis cette adresse IP [n]\" accesskey=\"n\"><span>Discussion</span></a></li>\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n\t\n\t</div>\n</div>\n\n</nav>\n\n\t\t</div>\n\t</header>\n</div>\n<div
+        class=\"mw-page-container\">\n\t<div class=\"mw-page-container-inner\">\n\t\t<div
+        class=\"vector-sitenotice-container\">\n\t\t\t<div id=\"siteNotice\"><!--
+        CentralNotice --></div>\n\t\t</div>\n\t\t<div class=\"vector-column-start\">\n\t\t\t<div
+        class=\"vector-main-menu-container\">\n\t\t<div id=\"mw-navigation\">\n\t\t\t<nav
+        id=\"mw-panel\" class=\"vector-main-menu-landmark\" aria-label=\"Site\">\n\t\t\t\t<div
+        id=\"vector-main-menu-pinned-container\" class=\"vector-pinned-container\">\n\t\t\t\t\n\t\t\t\t</div>\n\t\t</nav>\n\t\t</div>\n\t</div>\n</div>\n\t\t<div
+        class=\"mw-content-container\">\n\t\t\t<main id=\"content\" class=\"mw-body\">\n\t\t\t\t<header
+        class=\"mw-body-header vector-page-titlebar no-font-mode-scale\">\n\t\t\t\t\t<h1
+        id=\"firstHeading\" class=\"firstHeading mw-first-heading\"><span class=\"mw-page-title-main\">R\xE9forme
+        des retraites en france en 2023</span></h1>\n\t\t\t\t\t\t\t\n<div id=\"p-lang-btn\"
+        class=\"vector-dropdown mw-portlet mw-portlet-lang mw-portlet-lang-icon-only\"
+        \ >\n\t<input type=\"checkbox\" id=\"p-lang-btn-checkbox\" role=\"button\"
+        aria-haspopup=\"true\" data-event-name=\"ui.dropdown-p-lang-btn\" class=\"vector-dropdown-checkbox
+        mw-interlanguage-selector-empty\" aria-label=\"Cet article est disponible
+        uniquement dans cette langue. Ajouter l&#039;article pour d&#039;autres langues\"
+        \  >\n\t<label id=\"p-lang-btn-label\" for=\"p-lang-btn-checkbox\" class=\"vector-dropdown-label
+        cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet
+        cdx-button--icon-only mw-portlet-lang-heading-empty\" aria-hidden=\"true\"
+        \ ><span class=\"vector-icon mw-ui-icon-language mw-ui-icon-wikimedia-language\"></span>\n\n<span
+        class=\"vector-dropdown-label-text\">Ajouter des langues</span>\n\t</label>\n\t<div
+        class=\"vector-dropdown-content\">\n\n\t\t<div class=\"mw-portlet-empty-language-selector-body\">\n\t\t\t\t\t\tLe
+        contenu de la page n\u2019est pas pris en charge dans d\u2019autres langues.\n\t\t\t\t\t</div>\n\t\t\t\n\t</div>\n</div>\n</header>\n\t\t\t\t<div
+        class=\"vector-page-toolbar vector-feature-custom-font-size-clientpref--excluded\">\n\t\t\t\t\t<div
+        class=\"vector-page-toolbar-container\">\n\t\t\t\t\t\t<div id=\"left-navigation\">\n\t\t\t\t\t\t\t<nav
+        aria-label=\"Espaces de noms\">\n\t\t\t\t\t\t\t\t\n<div id=\"p-associated-pages\"
+        class=\"vector-menu vector-menu-tabs mw-portlet mw-portlet-associated-pages\"
+        \ >\n\t<div class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t<li
+        id=\"ca-nstab-main\" class=\"selected vector-tab-noicon mw-list-item\"><a
+        href=\"/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;action=edit&amp;redlink=1\"
+        title=\"Voir le contenu de la page (page inexistante) [c]\" accesskey=\"c\"><span>Article</span></a></li><li
+        id=\"ca-talk\" class=\"new vector-tab-noicon mw-list-item\"><a href=\"/w/index.php?title=Discussion:R%C3%A9forme_des_retraites_en_france_en_2023&amp;action=edit&amp;redlink=1\"
+        rel=\"discussion\" class=\"new\" title=\"Discussion au sujet de cette page
+        de contenu (page inexistante) [t]\" accesskey=\"t\"><span>Discussion</span></a></li>\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n\t\t\t\t\t\t\t\t\n<div
+        id=\"vector-variants-dropdown\" class=\"vector-dropdown emptyPortlet\"  >\n\t<input
+        type=\"checkbox\" id=\"vector-variants-dropdown-checkbox\" role=\"button\"
+        aria-haspopup=\"true\" data-event-name=\"ui.dropdown-vector-variants-dropdown\"
+        class=\"vector-dropdown-checkbox \" aria-label=\"Modifier la variante de langue\"
+        \  >\n\t<label id=\"vector-variants-dropdown-label\" for=\"vector-variants-dropdown-checkbox\"
+        class=\"vector-dropdown-label cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet\" aria-hidden=\"true\"  ><span class=\"vector-dropdown-label-text\">fran\xE7ais</span>\n\t</label>\n\t<div
+        class=\"vector-dropdown-content\">\n\n\n\t\t\t\t\t\n<div id=\"p-variants\"
+        class=\"vector-menu mw-portlet mw-portlet-variants emptyPortlet\"  >\n\t<div
+        class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n\t\t\t\t\n\t</div>\n</div>\n\n\t\t\t\t\t\t\t</nav>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div
+        id=\"right-navigation\" class=\"vector-collapsible\">\n\t\t\t\t\t\t\t<nav
+        aria-label=\"Affichages\">\n\t\t\t\t\t\t\t\t\n<div id=\"p-views\" class=\"vector-menu
+        vector-menu-tabs mw-portlet mw-portlet-views\"  >\n\t<div class=\"vector-menu-content\">\n\t\t\n\t\t<ul
+        class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t<li id=\"ca-ve-edit\" class=\"vector-tab-noicon
+        mw-list-item\"><a href=\"/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;veaction=edit\"
+        title=\"Cr\xE9er cette page [v]\" accesskey=\"v\"><span>Cr\xE9er</span></a></li><li
+        id=\"ca-edit\" class=\"collapsible vector-tab-noicon mw-list-item\"><a href=\"/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;action=edit\"
+        title=\"Cr\xE9er le code wiki de cette page [e]\" accesskey=\"e\"><span>Cr\xE9er
+        le wikicode</span></a></li>\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n\t\t\t\t\t\t\t</nav>\n\t\t\t\t\n\t\t\t\t\t\t\t<nav
+        class=\"vector-page-tools-landmark\" aria-label=\"Outils de la page\">\n\t\t\t\t\t\t\t\t\n<div
+        id=\"vector-page-tools-dropdown\" class=\"vector-dropdown vector-page-tools-dropdown\"
+        \ >\n\t<input type=\"checkbox\" id=\"vector-page-tools-dropdown-checkbox\"
+        role=\"button\" aria-haspopup=\"true\" data-event-name=\"ui.dropdown-vector-page-tools-dropdown\"
+        class=\"vector-dropdown-checkbox \"  aria-label=\"Outils\"  >\n\t<label id=\"vector-page-tools-dropdown-label\"
+        for=\"vector-page-tools-dropdown-checkbox\" class=\"vector-dropdown-label
+        cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet\"
+        aria-hidden=\"true\"  ><span class=\"vector-dropdown-label-text\">Outils</span>\n\t</label>\n\t<div
+        class=\"vector-dropdown-content\">\n\n\n\t\t\t\t\t\t\t\t\t<div id=\"vector-page-tools-unpinned-container\"
+        class=\"vector-unpinned-container\">\n\t\t\t\t\t\t\n<div id=\"vector-page-tools\"
+        class=\"vector-page-tools vector-pinnable-element\">\n\t<div\n\tclass=\"vector-pinnable-header
+        vector-page-tools-pinnable-header vector-pinnable-header-unpinned\"\n\tdata-feature-name=\"page-tools-pinned\"\n\tdata-pinnable-element-id=\"vector-page-tools\"\n\tdata-pinned-container-id=\"vector-page-tools-pinned-container\"\n\tdata-unpinned-container-id=\"vector-page-tools-unpinned-container\"\n>\n\t<div
+        class=\"vector-pinnable-header-label\">Outils</div>\n\t<button class=\"vector-pinnable-header-toggle-button
+        vector-pinnable-header-pin-button\" data-event-name=\"pinnable-header.vector-page-tools.pin\">d\xE9placer
+        vers la barre lat\xE9rale</button>\n\t<button class=\"vector-pinnable-header-toggle-button
+        vector-pinnable-header-unpin-button\" data-event-name=\"pinnable-header.vector-page-tools.unpin\">masquer</button>\n</div>\n\n\t\n<div
+        id=\"p-cactions\" class=\"vector-menu mw-portlet mw-portlet-cactions emptyPortlet
+        vector-has-collapsible-items\"  title=\"Plus d\u2019options\" >\n\t<div class=\"vector-menu-heading\">\n\t\tActions\n\t</div>\n\t<div
+        class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t<li
+        id=\"ca-more-ve-edit\" class=\"vector-more-collapsible-item mw-list-item\"><a
+        href=\"/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;veaction=edit\"
+        title=\"Cr\xE9er cette page [v]\" accesskey=\"v\"><span>Cr\xE9er</span></a></li><li
+        id=\"ca-more-edit\" class=\"collapsible vector-more-collapsible-item mw-list-item\"><a
+        href=\"/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;action=edit\"
+        title=\"Cr\xE9er le code wiki de cette page [e]\" accesskey=\"e\"><span>Cr\xE9er
+        le wikicode</span></a></li>\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n<div id=\"p-tb\"
+        class=\"vector-menu mw-portlet mw-portlet-tb\"  >\n\t<div class=\"vector-menu-heading\">\n\t\tG\xE9n\xE9ral\n\t</div>\n\t<div
+        class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t<li
+        id=\"t-whatlinkshere\" class=\"mw-list-item\"><a href=\"/wiki/Sp%C3%A9cial:Pages_li%C3%A9es/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        title=\"Liste des pages li\xE9es qui pointent sur celle-ci [j]\" accesskey=\"j\"><span>Pages
+        li\xE9es</span></a></li><li id=\"t-upload\" class=\"mw-list-item\"><a href=\"//fr.wikipedia.org/wiki/Aide:Importer_un_fichier\"
+        title=\"T\xE9l\xE9verser des fichiers [u]\" accesskey=\"u\"><span>T\xE9l\xE9verser
+        un fichier</span></a></li><li id=\"t-print\" class=\"mw-list-item\"><a href=\"javascript:print();\"
+        rel=\"alternate\" title=\"Version imprimable de cette page [p]\" accesskey=\"p\"><span>Version
+        imprimable</span></a></li><li id=\"t-info\" class=\"mw-list-item\"><a href=\"/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;action=info\"
+        title=\"Davantage d\u2019informations sur cette page\"><span>Informations
+        sur la page</span></a></li><li id=\"t-urlshortener\" class=\"mw-list-item\"><a
+        href=\"/w/index.php?title=Sp%C3%A9cial:UrlShortener&amp;url=https%3A%2F%2Ffr.wikipedia.org%2Fwiki%2FR%25C3%25A9forme_des_retraites_en_france_en_2023\"><span>Obtenir
+        l&#039;URL raccourcie</span></a></li><li id=\"t-urlshortener-qrcode\" class=\"mw-list-item\"><a
+        href=\"/w/index.php?title=Sp%C3%A9cial:QrCode&amp;url=https%3A%2F%2Ffr.wikipedia.org%2Fwiki%2FR%25C3%25A9forme_des_retraites_en_france_en_2023\"><span>T\xE9l\xE9charger
+        le code QR</span></a></li>\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n<div id=\"p-wikibase-otherprojects\"
+        class=\"vector-menu mw-portlet mw-portlet-wikibase-otherprojects emptyPortlet\"
+        \ >\n\t<div class=\"vector-menu-heading\">\n\t\tDans d\u2019autres projets\n\t</div>\n\t<div
+        class=\"vector-menu-content\">\n\t\t\n\t\t<ul class=\"vector-menu-content-list\">\n\t\t\t\n\t\t\t\n\t\t</ul>\n\t\t\n\t</div>\n</div>\n\n</div>\n\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\n\t</div>\n</div>\n\n\t\t\t\t\t\t\t</nav>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div
+        class=\"vector-column-end no-font-mode-scale\">\n\t\t\t\t\t<div class=\"vector-sticky-pinned-container\">\n\t\t\t\t\t\t<nav
+        class=\"vector-page-tools-landmark\" aria-label=\"Outils de la page\">\n\t\t\t\t\t\t\t<div
+        id=\"vector-page-tools-pinned-container\" class=\"vector-pinned-container\">\n\t\t\t\t\n\t\t\t\t\t\t\t</div>\n\t\t</nav>\n\t\t\t\t\t\t<nav
+        class=\"vector-appearance-landmark\" aria-label=\"Apparence\">\n\t\t\t\t\t\t\t<div
+        id=\"vector-appearance-pinned-container\" class=\"vector-pinned-container\">\n\t\t\t\t<div
+        id=\"vector-appearance\" class=\"vector-appearance vector-pinnable-element\">\n\t<div\n\tclass=\"vector-pinnable-header
+        vector-appearance-pinnable-header vector-pinnable-header-pinned\"\n\tdata-feature-name=\"appearance-pinned\"\n\tdata-pinnable-element-id=\"vector-appearance\"\n\tdata-pinned-container-id=\"vector-appearance-pinned-container\"\n\tdata-unpinned-container-id=\"vector-appearance-unpinned-container\"\n>\n\t<div
+        class=\"vector-pinnable-header-label\">Apparence</div>\n\t<button class=\"vector-pinnable-header-toggle-button
+        vector-pinnable-header-pin-button\" data-event-name=\"pinnable-header.vector-appearance.pin\">d\xE9placer
+        vers la barre lat\xE9rale</button>\n\t<button class=\"vector-pinnable-header-toggle-button
+        vector-pinnable-header-unpin-button\" data-event-name=\"pinnable-header.vector-appearance.unpin\">masquer</button>\n</div>\n\n\n</div>\n\n\t\t\t\t\t\t\t</div>\n\t\t</nav>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div
+        id=\"bodyContent\" class=\"vector-body\" aria-labelledby=\"firstHeading\"
+        data-mw-ve-target-container>\n\t\t\t\t\t<div class=\"vector-body-before-content\">\n\t\t\t\t\t\t\t<div
+        class=\"mw-indicators\">\n\t\t</div>\n\n\t\t\t\t\t\t<div id=\"siteSub\" class=\"noprint\">Un
+        article de Wikip\xE9dia, l&#039;encyclop\xE9die libre.</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div
+        id=\"contentSub\"><div id=\"mw-content-subtitle\"></div></div>\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t<div
+        id=\"mw-content-text\" class=\"mw-body-content\"><div class=\"noarticletext
+        mw-content-ltr\" dir=\"ltr\" lang=\"fr\">\n<div class=\"plainlinks\">\n<div
+        class=\"center\"><b>Wikip\xE9dia ne poss\xE8de pas d'article avec ce nom.</b></div>\n<hr
+        />\n<div id=\"sisterproject\" style=\"border:1px solid var(--border-color-subtle,
+        #c8ccd1); width:20em; font-size:90%; float:right; padding:5px; padding-top:1em;
+        margin-left:5px; background-color:var(--background-color-base, #fff);color:inherit\">\n<p>Cherchez
+        <b>R\xE9forme des retraites en france en 2023</b> sur un des <a href=\"/wiki/Sp%C3%A9cial:Matrice_des_sites\"
+        title=\"Sp\xE9cial:Matrice des sites\">projets-fr\xE8res</a> de Wikip\xE9dia&#160;:</p>\n<table>\n<tbody><tr>\n<td
+        style=\"text-align:center;\"><span typeof=\"mw:File\"><span><img alt=\"\"
+        src=\"//upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Wiktionary-logo.svg/40px-Wiktionary-logo.svg.png\"
+        decoding=\"async\" width=\"30\" height=\"28\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Wiktionary-logo.svg/60px-Wiktionary-logo.svg.png
+        1.5x\" data-file-width=\"370\" data-file-height=\"350\" /></span></span></td>\n<td><a
+        href=\"https://fr.wiktionary.org/wiki/Special:Recherche/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"wikt:Special:Recherche/R\xE9forme des retraites en
+        france en 2023\">Wiktionnaire</a> (dictionnaire)</td></tr>\n<tr>\n<td style=\"text-align:center;\"><span
+        typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Wikibooks-logo.svg/40px-Wikibooks-logo.svg.png\"
+        decoding=\"async\" width=\"30\" height=\"30\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Wikibooks-logo.svg/60px-Wikibooks-logo.svg.png
+        1.5x\" data-file-width=\"300\" data-file-height=\"300\" /></span></span></td>\n<td><a
+        href=\"https://fr.wikibooks.org/wiki/Special:Recherche/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"b:Special:Recherche/R\xE9forme des retraites en france
+        en 2023\">Wikibooks</a> (livres p\xE9dagogiques)</td></tr>\n<tr>\n<td style=\"text-align:center;\"><span
+        typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Wikiquote-logo.svg/40px-Wikiquote-logo.svg.png\"
+        decoding=\"async\" width=\"25\" height=\"30\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Wikiquote-logo.svg/60px-Wikiquote-logo.svg.png
+        2x\" data-file-width=\"300\" data-file-height=\"355\" /></span></span></td>\n<td><a
+        href=\"https://fr.wikiquote.org/wiki/Special:Recherche/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"q:Special:Recherche/R\xE9forme des retraites en france
+        en 2023\">Wikiquote</a> (citations)</td></tr>\n<tr>\n<td style=\"text-align:center;\"><span
+        typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Wikisource-logo.svg/40px-Wikisource-logo.svg.png\"
+        decoding=\"async\" width=\"29\" height=\"30\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Wikisource-logo.svg/60px-Wikisource-logo.svg.png
+        1.5x\" data-file-width=\"410\" data-file-height=\"430\" /></span></span></td>\n<td><a
+        href=\"https://fr.wikisource.org/wiki/Special:Recherche/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"s:Special:Recherche/R\xE9forme des retraites en france
+        en 2023\">Wikisource</a> (biblioth\xE8que universelle)</td></tr>\n<tr>\n<td
+        style=\"text-align:center; height:30px;\"><span typeof=\"mw:File\"><span><img
+        alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/2/24/Wikinews-logo.svg/40px-Wikinews-logo.svg.png\"
+        decoding=\"async\" width=\"30\" height=\"16\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/2/24/Wikinews-logo.svg/60px-Wikinews-logo.svg.png
+        1.5x\" data-file-width=\"759\" data-file-height=\"415\" /></span></span></td>\n<td><a
+        href=\"https://fr.wikinews.org/wiki/Special:Recherche/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"n:Special:Recherche/R\xE9forme des retraites en france
+        en 2023\">Wikinews</a> (actualit\xE9s libres)</td></tr>\n<tr>\n<td style=\"text-align:center;
+        height:30px;\"><span typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Wikiversity_logo_2017.svg/40px-Wikiversity_logo_2017.svg.png\"
+        decoding=\"async\" width=\"30\" height=\"25\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Wikiversity_logo_2017.svg/60px-Wikiversity_logo_2017.svg.png
+        1.5x\" data-file-width=\"626\" data-file-height=\"512\" /></span></span></td>\n<td><a
+        href=\"https://fr.wikiversity.org/wiki/Special:Recherche/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"v:Special:Recherche/R\xE9forme des retraites en france
+        en 2023\">Wikiversity</a> (communaut\xE9 p\xE9dagogique)</td></tr>\n<tr>\n<td
+        style=\"text-align:center;\"><span typeof=\"mw:File\"><span><img alt=\"\"
+        src=\"//upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Commons-logo.svg/40px-Commons-logo.svg.png\"
+        decoding=\"async\" width=\"22\" height=\"30\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Commons-logo.svg/60px-Commons-logo.svg.png
+        2x\" data-file-width=\"1024\" data-file-height=\"1376\" /></span></span></td>\n<td><a
+        href=\"https://commons.wikimedia.org/wiki/Special:Search/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"commons:Special:Search/R\xE9forme des retraites en
+        france en 2023\">Commons</a> (images et m\xE9dias)</td></tr>\n<tr>\n<td style=\"text-align:center;\"><span
+        typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Wikivoyage-logo.svg/40px-Wikivoyage-logo.svg.png\"
+        decoding=\"async\" width=\"30\" height=\"30\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Wikivoyage-logo.svg/60px-Wikivoyage-logo.svg.png
+        1.5x\" data-file-width=\"193\" data-file-height=\"193\" /></span></span></td>\n<td><a
+        href=\"https://fr.wikivoyage.org/wiki/Special:Search/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"voy:Special:Search/R\xE9forme des retraites en france
+        en 2023\">Wikivoyage</a> (guides de voyage)</td></tr>\n<tr>\n<td style=\"text-align:center;
+        height:30px;\"><span typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Wikidata-logo.svg/40px-Wikidata-logo.svg.png\"
+        decoding=\"async\" width=\"30\" height=\"17\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Wikidata-logo.svg/60px-Wikidata-logo.svg.png
+        1.5x\" data-file-width=\"1050\" data-file-height=\"590\" /></span></span></td>\n<td><a
+        href=\"https://www.wikidata.org/wiki/Special:Search/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"d:Special:Search/R\xE9forme des retraites en france
+        en 2023\">Wikidata</a> (base de donn\xE9es)</td></tr>\n</tbody></table></div>\n<p>Soit
+        vous avez mal \xE9crit le titre&#160;:\n</p>\n<ul><li><span class=\"skin-invert
+        notheme\" typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/d/de/OOjs_UI_icon_search-ltr.svg/20px-OOjs_UI_icon_search-ltr.svg.png\"
+        decoding=\"async\" width=\"20\" height=\"20\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/d/de/OOjs_UI_icon_search-ltr.svg/30px-OOjs_UI_icon_search-ltr.svg.png
+        1.5x, //upload.wikimedia.org/wikipedia/commons/thumb/d/de/OOjs_UI_icon_search-ltr.svg/40px-OOjs_UI_icon_search-ltr.svg.png
+        2x\" data-file-width=\"20\" data-file-height=\"20\" /></span></span> <a href=\"/wiki/Sp%C3%A9cial:Recherche/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        title=\"Sp\xE9cial:Recherche/R\xE9forme des retraites en france en 2023\"><b>Recherchez
+        \xAB&#160;R\xE9forme des retraites en france en 2023&#160;\xBB</b></a> dans
+        les autres articles (<a href=\"/wiki/Aide:Recherche\" title=\"Aide:Recherche\">aide</a>).</li>\n<li><span
+        class=\"skin-invert notheme\" typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/e/e5/OOjs_UI_icon_searchCaseSensitive.svg/20px-OOjs_UI_icon_searchCaseSensitive.svg.png\"
+        decoding=\"async\" width=\"20\" height=\"20\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/e/e5/OOjs_UI_icon_searchCaseSensitive.svg/30px-OOjs_UI_icon_searchCaseSensitive.svg.png
+        1.5x, //upload.wikimedia.org/wikipedia/commons/thumb/e/e5/OOjs_UI_icon_searchCaseSensitive.svg/40px-OOjs_UI_icon_searchCaseSensitive.svg.png
+        2x\" data-file-width=\"20\" data-file-height=\"20\" /></span></span> Consultez
+        la <b><a href=\"/wiki/Sp%C3%A9cial:Index/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        title=\"Sp\xE9cial:Index/R\xE9forme des retraites en france en 2023\">liste
+        des articles dont le titre commence ainsi</a>.</b></li>\n<li><span class=\"skin-invert
+        notheme\" typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/9/90/OOjs_UI_icon_expand.svg/25px-OOjs_UI_icon_expand.svg.png\"
+        decoding=\"async\" width=\"25\" height=\"25\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/9/90/OOjs_UI_icon_expand.svg/38px-OOjs_UI_icon_expand.svg.png
+        1.5x, //upload.wikimedia.org/wikipedia/commons/thumb/9/90/OOjs_UI_icon_expand.svg/50px-OOjs_UI_icon_expand.svg.png
+        2x\" data-file-width=\"20\" data-file-height=\"20\" /></span></span> <a href=\"/wiki/Sp%C3%A9cial:Pages_li%C3%A9es/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        title=\"Sp\xE9cial:Pages li\xE9es/R\xE9forme des retraites en france en 2023\">Cherchez
+        d'autres pages de Wikip\xE9dia pointant vers ce titre</a>.</li></ul>\n<hr
+        />\n<p>Soit  l'article n'existe pas encore&#160;:\n</p>\n<ul><li><span class=\"skin-invert
+        notheme\" typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/8/8a/OOjs_UI_icon_edit-ltr.svg/20px-OOjs_UI_icon_edit-ltr.svg.png\"
+        decoding=\"async\" width=\"20\" height=\"20\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/8/8a/OOjs_UI_icon_edit-ltr.svg/30px-OOjs_UI_icon_edit-ltr.svg.png
+        1.5x, //upload.wikimedia.org/wikipedia/commons/thumb/8/8a/OOjs_UI_icon_edit-ltr.svg/40px-OOjs_UI_icon_edit-ltr.svg.png
+        2x\" data-file-width=\"20\" data-file-height=\"20\" /></span></span> <b>Cr\xE9ez
+        l'article&#160;: <a class=\"external text\" href=\"https://fr.wikipedia.org/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;action=edit\"><span
+        style=\"color:var(--color-link-red, #d73333);\">en wikicode</span></a> ou
+        avec <a class=\"external text\" href=\"https://fr.wikipedia.org/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;veaction=edit\"><span
+        style=\"color:var(--color-link-red, #d73333);\">l'\xE9diteur visuel</span></a></b>
+        (<a href=\"/wiki/Aide:Comment_cr%C3%A9er_un_article\" title=\"Aide:Comment
+        cr\xE9er un article\">aide</a>)<small>, ou <a href=\"/wiki/Wikip%C3%A9dia:Articles_%C3%A0_cr%C3%A9er\"
+        title=\"Wikip\xE9dia:Articles \xE0 cr\xE9er\">demandez sa cr\xE9ation</a></small>.</li>\n<li><span
+        class=\"skin-invert notheme\" typeof=\"mw:File\"><span><img alt=\"\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/4/43/OOjs_UI_icon_language-ltr.svg/20px-OOjs_UI_icon_language-ltr.svg.png\"
+        decoding=\"async\" width=\"20\" height=\"20\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/4/43/OOjs_UI_icon_language-ltr.svg/30px-OOjs_UI_icon_language-ltr.svg.png
+        1.5x, //upload.wikimedia.org/wikipedia/commons/thumb/4/43/OOjs_UI_icon_language-ltr.svg/40px-OOjs_UI_icon_language-ltr.svg.png
+        2x\" data-file-width=\"20\" data-file-height=\"20\" /></span></span>\n<ul><li>Recherchez
+        cet article dans d\u2019<b>autres langues</b>, sur <b><a href=\"https://www.wikidata.org/wiki/Special:Search/R%C3%A9forme_des_retraites_en_france_en_2023\"
+        class=\"extiw\" title=\"d:Special:Search/R\xE9forme des retraites en france
+        en 2023\">Wikidata</a></b>.</li>\n<li>Consulter une <b><a href=\"/wiki/Sp%C3%A9cial:AutomaticTranslation\"
+        title=\"Sp\xE9cial:AutomaticTranslation\">traduction automatique</a></b> d'articles
+        dans d'autres langues sur le sujet.</li></ul></li></ul>\n<div class=\"plainlinks\"
+        id=\"noarticletext_technical\" style=\"font-size:80%;\">\n<hr />\n<p>Notes
+        pour les r\xE9dacteurs&#160;:\n</p>\n<ul><li>Si vous avez r\xE9cemment cr\xE9\xE9
+        cet article et qu\u2019il appara\xEEt toujours vide, essayez de <a class=\"external
+        text\" href=\"https://fr.wikipedia.org/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;action=purge\">purger
+        le cache</a> ou d\u2019attendre quelques minutes avant d\u2019essayer de le
+        recr\xE9er.</li>\n<li>L'article a peut-\xEAtre \xE9t\xE9 supprim\xE9&#160;:
+        si tel est le cas, l'historique des effacements est affich\xE9 ci-dessus.</li>\n<li>Il
+        peut aussi avoir \xE9t\xE9 renomm\xE9 sans cr\xE9ation d'une redirection,
+        jug\xE9e inutile.</li></ul>\n</div><br clear=\"all\" /></div>\n</div><!--esi
+        <esi:include src=\"/esitest-fa8a495983347898/content\" /> --><noscript><img
+        src=\"https://fr.wikipedia.org/wiki/Special:CentralAutoLogin/start?type=1x1&amp;usesul3=1\"
+        alt=\"\" width=\"1\" height=\"1\" style=\"border: none; position: absolute;\"></noscript>\n<div
+        class=\"printfooter\" data-nosnippet=\"\">Ce document provient de \xAB&#160;<a
+        dir=\"ltr\" href=\"https://fr.wikipedia.org/wiki/R\xE9forme_des_retraites_en_france_en_2023\">https://fr.wikipedia.org/wiki/R\xE9forme_des_retraites_en_france_en_2023</a>&#160;\xBB.</div></div>\n\t\t\t\t\t<div
+        id=\"catlinks\" class=\"catlinks catlinks-allhidden\" data-mw=\"interface\"></div>\n\t\t\t\t</div>\n\t\t\t</main>\n\t\t\t\n\t\t</div>\n\t\t<div
+        class=\"mw-footer-container\">\n\t\t\t\n<footer id=\"footer\" class=\"mw-footer\"
+        >\n\t<ul id=\"footer-info\">\n</ul>\n\n\t<ul id=\"footer-places\">\n\t<li
+        id=\"footer-places-privacy\"><a href=\"https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy/fr\">Politique
+        de confidentialit\xE9</a></li>\n\t<li id=\"footer-places-about\"><a href=\"/wiki/Wikip%C3%A9dia:%C3%80_propos_de_Wikip%C3%A9dia\">\xC0
+        propos de Wikip\xE9dia</a></li>\n\t<li id=\"footer-places-disclaimers\"><a
+        href=\"/wiki/Wikip%C3%A9dia:Avertissements_g%C3%A9n%C3%A9raux\">Avertissements</a></li>\n\t<li
+        id=\"footer-places-contact\"><a href=\"//fr.wikipedia.org/wiki/Wikip\xE9dia:Contact\">Contact</a></li>\n\t<li
+        id=\"footer-places-wm-codeofconduct\"><a href=\"https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Universal_Code_of_Conduct\">Code
+        de conduite</a></li>\n\t<li id=\"footer-places-developers\"><a href=\"https://developer.wikimedia.org\">D\xE9veloppeurs</a></li>\n\t<li
+        id=\"footer-places-statslink\"><a href=\"https://stats.wikimedia.org/#/fr.wikipedia.org\">Statistiques</a></li>\n\t<li
+        id=\"footer-places-cookiestatement\"><a href=\"https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Cookie_statement\">D\xE9claration
+        sur les t\xE9moins (cookies)</a></li>\n\t<li id=\"footer-places-mobileview\"><a
+        href=\"//fr.m.wikipedia.org/w/index.php?title=R%C3%A9forme_des_retraites_en_france_en_2023&amp;mobileaction=toggle_view_mobile\"
+        class=\"noprint stopMobileRedirectToggle\">Version mobile</a></li>\n</ul>\n\n\t<ul
+        id=\"footer-icons\" class=\"noprint\">\n\t<li id=\"footer-copyrightico\"><a
+        href=\"https://www.wikimedia.org/\" class=\"cdx-button cdx-button--fake-button
+        cdx-button--size-large cdx-button--fake-button--enabled\"><picture><source
+        media=\"(min-width: 500px)\" srcset=\"/static/images/footer/wikimedia-button.svg\"
+        width=\"84\" height=\"29\"><img src=\"/static/images/footer/wikimedia.svg\"
+        width=\"25\" height=\"25\" alt=\"Wikimedia Foundation\" lang=\"en\" loading=\"lazy\"></picture></a></li>\n\t<li
+        id=\"footer-poweredbyico\"><a href=\"https://www.mediawiki.org/\" class=\"cdx-button
+        cdx-button--fake-button cdx-button--size-large cdx-button--fake-button--enabled\"><picture><source
+        media=\"(min-width: 500px)\" srcset=\"/w/resources/assets/poweredby_mediawiki.svg\"
+        width=\"88\" height=\"31\"><img src=\"/w/resources/assets/mediawiki_compact.svg\"
+        alt=\"Powered by MediaWiki\" lang=\"en\" width=\"25\" height=\"25\" loading=\"lazy\"></picture></a></li>\n</ul>\n\n</footer>\n\n\t\t</div>\n\t</div>
+        \n</div> \n<div class=\"vector-header-container vector-sticky-header-container
+        no-font-mode-scale\">\n\t<div id=\"vector-sticky-header\" class=\"vector-sticky-header\">\n\t\t<div
+        class=\"vector-sticky-header-start\">\n\t\t\t<div class=\"vector-sticky-header-icon-start
+        vector-button-flush-left vector-button-flush-right\" aria-hidden=\"true\">\n\t\t\t\t<button
+        class=\"cdx-button cdx-button--weight-quiet cdx-button--icon-only vector-sticky-header-search-toggle\"
+        tabindex=\"-1\" data-event-name=\"ui.vector-sticky-search-form.icon\"><span
+        class=\"vector-icon mw-ui-icon-search mw-ui-icon-wikimedia-search\"></span>\n\n<span>Rechercher</span>\n\t\t\t</button>\n\t\t</div>\n\t\t\t\n\t\t<div
+        role=\"search\" class=\"vector-search-box-vue  vector-search-box-show-thumbnail
+        vector-search-box\">\n\t\t\t<div class=\"vector-typeahead-search-container\">\n\t\t\t\t<div
+        class=\"cdx-typeahead-search cdx-typeahead-search--show-thumbnail\">\n\t\t\t\t\t<form
+        action=\"/w/index.php\" id=\"vector-sticky-search-form\" class=\"cdx-search-input
+        cdx-search-input--has-end-button\">\n\t\t\t\t\t\t<div  class=\"cdx-search-input__input-wrapper\"
+        \ data-search-loc=\"header-moved\">\n\t\t\t\t\t\t\t<div class=\"cdx-text-input
+        cdx-text-input--has-start-icon\">\n\t\t\t\t\t\t\t\t<input\n\t\t\t\t\t\t\t\t\tclass=\"cdx-text-input__input
+        mw-searchInput\"\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\ttype=\"search\" name=\"search\"
+        placeholder=\"Rechercher sur Wikip\xE9dia\">\n\t\t\t\t\t\t\t\t<span class=\"cdx-text-input__icon
+        cdx-text-input__start-icon\"></span>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<input
+        type=\"hidden\" name=\"title\" value=\"Sp\xE9cial:Recherche\">\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<button
+        class=\"cdx-button cdx-search-input__end-button\">Rechercher</button>\n\t\t\t\t\t</form>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div
+        class=\"vector-sticky-header-context-bar\">\n\t\t\t\t<div class=\"vector-sticky-header-context-bar-primary\"
+        aria-hidden=\"true\" ><span class=\"mw-page-title-main\">R\xE9forme des retraites
+        en france en 2023</span></div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"vector-sticky-header-end\"
+        aria-hidden=\"true\">\n\t\t\t<div class=\"vector-sticky-header-icons\">\n\t\t\t\t<a
+        href=\"#\" class=\"cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only\" id=\"ca-talk-sticky-header\"
+        tabindex=\"-1\" data-event-name=\"talk-sticky-header\"><span class=\"vector-icon
+        mw-ui-icon-speechBubbles mw-ui-icon-wikimedia-speechBubbles\"></span>\n\n<span></span>\n\t\t\t</a>\n\t\t\t<a
+        href=\"#\" class=\"cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only\" id=\"ca-subject-sticky-header\"
+        tabindex=\"-1\" data-event-name=\"subject-sticky-header\"><span class=\"vector-icon
+        mw-ui-icon-article mw-ui-icon-wikimedia-article\"></span>\n\n<span></span>\n\t\t\t</a>\n\t\t\t<a
+        href=\"#\" class=\"cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only\" id=\"ca-history-sticky-header\"
+        tabindex=\"-1\" data-event-name=\"history-sticky-header\"><span class=\"vector-icon
+        mw-ui-icon-wikimedia-history mw-ui-icon-wikimedia-wikimedia-history\"></span>\n\n<span></span>\n\t\t\t</a>\n\t\t\t<a
+        href=\"#\" class=\"cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only mw-watchlink\" id=\"ca-watchstar-sticky-header\"
+        tabindex=\"-1\" data-event-name=\"watch-sticky-header\"><span class=\"vector-icon
+        mw-ui-icon-wikimedia-star mw-ui-icon-wikimedia-wikimedia-star\"></span>\n\n<span></span>\n\t\t\t</a>\n\t\t\t<a
+        href=\"#\" class=\"cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only\" id=\"ca-ve-edit-sticky-header\"
+        tabindex=\"-1\" data-event-name=\"ve-edit-sticky-header\"><span class=\"vector-icon
+        mw-ui-icon-wikimedia-edit mw-ui-icon-wikimedia-wikimedia-edit\"></span>\n\n<span></span>\n\t\t\t</a>\n\t\t\t<a
+        href=\"#\" class=\"cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only\" id=\"ca-edit-sticky-header\"
+        tabindex=\"-1\" data-event-name=\"wikitext-edit-sticky-header\"><span class=\"vector-icon
+        mw-ui-icon-wikimedia-wikiText mw-ui-icon-wikimedia-wikimedia-wikiText\"></span>\n\n<span></span>\n\t\t\t</a>\n\t\t\t<a
+        href=\"#\" class=\"cdx-button cdx-button--fake-button cdx-button--fake-button--enabled
+        cdx-button--weight-quiet cdx-button--icon-only\" id=\"ca-viewsource-sticky-header\"
+        tabindex=\"-1\" data-event-name=\"ve-edit-protected-sticky-header\"><span
+        class=\"vector-icon mw-ui-icon-wikimedia-editLock mw-ui-icon-wikimedia-wikimedia-editLock\"></span>\n\n<span></span>\n\t\t\t</a>\n\t\t</div>\n\t\t\t<div
+        class=\"vector-sticky-header-buttons\">\n\t\t\t\t<a href=\"#\" class=\"cdx-button
+        cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet
+        cdx-button--action-progressive\" id=\"ca-addsection-sticky-header\" tabindex=\"-1\"
+        data-event-name=\"addsection-sticky-header\"><span class=\"vector-icon mw-ui-icon-speechBubbleAdd-progressive
+        mw-ui-icon-wikimedia-speechBubbleAdd-progressive\"></span>\n\n<span>Ajouter
+        un sujet</span>\n\t\t\t</a>\n\t\t</div>\n\t\t\t<div class=\"vector-sticky-header-icon-end\">\n\t\t\t\t<div
+        class=\"vector-user-links\">\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</div>\n<div
+        class=\"mw-portlet mw-portlet-dock-bottom emptyPortlet\" id=\"p-dock-bottom\">\n\t<ul>\n\t\t\n\t</ul>\n</div>\n<script>(RLQ=window.RLQ||[]).push(function(){mw.config.set({\"wgHostname\":\"mw-web.eqiad.main-58f94c7789-xx56q\",\"wgBackendResponseTime\":127,\"wgPageParseReport\":{\"limitreport\":{\"cputime\":\"0.025\",\"walltime\":\"0.037\",\"ppvisitednodes\":{\"value\":120,\"limit\":1000000},\"revisionsize\":{\"value\":91,\"limit\":2097152},\"postexpandincludesize\":{\"value\":10994,\"limit\":2097152},\"templateargumentsize\":{\"value\":0,\"limit\":2097152},\"expansiondepth\":{\"value\":6,\"limit\":100},\"expensivefunctioncount\":{\"value\":2,\"limit\":500},\"unstrip-depth\":{\"value\":0,\"limit\":20},\"unstrip-size\":{\"value\":0,\"limit\":5000000},\"entityaccesscount\":{\"value\":0,\"limit\":500},\"timingprofile\":[\"100.00%
+        \   0.000      1 -total\"]},\"cachereport\":{\"origin\":\"mw-web.eqiad.main-58f94c7789-xx56q\",\"timestamp\":\"20250606104926\",\"ttl\":2592000,\"transientcontent\":false}}});});</script>\n</body>\n</html>"
+    headers:
+      accept-ch:
+      - ''
+      age:
+      - '0'
+      cache-control:
+      - private, s-maxage=0, max-age=0, must-revalidate, no-transform
+      content-language:
+      - fr
+      content-length:
+      - '51599'
+      content-type:
+      - text/html; charset=UTF-8
+      date:
+      - Fri, 06 Jun 2025 10:49:26 GMT
+      nel:
+      - '{ "report_to": "wm_nel", "max_age": 604800, "failure_fraction": 0.05, "success_fraction":
+        0.0}'
+      report-to:
+      - '{ "group": "wm_nel", "max_age": 604800, "endpoints": [{ "url": "https://intake-logging.wikimedia.org/v1/events?stream=w3c.reportingapi.network_error&schema_uri=/w3c/reportingapi/network_error/1.0.0"
+        }] }'
+      server:
+      - mw-web.eqiad.main-58f94c7789-xx56q
+      server-timing:
+      - cache;desc="miss", host;desc="cp6013"
+      set-cookie:
+      - WMF-Uniq=KfgPIceCvwyAwRzIc1InewIKAAEBAFvdflnhXIqg0aVEz20Dre6tFgV8KEwy5RIu;Domain=.wikipedia.org;Path=/;HttpOnly;secure;SameSite=None;Expires=Sat,
+        06 Jun 2026 00:00:00 GMT
+      strict-transport-security:
+      - max-age=106384710; includeSubDomains; preload
+      vary:
+      - Accept-Encoding,Cookie,Authorization
+      x-cache:
+      - cp6013 miss, cp6013 miss
+      x-cache-status:
+      - miss
+      x-client-ip:
+      - 2001:861:4f80:84d0:b9cd:428e:3906:2338
+      x-content-type-options:
+      - nosniff
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: "{\"input\":[\"Recherchez des informations sur la r\xE9forme des retraites
+      en France.\"],\"model\":\"embeddings-small\",\"encoding_format\":\"float\"}"
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '135'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"data":[{"embedding":[-0.01210102,0.04287013,-0.050524227,0.023716921,-0.031730365,-0.009819165,0.058861084,0.043948174,0.023663018,0.01588315,0.014966815,-0.025405854,-0.015964003,0.027382264,-0.022027988,0.019350851,0.02215376,-0.015748395,0.019332884,-0.008107773,0.0059202467,0.020680437,0.019261014,-0.03223345,-0.0266456,-0.0026973505,0.0063245124,0.03715651,-0.0037461955,-0.010681598,0.005718114,-0.0014598484,0.02556756,-0.005902279,-0.045349628,-0.029574282,-0.027040884,-0.06310138,-0.037048705,0.040893722,-0.02583707,-0.0126939425,-0.0009421637,-0.0015889888,0.04649954,-0.022081891,-0.03837829,0.0032184043,0.00583041,-0.00039359758,0.018793862,-0.004729909,0.055806633,-0.06245456,-0.028873555,0.017033061,-0.041396808,-0.06209521,-0.08157183,-0.010600745,-0.0036136862,0.04506215,-0.034479372,-0.018362647,0.041612417,0.073881805,0.023267737,0.04355289,0.0043076756,-0.036617488,0.004914074,-0.020410925,-0.049050905,-0.015317178,-0.016889323,0.02630422,0.019889873,-0.048619688,0.002008976,0.05106325,-0.013035323,0.034946524,-0.022279533,0.038018942,-0.04402004,0.02862201,0.024166105,0.017760739,0.008071839,-0.016862372,-0.0032408633,0.0231779,0.0046715145,-0.0067647127,-0.03059842,-0.021237426,-0.02466919,-0.04764945,0.054908264,0.0024772503,-0.006607498,0.050632033,0.0317663,0.028082991,0.01766192,-0.045565236,-0.038881376,0.027975187,0.01329585,0.011274521,-0.017554116,0.0049410253,0.02952038,0.034317665,0.008884862,-0.015739411,0.00075013743,-0.056884676,0.029286804,-0.04527776,0.0044806115,0.05972352,0.08344044,0.00062605034,0.027148688,0.0073890784,0.020087514,-0.015919086,0.0035710137,-0.028065024,0.0077619012,0.045529302,-0.020213285,-0.023842692,-0.015990954,-0.03027501,0.0222975,0.02535195,0.0022964538,-0.058034588,0.02263888,0.026735438,-0.036940902,0.0021257638,0.021147588,-0.029825825,0.05030862,0.0283525,0.0005586727,-0.03137102,0.01434694,0.034928557,-0.0033711267,0.031388987,-0.043157607,0.024255943,-0.03390442,0.00037113836,-0.020914013,0.018353663,-0.05127886,0.056130048,-0.041253068,0.02515431,-0.01707798,-0.009298111,0.015757378,-0.013879789,-0.028442338,-0.020734338,0.0222975,-0.08545279,0.0162964,0.0080987895,-0.009837132,0.015389048,0.042942002,0.014634418,0.01727562,-0.012406465,-0.03960007,0.02262091,-0.023393508,-0.039887547,-0.016727617,0.0068410737,-0.044559065,-0.011535048,0.011130782,-0.046247996,0.009792213,-0.008336857,0.016197579,-0.017356474,0.016538959,-0.057890847,-0.004662531,0.013628246,0.022081891,-0.020285154,0.002351479,0.020410925,0.0013228472,0.040390637,-0.0076675727,-0.053470876,-0.044415325,-0.020410925,0.027921284,-0.09141795,-0.01397861,0.00042784787,-0.04527776,0.047900993,0.04017503,0.06716201,-0.0141942175,0.05091951,0.058250196,-0.022926357,-0.03390442,0.022261564,-0.009549654,0.008893846,0.02120149,0.011508097,-0.024255943,0.016673714,0.049733665,-0.02896339,-0.011867444,0.042115502,0.029897694,-0.03559335,0.008997158,-0.021165555,-0.017365457,0.03891731,0.0035508003,-0.008884862,-0.0049050907,-0.05023675,0.029107131,0.013412638,-0.011022978,-0.012702927,0.05986726,0.00978323,-0.04779319,-0.047254167,0.012927518,-0.011642852,0.032305323,0.025765201,0.010996027,-0.03367084,-0.013403654,-0.012056101,0.01734749,-0.046319865,-0.017060012,0.023393508,0.020267187,0.019710198,-0.019404754,0.042043634,0.019674264,0.026879176,0.015146488,-0.011894396,-0.007847247,-0.014850027,0.030867932,0.010708549,0.024920734,0.0074474723,0.02849624,-0.018560287,0.08990869,-0.019386787,0.013960642,0.034120023,0.058861084,-0.024866832,0.0274721,-0.028927457,-0.012002199,0.003445242,-0.021596773,-0.036258142,-0.046463605,-0.027166655,0.055519156,-0.028819652,0.015047668,0.021650674,0.013349752,-0.11872835,0.021920184,-0.039851613,-0.012083053,-0.00033464216,0.05228503,-0.0141942175,-0.02359115,-0.043732565,-0.037120573,0.0006743376,-0.04233111,0.0078113116,0.038486093,-0.01983597,0.043840367,-0.028262664,-0.00678268,-0.027166655,-0.019117275,-0.047433842,-0.04527776,0.038845442,0.008574924,-0.026501862,0.0497696,-0.019440688,-0.03491059,0.015721444,0.035988633,-0.030652324,-0.0007394693,0.008107773,-0.016745584,0.003366635,0.036509685,0.04391224,-0.0013273391,-0.005304864,0.008341349,0.004361578,0.012927518,-0.00063671847,-0.0060684774,-0.029915662,-0.0026928587,-0.0150297005,-0.021417098,-0.042798262,-0.028981358,-0.07366619,-0.03395832,-0.016107742,0.052931856,-0.07226474,-0.011579966,0.06389195,0.047613516,0.0061403466,0.015389048,0.0002862145,-0.059759453,0.00035260952,0.017697854,-0.0180033,-0.0030454684,0.041935828,-0.07682845,0.0044806115,0.018254843,0.0650778,-0.021686608,-0.010483957,0.012747845,-0.012118987,0.03027501,-0.045565236,0.009118438,0.010340218,-0.08609961,-0.03618627,0.042977937,-0.040893722,-5.9201062e-05,-0.009926969,-0.0024952178,-0.0061672977,0.0018641141,0.029430542,0.24579355,0.052105356,0.054369245,-0.04150461,-0.0050398456,-0.05487233,-0.0021673134,0.018560287,0.03237719,-0.018632157,0.0036091944,0.010510908,-0.036042534,0.0037776383,-0.017230703,0.042367045,-0.012011183,-0.030454682,0.022854488,-0.008736631,0.047326036,0.02528008,-0.0009073519,0.024381714,-0.07395367,0.013439588,-0.024094235,-0.015505835,-0.044954345,0.031981908,-0.0070297313,-0.013179062,0.032017842,-0.020428894,-0.0047838106,0.0052734213,0.008291938,-0.026501862,0.026214385,0.02596284,0.002627727,-0.026699504,0.020914013,0.02481293,-0.0006872517,0.021093685,-0.0120291505,-0.011193668,0.018039234,0.013861822,-0.018488418,-0.01795838,0.0077888523,-0.03135305,0.006275102,-0.0056148013,-0.02100385,-0.00058899267,-0.012747845,0.059364174,0.010457006,-0.008521022,-0.032484993,0.0136821475,-0.041001525,-0.0636404,0.03974381,-0.041432742,0.060154736,0.049661797,-0.0015889888,0.030975737,0.041576482,0.016143678,0.013421621,-0.009765263,0.00746544,0.028981358,-0.014526614,0.0021830348,-0.04560117,-0.033365395,0.008377284,-0.025890972,0.043984108,-0.03837829,-0.0058349017,0.0073711113,0.00570913,0.01468832,-0.0077529177,-0.009378964,0.02195612,-0.035898793,-0.009909001,-0.07151011,0.024435615,0.002035927,-0.08099688,0.041289,0.02598081,-0.02364505,-0.018317727,-0.02998753,0.04103746,-0.005116207,-0.017760739,0.03115541,-0.023716921,0.002143731,0.02651983,0.013592311,-0.02332164,-0.04649954,-0.036940902,0.018811831,0.06719794,0.024561387,-0.022045957,-0.01315211,-0.028065024,0.03544961,-0.026627634,-0.0030454684,-0.008745614,0.010349202,0.027058851,0.008997158,-0.038486093,0.018317727,-0.0058843116,-0.007874197,0.032287356,0.0017473262,0.021560837,0.0028455814,0.012487318,0.017455295,-0.01588315,-0.0021998791,0.01032225,0.023339607,-0.020770272,-0.08272175,-0.0007832648,0.05303966,-0.01400556,0.014885961,0.006023559,0.058932956,0.025711298,-0.010735501,0.06119684,-0.013304833,-0.011166717,-0.016512008,-0.003818065,0.005030862,0.029843792,-0.010052741,0.019764101,-0.011741673,0.02030312,0.08322483,0.04254672,0.024507485,0.00040482718,0.019386787,0.01510157,-0.016772535,-0.014661369,-0.0309398,-0.041289,0.01588315,-0.005632769,0.005574375,0.010115626,0.004357086,-0.04567304,-0.01724867,0.010367169,0.013080241,0.01803025,-0.010942125,0.0048736474,0.026465928,-0.0159101,-0.011238586,0.02420204,-0.013349752,0.0073127174,0.0489431,0.010349202,-0.035701152,0.018632157,-0.031478822,0.035737086,-0.0009837132,0.037587725,-0.055267613,-0.06791664,0.0083638085,0.019153211,-0.03354507,-0.03381458,0.01659286,0.008260496,0.03708464,-0.011822525,0.01080737,-0.043732565,-0.006248151,0.007375603,-0.018102119,0.015415998,-0.011121798,-8.246739e-05,-0.00075013743,-0.027436165,-0.004119018,0.0017664165,0.012478335,0.029232902,-0.0041437233,-0.014463728,0.01956646,-0.0056103095,-0.0009848361,-0.032556865,0.01661083,-0.015604656,-0.034928557,-0.014140315,-0.023842692,-0.028442338,0.018335694,0.0011746164,0.039096985,0.019207112,-0.031335082,-0.018524352,0.0014205447,0.046787016,0.02127336,-0.034120023,-0.026879176,-0.02256701,0.0051251906,0.041253068,0.030490616,-0.051566336,0.040210962,0.051997554,-0.024184072,-0.039528202,0.04477467,-0.041289,-0.011885411,0.028729815,-0.05656126,-0.011921346,0.006189757,0.026196416,-0.021722544,-0.02930477,-0.002145977,0.033149786,0.02971802,-0.007964035,-0.050847642,-0.030652324,-0.010897206,-0.053327136,0.028747782,0.015604656,0.013089225,-0.035880826,-0.038270485,-0.05986726,-0.001977533,-0.008314398,0.069964916,0.0042268224,-0.010879239,-0.025100408,-0.01141826,0.052680314,-0.038737636,0.0034272748,-0.032880276,-2.8091554e-05,-0.026214385,-0.056273784,-0.001639522,0.01622453,-0.041289,0.008327873,0.043984108,-0.033167753,-0.0143649075,-0.011939313,0.0009803444,-0.0038090812,-0.022243597,0.039564136,-0.034461405,-0.00036692727,-0.03597066,0.0060415263,-0.041432742,0.01834468,-0.06417943,0.0037237362,0.024399681,0.009765263,-0.028604044,0.012424433,-0.032826375,0.006275102,0.018847765,0.008300922,0.011373342,-0.05896889,-0.0030319928,-0.04064218,0.0360066,-0.031263214,0.008395251,-0.01595502,0.015676524,-0.018560287,0.019961743,-0.009747295,-0.0053228317,0.0015418244,-0.035485543,0.046068322,0.036976837,0.020374991,-0.038809508,0.00690396,-0.04254672,0.009882051,-0.009909001,0.028801685,0.013942675,-0.015002749,0.023411475,-0.0351801,0.016772535,-0.03898918,0.007946067,-0.02154287,-0.027220557,-0.018937603,0.0065940227,-0.01656591,0.018973537,0.021183522,0.0463558,-0.033886448,-0.00401346,-0.039240725,0.035000425,0.022171728,0.035665218,0.015065635,-0.026699504,0.00086411793,-0.032305323,0.00914988,-0.014562549,0.011337407,-0.03422783,-0.032359224,0.07000085,-0.0031465348,0.022063924,-0.0039707874,-0.03906105,0.022117825,-0.02120149,-0.031676464,-0.0145895,0.03183817,-0.033850513,0.022387335,0.012873617,-0.030688258,0.015083603,0.01107688,-0.042223305,0.0030746653,-0.011624885,-0.12490912,-0.01107688,-0.026412025,-0.0089522395,-0.02447155,0.018901667,0.026663568,0.006535629,0.020572633,-0.010160545,0.011705738,-0.029735988,0.031263214,-0.021345228,0.005569883,0.007604687,-0.011813542,-0.018991504,-0.017329523,0.07424115,0.026717471,0.0014463728,-0.008305415,0.01407743,0.017401392,0.020357024,0.043373216,0.02481293,-0.021578804,-0.014778157,0.015856199,-0.028675914,0.0325928,0.058789216,0.019692231,-0.0180033,0.0063514635,-0.009181323,0.053255267,-0.025172278,-0.03122728,0.012774796,-0.04423565,0.03081403,-0.0062346756,0.016628796,0.08128436,-0.04265452,-0.03622221,0.010178512,0.012918535,-0.032413125,-0.03927666,0.033976287,0.020734338,-0.028711848,-0.013915724,0.0041819043,0.033563036,0.07176165,0.010448023,0.035413675,-0.019620363,-0.062346753,0.035359774,0.037515856,0.010007822,0.026753405,0.0049589924,0.009729328,-0.012514269,0.0072722905,0.008264988,-0.030831996,-0.0018742207,-0.0248848,0.055842567,-0.006809631,-0.0064323163,-0.046176128,-0.02024922,0.018111104,-0.039384462,0.0056148013,0.0074834074,0.008134725,-0.0034340124,-0.028711848,-0.005533948,0.016772535,-0.03300605,-0.033239625,0.0034497338,0.017967364,-0.007663081,0.039025117,-0.0650778,-0.022513108,-0.00091184373,0.0015923576,-0.012074069,-0.018578256,-0.04750571,-0.0055833585,-0.04437939,0.064251296,0.029394608,-0.009738311,0.017554116,-0.051566336,-0.00717347,0.0018742207,0.024094235,0.049266513,-0.08509344,-0.02869388,-0.040534373,0.024974637,0.02713072,0.003025255,-0.019081341,-0.020896045,0.008916304,-0.011355374,0.048368145,-0.027831448,-0.00026628195,0.021075718,-0.030454682,0.032484993,0.020608567,-0.018847765,0.0081931185,0.03271857,0.006522153,0.01824586,-0.019099308,0.004631088,-0.049194645,0.019961743,0.003815819,-0.03250296,-0.020374991,-0.054836396,-0.035629284,-0.0075148502,-0.017724805,-0.04628393,0.02330367,-0.00978323,-0.007838262,0.0015788821,0.0032386174,-0.005480046,-0.011526064,0.059795387,-0.08947747,0.0054351278,0.008233544,0.05814239,0.015173439,-0.012631057,-0.014616451,-0.041360874,0.03095777,0.021506935,-0.015676524,-0.01363723,-0.0036675883,-0.024363747,-0.015020717,0.015218358,0.0015002749,-0.023878627,0.0034834228,0.010088675,-0.003445242,-0.006791664,0.047577582,0.009873067,-0.0033396839,0.017949397,0.056058176,-0.043984108,0.007964035,-0.018218907,0.0029825824,-0.006962354,-0.022081891,-0.043193545,-0.039384462,-0.056489393,0.008907321,0.022135792,0.03496449,0.07941575,0.0153531125,-0.017051028,-0.00712406,0.0054351278,-0.006463759,0.0037394578,0.025316017,-0.026052678,-0.0137001155,0.02698698,0.015694493,0.009158864,0.021021817,-0.07273189,0.019512558,0.030526552,0.008633318,0.054081768,-0.018470451,0.0063739223,0.04818847,-0.052249096,-0.031263214,0.021363197,0.027579904,0.07539106,-0.011463178,0.008745614,-0.0019213851,-0.012127971,-0.019476622,0.010798386,0.014230153,0.045205887,0.040570308,0.02051873,0.006948878,-0.005821426,0.06504186,0.0034542258,-0.011669803,-0.0018068431,-0.031712398,-0.01622453,-0.0041976254,0.0040853294,-0.041828025,-0.023716921],"index":0,"object":"embedding"}],"model":"BAAI/bge-m3","object":"list","usage":{"prompt_tokens":14,"completion_tokens":0,"total_tokens":14,"details":[{"id":"request-54a474855e7946aa8ca4f80865dcdd8e","model":"BAAI/bge-m3","prompt_tokens":14,"completion_tokens":0,"total_tokens":14}]},"id":"request-54a474855e7946aa8ca4f80865dcdd8e"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:49:26 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '13062'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+    method: GET
+    uri: https://www.info-retraite.fr/browsers.html
+  response:
+    body:
+      string: "<html>\r\n <head>\r\n  <title>Forbidden</title>\r\n </head>\r\n <body>\r\n
+        \ <h1>Forbidden</h1>\r\n </body>\r\n</html>"
+    headers:
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '103'
+      Content-Type:
+      - text/html
+      Date:
+      - Fri, 06 Jun 2025 11:00:07 GMT
+      Keep-Alive:
+      - timeout=5, max=300
+    status:
+      code: 403
+      message: Forbidden
+version: 1

@@ -15,7 +15,7 @@ from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__COLLECTION
 
 
 @pytest.fixture(scope="module")
-def setup(client: TestClient):
+def setup(client: TestClient, record_with_vcr):
     # Get a language model
     response = client.get_without_permissions(url=f"/v1{ENDPOINT__MODELS}")
     assert response.status_code == 200, response.text
