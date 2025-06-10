@@ -18,12 +18,14 @@ services:
       - QDRANT_PORT=6333
       - QDRANT_GRPC_PORT=6334
       - MCP_BRIDGE_HOST=albert-test-mcp-bridge-1
-      - MCP_BRIDGE_PORT=9875
+      - MCP_BRIDGE_PORT=8000
       - VCR_ENABLED=true
     ports:
       - 8000:8000
     volumes:
       - ./config.test.yml:/config.yml:ro
+      - ../app:/app
+
     depends_on:
       redis:
         condition: service_healthy
