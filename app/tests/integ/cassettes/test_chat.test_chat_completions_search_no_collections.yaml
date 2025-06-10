@@ -1,0 +1,45 @@
+interactions:
+- request:
+    body: '{"messages":[{"role":"user","content":"Qui est Albert ?"}],"model":"albert-small","frequency_penalty":0.0,"logit_bias":null,"logprobs":false,"top_logprobs":null,"presence_penalty":0.0,"max_tokens":10,"max_completion_tokens":null,"n":1,"response_format":null,"seed":null,"stop":[],"stream":false,"stream_options":null,"temperature":0.7,"top_p":1,"tools":null,"tool_choice":"none"}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '379'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: "{\"id\":\"chatcmpl-441ae51fd3ac4b3b8d8421dfd5ba6c86\",\"object\":\"chat.completion\",\"created\":1749204519,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning_content\":null,\"content\":\"Il
+        existe plusieurs personnes c\xE9l\xE8bres portant\",\"tool_calls\":[]},\"logprobs\":null,\"finish_reason\":\"length\",\"stop_reason\":null}],\"usage\":{\"prompt_tokens\":4,\"completion_tokens\":7,\"total_tokens\":11,\"details\":[{\"id\":\"chatcmpl-441ae51fd3ac4b3b8d8421dfd5ba6c86\",\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"prompt_tokens\":4,\"completion_tokens\":7,\"total_tokens\":11}]},\"prompt_logprobs\":null}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:08:39 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '613'
+    status:
+      code: 200
+      message: OK
+version: 1

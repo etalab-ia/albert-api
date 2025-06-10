@@ -1,0 +1,41 @@
+interactions:
+- request:
+    body: '{"messages":[{"role":"user","content":"Hello, how are you?"}],"model":"albert-small","frequency_penalty":0.0,"logit_bias":null,"logprobs":false,"top_logprobs":null,"presence_penalty":0.0,"max_tokens":10,"max_completion_tokens":null,"n":1,"response_format":null,"seed":null,"stop":[],"stream":false,"stream_options":null,"temperature":0.7,"top_p":1,"tools":null,"tool_choice":"none","guided_regex":10}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '400'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: '{"detail":[{"type":"string_type","loc":["body","guided_regex"],"msg":"Input
+        should be a valid string","input":10}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '115'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:08:20 GMT
+      Server:
+      - nginx/1.27.4
+    status:
+      code: 400
+      message: Bad Request
+version: 1

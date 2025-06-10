@@ -1,0 +1,164 @@
+interactions:
+- request:
+    body: "{\"messages\":[{\"role\":\"user\",\"content\":\"Tu es un sp\xE9cialiste
+      pour transformer des demandes en requ\xEAte google. Tu sais \xE9crire les meilleurs
+      types de recherches pour arriver aux meilleurs r\xE9sultats.\\nVoici la demande
+      : What is the largest planet in our solar system?\\nR\xE9ponds en donnant uniquement
+      une requ\xEAte google qui permettrait de trouver des informations pour r\xE9pondre
+      \xE0 la question.\\n\\nExemples :\\n- Question: Peut-on avoir des jours de cong\xE9
+      pour un mariage ?\\n  R\xE9ponse: jour de cong\xE9 mariage conditions\\n\\n-
+      Question: Donnes-moi des informations sur Jules Verne.\\n  R\xE9ponse: Jules
+      Verne\\n\\n- Question: Comment refaire une pi\xE8ce d'identit\xE9 ?\\n  R\xE9ponse:
+      renouvellement pi\xE8ce identit\xE9 France\\n\\nNe donnes pas d'explication,
+      ne mets pas de guillemets, r\xE9ponds uniquement avec la requ\xEAte google qui
+      renverra les meilleurs r\xE9sultats pour la demande. Ne mets pas de mots qui
+      ne servent \xE0 rien dans la requ\xEAte Google.\\n\"}],\"model\":\"albert-small\",\"temperature\":0.2,\"stream\":false}"
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1001'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: "{\"id\":\"chatcmpl-024428c28e574769bc0a2eadd36b3db2\",\"object\":\"chat.completion\",\"created\":1749204638,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning_content\":null,\"content\":\"plus
+        grand plan\xE8te syst\xE8me solaire\",\"tool_calls\":[]},\"logprobs\":null,\"finish_reason\":\"stop\",\"stop_reason\":null}],\"usage\":{\"prompt_tokens\":187,\"completion_tokens\":5,\"total_tokens\":192,\"details\":[{\"id\":\"chatcmpl-024428c28e574769bc0a2eadd36b3db2\",\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"prompt_tokens\":187,\"completion_tokens\":5,\"total_tokens\":192}]},\"prompt_logprobs\":null}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:10:39 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '605'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - api.search.brave.com
+      user-agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+      x-subscription-token:
+      - BSAHUAJdQ7ZZTtK8cUhcP5qcK_AKShy
+    method: GET
+    uri: https://api.search.brave.com/res/v1/web/search?q=plus+grand+plan%C3%A8te+syst%C3%A8me+solaire&count=3&country=fr&safesearch=strict
+  response:
+    body:
+      string: "{\"query\":{\"original\":\"plus grand plan\xE8te syst\xE8me solaire\",\"show_strict_warning\":false,\"is_navigational\":false,\"is_news_breaking\":false,\"spellcheck_off\":true,\"country\":\"fr\",\"bad_results\":false,\"should_fallback\":false,\"postal_code\":\"\",\"city\":\"\",\"header_country\":\"\",\"more_results_available\":true,\"state\":\"\"},\"mixed\":{\"type\":\"mixed\",\"main\":[{\"type\":\"web\",\"index\":0,\"all\":false},{\"type\":\"web\",\"index\":1,\"all\":false},{\"type\":\"videos\",\"all\":true},{\"type\":\"web\",\"index\":2,\"all\":false},{\"type\":\"web\",\"index\":3,\"all\":false},{\"type\":\"web\",\"index\":4,\"all\":false},{\"type\":\"web\",\"index\":5,\"all\":false},{\"type\":\"web\",\"index\":6,\"all\":false},{\"type\":\"web\",\"index\":7,\"all\":false},{\"type\":\"web\",\"index\":8,\"all\":false},{\"type\":\"web\",\"index\":9,\"all\":false},{\"type\":\"web\",\"index\":10,\"all\":false},{\"type\":\"web\",\"index\":11,\"all\":false},{\"type\":\"web\",\"index\":12,\"all\":false},{\"type\":\"web\",\"index\":13,\"all\":false},{\"type\":\"web\",\"index\":14,\"all\":false},{\"type\":\"web\",\"index\":15,\"all\":false},{\"type\":\"web\",\"index\":16,\"all\":false},{\"type\":\"web\",\"index\":17,\"all\":false},{\"type\":\"web\",\"index\":18,\"all\":false},{\"type\":\"web\",\"index\":19,\"all\":false}],\"top\":[],\"side\":[]},\"type\":\"search\",\"videos\":{\"type\":\"videos\",\"results\":[{\"type\":\"video_result\",\"url\":\"https://m.facebook.com/futura.sciences.fr/videos/jupiter-la-plus-grande-plan%C3%A8te-du-syst%C3%A8me-solaire-/300712997614746/\",\"title\":\"Jupiter
+        la plus grande plan\xE8te du Syst\xE8me solaire ...\",\"description\":\"See
+        posts, photos and more on Facebook\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"m.facebook.com\",\"hostname\":\"m.facebook.com\",\"favicon\":\"https://imgs.search.brave.com/0WYs5UG59TQysOa5wSaC2nhsP4lT-DMZ274nRdPj6zg/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMmYzZmY2MTRl/ZDZiZTMxMGIxZjc5/Nzc5MTZjY2RhMWQ0/NjRkMzRiMWJmN2Q5/ZWRmNzk0Y2Y5ZWNh/N2M2NzdjMi9tLmZh/Y2Vib29rLmNvbS8\",\"path\":\"\u203A
+        futura.sciences.fr  \u203A videos  \u203A jupiter-la-plus-grande-plan\xE8te-du-syst\xE8me-solaire-
+        \ \u203A 300712997614746\"}},{\"type\":\"video_result\",\"url\":\"https://www.facebook.com/futura.sciences.fr/videos/jupiter-la-plus-grande-plan%C3%A8te-du-syst%C3%A8me-solaire-/300712997614746/\",\"title\":\"Jupiter
+        la plus grande plan\xE8te du Syst\xE8me solaire ! | [\u269B\uFE0F] ...\",\"description\":\"[\u269B\uFE0F]
+        Voyagez jusqu\u2019\xE0 la superbe Jupiter et d\xE9couvrez certains secrets
+        de la plan\xE8te g\xE9ante gazeuse ! Entre ses vents violents, sa Grande Tache
+        rouge et...\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"facebook.com\",\"hostname\":\"www.facebook.com\",\"favicon\":\"https://imgs.search.brave.com/UPSLokJBKWPdNzHbqH5o3CgD13zMvR3pUTn8bk7hmPM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOWM3NjZkMmE4/MTU1MTk4ZDU5YzU3/NjUxY2ExZTdjNWQx/NjJlNTY1Y2VlODM4/MmRmMDgzZDBiMmI3/YzU4NmU4ZS93d3cu/ZmFjZWJvb2suY29t/Lw\",\"path\":\"\u203A
+        futura.sciences.fr  \u203A videos  \u203A jupiter-la-plus-grande-plan\xE8te-du-syst\xE8me-solaire-
+        \ \u203A 300712997614746\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/obpi1En-fE427JH6GzshuS-C-1hXY_g3OFkxNFj1tC8/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9zY29u/dGVudC1iY24xLTEu/eHguZmJjZG4ubmV0/L3YvdDE1LjUyNTYt/MTAvMTAyOTg2OTM1/XzMwMDczMzkzNzYx/MjY1Ml84NDQ5MjA1/MTAwODczNzc3MTUy/X24uanBnP19uY19j/YXQ9MTA3JmFtcDtj/Y2I9MS03JmFtcDtf/bmNfc2lkPTU5NmVi/NyZhbXA7X25jX29o/Yz1sYWU2Q1dva1Fr/c0FYX3VpN1BTJmFt/cDtfbmNfb2M9QVFt/SG1rRjUwSVcxNVlD/UEEzX1lJQjJNenda/RFc4RVRLc0xmTzVm/U2t3QnNuWnEwZXhL/R29XdER2c2otVGJW/bzB0dyZhbXA7X25j/X2h0PXNjb250ZW50/LWJjbjEtMS54eCZh/bXA7b2g9MDBfQWZB/WmliVmJYaU5sMllp/NWZiWVhqeko5UWJV/MHRQSnRoYWQ3d3Zj/V1VGdUpmZyZhbXA7/b2U9NjU4NzZERkM\",\"original\":\"https://scontent-bcn1-1.xx.fbcdn.net/v/t15.5256-10/102986935_300733937612652_8449205100873777152_n.jpg?_nc_cat=107&amp;ccb=1-7&amp;_nc_sid=596eb7&amp;_nc_ohc=lae6CWokQksAX_ui7PS&amp;_nc_oc=AQmHmkF50IW15YCPA3_YIB2MzwZDW8ETKsLfO5fSkwBsnZq0exKGoWtDvsj-TbVo0tw&amp;_nc_ht=scontent-bcn1-1.xx&amp;oh=00_AfAZibVbXiNl2Yi5fbYXjzJ9QbU0tPJthad7wvcWUFuJfg&amp;oe=65876DFC\"}},{\"type\":\"video_result\",\"url\":\"https://fr-fr.facebook.com/futura.sciences.fr/videos/jupiter-la-plus-grande-plan%C3%A8te-du-syst%C3%A8me-solaire-/276827416669971/\",\"title\":\"Jupiter
+        la plus grande plan\xE8te du Syst\xE8me solaire ! | [\u269B\uFE0F] ...\",\"description\":\"[\u269B\uFE0F]
+        Voyagez jusqu\u2019\xE0 la superbe Jupiter et d\xE9couvrez certains secrets
+        de la plan\xE8te g\xE9ante gazeuse ! Entre ses vents violents, sa Grande Tache
+        rouge et...\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"fr-fr.facebook.com\",\"hostname\":\"fr-fr.facebook.com\",\"favicon\":\"https://imgs.search.brave.com/25l6yzPOfQkmGsy40x4xHD7Pldj5WIZHE8roFjW3eCo/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvM2ZiMWEyZWVm/NWY5ZDQ3YTk4OTVh/YzQ3YTBhZTM0MGQx/ZTJiMGI3OTI0OGZl/M2FjNTRhZTNiYTYw/NjkwMzE3ZS9mci1m/ci5mYWNlYm9vay5j/b20v\",\"path\":\"\u203A
+        futura.sciences.fr  \u203A videos  \u203A jupiter-la-plus-grande-plan\xE8te-du-syst\xE8me-solaire-
+        \ \u203A 276827416669971\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/1qRBftaUXXAXkKIMXiDbBnE1dPDk_LpZbKVXBP7pJUo/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9zY29u/dGVudC1jZGc0LTEu/eHguZmJjZG4ubmV0/L3YvdDE1LjUyNTYt/MTAvOTQyMTIyNjdf/Mjc2ODIwMzkwMDA0/MDA3XzY0OTIwNTA0/MjAzMzUxMTYyODhf/bi5qcGc_X25jX2Nh/dD0xMDUmYW1wO2Nj/Yj0xLTcmYW1wO19u/Y19zaWQ9YTI3NjY0/JmFtcDtfbmNfb2hj/PTRGeldlN3dwZ1BV/QVg4V3hhUHYmYW1w/O19uY19odD1zY29u/dGVudC1jZGc0LTEu/eHgmYW1wO29oPTAw/X0FmQ1h4Tl9fSFQ0/WjBHS1B5UEV2YmhR/dnktcEFuSnlFdkQ1/R245QTJ2Zl9waXcm/YW1wO29lPTY1RDlE/QkUw\",\"original\":\"https://scontent-cdg4-1.xx.fbcdn.net/v/t15.5256-10/94212267_276820390004007_6492050420335116288_n.jpg?_nc_cat=105&amp;ccb=1-7&amp;_nc_sid=a27664&amp;_nc_ohc=4FzWe7wpgPUAX8WxaPv&amp;_nc_ht=scontent-cdg4-1.xx&amp;oh=00_AfCXxN__HT4Z0GKPyPEvbhQvy-pAnJyEvD5Gn9A2vf_piw&amp;oe=65D9DBE0\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=NIyjtgvRcnQ\",\"title\":\"Tout
+        comprendre sur : le syst\xE8me solaire - YouTube\",\"description\":\"Combien
+        y a-t-il de plan\xE8tes dans le syst\xE8me solaire ? Comment s'est-il form\xE9
+        dans la Voie Lact\xE9e ? Apprenez-en plus sur la gen\xE8se du syst\xE8me solaire,
+        ainsi ...\",\"age\":\"June 16, 2019\",\"page_age\":\"2019-06-16T10:10:39\",\"video\":{\"duration\":\"03:56\",\"views\":798439,\"creator\":\"Nat
+        Geo France\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/8ZRYK3UHUpm76TRxrPyB9Geo0VN8j2OmDIOVpXmrvsk/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9O/SXlqdGd2UmNuUS9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/NIyjtgvRcnQ/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=D7y70ubsUbY\",\"title\":\"La
+        plus grande plan\xE8te du syst\xE8me solaire #univers #histoire ...\",\"description\":\"Lien
+        de la vid\xE9o : https://www.youtube.com/watch?v=PVZJhdrZ9LE&t=9s\U0001F30D
+        O\xF9 se situe l'\xEAtre humain au milieu de cette immensit\xE9 cosmique ?
+        L'Homme est une esp\xE8c\",\"age\":\"September 2, 2023\",\"page_age\":\"2023-09-02T20:00:04\",\"video\":{\"duration\":\"01:00\",\"views\":3355,\"creator\":\"Orbin\xE9a
+        | Le Monde des Odyss\xE9es\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/2Y36F-ZWFCHBwrBrN3biqSEwVusDSmKe0pTP-l1EZVo/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9E/N3k3MHVic1ViWS9v/YXIyLmpwZz9zcXA9/LW9heW13RWRDSlVE/RU5BRlNGV1FBZ0h5/cTRxcEF3d0lBUlVB/QUloQ2NBSEFBUVk9/JmFtcDtycz1BT240/Q0xDOVZWampVUlk0/NVhTMGF1OThYcWtx/anR1VlF3\",\"original\":\"https://i.ytimg.com/vi/D7y70ubsUbY/oar2.jpg?sqp=-oaymwEdCJUDENAFSFWQAgHyq4qpAwwIARUAAIhCcAHAAQY=&amp;rs=AOn4CLC9VVjjURY45XS0au98XqkqjtuVQw\"}}],\"mutated_by_goggles\":false},\"web\":{\"type\":\"search\",\"results\":[{\"title\":\"Combien
+        y a-t-il de plan\xE8tes dans le syst\xE8me solaire ?\",\"url\":\"https://www.mnhn.fr/fr/combien-y-a-t-il-de-planetes-dans-le-systeme-solaire\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Cette
+        tache seule est d\xE9j\xE0 plus grande que <strong>la Terre</strong> ! \xC0
+        la &quot;surface&quot; de la plan\xE8te (\xE0 un niveau d\u2019altitude o\xF9
+        la pression est \xE9gale \xE0 celle au niveau de la mer sur Terre), il fait
+        \u2013 145 \xB0C sur Jupiter. Jupiter marque le d\xE9but du Syst\xE8me solaire
+        externe.\",\"profile\":{\"name\":\"Mnhn\",\"url\":\"https://www.mnhn.fr/fr/combien-y-a-t-il-de-planetes-dans-le-systeme-solaire\",\"long_name\":\"mnhn.fr\",\"img\":\"https://imgs.search.brave.com/YyrJYNmEzl-CwbG6SrkZ9TJXx0eY3sD9hSnerZ1RZy8/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvN2RmYTdkNzNl/ZDVmNmZkYjAwYzVk/MjRiNTE2NjIyMjA2/NDFiOWYxNmQxYjAy/M2M1YTkzZTdiYzM3/MDM5YmI5MS93d3cu/bW5obi5mci8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"mnhn.fr\",\"hostname\":\"www.mnhn.fr\",\"favicon\":\"https://imgs.search.brave.com/YyrJYNmEzl-CwbG6SrkZ9TJXx0eY3sD9hSnerZ1RZy8/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvN2RmYTdkNzNl/ZDVmNmZkYjAwYzVk/MjRiNTE2NjIyMjA2/NDFiOWYxNmQxYjAy/M2M1YTkzZTdiYzM3/MDM5YmI5MS93d3cu/bW5obi5mci8\",\"path\":\"\u203A
+        fr  \u203A combien-y-a-t-il-de-planetes-dans-le-systeme-solaire\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/SMJEpCVnbIE_2QHJM9mQvzvmbyzAWP2q0km3ZBX9p0w/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly93d3cu/bW5obi5mci9zeXN0/ZW0vZmlsZXMvc3R5/bGVzLzE5XzEwX21l/ZGl1bS9wcml2YXRl/LzIwMjQtMDEvc3lz/dGVtZS1zb2xhaXJl/LXBsYW5ldGVzLmpw/Zy53ZWJwP2l0b2s9/MkpzdU9aX2c\",\"original\":\"https://www.mnhn.fr/system/files/styles/19_10_medium/private/2024-01/systeme-solaire-planetes.jpg.webp?itok=2JsuOZ_g\",\"logo\":false}},{\"title\":\"Quelle
+        est la plus grande plan\xE8te du Syst\xE8me solaire ? Et la plus petite ?\",\"url\":\"https://www.futura-sciences.com/sciences/questions-reponses/systeme-solaire-plus-grande-planete-systeme-solaire-plus-petite-7427/\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"<strong>Jupiter</strong>
+        est donc la plus grande plan\xE8te du Syst\xE8me solaire. Elle est aussi,
+        vraisemblablement, la premi\xE8re \xE0 s&#x27;\xEAtre form\xE9e autour du
+        Soleil tout jeune, voici 4,6 milliards d&#x27;ann\xE9es.\",\"page_age\":\"2021-06-03T14:58:28\",\"profile\":{\"name\":\"Futura\",\"url\":\"https://www.futura-sciences.com/sciences/questions-reponses/systeme-solaire-plus-grande-planete-systeme-solaire-plus-petite-7427/\",\"long_name\":\"futura-sciences.com\",\"img\":\"https://imgs.search.brave.com/0sEVYcZwvngBXK2LHQ5d-JSG1HPyXPHaQpRjd8Jke0c/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOWNjNzFlM2Qz/NzdiOTJlNWIyYzMz/YzdiZjVhYTg4YjNj/MmRjNmIwZjQ4MWQz/M2ViM2QxYjcwYzc2/MjUxMjM3ZS93d3cu/ZnV0dXJhLXNjaWVu/Y2VzLmNvbS8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"article\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"futura-sciences.com\",\"hostname\":\"www.futura-sciences.com\",\"favicon\":\"https://imgs.search.brave.com/0sEVYcZwvngBXK2LHQ5d-JSG1HPyXPHaQpRjd8Jke0c/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOWNjNzFlM2Qz/NzdiOTJlNWIyYzMz/YzdiZjVhYTg4YjNj/MmRjNmIwZjQ4MWQz/M2ViM2QxYjcwYzc2/MjUxMjM3ZS93d3cu/ZnV0dXJhLXNjaWVu/Y2VzLmNvbS8\",\"path\":\"
+        \ \u203A questions r\xE9ponses\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/TGKcSIXapteb8RRkj5sSXYSDT-TZwrzNKyuMVjexBIQ/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZnV0dXJhLXNjaWVu/Y2VzLmNvbS9idWls/ZHN2Ni9pbWFnZXMv/bGFyZ2VvcmlnaW5h/bC9jLzUvOC9jNTgy/ZjBkYzM2XzEwNTA1/NF9wbHVzLWdyYW5k/ZS1wbGFuZXRlLXN5/c3RlbWUtc29sYWly/ZS1qdXBpdGVyLmpw/Zw\",\"original\":\"https://cdn.futura-sciences.com/buildsv6/images/largeoriginal/c/5/8/c582f0dc36_105054_plus-grande-planete-systeme-solaire-jupiter.jpg\",\"logo\":false},\"age\":\"June
+        3, 2021\"},{\"title\":\"Plan\xE8te Jupiter | Agence spatiale canadienne\",\"url\":\"https://www.asc-csa.gc.ca/fra/astronomie/systeme-solaire/jupiter.asp\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Clich\xE9
+        de <strong>Jupiter</strong> obtenu par la sonde Juno en 2019, qui montre la
+        Grande Tache rouge et de nombreuses temp\xEAtes. (Source : NASA.) <strong>Jupiter</strong>
+        est la cinqui\xE8me plan\xE8te \xE0 partir du Soleil et aussi la plus grosse
+        du Syst\xE8me solaire. Comme toutes les autres plan\xE8tes, <strong>Jupiter</strong>
+        s&#x27;est probablement ...\",\"page_age\":\"2024-09-27T00:00:00\",\"profile\":{\"name\":\"Asc-csa\",\"url\":\"https://www.asc-csa.gc.ca/fra/astronomie/systeme-solaire/jupiter.asp\",\"long_name\":\"asc-csa.gc.ca\",\"img\":\"https://imgs.search.brave.com/rQxRPPjYLezPKfRUvOzwihBCEs-UyQM0z7afLRXXbVE/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvY2RiZTU5MjBh/MWI1ZTEwNmZiMjMy/NmFlZjBkNjA4MTAx/OWNkMjc2OGYxNzJi/NmM1YzYzNmE3M2Rm/MzQ3OWI2Ni93d3cu/YXNjLWNzYS5nYy5j/YS8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"asc-csa.gc.ca\",\"hostname\":\"www.asc-csa.gc.ca\",\"favicon\":\"https://imgs.search.brave.com/rQxRPPjYLezPKfRUvOzwihBCEs-UyQM0z7afLRXXbVE/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvY2RiZTU5MjBh/MWI1ZTEwNmZiMjMy/NmFlZjBkNjA4MTAx/OWNkMjc2OGYxNzJi/NmM1YzYzNmE3M2Rm/MzQ3OWI2Ni93d3cu/YXNjLWNzYS5nYy5j/YS8\",\"path\":\"\u203A
+        fra  \u203A astronomie  \u203A systeme-solaire  \u203A jupiter.asp\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/IXvtpfyI5nwuMH-yLrzt4pgHY7BYpa6y_yt2eX4oTso/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly93d3cu/YXNjLWNzYS5nYy5j/YS9pbWFnZXMvYXN0/cm9ub21pZS9zeXN0/ZW1lLXNvbGFpcmUv/c3lzdGVtZS1zb2xh/aXJlLW9nLmpwZw\",\"original\":\"https://www.asc-csa.gc.ca/images/astronomie/systeme-solaire/systeme-solaire-og.jpg\",\"logo\":false},\"age\":\"September
+        27, 2024\"}],\"family_friendly\":true}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:10:40 GMT
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User
+      X-Content-Type-Options:
+      - nosniff
+      X-Download-Options:
+      - noopen
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '13980'
+      server-timing:
+      - search-roundtrip;dur=544.401
+      x-ratelimit-limit:
+      - 1, 2000
+      x-ratelimit-policy:
+      - 1;w=1, 2000;w=2592000,
+      x-ratelimit-remaining:
+      - 0, 1984
+      x-ratelimit-reset:
+      - 1, 2123359
+    status:
+      code: 200
+      message: OK
+version: 1
