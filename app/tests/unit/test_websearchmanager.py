@@ -1,6 +1,7 @@
 import pytest
 import requests
 from fastapi import UploadFile
+from typing import List
 
 from app.helpers._websearchmanager import WebSearchManager
 
@@ -9,11 +10,11 @@ timeout = 5
 
 
 class DummyWebSearch:
-    def __init__(self, urls):
+    def __init__(self, urls: List[str]) -> None:
         self.urls = urls
         self.USER_AGENT = "test-agent"
 
-    async def search(self, query, n):
+    async def search(self, query: str, k: int) -> List[str]:
         return self.urls
 
 
@@ -36,7 +37,7 @@ async def test_get_results_success(monkeypatch):
         return FakeResponse(200, "hello world")
 
     monkeypatch.setattr(requests, "get", fake_get)
-    results = await manager.get_results("query")
+    results = await manager.get_results(query="query", k=1)
 
     assert len(results) == 1
     file_item = results[0]
@@ -59,7 +60,7 @@ async def test_get_results_filters_invalid_url(monkeypatch):
         pytest.skip("requests.get should not be called for invalid URL")
 
     monkeypatch.setattr(requests, "get", fake_get)
-    results = await manager.get_results("query")
+    results = await manager.get_results(query="query", k=1)
     assert results == []
 
 
@@ -75,7 +76,7 @@ async def test_get_results_filters_unauthorized_domain(monkeypatch):
         pytest.skip("requests.get should not be called for unauthorized domain")
 
     monkeypatch.setattr(requests, "get", fake_get)
-    results = await manager.get_results("query")
+    results = await manager.get_results(query="query", k=1)
     assert results == []
 
 
@@ -90,7 +91,7 @@ async def test_get_results_handles_request_exception(monkeypatch):
         raise requests.RequestException("network error")
 
     monkeypatch.setattr(requests, "get", fake_get)
-    results = await manager.get_results("query")
+    results = await manager.get_results(query="query", k=1)
     assert results == []
 
 
@@ -105,7 +106,7 @@ async def test_get_results_handles_non_200_status(monkeypatch):
         return FakeResponse(404, "not found")
 
     monkeypatch.setattr(requests, "get", fake_get)
-    results = await manager.get_results("query")
+    results = await manager.get_results(query="query", k=1)
     assert results == []
 
 
@@ -120,6 +121,6 @@ async def test_get_results_subdomain_allowed(monkeypatch):
         return FakeResponse(200, "<html/>")
 
     monkeypatch.setattr(requests, "get", fake_get)
-    results = await manager.get_results("query")
+    results = await manager.get_results(query="query", k=1)
     assert len(results) == 1
     assert results[0].filename == f"{urls[0]}.html"

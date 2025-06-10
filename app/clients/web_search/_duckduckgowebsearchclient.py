@@ -15,7 +15,7 @@ class DuckduckgoWebSearchClient(BaseWebSearchClient):
     def __init__(self, user_agent: str, *args, **kwargs) -> None:
         self.headers = {"User-Agent": user_agent}
 
-    async def search(self, query: str, n: int = 3) -> List[str]:
+    async def search(self, query: str, k: int) -> List[str]:
         params = {
             "q": query,
             "format": "json",
@@ -26,7 +26,7 @@ class DuckduckgoWebSearchClient(BaseWebSearchClient):
         try:
             async with httpx.AsyncClient(timeout=self.DEFAULT_TIMEOUT) as client:
                 response = await client.get(url=self.URL, headers=self.headers, params=params, follow_redirects=True)
-                results = response.json().get("Results", [])[:n]
+                results = response.json().get("Results", [])[:k]
         except Exception:
             logger.exception(msg="DuckDuckGo API unreachable.")
             results = []

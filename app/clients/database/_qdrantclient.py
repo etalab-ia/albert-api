@@ -31,10 +31,10 @@ class QdrantClient(AsyncQdrantClient):
 
     async def check(self) -> bool:
         try:
-            await super().collection_exists("test")
+            await super().collection_exists(collection_name="test")  # raise error only if connection is not established
             return True
-        except Exception as ex:
-            logger.exception("Qdrant client check failed: %s", ex)
+        except Exception as e:
+            logger.exception("Qdrant client check failed: %s", e)
             return False
 
     async def create_collection(self, collection_id: int, vector_size: int) -> None:

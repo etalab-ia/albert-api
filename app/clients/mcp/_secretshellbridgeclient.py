@@ -23,7 +23,6 @@ class SecretShellMCPBridgeClient:
         try:
             params = json.loads(params)
         except json.JSONDecodeError:
-            print(f"failed to decode json for {tool_name}")
             return None
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:

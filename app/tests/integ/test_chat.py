@@ -306,7 +306,7 @@ class TestChat:
         assert response.status_code == 200, response.text
 
         response_json = response.json()
-        print(response_json)
+
         assert response_json.get("usage") is not None, response.text
         assert response_json["usage"].get("prompt_tokens") is not None, response.text
         assert response_json["usage"]["prompt_tokens"] == prompt_tokens

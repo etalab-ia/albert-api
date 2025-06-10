@@ -16,8 +16,8 @@ class BraveWebSearchClient(BaseWebSearchClient):
         self.api_key = api_key
         self.headers = {"Accept": "application/json", "X-Subscription-Token": self.api_key, "User-Agent": user_agent}
 
-    async def search(self, query: str, n: int = 3) -> List[str]:
-        params = {"q": query, "count": n, "country": "fr", "safesearch": "strict"}
+    async def search(self, query: str, k: int) -> List[str]:
+        params = {"q": query, "count": k, "country": "fr", "safesearch": "strict"}
 
         try:
             async with httpx.AsyncClient(timeout=self.DEFAULT_TIMEOUT) as client:

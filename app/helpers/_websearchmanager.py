@@ -5,12 +5,12 @@ from urllib.parse import urlparse
 
 from fastapi import UploadFile
 import requests
+from starlette.datastructures import Headers
 
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.helpers.models.routers import ModelRouter
-from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
-
 from app.utils.settings import settings
+from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +50,8 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
 
         return query
 
-    async def get_results(self, query: str, n: int = 3) -> List[UploadFile]:
-        urls = await self.web_search.search(query=query, n=n)
+    async def get_results(self, query: str, k: int) -> List[UploadFile]:
+        urls = await self.web_search.search(query=query, k=k)
         results = []
         for url in urls:
             # Parse the URL and extract the hostname
@@ -79,7 +79,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
                 continue
 
             file = BytesIO(response.text.encode("utf-8"))
-            file = UploadFile(filename=f"{url}.html", file=file)
+            file = UploadFile(filename=f"{url}.html", file=file, headers=Headers({"content-type": "text/html"}))
             results.append(file)
 
         return results

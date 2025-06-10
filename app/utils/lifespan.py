@@ -78,17 +78,15 @@ async def lifespan(app: FastAPI):
     global_context.iam = IdentityAccessManager()
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
 
-    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
-    qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
-
-    global_context.parser = ParserManager(parser=parser)
     mcp_bridge = SecretShellMCPBridgeClient(settings.mcp.mcp_bridge_url)
     global_context.mcp.agents_manager = AgentsManager(mcp_bridge, global_context.models)
     if redis:
         assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
     # setup context: documents
+    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
     qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
+    parser = ParserManager(parser=parser)
 
     # TODO: pass domains in websearchmanager arguments
     web_search = WebSearchManager(web_search=web_search, model=global_context.models(model=settings.web_search.model)) if settings.web_search else None  # fmt: off
@@ -98,7 +96,14 @@ async def lifespan(app: FastAPI):
     multiagents.MultiAgents.model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
     multiagents.MultiAgents.ranker_model = global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
 
-    global_context.documents = DocumentManager(qdrant=qdrant, web_search=web_search, multi_agents_search_model=multi_agents_search_model) if qdrant else None  # fmt: off
+    if qdrant:
+        assert await qdrant.check(), "Qdrant database is not reachable."
+        global_context.documents = DocumentManager(
+            qdrant=qdrant,
+            parser=parser,
+            web_search=web_search,
+            multi_agents_search_model=multi_agents_search_model,
+        )
 
     # check databases are reachable
     if redis:

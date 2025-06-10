@@ -10,7 +10,7 @@ from ui.frontend.utils import pagination
 from ui.settings import settings
 
 header()
-models = get_models()
+models = get_models() + ["web-search"]
 
 with st.sidebar:
     if st.button(label="**:material/refresh: Refresh data**", key="refresh-sidebar-account", use_container_width=True):
