@@ -38,14 +38,14 @@ services:
     extends:
       file: ../compose.yml
       service: postgres 
-    ports: !override
+    ports:
       - 8432:5432
 
   qdrant:
     extends:
       file: ../compose.yml
       service: qdrant
-    ports: !override
+    ports:
       - 8333:6333
       - 8334:6334
 
@@ -53,14 +53,14 @@ services:
     extends:
       file: ../compose.yml
       service: redis
-    ports: !override
+    ports:
       - 8335:6379
 
   mcp-bridge:
     extends:
       file: ../compose.yml
       service: mcp-bridge
-    ports: !override
+    ports:
       - "9875:8000"
 
 volumes:
