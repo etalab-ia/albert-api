@@ -6,7 +6,7 @@ requires-python = ">=3.12"
 license = { text = "MIT" }
 dependencies = [
     "openai==1.63.0",
-    "requests==2.32.3",
+    "requests==2.32.4",
     "pydantic==2.10.6",
     "pydantic-settings==2.7.1",
     "alembic==1.15.1",
