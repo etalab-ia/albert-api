@@ -1,7 +1,5 @@
-import asyncio
 import logging
 from typing import List, Optional
-from urllib.parse import urlparse
 from uuid import uuid4
 
 from qdrant_client import AsyncQdrantClient
@@ -32,20 +30,11 @@ class QdrantClient(AsyncQdrantClient):
         self.url = kwargs.get("url")
 
     async def check(self) -> bool:
-        parsed = urlparse(self.url)
-        host = parsed.hostname
-        port = parsed.port
-        loop = asyncio.get_running_loop()
-        for attempt in range(4):  # 3 retries + 1 initial attempt = 4 total
-            try:
-                await loop.getaddrinfo(host, port)
-                fut = loop.create_connection(lambda: asyncio.Protocol(), host, port)
-                transport, _ = await asyncio.wait_for(fut, timeout=5)
-                transport.close()
-                return True
-            except Exception as e:
-                logger.exception(f"Qdrant Connection attempt {attempt + 1} failed: {e}")
-                await asyncio.sleep(1)  # Wait 1 second before retry
+        try:
+            await super().collection_exists("test")
+            return True
+        except Exception as ex:
+            logger.exception("Qdrant client check failed: %s", ex)
             return False
 
     async def create_collection(self, collection_id: int, vector_size: int) -> None:

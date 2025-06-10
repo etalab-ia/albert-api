@@ -20,7 +20,7 @@ services:
       - MCP_BRIDGE_HOST=albert-test-mcp-bridge-1
       - MCP_BRIDGE_PORT=8000
       - VCR_ENABLED=true
-    ports:
+    ports: 
       - 8000:8000
     volumes:
       - ./config.test.yml:/config.yml:ro
@@ -38,14 +38,14 @@ services:
     extends:
       file: ../compose.yml
       service: postgres 
-    ports:
+    ports: !override
       - 8432:5432
 
   qdrant:
     extends:
       file: ../compose.yml
       service: qdrant
-    ports:
+    ports: !override
       - 8333:6333
       - 8334:6334
 
@@ -53,14 +53,14 @@ services:
     extends:
       file: ../compose.yml
       service: redis
-    ports:
+    ports: !override
       - 8335:6379
 
   mcp-bridge:
     extends:
       file: ../compose.yml
       service: mcp-bridge
-    ports:
+    ports: !override
       - "9875:8000"
 
 volumes:
