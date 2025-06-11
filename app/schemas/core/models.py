@@ -28,6 +28,7 @@ class RoutingStrategy(str, Enum):
     ROUND_ROBIN = "round_robin"
     SHUFFLE = "shuffle"
 
+
 class ModelClientCarbonImpactParams(BaseModel):
-    total: Optional[int] = None 
-    active: Optional[int] = None 
+    total: Optional[int] = None
+    active: Optional[int] = None
