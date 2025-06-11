@@ -83,16 +83,6 @@ def engine(worker_id):
     Base.metadata.drop_all(engine)  # Clean state
     Base.metadata.create_all(engine)
 
-    # CLean the vector store
-    vector_store = get_vector_store(settings)
-
-    async def delete_all_collections():
-        collections = await vector_store.get_collections()
-        for collection in collections:
-            await vector_store.delete_collection(collection)
-
-    asyncio.run(delete_all_collections())
-
     yield engine
 
 
@@ -146,15 +136,25 @@ def app_with_test_db(engine, db_session):
 
 @pytest.fixture(scope="session")
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
+    async def init_vector_store():
+        """Initialize vector store by deleting all collections"""
+        vector_store = get_vector_store(settings)
+        collections = await vector_store.get_collections()
+        # Clean the vector store
+        for collection in collections:
+            await vector_store.delete_collection(collection)
+
     # Lifespan requests API to get models and initialize the app
     if VCR_ENABLED:
         with VCR_INSTANCE.use_cassette("lifespan_init.yaml"):
             with TestClient(app=app_with_test_db) as client:
                 client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+                asyncio.run(init_vector_store())  # Initialize vector store
                 yield client
     else:
         with TestClient(app=app_with_test_db) as client:
             client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+            asyncio.run(init_vector_store())  # Initialize vector store
             yield client
 
 
