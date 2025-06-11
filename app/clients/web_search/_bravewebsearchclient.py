@@ -12,12 +12,13 @@ class BraveWebSearchClient(BaseWebSearchClient):
     URL = "https://api.search.brave.com/res/v1/web/search"
     DEFAULT_TIMEOUT = 5
 
-    def __init__(self, api_key: str, user_agent: str, *args, **kwargs) -> None:
+    def __init__(self, api_key: str, *args, **kwargs) -> None:
         self.api_key = api_key
-        self.headers = {"Accept": "application/json", "X-Subscription-Token": self.api_key, "User-Agent": user_agent}
+        self.headers = {"Accept": "application/json", "X-Subscription-Token": self.api_key}
+        self.additional_params = kwargs
 
     async def search(self, query: str, k: int) -> List[str]:
-        params = {"q": query, "count": k, "country": "fr", "safesearch": "strict"}
+        params = {"q": query, "count": k, "country": "fr", "safesearch": "strict"} | self.additional_params
 
         try:
             async with httpx.AsyncClient(timeout=self.DEFAULT_TIMEOUT) as client:

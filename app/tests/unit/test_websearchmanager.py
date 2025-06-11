@@ -15,7 +15,7 @@ class DummyWebSearch:
         self.USER_AGENT = "test-agent"
 
     async def search(self, query: str, k: int) -> List[str]:
-        return self.urls
+        return self.urls[:k]
 
 
 class FakeResponse:

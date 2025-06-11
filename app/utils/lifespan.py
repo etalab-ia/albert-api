@@ -31,12 +31,12 @@ async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
     # setup clients
-    redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
-    web_search = (
-        WebSearchClient.import_module(type=settings.web_search.type)(user_agent=settings.web_search.user_agent, **settings.web_search.args)
-        if settings.web_search
-        else None
-    )
+    redis = ConnectionPool(**settings.databases.redis.args)
+    web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
+    parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
+    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
+    mcp_bridge = SecretShellMCPBridgeClient(mcp_bridge_url=settings.mcp.mcp_bridge_url)
+
     routers = []
     for model in settings.models:
         clients = []
@@ -55,9 +55,9 @@ async def lifespan(app: FastAPI):
                 continue
         if not clients:
             logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
-            if settings.web_search:
+            if web_search:
                 assert model.id != settings.web_search.model, f"Web search model ({model.id}) must be reachable."
-            if settings.databases.qdrant:
+            if qdrant:
                 assert model.id != settings.databases.qdrant.model, f"Qdrant model ({model.id}) must be reachable."
             continue
 
@@ -66,30 +66,25 @@ async def lifespan(app: FastAPI):
         model["clients"] = clients
         routers.append(ModelRouter(**model))
 
-    redis = ConnectionPool(**settings.databases.redis.args) if settings.databases.redis else None
-    # TODO: pass user_agent in args
-    web_search = WebSearchClient.import_module(type=settings.web_search.type)(user_agent=settings.web_search.user_agent, **settings.web_search.args) if settings.web_search else None  # fmt: off
-    parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
-    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
-
     # setup context: models, iam, limiter, tokenizer
     global_context.tokenizer = UsageTokenizer(tokenizer=settings.general.tokenizer)
     global_context.models = ModelRegistry(routers=routers)
     global_context.iam = IdentityAccessManager()
-    global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy) if redis else None
+    global_context.mcp.agents_manager = AgentsManager(mcp_bridge=mcp_bridge, model_registry=global_context.models)
 
-    mcp_bridge = SecretShellMCPBridgeClient(settings.mcp.mcp_bridge_url)
-    global_context.mcp.agents_manager = AgentsManager(mcp_bridge, global_context.models)
-    if redis:
-        assert await global_context.limiter.redis.check(), "Redis database is not reachable."
+    global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
+    assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
     # setup context: documents
-    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
-    qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
     parser = ParserManager(parser=parser)
 
-    # TODO: pass domains in websearchmanager arguments
-    web_search = WebSearchManager(web_search=web_search, model=global_context.models(model=settings.web_search.model)) if settings.web_search else None  # fmt: off
+    if web_search:
+        web_search = WebSearchManager(
+            web_search=web_search,
+            model=global_context.models(model=settings.web_search.query_model),
+            limited_domains=settings.web_search.limited_domains,
+            user_agent=settings.web_search.user_agent,
+        )
 
     # @TODO: refacto import of multiagents into DocumentManager
     multi_agents_search_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
@@ -98,6 +93,7 @@ async def lifespan(app: FastAPI):
 
     if qdrant:
         assert await qdrant.check(), "Qdrant database is not reachable."
+        qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
         global_context.documents = DocumentManager(
             qdrant=qdrant,
             parser=parser,
@@ -105,14 +101,8 @@ async def lifespan(app: FastAPI):
             multi_agents_search_model=multi_agents_search_model,
         )
 
-    # check databases are reachable
-    if redis:
-        assert await global_context.limiter.redis.check(), "Redis database is not reachable."
-
-    if qdrant:
-        assert await global_context.documents.qdrant.check(), "Qdrant database is not reachable."
-
     yield
 
     # cleanup resources when app shuts down
-    await qdrant.close()
+    if qdrant:
+        await qdrant.close()

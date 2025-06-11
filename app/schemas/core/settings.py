@@ -3,7 +3,7 @@ import logging
 import os
 import re
 from types import SimpleNamespace
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
@@ -115,12 +115,46 @@ class Model(ConfigBaseModel):
         return values
 
 
+class WebSearchClientDuckDuckGoArgs(ConfigBaseModel):
+    """
+    All additionnal parameters for the DuckDuckGo API requests can be found here: https://www.searchapi.io/docs/duckduckgo-api
+    """
+
+    api_key: Optional[str] = Field(default=None, description="API key to use for the DuckDuckGo API requests.")
+    timeout: int = Field(default=DEFAULT_TIMEOUT, description="Timeout for the DuckDuckGo API requests.")
+
+
+class WebSearchClientBraveArgs(ConfigBaseModel):
+    """
+    All additionnal parameters for the Brave API requests can be found here: https://api-dashboard.search.brave.com/app/documentation/web-search/query
+    """
+
+    api_key: str = Field(description="API key to use for the Brave API requests.")
+    timeout: int = Field(default=DEFAULT_TIMEOUT, description="Timeout for the Brave API requests.")
+
+
+class WebSearchClient(ConfigBaseModel):
+    """
+    Web search client configuration (API of the search engine to use).
+    """
+
+    type: WebSearchType = Field(default=WebSearchType.DUCKDUCKGO, description="Type of web search client to use.")
+    args: Union[WebSearchClientDuckDuckGoArgs, WebSearchClientBraveArgs] = Field(default_factory=WebSearchClientDuckDuckGoArgs, description="Arguments for the web search client.")  # fmt: off
+
+
 class WebSearch(ConfigBaseModel):
-    type: WebSearchType = WebSearchType.DUCKDUCKGO
-    model: str
-    limited_domains: List[str] = []
-    user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
-    args: dict = {}
+    """
+    Albert API allows searching the internet to enrich API responses. For this, it is necessary to configure a search engine API client in the `web_search` section.
+
+    Prerequisites:
+    - a vector database
+    - a text-generation or image-text-to-text model
+    """
+
+    query_model: str = Field(description="Model to use to generate the web query, only text-generation and image-text-to-text models are supported.")
+    limited_domains: List[str] = Field(default_factory=list, description="List of domains to limit the web search to.")
+    user_agent: Optional[str] = Field(default=None, description="User agent to use for the scrapping requests.")
+    client: WebSearchClient = Field(default_factory=WebSearchClient, description="Web search client to use.")
 
 
 class MultiAgentsSearch(ConfigBaseModel):
@@ -239,14 +273,14 @@ class MCP(ConfigBaseModel):
 
 class Config(ConfigBaseModel):
     general: General = Field(default_factory=General)
-    monitoring: Monitoring = Field(default_factory=Monitoring)
     auth: Auth = Field(default_factory=Auth)
     models: List[Model] = Field(min_length=1)
-    databases: List[Database] = Field(min_length=1)
-    web_search: List[WebSearch] = Field(default_factory=list, max_length=1)
+    databases: List[Database] = Field(min_length=2)
     multi_agents_search: Optional[MultiAgentsSearch] = None
     mcp: MCP = Field(default_factory=MCP)
     parser: Optional[Parser] = None
+    web_search: WebSearch = Field(default_factory=WebSearch)  # pre-requisite: vector database and text-generation or image-text-to-text model
+    monitoring: Monitoring = Field(default_factory=Monitoring)
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
@@ -261,7 +295,7 @@ class Config(ConfigBaseModel):
     @model_validator(mode="after")
     def validate_databases(cls, values) -> Any:
         redis_databases = [database for database in values.databases if database.type == DatabaseType.REDIS]
-        assert len(redis_databases) <= 1, "There must be only one redis database."
+        assert len(redis_databases) == 1, "There must be only one redis database."
 
         qdrant_databases = [database for database in values.databases if database.type == DatabaseType.QDRANT]
         assert len(qdrant_databases) <= 1, "There must be only one Qdrant database."
@@ -309,7 +343,7 @@ class Settings(BaseSettings):
 
         values.general = config.general
         values.auth = config.auth
-        values.web_search = config.web_search[0] if config.web_search else None
+        values.web_search = config.web_search
         values.models = config.models
         values.monitoring = config.monitoring
         values.databases = config.databases
@@ -323,7 +357,7 @@ class Settings(BaseSettings):
 
         if values.web_search:
             assert values.databases.qdrant, "Qdrant database is required to use web_search."
-            assert values.web_search.model in [model.id for model in values.models if model.type in [ModelType.TEXT_GENERATION, ModelType.IMAGE_TEXT_TO_TEXT]], f"Web search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
+            assert values.web_search.query_model in [model.id for model in values.models if model.type in [ModelType.TEXT_GENERATION, ModelType.IMAGE_TEXT_TO_TEXT]], f"Web search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
 
         if values.multi_agents_search:
             assert values.databases.qdrant, "Qdrant database is required to use multi-agents search."
