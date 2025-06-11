@@ -82,11 +82,6 @@ def engine(worker_id):
     Base.metadata.drop_all(engine)  # Clean state
     Base.metadata.create_all(engine)
 
-    qdrant_client = QdrantClient(**settings.databases.qdrant.args)
-    collections = qdrant_client.get_collections().collections
-    for collection in collections:
-        qdrant_client.delete_collection(collection_name=collection.name)
-
     yield engine
 
 
@@ -140,15 +135,24 @@ def app_with_test_db(engine, db_session):
 
 @pytest.fixture(scope="session")
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
+    def init_vector_store():
+        """Initialize vector store by deleting all collections"""
+        qdrant_client = QdrantClient(**settings.databases.qdrant.args)
+        collections = qdrant_client.get_collections().collections
+        for collection in collections:
+            qdrant_client.delete_collection(collection_name=collection.name)
+
     # Lifespan requests API to get models and initialize the app
     if VCR_ENABLED:
         with VCR_INSTANCE.use_cassette("lifespan_init.yaml"):
             with TestClient(app=app_with_test_db) as client:
                 client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+                init_vector_store()  # Initialize vector store
                 yield client
     else:
         with TestClient(app=app_with_test_db) as client:
             client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+            init_vector_store()  # Initialize vector store
             yield client
 
 
