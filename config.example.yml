@@ -16,7 +16,7 @@ monitoring:
     enabled: true
 
 mcp:
-  mcp_bridge_url: http://localhost:9000/
+  mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
 
 databases:
   - type: qdrant
@@ -60,6 +60,10 @@ models:
     clients:
       - model: gpt-3.5-turbo
         type: openai
+        params:
+          total: 70
+          active: 70
+          zone: WOR
         args:
           api_url: https://api.openai.com
           api_key: ${OPENAI_API_KEY}

@@ -12,6 +12,7 @@ from app.schemas.auth import LimitType
 from app.utils.settings import settings
 from app.utils.variables import (
     ENDPOINT__CHAT_COMPLETIONS,
+    ENDPOINT__COLLECTIONS,
     ENDPOINT__MODELS,
     ENDPOINT__ROLES,
     ENDPOINT__ROLES_ME,
@@ -324,3 +325,105 @@ class TestAuth:
             json={"model": text_generation_model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 100},
         )
         assert response.status_code == 400, response.text
+
+    def test_token_name_collision(self, client: TestClient, roles: tuple[dict, dict]):
+        """Test that tokens with same name across different users don't interfere with each other"""
+        role_with_permissions, role_without_permissions = roles
+        token_name = f"shared_token_name_{str(uuid4())}"
+
+        # Create first user
+        response = client.post_with_permissions(
+            url=ENDPOINT__USERS,
+            json={"name": f"user1_{str(uuid4())}", "role": role_without_permissions["id"]},
+        )
+        assert response.status_code == 201, response.text
+        user1_id = response.json()["id"]
+
+        # Create token for first user using admin credentials
+        response = client.post_with_permissions(
+            url=ENDPOINT__TOKENS,
+            json={"name": token_name, "user": user1_id},
+        )
+        assert response.status_code == 201, response.text
+        user1_token_id = response.json()["id"]
+        user1_token = response.json()["token"]
+
+        # Get first user's token
+        headers1 = {"Authorization": f"Bearer {user1_token}"}
+        response = client.get(
+            url=f"{ENDPOINT__TOKENS}/{user1_token_id}",
+            headers=headers1,
+        )
+        assert response.status_code == 200, response.text
+        user1_token_data = response.json()
+
+        # Create a collection using first user's token
+        response = client.post(
+            url=f"/v1{ENDPOINT__COLLECTIONS}",
+            headers=headers1,
+            json={"name": f"collection_user1_{str(uuid4())}", "visibility": "private"},
+        )
+        assert response.status_code == 201, response.text
+        collection_id = response.json()["id"]
+
+        # Create second user
+        response = client.post_with_permissions(
+            url=ENDPOINT__USERS,
+            json={"name": f"user2_{str(uuid4())}", "role": role_without_permissions["id"]},
+        )
+        assert response.status_code == 201, response.text
+        user2_id = response.json()["id"]
+
+        # Create token for second user with the same name using admin credentials
+        response = client.post_with_permissions(
+            url=ENDPOINT__TOKENS,
+            json={"name": token_name, "user": user2_id, "expires_at": int((time.time()) + 300)},
+        )
+        assert response.status_code == 201, response.text
+        user2_token_id = response.json()["id"]
+        user2_token = response.json()["token"]
+
+        # Get second user's token
+        headers2 = {"Authorization": f"Bearer {user2_token}"}
+        response = client.get(
+            url=f"{ENDPOINT__TOKENS}/{user2_token_id}",
+            headers=headers2,
+        )
+        assert response.status_code == 200, response.text
+        user2_token_data = response.json()
+
+        # Check that tokens are different for both users
+        assert user1_token_data["token"] != user2_token_data["token"], "Tokens across users should be unique"
+
+        # Do it again to expose collision when creating a token with the same name
+        # Get first user's token again to check it was not affected
+        headers1 = {"Authorization": f"Bearer {user1_token}"}
+        response = client.get(
+            url=f"{ENDPOINT__TOKENS}/{user1_token_id}",
+            headers=headers1,
+        )
+        assert response.status_code == 200, response.text
+        user1_token_data = response.json()
+
+        # Try to access collection created by first user with first user's token
+        response = client.get(
+            url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}",
+            headers=headers1,
+        )
+        assert response.status_code == 200, "Second user should not have access to first user's private collection"
+        # Try to access collection created by first user with second user's token
+        response = client.get(
+            url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}",
+            headers=headers2,
+        )
+        assert response.status_code == 404, "Second user should not have access to first user's private collection"
+
+        # Verify first user can still access their collection
+        response = client.get(
+            url=f"/v1{ENDPOINT__COLLECTIONS}/{collection_id}",
+            headers=headers1,
+        )
+        assert response.status_code == 200, "First user should still have access to their collection"
+
+        # Check that tokens are different for both users
+        assert user1_token_data["token"] != user2_token_data["token"], "Tokens with same name across users should not be modified by each other"
