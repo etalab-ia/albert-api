@@ -143,7 +143,7 @@ docker exec -it albert-api-api-1 pytest app/tests
     CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
     ```
 
-If you want integration tests to use mocked reponse, you need to enable VCR by adding to your .env file:
+If you want integration tests to use mocked responses, you need to enable VCR by adding to your .env file:
 
 ```
 VCR_ENABLED=true

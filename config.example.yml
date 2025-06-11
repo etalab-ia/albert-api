@@ -16,7 +16,7 @@ monitoring:
     enabled: true
 
 mcp:
-  mcp_bridge_url: http://localhost:9000/
+  mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
 
 databases:
   - type: qdrant
