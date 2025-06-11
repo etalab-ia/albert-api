@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
-def setup(client: TestClient):
+def setup(client: TestClient, record_with_vcr):
     # Create a collection
     response = client.post_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}", json={"name": f"test_collection_{uuid4()}"})
     assert response.status_code == 201, response.text

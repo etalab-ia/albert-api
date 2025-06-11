@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 from uuid import uuid4
 
@@ -20,16 +21,20 @@ from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
 from app.utils.exceptions import NotImplementedException
 
+logger = logging.getLogger(__name__)
+
 
 class QdrantClient(AsyncQdrantClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.url = kwargs.get("url")
 
     async def check(self) -> bool:
         try:
             await super().collection_exists("test")
             return True
-        except Exception:
+        except Exception as ex:
+            logger.exception("Qdrant client check failed: %s", ex)
             return False
 
     async def close(self):

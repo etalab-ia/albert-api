@@ -1,0 +1,46 @@
+interactions:
+- request:
+    body: '{"messages":[{"role":"user","content":"Raconte moi une histoire"}],"model":"albert-small","frequency_penalty":0.0,"logit_bias":null,"logprobs":false,"top_logprobs":null,"presence_penalty":0.0,"max_tokens":30,"max_completion_tokens":null,"n":1,"response_format":null,"seed":null,"stop":[],"stream":false,"stream_options":null,"temperature":0.7,"top_p":1,"tools":null,"tool_choice":"none"}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '387'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: "{\"id\":\"chatcmpl-91acd2b1269b44a4b110e9b8e9b4ea09\",\"object\":\"chat.completion\",\"created\":1749204640,\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning_content\":null,\"content\":\"Il
+        \xE9tait une fois, dans un petit village nich\xE9 au coeur d'une for\xEAt
+        enchant\xE9e, il y avait une jeune fille nomm\xE9e\",\"tool_calls\":[]},\"logprobs\":null,\"finish_reason\":\"length\",\"stop_reason\":null}],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":28,\"total_tokens\":34,\"details\":[{\"id\":\"chatcmpl-91acd2b1269b44a4b110e9b8e9b4ea09\",\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"prompt_tokens\":6,\"completion_tokens\":28,\"total_tokens\":34}]},\"prompt_logprobs\":null}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 06 Jun 2025 10:10:41 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '684'
+    status:
+      code: 200
+      message: OK
+version: 1

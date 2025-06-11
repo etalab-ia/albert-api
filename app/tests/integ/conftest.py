@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 import vcr
+import vcr.stubs.httpx_stubs
+from vcr.request import Request as VcrRequest
 
 from app.clients.database import get_vector_store
 from app.main import create_app
@@ -22,9 +24,8 @@ from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 
 
-# Define global VCR instance and cassette
+# Define global VCR instance
 VCR_INSTANCE = None
-VCR_GLOBAL_CASSETTE = None
 VCR_ENABLED = os.environ.get("VCR_ENABLED", "").lower() in ("true", "1", "yes")
 
 
@@ -32,7 +33,7 @@ def pytest_configure(config):
     """Called after command line options have been parsed and all plugins and initial conftest files loaded.
     This is the earliest pytest hook we can use to set up VCR globally.
     """
-    global VCR_INSTANCE, VCR_GLOBAL_CASSETTE
+    global VCR_INSTANCE
 
     # Skip VCR setup if disabled
     if not VCR_ENABLED:
@@ -42,18 +43,28 @@ def pytest_configure(config):
     cassette_library_dir = Path(__file__).parent / "cassettes"
     os.makedirs(cassette_library_dir, exist_ok=True)
 
+    # Patch VCR to handle binary requests
+    def _make_vcr_request(httpx_request, **kwargs):
+        body_bytes = httpx_request.read()
+        try:
+            body = body_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            body = body_bytes
+        uri = str(httpx_request.url)
+        headers = dict(httpx_request.headers)
+        return VcrRequest(httpx_request.method, uri, body, headers)
+
+    vcr.stubs.httpx_stubs._make_vcr_request = _make_vcr_request
+    ignore_hosts = ["testserver", os.environ.get("MCP_BRIDGE_HOST"), os.environ.get("QDRANT_HOST")]
+
     VCR_INSTANCE = vcr.VCR(
         cassette_library_dir=str(cassette_library_dir),
         record_mode="once",
         match_on=["method", "scheme", "host", "port", "path", "query"],
         filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
-        before_record_request=lambda request: None if request.host == "testserver" else request,
+        before_record_request=lambda request: None if request.host in ignore_hosts else request,
         decode_compressed_response=True,
     )
-
-    # Store the cassette object so we can properly close it later
-    VCR_GLOBAL_CASSETTE = VCR_INSTANCE.use_cassette("global_setup_cassette.yaml")
-    VCR_GLOBAL_CASSETTE.__enter__()
 
 
 @pytest.fixture(scope="session")
@@ -125,36 +136,50 @@ async def async_db_session(async_engine):
 def app_with_test_db(engine, db_session):
     """Create FastAPI app with test database"""
 
-    global VCR_GLOBAL_CASSETTE, VCR_INSTANCE
-
     def get_test_db():
         yield db_session
 
     # Create app with test config
     app = create_app(db_func=get_test_db)
-
-    # Exit the global cassette, requests done by app initialization
-    # are recorded in the global cassette
-    if VCR_ENABLED and VCR_GLOBAL_CASSETTE is not None:
-        VCR_GLOBAL_CASSETTE.__exit__(None, None, None)
-
     return app
 
 
 @pytest.fixture(scope="session")
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
-    with TestClient(app=app_with_test_db) as client:
-        client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
-        yield client
+    # Lifespan requests API to get models and initialize the app
+    if VCR_ENABLED:
+        with VCR_INSTANCE.use_cassette("lifespan_init.yaml"):
+            with TestClient(app=app_with_test_db) as client:
+                client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+                yield client
+    else:
+        with TestClient(app=app_with_test_db) as client:
+            client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+            yield client
 
 
+@pytest.fixture(scope="module")
+def record_with_vcr(request):
+    """Use VCR for module-level fixtures"""
+    if not VCR_ENABLED:
+        yield
+        return
+
+    module_name = request.module.__name__
+    cassette_path = f"{module_name}_module_setup"
+
+    with VCR_INSTANCE.use_cassette(cassette_path + ".yaml"):
+        yield
+
+
+# Keep the existing per-test fixture
 @pytest.fixture(autouse=True)
 def vcr_cassette(request):
     """Use VCR for specific tests, with per-test cassettes"""
     # Skip if VCR is disabled via environment variable
     if not VCR_ENABLED:
         yield
-        return  # Use a test-specific cassette
+        return
 
     test_name = request.node.name.replace("[", "_").replace("]", "_")
     cassette_path = f"{request.module.__name__}.{test_name}"

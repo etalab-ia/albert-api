@@ -1,0 +1,71 @@
+interactions:
+- request:
+    body: "{\"messages\":[{\"role\":\"user\",\"content\":\"Donne moi la m\xE9t\xE9o
+      \xE0 Miami\"}],\"model\":\"albert-large\",\"frequency_penalty\":0.0,\"logit_bias\":null,\"logprobs\":false,\"top_logprobs\":null,\"presence_penalty\":0.0,\"max_tokens\":1000,\"max_completion_tokens\":null,\"n\":1,\"response_format\":null,\"seed\":null,\"stop\":[],\"stream\":false,\"stream_options\":null,\"temperature\":0.7,\"top_p\":1,\"tools\":[],\"tool_choice\":\"auto\",\"search\":false,\"search_args\":null}"
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '426'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: '{"id":"chatcmpl-9361ad51d8f04a46a6bb83ea54d2f25c","choices":[{"finish_reason":"tool_calls","index":0,"logprobs":null,"message":{"content":"Salut,
+        je suis albert-API","refusal":null,"role":"assistant","audio":null,"function_call":null,"tool_calls":[{"id":"CIn3wUdeC","function":{"arguments":"{\"latitude\":
+        25.79, \"longitude\": -80.13}","name":"get_forecast"},"type":"function"}],"reasoning_content":null},"stop_reason":null}],"created":1747410275,"model":"mistralai/Mistral-Small-3.1-24B-Instruct-2503","object":"chat.completion","service_tier":null,"system_fingerprint":null,"usage":{"completion_tokens":36,"prompt_tokens":241,"total_tokens":277,"completion_tokens_details":null,"prompt_tokens_details":null},"search_results":[],"prompt_logprobs":null}'
+    headers:
+      Content-Length:
+      - '754'
+      Content-Type:
+      - application/json
+    status:
+      code: 200
+      message: OK
+- request:
+    body: "{\"messages\":[{\"role\":\"user\",\"content\":\"Donne moi la m\xE9t\xE9o
+      \xE0 Miami\"},{\"role\":\"user\",\"content\":\"tool call response\"}],\"model\":\"albert-large\",\"frequency_penalty\":0.0,\"logit_bias\":null,\"logprobs\":false,\"top_logprobs\":null,\"presence_penalty\":0.0,\"max_tokens\":1000,\"max_completion_tokens\":null,\"n\":1,\"response_format\":null,\"seed\":null,\"stop\":[],\"stream\":false,\"stream_options\":null,\"temperature\":0.7,\"top_p\":1,\"tools\":[],\"tool_choice\":\"auto\",\"search\":false,\"search_args\":null}"
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '473'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: "{\"id\":\"chatcmpl-9361ad51d8f04a46a6bb83ea54d2f25c\",\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"Message
+        apr\xE8s tool call\",\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[],\"reasoning_content\":null},\"stop_reason\":null}],\"created\":1747410275,\"model\":\"mistralai/Mistral-Small-3.1-24B-Instruct-2503\",\"object\":\"chat.completion\",\"service_tier\":null,\"system_fingerprint\":null,\"usage\":{\"completion_tokens\":36,\"prompt_tokens\":241,\"total_tokens\":277,\"completion_tokens_details\":null,\"prompt_tokens_details\":null},\"search_results\":[],\"prompt_logprobs\":null}"
+    headers:
+      Content-Length:
+      - '617'
+      Content-Type:
+      - application/json
+    status:
+      code: 200
+      message: OK
+version: 1

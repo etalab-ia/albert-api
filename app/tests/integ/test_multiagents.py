@@ -8,8 +8,8 @@ from app.utils.variables import ENDPOINT__FILES, ENDPOINT__SEARCH, ENDPOINT__COL
 from unittest.mock import patch
 
 
-@pytest.fixture(scope="session")
-def collection_id(client: TestClient):
+@pytest.fixture(scope="module")
+def collection_id(client: TestClient, record_with_vcr):
     """
     Create a private collection for the test and return its ID.
     """
