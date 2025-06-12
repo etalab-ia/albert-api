@@ -5,9 +5,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from app.helpers.agents import AgentsManager
+from app.schemas.mcp import MCPTool
 
 
-class TestMcpBody(SimpleNamespace):
+class TestMCPBody(SimpleNamespace):
     def model_dump(self):
         return self.__dict__
 
@@ -35,19 +36,15 @@ class TestMCPLoop:
         @pytest.mark.asyncio
         async def test_get_tools_from_bridge_returns_flat_tool_list(self, mcp_client, mock_mcp_bridge):
             # GIVEN
-            mock_mcp_bridge.get_tool_list.return_value = {
-                "mcp_server_1": {
-                    "tools": [
-                        {"name": "tool 1", "description": "First tool description", "inputSchema": {}},
-                        {"name": "tool 1", "description": "Second tool description", "inputSchema": {}},
-                    ]
-                },
-                "mcp_server_2": {"tools": [{"name": "tool 3", "description": "Third tool description", "inputSchema": {}}]},
-            }
+            mock_mcp_bridge.get_tool_list.return_value = [
+                MCPTool(name="tool 1", description="First tool description", inputSchema={}),
+                MCPTool(name="tool 1", description="Second tool description", inputSchema={}),
+                MCPTool(name="tool 3", description="Third tool description", inputSchema={}),
+            ]
             expected_tools = [
-                {"name": "tool 1", "description": "First tool description", "inputSchema": {}},
-                {"name": "tool 1", "description": "Second tool description", "inputSchema": {}},
-                {"name": "tool 3", "description": "Third tool description", "inputSchema": {}},
+                MCPTool(name="tool 1", description="First tool description", inputSchema={}),
+                MCPTool(name="tool 1", description="Second tool description", inputSchema={}),
+                MCPTool(name="tool 3", description="Third tool description", inputSchema={}),
             ]
             # WHEN
             actual_tools = await mcp_client.get_tools_from_bridge()
@@ -55,13 +52,8 @@ class TestMCPLoop:
             assert actual_tools == expected_tools
 
         @pytest.mark.asyncio
-        async def test_get_tools_from_bridge_with_empty_tools_returns_empty_list(self, mcp_client, mock_mcp_bridge):
-            mock_mcp_bridge.get_tool_list.return_value = {"section1": {"tools": []}, "section2": {"tools": []}}
-            assert await mcp_client.get_tools_from_bridge() == []
-
-        @pytest.mark.asyncio
         async def test_get_tools_from_bridge_with_no_sections_returns_empty_list(self, mcp_client, mock_mcp_bridge):
-            mock_mcp_bridge.get_tool_list.return_value = {}
+            mock_mcp_bridge.get_tool_list.return_value = []
             assert await mcp_client.get_tools_from_bridge() == []
 
     class TestGetCompletion:
@@ -89,15 +81,11 @@ class TestMCPLoop:
             self, mcp_client, mock_mcp_bridge, mock_llm_client
         ):
             # GIVEN
-            mock_mcp_bridge.get_tool_list.return_value = {
-                "mcp_server_1": {
-                    "tools": [
-                        {"name": "tool 1", "description": "First tool description", "inputSchema": {}},
-                        {"name": "tool 2", "description": "Second tool description", "inputSchema": {}},
-                        {"name": "tool 3", "description": "Third tool description", "inputSchema": {}},
-                    ]
-                },
-            }
+            mock_mcp_bridge.get_tool_list.return_value = [
+                MCPTool(name="tool 1", description="First tool description", inputSchema={}),
+                MCPTool(name="tool 2", description="Second tool description", inputSchema={}),
+                MCPTool(name="tool 3", description="Third tool description", inputSchema={}),
+            ]
             message_from_llm_after_tool_call = "message from llm"
 
             mock_llm_client.forward_request.side_effect = [
@@ -113,7 +101,7 @@ class TestMCPLoop:
             ]
             number_of_rounds = 2
             mock_mcp_bridge.call_tool.return_value = {"content": [{"text": "tool call result"}]}
-            body = TestMcpBody(
+            body = TestMCPBody(
                 messages=[{"content": "Je veux que tu fasses une action", "role": "user"}],
                 model="albert-large",
                 tools=[{"type": "tool 1"}, {"type": "tool 2"}],
@@ -145,15 +133,11 @@ class TestMCPLoop:
             self, mcp_client, mock_mcp_bridge, mock_llm_client
         ):
             # GIVEN
-            mock_mcp_bridge.get_tool_list.return_value = {
-                "mcp_server_1": {
-                    "tools": [
-                        {"name": "tool 1", "description": "First tool description", "inputSchema": {}},
-                        {"name": "tool 2", "description": "Second tool description", "inputSchema": {}},
-                        {"name": "tool 3", "description": "Third tool description", "inputSchema": {}},
-                    ]
-                },
-            }
+            mock_mcp_bridge.get_tool_list.return_value = [
+                MCPTool(name="tool 1", description="First tool description", inputSchema={}),
+                MCPTool(name="tool 2", description="Second tool description", inputSchema={}),
+                MCPTool(name="tool 3", description="Third tool description", inputSchema={}),
+            ]
             message_from_llm_after_tool_call = "message from llm"
 
             mock_llm_client.forward_request.side_effect = [
@@ -169,7 +153,7 @@ class TestMCPLoop:
             ]
             number_of_rounds = 2
             mock_mcp_bridge.call_tool.return_value = {"content": [{"text": "tool call result"}]}
-            body = TestMcpBody(
+            body = TestMCPBody(
                 messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large", tools=[{"type": "all"}]
             )
 
@@ -198,9 +182,7 @@ class TestMCPLoop:
         @pytest.mark.asyncio
         async def test_get_completion_should_not_use_any_tools_if_none_is_specified(self, mcp_client, mock_mcp_bridge, mock_llm_client):
             # GIVEN
-            mock_mcp_bridge.get_tool_list.return_value = {
-                "mcp_server_1": {"tools": [{"name": "tool 1", "description": "First tool description", "inputSchema": {}}]},
-            }
+            mock_mcp_bridge.get_tool_list.return_value = [MCPTool(name="tool 1", description="First tool description", inputSchema={})]
             message_from_llm = "message from llm without tool call"
 
             mock_llm_client.forward_request.side_effect = [
@@ -212,7 +194,7 @@ class TestMCPLoop:
                 ),
             ]
             number_of_rounds = 1
-            body = TestMcpBody(messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large")
+            body = TestMCPBody(messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large")
 
             # WHEN
             actual_message = await mcp_client.get_completion(body)
@@ -231,15 +213,11 @@ class TestMCPLoop:
         async def test_get_completion_should_use_tool_choice_when_specified_in_body(self, mcp_client, mock_mcp_bridge, mock_llm_client):
             # GIVEN
             agents_choice = "always"
-            mock_mcp_bridge.get_tool_list.return_value = {
-                "mcp_server_1": {
-                    "tools": [
-                        {"name": "tool 1", "description": "First tool description", "inputSchema": {}},
-                        {"name": "tool 2", "description": "Second tool description", "inputSchema": {}},
-                        {"name": "tool 3", "description": "Third tool description", "inputSchema": {}},
-                    ]
-                },
-            }
+            mock_mcp_bridge.get_tool_list.return_value = [
+                MCPTool(name="tool 1", description="First tool description", inputSchema={}),
+                MCPTool(name="tool 2", description="Second tool description", inputSchema={}),
+                MCPTool(name="tool 3", description="Third tool description", inputSchema={}),
+            ]
             message_from_llm_after_tool_call = "message from llm"
 
             mock_llm_client.forward_request.side_effect = [
@@ -255,7 +233,7 @@ class TestMCPLoop:
             ]
             number_of_rounds = 2
             mock_mcp_bridge.call_tool.return_value = {"content": [{"text": "tool call result"}]}
-            body = TestMcpBody(
+            body = TestMCPBody(
                 messages=[{"content": "Je veux que tu fasses une action", "role": "user"}],
                 model="albert-large",
                 tools=[{"type": "tool 1"}],
