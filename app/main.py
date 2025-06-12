@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 if settings.monitoring.sentry is not None and settings.monitoring.sentry.enabled:
     logger.info("Initializing Sentry SDK.")
-    sentry_sdk.init(**settings.monitoring.sentry.model_dump())
+    sentry_sdk.init(**settings.monitoring.sentry.args.model_dump())
 
 
 def create_app(*args, **kwargs) -> FastAPI:
