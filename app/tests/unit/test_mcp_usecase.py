@@ -114,7 +114,9 @@ class TestMCPLoop:
             number_of_rounds = 2
             mock_mcp_bridge.call_tool.return_value = {"content": [{"text": "tool call result"}]}
             body = TestMcpBody(
-                messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large", tools=["tool 1", "tool 2"]
+                messages=[{"content": "Je veux que tu fasses une action", "role": "user"}],
+                model="albert-large",
+                tools=[{"type": "tool 1"}, {"type": "tool 2"}],
             )
 
             # WHEN
@@ -167,7 +169,9 @@ class TestMCPLoop:
             ]
             number_of_rounds = 2
             mock_mcp_bridge.call_tool.return_value = {"content": [{"text": "tool call result"}]}
-            body = TestMcpBody(messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large", tools=["all"])
+            body = TestMcpBody(
+                messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large", tools=[{"type": "all"}]
+            )
 
             # WHEN
             actual_message = await mcp_client.get_completion(body)
@@ -254,7 +258,7 @@ class TestMCPLoop:
             body = TestMcpBody(
                 messages=[{"content": "Je veux que tu fasses une action", "role": "user"}],
                 model="albert-large",
-                tools=["tool 1"],
+                tools=[{"type": "tool 1"}],
                 tool_choice=agents_choice,
             )
 
