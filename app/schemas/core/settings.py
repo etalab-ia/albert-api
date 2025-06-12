@@ -279,7 +279,7 @@ class Config(ConfigBaseModel):
     multi_agents_search: Optional[MultiAgentsSearch] = None
     mcp: MCP = Field(default_factory=MCP)
     parser: Optional[Parser] = None
-    web_search: WebSearch = Field(default_factory=WebSearch)  # pre-requisite: vector database and text-generation or image-text-to-text model
+    web_search: Optional[WebSearch] = Field(default=None, description="Web search feature. Pre-requisite: vector database and text-generation or image-text-to-text model.")  # fmt: off
     monitoring: Monitoring = Field(default_factory=Monitoring)
 
     @model_validator(mode="after")
