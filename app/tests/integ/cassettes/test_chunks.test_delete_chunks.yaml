@@ -1,0 +1,60 @@
+interactions:
+- request:
+    body: '{"query":{"match":{"metadata.document_id":5}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/3/_delete_by_query
+  response:
+    body:
+      string: '{"took":38,"timed_out":false,"total":1,"deleted":1,"batches":1,"version_conflicts":0,"noops":0,"retries":{"bulk":0,"search":0},"throttled_millis":0,"requests_per_second":-1.0,"throttled_until_millis":0,"failures":[]}'
+    headers:
+      Content-Length:
+      - '216'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/3/_refresh
+  response:
+    body:
+      string: '{"_shards":{"total":2,"successful":1,"failed":0}}'
+    headers:
+      Content-Length:
+      - '49'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+version: 1

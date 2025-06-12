@@ -1,0 +1,452 @@
+interactions:
+- request:
+    body: '{"query":{"match":{"metadata.document_id":1}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/1/_count
+  response:
+    body:
+      string: '{"count":1,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":2}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/1/_count
+  response:
+    body:
+      string: '{"count":0,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":3}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/1/_count
+  response:
+    body:
+      string: '{"count":2,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":4}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/1/_count
+  response:
+    body:
+      string: '{"count":1,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":6}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/3/_count
+  response:
+    body:
+      string: '{"count":0,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":7}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/3/_count
+  response:
+    body:
+      string: '{"count":1,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":8}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/3/_count
+  response:
+    body:
+      string: '{"count":0,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":9}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/17/_count
+  response:
+    body:
+      string: '{"count":1,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":10}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/17/_count
+  response:
+    body:
+      string: '{"count":0,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":11}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/17/_count
+  response:
+    body:
+      string: '{"count":1,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":9}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/17/_count
+  response:
+    body:
+      string: '{"count":1,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":10}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/17/_count
+  response:
+    body:
+      string: '{"count":0,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":11}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/17/_count
+  response:
+    body:
+      string: '{"count":1,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":12}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/17/_count
+  response:
+    body:
+      string: '{"count":0,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":{"match":{"metadata.document_id":12}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/17/_count
+  response:
+    body:
+      string: '{"count":0,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}'
+    headers:
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+version: 1
