@@ -1,13 +1,16 @@
 import json
 import logging
 import os
+import time
 from uuid import uuid4
 
+from coredis import ConnectionPool, Redis
 from fastapi.testclient import TestClient
 import pytest
 
 from app.helpers._usagetokenizer import UsageTokenizer
 
+from app.clients.model import BaseModelClient
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk
 from app.schemas.models import ModelType
 from app.utils.settings import settings
@@ -57,19 +60,60 @@ def tokenizer():
 
 @pytest.mark.usefixtures("client", "setup", "tokenizer")
 class TestChat:
-    def test_chat_completions_unstreamed_response(self, client: TestClient, setup):
+    @pytest.mark.asyncio
+    async def test_chat_completions_unstreamed_response(self, client: TestClient, setup):
         """Test the POST /chat/completions unstreamed response."""
         MODEL_ID, DOCUMENT_IDS, COLLECTION_ID = setup
+
+        redis_connection_pool = ConnectionPool(**settings.databases.redis.args)
+        await BaseModelClient.setup_metrics_storage(connection_pool=redis_connection_pool, model=MODEL_ID, api_url="https://albert.api.etalab.gouv.fr/")
+        redis_time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{MODEL_ID}:https://albert.api.etalab.gouv.fr/"
+        redis_latency_ts_key = f"metrics_ts:latency:{MODEL_ID}:https://albert.api.etalab.gouv.fr/"
+        redis_client = Redis(connection_pool=redis_connection_pool)
+
+        latency_samples_count_before = {
+            k.decode(): v for k, v in (await redis_client.timeseries.info(redis_latency_ts_key)).items()
+        }["totalSamples"]
+        time_to_first_token_samples_count_before = {
+            k.decode(): v for k, v in (await redis_client.timeseries.info(redis_time_to_first_token_ts_key)).items()
+        }["totalSamples"]
+
         params = {"model": MODEL_ID, "messages": [{"role": "user", "content": "Hello, how are you?"}], "stream": False, "n": 1, "max_tokens": 10}
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}", json=params)
         assert response.status_code == 200, response.text
 
         ChatCompletion(**response.json())  # test output format
 
-    def test_chat_completions_streamed_response(self, client: TestClient, setup):
+        time.sleep(1) # Wait for metrics to be indeed logged in redis (async task)
+        latency_samples_count_after = {
+            k.decode(): v for k, v in (await redis_client.timeseries.info(redis_latency_ts_key)).items()
+        }["totalSamples"]
+        time_to_first_token_samples_count_after = {
+            k.decode(): v for k, v in (await redis_client.timeseries.info(redis_time_to_first_token_ts_key)).items()
+        }["totalSamples"]
+
+        assert latency_samples_count_after == latency_samples_count_before + 1, "Latency was not updated in redis"
+        assert time_to_first_token_samples_count_after == time_to_first_token_samples_count_before, "Time to first token count in redis TS not consistent"
+
+    @pytest.mark.asyncio
+    async def test_chat_completions_streamed_response(self, client: TestClient, setup):
         """Test the POST /chat/completions streamed response."""
         MODEL_ID, DOCUMENT_IDS, COLLECTION_ID = setup
         params = {"model": MODEL_ID, "messages": [{"role": "user", "content": "Hello, how are you?"}], "stream": True, "n": 1, "max_tokens": 10}
+
+        redis_connection_pool = ConnectionPool(**settings.databases.redis.args)
+        await BaseModelClient.setup_metrics_storage(connection_pool=redis_connection_pool, model=MODEL_ID, api_url="https://albert.api.etalab.gouv.fr/")
+        redis_time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{MODEL_ID}:https://albert.api.etalab.gouv.fr/"
+        redis_latency_ts_key = f"metrics_ts:latency:{MODEL_ID}:https://albert.api.etalab.gouv.fr/"
+        redis_client = Redis(connection_pool=redis_connection_pool)
+
+        latency_samples_count_before = {
+            k.decode(): v for k, v in (await redis_client.timeseries.info(redis_latency_ts_key)).items()
+        }["totalSamples"]
+        time_to_first_token_samples_count_before = {
+            k.decode(): v for k, v in (await redis_client.timeseries.info(redis_time_to_first_token_ts_key)).items()
+        }["totalSamples"]
+
         response = client.post_without_permissions(url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}", json=params)
         assert response.status_code == 200, response.text
 
@@ -80,6 +124,19 @@ class TestChat:
                     break
                 chunk = json.loads(chunk)
                 ChatCompletionChunk(**chunk)  # test output format
+
+        time.sleep(1) # Wait for metrics to be indeed logged in redis (async task)
+        latency_samples_count_after = {
+            k.decode(): v for k, v in (await redis_client.timeseries.info(redis_latency_ts_key)).items()
+        }["totalSamples"]
+        time_to_first_token_samples_count_after = {
+            k.decode(): v for k, v in (await redis_client.timeseries.info(redis_time_to_first_token_ts_key)).items()
+        }["totalSamples"]
+
+        assert latency_samples_count_after == latency_samples_count_before + 1,\
+            "Latency was not updated in redis"
+        assert time_to_first_token_samples_count_after == time_to_first_token_samples_count_before + 1,\
+            "Time to first token was not updated in redis"
 
     def test_chat_completions_unknown_params(self, client: TestClient, setup):
         """Test the POST /chat/completions unknown params."""
