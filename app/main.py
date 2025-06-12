@@ -121,7 +121,7 @@ def create_app(*args, **kwargs) -> FastAPI:
 
     if ROUTER__MCP not in settings.general.disabled_routers:
         add_hooks(router=mcp.router)
-        app.include_router(router=mcp.router, tags=[ROUTER__MCP.title()], prefix="/v1")
+        app.include_router(router=mcp.router, tags=[ROUTER__MCP.upper()], prefix="/v1")
 
     if ROUTER__OCR not in settings.general.disabled_routers:
         add_hooks(router=ocr.router)

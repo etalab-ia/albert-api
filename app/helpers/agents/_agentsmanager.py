@@ -11,7 +11,7 @@ class AgentsManager:
         self.model_registry = model_registry
         self.mcp_bridge = mcp_bridge
 
-    async def get_completion(self, body):
+    async def get_completion(self, body: dict):
         body = await self.set_tools_for_llm_request(body)
         http_llm_response = None
         number_of_iterations = 0
@@ -53,11 +53,13 @@ class AgentsManager:
                 {"type": "function", "function": {"name": tool["name"], "description": tool["description"], "parameters": tool["inputSchema"]}}
                 for tool in tools
             ]
-            if "all" in body.tools:
+            requested_tools = [tool.get("type") for tool in body.tools if tool.get("type") != "function" and tool.get("type") is not None]
+            if "all" in requested_tools:
                 body.tools = available_tools
             else:
+                # TODO: handle error if tool is not available
                 available_tool_names = [tool["function"]["name"] for tool in available_tools]
-                selected_available_tool_names = list(set(body.tools) & set(available_tool_names))
+                selected_available_tool_names = list(set(requested_tools) & set(available_tool_names))
                 used_tools = [
                     available_tool
                     for available_tool in available_tools

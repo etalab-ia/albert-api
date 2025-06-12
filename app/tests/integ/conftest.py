@@ -58,7 +58,7 @@ def pytest_configure(config):
 
     VCR_INSTANCE = vcr.VCR(
         cassette_library_dir=str(cassette_library_dir),
-        record_mode="new_episodes",
+        record_mode="once",
         match_on=["method", "scheme", "host", "port", "path", "query"],
         filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
         before_record_request=lambda request: None if request.host in ignore_hosts else request,
