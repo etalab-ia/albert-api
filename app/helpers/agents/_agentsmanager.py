@@ -6,6 +6,7 @@ import httpx
 from app.clients.mcp import SecretShellMCPBridgeClient
 from app.helpers.models import ModelRegistry
 from app.schemas.mcp import MCPTool
+from app.utils.exceptions import ToolNotFoundException
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 
@@ -54,25 +55,36 @@ class AgentsManager:
     async def set_tools_for_llm_request(self, body: dict) -> dict:
         if hasattr(body, "tools") and body.tools is not None:
             tools = await self.get_tools_from_bridge()
+            available_tools = [{"type": "function", "function": {"name": tool.name, "description": tool.description, "parameters": tool.input_schema}} for tool in tools]  # fmt:off
 
-            available_tools = [
-                {"type": "function", "function": {"name": tool.name, "description": tool.description, "parameters": tool.inputSchema}}
-                for tool in tools
-            ]
-            requested_tools = [tool.get("type") for tool in body.tools if tool.get("type") != "function" and tool.get("type") is not None]
-            if "all" in requested_tools:
-                body.tools = available_tools
-            else:
-                # TODO: handle error if tool is not available
-                available_tool_names = [tool["function"]["name"] for tool in available_tools]
-                selected_available_tool_names = list(set(requested_tools) & set(available_tool_names))
-                used_tools = [
-                    available_tool
-                    for available_tool in available_tools
-                    if available_tool.get("function").get("name") in selected_available_tool_names
-                ]
-                body.tools = used_tools
+            requested_tools: List[dict] = []
+            for tool in body.tools:
+                if tool.get("type") is None:
+                    continue
+                elif tool.get("type") == "function":
+                    continue
+                # all tools requested
+                elif tool.get("type") == "all":
+                    requested_tools = available_tools
+                    break
+                else:
+                    # specific tool requested
+                    tool_found = False
+
+                    # check if tool is available
+                    for available_tool in available_tools:
+                        if tool.get("type") == available_tool.get("function").get("name"):
+                            tool = available_tool
+                            tool_found = True
+                            break
+
+                    if not tool_found:
+                        raise ToolNotFoundException(f"Tool not found {tool.get("type")}")
+
+                    requested_tools.append(tool)
+
             body.tool_choice = getattr(body, "tool_choice", "auto")
+            body.tools = requested_tools
 
         return body
 

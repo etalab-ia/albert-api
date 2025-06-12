@@ -23,14 +23,15 @@ class SecretShellMCPBridgeClient:
 
         response_json = response.json()
         data = []
-        for section in response_json.keys():
-            tools = response_json[section]["tools"]
+        for mcp_server in response_json.keys():
+            tools = response_json[mcp_server]["tools"]
             for tool in tools:
                 data.append(
                     MCPTool(
+                        server=mcp_server,
                         name=tool["name"],
                         description=tool.get("description", ""),
-                        inputSchema=tool.get("inputSchema", {}),
+                        input_schema=tool.get("inputSchema", {}),
                         annotations=tool.get("annotations", None),
                     )
                 )

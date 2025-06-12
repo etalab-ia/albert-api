@@ -59,9 +59,11 @@ class MCPChatCompletion(ChatCompletion):
 
 
 class MCPTool(BaseModel):
+    object: Literal["tool"] = "tool"
+    server: str
     name: str
     description: str
-    inputSchema: Dict[str, Any]
+    input_schema: Dict[str, Any]
     annotations: Optional[Dict[str, Any]] = None
 
 
