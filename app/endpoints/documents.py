@@ -74,7 +74,7 @@ async def create_document(
 
     length_function = len if length_function == "len" else length_function
 
-    document = await global_context.parser.parse_file(
+    document = await global_context.documents.parse_file(
         file=file,
         collection=collection,
         paginate_output=paginate_output,

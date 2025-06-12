@@ -34,7 +34,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
             if not global_context.documents:
                 raise CollectionNotFoundException()
 
-            results = await global_context.documents.search(
+            results = await global_context.documents.search_chunks(
                 session=session,
                 collection_ids=body.search_args.collections,
                 prompt=body.messages[-1]["content"],

@@ -21,7 +21,7 @@ async def search(request: Request, body: SearchRequest, session: AsyncSession = 
     if not global_context.documents:  # no vector store available
         raise CollectionNotFoundException()
 
-    data = await global_context.documents.search(
+    data = await global_context.documents.search_chunks(
         session=session,
         collection_ids=body.collections,
         prompt=body.prompt,

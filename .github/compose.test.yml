@@ -60,7 +60,7 @@ services:
       file: ../compose.yml
       service: mcp-bridge
     ports: !override
-      - "9875:8000"
+      - 9875:8000
 
 volumes:
   postgres:

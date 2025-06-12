@@ -58,7 +58,7 @@ def pytest_configure(config):
 
     VCR_INSTANCE = vcr.VCR(
         cassette_library_dir=str(cassette_library_dir),
-        record_mode="once",
+        record_mode="new_episodes",
         match_on=["method", "scheme", "host", "port", "path", "query"],
         filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
         before_record_request=lambda request: None if request.host in ignore_hosts else request,
@@ -199,6 +199,11 @@ def roles(test_client: TestClient) -> tuple[dict, dict]:
         limits.append({"model": model, "type": LimitType.RPD.value, "value": None})
         limits.append({"model": model, "type": LimitType.TPM.value, "value": None})
         limits.append({"model": model, "type": LimitType.TPD.value, "value": None})
+
+    limits.append({"model": "web-search", "type": LimitType.RPM.value, "value": None})
+    limits.append({"model": "web-search", "type": LimitType.RPD.value, "value": None})
+    limits.append({"model": "web-search", "type": LimitType.TPM.value, "value": None})
+    limits.append({"model": "web-search", "type": LimitType.TPD.value, "value": None})
 
     # create role admin
     response = test_client.post(

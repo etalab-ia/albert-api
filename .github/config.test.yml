@@ -13,38 +13,43 @@ monitoring:
     enabled: true
 
 web_search:
-  - type: brave
-    model: albert-small
+  query_model: albert-small
+  limited_domains:
+      - service-public.fr
+      - gouv.fr
+      - caf.fr
+      - info-retraite.fr
+      - ameli.fr
+      - elysee.fr
+      - wikipedia.org
+      - autoritedelaconcurrence.fr
+      - assemblee-nationale.fr
+      - elysee.fr
+      - conseil-etat.fr
+      - departements.fr
+      - courdecassation.fr
+      - lcp.fr
+      - senat.fr
+      - gouvernement.fr
+      - vie-publique.fr
+      - elections-legislatives.fr
+      - ccomptes.fr
+      - conseil-constitutionnel.fr
+      - ladocumentationfrancaise.fr
+      - franceinfo.fr
+      - lefigaro.fr
+      - ouest-france.fr
+      - lemonde.fr
+      - leparisien.fr
+      - refugies.info
+      - stackoverflow.com
+  user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3
+  client:
+    type: brave
     args:
       api_key: ${BRAVE_API_KEY}
-    limited_domains:
-        - service-public.fr
-        - gouv.fr
-        - caf.fr
-        - info-retraite.fr
-        - ameli.fr
-        - elysee.fr
-        - wikipedia.org
-        - autoritedelaconcurrence.fr
-        - assemblee-nationale.fr
-        - elysee.fr
-        - conseil-etat.fr
-        - departements.fr
-        - courdecassation.fr
-        - lcp.fr
-        - senat.fr
-        - gouvernement.fr
-        - vie-publique.fr
-        - elections-legislatives.fr
-        - ccomptes.fr
-        - conseil-constitutionnel.fr
-        - ladocumentationfrancaise.fr
-        - franceinfo.fr
-        - lefigaro.fr
-        - ouest-france.fr
-        - lemonde.fr
-        - leparisien.fr
-        - refugies.info
+      timeout: 30
+
 
 multi_agents_search:
   model: albert-small

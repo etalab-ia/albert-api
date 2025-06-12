@@ -2,6 +2,7 @@ from enum import Enum
 from typing import List, Literal, Optional
 
 from fastapi import Form
+from langchain_text_splitters import Language
 from pydantic import Field
 
 from app.schemas import BaseModel
@@ -21,6 +22,7 @@ IsSeparatorRegexForm: bool = Form(default=False, description="Whether the separa
 SeparatorsForm: List[str] = Form(default=["\n\n", "\n", ". ", " "], description="The separators to use for the file upload.")  # fmt: off
 ChunkMinSizeForm: int = Form(default=0, description="The minimum size of the chunks to use for the file upload.")  # fmt: off
 MetadataForm: str = Form(default="", description="Additional metadata to chunks, JSON string.", pattern=r"^[^{}]*$")  # fmt: off
+LanguageForm: Optional[Language] = Form(default=None, description="The language to configure the text splitter for.")  # fmt: off
 
 
 class Document(BaseModel):

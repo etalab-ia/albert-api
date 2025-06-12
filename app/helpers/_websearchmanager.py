@@ -1,16 +1,15 @@
 from io import BytesIO
 import logging
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlparse
 
 from fastapi import UploadFile
 import requests
+from starlette.datastructures import Headers
 
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.helpers.models.routers import ModelRouter
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
-
-from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +32,13 @@ Exemples :
 Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 
-    def __init__(self, web_search: WebSearchClient, model: ModelRouter) -> None:
+    def __init__(
+        self, web_search: WebSearchClient, model: ModelRouter, limited_domains: Optional[List[str]] = None, user_agent: Optional[str] = None
+    ) -> None:
         self.web_search = web_search
         self.model = model
-        self.limited_domains = settings.web_search.limited_domains if settings.web_search else None
-        self.user_agent = settings.web_search.user_agent if settings.web_search else None
+        self.limited_domains = [] if limited_domains is None else limited_domains
+        self.user_agent = user_agent
 
     async def get_web_query(self, prompt: str) -> str:
         prompt = self.GET_WEB_QUERY_PROMPT.format(prompt=prompt)
@@ -50,8 +51,8 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
 
         return query
 
-    async def get_results(self, query: str, n: int = 3) -> List[UploadFile]:
-        urls = await self.web_search.search(query=query, n=n)
+    async def get_results(self, query: str, k: int) -> List[UploadFile]:
+        urls = await self.web_search.search(query=query, k=k)
         results = []
         for url in urls:
             # Parse the URL and extract the hostname
@@ -79,7 +80,7 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
                 continue
 
             file = BytesIO(response.text.encode("utf-8"))
-            file = UploadFile(filename=f"{url}.html", file=file)
+            file = UploadFile(filename=f"{url}.html", file=file, headers=Headers({"content-type": "text/html"}))
             results.append(file)
 
         return results
