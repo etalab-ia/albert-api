@@ -9,6 +9,7 @@ from app.schemas.search import Search, SearchMethod
 class ElasticsearchClient(AsyncElasticsearch):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.url = kwargs.get("url")
 
     async def check(self) -> bool:
         try:
@@ -54,27 +55,27 @@ class ElasticsearchClient(AsyncElasticsearch):
             },
         }
 
-        await self.super().indices.create(index=str(collection_id), mappings=mappings, settings=settings)
+        await self.indices.create(index=str(collection_id), mappings=mappings, settings=settings)
 
     async def delete_collection(self, collection_id: int) -> None:
-        await self.super().indices.delete(index=str(collection_id))
+        await self.indices.delete(index=str(collection_id))
 
     async def get_collections(self) -> list[int]:
-        collections = await super().indices.get_alias()
+        collections = await self.indices.get_alias()
         return [int(collection) for collection in collections]
 
     async def get_chunk_count(self, collection_id: int, document_id: int) -> Optional[int]:
         try:
             body = {"query": {"match": {"metadata.document_id": document_id}}}
-            result = await self.super().count(index=str(collection_id), body=body)
+            result = await super().count(index=str(collection_id), body=body)
             return result["count"]
         except Exception:
             return None
 
     async def delete_document(self, collection_id: int, document_id: int) -> None:
         body = {"query": {"match": {"metadata.document_id": document_id}}}
-        await self.super().delete_by_query(index=str(collection_id), body=body)
-        await self.super().indices.refresh(index=str(collection_id))
+        await super().delete_by_query(index=str(collection_id), body=body)
+        await self.indices.refresh(index=str(collection_id))
 
     async def get_chunks(self, collection_id: int, document_id: int, offset: int = 0, limit: int = 10, chunk_id: Optional[int] = None) -> List[Chunk]:
         body = {"query": {"match": {"metadata.document_id": document_id}}, "_source": ["body", "metadata"]}
@@ -82,7 +83,7 @@ class ElasticsearchClient(AsyncElasticsearch):
             body["query"]["match"]["id"] = chunk_id
 
         # TODO: vérifier le offset et le limit
-        results = await self.super().search(index=str(collection_id), body=body, from_=offset, size=limit)
+        results = await super().search(index=str(collection_id), body=body, from_=offset, size=limit)
 
         chunks = []
         for hit in results["hits"]["hits"]:
@@ -104,7 +105,7 @@ class ElasticsearchClient(AsyncElasticsearch):
             for chunk, embedding in zip(chunks, embeddings)
         ]
         await helpers.async_bulk(client=self, actions=actions, index=collection_id)
-        await self.super().indices.refresh(index=str(collection_id))
+        await self.indices.refresh(index=str(collection_id))
 
     async def search(
         self,
@@ -128,9 +129,10 @@ class ElasticsearchClient(AsyncElasticsearch):
         return searches
 
     async def _lexical_search(self, query_prompt: str, collection_ids: List[int], k: int) -> List[Search]:
+        collection_ids = [str(x) for x in collection_ids]
         fuzziness = {"fuzziness": "AUTO"} if len(query_prompt.split()) < 25 else {}
         body = {"query": {"multi_match": {"query": query_prompt, **fuzziness}}, "size": k, "_source": {"excludes": ["embedding"]}}
-        results = await self.super().search(index=",".join(collection_ids), body=body)
+        results = await super().search(index=collection_ids, body=body)
         hits = [hit for hit in results["hits"]["hits"] if hit]
         searches = [
             Search(
@@ -143,9 +145,9 @@ class ElasticsearchClient(AsyncElasticsearch):
         return searches
 
     async def _semantic_query(self, query_vector: list[float], collection_ids: List[int], k: int, score_threshold: float = 0.0) -> List[Search]:  # fmt: off
-        # @TODO: pourquoi query filter ?
+        collection_ids = [str(x) for x in collection_ids]
         body = {"knn": {"field": "embedding", "query_vector": query_vector, "k": k, "num_candidates": 200}}
-        results = await self.super().search(index=",".join(collection_ids), body=body)
+        results = await super().search(index=collection_ids, body=body)
         hits = [hit for hit in results["hits"]["hits"] if hit]
         searches = [
             Search(
