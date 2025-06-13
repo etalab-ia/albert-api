@@ -288,4 +288,201 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, zstd
+      connection:
+      - keep-alive
+      host:
+      - api.search.brave.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-subscription-token:
+      - BSAnVOCfcqE8eZbpfvH0Ba1ymlGPRMF
+    method: GET
+    uri: https://api.search.brave.com/res/v1/web/search?q=plus+grand+plan%C3%A8te+syst%C3%A8me+solaire&count=5&country=fr&safesearch=strict&timeout=30
+  response:
+    body:
+      string: "{\"query\":{\"original\":\"plus grand plan\xE8te syst\xE8me solaire\",\"show_strict_warning\":false,\"is_navigational\":false,\"is_news_breaking\":false,\"spellcheck_off\":true,\"country\":\"fr\",\"bad_results\":false,\"should_fallback\":false,\"postal_code\":\"\",\"city\":\"\",\"header_country\":\"\",\"more_results_available\":true,\"state\":\"\"},\"mixed\":{\"type\":\"mixed\",\"main\":[{\"type\":\"web\",\"index\":0,\"all\":false},{\"type\":\"web\",\"index\":1,\"all\":false},{\"type\":\"videos\",\"all\":true},{\"type\":\"web\",\"index\":2,\"all\":false},{\"type\":\"web\",\"index\":3,\"all\":false},{\"type\":\"web\",\"index\":4,\"all\":false},{\"type\":\"web\",\"index\":5,\"all\":false},{\"type\":\"web\",\"index\":6,\"all\":false},{\"type\":\"web\",\"index\":7,\"all\":false},{\"type\":\"web\",\"index\":8,\"all\":false},{\"type\":\"web\",\"index\":9,\"all\":false},{\"type\":\"web\",\"index\":10,\"all\":false},{\"type\":\"web\",\"index\":11,\"all\":false},{\"type\":\"web\",\"index\":12,\"all\":false},{\"type\":\"web\",\"index\":13,\"all\":false},{\"type\":\"web\",\"index\":14,\"all\":false},{\"type\":\"web\",\"index\":15,\"all\":false},{\"type\":\"web\",\"index\":16,\"all\":false},{\"type\":\"web\",\"index\":17,\"all\":false},{\"type\":\"web\",\"index\":18,\"all\":false},{\"type\":\"web\",\"index\":19,\"all\":false}],\"top\":[],\"side\":[]},\"type\":\"search\",\"videos\":{\"type\":\"videos\",\"results\":[{\"type\":\"video_result\",\"url\":\"https://m.facebook.com/futura.sciences.fr/videos/jupiter-la-plus-grande-plan%C3%A8te-du-syst%C3%A8me-solaire-/300712997614746/\",\"title\":\"Jupiter
+        la plus grande plan\xE8te du Syst\xE8me solaire ...\",\"description\":\"See
+        posts, photos and more on Facebook\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"m.facebook.com\",\"hostname\":\"m.facebook.com\",\"favicon\":\"https://imgs.search.brave.com/0WYs5UG59TQysOa5wSaC2nhsP4lT-DMZ274nRdPj6zg/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMmYzZmY2MTRl/ZDZiZTMxMGIxZjc5/Nzc5MTZjY2RhMWQ0/NjRkMzRiMWJmN2Q5/ZWRmNzk0Y2Y5ZWNh/N2M2NzdjMi9tLmZh/Y2Vib29rLmNvbS8\",\"path\":\"\u203A
+        futura.sciences.fr  \u203A videos  \u203A jupiter-la-plus-grande-plan\xE8te-du-syst\xE8me-solaire-
+        \ \u203A 300712997614746\"}},{\"type\":\"video_result\",\"url\":\"https://www.facebook.com/futura.sciences.fr/videos/jupiter-la-plus-grande-plan%C3%A8te-du-syst%C3%A8me-solaire-/300712997614746/\",\"title\":\"Jupiter
+        la plus grande plan\xE8te du Syst\xE8me solaire ! | [\u269B\uFE0F] ...\",\"description\":\"[\u269B\uFE0F]
+        Voyagez jusqu\u2019\xE0 la superbe Jupiter et d\xE9couvrez certains secrets
+        de la plan\xE8te g\xE9ante gazeuse ! Entre ses vents violents, sa Grande Tache
+        rouge et...\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"facebook.com\",\"hostname\":\"www.facebook.com\",\"favicon\":\"https://imgs.search.brave.com/UPSLokJBKWPdNzHbqH5o3CgD13zMvR3pUTn8bk7hmPM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOWM3NjZkMmE4/MTU1MTk4ZDU5YzU3/NjUxY2ExZTdjNWQx/NjJlNTY1Y2VlODM4/MmRmMDgzZDBiMmI3/YzU4NmU4ZS93d3cu/ZmFjZWJvb2suY29t/Lw\",\"path\":\"\u203A
+        futura.sciences.fr  \u203A videos  \u203A jupiter-la-plus-grande-plan\xE8te-du-syst\xE8me-solaire-
+        \ \u203A 300712997614746\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/obpi1En-fE427JH6GzshuS-C-1hXY_g3OFkxNFj1tC8/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9zY29u/dGVudC1iY24xLTEu/eHguZmJjZG4ubmV0/L3YvdDE1LjUyNTYt/MTAvMTAyOTg2OTM1/XzMwMDczMzkzNzYx/MjY1Ml84NDQ5MjA1/MTAwODczNzc3MTUy/X24uanBnP19uY19j/YXQ9MTA3JmFtcDtj/Y2I9MS03JmFtcDtf/bmNfc2lkPTU5NmVi/NyZhbXA7X25jX29o/Yz1sYWU2Q1dva1Fr/c0FYX3VpN1BTJmFt/cDtfbmNfb2M9QVFt/SG1rRjUwSVcxNVlD/UEEzX1lJQjJNenda/RFc4RVRLc0xmTzVm/U2t3QnNuWnEwZXhL/R29XdER2c2otVGJW/bzB0dyZhbXA7X25j/X2h0PXNjb250ZW50/LWJjbjEtMS54eCZh/bXA7b2g9MDBfQWZB/WmliVmJYaU5sMllp/NWZiWVhqeko5UWJV/MHRQSnRoYWQ3d3Zj/V1VGdUpmZyZhbXA7/b2U9NjU4NzZERkM\",\"original\":\"https://scontent-bcn1-1.xx.fbcdn.net/v/t15.5256-10/102986935_300733937612652_8449205100873777152_n.jpg?_nc_cat=107&amp;ccb=1-7&amp;_nc_sid=596eb7&amp;_nc_ohc=lae6CWokQksAX_ui7PS&amp;_nc_oc=AQmHmkF50IW15YCPA3_YIB2MzwZDW8ETKsLfO5fSkwBsnZq0exKGoWtDvsj-TbVo0tw&amp;_nc_ht=scontent-bcn1-1.xx&amp;oh=00_AfAZibVbXiNl2Yi5fbYXjzJ9QbU0tPJthad7wvcWUFuJfg&amp;oe=65876DFC\"}}],\"mutated_by_goggles\":false},\"web\":{\"type\":\"search\",\"results\":[{\"title\":\"Combien
+        y a-t-il de plan\xE8tes dans le syst\xE8me solaire ?\",\"url\":\"https://www.mnhn.fr/fr/combien-y-a-t-il-de-planetes-dans-le-systeme-solaire\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Cette
+        tache seule est d\xE9j\xE0 plus grande que <strong>la Terre</strong> ! \xC0
+        la &quot;surface&quot; de la plan\xE8te (\xE0 un niveau d\u2019altitude o\xF9
+        la pression est \xE9gale \xE0 celle au niveau de la mer sur Terre), il fait
+        \u2013 145 \xB0C sur Jupiter. Jupiter marque le d\xE9but du Syst\xE8me solaire
+        externe.\",\"profile\":{\"name\":\"Mnhn\",\"url\":\"https://www.mnhn.fr/fr/combien-y-a-t-il-de-planetes-dans-le-systeme-solaire\",\"long_name\":\"mnhn.fr\",\"img\":\"https://imgs.search.brave.com/YyrJYNmEzl-CwbG6SrkZ9TJXx0eY3sD9hSnerZ1RZy8/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvN2RmYTdkNzNl/ZDVmNmZkYjAwYzVk/MjRiNTE2NjIyMjA2/NDFiOWYxNmQxYjAy/M2M1YTkzZTdiYzM3/MDM5YmI5MS93d3cu/bW5obi5mci8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"mnhn.fr\",\"hostname\":\"www.mnhn.fr\",\"favicon\":\"https://imgs.search.brave.com/YyrJYNmEzl-CwbG6SrkZ9TJXx0eY3sD9hSnerZ1RZy8/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvN2RmYTdkNzNl/ZDVmNmZkYjAwYzVk/MjRiNTE2NjIyMjA2/NDFiOWYxNmQxYjAy/M2M1YTkzZTdiYzM3/MDM5YmI5MS93d3cu/bW5obi5mci8\",\"path\":\"\u203A
+        fr  \u203A combien-y-a-t-il-de-planetes-dans-le-systeme-solaire\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/SMJEpCVnbIE_2QHJM9mQvzvmbyzAWP2q0km3ZBX9p0w/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly93d3cu/bW5obi5mci9zeXN0/ZW0vZmlsZXMvc3R5/bGVzLzE5XzEwX21l/ZGl1bS9wcml2YXRl/LzIwMjQtMDEvc3lz/dGVtZS1zb2xhaXJl/LXBsYW5ldGVzLmpw/Zy53ZWJwP2l0b2s9/MkpzdU9aX2c\",\"original\":\"https://www.mnhn.fr/system/files/styles/19_10_medium/private/2024-01/systeme-solaire-planetes.jpg.webp?itok=2JsuOZ_g\",\"logo\":false},\"extra_snippets\":[\"Cette
+        poussi\xE8re omnipr\xE9sente donne \xE0 l\u2019air martien une couleur rouge
+        remarquable qui lui a valu son surnom de \\\"plan\xE8te rouge\\\". Les conditions
+        martiennes sont inhospitali\xE8res, mais son atmosph\xE8re a \xE9t\xE9 plus
+        dense il y a 4 milliards d\u2019ann\xE9es, et de l\u2019eau liquide semble
+        m\xEAme avoir circul\xE9 \xE0 la surface. De plus, de grands volcans existent
+        sur Mars. En l\u2019absence de tectonique des plaques, la lave a pu s\u2019accumuler
+        au m\xEAme endroit durant de longues p\xE9riodes. On trouve ainsi le plus
+        large des volcans du Syst\xE8me solaire, avec un diam\xE8tre de 1 600 km,
+        sur la surface de la plan\xE8te rouge : il s\u2019agit d\u2019Alba Patera
+        !\",\"Olympus Mons, avec ses 25 km d\u2019altitude, est de son c\xF4t\xE9
+        la plus haute montagne du Syst\xE8me solaire. ... Embarquez pour Mars ! Jupiter
+        et sa t\xE2che rouge, prise par Juno en 2019 \xB7 Cinqui\xE8me plan\xE8te
+        la plus proche du Soleil, Jupiter est une g\xE9ante gazeuse. C\u2019est la
+        plus grande plan\xE8te du Syst\xE8me solaire, avec un rayon mesurant 11 fois
+        celui de la Terre, pour 318 fois sa masse !\",\"Cette tache seule est d\xE9j\xE0
+        plus grande que la Terre ! \xC0 la \\\"surface\\\" de la plan\xE8te (\xE0
+        un niveau d\u2019altitude o\xF9 la pression est \xE9gale \xE0 celle au niveau
+        de la mer sur Terre), il fait \u2013 145 \xB0C sur Jupiter. Jupiter marque
+        le d\xE9but du Syst\xE8me solaire externe.\",\"C\u2019est la seule lune du
+        Syst\xE8me solaire \xE0 en avoir une. Titan est d\u2019ailleurs plus grande
+        que Mercure et Pluton. Le m\xE9thane, qui aux temp\xE9ratures frigorifiques
+        r\xE9gnantes (autour de - 180 \xB0C) peut \xEAtre gazeux, liquide ou solide,
+        y conna\xEEt un cycle comparable au cycle de l\u2019eau sur Terre. ... Uranus
+        est la 7e plan\xE8te en partant du Soleil, elle est plus petite que Saturne,
+        mais reste au moins 4 fois plus grande que la Terre.\"]},{\"title\":\"Quelle
+        est la plus grande plan\xE8te du Syst\xE8me solaire ? Et la plus petite ?\",\"url\":\"https://www.futura-sciences.com/sciences/questions-reponses/systeme-solaire-plus-grande-planete-systeme-solaire-plus-petite-7427/\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"<strong>Jupiter</strong>
+        est donc la plus grande plan\xE8te du Syst\xE8me solaire. Elle est aussi,
+        vraisemblablement, la premi\xE8re \xE0 s&#x27;\xEAtre form\xE9e autour du
+        Soleil tout jeune, voici 4,6 milliards d&#x27;ann\xE9es.\",\"page_age\":\"2021-06-03T14:58:28\",\"profile\":{\"name\":\"Futura\",\"url\":\"https://www.futura-sciences.com/sciences/questions-reponses/systeme-solaire-plus-grande-planete-systeme-solaire-plus-petite-7427/\",\"long_name\":\"futura-sciences.com\",\"img\":\"https://imgs.search.brave.com/0sEVYcZwvngBXK2LHQ5d-JSG1HPyXPHaQpRjd8Jke0c/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOWNjNzFlM2Qz/NzdiOTJlNWIyYzMz/YzdiZjVhYTg4YjNj/MmRjNmIwZjQ4MWQz/M2ViM2QxYjcwYzc2/MjUxMjM3ZS93d3cu/ZnV0dXJhLXNjaWVu/Y2VzLmNvbS8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"article\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"futura-sciences.com\",\"hostname\":\"www.futura-sciences.com\",\"favicon\":\"https://imgs.search.brave.com/0sEVYcZwvngBXK2LHQ5d-JSG1HPyXPHaQpRjd8Jke0c/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOWNjNzFlM2Qz/NzdiOTJlNWIyYzMz/YzdiZjVhYTg4YjNj/MmRjNmIwZjQ4MWQz/M2ViM2QxYjcwYzc2/MjUxMjM3ZS93d3cu/ZnV0dXJhLXNjaWVu/Y2VzLmNvbS8\",\"path\":\"
+        \ \u203A questions r\xE9ponses\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/TGKcSIXapteb8RRkj5sSXYSDT-TZwrzNKyuMVjexBIQ/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZnV0dXJhLXNjaWVu/Y2VzLmNvbS9idWls/ZHN2Ni9pbWFnZXMv/bGFyZ2VvcmlnaW5h/bC9jLzUvOC9jNTgy/ZjBkYzM2XzEwNTA1/NF9wbHVzLWdyYW5k/ZS1wbGFuZXRlLXN5/c3RlbWUtc29sYWly/ZS1qdXBpdGVyLmpw/Zw\",\"original\":\"https://cdn.futura-sciences.com/buildsv6/images/largeoriginal/c/5/8/c582f0dc36_105054_plus-grande-planete-systeme-solaire-jupiter.jpg\",\"logo\":false},\"age\":\"June
+        3, 2021\",\"extra_snippets\":[\"Dans notre Syst\xE8me solaire, hormis le Soleil,
+        qui est une \xE9toile, quel est l\u2019astre le plus grand et le plus massif
+        ? Cela ne saute pas aux yeux mais, dans le ciel nocturne, Jupiter est la reine
+        des plan\xE8tes.\",\"Europe est un monde aussi grand que notre Lune et, sous
+        sa surface glac\xE9e, elle poss\xE8de un oc\xE9an d'eau liquideliquide (bien
+        plus important que ceux de la Terre) potentiellement habitable. Quant \xE0
+        la plus petite plan\xE8tepetite plan\xE8te du Syst\xE8me solaire, il s'agit
+        de MercureMercure, qui est aussi la plan\xE8te la plus proche du Soleil.\",\"Jupiter
+        est donc la plus grande plan\xE8te du Syst\xE8me solaire. Elle est aussi,
+        vraisemblablement, la premi\xE8re \xE0 s'\xEAtre form\xE9e autour du Soleil
+        tout jeune, voici 4,6 milliards d'ann\xE9es.\",\"Seule, elle repr\xE9sente
+        2,5 fois celle de toutes les plan\xE8tes r\xE9unies, ce qui, somme toute,
+        n'est rien compar\xE9 au Soleil, qui vaut pour 99,8 % de la masse totale du
+        Syst\xE8me solaireSyst\xE8me solaire ! La g\xE9ante gazeuseg\xE9ante gazeuse
+        est la cinqui\xE8me plan\xE8te la plus \xE9loign\xE9e du Soleil ; elle en
+        est s\xE9par\xE9e en moyenne de 778 millions de km, ce qui \xE9quivaut \xE0
+        5,2 fois la distance Terre-Soleil (soit 5,2 unit\xE9s astronomiquesunit\xE9s
+        astronomiques).\"]},{\"title\":\"Quelles sont les plus grosses plan\xE8tes
+        ? - Cit\xE9 de l'espace\",\"url\":\"https://www.cite-espace.com/centre_ressources/les-plus-grosses-planetes/\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Milo
+        questionne l\u2019astrophysicien Sylvestre Maurice sur les plus grosses plan\xE8tes.
+        Ce sont les plan\xE8tes g\xE9antes : <strong>Jupiter, Saturne, Uranus et Neptune</strong>.
+        Leur rayon est de 4 \xE0 10 fois plus grand que celui de la Terre.\",\"page_age\":\"2025-01-14T15:33:19\",\"profile\":{\"name\":\"Cite-espace\",\"url\":\"https://www.cite-espace.com/centre_ressources/les-plus-grosses-planetes/\",\"long_name\":\"cite-espace.com\",\"img\":\"https://imgs.search.brave.com/JWIU0RLPW07fuHrC-I2NcZUM-DBoge0W0DSEKEn_1FI/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMzY4OTgzNjIy/MWI0YjYxOTA2NjRi/N2M0MTQ2OTU5NTE5/ZDVlZjc4OWNjOGNj/MTc2OWI5MmNjNjA2/ZDQ1NzU0Yy93d3cu/Y2l0ZS1lc3BhY2Uu/Y29tLw\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"cite-espace.com\",\"hostname\":\"www.cite-espace.com\",\"favicon\":\"https://imgs.search.brave.com/JWIU0RLPW07fuHrC-I2NcZUM-DBoge0W0DSEKEn_1FI/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMzY4OTgzNjIy/MWI0YjYxOTA2NjRi/N2M0MTQ2OTU5NTE5/ZDVlZjc4OWNjOGNj/MTc2OWI5MmNjNjA2/ZDQ1NzU0Yy93d3cu/Y2l0ZS1lc3BhY2Uu/Y29tLw\",\"path\":\"
+        \ \u203A accueil  \u203A quelles sont les plus grosses plan\xE8tes ?\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/mNgIZLF206vzHYgZ0GultAQiHgRoNNgrNkhHa_VPo4U/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly93d3cu/Y2l0ZS1lc3BhY2Uu/Y29tL2Fzc2V0cy91/cGxvYWRzL2dyb3Nz/cGxhbmV0ZXMtbG9n/by5wbmc\",\"original\":\"https://www.cite-espace.com/assets/uploads/grossplanetes-logo.png\",\"logo\":true},\"age\":\"January
+        14, 2025\",\"extra_snippets\":[\"Milo questionne l\u2019astrophysicien Sylvestre
+        Maurice sur les plus grosses plan\xE8tes. Ce sont les plan\xE8tes g\xE9antes
+        : Jupiter, Saturne, Uranus et Neptune. Leur rayon est de 4 \xE0 10 fois plus
+        grand que celui de la Terre.\",\"Le stockage ou l\u2019acc\xE8s technique
+        est n\xE9cessaire pour cr\xE9er des profils d\u2019utilisateurs afin d\u2019envoyer
+        des publicit\xE9s, ou pour suivre l\u2019utilisateur sur un site web ou sur
+        plusieurs sites web ayant des finalit\xE9s marketing similaires.\",\"G\xE9rer
+        les options G\xE9rer les services G\xE9rer {vendor_count} fournisseurs En
+        savoir plus sur ces finalit\xE9s\"]},{\"title\":\"Plan\xE8te Jupiter | Agence
+        spatiale canadienne\",\"url\":\"https://www.asc-csa.gc.ca/fra/astronomie/systeme-solaire/jupiter.asp\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Clich\xE9
+        de <strong>Jupiter</strong> obtenu par la sonde Juno en 2019, qui montre la
+        Grande Tache rouge et de nombreuses temp\xEAtes. (Source : NASA.) <strong>Jupiter</strong>
+        est la cinqui\xE8me plan\xE8te \xE0 partir du Soleil et aussi la plus grosse
+        du Syst\xE8me solaire. Comme toutes les autres plan\xE8tes, <strong>Jupiter</strong>
+        s&#x27;est probablement ...\",\"profile\":{\"name\":\"Asc-csa\",\"url\":\"https://www.asc-csa.gc.ca/fra/astronomie/systeme-solaire/jupiter.asp\",\"long_name\":\"asc-csa.gc.ca\",\"img\":\"https://imgs.search.brave.com/rQxRPPjYLezPKfRUvOzwihBCEs-UyQM0z7afLRXXbVE/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvY2RiZTU5MjBh/MWI1ZTEwNmZiMjMy/NmFlZjBkNjA4MTAx/OWNkMjc2OGYxNzJi/NmM1YzYzNmE3M2Rm/MzQ3OWI2Ni93d3cu/YXNjLWNzYS5nYy5j/YS8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"asc-csa.gc.ca\",\"hostname\":\"www.asc-csa.gc.ca\",\"favicon\":\"https://imgs.search.brave.com/rQxRPPjYLezPKfRUvOzwihBCEs-UyQM0z7afLRXXbVE/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvY2RiZTU5MjBh/MWI1ZTEwNmZiMjMy/NmFlZjBkNjA4MTAx/OWNkMjc2OGYxNzJi/NmM1YzYzNmE3M2Rm/MzQ3OWI2Ni93d3cu/YXNjLWNzYS5nYy5j/YS8\",\"path\":\"\u203A
+        fra  \u203A astronomie  \u203A systeme-solaire  \u203A jupiter.asp\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/IXvtpfyI5nwuMH-yLrzt4pgHY7BYpa6y_yt2eX4oTso/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly93d3cu/YXNjLWNzYS5nYy5j/YS9pbWFnZXMvYXN0/cm9ub21pZS9zeXN0/ZW1lLXNvbGFpcmUv/c3lzdGVtZS1zb2xh/aXJlLW9nLmpwZw\",\"original\":\"https://www.asc-csa.gc.ca/images/astronomie/systeme-solaire/systeme-solaire-og.jpg\",\"logo\":false},\"extra_snippets\":[\"Clich\xE9
+        de Jupiter obtenu par la sonde Juno en 2019, qui montre la Grande Tache rouge
+        et de nombreuses temp\xEAtes. (Source : NASA.) Jupiter est la cinqui\xE8me
+        plan\xE8te \xE0 partir du Soleil et aussi la plus grosse du Syst\xE8me solaire.
+        Comme toutes les autres plan\xE8tes, Jupiter s'est probablement form\xE9e
+        dans un grand nuage de gaz, de poussi\xE8re et de glace.\",\"Europe est un
+        monde marin recouvert d'une \xE9paisse cro\xFBte de glace. C'est l'une des
+        meilleures candidates du Syst\xE8me solaire en ce qui concerne la pr\xE9sence
+        de vie extraterrestre. Ganym\xE8de est \xE9norme : elle est plus grande que
+        la plan\xE8te Mercure.\",\"Ces lunes sont uniques et d'un grand int\xE9r\xEAt
+        pour les scientifiques. Io est l'astre dont le volcanisme est le plus actif
+        dans tout le Syst\xE8me solaire.\",\"En voyant que ces lunes \xE9taient en
+        orbite autour de Jupiter, Galil\xE9e a fourni des preuves contre la croyance
+        selon laquelle tous les corps du Syst\xE8me solaire tournaient autour de la
+        Terre. Nous savons maintenant que cette croyance \xE9tait fausse. Fait int\xE9ressant
+        : si les satellites galil\xE9ens \xE9taient en orbite autour du Soleil, ils
+        seraient assez gros pour \xEAtre class\xE9s parmi les plan\xE8tes naines.
+        Le premier engin spatial \xE0 orbiter la plus grosse plan\xE8te du Syst\xE8me
+        solaire est la sonde Galileo de la NASA en 1995.\"]},{\"title\":\"La plan\xE8te
+        Saturne | CNES\",\"url\":\"https://cnes.fr/dossiers/planete-saturne\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Sa
+        densit\xE9 est la <strong>plus</strong> faible des <strong>plan\xE8tes</strong>
+        <strong>du</strong> <strong>Syst\xE8me</strong> <strong>solaire</strong>,
+        8 fois inf\xE9rieure \xE0 celle de la Terre. Elle est beaucoup <strong>plus</strong>
+        volumineuse qu\u2019elle n\u2019est massive ou lourde. Si on la pla\xE7ait
+        au milieu d\u2019une immense piscine, elle flotterait ! Plongeons tout droit
+        vers Saturne : il faut d\u2019abord traverser les monstrueuses temp\xEAtes
+        et orages de son atmosph\xE8re, 1 000 fois <strong>plus</strong> puissants
+        que sur Terre. Ici, les vents soufflent \xE0 1 800 km/h. Certaines de ces
+        temp\xEAtes sont si <strong>grandes</strong> ...\",\"profile\":{\"name\":\"Cnes\",\"url\":\"https://cnes.fr/dossiers/planete-saturne\",\"long_name\":\"cnes.fr\",\"img\":\"https://imgs.search.brave.com/CYz_lRdBgOPhuhzdnCb4LU-F-0dFFJj5MPS955UnCKQ/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYjQ2N2ZhMTdk/NGFkNDBmZDdlM2Mx/MTFjZDMzZGMxMTdl/OWQxYjRlM2JmN2Jj/MTI5NDdhNzdlMWE3/OTRkNjU2Yi9jbmVz/LmZyLw\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"cnes.fr\",\"hostname\":\"cnes.fr\",\"favicon\":\"https://imgs.search.brave.com/CYz_lRdBgOPhuhzdnCb4LU-F-0dFFJj5MPS955UnCKQ/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYjQ2N2ZhMTdk/NGFkNDBmZDdlM2Mx/MTFjZDMzZGMxMTdl/OWQxYjRlM2JmN2Jj/MTI5NDdhNzdlMWE3/OTRkNjU2Yi9jbmVz/LmZyLw\",\"path\":\"\u203A
+        dossiers  \u203A planete-saturne\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/DXdF7borpRbkNvVZzNFTUg-6FBKPha0BfaMn15AXXeY/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9jbmVz/LmZyL3NpdGVzL2Rl/ZmF1bHQvZmlsZXMv/MjAyNC0wNi9wbGFu/ZXRlLXNhdHVybmUu/anBn\",\"original\":\"https://cnes.fr/sites/default/files/2024-06/planete-saturne.jpg\",\"logo\":false},\"extra_snippets\":[\"Sa
+        densit\xE9 est la plus faible des plan\xE8tes du Syst\xE8me solaire, 8 fois
+        inf\xE9rieure \xE0 celle de la Terre. Elle est beaucoup plus volumineuse qu\u2019elle
+        n\u2019est massive ou lourde. Si on la pla\xE7ait au milieu d\u2019une immense
+        piscine, elle flotterait ! Plongeons tout droit vers Saturne : il faut d\u2019abord
+        traverser les monstrueuses temp\xEAtes et orages de son atmosph\xE8re, 1 000
+        fois plus puissants que sur Terre. Ici, les vents soufflent \xE0 1 800 km/h.
+        Certaines de ces temp\xEAtes sont si grandes qu\u2019elles sont visibles au
+        t\xE9lescope depuis la Terre.\",\"Elle n\u2019est pas la seule \xE0 en poss\xE9der,
+        mais les siens sont uniques dans notre Syst\xE8me solaire ! Saturne est la
+        6\u1D49 plan\xE8te en partant du Soleil, situ\xE9e \xE0 1,4 milliard de km
+        de notre \xE9toile. Elle est aussi la 2\u1D49 plus grosse plan\xE8te du Syst\xE8me
+        solaire, apr\xE8s Jupiter.\",\"Elles sont beaucoup plus longues que sur Terre,
+        car la plan\xE8te met plus de 29 ans \xE0 faire sa r\xE9volution. Saturne
+        r\xE9alise un tour sur elle-m\xEAme en seulement 10 h 33 min. Cette vitesse
+        de rotation est \xE0 l\u2019origine de sa forme oblongue, c\u2019est-\xE0-dire
+        aplatie au niveau des p\xF4les. Contrairement \xE0 ce que l\u2019on peut penser,
+        Saturne n\u2019est pas tout \xE0 fait ronde ! Au sein de notre Syst\xE8me
+        solaire, les anneaux de Saturne sont uniques.\",\"Mais la lune la plus remarquable
+        reste certainement Titan : elle repr\xE9sente \xE0 elle seule 96% de toute
+        la masse (lunes et anneaux) en orbite autour de Saturne. C\u2019est la seule
+        du Syst\xE8me solaire \xE0 poss\xE9der une atmosph\xE8re dense riche en azote.
+        \xC0 l\u2019image de la Terre, sur laquelle des saisons et un climat sont
+        d\xE9finis par le cycle de l\u2019eau, Titan est fa\xE7onn\xE9 par des cycles
+        de m\xE9thane.\"]}],\"family_friendly\":true}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 13 Jun 2025 13:36:43 GMT
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User
+      X-Content-Type-Options:
+      - nosniff
+      X-Download-Options:
+      - noopen
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '20050'
+      server-timing:
+      - search-roundtrip;dur=778.733
+      x-ratelimit-limit:
+      - 1, 2000
+      x-ratelimit-policy:
+      - 1;w=1, 2000;w=2592000,
+      x-ratelimit-remaining:
+      - 0, 1997
+      x-ratelimit-reset:
+      - 1, 1506196
+    status:
+      code: 200
+      message: OK
 version: 1

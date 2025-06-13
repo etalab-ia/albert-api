@@ -1,3 +1,4 @@
+import asyncio
 from functools import partial
 import logging
 import os
@@ -7,7 +8,6 @@ from typing import Generator
 
 from fastapi.testclient import TestClient
 import pytest
-from qdrant_client import QdrantClient
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -16,6 +16,7 @@ import vcr
 import vcr.stubs.httpx_stubs
 from vcr.request import Request as VcrRequest
 
+from app.clients.database import get_vector_store
 from app.main import create_app
 from app.schemas.auth import LimitType, PermissionType
 from app.sql.models import Base
@@ -54,10 +55,11 @@ def pytest_configure(config):
         return VcrRequest(httpx_request.method, uri, body, headers)
 
     vcr.stubs.httpx_stubs._make_vcr_request = _make_vcr_request
-    ignore_hosts = ["testserver", os.environ.get("MCP_BRIDGE_HOST"), os.environ.get("QDRANT_HOST")]
+    ignore_hosts = ["testserver", os.environ.get("MCP_BRIDGE_HOST"), os.environ.get("QDRANT_HOST"), os.environ.get("ELASTICSEARCH_HOST")]
 
     VCR_INSTANCE = vcr.VCR(
         cassette_library_dir=str(cassette_library_dir),
+        #record_mode="new_episodes", # use that if there is a bug with the cassette, then reuse once...
         record_mode="once",
         match_on=["method", "scheme", "host", "port", "path", "query"],
         filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
@@ -81,11 +83,6 @@ def engine(worker_id):
 
     Base.metadata.drop_all(engine)  # Clean state
     Base.metadata.create_all(engine)
-
-    qdrant_client = QdrantClient(**settings.databases.qdrant.args)
-    collections = qdrant_client.get_collections().collections
-    for collection in collections:
-        qdrant_client.delete_collection(collection_name=collection.name)
 
     yield engine
 
@@ -140,15 +137,25 @@ def app_with_test_db(engine, db_session):
 
 @pytest.fixture(scope="session")
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
+    async def init_vector_store():
+        """Initialize vector store by deleting all collections"""
+        vector_store = get_vector_store(settings)
+        collections = await vector_store.get_collections()
+        # Clean the vector store
+        for collection in collections:
+            await vector_store.delete_collection(collection)
+
     # Lifespan requests API to get models and initialize the app
     if VCR_ENABLED:
         with VCR_INSTANCE.use_cassette("lifespan_init.yaml"):
             with TestClient(app=app_with_test_db) as client:
                 client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+                asyncio.run(init_vector_store())  # Initialize vector store
                 yield client
     else:
         with TestClient(app=app_with_test_db) as client:
             client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+            asyncio.run(init_vector_store())  # Initialize vector store
             yield client
 
 

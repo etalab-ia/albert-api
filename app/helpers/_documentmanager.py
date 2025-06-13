@@ -3,16 +3,16 @@ from itertools import batched
 import logging
 import time
 import traceback
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Union
 from uuid import uuid4
 
 from fastapi import UploadFile
 from langchain_text_splitters import Language
-from qdrant_client import AsyncQdrantClient
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.clients.database import ElasticsearchClient, QdrantClient
 from app.helpers.data.chunkers import NoChunker, RecursiveCharacterTextSplitter
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
@@ -44,12 +44,12 @@ class DocumentManager:
 
     def __init__(
         self,
-        qdrant: AsyncQdrantClient,
+        vector_store: Union[QdrantClient, ElasticsearchClient],
         parser: ParserManager,
         web_search: Optional[WebSearchManager] = None,
         multi_agents_search_model: Optional[ModelRouter] = None,
     ) -> None:
-        self.qdrant = qdrant
+        self.vector_store = vector_store
         self.web_search = web_search
         self.parser = parser
         self.multi_agents_search_model = multi_agents_search_model
@@ -63,7 +63,7 @@ class DocumentManager:
         collection_id = result.scalar_one()
         await session.commit()
 
-        await self.qdrant.create_collection(collection_id=collection_id, vector_size=self.qdrant.model._vector_size)
+        await self.vector_store.create_collection(collection_id=collection_id, vector_size=self.vector_store.model._vector_size)
 
         return collection_id
 
@@ -82,7 +82,7 @@ class DocumentManager:
         await session.commit()
 
         # delete the collection from vector store
-        await self.qdrant.delete_collection(collection_id=collection_id)
+        await self.vector_store.delete_collection(collection_id=collection_id)
 
     async def update_collection(self, session: AsyncSession, user_id: int, collection_id: int, name: Optional[str] = None, visibility: Optional[CollectionVisibility] = None, description: Optional[str] = None) -> None:  # fmt: off
         # check if collection exists
@@ -230,7 +230,7 @@ class DocumentManager:
 
         # chunks count
         for document in documents:
-            document.chunks = await self.qdrant.get_chunk_count(collection_id=document.collection_id, document_id=document.id)
+            document.chunks = await self.vector_store.get_chunk_count(collection_id=document.collection_id, document_id=document.id)
 
         return documents
 
@@ -251,7 +251,7 @@ class DocumentManager:
         await session.commit()
 
         # delete the document from vector store
-        await self.qdrant.delete_document(collection_id=document.collection_id, document_id=document_id)
+        await self.vector_store.delete_document(collection_id=document.collection_id, document_id=document_id)
 
     async def get_chunks(
         self,
@@ -274,7 +274,7 @@ class DocumentManager:
         except NoResultFound:
             raise DocumentNotFoundException()
 
-        chunks = await self.qdrant.get_chunks(
+        chunks = await self.vector_store.get_chunks(
             collection_id=document.collection_id,
             document_id=document_id,
             offset=offset,
@@ -345,13 +345,12 @@ class DocumentManager:
         response = await self._create_embeddings(input=[prompt])
         query_vector = response[0]
 
+        _method = method
         if method == SearchMethod.MULTIAGENT:
-            qdrant_method = SearchMethod.SEMANTIC
-        else:
-            qdrant_method = method
+            _method = MultiAgents.search_method
 
-        searches = await self.qdrant.search(
-            method=qdrant_method,
+        searches = await self.vector_store.search(
+            method=_method,
             collection_ids=collection_ids,
             query_prompt=prompt,
             query_vector=query_vector,
@@ -450,8 +449,8 @@ class DocumentManager:
         return chunks
 
     async def _create_embeddings(self, input: List[str]) -> list[float] | list[list[float]] | dict:
-        client = self.qdrant.model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
-        response = await client.forward_request(method="POST", json={"input": input, "model": self.qdrant.model.id, "encoding_format": "float"})
+        client = self.vector_store.model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
+        response = await client.forward_request(method="POST", json={"input": input, "model": self.vector_store.model.id, "encoding_format": "float"})
 
         return [vector["embedding"] for vector in response.json()["data"]]
 
@@ -463,4 +462,4 @@ class DocumentManager:
             embeddings = await self._create_embeddings(input=texts)
 
             # insert chunks and vectors
-            await self.qdrant.upsert(collection_id=collection_id, chunks=batch, embeddings=embeddings)
+            await self.vector_store.upsert(collection_id=collection_id, chunks=batch, embeddings=embeddings)

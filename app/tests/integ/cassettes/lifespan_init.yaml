@@ -34,8 +34,6 @@ interactions:
       - Tue, 10 Jun 2025 12:52:47 GMT
       Server:
       - nginx/1.27.4
-      Transfer-Encoding:
-      - chunked
       Vary:
       - Accept-Encoding
       content-length:
@@ -114,8 +112,6 @@ interactions:
       - Tue, 10 Jun 2025 12:52:48 GMT
       Server:
       - nginx/1.27.4
-      Transfer-Encoding:
-      - chunked
       Vary:
       - Accept-Encoding
       content-length:
@@ -194,8 +190,6 @@ interactions:
       - Tue, 10 Jun 2025 12:52:48 GMT
       Server:
       - nginx/1.27.4
-      Transfer-Encoding:
-      - chunked
       Vary:
       - Accept-Encoding
       content-length:
@@ -274,8 +268,6 @@ interactions:
       - Tue, 10 Jun 2025 12:52:48 GMT
       Server:
       - nginx/1.27.4
-      Transfer-Encoding:
-      - chunked
       Vary:
       - Accept-Encoding
       content-length:
@@ -314,8 +306,6 @@ interactions:
       - Tue, 10 Jun 2025 12:52:48 GMT
       Server:
       - nginx/1.27.4
-      Transfer-Encoding:
-      - chunked
       Vary:
       - Accept-Encoding
       content-length:
@@ -358,8 +348,6 @@ interactions:
       - Tue, 10 Jun 2025 12:52:48 GMT
       Server:
       - nginx/1.27.4
-      Transfer-Encoding:
-      - chunked
       Vary:
       - Accept-Encoding
       content-length:
@@ -438,8 +426,6 @@ interactions:
       - Tue, 10 Jun 2025 12:52:49 GMT
       Server:
       - nginx/1.27.4
-      Transfer-Encoding:
-      - chunked
       Vary:
       - Accept-Encoding
       content-length:
@@ -483,4 +469,148 @@ interactions:
     status:
       code: 422
       message: Unprocessable Entity
+- request:
+    body: null
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: HEAD
+    uri: http://localhost:9200/
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Length:
+      - '540'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: GET
+    uri: http://localhost:9200/_alias
+  response:
+    body:
+      string: '{"1":{"aliases":{}}}'
+    headers:
+      Content-Length:
+      - '20'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: DELETE
+    uri: http://localhost:9200/1
+  response:
+    body:
+      string: '{"acknowledged":true}'
+    headers:
+      Content-Length:
+      - '21'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"mappings":{"properties":{"id":{"type":"integer"},"embedding":{"type":"dense_vector","dims":1024},"body":{"type":"text"},"metadata":{"dynamic":true,"properties":{"collection_id":{"type":"integer"},"document_id":{"type":"integer"},"document_name":{"type":"keyword"},"document_created_at":{"type":"date"}}}}},"settings":{"similarity":{"default":{"type":"BM25"}},"analysis":{"filter":{"french_stop":{"type":"stop","stopwords":"_french_"},"french_stemmer":{"type":"stemmer","language":"light_french"}},"analyzer":{"french_analyzer":{"tokenizer":"standard","filter":["lowercase","french_stop","french_stemmer"]}}}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: PUT
+    uri: http://localhost:9200/18
+  response:
+    body:
+      string: '{"acknowledged":true,"shards_acknowledged":true,"index":"18"}'
+    headers:
+      Content-Length:
+      - '61'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"mappings":{"properties":{"id":{"type":"integer"},"embedding":{"type":"dense_vector","dims":1024},"body":{"type":"text"},"metadata":{"dynamic":true,"properties":{"collection_id":{"type":"integer"},"document_id":{"type":"integer"},"document_name":{"type":"keyword"},"document_created_at":{"type":"date"}}}}},"settings":{"similarity":{"default":{"type":"BM25"}},"analysis":{"filter":{"french_stop":{"type":"stop","stopwords":"_french_"},"french_stemmer":{"type":"stemmer","language":"light_french"}},"analyzer":{"french_analyzer":{"tokenizer":"standard","filter":["lowercase","french_stop","french_stemmer"]}}}}}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: PUT
+    uri: http://localhost:9200/19
+  response:
+    body:
+      string: '{"acknowledged":true,"shards_acknowledged":true,"index":"19"}'
+    headers:
+      Content-Length:
+      - '61'
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
 version: 1

@@ -1,0 +1,39 @@
+interactions:
+- request:
+    body: '{"query":{"match":{"metadata.document_id":5}},"_source":["body","metadata"],"size":10,"from":0}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      connection:
+      - keep-alive
+      content-type:
+      - application/vnd.elasticsearch+json; compatible-with=9
+      user-agent:
+      - elasticsearch-py/9.0.1 (Python/3.13.3; elastic-transport/8.17.1)
+      x-elastic-client-meta:
+      - es=9.0.1,py=3.13.3,t=8.17.1,ai=3.12.8
+    method: POST
+    uri: http://localhost:9200/3/_search
+  response:
+    body:
+      string: '{"took":4,"timed_out":false,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0},"hits":{"total":{"value":1,"relation":"eq"},"max_score":1.0,"hits":[{"_index":"3","_id":"hOd9X5cB5o58ThT0cbfm","_score":1.0,"_source":{"body":"Lorem
+        ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+        ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+        ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
+        in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
+        deserunt mollit anim id est laborum.","metadata":{"document_name":"Lorem ipsum.json","page":0,"source":"Lorem
+        ipsum dolor sit amet","metadata_test_type_string":"test","collection_id":3,"document_id":5,"document_created_at":1749653746}}}]}}'
+    headers:
+      Content-Type:
+      - application/vnd.elasticsearch+json;compatible-with=9
+      Transfer-Encoding:
+      - chunked
+      X-elastic-product:
+      - Elasticsearch
+    status:
+      code: 200
+      message: OK
+version: 1
