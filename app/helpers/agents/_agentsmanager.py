@@ -5,7 +5,7 @@ import httpx
 
 from app.clients.mcp import SecretShellMCPBridgeClient
 from app.helpers.models import ModelRegistry
-from app.schemas.mcp import MCPTool
+from app.schemas.agents import AgentsTool
 from app.utils.exceptions import ToolNotFoundException
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
@@ -88,7 +88,7 @@ class AgentsManager:
 
         return body
 
-    async def get_tools_from_bridge(self) -> List[MCPTool]:
+    async def get_tools_from_bridge(self) -> List[AgentsTool]:
         tools = await self.mcp_bridge.get_tool_list()
 
         return tools

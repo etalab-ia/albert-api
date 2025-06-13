@@ -4,7 +4,7 @@ from typing import List
 from fastapi import HTTPException
 import httpx
 
-from app.schemas.mcp import MCPTool
+from app.schemas.agents import AgentsTool
 
 
 class SecretShellMCPBridgeClient:
@@ -12,7 +12,7 @@ class SecretShellMCPBridgeClient:
         self.url = mcp_bridge_url
         self.timeout = 10
 
-    async def get_tool_list(self) -> List[MCPTool]:
+    async def get_tool_list(self) -> List[AgentsTool]:
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
                 response = await async_client.request(method="GET", url=self.url + "/mcp/tools", headers={})
@@ -27,7 +27,7 @@ class SecretShellMCPBridgeClient:
             tools = response_json[mcp_server]["tools"]
             for tool in tools:
                 data.append(
-                    MCPTool(
+                    AgentsTool(
                         server=mcp_server,
                         name=tool["name"],
                         description=tool.get("description", ""),

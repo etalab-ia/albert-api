@@ -11,7 +11,7 @@ from app.schemas.search import Search
 from app.schemas.usage import Usage
 
 
-class MCPChatCompletionRequest(BaseModel):
+class AgentsChatCompletionRequest(BaseModel):
     # only union between OpenAI fields and vLLM fields are defined. See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py#L209
     messages: List = Field(description="A list of messages comprising the conversation so far.")  # fmt: off
     model: str = Field(description="ID of the model to use. Call `/v1/models` endpoint to get the list of available models, only `text-generation` model type is supported.")  # fmt: off
@@ -47,18 +47,18 @@ class MCPChatCompletionRequest(BaseModel):
         return values
 
 
-class MCPChoiceChatCompletion(Choice):
+class AgentsChoiceChatCompletion(Choice):
     finish_reason: Literal["stop", "length", "tool_calls", "content_filter", "function_call", "max_iterations"]
 
 
-class MCPChatCompletion(ChatCompletion):
+class AgentsChatCompletion(ChatCompletion):
     id: str = Field(default=None, description="A unique identifier for the chat completion.")
     search_results: List[Search] = []
     usage: Usage = Field(default=None, description="Usage information for the request.")
-    choices: List[MCPChoiceChatCompletion]
+    choices: List[AgentsChoiceChatCompletion]
 
 
-class MCPTool(BaseModel):
+class AgentsTool(BaseModel):
     object: Literal["tool"] = "tool"
     server: str
     name: str
@@ -67,6 +67,6 @@ class MCPTool(BaseModel):
     annotations: Optional[Dict[str, Any]] = None
 
 
-class MCPTools(BaseModel):
+class AgentsTools(BaseModel):
     object: Literal["list"] = "list"
-    data: List[MCPTool]
+    data: List[AgentsTool]
