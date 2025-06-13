@@ -15,9 +15,13 @@ To contribute to the project, please follow the instructions below.
     > The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can use it as inspiration to configure your own configuration file.
 
 2. Launch the development docker compose with watch mode:
-
+   - on x86_64 (Intel/AMD) CPU architecture :
     ```bash
     docker compose --file compose.dev.yml up --watch
+    ```
+   - on ARM64 :
+    ```bash
+    docker compose --file compose.dev-arm.yml up --watch
     ```
 
     > **❗️Note**<br>
