@@ -6,8 +6,8 @@ from app.utils.variables import ENDPOINT__AGENTS_TOOLS, ENDPOINT__AGENTS_COMPLET
 
 
 @pytest.mark.usefixtures("client")
-class TestMCP:
-    def test_mcp_chat_completions_route_returns_chat_completion_with_tool_call(self, client: TestClient):
+class TestAgents:
+    def test_agents_chat_completions_route_returns_chat_completion_with_tool_call(self, client: TestClient):
         params = {
             "model": "albert-large",
             "messages": [{"role": "user", "content": "Quelles sont les données sur les accidents de la route ?"}],

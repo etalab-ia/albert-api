@@ -6,7 +6,7 @@ import pytest
 
 from app.utils.exceptions import ToolNotFoundException
 from app.helpers.agents import AgentsManager
-from app.schemas.mcp import MCPTool
+from app.schemas.agents import AgentsTool
 
 
 class TestMCPBody(SimpleNamespace):
@@ -38,14 +38,14 @@ class TestMCPLoop:
         async def test_get_tools_from_bridge_returns_flat_tool_list(self, agent_manager, mock_mcp_bridge):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = [
-                MCPTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
             ]
             expected_tools = [
-                MCPTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
             ]
             # WHEN
             actual_tools = await agent_manager.get_tools_from_bridge()
@@ -81,7 +81,7 @@ class TestMCPLoop:
         async def test_get_completions_return_error_when_tool_is_not_found(self, agent_manager, mock_mcp_bridge, mock_llm_client):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = [
-                MCPTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
             ]
             body = TestMCPBody(
                 messages=[{"content": "Je veux que tu fasses une action", "role": "user"}], model="albert-large", tools=[{"type": "tool_2"}]
@@ -96,9 +96,9 @@ class TestMCPLoop:
         ):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = [
-                MCPTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
             ]
             message_from_llm_after_tool_call = "message from llm"
 
@@ -148,9 +148,9 @@ class TestMCPLoop:
         ):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = [
-                MCPTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
             ]
             message_from_llm_after_tool_call = "message from llm"
 
@@ -197,7 +197,7 @@ class TestMCPLoop:
         async def test_get_completion_should_not_use_any_tools_if_none_is_specified(self, agent_manager, mock_mcp_bridge, mock_llm_client):
             # GIVEN
             mock_mcp_bridge.get_tool_list.return_value = [
-                MCPTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={})
+                AgentsTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={})
             ]
             message_from_llm = "message from llm without tool call"
 
@@ -230,9 +230,9 @@ class TestMCPLoop:
             # GIVEN
             agents_choice = "always"
             mock_mcp_bridge.get_tool_list.return_value = [
-                MCPTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
-                MCPTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_1", description="First tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_2", description="Second tool description", input_schema={}),
+                AgentsTool(server="mcp_server_1", name="tool_3", description="Third tool description", input_schema={}),
             ]
             message_from_llm_after_tool_call = "message from llm"
 
