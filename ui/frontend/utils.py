@@ -310,7 +310,7 @@ def input_new_role_limits(selected_role: dict):
         use_container_width=True,
     ):
         disabled = (not st.session_state.get("update_role", False) and not st.session_state.get("new_role", False)) or (st.session_state["no_roles"] and not st.session_state.get("new_role", False))  # fmt: off
-        models = get_models()
+        models = get_models() + ["web-search"]
         limits = (
             {model: {"rpm": None, "rpd": None, "tpm": None, "tpd": None} for model in models}
             if not st.session_state.get("new_role", False) and st.session_state["no_roles"]

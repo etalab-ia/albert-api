@@ -64,12 +64,13 @@ services:
       service: redis
     ports: !override
       - 8335:6379
+
   mcp-bridge:
     extends:
       file: ../compose.yml
       service: mcp-bridge
     ports: !override
-      - "9875:8000"
+      - 9875:8000
 
 volumes:
   postgres:

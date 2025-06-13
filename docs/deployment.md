@@ -352,23 +352,32 @@ The Albert API allows searching the internet to enrich API responses. For this, 
 Prerequisites:
 - Qdrant database
 - SQL database
-- A text-generation model
+- A text-generation or image-text-to-text model
 - A text-embeddings-inference model
 
 | Argument | Required | Description | Type | Values | Default |
 | --- | --- | --- | --- | --- | --- |
-| type | Required | Internet search engine type. | str | (1) | `duckduckgo` | 
-| model | Required | A text-generation model ID if required for web search. | str | (2) |
-| args | Required | Search engine client arguments (depends on the search engine type). | dict | |
+| query_model | Required | Model to use to generate the web query, only text-generation and image-text-to-text models are supported. | str | | |
+| limited_domains | Optional | List of domains to limit the web search to. | list[str] | | `[]` |
+| user_agent | Optional | User agent to use for the scrapping requests. | str | | `None` |
+| client | Required | Web search client to use. | dict | (1) | |
+| client.type | Optional | Web search client type. | str | (2) | `duckduckgo` |
+| client.args | Optional | Web search client arguments (depends on the web search client type). | dict | (3) | |
 
 **Example**
 
 ```yaml
 web_search:
-  - type: brave
-    model: my-language-model
+  query_model: my-language-model
+  limited_domains:
+    - service-public.fr
+    - gouv.fr
+  user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3
+  client:
+    type: brave
     args:
       api_key: xP...Df
+      timeout: 30
 ```
 
 **(1) Web Search Engine Types**

@@ -23,6 +23,7 @@ class SearchArgs(BaseModel):
     method: SearchMethod = Field(default=SearchMethod.SEMANTIC)
     score_threshold: Optional[float] = Field(default=0.0, ge=0.0, le=1.0, description="Score of cosine similarity threshold for filtering results, only available for semantic search method.")  # fmt: off
     web_search: bool = Field(default=False, description="Whether add internet search to the results.")
+    web_search_k: int = Field(default=5, description="Number of results to return for web search.")
 
     @model_validator(mode="after")
     def score_threshold_filter(cls, values):

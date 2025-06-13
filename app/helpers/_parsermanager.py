@@ -87,7 +87,7 @@ class ParserManager:
 
     async def parse_file(self, **params) -> ParsedDocument:
         params = ParserParams(**params)
-        file_type = self._detect_file_type(params.file)
+        file_type = self._detect_file_type(file=params.file)
 
         method_map = {FileType.PDF: self._parse_pdf, FileType.HTML: self._parse_html, FileType.MD: self._parse_md, FileType.TXT: self._parse_txt}
 

@@ -80,7 +80,7 @@ async def upload_file(
         files = [(file, None)]
 
     for file, metadata in files:
-        document = await global_context.parser.parse_file(
+        document = await global_context.documents.parse_file(
             file=file,
             output_format=ParsedDocumentOutputFormat.MARKDOWN.value,
             force_ocr=False,

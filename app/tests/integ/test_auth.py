@@ -7,7 +7,6 @@ import pytest
 from redis import Redis
 
 from app.helpers._usagetokenizer import UsageTokenizer
-
 from app.schemas.auth import LimitType
 from app.utils.settings import settings
 from app.utils.variables import (
@@ -16,6 +15,7 @@ from app.utils.variables import (
     ENDPOINT__MODELS,
     ENDPOINT__ROLES,
     ENDPOINT__ROLES_ME,
+    ENDPOINT__SEARCH,
     ENDPOINT__TOKENS,
     ENDPOINT__USERS,
     ENDPOINT__USERS_ME,
@@ -427,3 +427,126 @@ class TestAuth:
 
         # Check that tokens are different for both users
         assert user1_token_data["token"] != user2_token_data["token"], "Tokens with same name across users should not be modified by each other"
+
+    def test_web_search_limits_search(self, client: TestClient, tokenizer, text_generation_model):
+        # Create a role with web search limits (only one request per day)
+        response = client.get(url=f"/v1{ENDPOINT__MODELS}")
+        assert response.status_code == 200, response.text
+        models = response.json()["data"]
+
+        models = [model["id"] for model in models]
+
+        limits = []
+        for model in models:
+            limits.append({"model": model, "type": LimitType.RPM.value, "value": None})
+            limits.append({"model": model, "type": LimitType.RPD.value, "value": None})
+            limits.append({"model": model, "type": LimitType.TPM.value, "value": None})
+            limits.append({"model": model, "type": LimitType.TPD.value, "value": None})
+
+        limits.append({"model": "web-search", "type": LimitType.RPM.value, "value": None})
+        limits.append({"model": "web-search", "type": LimitType.RPD.value, "value": 1})
+
+        response = client.post_with_permissions(url=ENDPOINT__ROLES, json={"name": f"test_role_{str(uuid4())}", "limits": limits})
+        assert response.status_code == 201, response.text
+        role_id = response.json()["id"]
+
+        # Create a user
+        response = client.post_with_permissions(
+            url=ENDPOINT__USERS,
+            json={"name": f"test_user_{str(uuid4())}", "role": role_id},
+        )
+        assert response.status_code == 201, response.text
+        user_id = response.json()["id"]
+
+        # Create a token for this user
+        response = client.post_with_permissions(
+            url=ENDPOINT__TOKENS,
+            json={"name": f"test_token_{str(uuid4())}", "user": user_id, "expires_at": int((time.time()) + 60 * 10)},
+        )
+        assert response.status_code == 201, response.text
+        token = response.json()["token"]
+
+        # Test the web search limits (/v1/search)
+        prompt = "Can you find information about the DINUM, the French government agency responsible for digital transformation?"
+        response = client.post(
+            url=f"/v1{ENDPOINT__SEARCH}",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"web_search": True, "prompt": prompt},
+        )
+        assert response.status_code == 200, response.text
+
+        response = client.post(
+            url=f"/v1{ENDPOINT__SEARCH}",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "web_search": True,
+                "prompt": prompt,
+            },
+        )
+        assert response.status_code == 429, response.text
+
+    def test_web_search_limits_chat_completions(self, client: TestClient, tokenizer, text_generation_model):
+        # Create a role with web search limits (only one request per day)
+        response = client.get(url=f"/v1{ENDPOINT__MODELS}")
+        assert response.status_code == 200, response.text
+        models = response.json()["data"]
+
+        models = [model["id"] for model in models]
+
+        limits = []
+        for model in models:
+            limits.append({"model": model, "type": LimitType.RPM.value, "value": None})
+            limits.append({"model": model, "type": LimitType.RPD.value, "value": None})
+            limits.append({"model": model, "type": LimitType.TPM.value, "value": None})
+            limits.append({"model": model, "type": LimitType.TPD.value, "value": None})
+
+        limits.append({"model": "web-search", "type": LimitType.RPM.value, "value": None})
+        limits.append({"model": "web-search", "type": LimitType.RPD.value, "value": 1})
+
+        response = client.post_with_permissions(url=ENDPOINT__ROLES, json={"name": f"test_role_{str(uuid4())}", "limits": limits})
+        assert response.status_code == 201, response.text
+        role_id = response.json()["id"]
+
+        # Create a user
+        response = client.post_with_permissions(
+            url=ENDPOINT__USERS,
+            json={"name": f"test_user_{str(uuid4())}", "role": role_id},
+        )
+        assert response.status_code == 201, response.text
+        user_id = response.json()["id"]
+
+        # Create a token for this user
+        response = client.post_with_permissions(
+            url=ENDPOINT__TOKENS,
+            json={"name": f"test_token_{str(uuid4())}", "user": user_id, "expires_at": int((time.time()) + 60 * 10)},
+        )
+        assert response.status_code == 201, response.text
+        token = response.json()["token"]
+
+        # Test the web search limits (/v1/chat/completions)
+        prompt = "Can you find information about the DINUM, the French government agency responsible for digital transformation?"
+        response = client.post(
+            url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "model": text_generation_model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 100,
+                "search": True,
+                "search_args": {"web_search": True},
+            },
+        )
+        assert response.status_code == 200, response.text
+
+        response = client.post(
+            url=f"/v1{ENDPOINT__CHAT_COMPLETIONS}",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "model": text_generation_model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 100,
+                "search": True,
+                "search_args": {"web_search": True},
+            },
+        )
+        assert response.status_code == 429, response.text

@@ -1032,4 +1032,1330 @@ interactions:
     status:
       code: 403
       message: Forbidden
+- request:
+    body: "{\"input\":[\"Recherchez des informations sur la r\xE9forme des retraites
+      en France.\"],\"model\":\"embeddings-small\",\"encoding_format\":\"float\"}"
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '135'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"data":[{"embedding":[-0.01210102,0.04287013,-0.050524227,0.023716921,-0.031730365,-0.009819165,0.058861084,0.043948174,0.023663018,0.01588315,0.014966815,-0.025405854,-0.015964003,0.027382264,-0.022027988,0.019350851,0.02215376,-0.015748395,0.019332884,-0.008107773,0.0059202467,0.020680437,0.019261014,-0.03223345,-0.0266456,-0.0026973505,0.0063245124,0.03715651,-0.0037461955,-0.010681598,0.005718114,-0.0014598484,0.02556756,-0.005902279,-0.045349628,-0.029574282,-0.027040884,-0.06310138,-0.037048705,0.040893722,-0.02583707,-0.0126939425,-0.0009421637,-0.0015889888,0.04649954,-0.022081891,-0.03837829,0.0032184043,0.00583041,-0.00039359758,0.018793862,-0.004729909,0.055806633,-0.06245456,-0.028873555,0.017033061,-0.041396808,-0.06209521,-0.08157183,-0.010600745,-0.0036136862,0.04506215,-0.034479372,-0.018362647,0.041612417,0.073881805,0.023267737,0.04355289,0.0043076756,-0.036617488,0.004914074,-0.020410925,-0.049050905,-0.015317178,-0.016889323,0.02630422,0.019889873,-0.048619688,0.002008976,0.05106325,-0.013035323,0.034946524,-0.022279533,0.038018942,-0.04402004,0.02862201,0.024166105,0.017760739,0.008071839,-0.016862372,-0.0032408633,0.0231779,0.0046715145,-0.0067647127,-0.03059842,-0.021237426,-0.02466919,-0.04764945,0.054908264,0.0024772503,-0.006607498,0.050632033,0.0317663,0.028082991,0.01766192,-0.045565236,-0.038881376,0.027975187,0.01329585,0.011274521,-0.017554116,0.0049410253,0.02952038,0.034317665,0.008884862,-0.015739411,0.00075013743,-0.056884676,0.029286804,-0.04527776,0.0044806115,0.05972352,0.08344044,0.00062605034,0.027148688,0.0073890784,0.020087514,-0.015919086,0.0035710137,-0.028065024,0.0077619012,0.045529302,-0.020213285,-0.023842692,-0.015990954,-0.03027501,0.0222975,0.02535195,0.0022964538,-0.058034588,0.02263888,0.026735438,-0.036940902,0.0021257638,0.021147588,-0.029825825,0.05030862,0.0283525,0.0005586727,-0.03137102,0.01434694,0.034928557,-0.0033711267,0.031388987,-0.043157607,0.024255943,-0.03390442,0.00037113836,-0.020914013,0.018353663,-0.05127886,0.056130048,-0.041253068,0.02515431,-0.01707798,-0.009298111,0.015757378,-0.013879789,-0.028442338,-0.020734338,0.0222975,-0.08545279,0.0162964,0.0080987895,-0.009837132,0.015389048,0.042942002,0.014634418,0.01727562,-0.012406465,-0.03960007,0.02262091,-0.023393508,-0.039887547,-0.016727617,0.0068410737,-0.044559065,-0.011535048,0.011130782,-0.046247996,0.009792213,-0.008336857,0.016197579,-0.017356474,0.016538959,-0.057890847,-0.004662531,0.013628246,0.022081891,-0.020285154,0.002351479,0.020410925,0.0013228472,0.040390637,-0.0076675727,-0.053470876,-0.044415325,-0.020410925,0.027921284,-0.09141795,-0.01397861,0.00042784787,-0.04527776,0.047900993,0.04017503,0.06716201,-0.0141942175,0.05091951,0.058250196,-0.022926357,-0.03390442,0.022261564,-0.009549654,0.008893846,0.02120149,0.011508097,-0.024255943,0.016673714,0.049733665,-0.02896339,-0.011867444,0.042115502,0.029897694,-0.03559335,0.008997158,-0.021165555,-0.017365457,0.03891731,0.0035508003,-0.008884862,-0.0049050907,-0.05023675,0.029107131,0.013412638,-0.011022978,-0.012702927,0.05986726,0.00978323,-0.04779319,-0.047254167,0.012927518,-0.011642852,0.032305323,0.025765201,0.010996027,-0.03367084,-0.013403654,-0.012056101,0.01734749,-0.046319865,-0.017060012,0.023393508,0.020267187,0.019710198,-0.019404754,0.042043634,0.019674264,0.026879176,0.015146488,-0.011894396,-0.007847247,-0.014850027,0.030867932,0.010708549,0.024920734,0.0074474723,0.02849624,-0.018560287,0.08990869,-0.019386787,0.013960642,0.034120023,0.058861084,-0.024866832,0.0274721,-0.028927457,-0.012002199,0.003445242,-0.021596773,-0.036258142,-0.046463605,-0.027166655,0.055519156,-0.028819652,0.015047668,0.021650674,0.013349752,-0.11872835,0.021920184,-0.039851613,-0.012083053,-0.00033464216,0.05228503,-0.0141942175,-0.02359115,-0.043732565,-0.037120573,0.0006743376,-0.04233111,0.0078113116,0.038486093,-0.01983597,0.043840367,-0.028262664,-0.00678268,-0.027166655,-0.019117275,-0.047433842,-0.04527776,0.038845442,0.008574924,-0.026501862,0.0497696,-0.019440688,-0.03491059,0.015721444,0.035988633,-0.030652324,-0.0007394693,0.008107773,-0.016745584,0.003366635,0.036509685,0.04391224,-0.0013273391,-0.005304864,0.008341349,0.004361578,0.012927518,-0.00063671847,-0.0060684774,-0.029915662,-0.0026928587,-0.0150297005,-0.021417098,-0.042798262,-0.028981358,-0.07366619,-0.03395832,-0.016107742,0.052931856,-0.07226474,-0.011579966,0.06389195,0.047613516,0.0061403466,0.015389048,0.0002862145,-0.059759453,0.00035260952,0.017697854,-0.0180033,-0.0030454684,0.041935828,-0.07682845,0.0044806115,0.018254843,0.0650778,-0.021686608,-0.010483957,0.012747845,-0.012118987,0.03027501,-0.045565236,0.009118438,0.010340218,-0.08609961,-0.03618627,0.042977937,-0.040893722,-5.9201062e-05,-0.009926969,-0.0024952178,-0.0061672977,0.0018641141,0.029430542,0.24579355,0.052105356,0.054369245,-0.04150461,-0.0050398456,-0.05487233,-0.0021673134,0.018560287,0.03237719,-0.018632157,0.0036091944,0.010510908,-0.036042534,0.0037776383,-0.017230703,0.042367045,-0.012011183,-0.030454682,0.022854488,-0.008736631,0.047326036,0.02528008,-0.0009073519,0.024381714,-0.07395367,0.013439588,-0.024094235,-0.015505835,-0.044954345,0.031981908,-0.0070297313,-0.013179062,0.032017842,-0.020428894,-0.0047838106,0.0052734213,0.008291938,-0.026501862,0.026214385,0.02596284,0.002627727,-0.026699504,0.020914013,0.02481293,-0.0006872517,0.021093685,-0.0120291505,-0.011193668,0.018039234,0.013861822,-0.018488418,-0.01795838,0.0077888523,-0.03135305,0.006275102,-0.0056148013,-0.02100385,-0.00058899267,-0.012747845,0.059364174,0.010457006,-0.008521022,-0.032484993,0.0136821475,-0.041001525,-0.0636404,0.03974381,-0.041432742,0.060154736,0.049661797,-0.0015889888,0.030975737,0.041576482,0.016143678,0.013421621,-0.009765263,0.00746544,0.028981358,-0.014526614,0.0021830348,-0.04560117,-0.033365395,0.008377284,-0.025890972,0.043984108,-0.03837829,-0.0058349017,0.0073711113,0.00570913,0.01468832,-0.0077529177,-0.009378964,0.02195612,-0.035898793,-0.009909001,-0.07151011,0.024435615,0.002035927,-0.08099688,0.041289,0.02598081,-0.02364505,-0.018317727,-0.02998753,0.04103746,-0.005116207,-0.017760739,0.03115541,-0.023716921,0.002143731,0.02651983,0.013592311,-0.02332164,-0.04649954,-0.036940902,0.018811831,0.06719794,0.024561387,-0.022045957,-0.01315211,-0.028065024,0.03544961,-0.026627634,-0.0030454684,-0.008745614,0.010349202,0.027058851,0.008997158,-0.038486093,0.018317727,-0.0058843116,-0.007874197,0.032287356,0.0017473262,0.021560837,0.0028455814,0.012487318,0.017455295,-0.01588315,-0.0021998791,0.01032225,0.023339607,-0.020770272,-0.08272175,-0.0007832648,0.05303966,-0.01400556,0.014885961,0.006023559,0.058932956,0.025711298,-0.010735501,0.06119684,-0.013304833,-0.011166717,-0.016512008,-0.003818065,0.005030862,0.029843792,-0.010052741,0.019764101,-0.011741673,0.02030312,0.08322483,0.04254672,0.024507485,0.00040482718,0.019386787,0.01510157,-0.016772535,-0.014661369,-0.0309398,-0.041289,0.01588315,-0.005632769,0.005574375,0.010115626,0.004357086,-0.04567304,-0.01724867,0.010367169,0.013080241,0.01803025,-0.010942125,0.0048736474,0.026465928,-0.0159101,-0.011238586,0.02420204,-0.013349752,0.0073127174,0.0489431,0.010349202,-0.035701152,0.018632157,-0.031478822,0.035737086,-0.0009837132,0.037587725,-0.055267613,-0.06791664,0.0083638085,0.019153211,-0.03354507,-0.03381458,0.01659286,0.008260496,0.03708464,-0.011822525,0.01080737,-0.043732565,-0.006248151,0.007375603,-0.018102119,0.015415998,-0.011121798,-8.246739e-05,-0.00075013743,-0.027436165,-0.004119018,0.0017664165,0.012478335,0.029232902,-0.0041437233,-0.014463728,0.01956646,-0.0056103095,-0.0009848361,-0.032556865,0.01661083,-0.015604656,-0.034928557,-0.014140315,-0.023842692,-0.028442338,0.018335694,0.0011746164,0.039096985,0.019207112,-0.031335082,-0.018524352,0.0014205447,0.046787016,0.02127336,-0.034120023,-0.026879176,-0.02256701,0.0051251906,0.041253068,0.030490616,-0.051566336,0.040210962,0.051997554,-0.024184072,-0.039528202,0.04477467,-0.041289,-0.011885411,0.028729815,-0.05656126,-0.011921346,0.006189757,0.026196416,-0.021722544,-0.02930477,-0.002145977,0.033149786,0.02971802,-0.007964035,-0.050847642,-0.030652324,-0.010897206,-0.053327136,0.028747782,0.015604656,0.013089225,-0.035880826,-0.038270485,-0.05986726,-0.001977533,-0.008314398,0.069964916,0.0042268224,-0.010879239,-0.025100408,-0.01141826,0.052680314,-0.038737636,0.0034272748,-0.032880276,-2.8091554e-05,-0.026214385,-0.056273784,-0.001639522,0.01622453,-0.041289,0.008327873,0.043984108,-0.033167753,-0.0143649075,-0.011939313,0.0009803444,-0.0038090812,-0.022243597,0.039564136,-0.034461405,-0.00036692727,-0.03597066,0.0060415263,-0.041432742,0.01834468,-0.06417943,0.0037237362,0.024399681,0.009765263,-0.028604044,0.012424433,-0.032826375,0.006275102,0.018847765,0.008300922,0.011373342,-0.05896889,-0.0030319928,-0.04064218,0.0360066,-0.031263214,0.008395251,-0.01595502,0.015676524,-0.018560287,0.019961743,-0.009747295,-0.0053228317,0.0015418244,-0.035485543,0.046068322,0.036976837,0.020374991,-0.038809508,0.00690396,-0.04254672,0.009882051,-0.009909001,0.028801685,0.013942675,-0.015002749,0.023411475,-0.0351801,0.016772535,-0.03898918,0.007946067,-0.02154287,-0.027220557,-0.018937603,0.0065940227,-0.01656591,0.018973537,0.021183522,0.0463558,-0.033886448,-0.00401346,-0.039240725,0.035000425,0.022171728,0.035665218,0.015065635,-0.026699504,0.00086411793,-0.032305323,0.00914988,-0.014562549,0.011337407,-0.03422783,-0.032359224,0.07000085,-0.0031465348,0.022063924,-0.0039707874,-0.03906105,0.022117825,-0.02120149,-0.031676464,-0.0145895,0.03183817,-0.033850513,0.022387335,0.012873617,-0.030688258,0.015083603,0.01107688,-0.042223305,0.0030746653,-0.011624885,-0.12490912,-0.01107688,-0.026412025,-0.0089522395,-0.02447155,0.018901667,0.026663568,0.006535629,0.020572633,-0.010160545,0.011705738,-0.029735988,0.031263214,-0.021345228,0.005569883,0.007604687,-0.011813542,-0.018991504,-0.017329523,0.07424115,0.026717471,0.0014463728,-0.008305415,0.01407743,0.017401392,0.020357024,0.043373216,0.02481293,-0.021578804,-0.014778157,0.015856199,-0.028675914,0.0325928,0.058789216,0.019692231,-0.0180033,0.0063514635,-0.009181323,0.053255267,-0.025172278,-0.03122728,0.012774796,-0.04423565,0.03081403,-0.0062346756,0.016628796,0.08128436,-0.04265452,-0.03622221,0.010178512,0.012918535,-0.032413125,-0.03927666,0.033976287,0.020734338,-0.028711848,-0.013915724,0.0041819043,0.033563036,0.07176165,0.010448023,0.035413675,-0.019620363,-0.062346753,0.035359774,0.037515856,0.010007822,0.026753405,0.0049589924,0.009729328,-0.012514269,0.0072722905,0.008264988,-0.030831996,-0.0018742207,-0.0248848,0.055842567,-0.006809631,-0.0064323163,-0.046176128,-0.02024922,0.018111104,-0.039384462,0.0056148013,0.0074834074,0.008134725,-0.0034340124,-0.028711848,-0.005533948,0.016772535,-0.03300605,-0.033239625,0.0034497338,0.017967364,-0.007663081,0.039025117,-0.0650778,-0.022513108,-0.00091184373,0.0015923576,-0.012074069,-0.018578256,-0.04750571,-0.0055833585,-0.04437939,0.064251296,0.029394608,-0.009738311,0.017554116,-0.051566336,-0.00717347,0.0018742207,0.024094235,0.049266513,-0.08509344,-0.02869388,-0.040534373,0.024974637,0.02713072,0.003025255,-0.019081341,-0.020896045,0.008916304,-0.011355374,0.048368145,-0.027831448,-0.00026628195,0.021075718,-0.030454682,0.032484993,0.020608567,-0.018847765,0.0081931185,0.03271857,0.006522153,0.01824586,-0.019099308,0.004631088,-0.049194645,0.019961743,0.003815819,-0.03250296,-0.020374991,-0.054836396,-0.035629284,-0.0075148502,-0.017724805,-0.04628393,0.02330367,-0.00978323,-0.007838262,0.0015788821,0.0032386174,-0.005480046,-0.011526064,0.059795387,-0.08947747,0.0054351278,0.008233544,0.05814239,0.015173439,-0.012631057,-0.014616451,-0.041360874,0.03095777,0.021506935,-0.015676524,-0.01363723,-0.0036675883,-0.024363747,-0.015020717,0.015218358,0.0015002749,-0.023878627,0.0034834228,0.010088675,-0.003445242,-0.006791664,0.047577582,0.009873067,-0.0033396839,0.017949397,0.056058176,-0.043984108,0.007964035,-0.018218907,0.0029825824,-0.006962354,-0.022081891,-0.043193545,-0.039384462,-0.056489393,0.008907321,0.022135792,0.03496449,0.07941575,0.0153531125,-0.017051028,-0.00712406,0.0054351278,-0.006463759,0.0037394578,0.025316017,-0.026052678,-0.0137001155,0.02698698,0.015694493,0.009158864,0.021021817,-0.07273189,0.019512558,0.030526552,0.008633318,0.054081768,-0.018470451,0.0063739223,0.04818847,-0.052249096,-0.031263214,0.021363197,0.027579904,0.07539106,-0.011463178,0.008745614,-0.0019213851,-0.012127971,-0.019476622,0.010798386,0.014230153,0.045205887,0.040570308,0.02051873,0.006948878,-0.005821426,0.06504186,0.0034542258,-0.011669803,-0.0018068431,-0.031712398,-0.01622453,-0.0041976254,0.0040853294,-0.041828025,-0.023716921],"index":0,"object":"embedding"}],"model":"BAAI/bge-m3","object":"list","usage":{"prompt_tokens":14,"completion_tokens":0,"total_tokens":14,"details":[{"id":"request-8fd6ff97a7d14cd0b5a069af8be6505a","model":"BAAI/bge-m3","prompt_tokens":14,"completion_tokens":0,"total_tokens":14}]},"id":"request-8fd6ff97a7d14cd0b5a069af8be6505a"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 16:36:05 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '13062'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - api.search.brave.com
+      user-agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+      x-subscription-token:
+      - BSAHUAJdQ7ZZTtK8cUhcP5qcK_AKShy
+    method: GET
+    uri: https://api.search.brave.com/res/v1/web/search?q=r%C3%A9forme+des+retraites+en+France&count=5&country=fr&safesearch=strict
+  response:
+    body:
+      string: "{\"query\":{\"original\":\"r\xE9forme des retraites en France\",\"show_strict_warning\":false,\"is_navigational\":false,\"is_news_breaking\":false,\"spellcheck_off\":true,\"country\":\"fr\",\"bad_results\":false,\"should_fallback\":false,\"postal_code\":\"\",\"city\":\"\",\"header_country\":\"\",\"more_results_available\":true,\"state\":\"\"},\"mixed\":{\"type\":\"mixed\",\"main\":[{\"type\":\"web\",\"index\":0,\"all\":false},{\"type\":\"web\",\"index\":1,\"all\":false},{\"type\":\"videos\",\"all\":true},{\"type\":\"web\",\"index\":2,\"all\":false},{\"type\":\"web\",\"index\":3,\"all\":false},{\"type\":\"web\",\"index\":4,\"all\":false},{\"type\":\"web\",\"index\":5,\"all\":false},{\"type\":\"web\",\"index\":6,\"all\":false},{\"type\":\"web\",\"index\":7,\"all\":false},{\"type\":\"web\",\"index\":8,\"all\":false},{\"type\":\"web\",\"index\":9,\"all\":false},{\"type\":\"web\",\"index\":10,\"all\":false},{\"type\":\"web\",\"index\":11,\"all\":false},{\"type\":\"web\",\"index\":12,\"all\":false},{\"type\":\"web\",\"index\":13,\"all\":false},{\"type\":\"web\",\"index\":14,\"all\":false},{\"type\":\"web\",\"index\":15,\"all\":false},{\"type\":\"web\",\"index\":16,\"all\":false},{\"type\":\"web\",\"index\":17,\"all\":false},{\"type\":\"web\",\"index\":18,\"all\":false},{\"type\":\"web\",\"index\":19,\"all\":false}],\"top\":[],\"side\":[]},\"type\":\"search\",\"videos\":{\"type\":\"videos\",\"results\":[{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=EtnAE7HuHKI\",\"title\":\"R\xE9forme
+        des retraites : les d\xE9put\xE9s approuvent son abrogation ...\",\"description\":\"La
+        commission des affaires sociales examine la \\\"proposition de loi d'abrogation
+        de la retraite \xE0 64 ans\\\", d\xE9pos\xE9e par La France insoumise (NFP).
+        Le texte, po...\",\"age\":\"November 20, 2024\",\"page_age\":\"2024-11-20T16:00:23\",\"video\":{\"duration\":\"02:41:51\",\"views\":33386,\"creator\":\"LCP
+        - Assembl\xE9e nationale\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/8bw2dSn0P_jMaL1zSKhEQoLRHjXrePa6LHHEyXvYcR0/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9F/dG5BRTdIdUhLSS9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/EtnAE7HuHKI/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=ECw8WgfFttA\",\"title\":\"Le
+        S\xE9nat rejette largement deux propositions d'abrogation de ...\",\"description\":\"Enjoy
+        the videos and music you love, upload original content, and share it all with
+        friends, family, and the world on YouTube.\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/DJjRpWUPZ8F9sr7-m5hi-2f5heiawkaPqKiciHQSDWQ/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9F/Q3c4V2dmRnR0QS9o/cWRlZmF1bHQuanBn\",\"original\":\"https://i.ytimg.com/vi/ECw8WgfFttA/hqdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=B0a5jXfL32w\",\"title\":\"Abrogation
+        de la r\xE9forme des retraites : comment la gauche a ...\",\"description\":\"Enjoy
+        the videos and music you love, upload original content, and share it all with
+        friends, family, and the world on YouTube.\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/FfzjfqeWskYrrunRfbJthwEiryVrp5ljqqQd0lhMEZE/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9C/MGE1alhmTDMydy9o/cWRlZmF1bHQuanBn\",\"original\":\"https://i.ytimg.com/vi/B0a5jXfL32w/hqdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=pUu3RLWkXmY\",\"title\":\"R\xE9forme
+        des retraites : examen d'une proposition de loi d\xE9pos\xE9e ...\",\"description\":\"La
+        commission des affaires sociales examine la \\\"proposition de loi visant
+        \xE0 restaurer un syst\xE8me de retraite plus juste\\\", d\xE9pos\xE9e par
+        le Rassemblement Nation...\",\"age\":\"October 24, 2024\",\"page_age\":\"2024-10-24T12:01:03\",\"video\":{\"duration\":\"02:34:25\",\"views\":7564,\"creator\":\"LCP
+        - Assembl\xE9e nationale\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/wCZMFZWh6PvPi9j-1wygefeGXDrWUD1BjhWXXHLlHSE/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9w/VXUzUkxXa1htWS9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/pUu3RLWkXmY/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=l8wuOaoFj0s\",\"title\":\"Abrogation
+        de la r\xE9forme des retraites : le Rassemblement national ...\",\"description\":\"Alors
+        que le Rassemblement national proposait d\u2019abroger la r\xE9forme des retraites
+        lors de sa niche parlementaire le 31 octobre prochain, pour fixer \xE0 nouveau
+        ...\",\"age\":\"October 24, 2024\",\"page_age\":\"2024-10-24T10:25:16\",\"video\":{\"duration\":\"19:21\",\"views\":54088,\"creator\":\"Public
+        S\xE9nat\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/Dd3jB4tuUa_AkIzpxU3OPcHCmXoIzlifSoGvOVmyurs/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9s/OHd1T2FvRmowcy9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/l8wuOaoFj0s/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.tf1info.fr/conso-argent/videos/video-reforme-des-retraites-la-revalorisation-enfin-versee-1956-2309807.html\",\"title\":\"R\xE9forme
+        des retraites : la revalorisation enfin vers\xE9e | TF1 INFO\",\"description\":\"\u25B6\uFE0F
+        Les retrait\xE9s attendaient la revalorisation de leur pension, qui va augmenter
+        d\xE8s septembre prochain avec un an de retard. En effet, 60 euros par mois,
+        en moyenne, seront vers\xE9s de mani\xE8re r\xE9troactive aux personnes concern\xE9es.
+        (Mon argent et mes droits). TF1 INFO\",\"age\":\"July 22, 2024\",\"page_age\":\"2024-07-22T12:00:01\",\"video\":{\"duration\":\"01:36\",\"creator\":\"TF1
+        Info\",\"publisher\":\"Tf1info\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"tf1info.fr\",\"hostname\":\"www.tf1info.fr\",\"favicon\":\"https://imgs.search.brave.com/TKtTc6djpKVeYmDZjKqw-Iefx7eEy0Yw1jjLcuogQyo/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZDBkZDUyMzg2/OTQ2NmU5ZDZiYzkw/OGJiNTc2ZmNiNTQ5/MjgxYWFiMmEwYjYz/MmJlNzExOTc3MTc2/NWQ3MTlhYS93d3cu/dGYxaW5mby5mci8\",\"path\":\"\u203A
+        conso-argent  \u203A videos  \u203A video-reforme-des-retraites-la-revalorisation-enfin-versee-1956-2309807.html\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/hH-E8cnsq5O1Rdu0UTKancA-KSoJPAp4IyZbWFwUvvU/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9waG90/b3MudGYxaW5mby5m/ci9pbWFnZXMvMTI4/MC83MjAvcmVmb3Jt/ZS1kZXMtcmV0cmFp/dGVzLWxhLXJldmFs/b3Jpc2F0aW9uLWVu/ZmluLXZlcnNlZS0y/LTNhNjczNC0wQDF4/LmpwZWc_b3Zlcmxh/eUltYWdlPWJHOW5i/eTEwWmpGcGJtWnZM/V1JsWm1GMWJIUXVj/RzVuJmFtcDtvdmVy/bGF5V2lkdGg9MTgm/YW1wO292ZXJsYXlH/cmF2aXR5PW5vcnRo/d2VzdCZhbXA7cz03/OGM4MDI\",\"original\":\"https://photos.tf1info.fr/images/1280/720/reforme-des-retraites-la-revalorisation-enfin-versee-2-3a6734-0@1x.jpeg?overlayImage=bG9nby10ZjFpbmZvLWRlZmF1bHQucG5n&amp;overlayWidth=18&amp;overlayGravity=northwest&amp;s=78c802\"}}],\"mutated_by_goggles\":false},\"web\":{\"type\":\"search\",\"results\":[{\"title\":\"R\xE9forme
+        des retraites - \xC2ge l\xE9gal de d\xE9part\",\"url\":\"https://www.info-retraite.fr/portail-info/sites/PortailInformationnel/home/reforme-des-retraites---age-lega.html\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Salari\xE9,
+        fonctionnaire, ind\xE9pendant, ch\xF4meur, <strong>retrait\xE9</strong> :
+        quels que soient votre parcours et votre situation, retrouvez tous vos droits
+        avec Info <strong>Retraite</strong>.\",\"profile\":{\"name\":\"Info-retraite\",\"url\":\"https://www.info-retraite.fr/portail-info/sites/PortailInformationnel/home/reforme-des-retraites---age-lega.html\",\"long_name\":\"info-retraite.fr\",\"img\":\"https://imgs.search.brave.com/Yk2rtilXUZ_kws-pWHPX5Ro_KpsuF3-BiJX2-7nXJ6k/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWQ5ZDA2N2Ux/MTU2ZGNmY2Y0OThl/NmQ5OTg0NzhiNDM4/YjBhOTYyZjc1ZjVi/NzUzZTdmNTBiYjJk/MTViZmUwMy93d3cu/aW5mby1yZXRyYWl0/ZS5mci8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"info-retraite.fr\",\"hostname\":\"www.info-retraite.fr\",\"favicon\":\"https://imgs.search.brave.com/Yk2rtilXUZ_kws-pWHPX5Ro_KpsuF3-BiJX2-7nXJ6k/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWQ5ZDA2N2Ux/MTU2ZGNmY2Y0OThl/NmQ5OTg0NzhiNDM4/YjBhOTYyZjc1ZjVi/NzUzZTdmNTBiYjJk/MTViZmUwMy93d3cu/aW5mby1yZXRyYWl0/ZS5mci8\",\"path\":\"\u203A
+        portail-info  \u203A sites  \u203A PortailInformationnel  \u203A home  \u203A
+        reforme-des-retraites---age-lega.html\"}},{\"title\":\"Les r\xE9formes des
+        r\xE9gimes de retraite de 1982 \xE0 2023\",\"url\":\"https://www.vie-publique.fr/eclairage/19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"profile\":{\"name\":\"Vie-publique\",\"url\":\"https://www.vie-publique.fr/eclairage/19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie\",\"long_name\":\"vie-publique.fr\",\"img\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\"},\"language\":\"unk\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"vie-publique.fr\",\"hostname\":\"www.vie-publique.fr\",\"favicon\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\",\"path\":\"\u203A
+        eclairage  \u203A 19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie\"}},{\"title\":\"R\xE9forme
+        des retraites en France en 2023 \u2014 Wikip\xE9dia\",\"url\":\"https://fr.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_France_en_2023\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"La
+        r\xE9forme des retraites en France de 2023 <strong>consiste en un ensemble
+        de mesures r\xE9visant le syst\xE8me de retraite fran\xE7ais r\xE9alis\xE9es
+        pendant la mandature d&#x27;Emmanuel Macron</strong>, et port\xE9es par la
+        Premi\xE8re Ministre \xC9lisabeth Borne et le ministre du travail Olivier
+        Dussopt, dont le report de ...\",\"page_age\":\"2025-06-05T12:30:02\",\"profile\":{\"name\":\"Wikipedia\",\"url\":\"https://fr.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_France_en_2023\",\"long_name\":\"fr.wikipedia.org\",\"img\":\"https://imgs.search.brave.com/9hcXszQtxFqKhmv5bxBm9G2EFNIcGvLx34pvPEqARmw/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTMzMDhhNDdi/YjBhOTk2ZTM1MTBm/ODZlNjc3Y2Q5ZjBj/MTFmOTQ5ZWIzNmRh/NjI4ZTI0NGRhZDgx/MmE4ZTJjNi9mci53/aWtpcGVkaWEub3Jn/Lw\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"fr.wikipedia.org\",\"hostname\":\"fr.wikipedia.org\",\"favicon\":\"https://imgs.search.brave.com/9hcXszQtxFqKhmv5bxBm9G2EFNIcGvLx34pvPEqARmw/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTMzMDhhNDdi/YjBhOTk2ZTM1MTBm/ODZlNjc3Y2Q5ZjBj/MTFmOTQ5ZWIzNmRh/NjI4ZTI0NGRhZDgx/MmE4ZTJjNi9mci53/aWtpcGVkaWEub3Jn/Lw\",\"path\":\"\u203A
+        wiki  \u203A R\xE9forme_des_retraites_en_France_en_2023\"},\"age\":\"5 days
+        ago\"},{\"title\":\"Les diff\xE9rentes r\xE9formes des retraites de 1993 \xE0
+        2023\",\"url\":\"https://www.vie-publique.fr/eclairage/20111-retraites-les-differentes-reformes-de-1993-2023\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"profile\":{\"name\":\"Vie-publique\",\"url\":\"https://www.vie-publique.fr/eclairage/20111-retraites-les-differentes-reformes-de-1993-2023\",\"long_name\":\"vie-publique.fr\",\"img\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\"},\"language\":\"unk\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"vie-publique.fr\",\"hostname\":\"www.vie-publique.fr\",\"favicon\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\",\"path\":\"\u203A
+        eclairage  \u203A 20111-retraites-les-differentes-reformes-de-1993-2023\"}},{\"title\":\"R\xE9forme
+        des retraites : ce qui change \xE0 partir du 1er septembre 2023 | Travail-emploi.gouv.fr
+        | Minist\xE8re du Travail, de la Sant\xE9, des Solidarit\xE9s et des Familles\",\"url\":\"https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"<strong>Le
+        montant de la retraite minimale augmente de 100 \u20AC par mois</strong>.
+        Pour une carri\xE8re compl\xE8te cotis\xE9e \xE0 taux plein au Smic, elle
+        passe \xE0 1 200 \u20AC brut mensuels, soit 85 % du Smic net. Deux nouvelles
+        bornes d\u2019\xE2ge permettent de partir avant 64 ans, qui s\u2019ajoutent
+        aux bornes en vigueur.\",\"profile\":{\"name\":\"Travail-emploi\",\"url\":\"https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023\",\"long_name\":\"travail-emploi.gouv.fr\",\"img\":\"https://imgs.search.brave.com/gREybUdKbUEs9pcr7IUpLUma-kc2EV_1EEfS9Nh8sVI/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNTAwNDZlYTdh/N2RmNzcyZTlmYjY4/OGViZDMxZmE4NWQw/Yzg0YjcxOTFjODRi/ZGYzNjY0ZTc4N2Ri/MGM5OTg5ZS90cmF2/YWlsLWVtcGxvaS5n/b3V2LmZyLw\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"article\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"travail-emploi.gouv.fr\",\"hostname\":\"travail-emploi.gouv.fr\",\"favicon\":\"https://imgs.search.brave.com/gREybUdKbUEs9pcr7IUpLUma-kc2EV_1EEfS9Nh8sVI/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNTAwNDZlYTdh/N2RmNzcyZTlmYjY4/OGViZDMxZmE4NWQw/Yzg0YjcxOTFjODRi/ZGYzNjY0ZTc4N2Ri/MGM5OTg5ZS90cmF2/YWlsLWVtcGxvaS5n/b3V2LmZyLw\",\"path\":\"
+        \ \u203A accueil  \u203A r\xE9forme des retraites : ce qui change \xE0 partir
+        du 1er septembre 2023\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/RP3XZSyWGseucDc3lj8XVGp3h9f_MmeHYcbgu5bTJsM/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly90cmF2/YWlsLWVtcGxvaS5n/b3V2LmZyL3NpdGVz/L3RyYXZhaWwtZW1w/bG9pL2ZpbGVzLzIw/MjQtMDgvbG9nby1y/ZWZvcm1lLWRlcy1y/ZXRyYWl0ZXMtY2Ut/cXVpLWNoYW5nZS1h/dS0xZXItc2VwdGVt/YnJlLTIwMjMuanBn\",\"original\":\"https://travail-emploi.gouv.fr/sites/travail-emploi/files/2024-08/logo-reforme-des-retraites-ce-qui-change-au-1er-septembre-2023.jpg\",\"logo\":true}}],\"family_friendly\":true}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Jun 2025 16:51:14 GMT
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User
+      X-Content-Type-Options:
+      - nosniff
+      X-Download-Options:
+      - noopen
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '16691'
+      server-timing:
+      - search-roundtrip;dur=379.989
+      x-ratelimit-limit:
+      - 1, 2000
+      x-ratelimit-policy:
+      - 1;w=1, 2000;w=2592000,
+      x-ratelimit-remaining:
+      - 0, 1887
+      x-ratelimit-reset:
+      - 1, 1753724
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+    method: GET
+    uri: https://www.vie-publique.fr/eclairage/20111-retraites-les-differentes-reformes-de-1993-2023
+  response:
+    body:
+      string: "<!doctypehtml><meta name=\"viewport\"content=\"width=device-width\"><meta
+        charset=\"utf-8\"><script></script><script>var __blnChallengeStore={\"domain\":\".vie-publique.fr\",\"cookie\":{\"maxAge\":900,\"sameSite\":\"None\",\"name\":\"bln_challengejs\",\"secure\":true,\"path\":\"\\/\",\"value\":\"WzP3ZOb-mZoZGmjfoHShgnhIT7PE9eKrNBOGgqZYpTs2SEC6TqJgvNgwHIJFyLgpVrIyK4AYo4COccPvwfjjdhRw9UNNO6rYB-xQFppkybeQa42lIbvQz9onShAIR5EUw2VqG5w6TILbjAZ_UI6MuRPf1fkek3gjg62VM5FIcSSJGEY-1nmInql46HFzmPVZGZ3Ue98_dgQZHzRnyQeQcV7msilGPf_xNts0wLMMBVbA_Yxh5QijJtGsR6HrlS3_Dl3VeEC1zpmJMa58g52U8hVQhyKEbEGZR_qOeZufsQ5xjSCwByU0f_cDyuTtmY_M\"},\"unregisterServiceWorker\":false,\"checkChallengeParams\":{\"tracking_id\":\"\",\"rule_id\":\"\",\"bot_category\":\"unknown\",\"request_fate\":\"challengejs\"}};(()=>{\"use
+        strict\";const e=function*({domain:e,maxAge:n,name:o,path:t,secure:a,sameSite:i,value:r}){yield`${o}=${r}`,void
+        0!==e&&\"\"!==e&&(yield`Domain=${e}`),void 0!==t&&\"\"!==t&&(yield`Path=${t}`),void
+        0!==n&&(yield`Max-Age=${n}`),void 0!==i&&(yield`SameSite=${i}`),a&&(yield\"Secure\")},n=e=>{const
+        n=document.cookie.match(`${e}=([a-zA-Z0-9-_]*);?`);if(n)return{name:e,value:n[1]}},o=n=>{const
+        o=[...e(n)].join(\"; \");document.cookie=o},t=(e,n)=>{if(!e||!e.name)return
+        n;const o=new RegExp(`([?&])(${e.name})=([^&#]*)`,\"u\");if(!n.match(o)){const
+        o=n.startsWith(\"?\")?\"&\":\"?\";return`${n}${o}${e.name}=${e.value}`}return
+        n.replace(o,`$1$2=${e.value}`)},a=()=>{const{cookie:e,checkChallengeParams:n={}}=__blnChallengeStore,{name:o,value:t}=e,a=new
+        XMLHttpRequest,i=`/.well-known/baleen/challengejs/check?${o}=${t}`,r=Object.entries(n).map((([e,n])=>`${e}=${n}`)).join(\"&\");a.open(\"POST\",i),a.send(r)},i=e=>setTimeout((()=>{e?window.location=e:window.location.reload()}),2),r=()=>{if(!(()=>{const{cookie:t,cookieReferer:r,domain:c}=__blnChallengeStore;return!!(()=>{const
+        t={name:\"tst_bln_cookie_enabled\",sameSite:\"None\",secure:!0,value:\"1\"};o(t);const
+        a=n(t.name);return!!a&&((({name:n})=>{const o=[...e({maxAge:-1,name:n,value:\"\"})].join(\";
+        \");document.cookie=o})(a),!0)})()&&(o({domain:c,...t}),!!n(t.name)&&(r&&o({domain:c,...r}),a(),i(),!0))})()){const
+        e=(()=>{const{cookie:e,cookieReferer:n}=__blnChallengeStore||{},{origin:o,pathname:a,search:i,hash:r}=window.location;return`${o}${a}${t(n,t(e,i))}${r}`})();setTimeout((()=>{a(),i(e)}),1e3)}};(()=>{const{unregisterServiceWorker:e}=__blnChallengeStore||{};e&&navigator&&navigator.serviceWorker?navigator.serviceWorker.getRegistrations().then((e=>Promise.all(e.map((e=>e.unregister()))))).then((()=>r())).catch((()=>r())):r()})()})();</script><link
+        href=\"https://fonts.googleapis.com/css2?family=Roboto:wght@100;400;500&display=swap\"rel=\"stylesheet\"><link
+        href=\"/.well-known/baleen/challengejs/assets/style.css\"rel=\"stylesheet\"><body><noscript><div
+        class=\"challengejs-container\"><div class=\"container\"><div class=\"challengejs-body\"><div
+        class=\"challengejs-card\"><img src=\"/.well-known/baleen/challengejs/assets/logo.svg\"><div
+        class=\"challengejs-message-1\">Le JavaScript n'est pas activ\xE9 sur votre
+        navigateur.</div><div class=\"separator\"></div><div class=\"challengejs-message-2\">Le
+        JavaScript n'est pas activ\xE9 sur votre navigateur. Pour vous permettre de
+        naviguer correctement sur notre site, il est n\xE9cessaire qu'il soit activ\xE9.</div><div
+        class=\"challengejs-message-3\"><div class=\"how\"><span>Comment activer le
+        JavaScript ?</span></div><div class=\"drop\"><div class=\"how-to chrome\"><div>Chrome</div><a
+        href=\"https://support.google.com/chrome\">https://support.google.com/chrome</a></div><div
+        class=\"how-to firefox\"><div>Mozilla Firefox</div><a href=\"https://support.mozilla.org/fr/home\">https://support.mozilla.org/fr/home</a></div><div
+        class=\"how-to safari\"><div>Safari</div><a href=\"https://www.apple.com/support/safari/\">https://www.apple.com/support/safari/</a></div><div
+        class=\"how-to opera\"><div>Opera</div><a href=\"https://support.google.com/adsense/answer/12654?hl=fr\">https://support.google.com/adsense/answer/12654?hl=fr</a></div><div
+        class=\"how-to explorer\"><div>Internet Explorer</div><a href=\"https://support.microsoft.com/product/internet-explorer\">https://support.microsoft.com/product/internet-explorer</a></div></div></div></div></div></div></div></noscript>"
+    headers:
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/html
+      Date:
+      - Tue, 10 Jun 2025 16:51:14 GMT
+      Referrer-Policy:
+      - no-referrer
+      Strict-Transport-Security:
+      - max-age=63072000
+      Transfer-Encoding:
+      - chunked
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '4156'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+    method: GET
+    uri: https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"fr\" dir=\"ltr\" prefix=\"content: http://purl.org/rss/1.0/modules/content/
+        \ dc: http://purl.org/dc/terms/  foaf: http://xmlns.com/foaf/0.1/  og: http://ogp.me/ns#
+        \ rdfs: http://www.w3.org/2000/01/rdf-schema#  schema: http://schema.org/
+        \ sioc: http://rdfs.org/sioc/ns#  sioct: http://rdfs.org/sioc/types#  skos:
+        http://www.w3.org/2004/02/skos/core#  xsd: http://www.w3.org/2001/XMLSchema#
+        \" data-fr-scheme=\"light\">\n<head>\r\n<script type=\"text/javascript\">\r\n(function(){\r\nwindow[\"loaderConfig\"]
+        = \"/TSPD/?type=21\";\r\n})();\r\n\r\n</script>\r\n\r\n<script type=\"text/javascript\"
+        src=\"/TSPD/?type=18\"></script>\r\n\n  <meta charset=\"utf-8\" />\n<meta
+        name=\"description\" content=\"Plusieurs d\xE9crets li\xE9s \xE0 la r\xE9forme
+        de notre syst\xE8me de retraite ont \xE9t\xE9 publi\xE9s au cours de l&#039;\xE9t\xE9
+        2023. \xC2ge de d\xE9part, retraite minimale, d\xE9parts anticip\xE9s, pr\xE9vention
+        de l&#039;usure professionnelle... d\xE9couvrez ce qui change \xE0 partir
+        du 1er septembre 2023.\" />\n<meta name=\"keywords\" content=\"Retraites-Actualit\xE9s
+        et br\xE8ves-Actualit\xE9s et br\xE8ves,Presse,Dossiers de presse-Retraites-\"
+        />\n<link rel=\"canonical\" href=\"https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023\"
+        />\n<meta name=\"robots\" content=\"index, follow\" />\n<meta property=\"og:url\"
+        content=\"https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023\"
+        />\n<meta property=\"og:title\" content=\"R\xE9forme des retraites : ce qui
+        change \xE0 partir du 1er septembre 2023 | Travail-emploi.gouv.fr | Minist\xE8re
+        du Travail, de la Sant\xE9, des Solidarit\xE9s et des Familles\" />\n<meta
+        property=\"og:description\" content=\"Plusieurs d\xE9crets li\xE9s \xE0 la
+        r\xE9forme de notre syst\xE8me de retraite ont \xE9t\xE9 publi\xE9s au cours
+        de l&#039;\xE9t\xE9 2023. \xC2ge de d\xE9part, retraite minimale, d\xE9parts
+        anticip\xE9s, pr\xE9vention de l&#039;usure professionnelle... d\xE9couvrez
+        ce qui change \xE0 partir du 1er septembre 2023.\" />\n<meta property=\"og:image\"
+        content=\"https://travail-emploi.gouv.fr/sites/travail-emploi/files/2024-08/logo-reforme-des-retraites-ce-qui-change-au-1er-septembre-2023.jpg\"
+        />\n<meta name=\"google-site-verification\" content=\"YejjOjn7fnV-TngyOY8larq-LexJJJj-agjLsbU1rkg\"
+        />\n<meta name=\"Generator\" content=\"Drupal 11 (https://www.drupal.org)\"
+        />\n<meta name=\"MobileOptimized\" content=\"width\" />\n<meta name=\"HandheldFriendly\"
+        content=\"true\" />\n<meta name=\"viewport\" content=\"width=device-width,
+        initial-scale=1.0\" />\n<script type=\"application/ld+json\">{\n    \"@context\":
+        \"https://schema.org\",\n    \"@graph\": [\n        {\n            \"@type\":
+        \"Article\",\n            \"headline\": \"R\xE9forme des retraites : ce qui
+        change \xE0 partir du 1er septembre 2023\",\n            \"description\":
+        \"Plusieurs d\xE9crets li\xE9s \xE0 la r\xE9forme de notre syst\xE8me de retraite
+        ont \xE9t\xE9 publi\xE9s au cours de l\\u0027\xE9t\xE9 2023. \xC2ge de d\xE9part,
+        retraite minimale, d\xE9parts anticip\xE9s, pr\xE9vention de l\\u0027usure
+        professionnelle... d\xE9couvrez ce qui change \xE0 partir du 1er septembre
+        2023.\",\n            \"image\": {\n                \"@type\": \"ImageObject\",\n
+        \               \"url\": \"https://travail-emploi.gouv.fr/sites/travail-emploi/files/2024-08/logo-reforme-des-retraites-ce-qui-change-au-1er-septembre-2023.jpg\"\n
+        \           },\n            \"isAccessibleForFree\": \"True\"\n        }\n
+        \   ]\n}</script>\n<meta name=\"format-detection\" content=\"telephone=no,date=no,address=no,email=no,url=no\"
+        />\n<script type=\"application/ld+json\">{\n    \"@context\": \"https://schema.org\",\n
+        \   \"@type\": \"BreadcrumbList\",\n    \"itemListElement\": [\n        {\n
+        \           \"@type\": \"ListItem\",\n            \"position\": 1,\n            \"name\":
+        \"Accueil\",\n            \"item\": \"https://travail-emploi.gouv.fr/\"\n
+        \       },\n        {\n            \"@type\": \"ListItem\",\n            \"position\":
+        2,\n            \"name\": \"R\xE9forme des retraites : ce qui change \xE0
+        partir du 1er septembre 2023\"\n        }\n    ]\n}</script>\n<link rel=\"apple-touch-icon\"
+        href=\"/libraries/dsfr/dist/favicon/apple-touch-icon.png\" />\n<link rel=\"icon\"
+        href=\"/libraries/dsfr/dist/favicon/favicon.svg\" type=\"image/svg+xml\" />\n<link
+        rel=\"shortcut icon\" href=\"/libraries/dsfr/dist/favicon/favicon.ico\" type=\"image/x-icon\"
+        />\n<link rel=\"manifest\" href=\"/libraries/dsfr/dist/favicon/manifest.webmanifest\"
+        crossorigin=\"use-credentials\" />\n\n  <title>R\xE9forme des retraites :
+        ce qui change \xE0 partir du 1er septembre 2023 | Travail-emploi.gouv.fr |
+        Minist\xE8re du Travail, de la Sant\xE9, des Solidarit\xE9s et des Familles</title>\n
+        \ <link rel=\"stylesheet\" media=\"all\" href=\"/sites/travail-emploi/files/css/css_dYjDBXQ2zEhC_11d_-2UoyDX36SlI00SKWb5nhH5BpI.css?delta=0&amp;language=fr&amp;theme=dsfr_travail_emploi&amp;include=eJx1kkFyBCEIRS_UNb3JfSxUuqUGxYBOqm8fZ2aRSiosXOCD_xHMduhH1tmB9yS1S8M2bpCSaCZpW_6XR0XISWeNTkICZpnDoYcs-uVCGagOLMvXh3QWXsezpdbdllhOcVCVDOywBg86YfiT-pzrNQ5TWCN2mCFoKh4soJ6o3akztbuHZ62gl0MHRPaEB5y_iKWC9Z0chsIDiAPWzkKraLXHcK0fEDJZkgfqtS-ZJLxVzAT7Qby2vP5Jfw1PWqaG4Vm4J7NnVV8C4RCtIcrWQeFU6MX2t_3t5-Y2114jkxXMm0ki4PA2iWCUNrtsYH0GuA3QgQFmSDRU2v4nDkzxG4BOM1Q\"
+        />\n<link rel=\"stylesheet\" media=\"all\" href=\"/sites/travail-emploi/files/css/css_Y9Gre0VshcsC0_hEXtC5jRkEHzOUWMXI80_fyCuMJb0.css?delta=1&amp;language=fr&amp;theme=dsfr_travail_emploi&amp;include=eJx1kkFyBCEIRS_UNb3JfSxUuqUGxYBOqm8fZ2aRSiosXOCD_xHMduhH1tmB9yS1S8M2bpCSaCZpW_6XR0XISWeNTkICZpnDoYcs-uVCGagOLMvXh3QWXsezpdbdllhOcVCVDOywBg86YfiT-pzrNQ5TWCN2mCFoKh4soJ6o3akztbuHZ62gl0MHRPaEB5y_iKWC9Z0chsIDiAPWzkKraLXHcK0fEDJZkgfqtS-ZJLxVzAT7Qby2vP5Jfw1PWqaG4Vm4J7NnVV8C4RCtIcrWQeFU6MX2t_3t5-Y2114jkxXMm0ki4PA2iWCUNrtsYH0GuA3QgQFmSDRU2v4nDkzxG4BOM1Q\"
+        />\n<link rel=\"stylesheet\" media=\"print\" href=\"/sites/travail-emploi/files/css/css_22x5TE4EbjBDxJifoyhYDndRKcmn4sgfdbAY9IRMU8A.css?delta=2&amp;language=fr&amp;theme=dsfr_travail_emploi&amp;include=eJx1kkFyBCEIRS_UNb3JfSxUuqUGxYBOqm8fZ2aRSiosXOCD_xHMduhH1tmB9yS1S8M2bpCSaCZpW_6XR0XISWeNTkICZpnDoYcs-uVCGagOLMvXh3QWXsezpdbdllhOcVCVDOywBg86YfiT-pzrNQ5TWCN2mCFoKh4soJ6o3akztbuHZ62gl0MHRPaEB5y_iKWC9Z0chsIDiAPWzkKraLXHcK0fEDJZkgfqtS-ZJLxVzAT7Qby2vP5Jfw1PWqaG4Vm4J7NnVV8C4RCtIcrWQeFU6MX2t_3t5-Y2114jkxXMm0ki4PA2iWCUNrtsYH0GuA3QgQFmSDRU2v4nDkzxG4BOM1Q\"
+        />\n<link rel=\"stylesheet\" media=\"all\" href=\"/sites/travail-emploi/files/css/css_3SrSUnvzfCtp9fG-xAE8AxGw1V596jkB-_qRPBksXbQ.css?delta=3&amp;language=fr&amp;theme=dsfr_travail_emploi&amp;include=eJx1kkFyBCEIRS_UNb3JfSxUuqUGxYBOqm8fZ2aRSiosXOCD_xHMduhH1tmB9yS1S8M2bpCSaCZpW_6XR0XISWeNTkICZpnDoYcs-uVCGagOLMvXh3QWXsezpdbdllhOcVCVDOywBg86YfiT-pzrNQ5TWCN2mCFoKh4soJ6o3akztbuHZ62gl0MHRPaEB5y_iKWC9Z0chsIDiAPWzkKraLXHcK0fEDJZkgfqtS-ZJLxVzAT7Qby2vP5Jfw1PWqaG4Vm4J7NnVV8C4RCtIcrWQeFU6MX2t_3t5-Y2114jkxXMm0ki4PA2iWCUNrtsYH0GuA3QgQFmSDRU2v4nDkzxG4BOM1Q\"
+        />\n\n  <script type=\"application/json\" data-drupal-selector=\"drupal-settings-json\">{\"path\":{\"baseUrl\":\"\\/\",\"pathPrefix\":\"\",\"currentPath\":\"node\\/10318\",\"currentPathIsAdmin\":false,\"isFront\":false,\"currentLanguage\":\"fr\"},\"pluralDelimiter\":\"\\u0003\",\"suppressDeprecationErrors\":true,\"dsfr4drupal\":{\"production\":true,\"verbose\":false,\"level\":\"info\"},\"eulerian\":{\"datalayer\":{\"site_entity\":\"Min.
+        Travail Emploi\",\"site_target\":\"information\",\"site_type\":\"standard\",\"pagegroup\":\"new_actualites_et_breves_detail\",\"pagelabel\":\"contenu_article,Actualit\\u00e9s
+        presse et outils,Actualit\\u00e9s et br\\u00e8ves,\",\"page_template\":\"new_actualites_et_breves_detail\",\"segment-site\":\"new_actualites_et_breves\",\"page_category1\":\"new_actualites_et_breves\",\"page_category2\":\"R\\u00e9forme
+        des retraites : ce qui change \\u00e0 partir du 1er septembre 2023\",\"pagelabel1\":\"contenu_article\",\"pagelabel2\":\"Actualit\\u00e9s,
+        presse et outils\",\"pagelabel3\":\"Actualit\\u00e9s et br\\u00e8ves\",\"pagelabel4\":\"\",\"content_id\":\"8abc8548-0b0e-4386-a383-3f6ea9ca2777\",\"content_name\":\"R\\u00e9forme
+        des retraites : ce qui change \\u00e0 partir du 1er septembre 2023\",\"content_type\":\"article\",\"content_author\":\"Anonyme\",\"content_category\":\"Actualit\\u00e9s
+        et br\\u00e8ves\",\"content_date\":\"31\\/08\\/2023\",\"content_tags\":\"Retraites\",\"content_topic\":\"\",\"page_name\":\"R\\u00e9forme
+        des retraites : ce qui change \\u00e0 partir du 1er septembre 2023\"},\"clean_string\":true,\"domain\":\"vjie.travail-emploi.gouv.fr\"},\"tarte_au_citron\":{\"adblocker\":false,\"hashtag\":\"#tarteaucitron\",\"cookieName\":\"tarteaucitron\",\"highPrivacy\":true,\"orientation\":\"top\",\"bodyPosition\":\"top\",\"removeCredit\":true,\"showAlertSmall\":false,\"showDetailsOnClick\":true,\"showIcon\":false,\"iconPosition\":\"BottomRight\",\"cookieslist\":true,\"handleBrowserDNTRequest\":false,\"DenyAllCta\":true,\"AcceptAllCta\":true,\"moreInfoLink\":false,\"useExternalCss\":true,\"useExternalJs\":false,\"mandatory\":false,\"mandatoryCta\":true,\"closePopup\":false,\"groupServices\":false,\"serviceDefaultState\":\"wait\",\"googleConsentMode\":true,\"partnersList\":false,\"user\":{\"need_consent\":0},\"services\":[\"drupal_dailymotion\",\"eulerian-analytics\",\"issuu\",\"maps_q\",\"twitterembed\",\"drupal_vimeo\",\"drupal_youtube\"],\"tarteaucitronCustomText\":{\"alertBigPrivacy\":\"Ce
+        site utilise des cookies afin de vous proposer des vid\\u00e9os, des boutons
+        de partage, des remont\\u00e9es de contenus de plateformes sociales et des
+        contenus anim\\u00e9s et interactifs.\",\"all\":\"Sur ce site nous utilisons
+        des outils de mesure d\\u2019audience pour comprendre le parcours de navigation
+        des utilisateurs afin d\\u2019optimiser l\\u2019ergonomie et la mise en avant
+        des contenus les plus pertinents. Certaines fonctionnalit\\u00e9s du site
+        (partage de contenus sur les r\\u00e9seaux sociaux, lecteurs vid\\u00e9os,
+        contenus interactifs) font par ailleurs appel \\u00e0 des services propos\\u00e9s
+        par des tiers. Ces fonctionnalit\\u00e9s d\\u00e9posent des cookies permettant
+        aux tiers d\\u2019identifier les sites que vous consultez et les contenus
+        auxquels vous vous int\\u00e9ressez. Ces deux types de cookies ne sont d\\u00e9pos\\u00e9s
+        que si vous donnez votre accord. Vous pouvez ci-dessous vous informer sur
+        la nature de chacun des cookies d\\u00e9pos\\u00e9s, les accepter ou les refuser.
+        Ce choix est possible soit globalement pour l\\u2019ensemble du site et l\\u2019ensemble
+        des services, soit service par service.\",\"allowAll\":\"Autoriser tous les
+        cookies\",\"allowed\":\"Autoris\\u00e9\",\"disallowed\":\"Interdit\",\"ads\":{\"title\":\"Campagnes
+        d\\u2019informations gouvernementales\",\"details\":\"Les campagnes d\\u2019informations
+        gouvernementales permettent le partage d\\u2019informations utiles diffus\\u00e9es
+        dans le cadre de grandes campagnes d\\u2019information, ou en cas de crise.
+        Dans le d\\u00e9tail : le traceur AdForm contient des cookies provenant des
+        r\\u00e9gies Adyoulike et Captify.\"},\"support\":{\"title\":\"Assistance
+        technique\"},\"google\":{\"title\":\"Consentement sp\\u00e9cifique pour les
+        services Google\",\"details\":\"Google peut utiliser vos donn\\u00e9es \\u00e0
+        des fins de mesure d\\u0027audience, de performances publicitaires ou pour
+        vous proposer des publicit\\u00e9s personnalis\\u00e9es.\"},\"mandatoryText\":\"Ce
+        site utilise des cookies n\\u00e9cessaires \\u00e0 son bon fonctionnement
+        qui ne peuvent \\u00eatre d\\u00e9sactiv\\u00e9s.\"}},\"dsfr_ondine\":{\"summary\":{\"enabled\":true,\"display_h3\":false}},\"ajaxTrustedUrl\":{\"\\/recherche\":true},\"user\":{\"uid\":0,\"permissionsHash\":\"5690199743ab58b622d90aaadfa6c2e4f2b84c72fb64021b83fb22dd1156e3bd\"}}</script>\n<script
+        src=\"/libraries/tarteaucitron/tarteaucitron.js?v=1.17710\"></script>\n<script
+        src=\"/sites/travail-emploi/files/js/js_pMUfc6sbheVpROUqXVEcXvC1rmy8O7Uq6yjuM7aEoEc.js?scope=header&amp;delta=1&amp;language=fr&amp;theme=dsfr_travail_emploi&amp;include=eJyVj8FuxDAIRH8oW1_6P9bE0C2qDSnGkfL3TRv1sl0fekLMG2Cg_uav5GNDTcXaZsoaLyjFnMR0oad8dQYVH22dGEj6VnFM6Ps5zT6BzQh1whS73BHzYH20Bp_dDayVf1g2JVFOZ85v7QZFPUJKX3hUdoEmUYnlsuVwlA_Re-L93NNvv_0S8OCMkYuEm6aH_pHnhq3nz3SVv5RJkJ2bnfIuxJauHzJB6nHK8mzndGqXxvYP_2EjxspfXgHSvw\"></script>\n\n</head>\n<body
+        class=\"\">\n  <div data-component-id=\"dsfr4drupal:skiplinks\" class=\"fr-skiplinks\">\n
+        \ <nav class=\"fr-container\" role=\"navigation\" aria-label=\"Acc\xE8s rapide\">\n
+        \   <ul class=\"fr-skiplinks__list\">\n              <li>\n          <a href=\"#main\"
+        class=\"fr-link\">Vers le contenu principal</a>\n        </li>\n              <li>\n
+        \         <a href=\"#menu-main\" class=\"fr-link\">Aller au menu</a>\n        </li>\n
+        \             <li>\n          <a href=\"#edit-search-api-fulltext\" class=\"fr-link\">Aller
+        \xE0 la recherche</a>\n        </li>\n              <li>\n          <a href=\"#footer\"
+        class=\"fr-link\">Aller au pied de page</a>\n        </li>\n          </ul>\n
+        \ </nav>\n</div>\n\n  \n    <div class=\"dialog-off-canvas-main-canvas\" data-off-canvas-main-canvas>\n
+        \   \n<header data-component-id=\"dsfr4drupal:header\" class=\"fr-header\"
+        role=\"banner\">\n  <div class=\"fr-header__body\">\n    <div class=\"fr-container\">\n
+        \     <div class=\"fr-header__body-row\">\n        <div class=\"fr-header__brand
+        fr-enlarge-link\">\n          <div class=\"fr-header__brand-top\">\n\n                        <div
+        class=\"fr-header__logo\">\n              \n\n  <p class=\"fr-logo\">\n    Minist\xE8re<br
+        />\r\ndu Travail, de la Sant\xE9, <br />\r\ndes Solidarit\xE9s <br />\r\net
+        des Familles\n  </p>\n\n\n            </div>\n\n                        \n
+        \                                     <div class=\"fr-header__navbar\">\n
+        \                                                                     <button
+        type=\"button\" class=\"fr-btn--search fr-btn\" data-fr-opened=\"false\" aria-controls=\"fr-header-38700706--search\"
+        title=\"Rechercher\" id=\"fr-header-38700706--search-btn\">\n                    Rechercher\n
+        \                 </button>\n                                                                                      <button
+        type=\"button\" class=\"fr-btn--menu fr-btn\" data-fr-opened=\"false\" aria-controls=\"fr-header-38700706--mobile-menu\"
+        title=\"Menu\" id=\"fr-header-38700706--mobile-menu-btn\">\n                    Menu\n
+        \                 </button>\n                              </div>\n                      </div>\n\n
+        \                               <div class=\"fr-header__service\">\n                                                                                                              <a
+        href=\"https://travail-emploi.gouv.fr/\" title=\"Retour \xE0 l'accueil du
+        site - travail-emploi.gouv.fr - Minist\xE8re\r du Travail, de la Sant\xE9,
+        \r des Solidarit\xE9s \r et des Familles\">\n                  <p class=\"fr-header__service-title\">travail-emploi.gouv.fr</p>\n
+        \               </a>\n                                                      </div>\n
+        \                 </div>\n\n                          <div class=\"fr-header__tools\">\n
+        \                                     <div class=\"fr-header__tools-links\">\n
+        \                 \n  \n\n\n\n  \n              <ul data-region=\"header_tools_links\"
+        class=\"fr-btns-group\" >\n    \n          <li>\n                  \n\n\n\n\n
+        \ <button data-component-id=\"dsfr4drupal:button\" aria-controls=\"modal-display-settings\"
+        data-fr-opened=\"false\" class=\"fr-icon-theme-fill fr-btn\" type=\"button\">\n
+        \   Param\xE8tres d&#039;affichage\n  </button>\n\n\n              </li>\n
+        \       </ul>\n    \n\n\n\n\n\n\n  \n              </div>\n                                                                              <div
+        class=\"fr-header__search fr-modal\" id=\"fr-header-38700706--search\" aria-labelledby=\"fr-header-38700706--search-btn\">\n
+        \               <div class=\"fr-container fr-container-lg--fluid\">\n                  <button
+        type=\"button\" class=\"fr-btn fr-btn--close\" aria-controls=\"fr-header-38700706--search\"
+        title=\"Fermer la recherche\">Fermer</button>\n                  \n                    \n
+        \ \n  <div class=\"views-exposed-form\" data-drupal-selector=\"views-exposed-form-global-search-block-header\"
+        id=\"block-dsfr-ondine-search-block-header\">\n\n\n\n  <form action=\"/recherche\"
+        method=\"get\" id=\"views-exposed-form-global-search-block-header\" accept-charset=\"UTF-8\"
+        novalidate=\"novalidate\">\n  <div id=\"header-search\" class=\"fr-search-bar\"
+        role=\"search\">\n     <label for=\"edit-search-api-fulltext\" class=\"fr-label\">Rechercher\n
+        \     </label>\n\n<input placeholder=\"Rechercher\" aria-label=\"Rechercher
+        sur le site\" data-drupal-selector=\"edit-search-api-fulltext\" type=\"text\"
+        id=\"edit-search-api-fulltext\" name=\"search_api_fulltext\" value=\"\" size=\"30\"
+        maxlength=\"128\" class=\"form-text fr-input\" />\n\n<div data-drupal-selector=\"edit-actions\"
+        class=\"form-actions views-exposed-form__item views-exposed-form__item--actions
+        js-form-wrapper form-wrapper\" id=\"edit-actions\">\n  \n  \n<button data-drupal-selector=\"edit-submit-global-search\"
+        type=\"submit\" id=\"edit-submit-global-search\" class=\"button button--primary
+        js-form-submit form-submit fr-btn\" title=\"Rechercher\">\n  Rechercher\n</button>\n\n</div>\n\n\n
+        \ </div>\n</form>\n\n\n\n  </div>\n\n\n  \n                </div>\n              </div>\n
+        \                     </div>\n              </div>\n    </div>\n  </div>\n
+        \     <div class=\"fr-header__menu fr-modal\" id=\"fr-header-38700706--mobile-menu\"
+        aria-labelledby=\"fr-header-38700706--mobile-menu-btn\">\n      <div class=\"fr-container\">\n
+        \                       <button type=\"button\" class=\"fr-btn fr-btn--close\"
+        aria-controls=\"fr-header-38700706--mobile-menu\" title=\"Fermer le menu\">Fermer</button>\n
+        \       \n        <div class=\"fr-header__menu-links\"></div>\n          \n
+        \ \n\n\n\n  \n<nav data-region=\"header_navbar\" data-component-id=\"dsfr4drupal:navigation\"
+        class=\"fr-nav\" role=\"navigation\" aria-label=\"Menu principal\" id=\"menu-main\">\n
+        \ <ul class=\"fr-nav__list\">\n                              <li class=\"fr-nav__item\">\n
+        \                                 <button type=\"button\" class=\"fr-nav__btn\"
+        aria-expanded=\"false\"\n                    aria-controls=\"mega-menu-1-600381216\">\n
+        \             Actualit\xE9s, presse et outils\n            </button>\n            <div
+        class=\"fr-collapse fr-mega-menu\" id=\"mega-menu-1-600381216\" tabindex=\"-1\">\n
+        \                         <div class=\"fr-container fr-container--fluid fr-container-lg\">\n
+        \       <button type=\"button\" class=\"fr-btn fr-btn--close\" aria-controls=\"mega-menu-1-600381216\"
+        title=\"Fermer\">Fermer</button>\n        <div class=\"fr-grid-row fr-grid-row-lg--gutters\">\n
+        \                                                   <div  class=\"fr-col-12
+        fr-col-lg-3\">\n              <h2 class=\"fr-mega-menu__category\">\n                                      \n
+        \ <a href=\"/new-actualites-presse-publications/new-actualites-et-breves\"
+        title=\"Actualit\xE9s et br\xE8ves\" class=\"fr-nav__link\">Actualit\xE9s
+        et br\xE8ves</a>\n\n                              </h2>\n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-3\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <a href=\"/new-actualites-presse-publications/new-presse\" title=\"Presse\"
+        class=\"fr-nav__link\">Presse</a>\n\n                              </h2>\n
+        \                                         <ul class=\"fr-mega-menu__list\">\n
+        \                 <li>\n                \n  <a href=\"/presse/communiques-de-presse\"
+        title=\"Communiqu\xE9s de presse\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1129\">Communiqu\xE9s
+        de presse</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/new-presse/new-discours\" title=\"Discours\" class=\"fr-nav__link\">Discours</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-presse/new-dossiers-de-presse\"
+        title=\"Dossiers de presse\" class=\"fr-nav__link\">Dossiers de presse</a>\n\n
+        \         </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-3\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <a href=\"/new-actualites-presse-publications/new-publications-et-ressources\"
+        title=\"Publications et ressources\" class=\"fr-nav__link\">Publications et
+        ressources</a>\n\n                              </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/new-publications-et-ressources/new-bulletins-officiels-et-documents-opposables\"
+        title=\"Bulletins officiels et documents opposables\" class=\"fr-nav__link\">Bulletins
+        officiels et documents opposables</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/le-centre-de-ressources-documentaires-ministeriel-crdm\"
+        title=\"Centre de ressources documentaires minist\xE9riel (CRDM)\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"node/5674\">Centre de ressources documentaires
+        minist\xE9riel (CRDM)</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/documents-types\" title=\"Documents types\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"node/11960\">Documents types</a>\n\n          </li>\n
+        \                 <li>\n                \n  <a href=\"/new-publications-et-ressources/new-etudes-rapports-et-statistiques\"
+        title=\"\xC9tudes, rapports et statistiques\" class=\"fr-nav__link\">\xC9tudes,
+        rapports et statistiques</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/new-publications-et-ressources/new-fiches-pratiques\"
+        title=\"Fiches pratiques\" class=\"fr-nav__link\">Fiches pratiques</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-publications-et-ressources/new-foires-aux-questions\"
+        title=\"Foires aux questions\" class=\"fr-nav__link\">Foires aux questions</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-publications-et-ressources/new-grands-dossiers\"
+        title=\"Grands dossiers\" class=\"fr-nav__link\">Grands dossiers</a>\n\n          </li>\n
+        \                 <li>\n                \n  <a href=\"/new-publications-et-ressources/new-guides-et-outils\"
+        title=\"Guides et outils \" class=\"fr-nav__link\">Guides et outils</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-publications-et-ressources/new-services-en-ligne\"
+        title=\"Services en ligne\" class=\"fr-nav__link\">Services en ligne</a>\n\n
+        \         </li>\n              </ul>\n      \n                          </div>\n
+        \                 </div>\n      </div>\n      \n            </div>\n                  </li>\n
+        \             <li class=\"fr-nav__item\">\n                                  <button
+        type=\"button\" class=\"fr-nav__btn\" aria-expanded=\"false\"\n                    aria-controls=\"mega-menu-2-42860081\">\n
+        \             Droit du travail et dialogue social\n            </button>\n
+        \           <div class=\"fr-collapse fr-mega-menu\" id=\"mega-menu-2-42860081\"
+        tabindex=\"-1\">\n                          <div class=\"fr-container fr-container--fluid
+        fr-container-lg\">\n        <button type=\"button\" class=\"fr-btn fr-btn--close\"
+        aria-controls=\"mega-menu-2-42860081\" title=\"Fermer\">Fermer</button>\n
+        \       <div class=\"fr-grid-row fr-grid-row-lg--gutters\">\n                                                    <div
+        \ class=\"fr-col-12 fr-col-lg-3\">\n              <h2 class=\"fr-mega-menu__category\">\n
+        \                                     \n  <span title=\"Droit du travail\"
+        class=\"fr-nav__link\">Droit du travail</span>\n\n                              </h2>\n
+        \                                         <ul class=\"fr-mega-menu__list\">\n
+        \                 <li>\n                \n  <a href=\"/droit-du-travail/contrats-de-travail\"
+        title=\"Contrats de travail\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1177\">Contrats
+        de travail</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/new-droit-du-travail/new-rupture-du-contrat-de-travail\" title=\"Rupture
+        du contrat de travail\" class=\"fr-nav__link\">Rupture du contrat de travail</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-droit-du-travail/new-absences-pour-maladies-et-evenements-familiaux\"
+        title=\"Dur\xE9e du travail\" class=\"fr-nav__link\">Dur\xE9e du travail</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-droit-du-travail/new-conges-et-absences\"
+        title=\"Cong\xE9s et absences\" class=\"fr-nav__link\">Cong\xE9s et absences</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-droit-du-travail/new-remuneration\"
+        title=\"R\xE9mun\xE9ration\" class=\"fr-nav__link\">R\xE9mun\xE9ration</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-droit-du-travail/new-epargne-salariale\"
+        title=\"\xC9pargne salariale\" class=\"fr-nav__link\">\xC9pargne salariale</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-droit-du-travail/new-egalite-professionnelle-discrimination-et-harcelement\"
+        title=\"\xC9galit\xE9 professionnelle, discrimination et harc\xE8lement\"
+        class=\"fr-nav__link\">\xC9galit\xE9 professionnelle, discrimination et harc\xE8lement</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-droit-du-travail/new-lutte-contre-le-travail-illegal\"
+        title=\"Lutte contre le travail ill\xE9gal\" class=\"fr-nav__link\">Lutte
+        contre le travail ill\xE9gal</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/new-droit-du-travail/new-reglementation-et-conflits\"
+        title=\"R\xE9glementation et conflits\" class=\"fr-nav__link\">R\xE9glementation
+        et conflits</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/new-droit-du-travail/new-particuliers-employeurs\" title=\"Particuliers
+        employeurs\" class=\"fr-nav__link\">Particuliers employeurs</a>\n\n          </li>\n
+        \                 <li>\n                \n  <a href=\"/droit-du-travail/detachement-des-salaries\"
+        title=\"D\xE9tachement des salari\xE9s\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1180\">D\xE9tachement
+        des salari\xE9s</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-3\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Dialogue social\" class=\"fr-nav__link\">Dialogue social</span>\n\n
+        \                             </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/dialogue-social/la-negociation-collective\" title=\"N\xE9gociation
+        collective\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1639\">N\xE9gociation
+        collective</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/new-dialogue-social/new-comite-social-et-economique-cse\" title=\"Comit\xE9
+        social et \xE9conomique (CSE)\" class=\"fr-nav__link\">Comit\xE9 social et
+        \xE9conomique (CSE)</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/new-dialogue-social/new-representativite-syndicale-et-patronale\"
+        title=\"Repr\xE9sentativit\xE9 syndicale et patronale\" class=\"fr-nav__link\">Repr\xE9sentativit\xE9
+        syndicale et patronale</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/la-protection-en-cas-de-licenciement\" title=\"Protection en
+        cas de licenciement\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10810\">Protection
+        en cas de licenciement</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/new-dialogue-social/new-certification-des-competences-des-representants-du-personnel-et-mandataires\"
+        title=\"Certification des comp\xE9tences des repr\xE9sentants du personnel
+        et mandataires syndicaux\" class=\"fr-nav__link\">Certification des comp\xE9tences
+        des repr\xE9sentants du personnel et mandataires syndicaux</a>\n\n          </li>\n
+        \             </ul>\n      \n                          </div>\n                      <div
+        \ class=\"fr-col-12 fr-col-lg-3\">\n              <h2 class=\"fr-mega-menu__category\">\n
+        \                                     \n  <span title=\"Inspection du travail\"
+        class=\"fr-nav__link\">Inspection du travail</span>\n\n                              </h2>\n
+        \                                         <ul class=\"fr-mega-menu__list\">\n
+        \                 <li>\n                \n  <a href=\"/les-missions-et-les-prerogatives-de-linspection-du-travail\"
+        title=\"Missions et pr\xE9rogatives\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10333\">Missions
+        et pr\xE9rogatives</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/les-campagnes-de-linspection-du-travail\" title=\"Campagnes de
+        l&#039;Inspection du travail\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10360\">Campagnes
+        de l&#039;Inspection du travail</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/contacter-linspection-du-travail-ou-repondre-vos-questions-sur-le-droit-du-travail\"
+        title=\"Contacter l&#039;Inspection du travail\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10039\">Contacter
+        l&#039;Inspection du travail</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/new-metiers-et-concours/new-devenir-inspecteur-du-travail\"
+        title=\"Devenir inspecteur du travail\" class=\"fr-nav__link\">Devenir inspecteur
+        du travail</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                 </div>\n      </div>\n      \n            </div>\n                  </li>\n
+        \             <li class=\"fr-nav__item\">\n                                  <button
+        type=\"button\" class=\"fr-nav__btn\" aria-expanded=\"false\"\n                    aria-controls=\"mega-menu-3-961207157\">\n
+        \             Sant\xE9 et s\xE9curit\xE9 au travail\n            </button>\n
+        \           <div class=\"fr-collapse fr-mega-menu\" id=\"mega-menu-3-961207157\"
+        tabindex=\"-1\">\n                          <div class=\"fr-container fr-container--fluid
+        fr-container-lg\">\n        <button type=\"button\" class=\"fr-btn fr-btn--close\"
+        aria-controls=\"mega-menu-3-961207157\" title=\"Fermer\">Fermer</button>\n
+        \       <div class=\"fr-grid-row fr-grid-row-lg--gutters\">\n                                                    <div
+        \ class=\"fr-col-12 fr-col-lg-3\">\n              <h2 class=\"fr-mega-menu__category\">\n
+        \                                     \n  <span title=\"Suivi de la sant\xE9
+        au travail\" class=\"fr-nav__link\">Suivi de la sant\xE9 au travail</span>\n\n
+        \                             </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/suivi-de-la-sante-au-travail/inaptitude-invalidite-reclassement-les-notions-cles\"
+        title=\"Inaptitude, invalidit\xE9, reclassement\u2026 les notions cl\xE9s\"
+        class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1665\">Inaptitude,
+        invalidit\xE9, reclassement\u2026 les notions cl\xE9s</a>\n\n          </li>\n
+        \                 <li>\n                \n  <a href=\"/suivi-de-la-sante-au-travail/medecine-de-prevention-et-acteurs-en-entreprise\"
+        title=\"M\xE9decine de pr\xE9vention et acteurs en entreprise\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"taxonomy/term/1668\">M\xE9decine de pr\xE9vention
+        et acteurs en entreprise</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/suivi-de-la-sante-au-travail/acteurs-de-la-sante-au-travail\"
+        title=\"\xC9cosyst\xE8me de la sant\xE9 au travail\" class=\"fr-nav__link\">\xC9cosyst\xE8me
+        de la sant\xE9 au travail</a>\n\n          </li>\n              </ul>\n      \n
+        \                         </div>\n                      <div  class=\"fr-col-12
+        fr-col-lg-3\">\n              <h2 class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Dispositions particuli\xE8res et postes \xE0 risques\" class=\"fr-nav__link\">Dispositions
+        particuli\xE8res et postes \xE0 risques</span>\n\n                              </h2>\n
+        \                                         <ul class=\"fr-mega-menu__list\">\n
+        \                 <li>\n                \n  <a href=\"/la-protection-des-femmes-enceintes-et-les-risques-lies-la-grossesse\"
+        title=\"Femmes enceintes et risques li\xE9s \xE0 la grossesse\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"node/5557\">Femmes enceintes et risques li\xE9s
+        \xE0 la grossesse</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/la-liste-des-postes-risques\" title=\"Liste des postes \xE0 risques\"
+        class=\"fr-nav__link\" data-drupal-link-system-path=\"node/1942\">Liste des
+        postes \xE0 risques</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/la-sante-au-travail-des-salaries-en-interim-et-cdd\" title=\"Sant\xE9
+        au travail des salari\xE9s en interim et CDD\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10342\">Sant\xE9
+        au travail des salari\xE9s en interim et CDD</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/la-protection-de-la-sante-des-jeunes-travailleurs\"
+        title=\"Sant\xE9 des jeunes travailleurs\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10606\">Sant\xE9
+        des jeunes travailleurs</a>\n\n          </li>\n              </ul>\n      \n
+        \                         </div>\n                      <div  class=\"fr-col-12
+        fr-col-lg-3\">\n              <h2 class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Pr\xE9vention des risques\" class=\"fr-nav__link\">Pr\xE9vention
+        des risques</span>\n\n                              </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/la-prevention-des-risques-lies-lamiante\" title=\"Amiante\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"node/11302\">Amiante</a>\n\n          </li>\n
+        \                 <li>\n                \n  <a href=\"/prevention-des-risques/audition\"
+        title=\"Audition\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1671\">Audition</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/chaleur-et-canicule-au-travail\"
+        title=\"Chaleur\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10900\">Chaleur</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/prevention-des-risques/travaux-en-hauteur\"
+        title=\"Chutes de hauteur\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1677\">Chutes
+        de hauteur</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/travail-dans-le-froid-les-precautions-prendre\" title=\"Froid\"
+        class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10759\">Froid</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/prevention-des-risques/radioactivite\"
+        title=\"Radioactivit\xE9\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1692\">Radioactivit\xE9</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/le-risque-routier-professionnel\"
+        title=\"Risque routier\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10519\">Risque
+        routier</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/la-prevention-des-risques-psychosociaux-rps\" title=\"Risques
+        psychosociaux (RPS)\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10516\">Risques
+        psychosociaux (RPS)</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/la-prevention-des-troubles-musculo-squelettiques-tms\" title=\"Troubles
+        musculo-squelettiques\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10510\">Troubles
+        musculo-squelettiques</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/prevention-des-risques/autres-risques-professionnels-et-moyens-de-prevention\"
+        title=\"Autres risques et moyens de pr\xE9vention \" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"taxonomy/term/1698\">Autres risques et moyens
+        de pr\xE9vention </a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-3\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Pr\xE9vention des accidents de travail graves et mortels\"
+        class=\"fr-nav__link\">Pr\xE9vention des accidents de travail graves et mortels</span>\n\n
+        \                             </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/les-principes-generaux-de-prevention\" title=\"Principes g\xE9n\xE9raux
+        de pr\xE9vention\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10528\">Principes
+        g\xE9n\xE9raux de pr\xE9vention</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/prevention-des-accidents-de-travail-graves-et-mortels/description-des-risques\"
+        title=\"Risques professionnels par secteurs et m\xE9tiers\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"taxonomy/term/1703\">Risques professionnels
+        par secteurs et m\xE9tiers</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/le-role-des-acteurs-de-la-sante-au-travail-face-aux-risques-professionnels\"
+        class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10381\">Acteurs-ressources</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/que-faire-la-suite-dun-accident-du-travail\"
+        title=\"Que faire suite \xE0 un accident\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10489\">Que
+        faire suite \xE0 un accident</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/plan-pour-la-prevention-des-accidents-du-travail-graves-et-mortels-2022-2025\"
+        title=\"Plan pour la pr\xE9vention des accidents du travail graves et mortels\"
+        class=\"fr-nav__link\" data-drupal-link-system-path=\"node/10363\">Plan pour
+        la pr\xE9vention des accidents du travail graves et mortels</a>\n\n          </li>\n
+        \                 <li>\n                \n  <a href=\"/prevention-des-accidents-de-travail-graves-et-mortels/quelques-campagnes-de-sensibilisation-et-de\"
+        title=\"Campagnes de communication\" class=\"fr-nav__link\">Campagnes de communication</a>\n\n
+        \         </li>\n              </ul>\n      \n                          </div>\n
+        \                 </div>\n      </div>\n      \n            </div>\n                  </li>\n
+        \             <li class=\"fr-nav__item\">\n                                  <button
+        type=\"button\" class=\"fr-nav__btn\" aria-expanded=\"false\"\n                    aria-controls=\"mega-menu-4-2045891351\">\n
+        \             Emploi\n            </button>\n            <div class=\"fr-collapse
+        fr-mega-menu\" id=\"mega-menu-4-2045891351\" tabindex=\"-1\">\n                          <div
+        class=\"fr-container fr-container--fluid fr-container-lg\">\n        <button
+        type=\"button\" class=\"fr-btn fr-btn--close\" aria-controls=\"mega-menu-4-2045891351\"
+        title=\"Fermer\">Fermer</button>\n        <div class=\"fr-grid-row fr-grid-row-lg--gutters\">\n
+        \                                                   <div  class=\"fr-col-12
+        fr-col-lg-3\">\n              <h2 class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Acc\xE8s \xE0 l&#039;emploi\" class=\"fr-nav__link\">Acc\xE8s
+        \xE0 l&#039;emploi</span>\n\n                              </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/acces-lemploi/aides-et-accompagnements-pour-les-demandeurs-demploi\"
+        title=\"Aides et accompagnements pour les demandeurs d&#039;emploi\" class=\"fr-nav__link\">Aides
+        et accompagnements pour les demandeurs d&#039;emploi</a>\n\n          </li>\n
+        \                 <li>\n                \n  <a href=\"/emploi/acces-lemploi/insertion-professionnelle-des-jeunes\"
+        title=\"Insertion professionnelle des jeunes\" class=\"fr-nav__link\">Insertion
+        professionnelle des jeunes</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/acces-lemploi/dispositif-dinsertion\" title=\"Dispositifs
+        d&#039;insertion\" class=\"fr-nav__link\">Dispositifs d&#039;insertion</a>\n\n
+        \         </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-3\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"S\xE9curisation des emplois\" class=\"fr-nav__link\">S\xE9curisation
+        des emplois </span>\n\n                              </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/soutien-aux-employeurs/accompagner-les-entreprises\" title=\"Anticipation
+        des \xE9volutions de l&#039;emploi\" class=\"fr-nav__link\">Anticipation des
+        \xE9volutions de l&#039;emploi</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/soutien-aux-employeurs/reduction-des-tensions-de-recrutement\"
+        title=\"Pr\xE9vention des licenciements \xE9conomiques\" class=\"fr-nav__link\">Pr\xE9vention
+        des licenciements \xE9conomiques</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/emploi/securisation-des-emplois/accompagnement-des-restructurations-dentreprises\"
+        title=\"Accompagnement des restructurations d&#039;entreprises\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"taxonomy/term/1727\">Accompagnement des restructurations
+        d&#039;entreprises</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-3\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Handicap\" class=\"fr-nav__link\">Handicap</span>\n\n                              </h2>\n
+        \                                         <ul class=\"fr-mega-menu__list\">\n
+        \                 <li>\n                \n  <a href=\"/emploi/handicap/droits-des-travailleurs-en-situation-de-handicap\"
+        title=\"Droits des travailleurs en situation de handicap\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"taxonomy/term/1735\">Droits des travailleurs
+        en situation de handicap</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/emploi/handicap/entreprise-et-handicap\" title=\"Entreprise
+        et handicap\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1738\">Entreprise
+        et handicap</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/les-etablissements-ou-services-daide-par-le-travail-esat\" title=\"Travail
+        en milieu prot\xE9g\xE9\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/5482\">Travail
+        en milieu prot\xE9g\xE9</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/emploi/handicap/handicap-les-interlocuteurs\" title=\"Interlocuteurs\"
+        class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1744\">Interlocuteurs</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/emploi/handicap/maintien-en-emploi\"
+        title=\"Maintien en emploi\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1747\">Maintien
+        en emploi</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-3\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <a href=\"/emploi50plus\" title=\"Travailleurs exp\xE9riment\xE9s\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"node/12362\">Travailleurs exp\xE9riment\xE9s</a>\n\n
+        \                             </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/engager-son-entreprise-pour-lemploi-des-50\" title=\"Engager
+        son entreprise pour l\u2019emploi des 50+\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/12373\">Engager
+        son entreprise pour l\u2019emploi des 50+</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/salaries-et-demandeurs-demploi-faire-evoluer-votre-carriere-apres-50-ans\"
+        title=\"Salari\xE9s et demandeurs d&#039;emploi : faire \xE9voluer votre carri\xE8re
+        apr\xE8s 50 ans\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/12379\">Salari\xE9s
+        et demandeurs d&#039;emploi : faire \xE9voluer votre carri\xE8re apr\xE8s
+        50 ans</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                 </div>\n      </div>\n      \n            </div>\n                  </li>\n
+        \             <li class=\"fr-nav__item\">\n                                  <button
+        type=\"button\" class=\"fr-nav__btn\" aria-expanded=\"false\"\n                    aria-controls=\"mega-menu-5-178201351\">\n
+        \             Formation professionnelle\n            </button>\n            <div
+        class=\"fr-collapse fr-mega-menu\" id=\"mega-menu-5-178201351\" tabindex=\"-1\">\n
+        \                         <div class=\"fr-container fr-container--fluid fr-container-lg\">\n
+        \       <button type=\"button\" class=\"fr-btn fr-btn--close\" aria-controls=\"mega-menu-5-178201351\"
+        title=\"Fermer\">Fermer</button>\n        <div class=\"fr-grid-row fr-grid-row-lg--gutters\">\n
+        \                                                   <div  class=\"fr-col-12
+        fr-col-lg-3\">\n              <h2 class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Fonctionnement de la formation professionnelle\" class=\"fr-nav__link\">Fonctionnement
+        de la formation professionnelle</span>\n\n                              </h2>\n
+        \                                         <ul class=\"fr-mega-menu__list\">\n
+        \                 <li>\n                \n  <a href=\"/new-fonctionnement-de-la-formation-professionnelle/new-acteurs-et-cadre-de-la-formation\"
+        title=\"Acteurs et cadre de la formation professionnelle\" class=\"fr-nav__link\">Acteurs
+        et cadre de la formation professionnelle</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/new-fonctionnement-de-la-formation-professionnelle/new-investissement-dans-les-competences\"
+        title=\"Investissement dans les comp\xE9tences\" class=\"fr-nav__link\">Investissement
+        dans les comp\xE9tences</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/new-fonctionnement-de-la-formation-professionnelle/new-transformation-et-digitalisation-de-la\"
+        title=\"Transformation et digitalisation de la formation\" class=\"fr-nav__link\">Transformation
+        et digitalisation de la formation</a>\n\n          </li>\n              </ul>\n
+        \     \n                          </div>\n                      <div  class=\"fr-col-12
+        fr-col-lg-3\">\n              <h2 class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Formation en alternance\" class=\"fr-nav__link\">Formation
+        en alternance</span>\n\n                              </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/formation-en-alternance/apprentissage-et-formation-en-alternance\"
+        title=\"Apprentissage et formation en alternance\" class=\"fr-nav__link\"
+        data-drupal-link-system-path=\"taxonomy/term/1312\">Apprentissage et formation
+        en alternance</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/formation-en-alternance/entreprise-et-alternance\" title=\"Entreprise
+        et alternance\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1315\">Entreprise
+        et alternance</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-3\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Formation continue\" class=\"fr-nav__link\">Formation continue</span>\n\n
+        \                             </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/formation-continue/orientation-professionnelle-et-certification-des-competences-professionnelles\"
+        title=\"Orientation professionnelle et certification des comp\xE9tences\"
+        class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1321\">Orientation
+        professionnelle et certification des comp\xE9tences</a>\n\n          </li>\n
+        \                 <li>\n                \n  <a href=\"/formation-continue/formation-des-demandeurs-demploi\"
+        title=\"Formation des demandeurs d&#039;emploi\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1327\">Formation
+        des demandeurs d&#039;emploi</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/formation-continue/formation-des-salaries\"
+        title=\"Formation des salari\xE9s\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1324\">Formation
+        des salari\xE9s</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                 </div>\n      </div>\n      \n            </div>\n                  </li>\n
+        \             <li class=\"fr-nav__item\">\n                                  <button
+        type=\"button\" class=\"fr-nav__btn\" aria-expanded=\"false\"\n                    aria-controls=\"mega-menu-6-1754401767\">\n
+        \             Minist\xE8re\n            </button>\n            <div class=\"fr-collapse
+        fr-mega-menu\" id=\"mega-menu-6-1754401767\" tabindex=\"-1\">\n                          <div
+        class=\"fr-container fr-container--fluid fr-container-lg\">\n        <button
+        type=\"button\" class=\"fr-btn fr-btn--close\" aria-controls=\"mega-menu-6-1754401767\"
+        title=\"Fermer\">Fermer</button>\n        <div class=\"fr-grid-row fr-grid-row-lg--gutters\">\n
+        \                                                   <div  class=\"fr-col-12
+        fr-col-lg-2\">\n              <h2 class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"La ministre\" class=\"fr-nav__link\">La ministre </span>\n\n
+        \                             </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/catherine-vautrin-ministre-du-travail-de-la-sante-des-solidarites-et-des-familles\"
+        title=\"Biographie de Catherine Vautrin, ministre du Travail, de la Sant\xE9,
+        des Solidarit\xE9s et des Familles\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/12216\">Catherine
+        Vautrin, ministre du Travail, de la Sant\xE9, des Solidarit\xE9s et des Familles</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/agenda-de-catherine-vautrin-ministre-du-travail-de-la-sante-des-solidarites-et-des-familles\"
+        title=\"Agenda\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/12219\">Agenda</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/cabinet-de-catherine-vautrin\"
+        title=\"Cabinet\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/12222\">Cabinet</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/ecrire-a-catherine-vautrin\"
+        class=\"fr-nav__link\" data-drupal-link-system-path=\"node/12234\">\xC9crire
+        \xE0 la ministre</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-2\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"La ministre charg\xE9e du Travail et de l&#039;Emploi\" class=\"fr-nav__link\">La
+        ministre charg\xE9e du Travail et de l&#039;Emploi</span>\n\n                              </h2>\n
+        \                                         <ul class=\"fr-mega-menu__list\">\n
+        \                 <li>\n                \n  <a href=\"/astrid-panosyan-bouvet-ministre-du-travail-et-de-lemploi\"
+        title=\"Biographie d&#039;Astrid Panosyan-Bouvet, ministre charg\xE9e du Travail
+        et de l&#039;Emploi\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/11230\">Astrid
+        Panosyan-Bouvet, ministre charg\xE9e du Travail et de l&#039;Emploi</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/agenda-dastrid-panosyan-bouvet-ministre-chargee-du-chargee-du-travail-et-de-lemploi\"
+        title=\"Agenda\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/11224\">Agenda</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/cabinet-dastrid-panosyan-bouvet-ministre-chargee-du-travail-et-de-lemploi\"
+        title=\"Cabinet\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/11632\">Cabinet</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/ecrire-a-astrid-panosyan-bouvet\"
+        title=\"\xC9crire \xE0 la ministre\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/11823\">\xC9crire
+        \xE0 la ministre</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-2\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Organisation\" class=\"fr-nav__link\">Organisation</span>\n\n
+        \                             </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/new-organisation/new-directions-et-services-centraux\" title=\"Directions
+        et services centraux\" class=\"fr-nav__link\">Directions et services centraux</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/ministere/organisation/reseau-pour-lemploi\"
+        title=\"R\xE9seau pour l&#039;emploi\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1378\">R\xE9seau
+        pour l&#039;emploi</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/les-directions-regionales-de-leconomie-de-lemploi-du-travail-et-des-solidarites-dreets\"
+        title=\"Services territoriaux : les DREETS\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/11158\">Services
+        territoriaux : les DREETS</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/new-organisation/new-agences-operateurs-instances-rattachees-et-partenaires\"
+        title=\"Agences, op\xE9rateurs, instances rattach\xE9es et partenaires\" class=\"fr-nav__link\">Agences,
+        op\xE9rateurs, instances rattach\xE9es et partenaires</a>\n\n          </li>\n
+        \                 <li>\n                \n  <a href=\"/new-organisation/new-histoire-du-ministere-et-du-droit-du-travail\"
+        title=\"Histoire du minist\xE8re et du droit du travail\" class=\"fr-nav__link\">Histoire
+        du minist\xE8re et du droit du travail</a>\n\n          </li>\n              </ul>\n
+        \     \n                          </div>\n                      <div  class=\"fr-col-12
+        fr-col-lg-2\">\n              <h2 class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"Europe et international\" class=\"fr-nav__link\">Europe et
+        international</span>\n\n                              </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/ministere/europe-et-international/cooperation-europeenne\" title=\"Europe\"
+        class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1393\">Europe</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/ministere/europe-et-international/cooperation-internationale\"
+        title=\"International\" class=\"fr-nav__link\" data-drupal-link-system-path=\"taxonomy/term/1396\">International</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/actualites-et-breves?field_thematic_target_id=1426\"
+        title=\"Actualit\xE9 internationale\" class=\"fr-nav__link\" data-drupal-link-query=\"{&quot;field_thematic_target_id&quot;:&quot;1426&quot;}\">Actualit\xE9
+        internationale</a>\n\n          </li>\n              </ul>\n      \n                          </div>\n
+        \                     <div  class=\"fr-col-12 fr-col-lg-2\">\n              <h2
+        class=\"fr-mega-menu__category\">\n                                      \n
+        \ <span title=\"M\xE9tiers et concours\" class=\"fr-nav__link\">M\xE9tiers
+        et concours</span>\n\n                              </h2>\n                                          <ul
+        class=\"fr-mega-menu__list\">\n                  <li>\n                \n
+        \ <a href=\"/new-metiers-et-concours/new-devenir-inspecteur-du-travail\" title=\"Devenir
+        inspecteur du travail\" class=\"fr-nav__link\">Devenir inspecteur du travail</a>\n\n
+        \         </li>\n                  <li>\n                \n  <a href=\"/new-metiers-et-concours/new-resultats-annales-et-statistiques-des-concours-du-ministere-du-travail\"
+        title=\"R\xE9sultats, annales, statistiques\" class=\"fr-nav__link\">R\xE9sultats,
+        annales, statistiques</a>\n\n          </li>\n                  <li>\n                \n
+        \ <a href=\"/new-metiers-et-concours/new-devenir-medecin-inspecteur-du-travail\"
+        title=\"Devenir m\xE9decin inspecteur du travail\" class=\"fr-nav__link\">Devenir
+        m\xE9decin inspecteur du travail</a>\n\n          </li>\n                  <li>\n
+        \               \n  <a href=\"/travailler-pour-le-ministere-du-travail\" title=\"Travailler
+        pour le minist\xE8re\" class=\"fr-nav__link\" data-drupal-link-system-path=\"node/11260\">Travailler
+        pour le minist\xE8re</a>\n\n          </li>\n              </ul>\n      \n
+        \                         </div>\n                  </div>\n      </div>\n
+        \     \n            </div>\n                  </li>\n            \n      </ul>\n</nav>\n\n\n\n\n\n\n\n\n
+        \ \n      </div>\n    </div>\n  </header>\n\n\n<div class=\"campaign-global-container\">\n
+        \ \n\n  <div class=\"fr-container\">\n      \n  \n  <div id=\"block-dsfr-ondine-breadcrumbs\">\n\n\n\n
+        \ <nav data-component-id=\"dsfr4drupal:breadcrumb\" class=\"fr-breadcrumb\"
+        aria-label=\"Vous \xEAtes ici\_:\" role=\"navigation\">\n  <button type=\"button\"
+        class=\"fr-breadcrumb__button\" aria-expanded=\"false\" aria-controls=\"breadcrumb-1560693344\">\n
+        \   Voir le fil d'Ariane\n  </button>\n  <div class=\"fr-collapse\" id=\"breadcrumb-1560693344\">\n
+        \   <ol class=\"fr-breadcrumb__list\">\n              <li>\n                                                    <a
+        class=\"fr-breadcrumb__link\" href=\"/\">Accueil</a>\n        </li>\n              <li>\n
+        \                                                   <a class=\"fr-breadcrumb__link\"
+        aria-current=\"page\">Actualit\xE9s, presse et outils</a>\n        </li>\n
+        \             <li>\n                                                    <a
+        class=\"fr-breadcrumb__link\" href=\"/actualites-presse-et-outils/actualites-et-breves\">Actualit\xE9s
+        et br\xE8ves</a>\n        </li>\n              <li>\n                                                    <a
+        class=\"fr-breadcrumb__link\" aria-current=\"page\">R\xE9forme des retraites
+        : ce qui change \xE0 partir du 1er septembre 2023</a>\n        </li>\n          </ol>\n
+        \ </div>\n</nav>\n\n\n\n  </div>\n\n\n  \n  </div>\n\n  <main role=\"main\"
+        id=\"main\" tabindex=\"-1\">\n    <div class=\"fr-container\">\n  <div class=\"fr-grid-row
+        fr-grid-row--center\">\n    <div class=\"fr-col-12 fr-col-md-8 fr-col-sm-10\"
+        id=\"content\">\n      <div data-drupal-messages-fallback class=\"hidden\"></div>\n\n
+        \   </div>\n  </div>\n</div>\n\n      \n  \n  <div id=\"block-dsfr-ondine-main-content\">\n\n\n\n
+        \   \n  <div  class=\"layout__region layout__region--content fr-container\">\n
+        \   <div class=\"fr-grid-row fr-grid-row--center\">\n      <div class=\"fr-col-md-8
+        fr-col-sm-10 fr-col-12\">\n        \n  <div class=\"fr-grid-row fr-grid-row--right\">\n\n\n\n
+        \   <div class=\"fr-share\">\n    <ul class=\"fr-btns-group\">\n                              <li>\n
+        \                     <button type=\"button\"  class=\"fr-btn fr-icon-printer-line\"
+        onclick=\"window.print()\" title=\"Imprimer\">\n              Imprimer\n            </button>\n
+        \                 </li>\n                              <li>\n                      <a
+        \     class=\"fr-btn fr-btn--mail\"  href=\"mailto:?subject=Je vous recommande
+        un contenu sur https://travail-emploi.gouv.fr/&amp;body=Bonjour,%0D%0AJe vous
+        recommande le contenu suivant : R%C3%A9forme%20des%20retraites%20%3A%20ce%20qui%20change%20%C3%A0%20partir%20du%201er%20septembre%202023%0D%0A%0D%0Ahttps://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023%0D%0A%0D%0A\xC0
+        bient\xF4t\" title=\"Courriel - nouvelle fen\xEAtre\">\n                              Courriel\n
+        \                         </a>\n                  </li>\n                              <li>\n
+        \                     <a    target=\"_blank\"  rel=\"noopener noreferrer\"
+        \ class=\"fr-btn fr-btn--linkedin\"  href=\"http://www.linkedin.com/shareArticle?mini=true&amp;url=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023&amp;title=R%C3%A9forme%20des%20retraites%20%3A%20ce%20qui%20change%20%C3%A0%20partir%20du%201er%20septembre%202023&amp;source=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023\"
+        title=\"Linkedin - nouvelle fen\xEAtre\">\n                              Linkedin\n
+        \                         </a>\n                  </li>\n                              <li>\n
+        \                     <a    target=\"_blank\"  rel=\"noopener noreferrer\"
+        \ class=\"fr-btn fr-btn--facebook\"  href=\"http://www.facebook.com/share.php?u=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023&amp;title=R%C3%A9forme%20des%20retraites%20%3A%20ce%20qui%20change%20%C3%A0%20partir%20du%201er%20septembre%202023\"
+        title=\"Facebook - nouvelle fen\xEAtre\">\n                              Facebook\n
+        \                         </a>\n                  </li>\n                              <li>\n
+        \                     <a    target=\"_blank\"  rel=\"noopener noreferrer\"
+        \ class=\"fr-btn fr-btn--twitter-x\"  href=\"https://twitter.com/intent/tweet?url=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023&amp;url=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023&amp;hashtags=Hashtag\"
+        title=\"Twitter - nouvelle fen\xEAtre\">\n                              Twitter\n
+        \                         </a>\n                  </li>\n          </ul>\n
+        \ </div>\n  \n\n\n  </div>\n\n      </div>\n    </div>\n  </div>\n\n    \n
+        \ <div  class=\"layout__region layout__region--content fr-container\">\n    <div
+        class=\"fr-grid-row fr-grid-row--center\">\n      <div class=\"fr-col-md-8
+        fr-col-sm-10 fr-col-12\">\n        \n  <div class=\"fr-pb-md-12v\">\n\n\n\n
+        \ \n  \n<article about=\"/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023\"
+        class=\"node--with-summary\" id=\"node-10318\">\n  \n  <h1>R\xE9forme des
+        retraites : ce qui change \xE0 partir du 1er septembre 2023</h1>\n\n  \n\n
+        \   \n  <p>\n    <span class=\"fr-mr-1w\">Publi\xE9 le     <time datetime=\"2023-08-31T12:00:00Z\">31/08/2023</time>\n</span>\n
+        \       \n          | <span class=\"fr-tag--icon-left fr-icon-time-line fr-mr-1w\">Temps
+        de lecture : 5 minutes\n</span>\n      </p>\n\n  \n\n                                                          \n
+        \           <div class=\"fr-mb-2v\">\n        \n\n\n  \n  <a data-component-id=\"dsfr4drupal:tag\"
+        class=\"fr-tag\" href=\"/retraites\">\n    Retraites\n  </a>\n\n      </div>\n
+        \     \n      \n\n      <img loading=\"lazy\" src=\"/sites/travail-emploi/files/styles/w_1200/public/2024-08/logo-reforme-des-retraites-ce-qui-change-au-1er-septembre-2023.jpg.webp?itok=8fqlszsR\"
+        width=\"800\" height=\"450\" alt=\"R\xE9forme des retraites | Ce qui change
+        au 1er septembre 2023\" typeof=\"foaf:Image\" class=\"fr-fluid-img\" />\n\n\n\n\n\n
+        \     <div class=\"fr-text--lead fr-mt-6v\"><p><strong>Plusieurs d\xE9crets
+        li\xE9s \xE0 la r\xE9forme de notre syst\xE8me de retraite ont \xE9t\xE9 publi\xE9s
+        au cours de l'\xE9t\xE9 2023</strong>. \xC2ge de d\xE9part, retraite minimale,
+        d\xE9parts anticip\xE9s, pr\xE9vention de l'usure professionnelle... <strong>D\xE9couvrez
+        ce qui change \xE0 partir du 1er septembre 2023</strong>.</p></div>\n\n      <div
+        class=\"ondine-summary-wrapper\"></div>\n\n  \n  <div class=\"main-content\">\n
+        \         <h2>Recul progressif de l'\xE2ge de d\xE9part</h2><p><strong>L\u2019\xE2ge
+        l\xE9gal de d\xE9part \xE0 la retraite passe progressivement de 62 \xE0 64
+        ans</strong> et l\u2019augmentation de la dur\xE9e d\u2019assurance issue
+        de la r\xE9forme Touraine pour partir sans d\xE9cote acc\xE9l\xE8re. Au 1er
+        septembre, l'\xE2ge<br>l\xE9gal augmente de 3 mois et la dur\xE9e d'assurance
+        d'un trimestre.</p><p><strong>L\u2019\xE2ge d\u2019annulation de la d\xE9cote
+        reste \xE0 67 ans</strong>.</p>  <div class=\"text-align-center\">\n\n\n      <img
+        loading=\"lazy\" src=\"/sites/travail-emploi/files/styles/w_1200/public/files-spip/jpg/cartouche-1200-euros.jpg.webp?itok=tGp0wpEb\"
+        width=\"311\" height=\"167\" alt=\"jpg/cartouche-1200-euros.jpg\" typeof=\"foaf:Image\"
+        class=\"fr-fluid-img\">\n\n\n\n\n  </div>\n<h2>Augmentation de la retraite
+        minimale</h2><p>Le montant de la retraite minimale augmente de <strong>100</strong>&nbsp;<strong>\u20AC
+        par mois</strong>. Pour une carri\xE8re compl\xE8te cotis\xE9e \xE0 taux plein
+        au Smic, elle passe \xE0 <strong>1</strong>&nbsp;<strong>200</strong>&nbsp;<strong>\u20AC
+        brut mensuels</strong>, soit <strong>85</strong>&nbsp;<strong>% du Smic net</strong>.</p>
+        \ <div class=\"text-align-center\">\n\n\n      <img loading=\"lazy\" src=\"/sites/travail-emploi/files/styles/w_1200/public/files-spip/jpg/cartouche-depart-anticipe.jpg.webp?itok=WvT4AKl8\"
+        width=\"311\" height=\"198\" alt=\"jpg/cartouche-depart-anticipe.jpg\" typeof=\"foaf:Image\"
+        class=\"fr-fluid-img\">\n\n\n\n\n  </div>\n<h2>Acc\xE8s facilit\xE9 aux d\xE9parts
+        anticip\xE9s \xE0 la retraite</h2><h3>Pour les d\xE9parts en carri\xE8res
+        longues</h3><p><strong>Deux nouvelles bornes d\u2019\xE2ge permettent de partir
+        avant 64 ans</strong>, qui s\u2019ajoutent aux bornes en vigueur. Ainsi les
+        personnes ayant commenc\xE9 \xE0 travailler avant 16, 18, 20 et 21 ans pourront
+        partir en retraite respectivement \xE0 partir de 58, 60, 62 et 63 ans.</p><h3>Pour
+        les travailleurs en situation de handicap</h3><p>Un <strong>d\xE9part \xE0
+        compter de 55 ans</strong> est toujours possible, et m\xEAme <strong>facilit\xE9</strong>.
+        La condition de valider une dur\xE9e minimale, en plus d\u2019une dur\xE9e
+        cotis\xE9e, est supprim\xE9e. Par ailleurs, l\u2019acc\xE8s \xE0 la commission
+        permettant de <strong>valider r\xE9troactivement des p\xE9riodes de handicap</strong>
+        en l\u2019absence de justificatifs est d\xE9sormais ouvert \xE0 partir d\u2019un
+        taux d\u2019incapacit\xE9 de 50&nbsp;%, au lieu de 80&nbsp;% auparavant.</p><h3>En
+        cas d'inaptitude ou d'invalidit\xE9</h3><p>Un <strong>d\xE9part anticip\xE9
+        \xE0 62 ans</strong> est cr\xE9\xE9 pour inaptitude ou invalidit\xE9.</p><h3>En
+        cas d\u2019incapacit\xE9 permanente ou de handicap</h3><p>Les <strong>\xE2ges
+        de d\xE9part anticip\xE9</strong> pour handicap et pour <strong>incapacit\xE9
+        permanente d\u2019au moins 20</strong>&nbsp;<strong>%</strong> sont maintenus.</p>
+        \ <div class=\"text-align-center\">\n\n\n      <img loading=\"lazy\" src=\"/sites/travail-emploi/files/styles/w_1200/public/files-spip/jpg/cartouche-regimes-speciaux.jpg.webp?itok=bMxCwuqZ\"
+        width=\"311\" height=\"239\" alt=\"jpg/cartouche-regimes-speciaux.jpg\" typeof=\"foaf:Image\"
+        class=\"fr-fluid-img\">\n\n\n\n\n  </div>\n<h2>Fermeture des r\xE9gimes sp\xE9ciaux
+        pour les nouveaux entrants</h2><p>Les principaux r\xE9gimes sp\xE9ciaux de
+        retraite sont ferm\xE9s. \xC0 compter du 1er septembre 2023, les nouveaux
+        agents de la <strong>RATP</strong>, de la <strong>Banque de France</strong>,
+        des entreprises des <strong>industries \xE9lectriques et gazi\xE8res</strong>
+        (comme EDF), ainsi que les <strong>clercs de notaire</strong> et nouveaux
+        membres du <strong>Conseil \xE9conomique, social et environnemental</strong>
+        (CESE) seront affili\xE9s au r\xE9gime g\xE9n\xE9ral pour la retraite.</p>
+        \ <div class=\"text-align-center\">\n\n\n      <img loading=\"lazy\" src=\"/sites/travail-emploi/files/styles/w_1200/public/files-spip/jpg/cartouche-droits-familiaux.jpg.webp?itok=3ignKrTJ\"
+        width=\"311\" height=\"143\" alt=\"jpg/cartouche-droits-familiaux.jpg\" typeof=\"foaf:Image\"
+        class=\"fr-fluid-img\">\n\n\n\n\n  </div>\n<h2>De nouveaux droits familiaux</h2><ul><li><strong>Avec
+        la surcote anticip\xE9e \xE0 partir de 63 ans</strong> pour les m\xE8res de
+        famille ayant la dur\xE9e d\u2019assurance requise avant le nouvel \xE2ge
+        l\xE9gal&nbsp;;</li><li><strong>Avec la valorisation des cong\xE9s parentaux</strong>&nbsp;:
+        les trimestres d\u2019Assurance vieillesse des parents au foyer compteront
+        d\xE9sormais dans l\u2019\xE9ligibilit\xE9 aux dispositifs \xAB&nbsp;carri\xE8res
+        longues&nbsp;\xBB (dans la limite de quatre trimestres) et seront comptabilis\xE9s
+        dans le calcul de la retraite minimale major\xE9e (dans la limite de 24 trimestres)&nbsp;;</li><li><strong>Avec
+        la cr\xE9ation de l\u2019assurance vieillesse des aidants</strong> (AVA) et
+        l\u2019ouverture de droits \xE0 l\u2019assurance vieillesse aux parents d\u2019enfants
+        avec un taux d\u2019incapacit\xE9 de 50 \xE0 80&nbsp;% \xE9ligibles \xE0 un
+        compl\xE9ment de l\u2019allocation d\u2019\xE9ducation de l\u2019enfant handicap\xE9
+        (AEEH), et aux proches aidants de personnes en situation de handicap n\u2019habitant
+        pas avec la personne aid\xE9e&nbsp;;</li><li><strong>Avec la cr\xE9ation d'une
+        pension pour enfants orphelins</strong>. Les enfants ayant perdu leurs parents
+        percevront une pension jusqu'\xE0 21 ans, et sans limite d'\xE2ge pour les
+        orphelins en situation de handicap&nbsp;:</li><li><strong>Avec la cr\xE9ation
+        de nouveaux droits pour les professions lib\xE9rales</strong>. La majoration
+        de 10&nbsp;% de pension pour enfant d\xE8s le 3\xE8me enfant est \xE9tendue
+        aux professionnels lib\xE9raux et aux avocats, le taux de surcote au r\xE9gime
+        de base passe \xE0 5&nbsp;% par an contre 3&nbsp;% par an auparavant, et les
+        r\xE9gimes de prestations compl\xE9mentaires vieillesse des professionnels
+        de sant\xE9 exer\xE7ant une activit\xE9 lib\xE9rale sont ouverts \xE0 Mayotte.</li></ul>
+        \ <div class=\"text-align-center\">\n\n\n      <img loading=\"lazy\" src=\"/sites/travail-emploi/files/styles/w_1200/public/files-spip/jpg/cartouche-valorisation-taux-plein.jpg.webp?itok=CdjGM50E\"
+        width=\"311\" height=\"167\" alt=\"jpg/cartouche-valorisation-taux-plein.jpg\"
+        typeof=\"foaf:Image\" class=\"fr-fluid-img\">\n\n\n\n\n  </div>\n<h2>Valorisation
+        de l'activit\xE9 et facilitation des d\xE9parts \xE0 taux plein</h2><ul><li><strong>Gr\xE2ce
+        \xE0 la reconnaissance des p\xE9riodes de stages d\u2019insertion professionnelle</strong>,
+        et notamment de travaux d\u2019utilit\xE9 collective (TUC)&nbsp;;</li><li><strong>Gr\xE2ce
+        au rachat \xE0 tarif r\xE9duit des trimestres</strong> de stage jusqu\u2019\xE0
+        30 ans et des trimestres d\u2019\xE9tudes jusqu\u2019\xE0 40 ans&nbsp;;</li><li><strong>Les
+        \xE9lus locaux pourront plus ais\xE9ment valider des trimestres pendant leur
+        mandat</strong>. Ils pourront d\xE9sormais cotiser volontairement quelle que
+        soit leur indemnit\xE9 et pourront racheter des trimestres en cas de faibles
+        cotisations&nbsp;;</li><li><strong>Les sportifs de haut niveau pourront racheter
+        des trimestres et valider jusqu\u2019\xE0 8 ann\xE9es de droits</strong> (32
+        trimestres) au titre de leur engagement sportif.</li></ul><h2>Am\xE9lioration
+        des transitions activit\xE9-retraite</h2><ul><li><strong>Avec la cr\xE9ation
+        de nouveaux droits \xE0 la retraite de base</strong> pour les personnes en
+        cumul emploi-retraite&nbsp;;</li><li><strong>Avec l\u2019ouverture de la retraite
+        progressive du r\xE9gime de base</strong> d\xE8s deux ans avant l\u2019\xE2ge
+        l\xE9gal \xE0 l\u2019ensemble des r\xE9gimes, en particulier ceux de la fonction
+        publique ainsi qu\u2019\xE0 l\u2019ensemble des travailleurs non-salari\xE9s
+        et aux professionnels lib\xE9raux et aux avocats.</li></ul>  <div class=\"text-align-center\">\n\n\n
+        \     <img loading=\"lazy\" src=\"/sites/travail-emploi/files/styles/w_1200/public/files-spip/jpg/cartouche-usure-professionnelle.jpg.webp?itok=cIQEzlaN\"
+        width=\"311\" height=\"167\" alt=\"jpg/cartouche-usure-professionnelle.jpg\"
+        typeof=\"foaf:Image\" class=\"fr-fluid-img\">\n\n\n\n\n  </div>\n<h2>Pr\xE9vention
+        de l'usure professionnelle</h2><h3>Cr\xE9ation d\u2019un fonds consacr\xE9
+        \xE0 la pr\xE9vention de l\u2019usure professionnelle</h3><ul><li><strong>1
+        milliard d\u2019euros</strong> consacr\xE9s sur le quinquennat \xE0 la pr\xE9vention
+        de l\u2019usure professionnelle&nbsp;;</li><li><strong>Identification des
+        m\xE9tiers difficiles</strong> par les partenaires sociaux&nbsp;;</li><li><strong>Financement
+        de droits pour la formation et la reconversion</strong> des salari\xE9s et
+        d\u2019aides aux entreprises pour la pr\xE9vention.</li></ul><h3>Renforcement
+        du Compte professionnel de pr\xE9vention (C2P)</h3><ul><li><strong>Cr\xE9ation
+        d\u2019un cong\xE9 de reconversion</strong> comme nouvelle utilisation du
+        C2P.</li><li><strong>Suppression du plafond de 100 points</strong>.</li><li><strong>Meilleure
+        prise en compte de la poly-exposition</strong>&nbsp;: le nombre de points
+        acquis est proportionnel au nombre</li><li>de facteurs de risques auxquels
+        le salari\xE9 est expos\xE9.</li><li><strong>Baisse du seuil d\u2019acquisition
+        de points</strong>, qui passe de 120 \xE0 100 nuits pour le travail de nuit,
+        et de 50 \xE0 30 nuits pour le travail en \xE9quipe successives alternantes.</li><li><strong>Prise
+        en compte, pour le calcul de la pension de retraite, des trimestres de majoration
+        d\u2019assurance vieillesse</strong> acquis au titre du C2P dans le calcul
+        du coefficient de proratisation.</li></ul><p><a href=\"/sites/travail-emploi/files/files-spip/pdf/reforme-des-retraites-ce-qui-change-au-1er-septembre-2023.pdf\"
+        data-entity-type=\"media\" data-entity-uuid=\"d93dc649-0c0b-440b-893b-20897b378ae1\"
+        data-entity-substitution=\"media\" title=\"R\xE9forme des retraites : ce qui
+        change au 1er septembre 2023\" data-tracking-download-label=\"R\xE9forme des
+        retraites : ce qui change au 1er septembre 2023\"><strong>T\xE9l\xE9charger
+        notre infographie</strong></a></p><p><a href=\"/retraite/actualites-retraite\"><strong>En
+        savoir plus sur les d\xE9crets dans notre rubrique \"Actualit\xE9s Retraite\"</strong></a></p>
+        \         \n\n\n<div data-component-id=\"dsfr4drupal:callout\" class=\"fr-callout\">\n
+        \     <h2 class=\"fr-callout__title\">\n        Documents\n    </h2>\n    <p
+        class=\"fr-callout__text\">\n          \n\n    \n\n  \n\n  \n\n\n\n\n\n  \n<a
+        href=\"/sites/travail-emploi/files/files-spip/pdf/reforme-des-retraites-ce-qui-change-au-1er-septembre-2023.pdf\"
+        type=\"application/pdf\" class=\"file file--mime-application-pdf file--application-pdf
+        fr-link--download fr-link\" data-tracking-download-label=\"R\xE9forme des
+        retraites : ce qui change au 1er septembre 2023\" download data-component-id=\"dsfr4drupal:link\">
+        \   R\xE9forme des retraites : ce qui change au 1er septembre 2023 <span class=\"fr-link__detail\">(PDF
+        - 1.48 Mo)</span>\n  </a>\n\n\n\n\n  \n  </p>\n  \n</div>\n\n\n  \n  </div>\n</article>\n\n\n
+        \ </div>\n\n      </div>\n    </div>\n  </div>\n\n        <div class=\"fr-background-contrast--grey
+        fr-pb-8w fr-pt-9v\">\n  \n  <div  class=\"layout__region layout__region--content
+        fr-container\">\n    <div class=\"fr-grid-row fr-grid-row--center\">\n      <div
+        class=\"fr-col-md-8 fr-col-sm-10 fr-col-12\">\n        \n  <div class=\"fr-background-default--grey
+        fr-px-6v fr-py-4v fr-mb-8v\">\n\n\n  <h2 class=\"fr-h5\">Partager cet article</h2>\n\n
+        \   <div class=\"fr-share\">\n    <ul class=\"fr-btns-group\">\n                              <li>\n
+        \                     <button type=\"button\"  class=\"fr-btn fr-icon-printer-line\"
+        onclick=\"window.print()\" title=\"Imprimer\">\n              Imprimer\n            </button>\n
+        \                 </li>\n                              <li>\n                      <a
+        \     class=\"fr-btn fr-btn--mail\"  href=\"mailto:?subject=Je vous recommande
+        un contenu sur https://travail-emploi.gouv.fr/&amp;body=Bonjour,%0D%0AJe vous
+        recommande le contenu suivant : R%C3%A9forme%20des%20retraites%20%3A%20ce%20qui%20change%20%C3%A0%20partir%20du%201er%20septembre%202023%0D%0A%0D%0Ahttps://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023%0D%0A%0D%0A\xC0
+        bient\xF4t\" title=\"Courriel - nouvelle fen\xEAtre\">\n                              Courriel\n
+        \                         </a>\n                  </li>\n                              <li>\n
+        \                     <a    target=\"_blank\"  rel=\"noopener noreferrer\"
+        \ class=\"fr-btn fr-btn--linkedin\"  href=\"http://www.linkedin.com/shareArticle?mini=true&amp;url=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023&amp;title=R%C3%A9forme%20des%20retraites%20%3A%20ce%20qui%20change%20%C3%A0%20partir%20du%201er%20septembre%202023&amp;source=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023\"
+        title=\"Linkedin - nouvelle fen\xEAtre\">\n                              Linkedin\n
+        \                         </a>\n                  </li>\n                              <li>\n
+        \                     <a    target=\"_blank\"  rel=\"noopener noreferrer\"
+        \ class=\"fr-btn fr-btn--facebook\"  href=\"http://www.facebook.com/share.php?u=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023&amp;title=R%C3%A9forme%20des%20retraites%20%3A%20ce%20qui%20change%20%C3%A0%20partir%20du%201er%20septembre%202023\"
+        title=\"Facebook - nouvelle fen\xEAtre\">\n                              Facebook\n
+        \                         </a>\n                  </li>\n                              <li>\n
+        \                     <a    target=\"_blank\"  rel=\"noopener noreferrer\"
+        \ class=\"fr-btn fr-btn--twitter-x\"  href=\"https://twitter.com/intent/tweet?url=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023&amp;url=https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023&amp;hashtags=Hashtag\"
+        title=\"Twitter - nouvelle fen\xEAtre\">\n                              Twitter\n
+        \                         </a>\n                  </li>\n          </ul>\n
+        \ </div>\n  \n\n\n  </div>\n\n      </div>\n    </div>\n  </div>\n\n      </div>\n
+        \ \n\n\n  </div>\n\n\n  \n  </main>\n</div>\n  \n  \n  <div data-component-id=\"dsfr4drupal:follow\"
+        class=\"fr-follow\">\n    <div class=\"fr-container\">\n      <div class=\"fr-grid-row\">\n
+        \                         <div class=\"fr-col-12 \">\n            <div class=\"fr-follow__social\">\n
+        \             <h2 class=\"fr-h5\">Suivez-nous <br />sur les r\xE9seaux sociaux</h2>\n
+        \             \n\n\n\n\n  <ul class=\"fr-btns-group--lg fr-btns-group\" data-component-id=\"dsfr4drupal:button-group\">\n
+        \         <li>\n        \n\n    \n\n\n      <a href=\"https://www.linkedin.com/company/1032700/\"
+        data-component-id=\"dsfr4drupal:button\" class=\"fr-btn--linkedin fr-btn\"
+        target=\"_blank\" rel=\"noopener external\" title=\"LinkedIn - nouvelle fen\xEAtre\">LinkedIn</a>\n\n
+        \     </li>\n          <li>\n        \n\n    \n\n\n      <a href=\"https://www.youtube.com/@ministeredutravail\"
+        data-component-id=\"dsfr4drupal:button\" class=\"fr-btn--youtube fr-btn\"
+        target=\"_blank\" rel=\"noopener external\" title=\"YouTube - nouvelle fen\xEAtre\">YouTube</a>\n\n
+        \     </li>\n          <li>\n        \n\n    \n\n\n      <a href=\"https://twitter.com/Travail_Gouv\"
+        data-component-id=\"dsfr4drupal:button\" class=\"fr-btn--twitter-x fr-btn\"
+        target=\"_blank\" rel=\"noopener external\" title=\"Twitter-X - nouvelle fen\xEAtre\">Twitter-X</a>\n\n
+        \     </li>\n          <li>\n        \n\n    \n\n\n      <a href=\"https://www.facebook.com/Travail.Gouv/\"
+        data-component-id=\"dsfr4drupal:button\" class=\"fr-btn--facebook fr-btn\"
+        target=\"_blank\" rel=\"noopener external\" title=\"Facebook - nouvelle fen\xEAtre\">Facebook</a>\n\n
+        \     </li>\n          <li>\n        \n\n    \n\n\n      <a href=\"https://www.instagram.com/1jeune1solution/\"
+        data-component-id=\"dsfr4drupal:button\" class=\"fr-btn--instagram fr-btn\"
+        target=\"_blank\" rel=\"noopener external\" title=\"Instagram - nouvelle fen\xEAtre\">Instagram</a>\n\n
+        \     </li>\n          <li>\n        \n\n    \n\n\n      <a href=\"https://www.tiktok.com/@1jeune_1solution\"
+        data-component-id=\"dsfr4drupal:button\" class=\"fr-btn--tiktok fr-btn\" target=\"_blank\"
+        rel=\"noopener external\" title=\"TikTok - nouvelle fen\xEAtre\">TikTok</a>\n\n
+        \     </li>\n      </ul>\n\n            </div>\n          </div>\n              </div>\n
+        \   </div>\n  </div>\n\n\n\n\n  \n\n<footer data-component-id=\"dsfr4drupal:footer\"
+        class=\"fr-footer\" role=\"contentinfo\" id=\"footer\">\n      <div class=\"fr-footer__top\">\n
+        \     <div class=\"fr-container\">\n          \n  \n\n\n\n  \n\n<div data-component-id=\"dsfr4drupal:footer-top-menu\"
+        class=\"fr-grid-row fr-grid-row--start fr-grid-row--gutters\"\">\n      <div
+        \ class=\"fr-col-12 fr-col-md-2 fr-col-sm-3\">\n      <h3 class=\"fr-footer__top-cat\">\n
+        \       <span title=\"Actualit\xE9s, presse et outils\" class=\"fr-col-12
+        fr-col-md-2 fr-col-sm-3 fr-footer__top-link\">Actualit\xE9s, presse et outils</span>\n
+        \     </h3>\n      <ul class=\"fr-footer__top-list\">\n                  <li>\n
+        \                       <a href=\"/actualites-presse-et-outils/actualites-et-breves\"
+        title=\"Actualit\xE9s et br\xE8ves\" class=\"fr-footer__top-link\" data-drupal-link-system-path=\"taxonomy/term/1123\">Actualit\xE9s
+        et br\xE8ves</a>\n          </li>\n                  <li>\n                        <a
+        href=\"/actualites-presse-et-outils/presse\" title=\"Presse\" class=\"fr-footer__top-link\">Presse</a>\n
+        \         </li>\n                  <li>\n                        <a href=\"/actualites-presse-et-outils/publications-et-ressources\"
+        title=\"Publications et ressources\" class=\"fr-footer__top-link\">Publications
+        et ressources</a>\n          </li>\n              </ul>\n    </div>\n      <div
+        \ class=\"fr-col-12 fr-col-md-2 fr-col-sm-3\">\n      <h3 class=\"fr-footer__top-cat\">\n
+        \       <span class=\"fr-col-12 fr-col-md-2 fr-col-sm-3 fr-footer__top-link\">Droit
+        du travail et dialogue social</span>\n      </h3>\n      <ul class=\"fr-footer__top-list\">\n
+        \                 <li>\n                        <a href=\"/droit-du-travail\"
+        title=\"Droit du travail\" class=\"fr-footer__top-link\" data-drupal-link-system-path=\"taxonomy/term/1168\">Droit
+        du travail</a>\n          </li>\n                  <li>\n                        <a
+        href=\"/droit-du-travail-et-dialogue-social/dialogue-social\" title=\"Dialogue
+        social\" class=\"fr-footer__top-link\">Dialogue social</a>\n          </li>\n
+        \                 <li>\n                        <a href=\"/droit-du-travail-et-dialogue-social/inspection-du-travail\"
+        title=\"Inspection du travail\" class=\"fr-footer__top-link\">Inspection du
+        travail</a>\n          </li>\n              </ul>\n    </div>\n      <div
+        \ class=\"fr-col-12 fr-col-md-2 fr-col-sm-3\">\n      <h3 class=\"fr-footer__top-cat\">\n
+        \       <span title=\"Sant\xE9 et s\xE9curit\xE9 au travail\" class=\"fr-col-12
+        fr-col-md-2 fr-col-sm-3 fr-footer__top-link\">Sant\xE9 et s\xE9curit\xE9 au
+        travail</span>\n      </h3>\n      <ul class=\"fr-footer__top-list\">\n                  <li>\n
+        \                       <a href=\"/suivi-de-la-sante-au-travail\" title=\"Suivi
+        de la sant\xE9 au travail\" class=\"fr-footer__top-link\" data-drupal-link-system-path=\"taxonomy/term/1357\">Suivi
+        de la sant\xE9 au travail</a>\n          </li>\n                  <li>\n                        <a
+        href=\"/dispositions-particulieres-et-postes-risques\" title=\"Dispositions
+        particuli\xE8res et postes \xE0 risques\" class=\"fr-footer__top-link\" data-drupal-link-system-path=\"taxonomy/term/1345\">Dispositions
+        particuli\xE8res et postes \xE0 risques</a>\n          </li>\n                  <li>\n
+        \                       <a href=\"/sante-au-travail/prevention-des-risques\"
+        title=\"Pr\xE9vention des risques\" class=\"fr-footer__top-link\">Pr\xE9vention
+        des risques</a>\n          </li>\n                  <li>\n                        <a
+        href=\"/sante-au-travail/prevention-des-accidents-de-travail-graves-et-mortels\"
+        title=\"Pr\xE9vention des accidents de travail graves et mortels\" class=\"fr-footer__top-link\">Pr\xE9vention
+        des accidents de travail graves et mortels</a>\n          </li>\n              </ul>\n
+        \   </div>\n      <div  class=\"fr-col-12 fr-col-md-2 fr-col-sm-3\">\n      <h3
+        class=\"fr-footer__top-cat\">\n        <span title=\"Emploi\" class=\"fr-col-12
+        fr-col-md-2 fr-col-sm-3 fr-footer__top-link\">Emploi</span>\n      </h3>\n
+        \     <ul class=\"fr-footer__top-list\">\n                  <li>\n                        <a
+        href=\"/emploi/acces-lemploi\" title=\"Acc\xE8s \xE0 l&#039;emploi\" class=\"fr-footer__top-link\">Acc\xE8s
+        \xE0 l&#039;emploi</a>\n          </li>\n                  <li>\n                        <a
+        href=\"/emploi/securisation-des-emplois\" title=\"S\xE9curisation des emplois\"
+        class=\"fr-footer__top-link\" data-drupal-link-system-path=\"taxonomy/term/1273\">S\xE9curisation
+        des emplois</a>\n          </li>\n                  <li>\n                        <a
+        href=\"/handicap\" title=\"Handicap\" class=\"fr-footer__top-link\" data-drupal-link-system-path=\"taxonomy/term/1267\">Handicap</a>\n
+        \         </li>\n                  <li>\n                        <a href=\"/emploi/handicap/maintien-en-emploi\"
+        title=\"Maintien en emploi\" class=\"fr-footer__top-link\" data-drupal-link-system-path=\"taxonomy/term/1747\">Maintien
+        en emploi</a>\n          </li>\n              </ul>\n    </div>\n      <div
+        \ class=\"fr-col-12 fr-col-md-2 fr-col-sm-3\">\n      <h3 class=\"fr-footer__top-cat\">\n
+        \       <span title=\"Formation professionnelle\" class=\"fr-col-12 fr-col-md-2
+        fr-col-sm-3 fr-footer__top-link\">Formation professionnelle</span>\n      </h3>\n
+        \     <ul class=\"fr-footer__top-list\">\n                  <li>\n                        <a
+        href=\"/formation-professionnelle/fonctionnement-de-la-formation-professionnelle\"
+        title=\"Fonctionnement de la formation professionnelle\" class=\"fr-footer__top-link\">Fonctionnement
+        de la formation professionnelle</a>\n          </li>\n                  <li>\n
+        \                       <a href=\"/formation-professionnelle/formation-en-alternance\"
+        title=\"Formation en alternance\" class=\"fr-footer__top-link\">Formation
+        en alternance</a>\n          </li>\n                  <li>\n                        <a
+        href=\"/formation-professionnelle/formation-continue\" title=\"Formation continue\"
+        class=\"fr-footer__top-link\">Formation continue</a>\n          </li>\n              </ul>\n
+        \   </div>\n      <div  class=\"fr-col-12 fr-col-md-2 fr-col-sm-3\">\n      <h3
+        class=\"fr-footer__top-cat\">\n        <span title=\"Minist\xE8re\" class=\"fr-col-12
+        fr-col-md-2 fr-col-sm-3 fr-footer__top-link\">Minist\xE8re</span>\n      </h3>\n
+        \     <ul class=\"fr-footer__top-list\">\n                  <li>\n                        <a
+        href=\"/astrid-panosyan-bouvet-ministre-du-travail-et-de-lemploi\" title=\"La
+        ministre\" class=\"fr-footer__top-link\" data-drupal-link-system-path=\"node/11230\">La
+        ministre</a>\n          </li>\n                  <li>\n                        <a
+        href=\"/ministere/organisation\" title=\"Organisation\" class=\"fr-footer__top-link\"
+        data-drupal-link-system-path=\"taxonomy/term/1369\">Organisation</a>\n          </li>\n
+        \                 <li>\n                        <a href=\"/ministere/europe-et-international\"
+        title=\"Europe et international\" class=\"fr-footer__top-link\" data-drupal-link-system-path=\"taxonomy/term/1387\">Europe
+        et international</a>\n          </li>\n                  <li>\n                        <a
+        href=\"/ministere/metiers-et-concours\" title=\"M\xE9tiers et concours\" class=\"fr-footer__top-link\"
+        data-drupal-link-system-path=\"taxonomy/term/1399\">M\xE9tiers et concours</a>\n
+        \         </li>\n              </ul>\n    </div>\n  </div>\n\n\n\n\n\n  \n
+        \     </div>\n    </div>\n    <div class=\"fr-container\">\n    <div class=\"fr-footer__body\">\n
+        \     <div class=\"fr-footer__brand fr-enlarge-link\">\n        \n          \n
+        \ <a data-component-id=\"dsfr4drupal:logo\" href=\"/\" title=\"Retour \xE0
+        l&#039;accueil du site - Minist\xE8re\r du Travail, de la Sant\xE9, \r des
+        Solidarit\xE9s \r et des Familles\">\n\n  <p class=\"fr-logo\">\n    Minist\xE8re<br
+        />\r\ndu Travail, de la Sant\xE9, <br />\r\ndes Solidarit\xE9s <br />\r\net
+        des Familles\n  </p>\n\n  </a>\n\n\n              </div>\n              <div
+        class=\"fr-footer__content\">\n                      \n  \n\n\n\n  <ul data-region=\"footer_content\"
+        data-component-id=\"dsfr4drupal:footer-menu\" class=\"fr-footer__content-list\"
+        id=\"menu-footer-external\">\n          <li class=\"fr-footer__content-item\">\n
+        \             <a href=\"https://www.legifrance.gouv.fr\" target=\"_blank\"
+        class=\"fr-footer__content-link\" rel=\"noopener external\" title=\"legifrance.gouv.fr
+        - nouvelle fen\xEAtre\">legifrance.gouv.fr</a>\n          </li>\n          <li
+        class=\"fr-footer__content-item\">\n              <a href=\"https://www.service-public.fr\"
+        target=\"_blank\" class=\"fr-footer__content-link\" rel=\"noopener external\"
+        title=\"service-public.fr - nouvelle fen\xEAtre\">service-public.fr</a>\n
+        \         </li>\n          <li class=\"fr-footer__content-item\">\n              <a
+        href=\"https://www.info.gouv.fr\" target=\"_blank\" class=\"fr-footer__content-link\"
+        rel=\"noopener external\" title=\"info.gouv.fr - nouvelle fen\xEAtre\">info.gouv.fr</a>\n
+        \         </li>\n          <li class=\"fr-footer__content-item\">\n              <a
+        href=\"https://www.data.gouv.fr\" class=\"fr-footer__content-link\" target=\"_blank\"
+        rel=\"noopener external\" title=\"data.gouv.fr - nouvelle fen\xEAtre\">data.gouv.fr</a>\n
+        \         </li>\n  </ul>\n\n\n\n\n\n  \n        </div>\n          </div>\n
+        \     \n          <div class=\"fr-footer__bottom\">\n        <div class=\"fr-col-12\">\n
+        \ <div class=\"fr-grid-row\">\n    <div class=\"fr-col-12 fr-col-lg-9\">\n
+        \     \n\n\n\n  <ul data-region=\"footer_bottom\" data-component-id=\"dsfr4drupal:footer-menu\"
+        class=\"fr-footer__bottom-list\" id=\"menu-footer-legal\">\n          <li
+        class=\"fr-footer__bottom-item\">\n              <a href=\"/sitemap\" title=\"Plan
+        du site\" class=\"fr-footer__bottom-link\" data-drupal-link-system-path=\"sitemap\">Plan
+        du site</a>\n          </li>\n          <li class=\"fr-footer__bottom-item\">\n
+        \             <a href=\"/donnees-personnelles-et-cookies\" title=\"Donn\xE9es
+        personnelles et cookies\" class=\"fr-footer__bottom-link\" data-drupal-link-system-path=\"node/11820\">Donn\xE9es
+        personnelles et cookies</a>\n          </li>\n          <li class=\"fr-footer__bottom-item\">\n
+        \             <a href=\"/accessibilite-du-site\" title=\"Accessibilit\xE9\"
+        class=\"fr-footer__bottom-link\" data-drupal-link-system-path=\"node/11248\">Accessibilit\xE9:
+        partiellement conforme</a>\n          </li>\n          <li class=\"fr-footer__bottom-item\">\n
+        \             <a href=\"/mentions-legales\" title=\"Mentions l\xE9gales\"
+        class=\"fr-footer__bottom-link\" data-drupal-link-system-path=\"node/11817\">Mentions
+        l\xE9gales</a>\n          </li>\n          <li class=\"fr-footer__bottom-item\">\n
+        \             <a href=\"/nous-contacter\" title=\"Nous contacter\" class=\"fr-footer__bottom-link\"
+        data-drupal-link-system-path=\"node/11245\">Nous contacter</a>\n          </li>\n
+        \ </ul>\n\n\n\n\n    </div>\n    <div class=\"fr-col-12 fr-col-lg-3 fr-mb-2w
+        fr-mt-3v text-align-right\">\n      <a href=\"#tarteaucitron\" class=\"fr-footer__bottom-link\">\n
+        \       Gestion des cookies\n      </a>\n    </div>\n  </div>\n</div>\n\n
+        \                 <div class=\"fr-footer__bottom-copy\">\n            <div><p>Sauf
+        mention contraire, tous les contenus de ce site sont sous <a href=\"https://github.com/etalab/licence-ouverte/blob/master/LO.md\"
+        rel=\"nofollow noopener external\" target=\"_blank\" title=\"licence etalab-2.0
+        - Ouvrir dans une nouvelle fen\xEAtre - nouvelle fen\xEAtre\">licence etalab-2.0</a>.</p></div>\n
+        \         </div>\n              </div>\n      </div>\n</footer>\n\n\n  \n
+        \ \n\n<dialog data-component-id=\"dsfr4drupal:modal\" id=\"modal-display-settings\"
+        role=\"dialog\" aria-labelledby=\"modal-display-settings-title\" class=\"fr-modal\"
+        data-fr-concealing-backdrop=\"true\">\n  <div class=\"fr-container fr-container--fluid
+        fr-container-md\">\n    <div class=\"fr-grid-row fr-grid-row--center\">\n
+        \     <div class=\"fr-col-12 fr-col-md-6 fr-col-lg-4\">\n        <div class=\"fr-modal__body\">\n
+        \         <div class=\"fr-modal__header\">\n            <button type=\"button\"
+        class=\"fr-btn--close fr-btn\" aria-controls=\"modal-display-settings\" title=\"Fermer\">\n
+        \             Fermer\n            </button>\n          </div>\n          <div
+        class=\"fr-modal__content\">\n            <h1 id=\"modal-display-settings-title\"
+        class=\"fr-modal__title\">\n              Param\xE8tres d'affichage\n            </h1>\n
+        \               <div class=\"fr-display\">\n      <fieldset class=\"fr-fieldset\">\n
+        \       <legend class=\"fr-fieldset__legend--regular fr-fieldset__legend\">\n
+        \         Choisissez un th\xE8me pour personnaliser l'apparence du site.\n
+        \       </legend>\n        <div class=\"fr-fieldset__element\">\n          <div
+        class=\"fr-radio-group fr-radio-rich\">\n            <input value=\"light\"
+        type=\"radio\" id=\"fr-radios-theme-light\" name=\"fr-radios-theme\">\n            <label
+        class=\"fr-label\" for=\"fr-radios-theme-light\">Th\xE8me clair</label>\n
+        \           <div class=\"fr-radio-rich__img\">\n              <svg aria-hidden=\"true\"
+        class=\"fr-artwork\" viewBox=\"0 0 80 80\" width=\"80px\" height=\"80px\">\n
+        \               <use class=\"fr-artwork-decorative\" href=\"/libraries/dsfr/dist//artwork/pictograms/environment/sun.svg#artwork-decorative\"></use>\n
+        \               <use class=\"fr-artwork-minor\" href=\"/libraries/dsfr/dist//artwork/pictograms/environment/sun.svg#artwork-minor\"></use>\n
+        \               <use class=\"fr-artwork-major\" href=\"/libraries/dsfr/dist//artwork/pictograms/environment/sun.svg#artwork-major\"></use>\n
+        \             </svg>\n            </div>\n          </div>\n        </div>\n
+        \       <div class=\"fr-fieldset__element\">\n          <div class=\"fr-radio-group
+        fr-radio-rich\">\n            <input value=\"dark\" type=\"radio\" id=\"fr-radios-theme-dark\"
+        name=\"fr-radios-theme\">\n            <label class=\"fr-label\" for=\"fr-radios-theme-dark\">Th\xE8me
+        sombre</label>\n            <div class=\"fr-radio-rich__img\">\n              <svg
+        aria-hidden=\"true\" class=\"fr-artwork\" viewBox=\"0 0 80 80\" width=\"80px\"
+        height=\"80px\">\n                <use class=\"fr-artwork-decorative\" href=\"/libraries/dsfr/dist//artwork/pictograms/environment/moon.svg#artwork-decorative\"></use>\n
+        \               <use class=\"fr-artwork-minor\" href=\"/libraries/dsfr/dist//artwork/pictograms/environment/moon.svg#artwork-minor\"></use>\n
+        \               <use class=\"fr-artwork-major\" href=\"/libraries/dsfr/dist//artwork/pictograms/environment/moon.svg#artwork-major\"></use>\n
+        \             </svg>\n            </div>\n          </div>\n        </div>\n
+        \       <div class=\"fr-fieldset__element\">\n          <div class=\"fr-radio-group
+        fr-radio-rich\">\n            <input value=\"system\" type=\"radio\" id=\"fr-radios-theme-system\"
+        name=\"fr-radios-theme\">\n            <label class=\"fr-label\" for=\"fr-radios-theme-system\">\n
+        \             Syst\xE8me\n              <span class=\"fr-hint-text\">Utilise
+        les param\xE8tres syst\xE8me</span>\n            </label>\n            <div
+        class=\"fr-radio-rich__img\">\n              <svg aria-hidden=\"true\" class=\"fr-artwork\"
+        viewBox=\"0 0 80 80\" width=\"80px\" height=\"80px\">\n                <use
+        class=\"fr-artwork-decorative\" href=\"/libraries/dsfr/dist//artwork/pictograms/system/system.svg#artwork-decorative\"></use>\n
+        \               <use class=\"fr-artwork-minor\" href=\"/libraries/dsfr/dist//artwork/pictograms/system/system.svg#artwork-minor\"></use>\n
+        \               <use class=\"fr-artwork-major\" href=\"/libraries/dsfr/dist//artwork/pictograms/system/system.svg#artwork-major\"></use>\n
+        \             </svg>\n            </div>\n          </div>\n        </div>\n
+        \     </fieldset>\n    </div>\n            </div>\n\n                  </div>\n
+        \     </div>\n    </div>\n  </div>\n</dialog>\n\n\n  </div>\n\n  \n\n  \n
+        \ <script src=\"/libraries/dsfr/dist/core/core.module.min.js?sxc7pw\" type=\"module\"></script>\n<script
+        src=\"/libraries/dsfr/dist/component/breadcrumb/breadcrumb.module.min.js?sxc7pw\"
+        type=\"module\"></script>\n<script src=\"/libraries/dsfr/dist/scheme/scheme.module.min.js?sxc7pw\"
+        type=\"module\"></script>\n<script src=\"/libraries/dsfr/dist/component/display/display.module.min.js?sxc7pw\"
+        type=\"module\"></script>\n<script src=\"/libraries/dsfr/dist/component/modal/modal.module.min.js?sxc7pw\"
+        type=\"module\"></script>\n<script src=\"/libraries/dsfr/dist/component/navigation/navigation.module.min.js?sxc7pw\"
+        type=\"module\"></script>\n<script src=\"/libraries/dsfr/dist/component/table/table.module.min.js?sxc7pw\"
+        type=\"module\"></script>\n<script src=\"/sites/travail-emploi/files/js/js_6i7wySVBfhRYC_G50GtqCB_qb4mD_3B5KsUmhhd-NEo.js?scope=footer&amp;delta=7&amp;language=fr&amp;theme=dsfr_travail_emploi&amp;include=eJyVj8FuxDAIRH8oW1_6P9bE0C2qDSnGkfL3TRv1sl0fekLMG2Cg_uav5GNDTcXaZsoaLyjFnMR0oad8dQYVH22dGEj6VnFM6Ps5zT6BzQh1whS73BHzYH20Bp_dDayVf1g2JVFOZ85v7QZFPUJKX3hUdoEmUYnlsuVwlA_Re-L93NNvv_0S8OCMkYuEm6aH_pHnhq3nz3SVv5RJkJ2bnfIuxJauHzJB6nHK8mzndGqXxvYP_2EjxspfXgHSvw\"></script>\n\n</body>\n</html>\n"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Age:
+      - '8050'
+      Cache-Control:
+      - max-age=10800, public
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/html; charset=UTF-8
+      Content-language:
+      - fr
+      Date:
+      - Tue, 10 Jun 2025 14:29:39 GMT
+      Expires:
+      - Sun, 19 Nov 1978 05:00:00 GMT
+      Last-Modified:
+      - Tue, 10 Jun 2025 14:29:38 GMT
+      Set-Cookie:
+      - BIGipServerpool-travail-production.cegedim.cloud-TCP80=!w93WJ1hBVq4z+n2QEus9KsUIQe0YecVn9KtDGGv9rC4rZJWgQ0irciSWFSyVfXUaXqovP61N0AeDTyCy/fZjzN5p9wN9;
+        path=/; Httponly; Secure
+      - TS3e9dd0b3029=087dc22938ab2800bd391653a701d6cf1b6fea6f6290a3f24c6cf238a55cde5bc4f3548054e1282c6b18eeedaa61da94;
+        Max-Age=30; Path=/
+      - TSafbd99a4027=087dc22938ab20003227f1fab6bb68c63cd712a7225b9997a730c353d37941fb873d4e6e89f1357e084aa6ede311300016062e0ad5134aad0a9cd0dde54f1ed301a30a5742c7a2d38c5c959ddc008e9965a64bdba305a28a3dfd8eada5911560;
+        Path=/
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Cookie,Accept-Encoding
+      X-Cache:
+      - HIT
+      X-Cache-Hits:
+      - '10'
+      X-Cache-Ttl:
+      - '2749.968'
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+    status:
+      code: 200
+      message: OK
 version: 1

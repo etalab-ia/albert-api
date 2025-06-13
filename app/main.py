@@ -5,7 +5,23 @@ from fastapi.dependencies.utils import get_dependant
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 
-from app.endpoints import audio, auth, chat, chunks, collections, completions, documents, embeddings, files, models, ocr, parse, rerank, search, mcp
+from app.endpoints import (
+    agents,
+    audio,
+    auth,
+    chat,
+    chunks,
+    collections,
+    completions,
+    documents,
+    embeddings,
+    files,
+    models,
+    ocr,
+    parse,
+    rerank,
+    search,
+)
 from app.helpers._accesscontroller import AccessController
 from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
@@ -15,6 +31,7 @@ from app.utils.hooks_decorator import hooks
 from app.utils.lifespan import lifespan
 from app.utils.settings import settings
 from app.utils.variables import (
+    ROUTER__AGENTS,
     ROUTER__AUDIO,
     ROUTER__AUTH,
     ROUTER__CHAT,
@@ -30,14 +47,13 @@ from app.utils.variables import (
     ROUTER__PARSE,
     ROUTER__RERANK,
     ROUTER__SEARCH,
-    ROUTER__MCP,
 )
 
 logger = logging.getLogger(__name__)
 
 if settings.monitoring.sentry is not None and settings.monitoring.sentry.enabled:
     logger.info("Initializing Sentry SDK.")
-    sentry_sdk.init(**settings.monitoring.sentry.model_dump())
+    sentry_sdk.init(**settings.monitoring.sentry.args.model_dump())
 
 
 def create_app(*args, **kwargs) -> FastAPI:
@@ -77,6 +93,9 @@ def create_app(*args, **kwargs) -> FastAPI:
         return await call_next(request)
 
     # Routers
+    if ROUTER__AGENTS not in settings.general.disabled_routers:
+        add_hooks(router=agents.router)
+        app.include_router(router=agents.router, tags=[ROUTER__AGENTS.title()], prefix="/v1")
 
     if ROUTER__AUDIO not in settings.general.disabled_routers:
         add_hooks(router=audio.router)
@@ -118,10 +137,6 @@ def create_app(*args, **kwargs) -> FastAPI:
         @app.get(path="/health", tags=[ROUTER__MONITORING.title()], include_in_schema=settings.general.log_level == "DEBUG", dependencies=[Security(dependency=AccessController())])  # fmt: off
         def health() -> Response:
             return Response(status_code=200)
-
-    if ROUTER__MCP not in settings.general.disabled_routers:
-        add_hooks(router=mcp.router)
-        app.include_router(router=mcp.router, tags=[ROUTER__MCP.title()], prefix="/v1")
 
     if ROUTER__OCR not in settings.general.disabled_routers:
         add_hooks(router=ocr.router)

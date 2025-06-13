@@ -207,6 +207,11 @@ def roles(test_client: TestClient) -> tuple[dict, dict]:
         limits.append({"model": model, "type": LimitType.TPM.value, "value": None})
         limits.append({"model": model, "type": LimitType.TPD.value, "value": None})
 
+    limits.append({"model": "web-search", "type": LimitType.RPM.value, "value": None})
+    limits.append({"model": "web-search", "type": LimitType.RPD.value, "value": None})
+    limits.append({"model": "web-search", "type": LimitType.TPM.value, "value": None})
+    limits.append({"model": "web-search", "type": LimitType.TPD.value, "value": None})
+
     # create role admin
     response = test_client.post(
         url=ENDPOINT__ROLES,

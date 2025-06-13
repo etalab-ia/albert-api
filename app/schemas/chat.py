@@ -52,9 +52,6 @@ class ChatCompletionRequest(BaseModel):
     search: bool = Field(default=False)  # fmt: off
     search_args: Optional[ChatSearchArgs] = Field(default=None)  # fmt: off
 
-    class Config:
-        extra = "allow"
-
     @model_validator(mode="after")
     def validate_model(cls, values):
         if values.search:

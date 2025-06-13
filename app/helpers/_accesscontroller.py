@@ -48,8 +48,8 @@ class AccessController:
         self.permissions = permissions
 
     async def __call__(
-        self, 
-        request: Request, 
+        self,
+        request: Request,
         api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())],
         session: AsyncSession = Depends(get_session)
     ) -> User:  # fmt: off
@@ -106,7 +106,6 @@ class AccessController:
 
     def __get_user_limits(self, role: Role) -> Dict[str, UserModelLimits]:
         limits = {}
-
         for model in global_context.models.models:
             limits[model] = UserModelLimits()
             for limit in role.limits:
@@ -118,6 +117,14 @@ class AccessController:
                     limits[model].rpm = limit.value
                 elif limit.model == model and limit.type == LimitType.RPD:
                     limits[model].rpd = limit.value
+
+        # web search limits as pseudo model
+        limits["web-search"] = UserModelLimits()
+        for limit in role.limits:
+            if limit.model == "web-search" and limit.type == LimitType.RPM:
+                limits["web-search"].rpm = limit.value
+            elif limit.model == "web-search" and limit.type == LimitType.RPD:
+                limits["web-search"].rpd = limit.value
 
         return limits
 
@@ -232,7 +239,9 @@ class AccessController:
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
         if body.get("search", False):  # count the search request as one request to the search model (embeddings)
-            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
+            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
+            if body.get("search_args", {}).get("web_search", False):
+                await self._check_request_limits(request=request, user=user, limits=limits, model="web-search")
 
         prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__CHAT_COMPLETIONS, body=body)
         await self._check_token_limits(request=request, user=user, limits=limits, prompt_tokens=prompt_tokens, model=body.get("model"))
@@ -297,6 +306,9 @@ class AccessController:
 
         # count the search request as one request to the search model (embeddings)
         await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
+
+        if body.get("web_search", False):
+            await self._check_request_limits(request=request, user=user, limits=limits, model="web-search")
 
         prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=ENDPOINT__SEARCH, body=body)
         await self._check_token_limits(
