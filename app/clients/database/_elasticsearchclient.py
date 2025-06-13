@@ -189,7 +189,7 @@ class ElasticsearchClient(AsyncElasticsearch):
                     combined_scores[chunk_id] = 0
                     search_map[chunk_id] = search
                 else:
-                    search_map[chunk_id].method = search_map[chunk_id].method + "/" + search.method
+                    search_map[chunk_id].method = SearchMethod.HYBRID
                 combined_scores[chunk_id] += 1 / (rff_k + rank + 1)
 
         ranked_scores = sorted(combined_scores.items(), key=lambda item: item[1], reverse=True)

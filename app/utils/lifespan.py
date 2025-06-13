@@ -34,9 +34,9 @@ async def lifespan(app: FastAPI):
     redis = ConnectionPool(**settings.databases.redis.args)
     web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
     parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
-    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
     vector_store = get_vector_store(settings)
     mcp_bridge = SecretShellMCPBridgeClient(mcp_bridge_url=settings.mcp.mcp_bridge_url)
+
 
     routers = []
     for model in settings.models:
@@ -75,6 +75,9 @@ async def lifespan(app: FastAPI):
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
     assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
+    if vector_store and global_context.models:
+        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
+
     # setup context: documents
     parser = ParserManager(parser=parser)
 
@@ -90,12 +93,10 @@ async def lifespan(app: FastAPI):
     multi_agents_search_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
     multiagents.MultiAgents.model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
     multiagents.MultiAgents.ranker_model = global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
-
-
+    multiagents.MultiAgents.search_method = settings.multi_agents_search.method
 
     if vector_store:
         assert await vector_store.check(), "Vector store database is not reachable."
-        qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
         global_context.documents = DocumentManager(
             vector_store=vector_store,
             parser=parser,

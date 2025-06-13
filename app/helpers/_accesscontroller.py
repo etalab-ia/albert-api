@@ -239,7 +239,7 @@ class AccessController:
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
         if body.get("search", False):  # count the search request as one request to the search model (embeddings)
-            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
+            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
             if body.get("search_args", {}).get("web_search", False):
                 await self._check_request_limits(request=request, user=user, limits=limits, model="web-search")
 

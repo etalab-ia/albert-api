@@ -8484,4 +8484,106 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, zstd
+      connection:
+      - keep-alive
+      host:
+      - api.search.brave.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-subscription-token:
+      - BSAnVOCfcqE8eZbpfvH0Ba1ymlGPRMF
+    method: GET
+    uri: https://api.search.brave.com/res/v1/web/search?q=Ulrich+Tan&count=5&country=fr&safesearch=strict&timeout=30
+  response:
+    body:
+      string: "{\"query\":{\"original\":\"Ulrich Tan\",\"show_strict_warning\":false,\"is_navigational\":false,\"is_news_breaking\":false,\"spellcheck_off\":true,\"country\":\"fr\",\"bad_results\":false,\"should_fallback\":false,\"postal_code\":\"\",\"city\":\"\",\"header_country\":\"\",\"more_results_available\":true,\"state\":\"\"},\"mixed\":{\"type\":\"mixed\",\"main\":[{\"type\":\"web\",\"index\":0,\"all\":false},{\"type\":\"web\",\"index\":1,\"all\":false},{\"type\":\"web\",\"index\":2,\"all\":false},{\"type\":\"web\",\"index\":3,\"all\":false},{\"type\":\"web\",\"index\":4,\"all\":false},{\"type\":\"web\",\"index\":5,\"all\":false},{\"type\":\"web\",\"index\":6,\"all\":false},{\"type\":\"web\",\"index\":7,\"all\":false},{\"type\":\"web\",\"index\":8,\"all\":false},{\"type\":\"web\",\"index\":9,\"all\":false},{\"type\":\"web\",\"index\":10,\"all\":false},{\"type\":\"web\",\"index\":11,\"all\":false},{\"type\":\"web\",\"index\":12,\"all\":false},{\"type\":\"web\",\"index\":13,\"all\":false},{\"type\":\"web\",\"index\":14,\"all\":false},{\"type\":\"web\",\"index\":15,\"all\":false},{\"type\":\"web\",\"index\":16,\"all\":false},{\"type\":\"web\",\"index\":17,\"all\":false},{\"type\":\"web\",\"index\":18,\"all\":false},{\"type\":\"web\",\"index\":19,\"all\":false}],\"top\":[],\"side\":[]},\"type\":\"search\",\"web\":{\"type\":\"search\",\"results\":[{\"title\":\"L\u2019\xE9quipe
+        du DataLab \u2013 Etalab\",\"url\":\"https://www.etalab.gouv.fr/datalab/equipe/\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Mon
+        r\xF4le au sein du DataLab : Coordonner l\u2019\xE9quipe du DataLab et accompagner
+        les acteurs publics dans l\u2019identification et la priorisation de cas d\u2019usage
+        d\u2019intelligence artificielle pour leur administration. Me contacter :
+        <strong>ulrich</strong>.<strong>tan</strong>@modernisation.gouv.fr #ProjetsIA\",\"profile\":{\"name\":\"Etalab\",\"url\":\"https://www.etalab.gouv.fr/datalab/equipe/\",\"long_name\":\"etalab.gouv.fr\",\"img\":\"https://imgs.search.brave.com/Unn9S3vbL3WeRfIcTDtyBrpkGd-L2xAo_ebHeHkImnc/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMmI3ZTNiNzVh/MTY2YTRmMWIxYjQx/YTY5MTEzOGMwMTZm/ZDBhNzVjODZkNzEz/Y2JhZTJhODM0NGUw/ZjUyZGM0ZS93d3cu/ZXRhbGFiLmdvdXYu/ZnIv\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"etalab.gouv.fr\",\"hostname\":\"www.etalab.gouv.fr\",\"favicon\":\"https://imgs.search.brave.com/Unn9S3vbL3WeRfIcTDtyBrpkGd-L2xAo_ebHeHkImnc/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMmI3ZTNiNzVh/MTY2YTRmMWIxYjQx/YTY5MTEzOGMwMTZm/ZDBhNzVjODZkNzEz/Y2JhZTJhODM0NGUw/ZjUyZGM0ZS93d3cu/ZXRhbGFiLmdvdXYu/ZnIv\",\"path\":\"\u203A
+        datalab  \u203A equipe\"}},{\"title\":\"Ulrich Tan, cet ing\xE9nieur qui introduit
+        l\u2019IA dans les administrations pour les rendre plus efficaces\",\"url\":\"https://www.lefigaro.fr/conjoncture/ulrich-tan-cet-ingenieur-qui-introduit-l-ia-dans-les-administrations-pour-les-rendre-plus-efficaces-20240422\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"<strong>Ulrich
+        Tan</strong>, cet ing\xE9nieur qui introduit l\u2019IA dans les administrations
+        pour les rendre plus efficaces S&#x27;ABONNER\",\"page_age\":\"2024-04-23T10:06:06\",\"profile\":{\"name\":\"Le
+        Figaro\",\"url\":\"https://www.lefigaro.fr/conjoncture/ulrich-tan-cet-ingenieur-qui-introduit-l-ia-dans-les-administrations-pour-les-rendre-plus-efficaces-20240422\",\"long_name\":\"lefigaro.fr\",\"img\":\"https://imgs.search.brave.com/XEKxCZebAL78WpZqPoQWzoRvYIVvNDEtbr2Mfvq3C98/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZWQwMzkyYjll/YTFjYzVmNDFkMjg3/YTQwYzNiNDVkMjIz/MWM5NDA5YTJjZjY3/OTVlOGNlZTdjYTYz/MGFiZTNlMS93d3cu/bGVmaWdhcm8uZnIv\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"lefigaro.fr\",\"hostname\":\"www.lefigaro.fr\",\"favicon\":\"https://imgs.search.brave.com/XEKxCZebAL78WpZqPoQWzoRvYIVvNDEtbr2Mfvq3C98/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZWQwMzkyYjll/YTFjYzVmNDFkMjg3/YTQwYzNiNDVkMjIz/MWM5NDA5YTJjZjY3/OTVlOGNlZTdjYTYz/MGFiZTNlMS93d3cu/bGVmaWdhcm8uZnIv\",\"path\":\"\u203A
+        conjoncture  \u203A ulrich-tan-cet-ingenieur-qui-introduit-l-ia-dans-les-administrations-pour-les-rendre-plus-efficaces-20240422\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/dRYwkULWmIetKMfPjkmIIka0sEt1JDXG3qyk2F1gz0c/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLmYx/Zy5mci9tZWRpYS9j/bXMvb3JpZy8yMDI0/LzA0LzIyLzg3Yzc1/MWNjZWY4N2M4NWM3/OTZmMDYzMmZmYmY3/MjhhZjY5YmU4YzZi/MGMyNTk1MzJlMTRl/YWJlZTViZjdiODQu/anBn\",\"original\":\"https://i.f1g.fr/media/cms/orig/2024/04/22/87c751ccef87c85c796f0632ffbf728af69be8c6b0c259532e14eabee5bf7b84.jpg\",\"logo\":false},\"age\":\"April
+        23, 2024\",\"extra_snippets\":[\"Ulrich Tan est chef du DataLab au d\xE9partement
+        Etalab de la Direction interminist\xE9rielle du num\xE9rique (Dinum).\",\"\xAB
+        Nous aussi, nous savons attirer les meilleurs ! \xBB \xC0 Matignon, on n\u2019est
+        pas peu fier de l\u2019embauche par l\u2019\xC9tat, il y a un an, d\u2019Ulrich
+        Tan, un jeune quadra g\xE9nie du num\xE9rique.\",\"Ulrich Tan, cet ing\xE9nieur
+        qui introduit l\u2019IA dans les administrations pour les rendre plus efficaces
+        S'ABONNER\"]},{\"title\":\"Post de Direction interminist\xE9rielle du num\xE9rique
+        (DINUM)\",\"url\":\"https://fr.linkedin.com/posts/direction-interministerielle-du-numerique-dinum_interview-dulrich-tan-pour-it-for-business-activity-7254134902235766786-YUbu\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"1
+        milliard de membres | G\xE9rez votre image professionnelle. Constituez votre
+        r\xE9seau professionnel et communiquez avec celui-ci. Gagnez des connaissances,
+        acc\xE9dez \xE0 des id\xE9es et des opportunit\xE9s.\",\"profile\":{\"name\":\"LinkedIn\",\"url\":\"https://fr.linkedin.com/posts/direction-interministerielle-du-numerique-dinum_interview-dulrich-tan-pour-it-for-business-activity-7254134902235766786-YUbu\",\"long_name\":\"fr.linkedin.com\",\"img\":\"https://imgs.search.brave.com/66UweiWDhjgU-dni0kg8GZbGFjFp_j5HPp4-1Hn0Hmk/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTI4YmE0MmNj/MGNhM2U4YmIwYmQ2/ZDMyNmU3MjUyNzcz/ZDYzYzg4Nzg0ZDdm/ZjIzMzViNDNlYjEz/MjJkZWYyMy9mci5s/aW5rZWRpbi5jb20v\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"fr.linkedin.com\",\"hostname\":\"fr.linkedin.com\",\"favicon\":\"https://imgs.search.brave.com/66UweiWDhjgU-dni0kg8GZbGFjFp_j5HPp4-1Hn0Hmk/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTI4YmE0MmNj/MGNhM2U4YmIwYmQ2/ZDMyNmU3MjUyNzcz/ZDYzYzg4Nzg0ZDdm/ZjIzMzViNDNlYjEz/MjJkZWYyMy9mci5s/aW5rZWRpbi5jb20v\",\"path\":\"\u203A
+        posts  \u203A direction-interministerielle-du-numerique-dinum_interview-dulrich-tan-pour-it-for-business-activity-7254134902235766786-YUbu\"}},{\"title\":\"Ulrich
+        Tan : \u201CD\u2019ici l\u2019\xE9t\xE9, toutes les administrations auront
+        acc\xE8s \xE0 \xAB Albert \xBB pour explorer l\u2019IA g\xE9n\xE9rative\u201D
+        - Acteurs Publics\",\"url\":\"https://acteurspublics.fr/webtv/emissions/coter-2024/ulrich-tan-dici-lete-toutes-les-administrations-auront-acces-a-albert-pour-explorer-lia-generative/\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"\xC0
+        l\u2019occasion du congr\xE8s des collectivit\xE9s membres du CoTer num\xE9rique
+        \xE0 La Rochelle, le <strong>responsable du Datalab de la direction interminist\xE9rielle
+        du num\xE9rique (Dinum),</strong> Ulrich Tan, revient sur l\u2019\u2026\",\"page_age\":\"2024-06-05T00:00:00\",\"profile\":{\"name\":\"Acteurs
+        Publics\",\"url\":\"https://acteurspublics.fr/webtv/emissions/coter-2024/ulrich-tan-dici-lete-toutes-les-administrations-auront-acces-a-albert-pour-explorer-lia-generative/\",\"long_name\":\"acteurspublics.fr\",\"img\":\"https://imgs.search.brave.com/COkrs8QZh12hxeLUiRMGiTZX72TcwtYV8l8AGykhnug/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvODcyOTM3Y2Ji/NzQ1Mjk3MzBiYzg0/OTgxNjZjMDI5NTBh/MjE3YzQ2MDA3MmVh/YjZmNDJhYzlkYTI4/ZmE2MDQ2NC9hY3Rl/dXJzcHVibGljcy5m/ci8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"acteurspublics.fr\",\"hostname\":\"acteurspublics.fr\",\"favicon\":\"https://imgs.search.brave.com/COkrs8QZh12hxeLUiRMGiTZX72TcwtYV8l8AGykhnug/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvODcyOTM3Y2Ji/NzQ1Mjk3MzBiYzg0/OTgxNjZjMDI5NTBh/MjE3YzQ2MDA3MmVh/YjZmNDJhYzlkYTI4/ZmE2MDQ2NC9hY3Rl/dXJzcHVibGljcy5m/ci8\",\"path\":\"
+        \ \u203A acteurs publics  \u203A politiques publiques  \u203A international
+        \ \u203A ulrich tan : \u201Cd\u2019ici l\u2019\xE9t\xE9, toutes les administrations
+        auront acc\xE8s \xE0 \xAB\_albert\_\xBB pour explorer l\u2019ia g\xE9n\xE9rative\u201D\"},\"age\":\"June
+        5, 2024\",\"extra_snippets\":[\"\xC0 l\u2019occasion du congr\xE8s des collectivit\xE9s
+        membres du CoTer num\xE9rique \xE0 La Rochelle, le responsable du Datalab
+        de la direction interminist\xE9rielle du num\xE9rique (Dinum), Ulrich Tan,
+        revient sur l\u2019ouverture, \xE0 partir de cet \xE9t\xE9, de l\u2019IA g\xE9n\xE9rative
+        \u201CAlbert\u201D \xE0 toutes les administrations publiques, y compris les
+        collectivit\xE9s locales.\",\"\xC0 l\u2019occasion du congr\xE8s des collectivit\xE9s
+        membres du CoTer num\xE9rique \xE0 La Rochelle, le responsable du Datalab
+        de la direction interminist\xE9rielle du num\xE9rique\u2026\"]},{\"title\":\"Ulrich
+        Tan - Data Centre World Paris 2024\",\"url\":\"https://www.datacentreworld.fr/speakers/ulrich-tan\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"<strong>Ulrich</strong>
+        <strong>TAN</strong> est le chef du Datalab de la DINUM.\",\"profile\":{\"name\":\"Datacentreworld\",\"url\":\"https://www.datacentreworld.fr/speakers/ulrich-tan\",\"long_name\":\"datacentreworld.fr\",\"img\":\"https://imgs.search.brave.com/UXAkshMRr--O8hUkCQRcwEBq6bZVP9Ul5ZIzVlAct1A/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZGFmYjYxOGIy/NTU1ZWNlMzVlNGM4/ZmUxYTg4ODRmZjM4/ODcxNzQxYTBlOTBl/Mzg1ODRjYzc3NWRl/YzU5YjVjYy93d3cu/ZGF0YWNlbnRyZXdv/cmxkLmZyLw\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"datacentreworld.fr\",\"hostname\":\"www.datacentreworld.fr\",\"favicon\":\"https://imgs.search.brave.com/UXAkshMRr--O8hUkCQRcwEBq6bZVP9Ul5ZIzVlAct1A/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZGFmYjYxOGIy/NTU1ZWNlMzVlNGM4/ZmUxYTg4ODRmZjM4/ODcxNzQxYTBlOTBl/Mzg1ODRjYzc3NWRl/YzU5YjVjYy93d3cu/ZGF0YWNlbnRyZXdv/cmxkLmZyLw\",\"path\":\"\u203A
+        speakers  \u203A ulrich-tan\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/WXePuxC1oeAvx79FiA9HGECTXAwXIO6miCc59009Xxc/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9jZG4u/YXNwLmV2ZW50cy9D/TElFTlRfQ2xvc2Vy/U3RfRDg2RUEzODFf/NTA1Nl9CNzM5XzU0/ODJENTBBMUE4MzFE/REQvc2l0ZXMvRENX/UC0yMDIzL21lZGlh/L0RDV1AtRGF0ZS1G/Ui0yMDI0LUNNWUst/KDEpLmpwZy9maXQt/aW4vMTIwMHg2MzAv/ZmlsdGVyczpub191/cHNjYWxlKCk\",\"original\":\"https://cdn.asp.events/CLIENT_CloserSt_D86EA381_5056_B739_5482D50A1A831DDD/sites/DCWP-2023/media/DCWP-Date-FR-2024-CMYK-(1).jpg/fit-in/1200x630/filters:no_upscale()\",\"logo\":false}}],\"family_friendly\":true}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 13 Jun 2025 13:40:05 GMT
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User
+      X-Content-Type-Options:
+      - nosniff
+      X-Download-Options:
+      - noopen
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '10721'
+      server-timing:
+      - search-roundtrip;dur=73.509
+      x-ratelimit-limit:
+      - 1, 2000
+      x-ratelimit-policy:
+      - 1;w=1, 2000;w=2592000,
+      x-ratelimit-remaining:
+      - 0, 1996
+      x-ratelimit-reset:
+      - 1, 1505993
+    status:
+      code: 200
+      message: OK
 version: 1

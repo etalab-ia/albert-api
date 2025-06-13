@@ -13,6 +13,7 @@ from app.schemas.core.auth import LimitingStrategy
 from app.schemas.core.models import ModelClientType, RoutingStrategy
 from app.schemas.core.usage import CountryCodes
 from app.schemas.models import ModelCosts, ModelType
+from app.schemas.search import SearchMethod
 from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
 
 
@@ -163,6 +164,7 @@ class MultiAgentsSearch(ConfigBaseModel):
     max_tokens: int = 1024
     max_tokens_intermediate: int = 512
     extract_length: int = 512
+    method: SearchMethod = SearchMethod.SEMANTIC
 
 
 class DatabaseQdrantArgs(ConfigBaseModel):
@@ -298,10 +300,10 @@ class Config(ConfigBaseModel):
         assert len(redis_databases) == 1, "There must be only one redis database."
 
         qdrant_databases = [database for database in values.databases if database.type == DatabaseType.QDRANT]
-        assert len(qdrant_databases) <= 1, "There must be only one Qdrant database."
+        assert len(qdrant_databases) <= 1, "There must not more than one database."
 
         elasticsearch_databases = [database for database in values.databases if database.type == DatabaseType.ELASTICSEARCH]
-        assert len(elasticsearch_databases) <= 1, "There must be only one Elasticsearch database."
+        assert len(elasticsearch_databases) <= 1, "There must not more than one database."
 
         assert elasticsearch_databases == [] or qdrant_databases == [], "Only one vector database (Qdrant or Elasticsearch) is allowed."  # fmt: off
 
@@ -318,6 +320,7 @@ class Config(ConfigBaseModel):
         # vector store
         if qdrant_databases:
             values.databases.vector_store = qdrant_databases[0]
+            assert values.databases.vector_store.search_method == SearchMethod.SEMANTIC, "Qdrant vector store must use semantic search method."
         elif elasticsearch_databases:
             values.databases.vector_store = elasticsearch_databases[0]
         else:

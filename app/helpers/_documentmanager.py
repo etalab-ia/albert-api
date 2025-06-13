@@ -7,6 +7,7 @@ from typing import Callable, List, Optional, Union
 from uuid import uuid4
 
 from fastapi import UploadFile
+from langchain_text_splitters import Language
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -344,13 +345,12 @@ class DocumentManager:
         response = await self._create_embeddings(input=[prompt])
         query_vector = response[0]
 
+        _method = method
         if method == SearchMethod.MULTIAGENT:
-            qdrant_method = SearchMethod.SEMANTIC
-        else:
-            qdrant_method = method
+            _method = MultiAgents.search_method
 
         searches = await self.vector_store.search(
-            method=qdrant_method,
+            method=_method,
             collection_ids=collection_ids,
             query_prompt=prompt,
             query_vector=query_vector,

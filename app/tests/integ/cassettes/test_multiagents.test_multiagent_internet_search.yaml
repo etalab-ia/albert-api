@@ -1263,8 +1263,6 @@ interactions:
       - no-referrer
       Strict-Transport-Security:
       - max-age=63072000
-      Transfer-Encoding:
-      - chunked
       X-XSS-Protection:
       - 1; mode=block
       content-length:
@@ -2341,8 +2339,6 @@ interactions:
         Path=/
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
-      Transfer-Encoding:
-      - chunked
       Vary:
       - Cookie,Accept-Encoding
       X-Cache:
@@ -2355,6 +2351,191 @@ interactions:
       - nosniff
       X-Frame-Options:
       - SAMEORIGIN
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, zstd
+      connection:
+      - keep-alive
+      host:
+      - api.search.brave.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-subscription-token:
+      - BSAnVOCfcqE8eZbpfvH0Ba1ymlGPRMF
+    method: GET
+    uri: https://api.search.brave.com/res/v1/web/search?q=r%C3%A9forme+des+retraites+en+France&count=5&country=fr&safesearch=strict&timeout=30
+  response:
+    body:
+      string: "{\"query\":{\"original\":\"r\xE9forme des retraites en France\",\"show_strict_warning\":false,\"is_navigational\":false,\"is_news_breaking\":false,\"spellcheck_off\":true,\"country\":\"fr\",\"bad_results\":false,\"should_fallback\":false,\"postal_code\":\"\",\"city\":\"\",\"header_country\":\"\",\"more_results_available\":true,\"state\":\"\"},\"mixed\":{\"type\":\"mixed\",\"main\":[{\"type\":\"web\",\"index\":0,\"all\":false},{\"type\":\"web\",\"index\":1,\"all\":false},{\"type\":\"videos\",\"all\":true},{\"type\":\"web\",\"index\":2,\"all\":false},{\"type\":\"web\",\"index\":3,\"all\":false},{\"type\":\"web\",\"index\":4,\"all\":false},{\"type\":\"web\",\"index\":5,\"all\":false},{\"type\":\"web\",\"index\":6,\"all\":false},{\"type\":\"web\",\"index\":7,\"all\":false},{\"type\":\"web\",\"index\":8,\"all\":false},{\"type\":\"web\",\"index\":9,\"all\":false},{\"type\":\"web\",\"index\":10,\"all\":false},{\"type\":\"web\",\"index\":11,\"all\":false},{\"type\":\"web\",\"index\":12,\"all\":false},{\"type\":\"web\",\"index\":13,\"all\":false},{\"type\":\"web\",\"index\":14,\"all\":false},{\"type\":\"web\",\"index\":15,\"all\":false},{\"type\":\"web\",\"index\":16,\"all\":false},{\"type\":\"web\",\"index\":17,\"all\":false},{\"type\":\"web\",\"index\":18,\"all\":false},{\"type\":\"web\",\"index\":19,\"all\":false}],\"top\":[],\"side\":[]},\"type\":\"search\",\"videos\":{\"type\":\"videos\",\"results\":[{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=EtnAE7HuHKI\",\"title\":\"R\xE9forme
+        des retraites : les d\xE9put\xE9s approuvent son abrogation ...\",\"description\":\"La
+        commission des affaires sociales examine la \\\"proposition de loi d'abrogation
+        de la retraite \xE0 64 ans\\\", d\xE9pos\xE9e par La France insoumise (NFP).
+        Le texte, po...\",\"age\":\"November 20, 2024\",\"page_age\":\"2024-11-20T16:00:23\",\"video\":{\"duration\":\"02:41:51\",\"views\":33386,\"creator\":\"LCP
+        - Assembl\xE9e nationale\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/8bw2dSn0P_jMaL1zSKhEQoLRHjXrePa6LHHEyXvYcR0/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9F/dG5BRTdIdUhLSS9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/EtnAE7HuHKI/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=ECw8WgfFttA\",\"title\":\"Le
+        S\xE9nat rejette largement deux propositions d'abrogation de ...\",\"description\":\"Enjoy
+        the videos and music you love, upload original content, and share it all with
+        friends, family, and the world on YouTube.\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/DJjRpWUPZ8F9sr7-m5hi-2f5heiawkaPqKiciHQSDWQ/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9F/Q3c4V2dmRnR0QS9o/cWRlZmF1bHQuanBn\",\"original\":\"https://i.ytimg.com/vi/ECw8WgfFttA/hqdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=B0a5jXfL32w\",\"title\":\"Abrogation
+        de la r\xE9forme des retraites : comment la gauche a ...\",\"description\":\"Enjoy
+        the videos and music you love, upload original content, and share it all with
+        friends, family, and the world on YouTube.\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/FfzjfqeWskYrrunRfbJthwEiryVrp5ljqqQd0lhMEZE/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9C/MGE1alhmTDMydy9o/cWRlZmF1bHQuanBn\",\"original\":\"https://i.ytimg.com/vi/B0a5jXfL32w/hqdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=pUu3RLWkXmY\",\"title\":\"R\xE9forme
+        des retraites : examen d'une proposition de loi d\xE9pos\xE9e ...\",\"description\":\"La
+        commission des affaires sociales examine la \\\"proposition de loi visant
+        \xE0 restaurer un syst\xE8me de retraite plus juste\\\", d\xE9pos\xE9e par
+        le Rassemblement Nation...\",\"age\":\"October 24, 2024\",\"page_age\":\"2024-10-24T12:01:03\",\"video\":{\"duration\":\"02:34:25\",\"views\":7564,\"creator\":\"LCP
+        - Assembl\xE9e nationale\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/wCZMFZWh6PvPi9j-1wygefeGXDrWUD1BjhWXXHLlHSE/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9w/VXUzUkxXa1htWS9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/pUu3RLWkXmY/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.youtube.com/watch?v=l8wuOaoFj0s\",\"title\":\"Abrogation
+        de la r\xE9forme des retraites : le Rassemblement national ...\",\"description\":\"Alors
+        que le Rassemblement national proposait d\u2019abroger la r\xE9forme des retraites
+        lors de sa niche parlementaire le 31 octobre prochain, pour fixer \xE0 nouveau
+        ...\",\"age\":\"October 24, 2024\",\"page_age\":\"2024-10-24T10:25:16\",\"video\":{\"duration\":\"19:21\",\"views\":54088,\"creator\":\"Public
+        S\xE9nat\",\"publisher\":\"YouTube\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"youtube.com\",\"hostname\":\"www.youtube.com\",\"favicon\":\"https://imgs.search.brave.com/Wg4wjE5SHAargkzePU3eSLmWgVz84BEZk1SjSglJK_U/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvOTkyZTZiMWU3/YzU3Nzc5YjExYzUy/N2VhZTIxOWNlYjM5/ZGVjN2MyZDY4Nzdh/ZDYzMTYxNmI5N2Rk/Y2Q3N2FkNy93d3cu/eW91dHViZS5jb20v\",\"path\":\"\u203A
+        watch\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/Dd3jB4tuUa_AkIzpxU3OPcHCmXoIzlifSoGvOVmyurs/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnl0/aW1nLmNvbS92aS9s/OHd1T2FvRmowcy9t/YXhyZXNkZWZhdWx0/LmpwZw\",\"original\":\"https://i.ytimg.com/vi/l8wuOaoFj0s/maxresdefault.jpg\"}},{\"type\":\"video_result\",\"url\":\"https://www.tf1info.fr/conso-argent/videos/video-reforme-des-retraites-la-revalorisation-enfin-versee-1956-2309807.html\",\"title\":\"R\xE9forme
+        des retraites : la revalorisation enfin vers\xE9e | TF1 INFO\",\"description\":\"\u25B6\uFE0F
+        Les retrait\xE9s attendaient la revalorisation de leur pension, qui va augmenter
+        d\xE8s septembre prochain avec un an de retard. En effet, 60 euros par mois,
+        en moyenne, seront vers\xE9s de mani\xE8re r\xE9troactive aux personnes concern\xE9es.
+        (Mon argent et mes droits). TF1 INFO\",\"age\":\"July 22, 2024\",\"page_age\":\"2024-07-22T12:00:01\",\"video\":{\"duration\":\"01:36\",\"creator\":\"TF1
+        Info\",\"publisher\":\"Tf1info\"},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"tf1info.fr\",\"hostname\":\"www.tf1info.fr\",\"favicon\":\"https://imgs.search.brave.com/TKtTc6djpKVeYmDZjKqw-Iefx7eEy0Yw1jjLcuogQyo/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZDBkZDUyMzg2/OTQ2NmU5ZDZiYzkw/OGJiNTc2ZmNiNTQ5/MjgxYWFiMmEwYjYz/MmJlNzExOTc3MTc2/NWQ3MTlhYS93d3cu/dGYxaW5mby5mci8\",\"path\":\"\u203A
+        conso-argent  \u203A videos  \u203A video-reforme-des-retraites-la-revalorisation-enfin-versee-1956-2309807.html\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/hH-E8cnsq5O1Rdu0UTKancA-KSoJPAp4IyZbWFwUvvU/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9waG90/b3MudGYxaW5mby5m/ci9pbWFnZXMvMTI4/MC83MjAvcmVmb3Jt/ZS1kZXMtcmV0cmFp/dGVzLWxhLXJldmFs/b3Jpc2F0aW9uLWVu/ZmluLXZlcnNlZS0y/LTNhNjczNC0wQDF4/LmpwZWc_b3Zlcmxh/eUltYWdlPWJHOW5i/eTEwWmpGcGJtWnZM/V1JsWm1GMWJIUXVj/RzVuJmFtcDtvdmVy/bGF5V2lkdGg9MTgm/YW1wO292ZXJsYXlH/cmF2aXR5PW5vcnRo/d2VzdCZhbXA7cz03/OGM4MDI\",\"original\":\"https://photos.tf1info.fr/images/1280/720/reforme-des-retraites-la-revalorisation-enfin-versee-2-3a6734-0@1x.jpeg?overlayImage=bG9nby10ZjFpbmZvLWRlZmF1bHQucG5n&amp;overlayWidth=18&amp;overlayGravity=northwest&amp;s=78c802\"}}],\"mutated_by_goggles\":false},\"web\":{\"type\":\"search\",\"results\":[{\"title\":\"R\xE9forme
+        des retraites - \xC2ge l\xE9gal de d\xE9part\",\"url\":\"https://www.info-retraite.fr/portail-info/sites/PortailInformationnel/home/reforme-des-retraites---age-lega.html\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Salari\xE9,
+        fonctionnaire, ind\xE9pendant, ch\xF4meur, <strong>retrait\xE9</strong> :
+        quels que soient votre parcours et votre situation, retrouvez tous vos droits
+        avec Info <strong>Retraite</strong>.\",\"profile\":{\"name\":\"Info-retraite\",\"url\":\"https://www.info-retraite.fr/portail-info/sites/PortailInformationnel/home/reforme-des-retraites---age-lega.html\",\"long_name\":\"info-retraite.fr\",\"img\":\"https://imgs.search.brave.com/Yk2rtilXUZ_kws-pWHPX5Ro_KpsuF3-BiJX2-7nXJ6k/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWQ5ZDA2N2Ux/MTU2ZGNmY2Y0OThl/NmQ5OTg0NzhiNDM4/YjBhOTYyZjc1ZjVi/NzUzZTdmNTBiYjJk/MTViZmUwMy93d3cu/aW5mby1yZXRyYWl0/ZS5mci8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"info-retraite.fr\",\"hostname\":\"www.info-retraite.fr\",\"favicon\":\"https://imgs.search.brave.com/Yk2rtilXUZ_kws-pWHPX5Ro_KpsuF3-BiJX2-7nXJ6k/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWQ5ZDA2N2Ux/MTU2ZGNmY2Y0OThl/NmQ5OTg0NzhiNDM4/YjBhOTYyZjc1ZjVi/NzUzZTdmNTBiYjJk/MTViZmUwMy93d3cu/aW5mby1yZXRyYWl0/ZS5mci8\",\"path\":\"\u203A
+        portail-info  \u203A sites  \u203A PortailInformationnel  \u203A home  \u203A
+        reforme-des-retraites---age-lega.html\"},\"extra_snippets\":[\"Vous n\u2019\xEAtes
+        pas concern\xE9(e) par la r\xE9forme des retraites. Pour obtenir des informations
+        sur la r\xE9glementation actuelle, consultez cette page sur l'\xE2ge l\xE9gal.
+        Vous \xEAtes n\xE9(e) entre le 1er septembre 1961 et le 31 d\xE9cembre 1972\",\"Retrouvez
+        sur cette page des informations concernant l'\xE2ge l\xE9gal dans le contexte
+        de la r\xE9forme des retraites.\",\"\xC0 compter du 1er septembre 2023, la
+        r\xE9forme modifie les conditions de d\xE9part \xE0 la retraite.\",\"Pour
+        votre ann\xE9e de naissance, l\u2019\xE2ge de d\xE9part est relev\xE9 \xE0
+        64 ans. En revanche, votre nombre de trimestres requis (dur\xE9e d\u2019assurance)
+        pour un d\xE9part \xE0 taux plein est toujours 172.\"]},{\"title\":\"Les r\xE9formes
+        des r\xE9gimes de retraite de 1982 \xE0 2023\",\"url\":\"https://www.vie-publique.fr/eclairage/19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"profile\":{\"name\":\"Vie-publique\",\"url\":\"https://www.vie-publique.fr/eclairage/19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie\",\"long_name\":\"vie-publique.fr\",\"img\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\"},\"language\":\"unk\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"vie-publique.fr\",\"hostname\":\"www.vie-publique.fr\",\"favicon\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\",\"path\":\"\u203A
+        eclairage  \u203A 19237-les-reformes-des-regimes-de-retraite-de-1982-2023-chronologie\"}},{\"title\":\"R\xE9forme
+        des retraites en France en 2023 \u2014 Wikip\xE9dia\",\"url\":\"https://fr.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_France_en_2023\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"La
+        r\xE9forme des retraites en France de 2023 <strong>consiste en un ensemble
+        de mesures r\xE9visant le syst\xE8me de retraite fran\xE7ais r\xE9alis\xE9es
+        pendant la mandature d&#x27;Emmanuel Macron</strong>, et port\xE9es par la
+        Premi\xE8re Ministre \xC9lisabeth Borne et le ministre du travail Olivier
+        Dussopt, dont le report de ...\",\"page_age\":\"2025-06-05T12:30:02\",\"profile\":{\"name\":\"Wikipedia\",\"url\":\"https://fr.wikipedia.org/wiki/R%C3%A9forme_des_retraites_en_France_en_2023\",\"long_name\":\"fr.wikipedia.org\",\"img\":\"https://imgs.search.brave.com/9hcXszQtxFqKhmv5bxBm9G2EFNIcGvLx34pvPEqARmw/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTMzMDhhNDdi/YjBhOTk2ZTM1MTBm/ODZlNjc3Y2Q5ZjBj/MTFmOTQ5ZWIzNmRh/NjI4ZTI0NGRhZDgx/MmE4ZTJjNi9mci53/aWtpcGVkaWEub3Jn/Lw\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"fr.wikipedia.org\",\"hostname\":\"fr.wikipedia.org\",\"favicon\":\"https://imgs.search.brave.com/9hcXszQtxFqKhmv5bxBm9G2EFNIcGvLx34pvPEqARmw/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTMzMDhhNDdi/YjBhOTk2ZTM1MTBm/ODZlNjc3Y2Q5ZjBj/MTFmOTQ5ZWIzNmRh/NjI4ZTI0NGRhZDgx/MmE4ZTJjNi9mci53/aWtpcGVkaWEub3Jn/Lw\",\"path\":\"\u203A
+        wiki  \u203A R\xE9forme_des_retraites_en_France_en_2023\"},\"age\":\"1 week
+        ago\",\"extra_snippets\":[\"La r\xE9forme des retraites en France de 2023
+        consiste en un ensemble de mesures r\xE9visant le syst\xE8me de retraite fran\xE7ais
+        r\xE9alis\xE9es pendant la mandature d'Emmanuel Macron, et port\xE9es par
+        la Premi\xE8re Ministre \xC9lisabeth Borne et le ministre du travail Olivier
+        Dussopt, dont le report de l'\xE2ge l\xE9gal de la retraite \xE0 soixante-quatre
+        ans est pr\xE9sent\xE9 comme le phare.\",\"La r\xE9forme des retraites est
+        le grand chantier social d'Emmanuel Macron depuis son \xE9lection en 2017.
+        Lors de sa premi\xE8re pr\xE9sidence, le projet de cr\xE9er un syst\xE8me
+        universel \xE0 points a \xE9t\xE9 stopp\xE9 net par la pand\xE9mie de Covid-19
+        en France.\",\"La dur\xE9e de cotisation pour une retraite \xE0 taux plein,
+        dans les r\xE9formes Touraine et Borne, selon l'\xE2ge de naissance des personnes.
+        Le \xAB compte professionnel de pr\xE9vention \xBB (C2P) est le m\xE9canisme
+        de p\xE9nibilit\xE9 en France.\",\"Le 17 janvier 2023, Emmanuel Macron invite
+        \xE0 un d\xE9jeuner discret une dizaine d'\xE9ditorialistes \u2013 Fran\xE7oise
+        Fressoz (Le Monde), Guillaume Tabard (Le Figaro), Dominique Seux et C\xE9cile
+        Cornudet (Les \xC9chos), David Revault d\u2019Allones (Le Journal du dimanche),
+        St\xE9phane Vernay (Ouest-France), Nathalie Saint-Cricq (France T\xE9l\xE9visions),
+        Benjamin Duhamel (BFM TV), Ya\xEBl Goosz (France Inter) et Alba Ventura (RTL)
+        \u2013 pour exposer son point de vue tout en leur demandant de ne pas indiquer
+        leur source. Si selon Acrimed ces \xE9ditorialistes n'ont pas attendu cette
+        invitation pour promouvoir la con\",\"Environ 20 000 amendements, ont \xE9t\xE9
+        d\xE9pos\xE9s avant l'examen du projet de loi concernant la r\xE9forme des
+        retraites \xE0 l'Assembl\xE9e nationale, ce qui ralentit la proc\xE9dure.
+        Les d\xE9put\xE9s de la Nouvelle Union populaire \xE9cologique et sociale
+        (NUPES) d\xE9posent plusieurs milliers d'amendements dont pr\xE8s de 13 000
+        par La France insoumise (LFI).\"]},{\"title\":\"Les diff\xE9rentes r\xE9formes
+        des retraites de 1993 \xE0 2023\",\"url\":\"https://www.vie-publique.fr/eclairage/20111-retraites-les-differentes-reformes-de-1993-2023\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"profile\":{\"name\":\"Vie-publique\",\"url\":\"https://www.vie-publique.fr/eclairage/20111-retraites-les-differentes-reformes-de-1993-2023\",\"long_name\":\"vie-publique.fr\",\"img\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\"},\"language\":\"unk\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"vie-publique.fr\",\"hostname\":\"www.vie-publique.fr\",\"favicon\":\"https://imgs.search.brave.com/N18upEucpR-i0Uppf4t5WlqzHmHoHRISx97GIHsn6HY/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMWExZGJhZTYw/NDYyNTE4NDViMDYy/ZTMxNTg5YTdhNTA0/N2ZmNjUxMjY2NjYw/YjZmMzMxZjU3MGMw/ZmNlN2QyMS93d3cu/dmllLXB1YmxpcXVl/LmZyLw\",\"path\":\"\u203A
+        eclairage  \u203A 20111-retraites-les-differentes-reformes-de-1993-2023\"}},{\"title\":\"R\xE9forme
+        des retraites : ce qui change \xE0 partir du 1er septembre 2023 | Travail-emploi.gouv.fr
+        | Minist\xE8re du Travail, de la Sant\xE9, des Solidarit\xE9s et des Familles\",\"url\":\"https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"<strong>Le
+        montant de la retraite minimale augmente de 100 \u20AC par mois</strong>.
+        Pour une carri\xE8re compl\xE8te cotis\xE9e \xE0 taux plein au Smic, elle
+        passe \xE0 1 200 \u20AC brut mensuels, soit 85 % du Smic net. Deux nouvelles
+        bornes d\u2019\xE2ge permettent de partir avant 64 ans, qui s\u2019ajoutent
+        aux bornes en vigueur.\",\"profile\":{\"name\":\"Travail-emploi\",\"url\":\"https://travail-emploi.gouv.fr/reforme-des-retraites-ce-qui-change-partir-du-1er-septembre-2023\",\"long_name\":\"travail-emploi.gouv.fr\",\"img\":\"https://imgs.search.brave.com/gREybUdKbUEs9pcr7IUpLUma-kc2EV_1EEfS9Nh8sVI/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNTAwNDZlYTdh/N2RmNzcyZTlmYjY4/OGViZDMxZmE4NWQw/Yzg0YjcxOTFjODRi/ZGYzNjY0ZTc4N2Ri/MGM5OTg5ZS90cmF2/YWlsLWVtcGxvaS5n/b3V2LmZyLw\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"article\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"travail-emploi.gouv.fr\",\"hostname\":\"travail-emploi.gouv.fr\",\"favicon\":\"https://imgs.search.brave.com/gREybUdKbUEs9pcr7IUpLUma-kc2EV_1EEfS9Nh8sVI/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNTAwNDZlYTdh/N2RmNzcyZTlmYjY4/OGViZDMxZmE4NWQw/Yzg0YjcxOTFjODRi/ZGYzNjY0ZTc4N2Ri/MGM5OTg5ZS90cmF2/YWlsLWVtcGxvaS5n/b3V2LmZyLw\",\"path\":\"
+        \ \u203A accueil  \u203A r\xE9forme des retraites : ce qui change \xE0 partir
+        du 1er septembre 2023\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/RP3XZSyWGseucDc3lj8XVGp3h9f_MmeHYcbgu5bTJsM/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly90cmF2/YWlsLWVtcGxvaS5n/b3V2LmZyL3NpdGVz/L3RyYXZhaWwtZW1w/bG9pL2ZpbGVzLzIw/MjQtMDgvbG9nby1y/ZWZvcm1lLWRlcy1y/ZXRyYWl0ZXMtY2Ut/cXVpLWNoYW5nZS1h/dS0xZXItc2VwdGVt/YnJlLTIwMjMuanBn\",\"original\":\"https://travail-emploi.gouv.fr/sites/travail-emploi/files/2024-08/logo-reforme-des-retraites-ce-qui-change-au-1er-septembre-2023.jpg\",\"logo\":true},\"extra_snippets\":[\"Les
+        principaux r\xE9gimes sp\xE9ciaux de retraite sont ferm\xE9s. \xC0 compter
+        du 1er septembre 2023, les nouveaux agents de la RATP, de la Banque de France,
+        des entreprises des industries \xE9lectriques et gazi\xE8res (comme EDF),
+        ainsi que les clercs de notaire et nouveaux membres du Conseil \xE9conomique,
+        social et environnemental (CESE) seront affili\xE9s au r\xE9gime g\xE9n\xE9ral
+        pour la retraite.\",\"L\u2019\xE2ge l\xE9gal de d\xE9part \xE0 la retraite
+        passe progressivement de 62 \xE0 64 ans et l\u2019augmentation de la dur\xE9e
+        d\u2019assurance issue de la r\xE9forme Touraine pour partir sans d\xE9cote
+        acc\xE9l\xE8re.\",\"Le montant de la retraite minimale augmente de 100 \u20AC
+        par mois. Pour une carri\xE8re compl\xE8te cotis\xE9e \xE0 taux plein au Smic,
+        elle passe \xE0 1 200 \u20AC brut mensuels, soit 85 % du Smic net. Deux nouvelles
+        bornes d\u2019\xE2ge permettent de partir avant 64 ans, qui s\u2019ajoutent
+        aux bornes en vigueur.\",\"Avec la valorisation des cong\xE9s parentaux :
+        les trimestres d\u2019Assurance vieillesse des parents au foyer compteront
+        d\xE9sormais dans l\u2019\xE9ligibilit\xE9 aux dispositifs \xAB carri\xE8res
+        longues \xBB (dans la limite de quatre trimestres) et seront comptabilis\xE9s
+        dans le calcul de la retraite minimale major\xE9e (dans la limite de 24 trimestres)
+        ; Avec la cr\xE9ation de l\u2019assurance vieillesse des aidants (AVA) et
+        l\u2019ouverture de droits \xE0 l\u2019assurance vieillesse aux parents d\u2019enfants
+        avec un taux d\u2019incapacit\xE9 de 50 \xE0 80 % \xE9ligibles \xE0 un compl\xE9ment
+        de l\u2019allocation d\u2019\xE9ducation de l\u2019enfant handicap\xE9 (AEEH),
+        et aux proches aidants de personnes en situation de handicap n\u2019habitant
+        pas avec la personne aid\xE9e ;\"]}],\"family_friendly\":true}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 13 Jun 2025 13:36:36 GMT
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User
+      X-Content-Type-Options:
+      - nosniff
+      X-Download-Options:
+      - noopen
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '20812'
+      server-timing:
+      - search-roundtrip;dur=326.34
+      x-ratelimit-limit:
+      - 1, 2000
+      x-ratelimit-policy:
+      - 1;w=1, 2000;w=2592000,
+      x-ratelimit-remaining:
+      - 0, 1998
+      x-ratelimit-reset:
+      - 1, 1506202
     status:
       code: 200
       message: OK

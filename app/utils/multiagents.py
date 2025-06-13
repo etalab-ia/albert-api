@@ -25,23 +25,23 @@ _PROMPT_TELLER_1_4 = """
 Tu es un assistant administratif qui réponds a des questions sur le droit et l'administratif en Français. Tes réponses doit être succinctes et claires. Ne détailles pas inutilement.
 Voilà un contexte : \n{doc}\n
 Voilà une question : {question}
-En ne te basant uniquement sur le contexte donné, réponds à la question avec une réponse de la meilleure qualité possible. 
+En ne te basant uniquement sur le contexte donné, réponds à la question avec une réponse de la meilleure qualité possible.
 - Si le contexte ne te permets pas de répondre à la question, réponds juste "Rien ici", ne dis jamais "le texte ne mentionne pas".
 - Si le contexte donne des éléments de réponse, réponds uniquement a la question et n'inventes rien, donnes même juste quelques éléments de réponse si tu n'arrives pas à répondre totalement avec le contexte. Donnes le nom du texte du contexte dans ta réponse.
 - Si la question n'est pas explicite et renvoie à la conversation en cours, et que tu trouve que le contexte est en lien avec la conversation, réponds juste "Ces informations sont interessantes pour la conversation".
 question : {question}
-réponse ("Rien ici" ou ta réponse): 
+réponse ("Rien ici" ou ta réponse):
 """
 
 _PROMPT_TELLER_2 = """
 Tu es un assistant administratif qui réponds a des questions sur le droit et l'administratif en Français. Nous sommes en 2024. Tes réponses doit être succinctes et claires. Ne détailles pas inutilement.
 Voilà une demande utilisateur : {question}
-Réponds à cette question comme tu peux. 
+Réponds à cette question comme tu peux.
 Règles à respecter :
 N'inventes pas de référence.
 Si tu as besoin de plus d'information ou que la question n'est pas claire, dis le a l'utilisateur.
 La réponse doit être la plus courte possible.  Mets en forme ta réponse avec des sauts de lignes. Réponds en Français et part du principe que l'interlocuteur est Français et que ses questions concerne la France.
-Réponse : 
+Réponse :
 """
 
 _PROMPT_CHOICER = """
@@ -52,7 +52,7 @@ Le contexte est composé d'une liste d'extrait d'article qui sert d'aide pour r�
 
 Ne réponds pas au message utilisateur.
 Voilà le message utilisateur : {prompt}
- 
+
 Voilà tes choix :
 
 - Si le message utilisateur n'est vraiment pas claire ou ne veut vraiment rien dire en français réponds 0 OU
@@ -64,7 +64,7 @@ Voilà tes choix :
 - Si le message utilisateur a besoin de contexte car elle est spécifique, sur de l'administratif, ou complexe, mais qu'aucun des articles du contexte n'est en lien avec elle réponds 3
 - Si on te demande de chercher sur internet / qu'on te demande des informations sur quelqu'un ou une personnalité / qu'on te demande des informations actuelles / si le message utilisateur commence par "internet" réponds 4
 
-Pour chaque choix, assure-toi de bien évaluer le message utilisateur selon ces critères avant de donner ta réponse. 
+Pour chaque choix, assure-toi de bien évaluer le message utilisateur selon ces critères avant de donner ta réponse.
 Regardes bien le contexte, s'il peut t'aider à répondre au message utilisateur c'est important.
 Même si le contexte ne contient que quelques informations ou mots commun avec le message utilisateur, considère qu'il est en lien avec la question.
 
@@ -98,14 +98,14 @@ reponse :
 """
 
 _PROMPT_CONCAT = """
-Tu es un expert pour rédiger les bonnes réponses et expliquer les choses. 
+Tu es un expert pour rédiger les bonnes réponses et expliquer les choses.
 Voila plusieurs réponses générées par des agents : {answers}
 En te basant sur ces réponses, ne gardes que ce qui est utile pour répondre à la question : {prompt}
 Cites les sources utilisées s'il y en a, mais ne parle jamais des "réponses des agents".
 Réponds avec une réponse à cette question de la meilleure qualité possible.
 Si des éléments de réponses sont contradictoire, donnes les quand même à l'utilisateur en expliquant les informations que tu as.
 Réponds juste à la question, ne dis rien d'autre. Tu dois faire un mélange de ces informations pour ne sortir que l'utile de la meilleure manière possible.
-Réponse : 
+Réponse :
 """
 
 
@@ -114,6 +114,7 @@ class MultiAgents:
     """Multi Agents researcher."""
     ranker_model: ModelRegistry = None
     """Multi Agents ranker model."""
+    search_method: SearchMethod = SearchMethod.SEMANTIC
 
     @staticmethod
     async def search(
@@ -142,7 +143,7 @@ class MultiAgents:
                     session=session,
                     collection_ids=[],
                     prompt=prompt_text,
-                    method=SearchMethod.SEMANTIC,
+                    method=MultiAgents.search_method,
                     k=k,
                     rff_k=5,
                     web_search=True,
