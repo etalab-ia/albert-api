@@ -37,6 +37,7 @@ jobs:
         with:
           context: .
           file: ./app/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ env.APP_IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.APP_IMAGE_NAME }}:latest
           cache-from: type=gha
@@ -47,6 +48,7 @@ jobs:
         with:
           context: .
           file: ./ui/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ env.UI_IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ env.UI_IMAGE_NAME }}:latest
           cache-from: type=gha
