@@ -11,8 +11,15 @@ def generate_stream(messages: List[dict], params: dict, rag: bool, rerank: bool)
     sources = []
     if rag:
         prompt = messages[-1]["content"]
-        k = params["rag"]["k"] * 2 if rerank else params["rag"]["k"]
-        data = {"collections": params["rag"]["collections"], "k": k, "prompt": messages[-1]["content"], "score_threshold": None}
+        # Use "rag_params" instead of "rag"
+        k = params["rag_params"]["k"] * 2 if rerank else params["rag_params"]["k"]
+        data = {
+            "collections": params["rag_params"]["collections"],
+            "k": k,
+            "prompt": messages[-1]["content"],
+            "method": params["rag_params"]["method"],  # Add method from rag_params
+            "score_threshold": None,
+        }
         response = requests.post(
             url=f"{settings.playground.api_url}/v1/search", json=data, headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
         )
@@ -38,7 +45,8 @@ Les documents sont :
             assert response.status_code == 200, f"{response.status_code} - {response.json()}"
 
             rerank_scores = sorted(response.json()["data"], key=lambda x: x["score"])
-            chunks = [chunks[result["index"]] for result in rerank_scores[: params["rag"]["k"]]]
+            # Use "rag_params" instead of "rag"
+            chunks = [chunks[result["index"]] for result in rerank_scores[: params["rag_params"]["k"]]]
 
         sources = list(set([chunk["metadata"]["document_name"] for chunk in chunks]))
         chunks = [chunk["content"] for chunk in chunks]
