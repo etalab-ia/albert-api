@@ -121,6 +121,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.test
 .venv
 env/
 venv/
@@ -194,7 +195,6 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-**/config.yml
 **/config.**.yml
 .DS_Store
 .idea
