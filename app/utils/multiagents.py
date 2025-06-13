@@ -13,13 +13,21 @@ from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 logger = logging.getLogger(__name__)
 
-_explain_choice = {
-    0: "Je ne comprends pas la demande.",
-    1: "Des informations pertinentes ont été trouvées dans la base de données cherchée.",
-    2: "Je n'ai pas trouvé d'informations pertinentes en base de données, mais il me semblait juste de répondre avec mes connaissances générales.",
-    3: "Je n'ai pas trouvé d'informations pertinentes en base de données, et je ne veux pas me mouiller en répondant quelque chose de faux.",
-    4: "La décision d'aller sur internet a été prise pour chercher des informations pertinentes.",
-}
+
+def _get_explain_choice():
+    """Get the explanation choices based on whether web search is available."""
+    base_choices = {
+        0: "Je ne comprends pas la demande.",
+        1: "Des informations pertinentes ont été trouvées dans la base de données cherchée.",
+        2: "Je n'ai pas trouvé d'informations pertinentes en base de données, mais il me semblait juste de répondre avec mes connaissances générales.",
+        3: "Je n'ai pas trouvé d'informations pertinentes en base de données, et je ne veux pas me mouiller en répondant quelque chose de faux.",
+    }
+
+    if settings.web_search is not None:
+        base_choices[4] = "La décision d'aller sur internet a été prise pour chercher des informations pertinentes."
+
+    return base_choices
+
 
 _PROMPT_TELLER_1_4 = """
 Tu es un assistant administratif qui réponds a des questions sur le droit et l'administratif en Français. Tes réponses doit être succinctes et claires. Ne détailles pas inutilement.
@@ -44,14 +52,23 @@ La réponse doit être la plus courte possible.  Mets en forme ta réponse avec 
 Réponse : 
 """
 
-_PROMPT_CHOICER = """
+
+def _get_prompt_choicer():
+    """Get the CHOICER prompt based on whether web search is available."""
+    web_search_option = ""
+    if settings.web_search is not None:
+        web_search_option = "- Si on te demande de chercher sur internet / qu'on te demande des informations sur quelqu'un ou une personnalité / qu'on te demande des informations actuelles / si le message utilisateur commence par \"internet\" réponds 4"
+
+    max_choice = "4" if settings.web_search is not None else "3"
+
+    return f"""
 Tu es un expert en compréhension et en évaluation des besoins en information pour répondre à un message utilisateur. Ton travail est de juger la possibilité de répondre à un message utilisateur en fonction d'un contexte donné.
 Nous sommes en 2024 et ton savoir s'arrete en 2023.
 
 Le contexte est composé d'une liste d'extrait d'article qui sert d'aide pour répondre au message utilisateur, mais n'est pas forcément en lien avec lui. Tu dois évaluer s'il y a besoin du contexte ou non.
 
 Ne réponds pas au message utilisateur.
-Voilà le message utilisateur : {prompt}
+Voilà le message utilisateur : {{prompt}}
  
 Voilà tes choix :
 
@@ -61,14 +78,13 @@ Voilà tes choix :
 - Si le message utilisateur demande explicitement des sources ou des références réponds 1 (si le contexte associé est bon) ou 3 (si le contexte associé est mauvais) OU
 - Si le message utilisateur n'a pas besoin de contexte car ce n'est pas une question adminitrative / c'est de la culture générale simple réponds 2 OU
 - Si le message utilisateur est un message simple ou personnel / Le reste de la conversation permets d'y répondre réponds 2 OU
-- Si le message utilisateur a besoin de contexte car elle est spécifique, sur de l'administratif, ou complexe, mais qu'aucun des articles du contexte n'est en lien avec elle réponds 3
-- Si on te demande de chercher sur internet / qu'on te demande des informations sur quelqu'un ou une personnalité / qu'on te demande des informations actuelles / si le message utilisateur commence par "internet" réponds 4
+- Si le message utilisateur a besoin de contexte car elle est spécifique, sur de l'administratif, ou complexe, mais qu'aucun des articles du contexte n'est en lien avec elle réponds 3{web_search_option}
 
 Pour chaque choix, assure-toi de bien évaluer le message utilisateur selon ces critères avant de donner ta réponse. 
 Regardes bien le contexte, s'il peut t'aider à répondre au message utilisateur c'est important.
 Même si le contexte ne contient que quelques informations ou mots commun avec le message utilisateur, considère qu'il est en lien avec la question.
 
-Ne fais pas de phrase, réponds uniquement 0, 1, 2, 3 ou 4.
+Ne fais pas de phrase, réponds uniquement 0, 1, 2, 3{" ou " + max_choice if settings.web_search is not None else ""}.
 
 Exemples
 ----------
@@ -87,15 +103,16 @@ reponse : 2
 Exemple 4 : "Question necessitant du contexte pertinent mais pas dans le rag"
 context : Vous pouvez faire une demarche [...]
 question : Qui est le président des usa actuellement ?
-reponse : 4
+reponse : {"4" if settings.web_search is not None else "3"}
 ----------
 
-Ne réponds pas à la question, réponds uniquement 0, 1, 2, 3 ou 4. Ne donnes jamais d'explication ou de phrase dans ta réponse, renvoies juste un chiffre. Ta réponse doit être sous ce format:<CHIFFRE>
+Ne réponds pas à la question, réponds uniquement 0, 1, 2, 3{" ou " + max_choice if settings.web_search is not None else ""}. Ne donnes jamais d'explication ou de phrase dans ta réponse, renvoies juste un chiffre. Ta réponse doit être sous ce format:<CHIFFRE>
 Bases toi également sur le reste des messages de la conversation pour répondre avec ton choix.
-context : {docs}
-question : {prompt}
+context : {{docs}}
+question : {{prompt}}
 reponse :
 """
+
 
 _PROMPT_CONCAT = """
 Tu es un expert pour rédiger les bonnes réponses et expliquer les choses. 
@@ -137,7 +154,7 @@ class MultiAgents:
             if choice in (1, 2):
                 return searches, choice, n_retry
             # internet / fallback
-            if choice == 4 or n_retry >= max_retry:
+            if choice == 4 and settings.web_search is not None:
                 new_searches = await doc_search(
                     session=session,
                     collection_ids=[],
@@ -148,6 +165,27 @@ class MultiAgents:
                     web_search=True,
                 )
                 return new_searches, choice, n_retry
+            # fallback when web search is not available or max retries reached
+            if choice == 4 and settings.web_search is None:
+                # If web search was requested but not available, fallback to choice 3
+                choice = 3
+                return searches, choice, n_retry
+            if n_retry >= max_retry:
+                # If max retries reached and web search is available, try web search
+                if settings.web_search is not None:
+                    new_searches = await doc_search(
+                        session=session,
+                        collection_ids=[],
+                        prompt=prompt_text,
+                        method=SearchMethod.SEMANTIC,
+                        k=k,
+                        rff_k=5,
+                        web_search=True,
+                    )
+                    return new_searches, 4, n_retry
+                else:
+                    # If web search not available, return with choice 3
+                    return searches, 3, n_retry
             raise ValueError(f"Unknown choice: {choice}")
 
         initial_docs = [s.chunk.content for s in searches]
@@ -156,7 +194,7 @@ class MultiAgents:
 
         for s in searches_out:
             s.chunk.metadata["choice"] = choice
-            s.chunk.metadata["choice_desc"] = _explain_choice[choice]
+            s.chunk.metadata["choice_desc"] = _get_explain_choice()[choice]
             s.chunk.metadata["n_retry"] = n_retry
 
         return searches_out
@@ -202,7 +240,7 @@ class MultiAgents:
     @staticmethod
     async def _get_rank(prompt: str, inputs: List[str]) -> List[int]:
         client = MultiAgents.ranker_model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
-        query = _PROMPT_CHOICER.format(prompt=prompt, docs=inputs)
+        query = _get_prompt_choicer().format(prompt=prompt, docs=inputs)
         resp = await client.forward_request(
             method="POST",
             json={
@@ -214,5 +252,7 @@ class MultiAgents:
             },
         )
         text = resp.json()["choices"][0]["message"]["content"]
-        m = re.search(r"[0-4]", text)
+        max_choice = 4 if settings.web_search is not None else 3
+        pattern = f"[0-{max_choice}]"
+        m = re.search(pattern, text)
         return [int(m.group())] if m else [0]
