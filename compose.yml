@@ -5,7 +5,7 @@ services:
     environment:
       REDIS_ARGS: --dir /data --requirepass changeme --user username on >password ~* allcommands --save 60 1 --appendonly yes
     ports:
-      - 6379:6379
+      - "${REDIS_PORT}:6379"
     volumes:
       - redis:/data
     healthcheck:
@@ -22,8 +22,8 @@ services:
     volumes:
       - qdrant:/qdrant/storage
     ports:
-      - 6333:6333
-      - 6334:6334
+      - "${QDRANT_PORT_HTTP}:6333"
+      - "${QDRANT_PORT_GRPC}:6334"
     healthcheck:
       test: [ "CMD-SHELL", "bash", "-c", ":> /dev/tcp/127.0.0.1/6333" ]
       interval: 4s
@@ -40,7 +40,7 @@ services:
       - POSTGRES_PASSWORD=changeme
       - POSTGRES_DB=postgres
     ports:
-      - 5432:5432
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres:/var/lib/postgresql/data
       - ./scripts/postgres_entrypoint.sh:/docker-entrypoint-initdb.d/postgres_entrypoint.sh
@@ -53,14 +53,10 @@ services:
 
   mcp-bridge:
     image: ghcr.io/etalab-ia/albert-api-mcp-bridge/albert-api-mcp-bridge:latest
-    develop:
-      watch:
-        - path: mcp_bridge
-          action: rebuild
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "9876:8000"
+      - "${MCP_BRIDGE_PORT}:8000"
     environment:
       - MCP_BRIDGE__CONFIG__FILE=config.json
     volumes:
