@@ -49,10 +49,10 @@ async def upload_file(
 
     if request.chunker:
         chunker_args = request.chunker.args.model_dump() if request.chunker.args else ChunkerArgs().model_dump()
-        chunker_name = request.chunker.name
+        chunker = request.chunker.name
     else:
         chunker_args = ChunkerArgs().model_dump()
-        chunker_name = None
+        chunker = None
 
     chunker_args["length_function"] = len if chunker_args["length_function"] == "len" else chunker_args["length_function"]
 
@@ -95,13 +95,13 @@ async def upload_file(
             session=session,
             collection_id=request.collection,
             document=document,
-            chunker_name=chunker_name,
+            chunker=chunker,
+            chunk_min_size=chunker_args["chunk_min_size"],
             chunk_size=chunker_args["chunk_size"],
             chunk_overlap=chunker_args["chunk_overlap"],
             length_function=chunker_args["length_function"],
-            is_separator_regex=chunker_args["is_separator_regex"],
             separators=chunker_args["separators"],
-            chunk_min_size=chunker_args["chunk_min_size"],
+            is_separator_regex=chunker_args["is_separator_regex"],
             metadata=metadata,
         )
 
