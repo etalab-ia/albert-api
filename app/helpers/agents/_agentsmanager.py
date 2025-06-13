@@ -1,12 +1,18 @@
 import json
+from typing import List
+
 import httpx
 
 from app.clients.mcp import SecretShellMCPBridgeClient
 from app.helpers.models import ModelRegistry
+from app.schemas.mcp import MCPTool
+from app.utils.exceptions import ToolNotFoundException
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 
 class AgentsManager:
+    MAX_ITERATIONS = 2
+
     def __init__(self, mcp_bridge: SecretShellMCPBridgeClient, model_registry: ModelRegistry):
         self.model_registry = model_registry
         self.mcp_bridge = mcp_bridge
@@ -15,8 +21,7 @@ class AgentsManager:
         body = await self.set_tools_for_llm_request(body)
         http_llm_response = None
         number_of_iterations = 0
-        max_iterations = 2
-        while number_of_iterations < max_iterations:
+        while number_of_iterations < self.MAX_ITERATIONS:
             http_llm_response = await self.get_llm_http_response(body)
             llm_response = json.loads(http_llm_response.text)
             finish_reason = llm_response["choices"][0]["finish_reason"]
@@ -44,33 +49,46 @@ class AgentsManager:
         model = self.model_registry(model=body.model)
         client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
         http_llm_response = await client.forward_request(method="POST", json=body.model_dump())
+
         return http_llm_response
 
-    async def set_tools_for_llm_request(self, body):
+    async def set_tools_for_llm_request(self, body: dict) -> dict:
         if hasattr(body, "tools") and body.tools is not None:
             tools = await self.get_tools_from_bridge()
-            available_tools = [
-                {"type": "function", "function": {"name": tool["name"], "description": tool["description"], "parameters": tool["inputSchema"]}}
-                for tool in tools
-            ]
-            requested_tools = [tool.get("type") for tool in body.tools if tool.get("type") != "function" and tool.get("type") is not None]
-            if "all" in requested_tools:
-                body.tools = available_tools
-            else:
-                # TODO: handle error if tool is not available
-                available_tool_names = [tool["function"]["name"] for tool in available_tools]
-                selected_available_tool_names = list(set(requested_tools) & set(available_tool_names))
-                used_tools = [
-                    available_tool
-                    for available_tool in available_tools
-                    if available_tool.get("function").get("name") in selected_available_tool_names
-                ]
-                body.tools = used_tools
+            available_tools = [{"type": "function", "function": {"name": tool.name, "description": tool.description, "parameters": tool.input_schema}} for tool in tools]  # fmt:off
+
+            requested_tools: List[dict] = []
+            for tool in body.tools:
+                if tool.get("type") is None:
+                    continue
+                elif tool.get("type") == "function":
+                    continue
+                # all tools requested
+                elif tool.get("type") == "all":
+                    requested_tools = available_tools
+                    break
+                else:
+                    # specific tool requested
+                    tool_found = False
+
+                    # check if tool is available
+                    for available_tool in available_tools:
+                        if tool.get("type") == available_tool.get("function").get("name"):
+                            tool = available_tool
+                            tool_found = True
+                            break
+
+                    if not tool_found:
+                        raise ToolNotFoundException(f"Tool not found {tool.get("type")}")
+
+                    requested_tools.append(tool)
+
             body.tool_choice = getattr(body, "tool_choice", "auto")
+            body.tools = requested_tools
+
         return body
 
-    async def get_tools_from_bridge(self):
-        mcp_bridge_tools = await self.mcp_bridge.get_tool_list()
-        all_tools = [section["tools"] for section in mcp_bridge_tools.values()]
-        flat_tools = [tool for tools in all_tools for tool in tools]
-        return flat_tools
+    async def get_tools_from_bridge(self) -> List[MCPTool]:
+        tools = await self.mcp_bridge.get_tool_list()
+
+        return tools

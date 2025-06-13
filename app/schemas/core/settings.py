@@ -5,7 +5,7 @@ import re
 from types import SimpleNamespace
 from typing import Any, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 import yaml
 
@@ -41,8 +41,7 @@ class ParserType(str, Enum):
 
 
 class ConfigBaseModel(BaseModel):
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class ParserArgs(ConfigBaseModel):
@@ -315,11 +314,10 @@ class Config(ConfigBaseModel):
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(extra="allow")
+
     # config
     config_file: str = "config.yml"
-
-    class Config:
-        extra = "allow"
 
     @field_validator("config_file", mode="before")
     def config_file_exists(cls, config_file):

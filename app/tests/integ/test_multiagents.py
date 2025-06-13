@@ -54,7 +54,6 @@ class TestMultiAgents:
         assert response.status_code == 200, response.text
         data = response.json()["data"]
         # Check response schema
-        print(data)
         assert len(data) > 0
         assert "choice" in data[0]["chunk"]["metadata"]
         assert "choice_desc" in data[0]["chunk"]["metadata"]

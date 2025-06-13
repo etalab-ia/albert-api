@@ -96,6 +96,11 @@ class TokenNotFoundException(HTTPException):
         super().__init__(status_code=404, detail=detail)
 
 
+class ToolNotFoundException(HTTPException):
+    def __init__(self, detail: str = "Tool not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
 class UserNotFoundException(HTTPException):
     def __init__(self, detail: str = "User not found.") -> None:
         super().__init__(status_code=404, detail=detail)
