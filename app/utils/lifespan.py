@@ -4,7 +4,7 @@ import traceback
 from coredis import ConnectionPool
 from fastapi import FastAPI
 
-from app.clients.database import QdrantClient
+from app.clients.database import get_vector_store
 from app.clients.mcp import SecretShellMCPBridgeClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.parser import BaseParserClient as ParserClient
@@ -34,8 +34,9 @@ async def lifespan(app: FastAPI):
     redis = ConnectionPool(**settings.databases.redis.args)
     web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
     parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
-    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
+    vector_store = get_vector_store(settings)
     mcp_bridge = SecretShellMCPBridgeClient(mcp_bridge_url=settings.mcp.mcp_bridge_url)
+
 
     routers = []
     for model in settings.models:
@@ -50,15 +51,15 @@ async def lifespan(app: FastAPI):
                     **client.args.model_dump(),
                 )
                 clients.append(client)
-            except Exception as e:
+            except Exception:
                 logger.debug(msg=traceback.format_exc())
                 continue
         if not clients:
             logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
             if web_search:
                 assert model.id != settings.web_search.model, f"Web search model ({model.id}) must be reachable."
-            if qdrant:
-                assert model.id != settings.databases.qdrant.model, f"Qdrant model ({model.id}) must be reachable."
+            if settings.databases.vector_store:
+                assert model.id != settings.databases.vector_store.model, f"Vector store embedding model ({model.id}) must be reachable."
             continue
 
         logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
@@ -71,9 +72,11 @@ async def lifespan(app: FastAPI):
     global_context.models = ModelRegistry(routers=routers)
     global_context.iam = IdentityAccessManager()
     global_context.mcp.agents_manager = AgentsManager(mcp_bridge=mcp_bridge, model_registry=global_context.models)
-
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
     assert await global_context.limiter.redis.check(), "Redis database is not reachable."
+
+    if vector_store and global_context.models:
+        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
 
     # setup context: documents
     parser = ParserManager(parser=parser)
@@ -90,12 +93,12 @@ async def lifespan(app: FastAPI):
     multi_agents_search_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
     multiagents.MultiAgents.model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
     multiagents.MultiAgents.ranker_model = global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
+    multiagents.MultiAgents.search_method = settings.multi_agents_search.method
 
-    if qdrant:
-        assert await qdrant.check(), "Qdrant database is not reachable."
-        qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
+    if vector_store:
+        assert await vector_store.check(), "Vector store database is not reachable."
         global_context.documents = DocumentManager(
-            qdrant=qdrant,
+            vector_store=vector_store,
             parser=parser,
             web_search=web_search,
             multi_agents_search_model=multi_agents_search_model,
@@ -104,5 +107,5 @@ async def lifespan(app: FastAPI):
     yield
 
     # cleanup resources when app shuts down
-    if qdrant:
-        await qdrant.close()
+    if vector_store:
+        await vector_store.close()
