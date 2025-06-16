@@ -130,8 +130,8 @@ class VectorizationFailedException(HTTPException):
         super().__init__(status_code=422, detail=detail)
 
 
-class InvalidJSONFileFormatException(HTTPException):
-    def __init__(self, detail: str = "Invalid JSON file format.") -> None:
+class InvalidJSONFormatException(HTTPException):
+    def __init__(self, detail: str = "Invalid JSON format.") -> None:
         super().__init__(status_code=422, detail=detail)
 
 
