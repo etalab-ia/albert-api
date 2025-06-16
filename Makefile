@@ -1,23 +1,21 @@
-ifneq (,$(wildcard .env))
-	include .env
-	export
-endif
-
-
 CONFIG_FILE=./config.yml
 PYPROJECT=pyproject.toml
 
 install:
 	pip install ".[app,ui,dev,test]"
 
-docker-compose:
+docker-compose-up:
 	docker compose up --detach
 
-docker-compose-test:
-	bash -c 'set -a; . .env.test; exec docker compose --env-file .env.test up --detach'
+docker-compose-down:
+	docker compose down
 
-docker-compose-test-2:
-	sh -c 'set -a; . .env'
+docker-compose-test-up:
+	docker compose --env-file .env.test up --detach
+
+
+docker-compose-test-down:
+	docker compose --env-file .env.test down
 
 run-api:
 	uvicorn app.main:app --port 8000 --log-level debug --reload
@@ -32,13 +30,13 @@ db-ui-migrate:
 	alembic -c ui/alembic.ini upgrade head
 
 test-all:
-	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT)
+	CONFIG_FILE=$(CONFIG_FILE) ENV_FILE=.env.test PYTHONPATH=. pytest --config-file=$(PYPROJECT)
 
 test-unit:
 	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)
 
 test-integ:
-	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest app/tests/integ --config-file=$(PYPROJECT)
+	CONFIG_FILE=$(CONFIG_FILE) ENV_FILE=.env.test PYTHONPATH=. pytest app/tests/integ/test_mcp.py --config-file=$(PYPROJECT)
 
 test-snap-update:
 	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT) --snapshot-update
