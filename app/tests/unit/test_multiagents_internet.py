@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.helpers.models import ModelRegistry
 from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
-from app.utils.multiagents import MultiAgents
+from app.helpers._multiagents import MultiAgents
 from app.utils.settings import settings
 
 
@@ -17,8 +17,7 @@ async def test_search_web_search_disabled_fallback_to_3():
     the choice falls back to 3 and no web search is performed.
     """
     # 1. Setup Mocks
-    MultiAgents.model = MagicMock(spec=ModelRegistry)
-    MultiAgents.ranker_model = MagicMock(spec=ModelRegistry)
+    multi_agents = MultiAgents(model=MagicMock(spec=ModelRegistry), ranker_model=MagicMock(spec=ModelRegistry))
 
     mock_doc_search = AsyncMock()
     mock_session = MagicMock(spec=AsyncSession)
@@ -38,11 +37,11 @@ async def test_search_web_search_disabled_fallback_to_3():
     settings.web_search = None
 
     # 3. Mock _get_rank to return choice 4 (request web search)
-    with patch("app.utils.multiagents.MultiAgents._get_rank", new_callable=AsyncMock) as mock_get_rank:
+    with patch("app.helpers._multiagents.MultiAgents._get_rank", new_callable=AsyncMock) as mock_get_rank:
         mock_get_rank.return_value = [4]  # Agent decides to go for web search
 
         # 4. Call MultiAgents.search
-        result_searches = await MultiAgents.search(
+        result_searches = await multi_agents.search(
             doc_search=mock_doc_search,
             searches=initial_searches,
             prompt=prompt_text,
@@ -77,8 +76,7 @@ async def test_search_web_search_enabled_and_chosen():
     Tests that if _get_rank returns 4 and settings.web_search is enabled,
     a web search is performed.
     """
-    MultiAgents.model = MagicMock(spec=ModelRegistry)
-    MultiAgents.ranker_model = MagicMock(spec=ModelRegistry)
+    multi_agents = MultiAgents(model=MagicMock(spec=ModelRegistry), ranker_model=MagicMock(spec=ModelRegistry))
 
     mock_doc_search = AsyncMock()
     # Simulate doc_search returning some new searches when called for web_search
@@ -103,10 +101,10 @@ async def test_search_web_search_enabled_and_chosen():
     # Ensure web_search setting is something that evaluates to True (e.g., a dummy config object)
     settings.web_search = MagicMock()
 
-    with patch("app.utils.multiagents.MultiAgents._get_rank", new_callable=AsyncMock) as mock_get_rank:
+    with patch("app.helpers._multiagents.MultiAgents._get_rank", new_callable=AsyncMock) as mock_get_rank:
         mock_get_rank.return_value = [4]  # Agent decides to go for web search
 
-        result_searches = await MultiAgents.search(
+        result_searches = await multi_agents.search(
             doc_search=mock_doc_search,
             searches=initial_searches,
             prompt=prompt_text,
@@ -132,7 +130,7 @@ async def test_search_web_search_enabled_and_chosen():
         # Ensure results from web_search are returned
         assert result_searches[0].chunk.metadata.get("choice") == 4
 
-        from app.utils.multiagents import _get_explain_choice as actual_get_explain_choice
+        from app.helpers._multiagents import _get_explain_choice as actual_get_explain_choice
 
         expected_desc_for_choice_4 = actual_get_explain_choice()[4]  # Web search is enabled here
         assert result_searches[0].chunk.metadata.get("choice_desc") == expected_desc_for_choice_4
@@ -148,7 +146,7 @@ def test_get_explain_choice_web_search_disabled():
     original_web_search_setting = settings.web_search
     settings.web_search = None
 
-    from app.utils.multiagents import _get_explain_choice
+    from app.helpers._multiagents import _get_explain_choice
 
     choices = _get_explain_choice()
 
@@ -161,7 +159,7 @@ def test_get_prompt_choicer_web_search_disabled():
     original_web_search_setting = settings.web_search
     settings.web_search = None
 
-    from app.utils.multiagents import _get_prompt_choicer
+    from app.helpers._multiagents import _get_prompt_choicer
 
     prompt = _get_prompt_choicer()
 
@@ -175,7 +173,7 @@ def test_get_prompt_choicer_web_search_enabled():
     original_web_search_setting = settings.web_search
     settings.web_search = MagicMock()  # Enable web search
 
-    from app.utils.multiagents import _get_prompt_choicer
+    from app.helpers._multiagents import _get_prompt_choicer
 
     prompt = _get_prompt_choicer()
 

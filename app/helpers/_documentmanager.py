@@ -27,32 +27,36 @@ from app.utils.exceptions import (
     ChunkingFailedException,
     CollectionNotFoundException,
     DocumentNotFoundException,
+    MultiAgentsSearchNotAvailableException,
     VectorizationFailedException,
     WebSearchNotAvailableException,
 )
-from app.utils.multiagents import MultiAgents
 from app.utils.variables import ENDPOINT__EMBEDDINGS
 
 from ._parsermanager import ParserManager
 from ._websearchmanager import WebSearchManager
+from ._multiagents import MultiAgents
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentManager:
     BATCH_SIZE = 32
+    multi_agents: Optional[MultiAgents] = None
 
     def __init__(
         self,
         qdrant: AsyncQdrantClient,
         parser: ParserManager,
         web_search: Optional[WebSearchManager] = None,
-        multi_agents_search_model: Optional[ModelRouter] = None,
+        multi_agents_model: Optional[ModelRouter] = None,
+        multi_agents_reranker_model: Optional[ModelRouter] = None,
     ) -> None:
         self.qdrant = qdrant
         self.web_search = web_search
         self.parser = parser
-        self.multi_agents_search_model = multi_agents_search_model
+        if multi_agents_model and multi_agents_reranker_model:
+            self.multi_agents = MultiAgents(multi_agents_model, multi_agents_reranker_model)
 
     async def create_collection(self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:  # fmt: off
         result = await session.execute(
@@ -366,7 +370,9 @@ class DocumentManager:
             score_threshold=score_threshold,
         )
         if method == SearchMethod.MULTIAGENT:
-            searches = await MultiAgents.search(
+            if not self.multi_agents:
+                raise MultiAgentsSearchNotAvailableException()
+            searches = await self.multi_agents.search(
                 doc_search=partial(self.search_chunks, user_id=user_id),
                 searches=searches,
                 prompt=prompt,

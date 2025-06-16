@@ -12,7 +12,6 @@ from app.schemas.search import Search, SearchMethod
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
-from app.utils.multiagents import MultiAgents
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 router = APIRouter()
@@ -46,7 +45,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
             )
             if results:
                 if body.search_args.method == SearchMethod.MULTIAGENT:
-                    body.messages[-1]["content"] = await MultiAgents.full_multiagents(results, body.messages[-1]["content"])
+                    body.messages[-1]["content"] = await global_context.documents.multi_agents.full_multiagents(results, body.messages[-1]["content"])
                 else:
                     chunks = "\n".join([result.chunk.content for result in results])
                     body.messages[-1]["content"] = body.search_args.template.format(prompt=body.messages[-1]["content"], chunks=chunks)

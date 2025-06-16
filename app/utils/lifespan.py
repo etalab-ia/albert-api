@@ -18,7 +18,6 @@ from app.helpers._websearchmanager import WebSearchManager
 from app.helpers.agents import AgentsManager
 from app.helpers.models import ModelRegistry
 from app.helpers.models.routers import ModelRouter
-from app.utils import multiagents
 from app.utils.context import global_context
 from app.utils.logging import init_logger
 from app.utils.settings import settings
@@ -86,19 +85,17 @@ async def lifespan(app: FastAPI):
             user_agent=settings.web_search.user_agent,
         )
 
-    # @TODO: refacto import of multiagents into DocumentManager
-    multi_agents_search_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-    multiagents.MultiAgents.model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-    multiagents.MultiAgents.ranker_model = global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
-
     if qdrant:
         assert await qdrant.check(), "Qdrant database is not reachable."
         qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
+        multi_agents_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
+        multi_agents_reranker_model=global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
         global_context.documents = DocumentManager(
             qdrant=qdrant,
             parser=parser,
             web_search=web_search,
-            multi_agents_search_model=multi_agents_search_model,
+            multi_agents_model=multi_agents_model,
+            multi_agents_reranker_model=multi_agents_reranker_model,
         )
 
     yield

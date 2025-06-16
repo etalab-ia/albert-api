@@ -5,9 +5,8 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers.models import ModelRegistry
+from app.helpers.models.routers._modelrouter import ModelRouter
 from app.schemas.search import Search, SearchMethod
-from app.utils.exceptions import MultiAgentsSearchNotAvailableException
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
@@ -127,13 +126,15 @@ Réponse :
 
 
 class MultiAgents:
-    model: ModelRegistry = None
-    """Multi Agents researcher."""
-    ranker_model: ModelRegistry = None
-    """Multi Agents ranker model."""
+    """Multi Agents researcher for handling complex search queries with multiple models."""
 
-    @staticmethod
+    def __init__(self, model: ModelRouter, ranker_model: ModelRouter):
+        """Initialize MultiAgents with the given models."""
+        self.model = model
+        self.ranker_model = ranker_model
+
     async def search(
+        self,
         doc_search: callable,
         searches: List[Search],
         prompt: str,
@@ -142,13 +143,10 @@ class MultiAgents:
     ) -> List[Search]:
         """Multi Agents researcher."""
 
-        if not MultiAgents.model or not MultiAgents.ranker_model:
-            raise MultiAgentsSearchNotAvailableException()
-
         async def _go_agents(prompt_text, docs, refs, n_retry=0, max_retry=5, window=5):
             chunk_batch = docs[n_retry * window : (n_retry + 1) * window]
             inputs = [f"(Extrait : {refs[i]}) {chunk[: settings.multi_agents_search.extract_length]}..." for i, chunk in enumerate(chunk_batch)]
-            choice = (await MultiAgents._get_rank(prompt_text, inputs))[0]
+            choice = (await self._get_rank(prompt_text, inputs))[0]
             if choice in (0, 3) and n_retry < max_retry:
                 return await _go_agents(prompt_text, docs, refs, n_retry + 1)
             if choice in (1, 2):
@@ -199,18 +197,14 @@ class MultiAgents:
 
         return searches_out
 
-    @staticmethod
-    async def full_multiagents(searches: List[Search], prompt: str) -> str:
-        if not MultiAgents.model or not MultiAgents.ranker_model:
-            raise MultiAgentsSearchNotAvailableException()
-        prompts = MultiAgents._get_prompts(prompt, searches)
-        answers = await MultiAgents._ask_in_parallel(prompts)
+    async def full_multiagents(self, searches: List[Search], prompt: str) -> str:
+        prompts = self._get_prompts(prompt, searches)
+        answers = await self._ask_in_parallel(prompts)
         return _PROMPT_CONCAT.format(prompt=prompt, answers=answers)
 
     # --- private helpers ---
 
-    @staticmethod
-    def _get_prompts(question: str, searches: List[Search]) -> List[str]:
+    def _get_prompts(self, question: str, searches: List[Search]) -> List[str]:
         choice = searches[0].chunk.metadata["choice"]
         if choice in (1, 4):
             return [_PROMPT_TELLER_1_4.format(doc=s.chunk.content, question=question) for s in searches]
@@ -218,28 +212,25 @@ class MultiAgents:
             return [_PROMPT_TELLER_2.format(question=question)]
         return []
 
-    @staticmethod
-    async def _get_completion(prompt: str, temperature=0.2) -> str:
-        client = MultiAgents.model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+    async def _get_completion(self, prompt: str, temperature=0.2) -> str:
+        client = self.model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
         resp = await client.forward_request(
             method="POST",
             json={
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": temperature,
                 "max_tokens": settings.multi_agents_search.max_tokens,
-                "model": MultiAgents.model,
+                "model": self.model,
             },
         )
         return resp.json()["choices"][0]["message"]["content"]
 
-    @staticmethod
-    async def _ask_in_parallel(prompts: List[str]) -> List[str]:
-        tasks = [asyncio.create_task(MultiAgents._get_completion(prm, temperature=0.2)) for prm in prompts]
+    async def _ask_in_parallel(self, prompts: List[str]) -> List[str]:
+        tasks = [asyncio.create_task(self._get_completion(prm, temperature=0.2)) for prm in prompts]
         return await asyncio.gather(*tasks)
 
-    @staticmethod
-    async def _get_rank(prompt: str, inputs: List[str]) -> List[int]:
-        client = MultiAgents.ranker_model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+    async def _get_rank(self, prompt: str, inputs: List[str]) -> List[int]:
+        client = self.ranker_model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
         query = _get_prompt_choicer().format(prompt=prompt, docs=inputs)
         resp = await client.forward_request(
             method="POST",
@@ -248,7 +239,7 @@ class MultiAgents:
                 "temperature": 0.1,
                 "max_tokens": 3,
                 "stream": False,
-                "model": MultiAgents.ranker_model,
+                "model": self.ranker_model,
             },
         )
         text = resp.json()["choices"][0]["message"]["content"]
