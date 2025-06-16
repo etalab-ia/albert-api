@@ -10,10 +10,19 @@ from ._basesplitter import BaseSplitter
 
 
 class RecursiveCharacterTextSplitter(BaseSplitter):
-    def __init__(self, chunk_min_size: int = 0, metadata: Optional[dict] = None, language: Optional[Language] = None, *args, **kwargs) -> None:
-        super().__init__(chunk_min_size=chunk_min_size, metadata=metadata, language=language)
-        if language:
-            self.splitter = LangChainRecursiveCharacterTextSplitter.from_language(language=language, *args, **kwargs)
+    def __init__(
+        self,
+        chunk_min_size: int = 0,
+        metadata: Optional[dict] = None,
+        language_separators: Optional[Language] = None,
+        *args,
+        **kwargs,
+    ) -> None:
+        super().__init__(chunk_min_size=chunk_min_size, metadata=metadata, language_separators=language_separators)
+        if language_separators:
+            kwargs.pop("separators")
+            kwargs.pop("is_separator_regex")
+            self.splitter = LangChainRecursiveCharacterTextSplitter.from_language(language=self.language_separators, *args, **kwargs)
         else:
             self.splitter = LangChainRecursiveCharacterTextSplitter(*args, **kwargs)
 
