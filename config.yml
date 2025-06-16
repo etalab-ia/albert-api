@@ -67,7 +67,7 @@ models:
       - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
         type: albert
         args:
-          api_url: https://albert.api.staging.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -78,7 +78,7 @@ models:
       - model: albert-small
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -89,7 +89,7 @@ models:
       - model: BAAI/bge-m3
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -100,7 +100,7 @@ models:
       - model: audio-large
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -111,7 +111,7 @@ models:
       - model: rerank-small
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
          
