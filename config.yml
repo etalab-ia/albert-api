@@ -24,7 +24,7 @@ databases:
   - type: qdrant
     model: embeddings-small
     args:
-      url: http://${QDRANT_HOST}:${QDRANT_PORT}
+      url: http://${QDRANT_HOST}:${QDRANT_PORT_HTTP}
       api_key: changeme
       prefer_grpc: True
       grpc_port: ${QDRANT_GRPC_PORT}
