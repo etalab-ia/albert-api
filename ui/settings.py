@@ -6,7 +6,7 @@ import re
 from types import SimpleNamespace
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 import yaml
 
@@ -18,8 +18,7 @@ class DatabaseType(str, Enum):
 
 
 class ConfigBaseModel(BaseModel):
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class MenuItems(ConfigBaseModel):
@@ -91,10 +90,9 @@ class Config(ConfigBaseModel):
 
 
 class Settings(BaseSettings):
-    config_file: str = "config.yml"
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
+    config_file: str = "config.yml"
 
     @field_validator("config_file", mode="before")
     def config_file_exists(cls, config_file):
