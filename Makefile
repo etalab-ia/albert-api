@@ -5,14 +5,13 @@ install:
 	pip install ".[app,ui,dev,test]"
 
 docker-compose-up:
-	docker compose up --detach
+	docker compose --env-file .env up --detach
 
 docker-compose-down:
-	docker compose down
+	docker compose --env-file .env down
 
 docker-compose-test-up:
 	docker compose --env-file .env.test up --detach
-
 
 docker-compose-test-down:
 	docker compose --env-file .env.test down
@@ -25,6 +24,9 @@ run-ui:
 
 db-app-migrate:
 	alembic -c app/alembic.ini upgrade head
+
+db-test-migrate:
+	ENV_FILE=.env.test alembic -c app/alembic.ini upgrade head
 
 db-ui-migrate:
 	alembic -c ui/alembic.ini upgrade head
