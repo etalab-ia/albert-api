@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from typing import Annotated, Dict, List, Optional
 
@@ -32,6 +33,8 @@ from app.utils.variables import (
     ENDPOINT__TOKENS,
     ENDPOINT__USERS_ME,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AccessController:
@@ -233,8 +236,7 @@ class AccessController:
         await self._check_budget(user=user, model=form.get("model"))
 
     async def _check_chat_completions_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        body = await request.body()
-        body = json.loads(body) if body else {}
+        body = await self._safely_parse_body(request)
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
@@ -249,22 +251,19 @@ class AccessController:
         await self._check_budget(user=user, model=body.get("model"))
 
     async def _check_collections_patch(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        body = await request.body()
-        body = json.loads(body) if body else {}
+        body = await self._safely_parse_body(request)
 
         if body.get("visibility") == CollectionVisibility.PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in role.permissions:
             raise InsufficientPermissionException("Missing permission to update collection visibility to public.")
 
     async def _check_collections_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        body = await request.body()
-        body = json.loads(body) if body else {}
+        body = await self._safely_parse_body(request)
 
         if body.get("visibility") == CollectionVisibility.PUBLIC and PermissionType.CREATE_PUBLIC_COLLECTION not in role.permissions:
             raise InsufficientPermissionException("Missing permission to create public collections.")
 
     async def _check_embeddings_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        body = await request.body()
-        body = json.loads(body) if body else {}
+        body = await self._safely_parse_body(request)
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
@@ -290,8 +289,7 @@ class AccessController:
         await self._check_budget(user=user, model=form.get("model"))
 
     async def _check_rerank_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        body = await request.body()
-        body = json.loads(body) if body else {}
+        body = await self._safely_parse_body(request)
 
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
@@ -301,8 +299,7 @@ class AccessController:
         await self._check_budget(user=user, model=body.get("model"))
 
     async def _check_search_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        body = await request.body()
-        body = json.loads(body) if body else {}
+        body = await self._safely_parse_body(request)
 
         # count the search request as one request to the search model (embeddings)
         await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
@@ -322,9 +319,53 @@ class AccessController:
         await self._check_budget(user=user, model=global_context.documents.vector_store.model.id)
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        body = await request.body()
-        body = json.loads(body) if body else {}
+        body = await self._safely_parse_body(request)
 
         # if the token is for another user, we don't check the expiration date
         if body.get("user") and PermissionType.CREATE_USER not in role.permissions:
             raise InsufficientPermissionException("Missing permission to create token for another user.")
+
+    async def _safely_parse_body(self, request: Request) -> Dict:
+        """Safely parse request body as JSON or form data, handling encoding errors."""
+        try:
+            # Check content type to determine parsing strategy
+            content_type = request.headers.get("content-type", "").lower()
+
+            if content_type.startswith("multipart/form-data") or content_type.startswith("application/x-www-form-urlencoded"):
+                # Handle multipart forms and URL-encoded forms
+                try:
+                    form_data = await request.form()
+                    # Convert form data to dictionary, handling file uploads
+                    result = {}
+                    for key, value in form_data.items():
+                        if hasattr(value, "filename"):  # File upload
+                            # For file uploads, store filename and content type info
+                            result[key] = {
+                                "filename": value.filename,
+                                "content_type": value.content_type,
+                                "size": value.size if hasattr(value, "size") else None,
+                            }
+                        else:
+                            # Regular form field
+                            result[key] = value
+                    return result
+                except Exception:
+                    logger.warning("Failed to parse multipart/form-data or application/x-www-form-urlencoded body.", exc_info=True)
+                    return {}
+            else:
+                # Handle JSON content
+                body = await request.body()
+                if not body:
+                    return {}
+
+                # Try to decode as UTF-8 first
+                try:
+                    body_str = body.decode("utf-8")
+                except UnicodeDecodeError:
+                    # If UTF-8 fails, try with error handling to replace invalid characters
+                    body_str = body.decode("utf-8", errors="replace")
+
+                return json.loads(body_str)
+        except (json.JSONDecodeError, AttributeError, ValueError):
+            logger.warning("Failed to parse request body as JSON or form data.", exc_info=True)
+            return {}
