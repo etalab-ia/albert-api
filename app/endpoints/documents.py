@@ -81,7 +81,6 @@ async def create_document(
 
     document = await global_context.documents.parse_file(
         file=file,
-        collection=collection,
         paginate_output=paginate_output,
         page_range=page_range,
         languages=languages,

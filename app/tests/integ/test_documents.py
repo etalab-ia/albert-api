@@ -83,3 +83,23 @@ class TestDocuments:
         response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}")
         documents = response.json()["data"]
         assert DOCUMENT_ID not in [document["id"] for document in documents]
+
+    def test_create_document_simple(self, client: TestClient, setup):
+        """Simple test for creating a document directly via the documents endpoint - should expose a bug."""
+        COLLECTION_ID, _ = setup
+
+        # Try to create a document directly using the documents endpoint
+        file_path = "app/tests/integ/assets/pdf.pdf"
+        with open(file_path, "rb") as file:
+            files = {"file": (os.path.basename(file_path), file, "application/pdf")}
+            data = {"collection": COLLECTION_ID}
+
+            response = client.post_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}", data=data, files=files)
+
+        # This should work but will likely fail due to the bug
+        assert response.status_code == 201, f"Expected 201 but got {response.status_code}: {response.text}"
+
+        # Verify the response contains the document ID
+        response_data = response.json()
+        assert "id" in response_data, f"Response missing 'id' field: {response_data}"
+        assert isinstance(response_data["id"], int), f"Document ID should be integer, got: {type(response_data['id'])}"
