@@ -1,4 +1,3 @@
-import json
 import os
 from uuid import uuid4
 
@@ -7,43 +6,76 @@ import pytest
 
 from app.schemas.collections import CollectionVisibility
 from app.schemas.documents import Document, Documents
-from app.utils.variables import ENDPOINT__COLLECTIONS, ENDPOINT__DOCUMENTS, ENDPOINT__FILES
+from app.utils.variables import ENDPOINT__COLLECTIONS, ENDPOINT__DOCUMENTS
 
 
 @pytest.fixture(scope="module")
-def setup(client, record_with_vcr):
+def collection(client, record_with_vcr):
     response = client.post_without_permissions(
         url=f"/v1{ENDPOINT__COLLECTIONS}",
         json={"name": f"test_collection_{str(uuid4())}", "visibility": CollectionVisibility.PRIVATE},
     )
     assert response.status_code == 201, response.text
-    COLLECTION_ID = response.json()["id"]
+    collection_id = response.json()["id"]
 
-    file_path = "app/tests/integ/assets/json.json"
-    with open(file_path, "rb") as file:
-        files = {"file": (os.path.basename(file_path), file, "application/json")}
-        data = {"request": '{"collection": "%s"}' % COLLECTION_ID}
-        response = client.post_without_permissions(url=f"/v1{ENDPOINT__FILES}", data=data, files=files)
-        file.close()
-    assert response.status_code == 201, response.text
-
-    DOCUMENT_ID = response.json()["id"]
-
-    yield COLLECTION_ID, DOCUMENT_ID
+    yield collection_id
 
 
-@pytest.mark.usefixtures("client", "setup")
+@pytest.mark.usefixtures("client", "collection")
 class TestDocuments:
-    def test_get_document(self, client: TestClient, setup):
-        COLLECTION_ID, DOCUMENT_ID = setup
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}", params={"collection": COLLECTION_ID})
-        assert response.status_code == 200, response.text
+    def test_post_document(self, client: TestClient, collection):
+        file_path = "app/tests/integ/assets/pdf.pdf"
 
-        documents = [document for document in response.json()["data"] if document["id"] == DOCUMENT_ID]
-        assert len(documents) == 1
+        data = {  # with metadata
+            "collection": str(collection),
+            "output_format": "markdown",
+            "force_ocr": "false",
+            "languages": "fr",
+            "chunk_size": "1000",
+            "chunk_overlap": "200",
+            "use_llm": "false",
+            "paginate_output": "false",
+            "chunker": "RecursiveCharacterTextSplitter",
+            "length_function": "len",
+            "chunk_min_size": "0",
+            "is_separator_regex": "false",
+            "metadata": '{"string_metadata": "test", "int_metadata": 1, "float_metadata": 1.0, "bool_metadata": true}',
+        }
 
-    def test_format_document(self, client: TestClient, setup):
-        COLLECTION_ID, DOCUMENT_ID = setup
+        with open(file_path, "rb") as file:
+            files = {"file": (os.path.basename(file_path), file, "application/pdf")}
+            response = client.post_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}", data=data, files=files)
+            file.close()
+
+        assert response.status_code == 201, response.text
+
+    def test_get_documents(self, client: TestClient, collection):
+        # Create document
+        file_path = "app/tests/integ/assets/pdf.pdf"
+
+        data = {  # with empty metadata
+            "collection": str(collection),
+            "output_format": "markdown",
+            "force_ocr": "false",
+            "languages": "fr",
+            "chunk_size": "1000",
+            "chunk_overlap": "200",
+            "use_llm": "false",
+            "paginate_output": "false",
+            "chunker": "RecursiveCharacterTextSplitter",
+            "length_function": "len",
+            "chunk_min_size": "0",
+            "is_separator_regex": "false",
+            "metadata": "{}",
+        }
+
+        with open(file_path, "rb") as file:
+            files = {"file": (os.path.basename(file_path), file, "application/pdf")}
+            response = client.post_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}", data=data, files=files)
+            file.close()
+
+        assert response.status_code == 201, response.text
+        document_id = response.json()["id"]
 
         response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}")
         assert response.status_code == 200, response.text
@@ -51,35 +83,47 @@ class TestDocuments:
         documents = response.json()
         Documents(**documents)  # test output format
 
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}", params={"collection": COLLECTION_ID})
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}", params={"collection": collection})
         assert response.status_code == 200, response.text
 
         documents = response.json()
         Documents(**documents)  # test output format
 
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}/{DOCUMENT_ID}")
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}/{document_id}")
         assert response.status_code == 200, response.text
 
         document = response.json()
         Document(**document)  # test output format
 
-    def test_collection_document_count(self, client: TestClient, setup):
-        COLLECTION_ID, DOCUMENT_ID = setup
+    def test_delete_document(self, client: TestClient, collection):
+        # Create document
+        file_path = "app/tests/integ/assets/pdf.pdf"
 
-        with open("app/tests/integ/assets/json.json", "r") as f:
-            data = json.load(f)
-            document_count = len(data)
+        data = {  # without metadata
+            "collection": str(collection),
+            "output_format": "markdown",
+            "force_ocr": "false",
+            "languages": "fr",
+            "chunk_size": "1000",
+            "chunk_overlap": "200",
+            "use_llm": "false",
+            "paginate_output": "false",
+            "chunker": "RecursiveCharacterTextSplitter",
+            "length_function": "len",
+            "chunk_min_size": "0",
+            "is_separator_regex": "false",
+        }
 
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__COLLECTIONS}/{COLLECTION_ID}")
-        collection = response.json()
-        assert collection["documents"] == document_count
+        with open(file_path, "rb") as file:
+            files = {"file": (os.path.basename(file_path), file, "application/pdf")}
+            response = client.post_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}", data=data, files=files)
+            file.close()
 
-    def test_delete_document(self, client: TestClient, setup):
-        COLLECTION_ID, DOCUMENT_ID = setup
+        assert response.status_code == 201, response.text
+        document_id = response.json()["id"]
 
-        response = client.delete_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}/{DOCUMENT_ID}")
+        response = client.delete_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}/{document_id}")
         assert response.status_code == 204, response.text
 
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}")
-        documents = response.json()["data"]
-        assert DOCUMENT_ID not in [document["id"] for document in documents]
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__DOCUMENTS}/{document_id}")
+        assert response.status_code == 404, response.text
