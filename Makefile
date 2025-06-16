@@ -1,20 +1,23 @@
 CONFIG_FILE=./config.yml
 PYPROJECT=pyproject.toml
 
+APP_ENV_FILE=.env
+TEST_ENV_FILE=.env.test
+
 install:
 	pip install ".[app,ui,dev,test]"
 
 docker-compose-up:
-	docker compose --env-file .env up --detach
+	docker compose --env-file ${APP_ENV_FILE} up --detach
 
 docker-compose-down:
-	docker compose --env-file .env down
+	docker compose --env-file ${APP_ENV_FILE} down
 
 docker-compose-test-up:
-	docker compose --env-file .env.test up --detach
+	docker compose --env-file ${TEST_ENV_FILE} up --detach
 
 docker-compose-test-down:
-	docker compose --env-file .env.test down
+	docker compose --env-file ${TEST_ENV_FILE} down
 
 run-api:
 	uvicorn app.main:app --port 8000 --log-level debug --reload
@@ -26,19 +29,19 @@ db-app-migrate:
 	alembic -c app/alembic.ini upgrade head
 
 db-test-migrate:
-	ENV_FILE=.env.test alembic -c app/alembic.ini upgrade head
+	ENV_FILE=${TEST_ENV_FILE} alembic -c app/alembic.ini upgrade head
 
 db-ui-migrate:
 	alembic -c ui/alembic.ini upgrade head
 
 test-all:
-	CONFIG_FILE=$(CONFIG_FILE) ENV_FILE=.env.test PYTHONPATH=. pytest --config-file=$(PYPROJECT)
+	CONFIG_FILE=$(CONFIG_FILE) ENV_FILE=${TEST_ENV_FILE} PYTHONPATH=. pytest --config-file=$(PYPROJECT)
 
 test-unit:
 	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)
 
 test-integ:
-	CONFIG_FILE=$(CONFIG_FILE) ENV_FILE=.env.test PYTHONPATH=. pytest app/tests/integ/test_mcp.py --config-file=$(PYPROJECT)
+	CONFIG_FILE=$(CONFIG_FILE) ENV_FILE=${TEST_ENV_FILE} PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)
 
 test-snap-update:
 	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT) --snapshot-update
