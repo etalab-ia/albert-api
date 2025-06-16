@@ -159,12 +159,12 @@ class DocumentManager:
         language_separators: Optional[Language] = None,
         metadata: Optional[dict] = None,
     ) -> int:
-        # check if collection exists
+        # check if collection exists and prepare document chunks in a single transaction
         result = await session.execute(
             statement=select(CollectionTable).where(CollectionTable.id == collection_id).where(CollectionTable.user_id == user_id)
         )
         try:
-            collection = result.scalar_one()
+            result.scalar_one()
         except NoResultFound:
             raise CollectionNotFoundException()
 
@@ -186,9 +186,13 @@ class DocumentManager:
             raise ChunkingFailedException(detail=f"Chunking failed: {e}")
 
         document_name = document.data[0].metadata.document_name
-        result = await session.execute(
-            statement=insert(table=DocumentTable).values(name=document_name, collection_id=collection_id).returning(DocumentTable.id)
-        )
+        try:
+            result = await session.execute(
+                statement=insert(table=DocumentTable).values(name=document_name, collection_id=collection_id).returning(DocumentTable.id)
+            )
+        except Exception as e:
+            if "foreign key constraint" in str(e).lower() or "fkey" in str(e).lower():
+                raise CollectionNotFoundException(detail=f"Collection {collection_id} no longer exists")
         document_id = result.scalar_one()
         await session.commit()
 
