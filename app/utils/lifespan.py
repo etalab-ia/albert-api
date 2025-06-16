@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 import traceback
 
-from coredis import ConnectionPool
+from coredis import ConnectionPool, Redis
 from fastapi import FastAPI
 
 from app.clients.database import QdrantClient
@@ -31,7 +31,11 @@ async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
     # setup clients
+    assert settings.databases.redis is not None, "Redis database connection parameters must be set in configuration."
     redis = ConnectionPool(**settings.databases.redis.args)
+    redis_test_client = Redis(connection_pool=redis)
+    assert (await redis_test_client.ping()).decode('ascii') == "PONG", "Redis database is not reachable."
+
     web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
     parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
     qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
@@ -43,10 +47,11 @@ async def lifespan(app: FastAPI):
         for client in model.clients:
             try:
                 # model client can be not reatachable to API start up
-                client = ModelClient.import_module(type=client.type)(
+                client = (await ModelClient.import_module(type=client.type, redis_connection_pool=redis, model_name=client.model, api_url=client.args.api_url))(
                     model=client.model,
                     costs=client.costs,
                     carbon=client.carbon,
+                    redis_connection=redis,
                     **client.args.model_dump(),
                 )
                 clients.append(client)
@@ -71,9 +76,7 @@ async def lifespan(app: FastAPI):
     global_context.models = ModelRegistry(routers=routers)
     global_context.iam = IdentityAccessManager()
     global_context.mcp.agents_manager = AgentsManager(mcp_bridge=mcp_bridge, model_registry=global_context.models)
-
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
-    assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
     # setup context: documents
     parser = ParserManager(parser=parser)
