@@ -3,12 +3,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Path, Query, Request, Response, Security, UploadFile
 from fastapi.responses import JSONResponse
+from langchain_text_splitters import Language
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers._accesscontroller import AccessController
 from app.schemas.documents import (
-    ChunkerName,
-    ChunkerNameForm,
+    Chunker,
+    ChunkerForm,
     ChunkMinSizeForm,
     ChunkOverlapForm,
     ChunkSizeForm,
@@ -17,6 +18,7 @@ from app.schemas.documents import (
     DocumentResponse,
     Documents,
     IsSeparatorRegexForm,
+    LanguageSeparatorsForm,
     LengthFunctionForm,
     MetadataForm,
     SeparatorsForm,
@@ -46,19 +48,22 @@ async def create_document(
     session: AsyncSession = Depends(get_session),
     file: UploadFile = FileForm,
     collection: int = CollectionForm,
+    # parse params
     paginate_output: Optional[bool] = PaginateOutputForm,
     page_range: str = PageRangeForm,
     languages: Optional[Languages] = LanguagesForm,
     force_ocr: bool = ForceOCRForm,
     output_format: ParsedDocumentOutputFormat = OutputFormatForm,
     use_llm: Optional[bool] = UseLLMForm,
-    chunker_name: ChunkerName = ChunkerNameForm,
+    # chunker params
+    chunker: Chunker = ChunkerForm,
     chunk_size: int = ChunkSizeForm,
+    chunk_min_size: int = ChunkMinSizeForm,
     chunk_overlap: int = ChunkOverlapForm,
     length_function: Literal["len"] = LengthFunctionForm,
     is_separator_regex: bool = IsSeparatorRegexForm,
     separators: List[str] = SeparatorsForm,
-    chunk_min_size: int = ChunkMinSizeForm,
+    language_separators: Optional[Language] = LanguageSeparatorsForm,
     metadata: str = MetadataForm,
 ) -> JSONResponse:
     """
@@ -90,13 +95,14 @@ async def create_document(
         session=session,
         collection_id=collection,
         document=document,
-        chunker_name=chunker_name,
+        chunker=chunker,
         chunk_size=chunk_size,
+        chunk_min_size=chunk_min_size,
         chunk_overlap=chunk_overlap,
         length_function=length_function,
         is_separator_regex=is_separator_regex,
         separators=separators,
-        chunk_min_size=chunk_min_size,
+        language_separators=language_separators,
         metadata=metadata,
     )
 
