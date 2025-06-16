@@ -13,11 +13,11 @@ from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, selec
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.helpers.data.chunkers import NoChunker, RecursiveCharacterTextSplitter
+from app.helpers.data.chunkers import NoSplitter, RecursiveCharacterTextSplitter
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
-from app.schemas.documents import ChunkerName, Document
+from app.schemas.documents import Chunker, Document
 from app.schemas.parse import Languages, ParsedDocument, ParsedDocumentOutputFormat
 from app.schemas.search import Search, SearchMethod
 from app.sql.models import Collection as CollectionTable
@@ -149,34 +149,36 @@ class DocumentManager:
         user_id: int,
         collection_id: int,
         document: ParsedDocument,
-        chunker_name: ChunkerName,
+        chunker: Chunker,
         chunk_size: int,
         chunk_overlap: int,
         length_function: Callable,
-        is_separator_regex: bool,
-        separators: List[str],
         chunk_min_size: int,
+        is_separator_regex: Optional[bool] = None,
+        separators: Optional[List[str]] = None,
+        language_separators: Optional[Language] = None,
         metadata: Optional[dict] = None,
     ) -> int:
-        # check if collection exists
+        # check if collection exists and prepare document chunks in a single transaction
         result = await session.execute(
             statement=select(CollectionTable).where(CollectionTable.id == collection_id).where(CollectionTable.user_id == user_id)
         )
         try:
-            collection = result.scalar_one()
+            result.scalar_one()
         except NoResultFound:
             raise CollectionNotFoundException()
 
         try:
             chunks = self._split(
                 document=document,
-                chunker_name=chunker_name,
+                chunker=chunker,
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
                 length_function=length_function,
                 is_separator_regex=is_separator_regex,
                 separators=separators,
                 chunk_min_size=chunk_min_size,
+                language_separators=language_separators,
                 metadata=metadata,
             )
         except Exception as e:
@@ -184,9 +186,13 @@ class DocumentManager:
             raise ChunkingFailedException(detail=f"Chunking failed: {e}")
 
         document_name = document.data[0].metadata.document_name
-        result = await session.execute(
-            statement=insert(table=DocumentTable).values(name=document_name, collection_id=collection_id).returning(DocumentTable.id)
-        )
+        try:
+            result = await session.execute(
+                statement=insert(table=DocumentTable).values(name=document_name, collection_id=collection_id).returning(DocumentTable.id)
+            )
+        except Exception as e:
+            if "foreign key constraint" in str(e).lower() or "fkey" in str(e).lower():
+                raise CollectionNotFoundException(detail=f"Collection {collection_id} no longer exists")
         document_id = result.scalar_one()
         await session.commit()
 
@@ -391,59 +397,56 @@ class DocumentManager:
                 visibility=CollectionVisibility.PRIVATE,
             )
             for file in web_results:
-                try:
-                    document = await self.parse_file(
-                        file=file,
-                        output_format=ParsedDocumentOutputFormat.MARKDOWN.value,
-                        force_ocr=False,
-                        languages=Languages.EN.value,
-                        page_range="",
-                        paginate_output=False,
-                        use_llm=False,
-                    )
-                    await self.create_document(
-                        session=session,
-                        user_id=user_id,
-                        collection_id=collection_id,
-                        document=document,
-                        chunker_name=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER,
-                        chunk_overlap=0,
-                        chunk_min_size=20,
-                        chunk_size=2048,
-                        length_function=len,
-                        is_separator_regex=False,
-                        language=Language.HTML.value,
-                        separators=["\n\n", "\n", ". ", " "],
-                    )
-                except Exception as e:
-                    logger.exception(msg=f"Error during web search document creation: {e}")
+                document = await self.parse_file(
+                    file=file,
+                    output_format=ParsedDocumentOutputFormat.MARKDOWN.value,
+                    force_ocr=False,
+                    languages=Languages.EN.value,
+                    page_range="",
+                    paginate_output=False,
+                    use_llm=False,
+                )
+                await self.create_document(
+                    session=session,
+                    user_id=user_id,
+                    collection_id=collection_id,
+                    document=document,
+                    chunker=Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER,
+                    chunk_overlap=0,
+                    chunk_min_size=20,
+                    chunk_size=2048,
+                    length_function=len,
+                    language_separators=Language.HTML.value,
+                )
 
         return collection_id
 
     def _split(
         self,
         document: ParsedDocument,
-        chunker_name: ChunkerName,
+        chunker: Chunker,
         chunk_size: int,
+        chunk_min_size: int,
         chunk_overlap: int,
         length_function: Callable,
-        is_separator_regex: bool,
-        separators: List[str],
-        chunk_min_size: int,
+        separators: Optional[List[str]] = None,
+        is_separator_regex: Optional[bool] = None,
+        language_separators: Optional[Language] = None,
         metadata: Optional[dict] = None,
     ) -> List[Chunk]:
-        if chunker_name == ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER:
+        if chunker == Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER:
             chunker = RecursiveCharacterTextSplitter(
                 chunk_size=chunk_size,
+                chunk_min_size=chunk_min_size,
                 chunk_overlap=chunk_overlap,
                 length_function=length_function,
-                is_separator_regex=is_separator_regex,
                 separators=separators,
-                chunk_min_size=chunk_min_size,
+                is_separator_regex=is_separator_regex,
+                language_separators=language_separators,
                 metadata=metadata,
             )
-        else:  # ChunkerName.NoChunker
-            chunker = NoChunker(chunk_min_size=chunk_min_size, metadata=metadata)
+        else:  # Chunker.NoSplitter
+            chunker = NoSplitter(chunk_min_size=chunk_min_size, language_separators=language_separators, metadata=metadata)
 
         chunks = chunker.split_document(document=document)
 

@@ -87,7 +87,13 @@ class TeiModelClient(BaseModelClient):
 
         return url, headers, json, files, data
 
-    def _format_response(self, json: dict, response: httpx.Response, additional_data: Dict[str, Any] = {}) -> httpx.Response:
+    def _format_response(
+        self,
+        json: dict,
+        response: httpx.Response,
+        additional_data: Dict[str, Any] = {},
+        request_latency: float = 0.0,
+    ) -> httpx.Response:
         """
         Format a response from a client model and add usage data and model ID to the response. This method can be overridden by a subclass to add additional headers or parameters.
 
@@ -105,7 +111,7 @@ class TeiModelClient(BaseModelClient):
             data = response.json()
             if isinstance(data, list):  # for TEI reranking
                 data = {"data": data}
-            data.update(self._get_additional_data(json=json, data=data, stream=False))
+            data.update(self._get_additional_data(json=json, data=data, stream=False, request_latency=request_latency))
             data.update(additional_data)
             response = httpx.Response(status_code=response.status_code, content=dumps(data))
 

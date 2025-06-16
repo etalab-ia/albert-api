@@ -1,0 +1,177 @@
+interactions:
+- request:
+    body: "{\"messages\":[{\"role\":\"user\",\"content\":\"Quelles sont les donn\xE9es
+      sur les accidents de la route ?\"}],\"model\":\"albert-large\",\"frequency_penalty\":0.0,\"logit_bias\":null,\"logprobs\":false,\"top_logprobs\":null,\"presence_penalty\":0.0,\"max_tokens\":200,\"max_completion_tokens\":null,\"n\":1,\"response_format\":null,\"seed\":null,\"stop\":[],\"stream\":false,\"stream_options\":null,\"temperature\":0.7,\"top_p\":1,\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"search_datasets\",\"description\":\"\\n
+      \           Recherche des jeux de donn\xE9es sur data.gouv.fr\\n\\n            Args:\\n
+      \               query: La requ\xEAte de recherche (mots-cl\xE9s)\\n                limit:
+      Nombre maximum de r\xE9sultats \xE0 retourner (d\xE9faut: 10)\\n\\n            Returns:\\n
+      \               Dict contenant les r\xE9sultats de la recherche\\n            \",\"parameters\":{\"properties\":{\"query\":{\"title\":\"Query\",\"type\":\"string\"},\"limit\":{\"default\":10,\"title\":\"Limit\",\"type\":\"integer\"}},\"required\":[\"query\"],\"title\":\"search_datasetsArguments\",\"type\":\"object\"}}}],\"tool_choice\":\"auto\",\"search\":false,\"search_args\":null}"
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1052'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: '{"id":"request-55b5cad3965c46f0b5ffddb25f813437","object":"chat.completion","created":1749806645,"model":"mistralai/Mistral-Small-3.1-24B-Instruct-2503","choices":[{"index":0,"message":{"role":"assistant","reasoning_content":null,"content":null,"tool_calls":[{"id":"f6Xysu8z4","type":"function","function":{"name":"search_datasets","arguments":"{\"query\":
+        \"accidents de la route\"}"}}]},"logprobs":null,"finish_reason":"tool_calls","stop_reason":null}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0,"details":[]},"prompt_logprobs":null}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 13 Jun 2025 09:24:06 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '558'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: "{\"messages\":[{\"role\":\"user\",\"content\":\"Quelles sont les donn\xE9es
+      sur les accidents de la route ?\"},{\"role\":\"user\",\"content\":\"{\\n  \\\"query\\\":
+      \\\"accidents de la route\\\",\\n  \\\"nombre_resultats\\\": 6,\\n  \\\"total_disponible\\\":
+      6,\\n  \\\"resultats\\\": [\\n    {\\n      \\\"id\\\": \\\"53698e4ba3a729239d203415\\\",\\n
+      \     \\\"titre\\\": \\\"Accidents de la route\\\",\\n      \\\"description\\\":
+      \\\" \\\\r\\\\nExport : CSV, HTML et XLS  \\\\r\\\\nSource : [www.ecosante.fr](http://www.ecosante.fr/)
+      Irdes d'apr\xE8s donn\xE9es de l'Observatoire national interminist\xE9riel de
+      la s\xE9curit\xE9 routi\xE8re (Onisr)\\\\r\\\\n\\\",\\n      \\\"url\\\": \\\"https://www.data.gouv.fr/fr/datasets/accidents-de-la-route/\\\",\\n
+      \     \\\"organisation\\\": \\\"IRDES & ECOSANTE.FR : Institut de Recherche
+      et Documentation en Economie de la Sant\xE9\\\",\\n      \\\"tags\\\": [\\n
+      \       \\\"accident-circulation\\\",\\n        \\\"blesse\\\",\\n        \\\"departement\\\",\\n
+      \       \\\"facteur-risque\\\",\\n        \\\"hospitalise\\\"\\n      ],\\n
+      \     \\\"formats_disponibles\\\": [\\n        \\\"HTML\\\"\\n      ],\\n      \\\"date_creation\\\":
+      \\\"2013-12-16\\\",\\n      \\\"derniere_modification\\\": \\\"2016-03-16\\\",\\n
+      \     \\\"nombre_ressources\\\": 2\\n    },\\n    {\\n      \\\"id\\\": \\\"6662501aa070d9b3ee9fc8f3\\\",\\n
+      \     \\\"titre\\\": \\\"Tableau de bord   Accidents de la route en Seine-Maritime
+      en 2021\\\",\\n      \\\"description\\\": \\\"Pour chaque accident corporel
+      (soit un accident survenu sur une voie ouverte \xE0 la circulation publique,
+      impliquant au moins un v\xE9hicule et ayant fait au moins une victime ayant
+      n\xE9cessit\xE9 des soins), des saisies d\u2019information d\xE9crivant l\u2019accident
+      sont effectu\xE9es par l\u2019unit\xE9 des forces de l\u2019ordre (police, gendarmerie,
+      etc.) qui est intervenue sur le lieu de l\u2019accident. Ces saisies sont rassembl\xE9es
+      dans une fiche intitul\xE9e bulletin d\u2019analyse des accidents corporels.
+      L\u2019ensemble de ces fiches constit...\\\",\\n      \\\"url\\\": \\\"https://www.data.gouv.fr/fr/datasets/tableau-de-bord-accidents-de-la-route-en-seine-maritime-en-2021/\\\",\\n
+      \     \\\"organisation\\\": \\\"D\xE9partement de la Seine-Maritime\\\",\\n
+      \     \\\"tags\\\": [\\n        \\\"accidents\\\",\\n        \\\"circulation\\\",\\n
+      \       \\\"geospatial\\\",\\n        \\\"routes\\\"\\n      ],\\n      \\\"formats_disponibles\\\":
+      [\\n        \\\"WEB PAGE\\\"\\n      ],\\n      \\\"date_creation\\\": \\\"2023-01-16\\\",\\n
+      \     \\\"derniere_modification\\\": \\\"2024-01-30\\\",\\n      \\\"nombre_ressources\\\":
+      1\\n    },\\n    {\\n      \\\"id\\\": \\\"53699a1fa3a729239d2053f2\\\",\\n
+      \     \\\"titre\\\": \\\"Mortalit\xE9 due aux accidents de la route\\\",\\n
+      \     \\\"description\\\": \\\"Export : CSV, HTML et XLS\\\\r\\\\nSource : [www.ecosante.fr](http://www.ecosante.fr/)
+      Irdes d'apr\xE8s donn\xE9es Inserm C\xE9piDC\\\\r\\\\n\\\",\\n      \\\"url\\\":
+      \\\"https://www.data.gouv.fr/fr/datasets/mortalite-due-aux-accidents-de-la-route/\\\",\\n
+      \     \\\"organisation\\\": \\\"IRDES & ECOSANTE.FR : Institut de Recherche
+      et Documentation en Economie de la Sant\xE9\\\",\\n      \\\"tags\\\": [\\n
+      \       \\\"accident-circulation\\\",\\n        \\\"cepidc\\\",\\n        \\\"femme\\\",\\n
+      \       \\\"homme\\\",\\n        \\\"mortalite\\\"\\n      ],\\n      \\\"formats_disponibles\\\":
+      [\\n        \\\"HTML\\\",\\n        \\\"DATA\\\"\\n      ],\\n      \\\"date_creation\\\":
+      \\\"2014-02-21\\\",\\n      \\\"derniere_modification\\\": \\\"2015-12-01\\\",\\n
+      \     \\\"nombre_ressources\\\": 2\\n    },\\n    {\\n      \\\"id\\\": \\\"6662501c4aef32f7859fc8f3\\\",\\n
+      \     \\\"titre\\\": \\\"Accidents de la route en Seine-Maritime en 2021\\\",\\n
+      \     \\\"description\\\": \\\"\\\",\\n      \\\"url\\\": \\\"https://www.data.gouv.fr/fr/datasets/accidents-de-la-route-en-seine-maritime-en-2021/\\\",\\n
+      \     \\\"organisation\\\": \\\"D\xE9partement de la Seine-Maritime\\\",\\n
+      \     \\\"tags\\\": [\\n        \\\"accidents\\\",\\n        \\\"circulation\\\",\\n
+      \       \\\"geospatial\\\",\\n        \\\"routes\\\"\\n      ],\\n      \\\"formats_disponibles\\\":
+      [\\n        \\\"WEB PAGE\\\"\\n      ],\\n      \\\"date_creation\\\": \\\"2023-01-16\\\",\\n
+      \     \\\"derniere_modification\\\": \\\"2023-01-17\\\",\\n      \\\"nombre_ressources\\\":
+      1\\n    },\\n    {\\n      \\\"id\\\": \\\"55968dedc751df26c5a453b9\\\",\\n
+      \     \\\"titre\\\": \\\"Mobilit\xE9 - Victimes d'accidents de la route selon
+      la gravit\xE9 - 2009-2014\\\",\\n      \\\"description\\\": \\\"Ce tableau de
+      bord pr\xE9sente, par commune, l'\xE9volution annuelle du nombre de bless\xE9s
+      par type de gravit\xE9 ( depuis 2009 ) de chaque commune - Source : Police -
+      Gendarmerie\\\",\\n      \\\"url\\\": \\\"https://www.data.gouv.fr/fr/datasets/mobilite-victimes-daccidents-de-la-route-selon-la-gravite-2009-2014/\\\",\\n
+      \     \\\"organisation\\\": \\\"Grand Poitiers Open Data\\\",\\n      \\\"tags\\\":
+      [\\n        \\\"accident\\\",\\n        \\\"blesses\\\",\\n        \\\"donnees-ouvertes\\\",\\n
+      \       \\\"gravite\\\",\\n        \\\"tues\\\"\\n      ],\\n      \\\"formats_disponibles\\\":
+      [\\n        \\\"XLS\\\",\\n        \\\"XLSX\\\",\\n        \\\"CSV\\\"\\n      ],\\n
+      \     \\\"date_creation\\\": \\\"2015-07-03\\\",\\n      \\\"derniere_modification\\\":
+      \\\"2015-11-13\\\",\\n      \\\"nombre_ressources\\\": 3\\n    },\\n    {\\n
+      \     \\\"id\\\": \\\"5d3a7d1206e3e70553e75019\\\",\\n      \\\"titre\\\": \\\"Localisation
+      des accidents sur les routes d\xE9partementales de Loire-Atlantique\\\",\\n
+      \     \\\"description\\\": \\\"Localisation des accidents mortels et des accidents
+      avec au moins un bless\xE9 sur les routes d\xE9partementales de Loire-Atlantique
+      depuis 1998. \\\\n\\\\n* * *\\\\n\\\\nCe fichier se base sur les donn\xE9es
+      du jeu \\\\\\\"Base de donn\xE9es accidents corporels de la circulation\\\\\\\"
+      du Minist\xE8re de l'Int\xE9rieur.\\\",\\n      \\\"url\\\": \\\"https://www.data.gouv.fr/fr/datasets/localisation-des-accidents-sur-les-routes-departementales-de-loire-atlantique/\\\",\\n
+      \     \\\"organisation\\\": \\\"D\xE9partement de Loire-Atlantique\\\",\\n      \\\"tags\\\":
+      [\\n        \\\"implantation\\\",\\n        \\\"mobilite\\\",\\n        \\\"securite-routiere\\\"\\n
+      \     ],\\n      \\\"formats_disponibles\\\": [\\n        \\\"ZIP\\\",\\n        \\\"JSON\\\",\\n
+      \       \\\"CSV\\\"\\n      ],\\n      \\\"date_creation\\\": \\\"2012-04-02\\\",\\n
+      \     \\\"derniere_modification\\\": \\\"2019-09-06\\\",\\n      \\\"nombre_ressources\\\":
+      4\\n    }\\n  ]\\n}\"}],\"model\":\"albert-large\",\"frequency_penalty\":0.0,\"logit_bias\":null,\"logprobs\":false,\"top_logprobs\":null,\"presence_penalty\":0.0,\"max_tokens\":200,\"max_completion_tokens\":null,\"n\":1,\"response_format\":null,\"seed\":null,\"stop\":[],\"stream\":false,\"stream_options\":null,\"temperature\":0.7,\"top_p\":1,\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"search_datasets\",\"description\":\"\\n
+      \           Recherche des jeux de donn\xE9es sur data.gouv.fr\\n\\n            Args:\\n
+      \               query: La requ\xEAte de recherche (mots-cl\xE9s)\\n                limit:
+      Nombre maximum de r\xE9sultats \xE0 retourner (d\xE9faut: 10)\\n\\n            Returns:\\n
+      \               Dict contenant les r\xE9sultats de la recherche\\n            \",\"parameters\":{\"properties\":{\"query\":{\"title\":\"Query\",\"type\":\"string\"},\"limit\":{\"default\":10,\"title\":\"Limit\",\"type\":\"integer\"}},\"required\":[\"query\"],\"title\":\"search_datasetsArguments\",\"type\":\"object\"}}}],\"tool_choice\":\"auto\",\"search\":false,\"search_args\":null}"
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '6720'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/chat/completions
+  response:
+    body:
+      string: "{\"id\":\"chatcmpl-c5ca9c235f2a4f559359e5d5ea314813\",\"object\":\"chat.completion\",\"created\":1749806647,\"model\":\"mistralai/Mistral-Small-3.1-24B-Instruct-2503\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning_content\":null,\"content\":\"Voici
+        les donn\xE9es disponibles sur les accidents de la route trouv\xE9es sur data.gouv.fr
+        :\\n\\n1. **Accidents de la route**\\n   - **Description** : Export : CSV,
+        HTML et XLS. Source : [www.ecosante.fr](http://www.ecosante.fr/) Irdes d'apr\xE8s
+        donn\xE9es de l'Observatoire national interminist\xE9riel de la s\xE9curit\xE9
+        routi\xE8re (Onisr).\\n   - **Organisation** : IRDES & ECOSANTE.FR : Institut
+        de Recherche et Documentation en Economie de la Sant\xE9\\n   - **Tags** :
+        accident-circulation, blesse, departement, facteur-risque, hospitalise\\n
+        \  - **Formats disponibles** : HTML\\n   - **Date de cr\xE9ation** : 2013-12-16\\n
+        \  - **Derni\xE8re modification** : 2016-03-16\\n   - **URL**\",\"tool_calls\":[]},\"logprobs\":null,\"finish_reason\":\"length\",\"stop_reason\":null}],\"usage\":{\"prompt_tokens\":1484,\"completion_tokens\":179,\"total_tokens\":1663,\"details\":[{\"id\":\"chatcmpl-c5ca9c235f2a4f559359e5d5ea314813\",\"model\":\"mistralai/Mistral-Small-3.1-24B-Instruct-2503\",\"prompt_tokens\":1484,\"completion_tokens\":179,\"total_tokens\":1663}]},\"prompt_logprobs\":null}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 13 Jun 2025 09:24:14 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '1271'
+    status:
+      code: 200
+      message: OK
+version: 1

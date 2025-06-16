@@ -11,7 +11,7 @@ from app.schemas.search import Search
 from app.schemas.usage import Usage
 
 
-class McpChatCompletionRequest(BaseModel):
+class AgentsChatCompletionRequest(BaseModel):
     # only union between OpenAI fields and vLLM fields are defined. See https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py#L209
     messages: List = Field(description="A list of messages comprising the conversation so far.")  # fmt: off
     model: str = Field(description="ID of the model to use. Call `/v1/models` endpoint to get the list of available models, only `text-generation` model type is supported.")  # fmt: off
@@ -31,15 +31,12 @@ class McpChatCompletionRequest(BaseModel):
     temperature: Optional[float] = Field(default=0.7, description="What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. We generally recommend altering this or `top_p` but not both.")  # fmt: off
     top_p: Optional[float] = Field(default=1, description="An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.<br>We generally recommend altering this or `temperature` but not both.")  # fmt: off
 
-    tools: Optional[List[Dict[str, Any]]] = Field(default=[{"type": "all"}], description="A list of tools the model may call. Currently, only functions are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.")  # fmt: off
+    tools: Optional[List[Dict[str, Any]]] = Field(default=[{"type": "all"}], description="A list of tools the model may call. Get the list of tools with the `/v1/tools` endpoint. Tools must be provide as dict `{'type': 'tool_name'}`.")  # fmt: off
     tool_choice: Any = Field(default="auto", description="Controls which (if any) tool is called by the model. `none` means the model will not call any tool and instead generates a message. `auto` means the model can pick between generating a message or calling one or more tools. `required` means the model must call one or more tools. Specifying a particular tool via `{\"type\": \"function\", \"function\": {\"name\": \"my_function\"}}` forces the model to call that tool.<br>`none` is the default when no tools are present. `auto` is the default if tools are present.")  # fmt: off
 
     # search additionnal fields
     search: bool = Field(default=False, deprecated=True)  # fmt: off
     search_args: Optional[ChatSearchArgs] = Field(default=None, deprecated=True)  # fmt: off
-
-    class Config:
-        extra = "allow"
 
     @model_validator(mode="after")
     def validate_model(cls, values):
@@ -50,12 +47,26 @@ class McpChatCompletionRequest(BaseModel):
         return values
 
 
-class McpChoiceChatCompletion(Choice):
+class AgentsChoiceChatCompletion(Choice):
     finish_reason: Literal["stop", "length", "tool_calls", "content_filter", "function_call", "max_iterations"]
 
 
-class McpChatCompletion(ChatCompletion):
+class AgentsChatCompletion(ChatCompletion):
     id: str = Field(default=None, description="A unique identifier for the chat completion.")
     search_results: List[Search] = []
     usage: Usage = Field(default=None, description="Usage information for the request.")
-    choices: List[McpChoiceChatCompletion]
+    choices: List[AgentsChoiceChatCompletion]
+
+
+class AgentsTool(BaseModel):
+    object: Literal["tool"] = "tool"
+    server: str
+    name: str
+    description: str
+    input_schema: Dict[str, Any]
+    annotations: Optional[Dict[str, Any]] = None
+
+
+class AgentsTools(BaseModel):
+    object: Literal["list"] = "list"
+    data: List[AgentsTool]

@@ -85,7 +85,7 @@ Ces métadonnées seront retournées avec le chunk associé au document lors d'u
 
 Pour la stratégie de chunking est configurable en paramètre du endpoint `POST /v1/files`. Différentes chunker sont disponibles :
 
-- `NoChunker` : le fichier est considéré comme un seul chunk
+- `NoSplitter` : le fichier est considéré comme un seul chunk
 - `LangchainRecursiveCharacterTextSplitter` : voir [la documentation Langchain](https://python.langchain.com/v0.1/docs/modules/data_connection/document_transformers/recursive_text_splitter/) pour plus de détails
 
 Les paramètres du chunker (taille, séparateur, etc.) sont passés en paramètre du endpoint `POST /v1/files` dans le paramètre `chunker_args`, voir [la documentation](https://albert.api.etalab.gouv.fr/documentation#tag/Retrieval-Augmented-Generation/operation/upload_file_v1_files_post).
