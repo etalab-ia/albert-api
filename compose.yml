@@ -5,8 +5,8 @@ services:
     user: postgres
     environment:
       - CREATE_DB=api,playground
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=changeme
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
       - POSTGRES_DB=postgres
     ports:
       - "${POSTGRES_PORT}:5432"
@@ -23,7 +23,7 @@ services:
     image: redis/redis-stack-server:7.2.0-v11
     restart: always
     environment:
-      REDIS_ARGS: --dir /data --requirepass changeme --user username on >password ~* allcommands --save 60 1 --appendonly yes
+      REDIS_ARGS: "--dir /data --requirepass ${REDIS_PASSWORD} --user ${REDIS_USER} on >password ~* allcommands --save 60 1 --appendonly yes"
     ports:
       - "${REDIS_PORT}:6379"
     volumes:
@@ -34,9 +34,6 @@ services:
       timeout: 10s
       retries: 5
 
-  # ---------------------------------------------------------------------
-  # Vector store
-  # ---------------------------------------------------------------------
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.2
@@ -62,7 +59,7 @@ services:
 #    image: qdrant/qdrant:v1.11.5-unprivileged
 #    restart: always
 #    environment:
-#      - QDRANT__SERVICE__API_KEY=changeme
+#      - "QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY}"
 #    volumes:
 #      - qdrant:/qdrant/storage
 #    ports:
