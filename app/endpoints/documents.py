@@ -1,3 +1,4 @@
+import json
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
@@ -36,7 +37,7 @@ from app.schemas.parse import (
 )
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
-from app.utils.exceptions import CollectionNotFoundException, DocumentNotFoundException, FileSizeLimitExceededException
+from app.utils.exceptions import CollectionNotFoundException, DocumentNotFoundException, FileSizeLimitExceededException, InvalidJSONFormatException
 from app.utils.variables import ENDPOINT__DOCUMENTS
 
 router = APIRouter()
@@ -69,6 +70,12 @@ async def create_document(
     """
     Parse a file and create a document.
     """
+
+    try:
+        metadata = json.loads(metadata)
+    except Exception as e:
+        raise InvalidJSONFormatException(f"Invalid JSON string for metadata: {e}")
+
     if not global_context.documents:  # no vector store available
         raise CollectionNotFoundException()
 
@@ -81,7 +88,6 @@ async def create_document(
 
     document = await global_context.documents.parse_file(
         file=file,
-        collection=collection,
         paginate_output=paginate_output,
         page_range=page_range,
         languages=languages,

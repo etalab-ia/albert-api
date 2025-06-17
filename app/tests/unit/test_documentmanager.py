@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers._documentmanager import DocumentManager
 from app.schemas.parse import ParsedDocument, ParsedDocumentPage, ParsedDocumentMetadata
-from app.schemas.documents import ChunkerName
+from app.schemas.documents import Chunker
 from app.utils.exceptions import CollectionNotFoundException
 
 
@@ -55,7 +55,7 @@ async def test_create_document_collection_no_longer_exists():
                 user_id=1,
                 collection_id=123,
                 document=mock_document,
-                chunker_name=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER,
+                chunker=Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER,
                 chunk_size=1000,
                 chunk_overlap=100,
                 length_function=len,
@@ -113,7 +113,7 @@ async def test_create_document_collection_no_longer_exists_with_fkey_error():
                 user_id=1,
                 collection_id=456,
                 document=mock_document,
-                chunker_name=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER,
+                chunker=Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER,
                 chunk_size=1000,
                 chunk_overlap=100,
                 length_function=len,
@@ -171,7 +171,7 @@ async def test_create_document_other_integrity_error_not_collection_related():
                 user_id=1,
                 collection_id=789,
                 document=mock_document,
-                chunker_name=ChunkerName.RECURSIVE_CHARACTER_TEXT_SPLITTER,
+                chunker=Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER,
                 chunk_size=1000,
                 chunk_overlap=100,
                 length_function=len,

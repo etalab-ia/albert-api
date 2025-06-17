@@ -14,7 +14,7 @@ from app.schemas.files import ChunkerArgs, FileResponse, FilesRequest
 from app.schemas.parse import Languages, ParsedDocumentOutputFormat
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
-from app.utils.exceptions import CollectionNotFoundException, FileSizeLimitExceededException, InvalidJSONFileFormatException
+from app.utils.exceptions import CollectionNotFoundException, FileSizeLimitExceededException, InvalidJSONFormatException
 from app.utils.variables import ENDPOINT__FILES
 
 router = APIRouter()
@@ -63,7 +63,7 @@ async def upload_file(
             file = JsonFile(documents=json.loads(file.file.read())).documents
         except ValidationError as e:
             detail = "; ".join([f"{error["loc"][-1]}: {error["msg"]}" for error in e.errors()])
-            raise InvalidJSONFileFormatException(detail=detail)
+            raise InvalidJSONFormatException(detail=detail)
 
         files = list()
 
