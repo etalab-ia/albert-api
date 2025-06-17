@@ -220,10 +220,6 @@ async def log_usage(response: Optional[Response], usage: Usage, start_time: date
         session.add(usage)
         try:
             await session.commit()
-            #TODO: AUDREY / drop logger.debug
-            logger.debug(f"Usage logged: tokens={usage.total_tokens}, cost={usage.cost}, "
-                f"carbon kWh=[{usage.kwh_min}-{usage.kwh_max}], "
-                f"carbon kgCO2eq=[{usage.kgco2eq_min}-{usage.kgco2eq_max}]")
         except Exception as e:
             logger.error(f"Failed to log usage: {e}")
             await session.rollback()
