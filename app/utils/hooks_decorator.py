@@ -151,10 +151,10 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
                         usage.completion_tokens = data["usage"]["completion_tokens"]
                         usage.total_tokens = data["usage"]["total_tokens"]
                         usage.cost = data["usage"].get("cost", None)
-                        usage.kwh_min = data["usage"].get("carbon", {}).get("kWh", {}).get("min")
-                        usage.kwh_max = data["usage"].get("carbon", {}).get("kWh", {}).get("max")
-                        usage.kgco2eq_min = data["usage"].get("carbon", {}).get("kgCO2eq", {}).get("min")
-                        usage.kgco2eq_max = data["usage"].get("carbon", {}).get("kgCO2eq", {}).get("max")
+                        usage.kwh_min = data["usage"].get("carbon", {}).get("kWh", {}).get("min", None)
+                        usage.kwh_max = data["usage"].get("carbon", {}).get("kWh", {}).get("max", None)
+                        usage.kgco2eq_min = data["usage"].get("carbon", {}).get("kgCO2eq", {}).get("min", None)
+                        usage.kgco2eq_max = data["usage"].get("carbon", {}).get("kgCO2eq", {}).get("max", None)
 
 
         # Set usage.status with the captured status code before calling write_usage
@@ -185,10 +185,10 @@ async def extract_usage_from_response(response: Response, start_time: datetime, 
         usage.completion_tokens = response_usage.get("completion_tokens", None)
         usage.total_tokens = response_usage.get("total_tokens", None)
         usage.cost = response_usage.get("cost", None)        
-        usage.kwh_min = response_usage.get("carbon", {}).get("kWh", {}).get("min")
-        usage.kwh_max = response_usage.get("carbon", {}).get("kWh", {}).get("max")
-        usage.kgco2eq_min = response_usage.get("carbon", {}).get("kgCO2eq", {}).get("min")
-        usage.kgco2eq_max = response_usage.get("carbon", {}).get("kgCO2eq", {}).get("max")
+        usage.kwh_min = response_usage.get("carbon", {}).get("kWh", {}).get("min", None)
+        usage.kwh_max = response_usage.get("carbon", {}).get("kWh", {}).get("max", None)
+        usage.kgco2eq_min = response_usage.get("carbon", {}).get("kgCO2eq", {}).get("min", None)
+        usage.kgco2eq_max = response_usage.get("carbon", {}).get("kgCO2eq", {}).get("max", None)
    
     except Exception as e:
         logger.warning(f"Failed to parse JSON response body: {response.body} ({e})")
