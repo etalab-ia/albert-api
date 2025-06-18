@@ -1,4 +1,3 @@
-from functools import partial
 from itertools import batched
 import logging
 import time
@@ -373,7 +372,6 @@ class DocumentManager:
             if not self.multi_agents:
                 raise MultiAgentsSearchNotAvailableException()
             searches = await self.multi_agents.search(
-                doc_search=partial(self.search_chunks, user_id=user_id),
                 searches=searches,
                 prompt=prompt,
                 session=session,
