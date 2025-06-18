@@ -83,16 +83,10 @@ class TestLogUsageDecorator:
         assert isinstance(log.kwh_max, float)
         assert isinstance(log.kgco2eq_min, float)
         assert isinstance(log.kgco2eq_max, float)
-        if log.kwh_min is not None:
-            assert log.kwh_min >= 0
-        if log.kwh_max is not None:
-            assert log.kwh_max >= 0
-        if log.kgco2eq_min is not None:
-            assert log.kgco2eq_min >= 0
-        if log.kgco2eq_max is not None:
-            assert log.kgco2eq_max >= 0
-        if log.kwh_min is not None and log.kwh_max is not None:
-            assert log.kwh_min <= log.kwh_max
-        if log.kgco2eq_min is not None and log.kgco2eq_max is not None:
-            assert log.kgco2eq_min <= log.kgco2eq_max
+        assert log.kwh_min >= 0
+        assert log.kwh_max >= 0
+        assert log.kgco2eq_min >= 0
+        assert log.kgco2eq_max >= 0
+        assert log.kwh_min <= log.kwh_max
+        assert log.kgco2eq_min <= log.kgco2eq_max
 
