@@ -61,6 +61,7 @@ databases:
   - type: qdrant
     model: embeddings-small
     args:
+    
       url: http://${QDRANT_HOST}:${QDRANT_PORT}
       api_key: changeme
       prefer_grpc: True

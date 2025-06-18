@@ -27,6 +27,10 @@ class Usage(Base):
     total_tokens = Column(Integer)
     cost = Column(Float, nullable=True)
     status = Column(Integer, nullable=True)
+    kwh_min = Column(Float, nullable=True)
+    kwh_max = Column(Float, nullable=True)
+    kgco2eq_min = Column(Float, nullable=True)
+    kgco2eq_max = Column(Float, nullable=True)
 
     user = relationship(argument="User", backref=backref(name="usage", cascade="all, delete-orphan"))
     token = relationship(argument="Token", backref=backref(name="usage"))

@@ -79,3 +79,14 @@ class TestLogUsageDecorator:
         assert log.completion_tokens > 0
         assert log.total_tokens > 0
         assert log.duration > 0
+        assert isinstance(log.kwh_min, float)
+        assert isinstance(log.kwh_max, float)
+        assert isinstance(log.kgco2eq_min, float)
+        assert isinstance(log.kgco2eq_max, float)
+        assert log.kwh_min >= 0
+        assert log.kwh_max >= 0
+        assert log.kgco2eq_min >= 0
+        assert log.kgco2eq_max >= 0
+        assert log.kwh_min <= log.kwh_max
+        assert log.kgco2eq_min <= log.kgco2eq_max
+
