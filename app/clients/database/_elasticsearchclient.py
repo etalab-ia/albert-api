@@ -40,9 +40,9 @@ class ElasticsearchClient(AsyncElasticsearch):
 
         mappings = {
             "properties": {
-                "id": {"type": "integer", "analyzer": "french_analyzer"},
+                "id": {"type": "keyword"},
                 "embedding": {"type": "dense_vector", "dims": vector_size},
-                "content": {"type": "text"},
+                "content": {"type": "text", "analyzer": "french_analyzer"},
                 "metadata": {
                     "dynamic": True,
                     "type": "object",
