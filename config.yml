@@ -5,7 +5,7 @@ playground:
   api_url: http://localhost:8000
   max_api_key_expiration_days: 365
   cache_ttl: 1800
-  database_url: postgresql://postgres:changeme@${POSTGRES_HOST}:5432/playground
+  database_url: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/playground
 
 auth:
   master_username: master
@@ -39,7 +39,7 @@ databases:
   - type: sql # API database (async)
     context: api
     args:
-      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:${POSTGRES_PORT}/api
+      url: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/api
       echo: False
       pool_size: 5
       max_overflow: 10
@@ -51,7 +51,7 @@ databases:
   - type: sql # Playground database (sync)
     context: playground
     args:
-      url: postgresql://postgres:changeme@${POSTGRES_HOST}:${POSTGRES_PORT}/playground
+      url: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/playground
       echo: False
       pool_size: 5
       max_overflow: 10

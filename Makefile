@@ -7,16 +7,22 @@ TEST_ENV_FILE=.env.test
 install:
 	pip install ".[app,ui,dev,test]"
 
-docker-compose-up:
+docker-compose-albert-api-up:
 	docker compose --env-file ${APP_ENV_FILE} up --detach
 
-docker-compose-down:
+docker-compose-albert-api-down:
 	docker compose --env-file ${APP_ENV_FILE} down
 
-docker-compose-test-up:
-	docker compose --env-file ${TEST_ENV_FILE} up --detach
+docker-compose-services-up:
+	docker compose --env-file ${APP_ENV_FILE} up redis qdrant postgres mcp-bridge --detach
 
-docker-compose-test-down:
+docker-compose-services-down:
+	docker compose --env-file ${APP_ENV_FILE} down
+
+docker-compose-test-services-up:
+	docker compose --env-file ${TEST_ENV_FILE} up redis qdrant postgres mcp-bridge --detach
+
+docker-compose-test-services-down:
 	docker compose --env-file ${TEST_ENV_FILE} down
 
 run-api:
