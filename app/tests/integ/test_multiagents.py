@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from app.schemas.collections import CollectionVisibility
 from app.schemas.search import SearchMethod
 from app.utils.variables import ENDPOINT__FILES, ENDPOINT__SEARCH, ENDPOINT__COLLECTIONS
-from unittest.mock import patch
+from app.utils.context import global_context
 
 
 @pytest.fixture(scope="module")
@@ -62,31 +62,27 @@ class TestMultiAgents:
         """
         Test the /multiagents endpoint with internet search enabled by patching get_rank to return [4].
         """
-        # Patch MultiAgents._get_rank to always return [4]
-        with patch("app.utils.multiagents.MultiAgents._get_rank", return_value=[4]):
-            # Test the /multiagents endpoint with a prompt
-            payload = {
-                "prompt": "Recherchez des informations sur la réforme des retraites en France.",
-                "collections": [collection_id],
-                "method": SearchMethod.MULTIAGENT,
-                "k": 3,
-                "rff_k": 1,
-                "score_threshold": 0.5,
-                "max_tokens": 50,
-                "max_tokens_intermediate": 20,
-                "model": "albert-small",
-            }
-            response = client.post_without_permissions(f"/v1{ENDPOINT__SEARCH}", json=payload)
-            assert response.status_code == 200, response.text
+        payload = {
+            "prompt": "Recherchez des informations sur la réforme des retraites en France.",
+            "collections": [collection_id],
+            "method": SearchMethod.MULTIAGENT,
+            "k": 3,
+            "rff_k": 1,
+            "score_threshold": 0.5,
+            "max_tokens": 50,
+            "max_tokens_intermediate": 20,
+            "model": "albert-small",
+            "web_search": True,
+        }
+        response = client.post_without_permissions(f"/v1{ENDPOINT__SEARCH}", json=payload)
+        assert response.status_code == 200, response.text
 
     def test_multiagents_not_available(self, client: TestClient, monkeypatch, collection_id: str):
         """
         Test that MultiAgentsSearchNotAvailableException is raised when multi_agents_search setting is None.
         """
         # Disable multi-agents search in settings
-        from app.utils.multiagents import MultiAgents
-
-        monkeypatch.setattr(MultiAgents, "model", None)
+        monkeypatch.setattr(global_context.documents, "multi_agents", None)
 
         # Build payload with MULTIAGENT method
         payload = {
