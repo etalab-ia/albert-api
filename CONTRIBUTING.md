@@ -2,32 +2,7 @@
 
 To contribute to the project, please follow the instructions below.
 
-## Development in Docker environment
-
-> **⚠️ Warning**<br>
-> You must have access to a language model API.
-
-1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)* with your models.
-
-    For more information on deploying services, please consult the [dedicated documentation](./docs/deployment.md).
-
-    > **❗️Note**<br>
-    > The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can use it as inspiration to configure your own configuration file.
-
-2. Launch the development docker compose with watch mode:
-   - on x86_64 (Intel/AMD) CPU architecture :
-    ```bash
-    docker compose --file compose.dev.yml up --watch
-    ```
-   - on ARM64 :
-    ```bash
-    docker compose --file compose.dev-arm.yml up --watch
-    ```
-
-    > **❗️Note**<br>
-    > The API and playground will be available on ports 8000 and 8501 respectively. To connect to the playground for the first time, use the login *master* and password *changeme* (defined in the configuration file).
-
-## Development outside Docker environment
+## Development environment
 
 1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)* with your models.
 

@@ -5,14 +5,10 @@
 1. Create a configuration file (see the following [configuration section](./deployment.md#configuration)) `config.yml` on the root of the project. A example configuration file is available [here](../config.example.yml).
 
 2. Deploy the services with the following command:
-   - on x86_64 (Intel/AMD) CPU architecture :
-   ```bash
-   docker compose --file compose.prod.yml up --detach
-   ```
-   - on ARM64 :
-   ```bash
-   docker compose --file compose.prod-arm.yml up --detach
-   ```
+
+  ```bash
+  docker compose --file compose.prod.yml up --detach
+  ```
 
 ### First authentication
 
