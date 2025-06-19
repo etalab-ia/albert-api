@@ -37,6 +37,7 @@ class WebSearchType(str, Enum):
 
 
 class ParserType(str, Enum):
+    ALBERT = "albert"
     MARKER = "marker"
 
 
@@ -331,7 +332,7 @@ class Settings(BaseSettings):
             file.close()
 
         # replace environment variables (pattern: ${VARIABLE_NAME})
-        for match in set(re.findall(pattern=r"\${[A-Z_][A-Z_0-9]*}", string=file_content)):
+        for match in set(re.findall(pattern=r"\${[A-Z0-9_]*}", string=file_content)):
             variable = match.replace("${", "").replace("}", "")
             if os.getenv(variable) is None or os.getenv(variable) == "":
                 logging.warning(f"Environment variable {variable} not found or empty to replace {match}.")

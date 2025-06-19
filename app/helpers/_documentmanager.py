@@ -5,7 +5,6 @@ import traceback
 from typing import Callable, List, Optional
 from uuid import uuid4
 
-from fastapi import UploadFile
 from langchain_text_splitters import Language
 from qdrant_client import AsyncQdrantClient
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
@@ -16,8 +15,9 @@ from app.helpers.data.chunkers import NoSplitter, RecursiveCharacterTextSplitter
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
+from app.schemas.core.documents import ParserParams
 from app.schemas.documents import Chunker, Document
-from app.schemas.parse import Languages, ParsedDocument, ParsedDocumentOutputFormat
+from app.schemas.parse import ParsedDocument, ParsedDocumentOutputFormat
 from app.schemas.search import Search, SearchMethod
 from app.sql.models import Collection as CollectionTable
 from app.sql.models import Document as DocumentTable
@@ -293,25 +293,8 @@ class DocumentManager:
 
         return chunks
 
-    async def parse_file(
-        self,
-        file: UploadFile,
-        output_format: ParsedDocumentOutputFormat,
-        force_ocr: bool,
-        languages: Languages,
-        page_range: str,
-        paginate_output: bool,
-        use_llm: bool,
-    ) -> ParsedDocument:
-        return await self.parser.parse_file(
-            file=file,
-            output_format=output_format,
-            force_ocr=force_ocr,
-            languages=languages,
-            page_range=page_range,
-            paginate_output=paginate_output,
-            use_llm=use_llm,
-        )
+    async def parse_file(self, **params: ParserParams) -> ParsedDocument:
+        return await self.parser.parse_file(**params)
 
     async def search_chunks(
         self,
@@ -405,7 +388,6 @@ class DocumentManager:
                     file=file,
                     output_format=ParsedDocumentOutputFormat.MARKDOWN.value,
                     force_ocr=False,
-                    languages=Languages.EN.value,
                     page_range="",
                     paginate_output=False,
                     use_llm=False,

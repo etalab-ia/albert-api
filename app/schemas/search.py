@@ -53,4 +53,4 @@ class Search(BaseModel):
 class Searches(BaseModel):
     object: Literal["list"] = "list"
     data: List[Search]
-    usage: Usage = Field(default=None, description="Usage information for the request.")
+    usage: Usage = Field(default_factory=Usage, description="Usage information for the request.")

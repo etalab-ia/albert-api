@@ -29,4 +29,4 @@ class CompletionRequest(BaseModel):
 
 class Completions(Completion):
     id: str = Field(default=None, description="A unique identifier for the completion.")
-    usage: Usage = Field(default=None, description="Usage information for the request.")
+    usage: Usage = Field(default_factory=Usage, description="Usage information for the request.")
