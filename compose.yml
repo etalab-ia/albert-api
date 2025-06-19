@@ -1,4 +1,20 @@
 services:
+  api:
+    image: ghcr.io/etalab-ia/albert-api/app:latest
+    restart: always
+    env_file: .env
+    ports:
+      - 8000:8000
+    volumes:
+      - ./config.yml:/config.yml:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+
   postgres:
     image: postgres:16.5
     restart: always
@@ -33,7 +49,6 @@ services:
       interval: 4s
       timeout: 10s
       retries: 5
-
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.2
