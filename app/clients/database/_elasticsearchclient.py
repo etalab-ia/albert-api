@@ -40,17 +40,17 @@ class ElasticsearchClient(AsyncElasticsearch):
 
         mappings = {
             "properties": {
-                "id": {"type": "integer"},
+                "id": {"type": "integer", "analyzer":"french_analyzer"},
                 "embedding": {"type": "dense_vector", "dims": vector_size},
-                "body": {"type": "text"},
+                "content": {"type": "text"},
                 "metadata": {
                     "dynamic": True,
-                    "properties": {
-                        "collection_id": {"type": "integer"},
-                        "document_id": {"type": "integer"},
-                        "document_name": {"type": "keyword"},
-                        "document_created_at": {"type": "date"},
-                    },
+                    #"properties": {
+                    #    "collection_id": {"type": "keyword"},
+                    #    "document_id": {"type": "keyword"},
+                    #    "document_name": {"type": "keyword"},
+                    #    "document_created_at": {"type": "date"},
+                    #},
                 },
             },
         }
@@ -78,7 +78,7 @@ class ElasticsearchClient(AsyncElasticsearch):
         await self.indices.refresh(index=str(collection_id))
 
     async def get_chunks(self, collection_id: int, document_id: int, offset: int = 0, limit: int = 10, chunk_id: Optional[int] = None) -> List[Chunk]:
-        body = {"query": {"match": {"metadata.document_id": document_id}}, "_source": ["body", "metadata"]}
+        body = {"query": {"match": {"metadata.document_id": document_id}}, "_source": ["content", "metadata"]}
         if chunk_id:
             body["query"]["match"]["id"] = chunk_id
 
@@ -87,7 +87,7 @@ class ElasticsearchClient(AsyncElasticsearch):
 
         chunks = []
         for hit in results["hits"]["hits"]:
-            chunks.append(Chunk(id=hit["_id"], content=hit["_source"]["body"], metadata=hit["_source"]["metadata"]))
+            chunks.append(Chunk(id=hit["_id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]))
 
         return chunks
 
@@ -97,7 +97,7 @@ class ElasticsearchClient(AsyncElasticsearch):
                 "_index": str(collection_id),
                 "_source": {
                     "id": chunk.id,
-                    "body": chunk.content,
+                    "content": chunk.content,
                     "embedding": embedding,
                     "metadata": chunk.metadata,
                 },
@@ -138,7 +138,7 @@ class ElasticsearchClient(AsyncElasticsearch):
             Search(
                 method=SearchMethod.LEXICAL.value,
                 score=hit["_score"],
-                chunk=Chunk(id=hit["_id"], content=hit["_source"]["body"], metadata=hit["_source"]["metadata"]),
+                chunk=Chunk(id=hit["_id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]),
             )
             for hit in hits
         ]
@@ -153,7 +153,7 @@ class ElasticsearchClient(AsyncElasticsearch):
             Search(
                 method=SearchMethod.SEMANTIC.value,
                 score=hit["_score"],
-                chunk=Chunk(id=hit["_id"], content=hit["_source"]["body"], metadata=hit["_source"]["metadata"]),
+                chunk=Chunk(id=hit["_id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]),
             )
             for hit in hits
         ]
