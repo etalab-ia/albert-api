@@ -43,7 +43,7 @@ models:
   - name: Albert code
     provider: openai
     model: albert-code
-    apiBase: https://albert.api.dev.etalab.gouv.fr/v1
+    apiBase: https://albert.api.etalab.gouv.fr/v1
     apiKey: <YOUR_API_KEY>
     roles:
       - chat
@@ -66,4 +66,30 @@ You now see Local Assistant as an available template in the chat window.
 
 
 <p style="text-align: justify;">ProxyAI is a Intellij/Pycharm plugin that allows you to get a code wizard locally, on your IDE. </p>
+
+
+- Open Intellij/Pycharm marketplace extensions.
+
+- Search for `ProxyAI` in the marketplace.
+
+- Select and install.
+
+- If the installation was successful, you should see a "ProxyAI" item in the tool configuration.
+
+- After installation, you need to access the ProxyAI config file. To do this:
+  
+Open Tool > ProxyAI > Providers    
+Select `Custom OpenAI`  
+Add a new configuration `+`  
+Change the configuration:  
+
+
+```yaml
+name: Albert code
+API Key: <YOUR_API_KEY>
+URL: https://albert.api.etalab.gouv.fr/v1/chat/completions
+model: albert-code
+```
+
+You now see Albert-code in proxyAI.
 
