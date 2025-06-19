@@ -58,9 +58,11 @@ class TestMultiAgents:
         assert "choice" in data[0]["chunk"]["metadata"]
         assert "choice_desc" in data[0]["chunk"]["metadata"]
 
+    @pytest.mark.vcr(record_mode="new_episodes")
     def test_multiagent_internet_search(self, client: TestClient, collection_id: str):
         """
-        Test the /multiagents endpoint with internet search enabled by patching get_rank to return [4].
+        Test the /multiagents endpoint with internet search enabled using pytest marker approach.
+        This test uses the @pytest.mark.vcr decorator to override VCR matching settings.
         """
         # Patch MultiAgents._get_rank to always return [4]
         with patch("app.utils.multiagents.MultiAgents._get_rank", return_value=[4]):
@@ -105,3 +107,22 @@ class TestMultiAgents:
         assert response.status_code == 400, response.text
         # Verify correct exception detail
         assert response.json().get("detail") == "Multi agents search is not available."
+
+    def _run_multiagent_internet_search_test(self, client: TestClient, collection_id: str):
+        """Helper method to run the actual test logic"""
+        # Patch MultiAgents._get_rank to always return [4]
+        with patch("app.utils.multiagents.MultiAgents._get_rank", return_value=[4]):
+            # Test the /multiagents endpoint with a prompt
+            payload = {
+                "prompt": "Recherchez des informations sur la réforme des retraites en France.",
+                "collections": [collection_id],
+                "method": SearchMethod.MULTIAGENT,
+                "k": 3,
+                "rff_k": 1,
+                "score_threshold": 0.5,
+                "max_tokens": 50,
+                "max_tokens_intermediate": 20,
+                "model": "albert-small",
+            }
+            response = client.post_without_permissions(f"/v1{ENDPOINT__SEARCH}", json=payload)
+            assert response.status_code == 200, response.text

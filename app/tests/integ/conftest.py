@@ -35,6 +35,9 @@ def pytest_configure(config):
     """
     global VCR_INSTANCE
 
+    # Register custom markers
+    config.addinivalue_line("markers", "vcr: Configure VCR for specific tests")
+
     # Skip VCR setup if disabled
     if not VCR_ENABLED:
         logging.info("VCR is disabled via VCR_ENABLED environment variable")
@@ -59,7 +62,7 @@ def pytest_configure(config):
 
     VCR_INSTANCE = vcr.VCR(
         cassette_library_dir=str(cassette_library_dir),
-        #record_mode="new_episodes", # use that if there is a bug with the cassette, then reuse once...
+        # record_mode="new_episodes", # use that if there is a bug with the cassette, then reuse once...
         record_mode="once",
         match_on=["method", "scheme", "host", "port", "path", "query"],
         filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
@@ -185,8 +188,32 @@ def vcr_cassette(request):
     test_name = request.node.name.replace("[", "_").replace("]", "_")
     cassette_path = f"{request.module.__name__}.{test_name}"
 
-    with VCR_INSTANCE.use_cassette(cassette_path + ".yaml"):
-        yield
+    # Check if the test has custom VCR configuration
+    vcr_marker = request.node.get_closest_marker("vcr")
+    if vcr_marker:
+        # Create a new VCR instance with custom configuration
+        custom_vcr_config = vcr_marker.kwargs.copy()
+
+        # Get the base configuration from the global VCR instance
+        cassette_library_dir = Path(__file__).parent / "cassettes"
+        ignore_hosts = ["testserver", os.environ.get("MCP_BRIDGE_HOST"), os.environ.get("QDRANT_HOST"), os.environ.get("ELASTICSEARCH_HOST")]
+
+        # Create custom VCR instance with merged configuration
+        custom_vcr = vcr.VCR(
+            cassette_library_dir=str(cassette_library_dir),
+            record_mode=custom_vcr_config.get("record_mode", "once"),
+            match_on=custom_vcr_config.get("match_on", ["method", "scheme", "host", "port", "path", "query"]),
+            filter_headers=custom_vcr_config.get("filter_headers", [("Authorization", "Bearer dummy_token_for_test")]),
+            before_record_request=lambda request: None if request.host in ignore_hosts else request,
+            decode_compressed_response=True,
+        )
+
+        with custom_vcr.use_cassette(cassette_path + ".yaml"):
+            yield
+    else:
+        # Use the global VCR instance
+        with VCR_INSTANCE.use_cassette(cassette_path + ".yaml"):
+            yield
 
 
 @pytest.fixture(scope="session")
