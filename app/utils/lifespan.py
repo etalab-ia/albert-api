@@ -18,7 +18,6 @@ from app.helpers._websearchmanager import WebSearchManager
 from app.helpers.agents import AgentsManager
 from app.helpers.models import ModelRegistry
 from app.helpers.models.routers import ModelRouter
-from app.utils import multiagents
 from app.utils.context import global_context
 from app.utils.logging import init_logger
 from app.utils.settings import settings
@@ -75,8 +74,6 @@ async def lifespan(app: FastAPI):
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
     assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
-    if vector_store and global_context.models:
-        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
 
     # setup context: documents
     parser = ParserManager(parser=parser)
@@ -89,19 +86,17 @@ async def lifespan(app: FastAPI):
             user_agent=settings.web_search.user_agent,
         )
 
-    # @TODO: refacto import of multiagents into DocumentManager
-    multi_agents_search_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-    multiagents.MultiAgents.model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-    multiagents.MultiAgents.ranker_model = global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
-    multiagents.MultiAgents.search_method = settings.multi_agents_search.method
-
     if vector_store:
         assert await vector_store.check(), "Vector store database is not reachable."
+        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
+        multi_agents_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
+        multi_agents_reranker_model=global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
         global_context.documents = DocumentManager(
             vector_store=vector_store,
             parser=parser,
             web_search=web_search,
-            multi_agents_search_model=multi_agents_search_model,
+            multi_agents_model=multi_agents_model,
+            multi_agents_reranker_model=multi_agents_reranker_model,
         )
 
     yield

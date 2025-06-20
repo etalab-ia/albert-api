@@ -4,7 +4,7 @@ from typing import List, Literal
 from pydantic import Field, field_validator, model_validator
 
 from app.schemas import BaseModel
-from app.schemas.documents import Chunker
+from app.schemas.documents import Chunker as DocumentChunker
 
 
 class ChunkerArgs(BaseModel):
@@ -17,15 +17,15 @@ class ChunkerArgs(BaseModel):
 
 
 class Chunker(BaseModel):
-    name: Literal[Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER, Chunker.NO_SPLITTER, "LangchainRecursiveCharacterTextSplitter", "NoSplitter"] = Field(default=Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER, description="The name of the chunker to use for the file upload.")  # fmt: off
+    name: Literal[DocumentChunker.RECURSIVE_CHARACTER_TEXT_SPLITTER, DocumentChunker.NO_SPLITTER, "LangchainRecursiveCharacterTextSplitter", "NoSplitter"] = Field(default=DocumentChunker.RECURSIVE_CHARACTER_TEXT_SPLITTER, description="The name of the chunker to use for the file upload.")  # fmt: off
     args: ChunkerArgs = Field(default_factory=ChunkerArgs, description="The arguments to use for the chunker to use for the file upload.")  # fmt: off
 
     @field_validator("name")
     def validate_name(cls, name):
         if name == "LangchainRecursiveCharacterTextSplitter":
-            name = Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER
+            name = DocumentChunker.RECURSIVE_CHARACTER_TEXT_SPLITTER
         elif name == "NoChunker":
-            name = Chunker.NO_SPLITTER
+            name = DocumentChunker.NO_SPLITTER
         return name
 
 

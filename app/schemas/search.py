@@ -10,10 +10,12 @@ from app.utils.exceptions import WrongSearchMethodException
 
 
 class SearchMethod(str, Enum):
-    HYBRID = "hybrid"
-    LEXICAL = "lexical"
-    SEMANTIC = "semantic"
+    """Enum representing the search methods available (will be displayed in this order in playground)."""
+
     MULTIAGENT = "multiagent"
+    HYBRID = "hybrid"
+    SEMANTIC = "semantic"
+    LEXICAL = "lexical"
 
 
 class SearchArgs(BaseModel):
@@ -51,4 +53,4 @@ class Search(BaseModel):
 class Searches(BaseModel):
     object: Literal["list"] = "list"
     data: List[Search]
-    usage: Usage = Field(default=None, description="Usage information for the request.")
+    usage: Usage = Field(default_factory=Usage, description="Usage information for the request.")

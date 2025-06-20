@@ -11,7 +11,7 @@ from starlette.datastructures import Headers
 from app.helpers._accesscontroller import AccessController
 from app.schemas.core.documents import JsonFile
 from app.schemas.files import ChunkerArgs, FileResponse, FilesRequest
-from app.schemas.parse import Languages, ParsedDocumentOutputFormat
+from app.schemas.parse import ParsedDocumentOutputFormat
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException, FileSizeLimitExceededException, InvalidJSONFormatException
@@ -84,7 +84,6 @@ async def upload_file(
             file=file,
             output_format=ParsedDocumentOutputFormat.MARKDOWN.value,
             force_ocr=False,
-            languages=Languages.FR.value,
             page_range="",
             paginate_output=False,
             use_llm=False,

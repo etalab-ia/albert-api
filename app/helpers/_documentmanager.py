@@ -1,4 +1,3 @@
-from functools import partial
 from itertools import batched
 import logging
 import time
@@ -6,7 +5,6 @@ import traceback
 from typing import Callable, List, Optional, Union
 from uuid import uuid4
 
-from fastapi import UploadFile
 from langchain_text_splitters import Language
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.exc import NoResultFound
@@ -17,8 +15,9 @@ from app.helpers.data.chunkers import NoSplitter, RecursiveCharacterTextSplitter
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
+from app.schemas.core.documents import ParserParams
 from app.schemas.documents import Chunker, Document
-from app.schemas.parse import Languages, ParsedDocument, ParsedDocumentOutputFormat
+from app.schemas.parse import ParsedDocument, ParsedDocumentOutputFormat
 from app.schemas.search import Search, SearchMethod
 from app.sql.models import Collection as CollectionTable
 from app.sql.models import Document as DocumentTable
@@ -27,32 +26,36 @@ from app.utils.exceptions import (
     ChunkingFailedException,
     CollectionNotFoundException,
     DocumentNotFoundException,
+    MultiAgentsSearchNotAvailableException,
     VectorizationFailedException,
     WebSearchNotAvailableException,
 )
-from app.utils.multiagents import MultiAgents
 from app.utils.variables import ENDPOINT__EMBEDDINGS
 
 from ._parsermanager import ParserManager
 from ._websearchmanager import WebSearchManager
+from ._multiagents import MultiAgents
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentManager:
     BATCH_SIZE = 32
+    multi_agents: Optional[MultiAgents] = None
 
     def __init__(
         self,
         vector_store: Union[QdrantClient, ElasticsearchClient],
         parser: ParserManager,
         web_search: Optional[WebSearchManager] = None,
-        multi_agents_search_model: Optional[ModelRouter] = None,
+        multi_agents_model: Optional[ModelRouter] = None,
+        multi_agents_reranker_model: Optional[ModelRouter] = None,
     ) -> None:
         self.vector_store = vector_store
         self.web_search = web_search
         self.parser = parser
-        self.multi_agents_search_model = multi_agents_search_model
+        if multi_agents_model and multi_agents_reranker_model:
+            self.multi_agents = MultiAgents(multi_agents_model, multi_agents_reranker_model)
 
     async def create_collection(self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:  # fmt: off
         result = await session.execute(
@@ -290,25 +293,8 @@ class DocumentManager:
 
         return chunks
 
-    async def parse_file(
-        self,
-        file: UploadFile,
-        output_format: ParsedDocumentOutputFormat,
-        force_ocr: bool,
-        languages: Languages,
-        page_range: str,
-        paginate_output: bool,
-        use_llm: bool,
-    ) -> ParsedDocument:
-        return await self.parser.parse_file(
-            file=file,
-            output_format=output_format,
-            force_ocr=force_ocr,
-            languages=languages,
-            page_range=page_range,
-            paginate_output=paginate_output,
-            use_llm=use_llm,
-        )
+    async def parse_file(self, **params: ParserParams) -> ParsedDocument:
+        return await self.parser.parse_file(**params)
 
     async def search_chunks(
         self,
@@ -365,8 +351,9 @@ class DocumentManager:
             score_threshold=score_threshold,
         )
         if method == SearchMethod.MULTIAGENT:
-            searches = await MultiAgents.search(
-                doc_search=partial(self.search_chunks, user_id=user_id),
+            if not self.multi_agents:
+                raise MultiAgentsSearchNotAvailableException()
+            searches = await self.multi_agents.search(
                 searches=searches,
                 prompt=prompt,
                 session=session,
@@ -400,7 +387,6 @@ class DocumentManager:
                     file=file,
                     output_format=ParsedDocumentOutputFormat.MARKDOWN.value,
                     force_ocr=False,
-                    languages=Languages.EN.value,
                     page_range="",
                     paginate_output=False,
                     use_llm=False,

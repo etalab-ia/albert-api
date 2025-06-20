@@ -22,4 +22,4 @@ class Reranks(BaseModel):
     id: str = Field(default=None, description="A unique identifier for the reranking.")
     object: Literal["list"] = "list"
     data: List[Rerank]
-    usage: Usage = Field(default=None, description="Usage information for the request.")
+    usage: Usage = Field(default_factory=Usage, description="Usage information for the request.")
