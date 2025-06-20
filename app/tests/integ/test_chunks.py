@@ -59,9 +59,6 @@ class TestChunks:
         response = client.get_without_permissions(url=f"/v1{ENDPOINT__CHUNKS}/{DOCUMENT_ID}/{chunk_id}")
         assert response.status_code == 200, response.text
 
-        print("---------------------------------")
-        print(response.json())
-        print("---------------------------------")
         chunk = Chunk(**response.json())
         assert chunk.id == chunk_id
 
