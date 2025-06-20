@@ -6,6 +6,9 @@ general:
 
 playground:
   api_url: http://${API_HOST}:8000
+  max_api_key_expiration_days: 365
+  cache_ttl: 1800
+  database_url: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/playground
 
 auth:
   master_username: master
@@ -17,6 +20,12 @@ monitoring:
 
 mcp:
   mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
+
+web_search:
+  - type: brave
+    model: albert-small
+    args:
+      api_key: ${BRAVE_API_KEY}
 
 databases:
   - type: elasticsearch
@@ -32,12 +41,13 @@ databases:
     context: api
     args:
       host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       password: changeme
 
   - type: sql # API database (async)
     context: api
     args:
-      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:5432/api
+      url: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/api
       echo: False
       pool_size: 5
       max_overflow: 10
@@ -49,13 +59,69 @@ databases:
   - type: sql # Playground database (sync)
     context: playground
     args:
-      url: postgresql://postgres:changeme@${POSTGRES_HOST}:5432/playground
+      url: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/playground
       echo: False
       pool_size: 5
       max_overflow: 10
       pool_pre_ping: True
 
 models:
+  - id: albert-large
+    type: text-generation
+    owned_by: test
+    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
+    clients:
+      - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+
+  - id: albert-small
+    type: text-generation
+    aliases: ["meta-llama/Llama-3.1-8B-Instruct"]
+    clients:
+      - model: albert-small
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+
+  - id: embeddings-small
+    type: text-embeddings-inference
+    aliases: ["BAAI/bge-m3"]
+    clients:
+      - model: BAAI/bge-m3
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+
+  - id: audio-large
+    type: automatic-speech-recognition
+    aliases: ["openai/whisper-large-v3"]
+    clients:
+      - model: audio-large
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+
+  - id: rerank-small
+    type: text-classification
+    aliases: ["BAAI/bge-reranker-v2-m3"]
+    clients:
+      - model: rerank-small
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+
   - id: my-language-model
     type: text-generation
     clients:
