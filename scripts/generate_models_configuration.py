@@ -10,14 +10,18 @@ MODEL_TYPES = {
     "text-generation": "Génération de Texte",
 }
 
+CONFIG_FILE = "config_tmp.yml"
+
+DEFAULT_URLS = {"openai": "https://api.openai.com/v1", "albert": "https://api.albert.fr/v1"}
+
 
 def main():
     print("\n" + "=" * 60)
     print("CONFIGURATION DES MODÈLES IA")
     print("=" * 60)
     models_configuration = ask_models_configuration()
-    config_file, existing_config = get_existing_configuration()
-    write_models_configuration(config_file, existing_config, models_configuration)
+    existing_config = get_existing_configuration()
+    write_models_configuration(existing_config, models_configuration)
     display_configuration_summary(models_configuration)
 
 
@@ -50,21 +54,20 @@ def ask_models_configuration():
 
 
 def get_existing_configuration():
-    config_file = "config_tmp.yml"
     existing_config = {}
-    if os.path.exists(config_file):
+    if os.path.exists(CONFIG_FILE):
         try:
-            with open(config_file, "r", encoding="utf-8") as f:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 existing_config = yaml.safe_load(f) or {}
         except yaml.YAMLError as e:
             print(f"Erreur lors de la lecture de config.yml: {e}")
             existing_config = {}
-    return config_file, existing_config
+    return existing_config
 
 
-def write_models_configuration(config_file, existing_config, models_configuration):
+def write_models_configuration(existing_config, models_configuration):
     existing_config["models"] = models_configuration
-    with open(config_file, "w", encoding="utf-8") as f:
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         yaml.dump(existing_config, f, default_flow_style=False, indent=2, allow_unicode=True, sort_keys=False)
 
 
@@ -108,8 +111,7 @@ def get_model_config(model_type, model_name):
 
 
 def get_model_api_url(model_name, model_provider):
-    default_urls = {"openai": "https://api.openai.com/v1", "albert": "https://api.albert.fr/v1"}
-    default_url = default_urls.get(model_provider, "")
+    default_url = DEFAULT_URLS.get(model_provider, "")
     api_url = input(f"URL de l'API pour {model_name} [{default_url}]: ").strip()
     if not api_url:
         api_url = default_url
@@ -140,7 +142,7 @@ def get_model_api_key(model_name):
 
 
 def get_model_provider(model_name):
-    print("Types disponibles: albert, openai")
+    print("Types disponibles: " + ", ".join(DEFAULT_URLS.keys()))
     model_provider = input(f"Type du modèle {model_name} [openai]: ").strip().lower()
     if not model_provider:
         model_provider = "openai"
