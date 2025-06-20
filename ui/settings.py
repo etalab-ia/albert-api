@@ -12,6 +12,7 @@ import yaml
 
 
 class DatabaseType(str, Enum):
+    ELASTICSEARCH = "elasticsearch"
     QDRANT = "qdrant"
     REDIS = "redis"
     SQL = "sql"
