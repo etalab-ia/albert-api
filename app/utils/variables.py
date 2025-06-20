@@ -47,7 +47,7 @@ ROUTER__MULTIAGENTS = "multiagents"
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
 
 # Supported language from https://github.com/huggingface/transformers/blob/main/src/transformers/models/whisper/tokenization_whisper.py
-AUDIO_SUPPORTED_LANGUAGES = {
+SUPPORTED_LANGUAGES = {
     "afrikaans": "af",
     "albanian": "sq",
     "amharic": "am",
@@ -162,4 +162,4 @@ AUDIO_SUPPORTED_LANGUAGES = {
     "yoruba": "yo",
 }
 
-AUDIO_SUPPORTED_LANGUAGES_VALUES = sorted(set(AUDIO_SUPPORTED_LANGUAGES.values())) + sorted(set(AUDIO_SUPPORTED_LANGUAGES.keys()))
+SUPPORTED_LANGUAGES_VALUES = sorted(set(SUPPORTED_LANGUAGES.values())) + sorted(set(SUPPORTED_LANGUAGES.keys()))

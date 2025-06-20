@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Union
 
 from fastapi import Form
 from langchain_text_splitters import Language
@@ -21,8 +21,8 @@ LengthFunctionForm: Literal["len"] = Form(default="len", description="The functi
 IsSeparatorRegexForm: bool = Form(default=False, description="Whether the separator is a regex to use for the file upload.")  # fmt: off
 SeparatorsForm: List[str] = Form(default=["\n\n", "\n", ". ", " "], description="The separators to use for the file upload.")  # fmt: off
 ChunkMinSizeForm: int = Form(default=0, description="The minimum size of the chunks to use for the file upload.")  # fmt: off
-MetadataForm: str = Form(default="{}", description="Additional metadata to chunks, JSON string.", pattern=r"^\{.*\}$", examples=['{"string_metadata": "test", "int_metadata": 1, "float_metadata": 1.0, "bool_metadata": true}'])  # fmt: off
-LanguageSeparatorsForm: Optional[Language] = Form(default=None, description="If provided, override separators by the code language specific separators.")  # fmt: off
+MetadataForm: str = Form(default="{}", description="Additional metadata to chunks, JSON string. Example: '{\"string_metadata\": \"test\", \"int_metadata\": 1, \"float_metadata\": 1.0, \"bool_metadata\": true}'", pattern=r"^\{.*\}$")  # fmt: off
+LanguageSeparatorsForm: Union[Language, Literal[""]] = Form(default="", description="If provided, override separators by the code language specific separators.")  # fmt: off
 
 
 class Document(BaseModel):

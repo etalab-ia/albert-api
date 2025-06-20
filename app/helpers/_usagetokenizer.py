@@ -87,7 +87,12 @@ class UsageTokenizer:
 
             else:
                 response = ChatCompletion(**response)
-                contents = [choice.message.content for choice in response.choices]
+                contents = []
+                for choice in response.choices:
+                    content = choice.message.content
+                    if content:
+                        contents.append(content)
+
                 completion_tokens = sum([len(self.tokenizer.encode(content)) for content in contents])
         else:
             raise ValueError(f"Endpoint {endpoint} not supported")
