@@ -339,7 +339,8 @@ class DocumentManager:
 
         _method = method
         if method == SearchMethod.MULTIAGENT:
-            _method = MultiAgents.search_method
+            #_method = MultiAgents.search_method
+            _method = SearchMethod.HYBRID
 
         searches = await self.vector_store.search(
             method=_method,
