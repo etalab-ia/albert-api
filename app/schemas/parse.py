@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
 from fastapi import File, Form, UploadFile
 from pydantic import Field
@@ -17,6 +17,7 @@ class ParsedDocumentOutputFormat(str, Enum):
 class ParsedDocumentMetadata(BaseModel):
     document_name: str
     page: int = 0
+    parser_metadata: Any = {}
 
 
 class ParsedDocumentPage(BaseModel):

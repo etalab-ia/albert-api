@@ -29,7 +29,6 @@ async def parse(
     """
     Parse a document.
     """
-
     if file.size > FileSizeLimitExceededException.MAX_CONTENT_SIZE:
         raise FileSizeLimitExceededException()
 

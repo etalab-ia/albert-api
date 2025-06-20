@@ -16,7 +16,7 @@ import vcr
 import vcr.stubs.httpx_stubs
 from vcr.request import Request as VcrRequest
 
-from app.clients.database import get_vector_store
+from app.clients.vector_store import get_vector_store
 from app.main import create_app
 from app.schemas.auth import LimitType, PermissionType
 from app.sql.models import Base

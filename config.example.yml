@@ -19,13 +19,14 @@ mcp:
   mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
 
 databases:
-  - type: qdrant
+  - type: elasticsearch
     context: api
     model: my-embeddings-model
     args:
-      url: http://${QDRANT_HOST}
-      api_key: changeme
-      timeout: 10
+      hosts: http://${ELASTICSEARCH_HOST}:9200
+      basic_auth:
+        - "elastic"
+        - "changeme"
 
   - type: redis
     context: api

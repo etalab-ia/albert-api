@@ -105,16 +105,13 @@ class ParserManager:
             pdf = pymupdf.open(stream=file_content, filetype="pdf")
 
             document = ParsedDocument(data=[])
+            metadata = ParsedDocumentMetadata(document_name=params.file.filename, parser_metadata=pdf.metadata)
             for page_num in range(len(pdf)):
                 page = pdf[page_num]
                 text = page.get_text()
-                document.data.append(
-                    ParsedDocumentPage(
-                        content=text,
-                        images={},
-                        metadata=ParsedDocumentMetadata(document_name=params.file.filename, page=page_num),
-                    )
-                )
+                metadata.page = page_num
+                document.data.append(ParsedDocumentPage(content=text, images={}, metadata=metadata))
+
             pdf.close()
             return document
 

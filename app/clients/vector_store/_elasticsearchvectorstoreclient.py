@@ -1,17 +1,25 @@
 from typing import List, Optional
 
 from elasticsearch import AsyncElasticsearch, helpers
+from elasticsearch.helpers import BulkIndexError
 
 from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
 
+from elasticsearch import logger as es_logger
 
-class ElasticsearchClient(AsyncElasticsearch):
+
+class ElasticsearchVectorStoreClient(AsyncElasticsearch):
     default_method = SearchMethod.HYBRID
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, log_level: str = "TRACE", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.url = kwargs.get("url")
+        self.log_level = log_level
+
+        es_logger.setLevel(level=self.log_level)
+
+        print(es_logger.getEffectiveLevel())
 
     async def check(self) -> bool:
         try:
@@ -20,7 +28,7 @@ class ElasticsearchClient(AsyncElasticsearch):
         except Exception:
             return False
 
-    async def close(self):
+    async def close(self) -> None:
         await super().transport.close()
 
     async def create_collection(self, collection_id: int, vector_size: int) -> None:
@@ -39,21 +47,15 @@ class ElasticsearchClient(AsyncElasticsearch):
                 },
             },
         }
-
         mappings = {
             "properties": {
-                "id": {"type": "keyword"},
+                "id": {"type": "integer"},
                 "embedding": {"type": "dense_vector", "dims": vector_size},
                 "content": {"type": "text", "analyzer": "french_analyzer"},
                 "metadata": {
-                    "dynamic": True,
                     "type": "object",
-                    # "properties": {
-                    #    "collection_id": {"type": "keyword"},
-                    #    "document_id": {"type": "keyword"},
-                    #    "document_name": {"type": "keyword"},
-                    #    "document_created_at": {"type": "date"},
-                    # },
+                    "dynamic": True,
+                    "properties": {"parser_metadata": {"type": "object", "enabled": False}},
                 },
             },
         }
@@ -90,6 +92,7 @@ class ElasticsearchClient(AsyncElasticsearch):
 
         chunks = []
         for hit in results["hits"]["hits"]:
+            # TODO:
             chunks.append(Chunk(id=hit["_id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]))
 
         return chunks
@@ -107,7 +110,26 @@ class ElasticsearchClient(AsyncElasticsearch):
             }
             for chunk, embedding in zip(chunks, embeddings)
         ]
-        await helpers.async_bulk(client=self, actions=actions, index=collection_id)
+
+        try:
+            # Tentative rapide via l'API bulk (plus performante)
+            await helpers.async_bulk(
+                client=self,
+                actions=actions,
+                index=collection_id,
+                raise_on_error=True,  # lève BulkIndexError si un doc échoue
+            )
+        except BulkIndexError as exc:
+            # On log le détail des documents rejetés puis on retente en insertion classique
+            es_logger.error("BulkIndexError lors de l'indexation de la collection %s : %s", collection_id, exc.errors)
+
+            for action in actions:
+                try:
+                    es_logger.debug("Indexation individuelle du chunk id=%s", action["_source"]["id"])
+                    await super().index(index=str(collection_id), document=action["_source"])
+                except Exception as e:
+                    es_logger.exception("Échec d'indexation du chunk id=%s : %s", action["_source"]["id"], e)
+
         await self.indices.refresh(index=str(collection_id))
 
     async def search(
