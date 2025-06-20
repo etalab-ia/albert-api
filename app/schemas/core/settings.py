@@ -321,7 +321,6 @@ class Config(ConfigBaseModel):
         # vector store
         if qdrant_databases:
             values.databases.vector_store = qdrant_databases[0]
-            assert values.databases.vector_store.search_method == SearchMethod.SEMANTIC, "Qdrant vector store must use semantic search method."
         elif elasticsearch_databases:
             values.databases.vector_store = elasticsearch_databases[0]
         else:

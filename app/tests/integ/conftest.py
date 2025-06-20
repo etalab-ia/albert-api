@@ -13,16 +13,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 import vcr
-import vcr.stubs.httpx_stubs
 from vcr.request import Request as VcrRequest
+import vcr.stubs.httpx_stubs
 
-from app.clients.database import get_vector_store
+from app.clients.vector_store import BaseVectorStoreClient as VectorStoreClient
 from app.main import create_app
 from app.schemas.auth import LimitType, PermissionType
 from app.sql.models import Base
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
-
 
 # Define global VCR instance
 VCR_INSTANCE = None
@@ -142,7 +141,8 @@ def app_with_test_db(engine, db_session):
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
     async def init_vector_store():
         """Initialize vector store by deleting all collections"""
-        vector_store = get_vector_store(settings)
+        vector_store = VectorStoreClient.import_module(type=settings.databases.vector_store.type)(**settings.databases.vector_store.args)
+
         collections = await vector_store.get_collections()
         # Clean the vector store
         for collection in collections:

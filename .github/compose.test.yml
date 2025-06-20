@@ -24,15 +24,12 @@ services:
       - 8000:8000
     volumes:
       - ./config.test.yml:/config.yml:ro
-      #- ../app:/app
 
     depends_on:
       redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      #qdrant:
-      #  condition: service_healthy
       elasticsearch:
         condition: service_healthy
 
@@ -43,20 +40,12 @@ services:
     ports: !override
       - 8432:5432
 
-  #qdrant:
-  #  extends:
-  #    file: ../compose.yml
-  #    service: qdrant
-  #  ports: !override
-  #    - 8333:6333
-  #    - 8334:6334
-
   elasticsearch:
     extends:
       file: ../compose.yml
       service: elasticsearch
     ports: !override
-      - 9200:9200
+      - 8337:9200
 
   redis:
     extends:
@@ -70,7 +59,7 @@ services:
       file: ../compose.yml
       service: mcp-bridge
     ports: !override
-      - 9875:8000
+      - 8336:8000
 
 volumes:
   postgres:

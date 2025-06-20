@@ -86,7 +86,7 @@ class MarkerParserClient(BaseParserClient):
                 if not result.get("success", False):
                     raise HTTPException(status_code=500, detail=result.get("error", "Parsing failed."))
 
-                metadata = ParsedDocumentMetadata(document_name=params.file.filename, page=i, **result["metadata"])
+                metadata = ParsedDocumentMetadata(document_name=params.file.filename, page=i)
                 data.append(ParsedDocumentPage(content=result["output"], images=result["images"], metadata=metadata))
 
         # Close the PDF document to free memory

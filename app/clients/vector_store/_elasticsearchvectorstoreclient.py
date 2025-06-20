@@ -6,7 +6,7 @@ from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
 
 
-class ElasticsearchClient(AsyncElasticsearch):
+class ElasticsearchVectorStoreClient(AsyncElasticsearch):
     default_method = SearchMethod.HYBRID
 
     def __init__(self, *args, **kwargs):
@@ -20,13 +20,14 @@ class ElasticsearchClient(AsyncElasticsearch):
         except Exception:
             return False
 
-    async def close(self):
+    async def close(self) -> None:
         await super().transport.close()
 
     async def create_collection(self, collection_id: int, vector_size: int) -> None:
         settings = {
             "similarity": {"default": {"type": "BM25"}},
             "analysis": {
+                # TODO: support other languages
                 "filter": {
                     "french_stop": {"type": "stop", "stopwords": "_french_"},
                     "french_stemmer": {"type": "stemmer", "language": "light_french"},
@@ -39,22 +40,12 @@ class ElasticsearchClient(AsyncElasticsearch):
                 },
             },
         }
-
         mappings = {
             "properties": {
-                "id": {"type": "keyword"},
+                "id": {"type": "integer"},
                 "embedding": {"type": "dense_vector", "dims": vector_size},
                 "content": {"type": "text", "analyzer": "french_analyzer"},
-                "metadata": {
-                    "dynamic": True,
-                    "type": "object",
-                    # "properties": {
-                    #    "collection_id": {"type": "keyword"},
-                    #    "document_id": {"type": "keyword"},
-                    #    "document_name": {"type": "keyword"},
-                    #    "document_created_at": {"type": "date"},
-                    # },
-                },
+                "metadata": {"type": "object", "dynamic": True},
             },
         }
 
@@ -81,16 +72,15 @@ class ElasticsearchClient(AsyncElasticsearch):
         await self.indices.refresh(index=str(collection_id))
 
     async def get_chunks(self, collection_id: int, document_id: int, offset: int = 0, limit: int = 10, chunk_id: Optional[int] = None) -> List[Chunk]:
-        body = {"query": {"match": {"metadata.document_id": document_id}}, "_source": ["content", "metadata"]}
-        if chunk_id:
-            body["query"]["match"]["id"] = chunk_id
+        body = {"query": {"bool": {"must": [{"match": {"metadata.document_id": document_id}}]}}, "_source": ["id", "content", "metadata"]}
+        if chunk_id is not None:
+            body["query"]["bool"]["must"].append({"term": {"id": chunk_id}})
 
-        # TODO: vérifier le offset et le limit
         results = await super().search(index=str(collection_id), body=body, from_=offset, size=limit)
 
         chunks = []
         for hit in results["hits"]["hits"]:
-            chunks.append(Chunk(id=hit["_id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]))
+            chunks.append(Chunk(id=hit["_source"]["id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]))
 
         return chunks
 
@@ -107,6 +97,7 @@ class ElasticsearchClient(AsyncElasticsearch):
             }
             for chunk, embedding in zip(chunks, embeddings)
         ]
+
         await helpers.async_bulk(client=self, actions=actions, index=collection_id)
         await self.indices.refresh(index=str(collection_id))
 
@@ -141,7 +132,7 @@ class ElasticsearchClient(AsyncElasticsearch):
             Search(
                 method=SearchMethod.LEXICAL.value,
                 score=hit["_score"],
-                chunk=Chunk(id=hit["_id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]),
+                chunk=Chunk(id=hit["_source"]["id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]),
             )
             for hit in hits
         ]
@@ -156,7 +147,7 @@ class ElasticsearchClient(AsyncElasticsearch):
             Search(
                 method=SearchMethod.SEMANTIC.value,
                 score=hit["_score"],
-                chunk=Chunk(id=hit["_id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]),
+                chunk=Chunk(id=hit["_source"]["id"], content=hit["_source"]["content"], metadata=hit["_source"]["metadata"]),
             )
             for hit in hits
         ]
