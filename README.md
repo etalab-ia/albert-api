@@ -29,7 +29,6 @@ L'API Albert permet d'être un proxy entre des clients API d'IA générative et 
 | [HuggingFace Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) | v1.6 | • embeddings<br>• reranking |
 | [Albert](https://github.com/etalab-ia/albert-api) | latest | • language<br>• embeddings<br>• reranking<br>• transcription |
 
-
 ## ⚙️ Fonctionnalités avancées
 
 - accès à un *vector store* avec [Elasticsearch](https://www.elastic.co/fr/products/elasticsearch) pour la recherche de similarité (lexicale, sémantique ou hybride) ou [Qdrant](https://qdrant.tech/) pour la recherche sémantique uniquement.
