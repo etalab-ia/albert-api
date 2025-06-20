@@ -54,7 +54,6 @@ class MarkerParserClient(BaseParserClient):
         try:
             # Correct way to open PDF from bytes with PyMuPDF
             pdf = pymupdf.open(stream=file_content, filetype="pdf")
-            page_count = pdf.page_count
         except Exception as e:
             # Handle corrupted or invalid PDF files
             raise HTTPException(status_code=400, detail=f"Invalid PDF file: {str(e)}")
@@ -63,11 +62,10 @@ class MarkerParserClient(BaseParserClient):
         payload = {
             "output_format": params.output_format.value,
             "force_ocr": params.force_ocr,
-            "languages": params.languages.value,
             "paginate_output": params.paginate_output,
             "use_llm": params.use_llm,
         }
-        pages = self.convert_page_range(page_range=params.page_range, page_count=page_count)
+        pages = self.convert_page_range(page_range=params.page_range, page_count=pdf.page_count)
         async with httpx.AsyncClient() as client:
             for i in pages:
                 # Create a fresh BytesIO object for each request to avoid stream consumption issues

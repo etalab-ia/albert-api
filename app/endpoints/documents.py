@@ -27,13 +27,10 @@ from app.schemas.documents import (
 from app.schemas.parse import (
     FileForm,
     ForceOCRForm,
-    Languages,
-    LanguagesForm,
     OutputFormatForm,
     PageRangeForm,
     PaginateOutputForm,
     ParsedDocumentOutputFormat,
-    UseLLMForm,
 )
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
@@ -52,10 +49,8 @@ async def create_document(
     # parse params
     paginate_output: Optional[bool] = PaginateOutputForm,
     page_range: str = PageRangeForm,
-    languages: Optional[Languages] = LanguagesForm,
     force_ocr: bool = ForceOCRForm,
     output_format: ParsedDocumentOutputFormat = OutputFormatForm,
-    use_llm: Optional[bool] = UseLLMForm,
     # chunker params
     chunker: Chunker = ChunkerForm,
     chunk_size: int = ChunkSizeForm,
@@ -64,12 +59,13 @@ async def create_document(
     length_function: Literal["len"] = LengthFunctionForm,
     is_separator_regex: bool = IsSeparatorRegexForm,
     separators: List[str] = SeparatorsForm,
-    language_separators: Optional[Language] = LanguageSeparatorsForm,
+    language_separators: Union[Language, Literal[""]] = LanguageSeparatorsForm,
     metadata: str = MetadataForm,
 ) -> JSONResponse:
     """
     Parse a file and create a document.
     """
+    language_separators = None if language_separators == "" else language_separators
 
     try:
         metadata = json.loads(metadata)
@@ -90,10 +86,8 @@ async def create_document(
         file=file,
         paginate_output=paginate_output,
         page_range=page_range,
-        languages=languages,
         force_ocr=force_ocr,
         output_format=output_format,
-        use_llm=use_llm,
     )
 
     document_id = await global_context.documents.create_document(

@@ -6,7 +6,7 @@ import logging
 import re
 import time
 import traceback
-from typing import Any, Dict, Literal, Optional, Type
+from typing import Any, Dict, Optional, Type
 from urllib.parse import urljoin
 
 from fastapi import HTTPException
@@ -54,7 +54,7 @@ class BaseModelClient(ABC):
         self.max_context_length = None
 
     @staticmethod
-    def import_module(type: Literal[ModelClientType.OPENAI, ModelClientType.VLLM, ModelClientType.TEI]) -> "Type[BaseModelClient]":
+    def import_module(type: ModelClientType) -> "Type[BaseModelClient]":
         """
         Static method to import a subclass of BaseModelClient.
 
@@ -109,8 +109,6 @@ class BaseModelClient(ABC):
                 )
                 detail.usage.cost = round(detail.usage.prompt_tokens / 1000000 * self.costs.prompt_tokens + detail.usage.completion_tokens / 1000000 * self.costs.completion_tokens, ndigits=6)  # fmt: off
                 usage.details.append(detail)
-
-                # compute total usage
 
                 # add token usage to the total usage
                 usage.prompt_tokens += detail.usage.prompt_tokens
@@ -238,6 +236,7 @@ class BaseModelClient(ABC):
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
                 raise HTTPException(status_code=504, detail="Request timed out, model is too busy.")
             except Exception as e:
+                logger.exception(msg=f"Failed to forward request to {self.model}: {e}.")
                 raise HTTPException(status_code=500, detail=type(e).__name__)
             try:
                 response.raise_for_status()
