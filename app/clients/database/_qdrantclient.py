@@ -25,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class QdrantClient(AsyncQdrantClient):
+    default_method = SearchMethod.SEMANTIC
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.url = kwargs.get("url")

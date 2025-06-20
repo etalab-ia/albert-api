@@ -7,6 +7,8 @@ from app.schemas.search import Search, SearchMethod
 
 
 class ElasticsearchClient(AsyncElasticsearch):
+    default_method = SearchMethod.HYBRID
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.url = kwargs.get("url")
