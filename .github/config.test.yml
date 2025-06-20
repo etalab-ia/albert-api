@@ -53,7 +53,6 @@ web_search:
 
 multi_agents_search:
   model: albert-small
-  method: hybrid
 
 mcp:
   mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
