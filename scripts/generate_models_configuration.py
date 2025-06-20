@@ -46,11 +46,11 @@ def ask_models_configuration():
                         count = int(count)
 
                     if count < 1:
-                        print("\033[91mThe number of models should be at least 1\033[0m")
+                        print_error("The number of models should be at least 1")
                         continue
                     break
                 except ValueError:
-                    print("\033[91mInvalid number\033[0m")
+                    print_error("Invalid number")
 
             for i in range(count):
                 suffix = f" #{i + 1}" if count > 1 else ""
@@ -66,7 +66,7 @@ def get_existing_configuration(configuration_file_path: str):
             with open(configuration_file_path, "r", encoding="utf-8") as f:
                 existing_config = yaml.safe_load(f) or {}
         except yaml.YAMLError as e:
-            print(f"\033[91m Error when opening configuration file {configuration_file_path}: {e}\033[0m")
+            print_error(f"Error when opening configuration file {configuration_file_path}: {e}")
             existing_config = {}
     return existing_config
 
@@ -96,7 +96,7 @@ def ask_yes_no(question):
         elif response in ["n", "no", "non"]:
             return False
         else:
-            print("Answer with 'y' (yes) or 'n' (no)")
+            print_error("Answer with 'y' (yes) or 'n' (no)")
 
 
 def get_model_config(model_type, model_name):
@@ -137,7 +137,7 @@ def get_model_name(model_name):
         if model_full_name:
             return model_full_name
         else:
-            print("\033[91mError: model name is required\033[0m")
+            print_error("Error: model name is required")
 
 
 def get_model_api_key(model_name):
@@ -146,7 +146,7 @@ def get_model_api_key(model_name):
         if api_key:
             return api_key
         else:
-            print("\033[91mError: API key is required\033[0m")
+            print_error("Error: API key is required")
 
 
 def get_model_provider(model_name):
@@ -158,7 +158,7 @@ def get_model_provider(model_name):
         if model_provider in ["albert", "openai"]:
             return model_provider
         else:
-            print("\033[91mError: model type must be one of: " + ", ".join(DEFAULT_URLS.keys()) + "\033[0m")
+            print_error("Error: model type must be one of: " + ", ".join(DEFAULT_URLS.keys()))
 
 
 def get_model_id(model_name):
@@ -166,7 +166,7 @@ def get_model_id(model_name):
         model_id = input(f"Model ID {model_name}: ").strip()
         if model_id:
             return model_id
-        print("\033[91mError: model id is required\033[0m")
+        print_error("Error: model id is required")
 
 
 def print_error(message: str):
