@@ -12,11 +12,10 @@ services:
       - ALBERT_API_KEY=${ALBERT_API_KEY}
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
-      - QDRANT_HOST=qdrant
+      - ELASTICSEARCH_HOST=elasticsearch
       - POSTGRES_PORT=5432
       - REDIS_PORT=6379
-      - QDRANT_PORT=6333
-      - QDRANT_GRPC_PORT=6334
+      - ELASTICSEARCH_PORT=9200
       - MCP_BRIDGE_HOST=albert-test-mcp-bridge-1
       - MCP_BRIDGE_PORT=8000
       - VCR_ENABLED=true
