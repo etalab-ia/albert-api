@@ -7,6 +7,9 @@ TEST_ENV_FILE=.env.test
 install:
 	pip install ".[app,ui,dev,test]"
 
+configuration:
+	python scripts/generate_models_configuration.py
+
 docker-compose-albert-api-up:
 	docker compose --env-file ${APP_ENV_FILE} up --detach
 
