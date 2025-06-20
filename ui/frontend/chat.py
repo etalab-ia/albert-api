@@ -2,12 +2,12 @@ from uuid import uuid4
 
 import streamlit as st
 
-from app.schemas.search import SearchMethod
 from ui.backend.chat import generate_stream
 from ui.backend.common import get_collections, get_limits, get_models
 from ui.frontend.header import header
 from ui.variables import MODEL_TYPE_IMAGE_TEXT_TO_TEXT, MODEL_TYPE_LANGUAGE
 
+SEARCH_METHODS = ["multiagent", "hybrid", "semantic", "lexical"]
 header()
 
 # Data
@@ -49,7 +49,7 @@ with st.sidebar:
 
     st.subheader(body="RAG parameters")
     # Search method selection now under RAG parameters
-    params["rag_params"]["method"] = st.selectbox(label="Search method", options=[x.value for x in SearchMethod], index=0)
+    params["rag_params"]["method"] = st.selectbox(label="Search method", options=SEARCH_METHODS, index=0)
 
     if collections:
 
