@@ -6,6 +6,8 @@
 
 **Enterprise-ready Generative AI API Gateway | Open Source | Sovereign Infrastructure**
 
+**Developed by the French Government 🇫🇷**
+
 [![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/albert-api/refs/heads/main/.github/badges/coverage.json)](https://github.com/etalab-ia/albert-api)
 
 [**Changelog**](https://github.com/etalab-ia/albert-api/blob/main/CHANGELOG.md) | [**Documentation**](https://albert.api.etalab.gouv.fr/documentation) | [**Playground**](https://albert.api.etalab.gouv.fr/playground) | [**API Status**](https://albert.api.etalab.gouv.fr/status) | [**Swagger**](https://albert.api.etalab.gouv.fr/swagger)
@@ -38,6 +40,19 @@ Albert API is an **enterprise-ready open-source gateway** for deploying **genera
 * **Audio & Vision:** Transcribe audio (Whisper) and perform OCR on PDF documents.
 * **Enhanced Security:** Built-in API key authentication.
 
+## 📊 Comparison
+
+| Feature              | Albert API ✅ | LiteLLM   | OpenRouter | OpenAI API |
+| -------------------- | ------------ | --------- | ---------- | ---------- |
+| Fully Open Source    | ✔️           | Partially | ❌          | ❌          |
+| Data Sovereignty     | ✔️           | ✔️        | ❌          | ❌          |
+| Multiple AI Backends | ✔️           | ✔️        | ✔️         | ❌          |
+| Built-in RAG         | ✔️           | ❌         | ❌          | ❌          |
+| Built-in OCR         | ✔️           | ❌         | ❌          | ❌          |
+| Audio Transcription  | ✔️           | ❌         | ❌          | ✔️         |
+| Flexible Deployment  | ✔️           | ✔️        | ❌          | ❌          |
+| OpenAI Compatibility | ✔️           | ✔️        | ✔️         | ✔️         |
+
 ## 🚀 Quickstart
 
 Deploy Albert API quickly on your own infrastructure:
@@ -67,7 +82,7 @@ Albert API thrives on open-source contributions. Join our community!
 
 **API open source pour modèles d'IA générative | Infrastructure souveraine**
 
-Albert API, porté par l'[OPI de la DINUM](https://www.numerique.gouv.fr/dinum/) via le programme [ALLiaNCE](https://alliance.numerique.gouv.fr/), propose une solution prête pour la production destinée à l’hébergement souverain et performant d’IA génératives avancées sur votre infrastructure.
+Albert API, porté par l'[OPI de la DINUM](https://www.numerique.gouv.fr/dinum/), est le service d'IA générative de référence de l'État français, homologué pour des traitements sécurisés. Il propose une solution prête pour la production destinée à l’hébergement souverain et performant d’IA génératives avancées sur votre infrastructure.
 
 ## Points forts
 
