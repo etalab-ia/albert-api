@@ -14,12 +14,12 @@ async def test_create_document_collection_no_longer_exists():
     """Test that CollectionNotFoundException is raised when collection is deleted during document creation."""
 
     # Mock dependencies
-    mock_qdrant = AsyncMock()
+    mock_vectore_store = AsyncMock()
     mock_parser = AsyncMock()
     mock_session = AsyncMock(spec=AsyncSession)
 
     # Create DocumentManager instance
-    document_manager = DocumentManager(qdrant=mock_qdrant, parser=mock_parser)
+    document_manager = DocumentManager(vector_store=mock_vectore_store, parser=mock_parser)
 
     # Mock the collection existence check to pass initially
     mock_collection_result = MagicMock()
@@ -74,12 +74,12 @@ async def test_create_document_collection_no_longer_exists_with_fkey_error():
     """Test that CollectionNotFoundException is raised when fkey constraint fails."""
 
     # Mock dependencies
-    mock_qdrant = AsyncMock()
+    mock_vectore_store = AsyncMock()
     mock_parser = AsyncMock()
     mock_session = AsyncMock(spec=AsyncSession)
 
     # Create DocumentManager instance
-    document_manager = DocumentManager(qdrant=mock_qdrant, parser=mock_parser)
+    document_manager = DocumentManager(vector_store=mock_vectore_store, parser=mock_parser)
 
     # Mock the collection existence check to pass initially
     mock_collection_result = MagicMock()
@@ -132,12 +132,12 @@ async def test_create_document_other_integrity_error_not_collection_related():
     """Test that other IntegrityErrors are not caught and converted to CollectionNotFoundException."""
 
     # Mock dependencies
-    mock_qdrant = AsyncMock()
+    mock_vectore_store = AsyncMock()
     mock_parser = AsyncMock()
     mock_session = AsyncMock(spec=AsyncSession)
 
     # Create DocumentManager instance
-    document_manager = DocumentManager(qdrant=mock_qdrant, parser=mock_parser)
+    document_manager = DocumentManager(vector_store=mock_vectore_store, parser=mock_parser)
 
     # Mock the collection existence check to pass initially
     mock_collection_result = MagicMock()

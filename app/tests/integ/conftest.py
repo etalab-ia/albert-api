@@ -1,3 +1,4 @@
+import asyncio
 from functools import partial
 import logging
 import os
@@ -7,21 +8,20 @@ from typing import Generator
 
 from fastapi.testclient import TestClient
 import pytest
-from qdrant_client import QdrantClient
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 import vcr
-import vcr.stubs.httpx_stubs
 from vcr.request import Request as VcrRequest
+import vcr.stubs.httpx_stubs
 
+from app.clients.vector_store import BaseVectorStoreClient as VectorStoreClient
 from app.main import create_app
 from app.schemas.auth import LimitType, PermissionType
 from app.sql.models import Base
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
-
 
 # Define global VCR instance
 VCR_INSTANCE = None
@@ -33,6 +33,9 @@ def pytest_configure(config):
     This is the earliest pytest hook we can use to set up VCR globally.
     """
     global VCR_INSTANCE
+
+    # Register custom markers
+    config.addinivalue_line("markers", "vcr: Configure VCR for specific tests")
 
     # Skip VCR setup if disabled
     if not VCR_ENABLED:
@@ -54,10 +57,11 @@ def pytest_configure(config):
         return VcrRequest(httpx_request.method, uri, body, headers)
 
     vcr.stubs.httpx_stubs._make_vcr_request = _make_vcr_request
-    ignore_hosts = ["testserver", os.environ.get("MCP_BRIDGE_HOST"), os.environ.get("QDRANT_HOST")]
+    ignore_hosts = ["testserver", os.environ.get("MCP_BRIDGE_HOST"), os.environ.get("QDRANT_HOST"), os.environ.get("ELASTICSEARCH_HOST")]
 
     VCR_INSTANCE = vcr.VCR(
         cassette_library_dir=str(cassette_library_dir),
+        # record_mode="new_episodes", # use that if there is a bug with the cassette, then reuse once...
         record_mode="once",
         match_on=["method", "scheme", "host", "port", "path", "query"],
         filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
@@ -81,11 +85,6 @@ def engine(worker_id):
 
     Base.metadata.drop_all(engine)  # Clean state
     Base.metadata.create_all(engine)
-
-    qdrant_client = QdrantClient(**settings.databases.qdrant.args)
-    collections = qdrant_client.get_collections().collections
-    for collection in collections:
-        qdrant_client.delete_collection(collection_name=collection.name)
 
     yield engine
 
@@ -140,15 +139,26 @@ def app_with_test_db(engine, db_session):
 
 @pytest.fixture(scope="session")
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
+    async def init_vector_store():
+        """Initialize vector store by deleting all collections"""
+        vector_store = VectorStoreClient.import_module(type=settings.databases.vector_store.type)(**settings.databases.vector_store.args)
+
+        collections = await vector_store.get_collections()
+        # Clean the vector store
+        for collection in collections:
+            await vector_store.delete_collection(collection)
+
     # Lifespan requests API to get models and initialize the app
     if VCR_ENABLED:
         with VCR_INSTANCE.use_cassette("lifespan_init.yaml"):
             with TestClient(app=app_with_test_db) as client:
                 client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+                asyncio.run(init_vector_store())  # Initialize vector store
                 yield client
     else:
         with TestClient(app=app_with_test_db) as client:
             client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+            asyncio.run(init_vector_store())  # Initialize vector store
             yield client
 
 
@@ -178,8 +188,32 @@ def vcr_cassette(request):
     test_name = request.node.name.replace("[", "_").replace("]", "_")
     cassette_path = f"{request.module.__name__}.{test_name}"
 
-    with VCR_INSTANCE.use_cassette(cassette_path + ".yaml"):
-        yield
+    # Check if the test has custom VCR configuration
+    vcr_marker = request.node.get_closest_marker("vcr")
+    if vcr_marker:
+        # Create a new VCR instance with custom configuration
+        custom_vcr_config = vcr_marker.kwargs.copy()
+
+        # Get the base configuration from the global VCR instance
+        cassette_library_dir = Path(__file__).parent / "cassettes"
+        ignore_hosts = ["testserver", os.environ.get("MCP_BRIDGE_HOST"), os.environ.get("QDRANT_HOST"), os.environ.get("ELASTICSEARCH_HOST")]
+
+        # Create custom VCR instance with merged configuration
+        custom_vcr = vcr.VCR(
+            cassette_library_dir=str(cassette_library_dir),
+            record_mode=custom_vcr_config.get("record_mode", "once"),
+            match_on=custom_vcr_config.get("match_on", ["method", "scheme", "host", "port", "path", "query"]),
+            filter_headers=custom_vcr_config.get("filter_headers", [("Authorization", "Bearer dummy_token_for_test")]),
+            before_record_request=lambda request: None if request.host in ignore_hosts else request,
+            decode_compressed_response=True,
+        )
+
+        with custom_vcr.use_cassette(cassette_path + ".yaml"):
+            yield
+    else:
+        # Use the global VCR instance
+        with VCR_INSTANCE.use_cassette(cassette_path + ".yaml"):
+            yield
 
 
 @pytest.fixture(scope="session")

@@ -1,16 +1,17 @@
+from functools import wraps
 from itertools import batched
 import logging
 import time
-import traceback
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Union
 from uuid import uuid4
 
+from fastapi import HTTPException
 from langchain_text_splitters import Language
-from qdrant_client import AsyncQdrantClient
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.clients.vector_store import ElasticsearchVectorStoreClient, QdrantVectorStoreClient
 from app.helpers.data.chunkers import NoSplitter, RecursiveCharacterTextSplitter
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
@@ -32,11 +33,35 @@ from app.utils.exceptions import (
 )
 from app.utils.variables import ENDPOINT__EMBEDDINGS
 
+from ._multiagents import MultiAgents
 from ._parsermanager import ParserManager
 from ._websearchmanager import WebSearchManager
-from ._multiagents import MultiAgents
 
 logger = logging.getLogger(__name__)
+
+
+def check_dependancy(*, dependancies: List[str]) -> Callable:
+    """
+    Decorator to check if the dependencies are initialized before executing the method.
+    """
+
+    def decorator(method: Callable) -> Callable:
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            if "vector_store" in dependancies and not self.vector_store:
+                raise HTTPException(status_code=400, detail="Feature not available: vector store is not initialized.")
+            if "web_search" in dependancies and not self.web_search:
+                raise HTTPException(status_code=400, detail="Feature not available: web search is not initialized.")
+            if "parser" in dependancies and not self.parser:
+                raise HTTPException(status_code=400, detail="Feature not available: parser is not initialized.")
+            if "multi_agents" in dependancies and not self.multi_agents:
+                raise HTTPException(status_code=400, detail="Feature not available: multi agents is not initialized.")
+
+            return method(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 class DocumentManager:
@@ -45,18 +70,19 @@ class DocumentManager:
 
     def __init__(
         self,
-        qdrant: AsyncQdrantClient,
+        vector_store: Union[QdrantVectorStoreClient, ElasticsearchVectorStoreClient],
         parser: ParserManager,
         web_search: Optional[WebSearchManager] = None,
         multi_agents_model: Optional[ModelRouter] = None,
         multi_agents_reranker_model: Optional[ModelRouter] = None,
     ) -> None:
-        self.qdrant = qdrant
+        self.vector_store = vector_store
         self.web_search = web_search
         self.parser = parser
         if multi_agents_model and multi_agents_reranker_model:
             self.multi_agents = MultiAgents(multi_agents_model, multi_agents_reranker_model)
 
+    @check_dependancy(dependancies=["vector_store"])
     async def create_collection(self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:  # fmt: off
         result = await session.execute(
             statement=insert(table=CollectionTable)
@@ -66,10 +92,11 @@ class DocumentManager:
         collection_id = result.scalar_one()
         await session.commit()
 
-        await self.qdrant.create_collection(collection_id=collection_id, vector_size=self.qdrant.model._vector_size)
+        await self.vector_store.create_collection(collection_id=collection_id, vector_size=self.vector_store.model._vector_size)
 
         return collection_id
 
+    @check_dependancy(dependancies=["vector_store"])
     async def delete_collection(self, session: AsyncSession, user_id: int, collection_id: int) -> None:
         # check if collection exists
         result = await session.execute(
@@ -85,8 +112,9 @@ class DocumentManager:
         await session.commit()
 
         # delete the collection from vector store
-        await self.qdrant.delete_collection(collection_id=collection_id)
+        await self.vector_store.delete_collection(collection_id=collection_id)
 
+    @check_dependancy(dependancies=["vector_store"])
     async def update_collection(self, session: AsyncSession, user_id: int, collection_id: int, name: Optional[str] = None, visibility: Optional[CollectionVisibility] = None, description: Optional[str] = None) -> None:  # fmt: off
         # check if collection exists
         result = await session.execute(
@@ -111,6 +139,7 @@ class DocumentManager:
         )
         await session.commit()
 
+    @check_dependancy(dependancies=["vector_store"])
     async def get_collections(self, session: AsyncSession, user_id: int, collection_id: Optional[int] = None, include_public: bool = True, offset: int = 0, limit: int = 10) -> List[Collection]:  # fmt: off
         # Query basic collection data
         statement = (
@@ -146,6 +175,7 @@ class DocumentManager:
 
         return collections
 
+    @check_dependancy(dependancies=["vector_store"])
     async def create_document(
         self,
         session: AsyncSession,
@@ -206,13 +236,13 @@ class DocumentManager:
         try:
             await self._upsert(chunks=chunks, collection_id=collection_id)
         except Exception as e:
-            logger.error(msg=f"Error during document creation: {e}")
-            logger.debug(msg=traceback.format_exc())
+            logger.exception(msg=f"Error during document creation: {e}")
             await self.delete_document(session=session, user_id=user_id, document_id=document_id)
             raise VectorizationFailedException(detail=f"Vectorization failed: {e}")
 
         return document_id
 
+    @check_dependancy(dependancies=["vector_store"])
     async def get_documents(self, session: AsyncSession, user_id: int, collection_id: Optional[int] = None, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
         statement = (
             select(
@@ -239,10 +269,11 @@ class DocumentManager:
 
         # chunks count
         for document in documents:
-            document.chunks = await self.qdrant.get_chunk_count(collection_id=document.collection_id, document_id=document.id)
+            document.chunks = await self.vector_store.get_chunk_count(collection_id=document.collection_id, document_id=document.id)
 
         return documents
 
+    @check_dependancy(dependancies=["vector_store"])
     async def delete_document(self, session: AsyncSession, user_id: int, document_id: int) -> None:
         # check if document exists
         result = await session.execute(
@@ -260,8 +291,9 @@ class DocumentManager:
         await session.commit()
 
         # delete the document from vector store
-        await self.qdrant.delete_document(collection_id=document.collection_id, document_id=document_id)
+        await self.vector_store.delete_document(collection_id=document.collection_id, document_id=document_id)
 
+    @check_dependancy(dependancies=["vector_store"])
     async def get_chunks(
         self,
         session: AsyncSession,
@@ -283,7 +315,7 @@ class DocumentManager:
         except NoResultFound:
             raise DocumentNotFoundException()
 
-        chunks = await self.qdrant.get_chunks(
+        chunks = await self.vector_store.get_chunks(
             collection_id=document.collection_id,
             document_id=document_id,
             offset=offset,
@@ -293,9 +325,11 @@ class DocumentManager:
 
         return chunks
 
+    @check_dependancy(dependancies=["parser"])
     async def parse_file(self, **params: ParserParams) -> ParsedDocument:
         return await self.parser.parse_file(**params)
 
+    @check_dependancy(dependancies=["vector_store"])
     async def search_chunks(
         self,
         session: AsyncSession,
@@ -337,13 +371,12 @@ class DocumentManager:
         response = await self._create_embeddings(input=[prompt])
         query_vector = response[0]
 
+        _method = method
         if method == SearchMethod.MULTIAGENT:
-            qdrant_method = SearchMethod.SEMANTIC
-        else:
-            qdrant_method = method
+            _method = self.vector_store.default_method
 
-        searches = await self.qdrant.search(
-            method=qdrant_method,
+        searches = await self.vector_store.search(
+            method=_method,
             collection_ids=collection_ids,
             query_prompt=prompt,
             query_vector=query_vector,
@@ -366,6 +399,7 @@ class DocumentManager:
 
         return searches
 
+    @check_dependancy(dependancies=["web_search"])
     async def _create_web_collection(
         self,
         session: AsyncSession,
@@ -439,8 +473,8 @@ class DocumentManager:
         return chunks
 
     async def _create_embeddings(self, input: List[str]) -> list[float] | list[list[float]] | dict:
-        client = self.qdrant.model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
-        response = await client.forward_request(method="POST", json={"input": input, "model": self.qdrant.model.id, "encoding_format": "float"})
+        client = self.vector_store.model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
+        response = await client.forward_request(method="POST", json={"input": input, "model": self.vector_store.model.id, "encoding_format": "float"})
 
         return [vector["embedding"] for vector in response.json()["data"]]
 
@@ -452,4 +486,4 @@ class DocumentManager:
             embeddings = await self._create_embeddings(input=texts)
 
             # insert chunks and vectors
-            await self.qdrant.upsert(collection_id=collection_id, chunks=batch, embeddings=embeddings)
+            await self.vector_store.upsert(collection_id=collection_id, chunks=batch, embeddings=embeddings)

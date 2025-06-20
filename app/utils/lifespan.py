@@ -4,10 +4,10 @@ import traceback
 from coredis import ConnectionPool
 from fastapi import FastAPI
 
-from app.clients.database import QdrantClient
 from app.clients.mcp import SecretShellMCPBridgeClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.parser import BaseParserClient as ParserClient
+from app.clients.vector_store import BaseVectorStoreClient as VectorStoreClient
 from app.clients.web_search import BaseWebSearchClient as WebSearchClient
 from app.helpers._documentmanager import DocumentManager
 from app.helpers._identityaccessmanager import IdentityAccessManager
@@ -29,13 +29,7 @@ logger = init_logger(name=__name__)
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
-    # setup clients
-    redis = ConnectionPool(**settings.databases.redis.args)
-    web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
-    parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
-    qdrant = QdrantClient(**settings.databases.qdrant.args) if settings.databases.qdrant else None
-    mcp_bridge = SecretShellMCPBridgeClient(mcp_bridge_url=settings.mcp.mcp_bridge_url)
-
+    # Global context: models
     routers = []
     for model in settings.models:
         clients = []
@@ -49,15 +43,15 @@ async def lifespan(app: FastAPI):
                     **client.args.model_dump(),
                 )
                 clients.append(client)
-            except Exception as e:
+            except Exception:
                 logger.debug(msg=traceback.format_exc())
                 continue
         if not clients:
             logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
-            if web_search:
-                assert model.id != settings.web_search.model, f"Web search model ({model.id}) must be reachable."
-            if qdrant:
-                assert model.id != settings.databases.qdrant.model, f"Qdrant model ({model.id}) must be reachable."
+            if settings.web_search and model.id == settings.web_search.model:
+                raise ValueError(f"Web search model ({model.id}) must be reachable.")
+            if settings.databases.vector_store and model.id == settings.databases.vector_store.model:
+                raise ValueError(f"Vector store embedding model ({model.id}) must be reachable.")
             continue
 
         logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
@@ -65,18 +59,27 @@ async def lifespan(app: FastAPI):
         model["clients"] = clients
         routers.append(ModelRouter(**model))
 
-    # setup context: models, iam, limiter, tokenizer
-    global_context.tokenizer = UsageTokenizer(tokenizer=settings.general.tokenizer)
     global_context.models = ModelRegistry(routers=routers)
-    global_context.iam = IdentityAccessManager()
-    global_context.mcp.agents_manager = AgentsManager(mcp_bridge=mcp_bridge, model_registry=global_context.models)
 
+    # Global context: iam
+    global_context.iam = IdentityAccessManager()
+
+    # Global context: limiter
+    redis = ConnectionPool(**settings.databases.redis.args)
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
     assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
-    # setup context: documents
-    parser = ParserManager(parser=parser)
+    # Global context: tokenizer
+    global_context.tokenizer = UsageTokenizer(tokenizer=settings.general.tokenizer)
 
+    # Global context: mcp
+    mcp_bridge = SecretShellMCPBridgeClient(mcp_bridge_url=settings.mcp.mcp_bridge_url)
+    global_context.mcp.agents_manager = AgentsManager(mcp_bridge=mcp_bridge, model_registry=global_context.models)
+
+    # Global context: documents
+
+    ## documents dependancy: web search
+    web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
     if web_search:
         web_search = WebSearchManager(
             web_search=web_search,
@@ -85,21 +88,31 @@ async def lifespan(app: FastAPI):
             user_agent=settings.web_search.user_agent,
         )
 
-    if qdrant:
-        assert await qdrant.check(), "Qdrant database is not reachable."
-        qdrant.model = global_context.models(model=settings.databases.qdrant.model) if qdrant else None
-        multi_agents_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-        multi_agents_reranker_model=global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
-        global_context.documents = DocumentManager(
-            qdrant=qdrant,
-            parser=parser,
-            web_search=web_search,
-            multi_agents_model=multi_agents_model,
-            multi_agents_reranker_model=multi_agents_reranker_model,
-        )
+    ## documents dependancy: parser
+    parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
+    parser = ParserManager(parser=parser)
+
+    ## documents dependancy: vector store
+    vector_store = VectorStoreClient.import_module(type=settings.databases.vector_store.type)(**settings.databases.vector_store.args) if settings.databases.vector_store else None  # fmt: off
+
+    if vector_store:
+        assert await vector_store.check(), "Vector store database is not reachable."
+        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
+
+    ## documents dependancy: multi agents
+    multi_agents_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
+    multi_agents_reranker_model=global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
+
+    global_context.documents = DocumentManager(
+        vector_store=vector_store,
+        parser=parser,
+        web_search=web_search,
+        multi_agents_model=multi_agents_model,
+        multi_agents_reranker_model=multi_agents_reranker_model,
+    )
 
     yield
 
     # cleanup resources when app shuts down
-    if qdrant:
-        await qdrant.close()
+    if vector_store:
+        await vector_store.close()

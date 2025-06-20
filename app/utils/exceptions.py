@@ -120,16 +120,6 @@ class ParsingDocumentFailedException(HTTPException):
         super().__init__(status_code=422, detail=detail)
 
 
-class ChunkingFailedException(HTTPException):
-    def __init__(self, detail: str = "Chunking failed.") -> None:
-        super().__init__(status_code=500, detail=detail)
-
-
-class VectorizationFailedException(HTTPException):
-    def __init__(self, detail: str = "Vectorization failed.") -> None:
-        super().__init__(status_code=422, detail=detail)
-
-
 class InvalidJSONFormatException(HTTPException):
     def __init__(self, detail: str = "Invalid JSON format.") -> None:
         super().__init__(status_code=422, detail=detail)
@@ -176,3 +166,14 @@ class RateLimitExceeded(HTTPException):
     def __init__(self, detail: Optional[str] = None) -> None:
         detail = f"Rate limit exceeded: {detail}" if detail else "Rate limit exceeded."
         super(RateLimitExceeded, self).__init__(status_code=429, detail=detail)
+
+
+# 500
+class ChunkingFailedException(HTTPException):
+    def __init__(self, detail: str = "Chunking failed.") -> None:
+        super().__init__(status_code=500, detail=detail)
+
+
+class VectorizationFailedException(HTTPException):
+    def __init__(self, detail: str = "Vectorization failed.") -> None:
+        super().__init__(status_code=500, detail=detail)

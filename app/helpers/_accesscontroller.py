@@ -51,8 +51,8 @@ class AccessController:
         self.permissions = permissions
 
     async def __call__(
-        self, 
-        request: Request, 
+        self,
+        request: Request,
         api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())],
         session: AsyncSession = Depends(get_session)
     ) -> User:  # fmt: off
@@ -241,7 +241,7 @@ class AccessController:
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
         if body.get("search", False):  # count the search request as one request to the search model (embeddings)
-            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
+            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
             if body.get("search_args", {}).get("web_search", False):
                 await self._check_request_limits(request=request, user=user, limits=limits, model="web-search")
 
@@ -273,9 +273,9 @@ class AccessController:
         await self._check_budget(user=user, model=body.get("model"))
 
     async def _check_files_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
 
-        await self._check_budget(user=user, model=global_context.documents.qdrant.model.id)
+        await self._check_budget(user=user, model=global_context.documents.vector_store.model.id)
 
     async def _check_ocr_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
@@ -302,7 +302,7 @@ class AccessController:
         body = await self._safely_parse_body(request)
 
         # count the search request as one request to the search model (embeddings)
-        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.qdrant.model.id)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
 
         if body.get("web_search", False):
             await self._check_request_limits(request=request, user=user, limits=limits, model="web-search")
@@ -313,10 +313,10 @@ class AccessController:
             user=user,
             limits=limits,
             prompt_tokens=prompt_tokens,
-            model=global_context.documents.qdrant.model.id,
+            model=global_context.documents.vector_store.model.id,
         )
 
-        await self._check_budget(user=user, model=global_context.documents.qdrant.model.id)
+        await self._check_budget(user=user, model=global_context.documents.vector_store.model.id)
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await self._safely_parse_body(request)

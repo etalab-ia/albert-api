@@ -1550,8 +1550,6 @@ interactions:
       - same-origin
       Strict-Transport-Security:
       - max-age=31536000
-      Transfer-Encoding:
-      - chunked
       Vary:
       - Accept-Language, Cookie, Accept-Encoding
       X-Cache-Grace:
@@ -1573,4 +1571,152 @@ interactions:
     status:
       code: 404
       message: Not Found
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, zstd
+      connection:
+      - keep-alive
+      host:
+      - api.search.brave.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-subscription-token:
+      - BSAnVOCfcqE8eZbpfvH0Ba1ymlGPRMF
+    method: GET
+    uri: https://api.search.brave.com/res/v1/web/search?q=DINUM+France+digital+transformation&count=5&country=fr&safesearch=strict&timeout=30
+  response:
+    body:
+      string: "{\"query\":{\"original\":\"DINUM France digital transformation\",\"show_strict_warning\":false,\"is_navigational\":true,\"is_news_breaking\":false,\"spellcheck_off\":true,\"country\":\"fr\",\"bad_results\":false,\"should_fallback\":false,\"postal_code\":\"\",\"city\":\"\",\"header_country\":\"\",\"more_results_available\":true,\"state\":\"\"},\"mixed\":{\"type\":\"mixed\",\"main\":[{\"type\":\"web\",\"index\":0,\"all\":false},{\"type\":\"web\",\"index\":1,\"all\":false},{\"type\":\"videos\",\"all\":true},{\"type\":\"web\",\"index\":2,\"all\":false},{\"type\":\"web\",\"index\":3,\"all\":false},{\"type\":\"web\",\"index\":4,\"all\":false},{\"type\":\"web\",\"index\":5,\"all\":false},{\"type\":\"web\",\"index\":6,\"all\":false},{\"type\":\"web\",\"index\":7,\"all\":false},{\"type\":\"web\",\"index\":8,\"all\":false},{\"type\":\"web\",\"index\":9,\"all\":false},{\"type\":\"web\",\"index\":10,\"all\":false},{\"type\":\"web\",\"index\":11,\"all\":false},{\"type\":\"web\",\"index\":12,\"all\":false},{\"type\":\"web\",\"index\":13,\"all\":false},{\"type\":\"web\",\"index\":14,\"all\":false},{\"type\":\"web\",\"index\":15,\"all\":false},{\"type\":\"web\",\"index\":16,\"all\":false},{\"type\":\"web\",\"index\":17,\"all\":false},{\"type\":\"web\",\"index\":18,\"all\":false}],\"top\":[],\"side\":[]},\"type\":\"search\",\"videos\":{\"type\":\"videos\",\"results\":[{\"type\":\"video_result\",\"url\":\"https://www.dailymotion.com/video/x9ak9fm\",\"title\":\"Dailymotion\",\"description\":\"Skip
+        to playerSkip to main contentSkip to footer \xB7 Watch fullscreen\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"dailymotion.com\",\"hostname\":\"www.dailymotion.com\",\"favicon\":\"https://imgs.search.brave.com/eT-9fAHd-dbH53yGn6ATXAaD-bfBVauU52kMa6Bd-MM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTk0NzliNzg4/ZmZjM2U0OTg2ZDNm/YThiMWNlZGE0YTlh/NTljYTVkNDY1MjA1/OWZjNGYzNDY5NTk0/MzBkMmMyYi93d3cu/ZGFpbHltb3Rpb24u/Y29tLw\",\"path\":\"\u203A
+        video  \u203A x9ak9fm\"}},{\"type\":\"video_result\",\"url\":\"https://www.dailymotion.com/playlist/x79i7t\",\"title\":\"France
+        Relance - Transfo num\xE9rique collectivit\xE9s par DINUM\",\"description\":\"\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"dailymotion.com\",\"hostname\":\"www.dailymotion.com\",\"favicon\":\"https://imgs.search.brave.com/eT-9fAHd-dbH53yGn6ATXAaD-bfBVauU52kMa6Bd-MM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTk0NzliNzg4/ZmZjM2U0OTg2ZDNm/YThiMWNlZGE0YTlh/NTljYTVkNDY1MjA1/OWZjNGYzNDY5NTk0/MzBkMmMyYi93d3cu/ZGFpbHltb3Rpb24u/Y29tLw\",\"path\":\"\u203A
+        playlist  \u203A x79i7t\"}},{\"type\":\"video_result\",\"url\":\"https://www.dailymotion.com/video/x84uqp2\",\"title\":\"[France
+        Relance] Appel \xE0 projets Donn\xE9e - Fonds ...\",\"description\":\"Skip
+        to playerSkip to main contentSkip to footer \xB7 Watch fullscreen\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"dailymotion.com\",\"hostname\":\"www.dailymotion.com\",\"favicon\":\"https://imgs.search.brave.com/eT-9fAHd-dbH53yGn6ATXAaD-bfBVauU52kMa6Bd-MM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTk0NzliNzg4/ZmZjM2U0OTg2ZDNm/YThiMWNlZGE0YTlh/NTljYTVkNDY1MjA1/OWZjNGYzNDY5NTk0/MzBkMmMyYi93d3cu/ZGFpbHltb3Rpb24u/Y29tLw\",\"path\":\"\u203A
+        video  \u203A x84uqp2\"}},{\"type\":\"video_result\",\"url\":\"https://www.dailymotion.com/video/x84ulso\",\"title\":\"[France
+        Relance] Pr\xE9sentation g\xE9n\xE9rale des appels \xE0 projets ...\",\"description\":\"Watch
+        fullscreen\",\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"dailymotion.com\",\"hostname\":\"www.dailymotion.com\",\"favicon\":\"https://imgs.search.brave.com/eT-9fAHd-dbH53yGn6ATXAaD-bfBVauU52kMa6Bd-MM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTk0NzliNzg4/ZmZjM2U0OTg2ZDNm/YThiMWNlZGE0YTlh/NTljYTVkNDY1MjA1/OWZjNGYzNDY5NTk0/MzBkMmMyYi93d3cu/ZGFpbHltb3Rpb24u/Y29tLw\",\"path\":\"\u203A
+        video  \u203A x84ulso\"}}],\"mutated_by_goggles\":false},\"web\":{\"type\":\"search\",\"results\":[{\"title\":\"La
+        DINUM\",\"url\":\"https://www.numerique.gouv.fr/dinum\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"profile\":{\"name\":\"Numerique\",\"url\":\"https://www.numerique.gouv.fr/dinum\",\"long_name\":\"numerique.gouv.fr\",\"img\":\"https://imgs.search.brave.com/CY-QFYEdoB7S0eHPPja5hWZTP-cIBsGSQuYIUsZZFsk/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNjMxYzZhN2E4/MTM4ZjI0YTQ1Yjg4/ZjkzY2I2MTcxYWY5/NTk1NTA0YTY1YWJj/NDNmMjAwZGYzZWI5/MWFiMmExOS93d3cu/bnVtZXJpcXVlLmdv/dXYuZnIv\"},\"language\":\"unk\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"numerique.gouv.fr\",\"hostname\":\"www.numerique.gouv.fr\",\"favicon\":\"https://imgs.search.brave.com/CY-QFYEdoB7S0eHPPja5hWZTP-cIBsGSQuYIUsZZFsk/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNjMxYzZhN2E4/MTM4ZjI0YTQ1Yjg4/ZjkzY2I2MTcxYWY5/NTk1NTA0YTY1YWJj/NDNmMjAwZGYzZWI5/MWFiMmExOS93d3cu/bnVtZXJpcXVlLmdv/dXYuZnIv\",\"path\":\"\u203A
+        dinum\"}},{\"title\":\"Direction Interminist\xE9rielle du Num\xE9rique (DINUM)
+        | transformation.gouv.fr\",\"url\":\"https://www.transformation.gouv.fr/le-ministere/directions/dinum\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"La
+        direction interminist\xE9rielle du num\xE9rique (<strong>DINUM</strong>) est
+        en charge de la <strong>transformation</strong> num\xE9rique de l\u2019\xC9tat
+        au b\xE9n\xE9fice du citoyen comme de l\u2019agent, sous tous ses aspects
+        : modernisation du syst\xE8me d\u2019information de l\u2019\xC9tat, qualit\xE9
+        des services publics num\xE9riques, cr\xE9ation ...\",\"profile\":{\"name\":\"Transformation\",\"url\":\"https://www.transformation.gouv.fr/le-ministere/directions/dinum\",\"long_name\":\"transformation.gouv.fr\",\"img\":\"https://imgs.search.brave.com/MKY-rLxWsbVHs3fT9eur3JdUFfRkiuHRuB8yOiI9Fog/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGM0MGZhMTkx/NjA5MDk5MGJiYjU3/ZmNhZTJkY2NmY2Zi/NDJkZGIyMzYzZWZl/ZDJlNGM4NTNhZjNj/NmQxZTZhMS93d3cu/dHJhbnNmb3JtYXRp/b24uZ291di5mci8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"transformation.gouv.fr\",\"hostname\":\"www.transformation.gouv.fr\",\"favicon\":\"https://imgs.search.brave.com/MKY-rLxWsbVHs3fT9eur3JdUFfRkiuHRuB8yOiI9Fog/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGM0MGZhMTkx/NjA5MDk5MGJiYjU3/ZmNhZTJkY2NmY2Zi/NDJkZGIyMzYzZWZl/ZDJlNGM4NTNhZjNj/NmQxZTZhMS93d3cu/dHJhbnNmb3JtYXRp/b24uZ291di5mci8\",\"path\":\"\u203A
+        le-ministere  \u203A directions  \u203A dinum\"},\"extra_snippets\":[\"La
+        direction interminist\xE9rielle du num\xE9rique (DINUM) est en charge de la
+        transformation num\xE9rique de l\u2019\xC9tat au b\xE9n\xE9fice du citoyen
+        comme de l\u2019agent, sous tous ses aspects : modernisation du syst\xE8me
+        d\u2019information de l\u2019\xC9tat, qualit\xE9 des services publics num\xE9riques,
+        cr\xE9ation de services innovants pour les citoyens \u2026\",\"La direction
+        interminist\xE9rielle du num\xE9rique (DINUM), cr\xE9\xE9e par le d\xE9cret
+        du 25 octobre 2019, prend la suite de la direction interminist\xE9rielle du
+        num\xE9rique et du syst\xE8me d\u2019information et de communication de l\u2019\xC9tat
+        (DINSIC). Elle accompagne les minist\xE8res dans leur transformation num\xE9rique,
+        conseille le Gouvernement et d\xE9veloppe des services et ressources partag\xE9es
+        comme le r\xE9seau interminist\xE9riel de l\u2019\xC9tat, FranceConnect, data.gouv.fr
+        ou api.gouv.fr.\"]},{\"title\":\"A Digital Strategy for Efficient Public Action\",\"url\":\"https://www.numerique.gouv.fr/uploads/DINUM-roadmap_EN.pdf\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"profile\":{\"name\":\"Numerique\",\"url\":\"https://www.numerique.gouv.fr/uploads/DINUM-roadmap_EN.pdf\",\"long_name\":\"numerique.gouv.fr\",\"img\":\"https://imgs.search.brave.com/CY-QFYEdoB7S0eHPPja5hWZTP-cIBsGSQuYIUsZZFsk/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNjMxYzZhN2E4/MTM4ZjI0YTQ1Yjg4/ZjkzY2I2MTcxYWY5/NTk1NTA0YTY1YWJj/NDNmMjAwZGYzZWI5/MWFiMmExOS93d3cu/bnVtZXJpcXVlLmdv/dXYuZnIv\"},\"language\":\"unk\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"numerique.gouv.fr\",\"hostname\":\"www.numerique.gouv.fr\",\"favicon\":\"https://imgs.search.brave.com/CY-QFYEdoB7S0eHPPja5hWZTP-cIBsGSQuYIUsZZFsk/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNjMxYzZhN2E4/MTM4ZjI0YTQ1Yjg4/ZjkzY2I2MTcxYWY5/NTk1NTA0YTY1YWJj/NDNmMjAwZGYzZWI5/MWFiMmExOS93d3cu/bnVtZXJpcXVlLmdv/dXYuZnIv\",\"path\":\"\u203A
+        uploads  \u203A DINUM-roadmap_EN.pdf\"},\"content_type\":\"pdf\"},{\"title\":\"France\u2019s
+        Dinum roadmap towards sovereign cloud | Interoperable Europe Portal\",\"url\":\"https://interoperable-europe.ec.europa.eu/collection/open-source-observatory-osor/news/frances-dinum-roadmap-towards-sovereign-cloud\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"These
+        are elements that we want ... (<strong>Dinum</strong>) was presenting the
+        organisation\u2019s new roadmap for a <strong>digital</strong> strategy aimed
+        at improving the efficiency of public action in <strong>France</strong>.  \xB7
+        The strategy focuses on four priorities. It is first calling for a <strong>transformation</strong>
+        of public ...\",\"page_age\":\"2023-06-21T09:04:51\",\"profile\":{\"name\":\"Europa\",\"url\":\"https://interoperable-europe.ec.europa.eu/collection/open-source-observatory-osor/news/frances-dinum-roadmap-towards-sovereign-cloud\",\"long_name\":\"interoperable-europe.ec.europa.eu\",\"img\":\"https://imgs.search.brave.com/OoiDggQlNMLoZmeBG_h0y4NA4DpuU2dsBVvpVEPwoZE/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGVjYjM2N2Ri/ZGE0Mzg1MTI5Mzkw/MjFhMTQ0M2IyODFl/MjljZDBhZWIzNDYx/MmM5Mjk0NWQxNzM2/OWY0N2EzNS9pbnRl/cm9wZXJhYmxlLWV1/cm9wZS5lYy5ldXJv/cGEuZXUv\"},\"language\":\"en\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"article\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"interoperable-europe.ec.europa.eu\",\"hostname\":\"interoperable-europe.ec.europa.eu\",\"favicon\":\"https://imgs.search.brave.com/OoiDggQlNMLoZmeBG_h0y4NA4DpuU2dsBVvpVEPwoZE/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGVjYjM2N2Ri/ZGE0Mzg1MTI5Mzkw/MjFhMTQ0M2IyODFl/MjljZDBhZWIzNDYx/MmM5Mjk0NWQxNzM2/OWY0N2EzNS9pbnRl/cm9wZXJhYmxlLWV1/cm9wZS5lYy5ldXJv/cGEuZXUv\",\"path\":\"\u203A
+        collection  \u203A open-source-observatory-osor  \u203A news  \u203A frances-dinum-roadmap-towards-sovereign-cloud\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/o-nyhJ1rkXLeP5Ims0Xo8HpEEIJh-DVg0uFzS89jGns/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pbnRl/cm9wZXJhYmxlLWV1/cm9wZS5lYy5ldXJv/cGEuZXUvc2l0ZXMv/ZGVmYXVsdC9maWxl/cy9uZXdzL2xvZ28v/MjAyMy0wNi9tYXJr/LWtvbmlnLUVDR3Y4/czJJUEcwLXVuc3Bs/YXNoLmpwZw\",\"original\":\"https://interoperable-europe.ec.europa.eu/sites/default/files/news/logo/2023-06/mark-konig-ECGv8s2IPG0-unsplash.jpg\",\"logo\":true},\"age\":\"June
+        21, 2023\",\"extra_snippets\":[\"These are elements that we want to implement
+        in the service we are going to create.\u201D On Thursday, 1 June, Florian
+        Delezenne, the newly appointed head of the Interministerial Service Operator
+        department at the French Interministerial Directorate for Digital Services
+        (Dinum) was presenting the organisation\u2019s new roadmap for a digital strategy
+        aimed at improving the efficiency of public action in France.  \xB7 The strategy
+        focuses on four priorities. It is first calling for a transformation of public
+        organisations, strengthening of digital skills and leveraging data exploitation
+        to enhance the state\u2019s efficiency.\",\"When it comes to shared digital
+        tools, the Dinum operates various digital products in France, including the
+        State Interministerial Network (RIE), FranceConnect, D\xE9marches Simplifi\xE9es,
+        Tchap and the Interministerial Free Software Catalogue. The Dinum is now looking
+        to further develop and unify their offer of shared digital tools to bring
+        clarity to their users.\",\"\u201COpen source, independence... These are elements
+        that we want to implement in the service we are going to create.\u201D On
+        Thursday, 1 June, Florian Delezenne, the newly appointed head of the...\",\"It
+        plans to become an operator of interministerial digital products, offering
+        competitive and scalable alternatives for office tools and application programming
+        interfaces. Dinum will collaborate closely with the French National Cybersecurity
+        Agency (ANSSI) to ensure cybersecurity considerations are integrated into
+        the development of cloud solutions tailored to the specific administration's
+        needs. Furthermore, the Dinum's free software unit will provide support to
+        the Interministerial Service Operator department, leveraging their expertise
+        and experience in this field.\"]},{\"title\":\"Direction interminist\xE9rielle
+        du Num\xE9rique (DINUM) | Viva Technology \u2605\",\"url\":\"https://vivatechnology.com/partners/direction-interministerielle-du-numerique-dinum\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"The
+        interministerial <strong>digital</strong> directorate (<strong>DINUM</strong>)
+        is tasked with developing and overseeing the implementation of the State&#x27;s
+        <strong>digital</strong> strategy. As a department of the Prime Minister&#x27;s
+        office, under the Ministry of the Civil Service, Simplification, and <strong>Transformation</strong>
+        of Public Action, <strong>DINUM</strong> serves ...\",\"profile\":{\"name\":\"Vivatechnology\",\"url\":\"https://vivatechnology.com/partners/direction-interministerielle-du-numerique-dinum\",\"long_name\":\"vivatechnology.com\",\"img\":\"https://imgs.search.brave.com/kpDhMtxJFL8z9y3jh5305WKAWAD64umLtbhwPGNFHRo/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZDlmYjE4Mzlm/YzU3MWVhOTRkZmQz/NzI0MzJiNmJmYjA0/ODRjNDdkNGI2ZjQy/MjIyMDVlMDM1MWUy/YTUzYTgzOC92aXZh/dGVjaG5vbG9neS5j/b20v\"},\"language\":\"en\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"vivatechnology.com\",\"hostname\":\"vivatechnology.com\",\"favicon\":\"https://imgs.search.brave.com/kpDhMtxJFL8z9y3jh5305WKAWAD64umLtbhwPGNFHRo/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZDlmYjE4Mzlm/YzU3MWVhOTRkZmQz/NzI0MzJiNmJmYjA0/ODRjNDdkNGI2ZjQy/MjIyMDVlMDM1MWUy/YTUzYTgzOC92aXZh/dGVjaG5vbG9neS5j/b20v\",\"path\":\"\u203A
+        partners  \u203A direction-interministerielle-du-numerique-dinum\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/Q7OjYDc4sC90NXeGkCiveim9ThXtYogsvGR7EIIZDYU/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9jZG4u/dml2YXRlY2hub2xv/Z3kuY29tL3Z0LWFs/bC9hc3NldHMvaW1h/Z2VzL29wZW5ncmFw/aC9kZWZhdWx0LnBu/Zw\",\"original\":\"https://cdn.vivatechnology.com/vt-all/assets/images/opengraph/default.png\",\"logo\":false},\"extra_snippets\":[\"The
+        interministerial digital directorate (DINUM) is tasked with developing and
+        overseeing the implementation of the State's digital strategy. As a department
+        of the Prime Minister's office, under the Ministry of the Civil Service, Simplification,
+        and Transformation of Public Action, DINUM serves as the State\u2019s digital
+        leader.\",\"Its mission is to: - Enhance the efficiency, simplicity, and sovereignty
+        of the State through digital technology; - Develop and ensure the implementation
+        of the State's digital strategy; - Advise the Prime Minister and relevant
+        ministers on integrating digital technology into public policies across ministries;
+        - Foster collaboration with digital departments in all ministries and key
+        partners.\"]}],\"family_friendly\":true}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 13 Jun 2025 13:24:42 GMT
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User
+      X-Content-Type-Options:
+      - nosniff
+      X-Download-Options:
+      - noopen
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '15596'
+      server-timing:
+      - search-roundtrip;dur=709.453
+      x-ratelimit-limit:
+      - 1, 2000
+      x-ratelimit-policy:
+      - 1;w=1, 2000;w=2592000,
+      x-ratelimit-remaining:
+      - 0, 2000
+      x-ratelimit-reset:
+      - 1, 1506917
+    status:
+      code: 200
+      message: OK
 version: 1

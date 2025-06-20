@@ -58,9 +58,11 @@ class TestMultiAgents:
         assert "choice" in data[0]["chunk"]["metadata"]
         assert "choice_desc" in data[0]["chunk"]["metadata"]
 
+    @pytest.mark.vcr(record_mode="new_episodes")
     def test_multiagent_internet_search(self, client: TestClient, collection_id: str):
         """
-        Test the /multiagents endpoint with internet search enabled by patching get_rank to return [4].
+        Test the /multiagents endpoint with internet search enabled using pytest marker approach.
+        This test uses the @pytest.mark.vcr decorator to override VCR matching settings.
         """
         payload = {
             "prompt": "Recherchez des informations sur la réforme des retraites en France.",
@@ -101,3 +103,4 @@ class TestMultiAgents:
         assert response.status_code == 400, response.text
         # Verify correct exception detail
         assert response.json().get("detail") == "Multi agents search is not available."
+

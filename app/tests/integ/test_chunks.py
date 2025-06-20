@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 import pytest
 
-from app.schemas.chunks import Chunks
+from app.schemas.chunks import Chunk, Chunks
 from app.schemas.collections import CollectionVisibility
 from app.utils.variables import ENDPOINT__CHUNKS, ENDPOINT__COLLECTIONS, ENDPOINT__DOCUMENTS, ENDPOINT__FILES
 
@@ -47,6 +47,20 @@ class TestChunks:
 
         assert len(chunks.data) > 0
         assert chunks.data[0].metadata["document_id"] == DOCUMENT_ID
+
+    def test_get_chunk_by_id(self, client: TestClient, setup):
+        COLLECTION_ID, DOCUMENT_ID = setup
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__CHUNKS}/{DOCUMENT_ID}")
+        assert response.status_code == 200, response.text
+        chunks = Chunks(**response.json())
+        assert len(chunks.data) > 0
+
+        chunk_id = chunks.data[-1].id
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__CHUNKS}/{DOCUMENT_ID}/{chunk_id}")
+        assert response.status_code == 200, response.text
+
+        chunk = Chunk(**response.json())
+        assert chunk.id == chunk_id
 
     def test_delete_chunks(self, client: TestClient, setup):
         COLLECTION_ID, DOCUMENT_ID = setup

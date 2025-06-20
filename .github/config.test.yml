@@ -50,7 +50,6 @@ web_search:
       api_key: ${BRAVE_API_KEY}
       timeout: 30
 
-
 multi_agents_search:
   model: albert-small
 
@@ -58,15 +57,14 @@ mcp:
   mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
 
 databases:
-  - type: qdrant
+  - type: elasticsearch
+    context: api
     model: embeddings-small
     args:
-    
-      url: http://${QDRANT_HOST}:${QDRANT_PORT}
-      api_key: changeme
-      prefer_grpc: True
-      grpc_port: ${QDRANT_GRPC_PORT}
-      timeout: 10
+      hosts: http://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}
+      basic_auth:
+        - "elastic"
+        - "changeme"
 
   - type: redis
     args:

@@ -12,11 +12,10 @@ services:
       - ALBERT_API_KEY=${ALBERT_API_KEY}
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
-      - QDRANT_HOST=qdrant
+      - ELASTICSEARCH_HOST=elasticsearch
       - POSTGRES_PORT=5432
       - REDIS_PORT=6379
-      - QDRANT_PORT=6333
-      - QDRANT_GRPC_PORT=6334
+      - ELASTICSEARCH_PORT=9200
       - MCP_BRIDGE_HOST=albert-test-mcp-bridge-1
       - MCP_BRIDGE_PORT=8000
       - VCR_ENABLED=true
@@ -24,14 +23,13 @@ services:
       - 8000:8000
     volumes:
       - ./config.test.yml:/config.yml:ro
-      #- ../app:/app
 
     depends_on:
       redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      qdrant:
+      elasticsearch:
         condition: service_healthy
 
   postgres:
@@ -41,13 +39,12 @@ services:
     ports: !override
       - 8432:5432
 
-  qdrant:
+  elasticsearch:
     extends:
       file: ../compose.yml
-      service: qdrant
+      service: elasticsearch
     ports: !override
-      - 8333:6333
-      - 8334:6334
+      - 8337:9200
 
   redis:
     extends:
@@ -61,9 +58,9 @@ services:
       file: ../compose.yml
       service: mcp-bridge
     ports: !override
-      - 9875:8000
+      - 8336:8000
 
 volumes:
   postgres:
   redis:
-  qdrant:
+  elasticsearch:
