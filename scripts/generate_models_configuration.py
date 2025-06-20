@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import sys
 import os
 import yaml
 
@@ -10,41 +9,48 @@ MODEL_TYPES = {
     "text-generation": "Génération de Texte",
 }
 
-CONFIG_FILE = "config_tmp.yml"
 
-DEFAULT_URLS = {"openai": "https://api.openai.com/v1", "albert": "https://api.albert.fr/v1"}
+DEFAULT_URLS = {"openai": "https://api.openai.com", "albert": "https://albert.api.etalab.gouv.fr"}
 
 
 def main():
     print("\n" + "=" * 60)
-    print("CONFIGURATION DES MODÈLES IA")
+    print("MODELS CONFIGURATION FOR ALBERT-API")
     print("=" * 60)
+    configuration_file_path = ask_configuration_file_path()
     models_configuration = ask_models_configuration()
-    existing_config = get_existing_configuration()
-    write_models_configuration(existing_config, models_configuration)
+    existing_config = get_existing_configuration(configuration_file_path)
+    write_models_configuration(configuration_file_path, existing_config, models_configuration)
     display_configuration_summary(models_configuration)
+
+
+def ask_configuration_file_path():
+    configuration_file_path = input("Where do you want to store the configuration file ? [config.yml]: ").strip()
+    if not configuration_file_path:
+        configuration_file_path = "config.yml"
+    return configuration_file_path
 
 
 def ask_models_configuration():
     models = []
     for model_type, display_name in MODEL_TYPES.items():
-        question = f"Voulez-vous ajouter un modèle de type {display_name} ({model_type}) ?"
+        question = f"Do want to add a {display_name} ({model_type}) model ?"
 
         if ask_yes_no(question):
             while True:
                 try:
-                    count = input(f"Combien de modèles {display_name} voulez-vous ajouter ? [1]: ").strip()
+                    count = input(f"How many {display_name} models do you want ? [1]: ").strip()
                     if not count:
                         count = 1
                     else:
                         count = int(count)
 
                     if count < 1:
-                        print("Le nombre doit être au moins 1")
+                        print("\033[91mThe number of models should be at least 1\033[0m")
                         continue
                     break
                 except ValueError:
-                    print("Veuillez entrer un nombre valide")
+                    print("\033[91mInvalid number\033[0m")
 
             for i in range(count):
                 suffix = f" #{i + 1}" if count > 1 else ""
@@ -53,29 +59,29 @@ def ask_models_configuration():
     return models
 
 
-def get_existing_configuration():
+def get_existing_configuration(configuration_file_path: str):
     existing_config = {}
-    if os.path.exists(CONFIG_FILE):
+    if os.path.exists(configuration_file_path):
         try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            with open(configuration_file_path, "r", encoding="utf-8") as f:
                 existing_config = yaml.safe_load(f) or {}
         except yaml.YAMLError as e:
-            print(f"Erreur lors de la lecture de config.yml: {e}")
+            print(f"\033[91m Error when opening configuration file {configuration_file_path}: {e}\033[0m")
             existing_config = {}
     return existing_config
 
 
-def write_models_configuration(existing_config, models_configuration):
+def write_models_configuration(configuration_file_path, existing_config, models_configuration):
     existing_config["models"] = models_configuration
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+    with open(configuration_file_path, "w", encoding="utf-8") as f:
         yaml.dump(existing_config, f, default_flow_style=False, indent=2, allow_unicode=True, sort_keys=False)
 
 
 def display_configuration_summary(models_configuration):
-    print(f"\n✅ Configuration sauvegardée dans config.yml avec {len(models_configuration)} modèle(s)")
+    print(f"\n✅ Configuration saved with {len(models_configuration)} model(s)")
     if models_configuration:
         print("\n" + "=" * 40)
-        print("RÉSUMÉ DE LA CONFIGURATION")
+        print("CONFIGURATION SUMMARY")
         print("=" * 40)
         for model in models_configuration:
             for client in model["clients"]:
@@ -90,11 +96,11 @@ def ask_yes_no(question):
         elif response in ["n", "no", "non"]:
             return False
         else:
-            print("Veuillez répondre par 'y' (oui) ou 'n' (non)")
+            print("Answer with 'y' (yes) or 'n' (no)")
 
 
 def get_model_config(model_type, model_name):
-    print(f"\n=== Configuration du modèle {model_name} ===")
+    print(f"\n=== {model_name} model configuration ===")
     model_id = get_model_id(model_name)
     model_provider = get_model_provider(model_name)
     api_key = get_model_api_key(model_name)
@@ -112,53 +118,63 @@ def get_model_config(model_type, model_name):
 
 def get_model_api_url(model_name, model_provider):
     default_url = DEFAULT_URLS.get(model_provider, "")
-    api_url = input(f"URL de l'API pour {model_name} [{default_url}]: ").strip()
+    api_url = input(f"API URL for {model_name} [{default_url}]: ").strip()
     if not api_url:
         api_url = default_url
     return api_url
 
 
 def get_model_aliases(model_name):
-    model_aliases = input(f"Alias du modèle {model_name} []: ").strip().lower()
+    model_aliases = input(f"Model aliases {model_name} []: ").strip().lower()
     if not model_aliases:
         model_aliases = []
     return model_aliases
 
 
 def get_model_name(model_name):
-    model_full_name = input(f"Nom du modèle {model_name}: ").strip()
-    if not model_full_name:
-        print("Erreur: Le nom du modèle est requis")
-        sys.exit(1)
-    return model_full_name
+    while True:
+        model_full_name = input(f"Model name {model_name}: ").strip()
+        if model_full_name:
+            return model_full_name
+        else:
+            print("\033[91mError: model name is required\033[0m")
 
 
 def get_model_api_key(model_name):
-    api_key = input(f"Clé API pour {model_name}: ").strip()
-    if not api_key:
-        print("Erreur: La clé API est requise")
-        sys.exit(1)
-    return api_key
+    while True:
+        api_key = input(f"API key for {model_name}: ").strip()
+        if api_key:
+            return api_key
+        else:
+            print("\033[91mError: API key is required\033[0m")
 
 
 def get_model_provider(model_name):
-    print("Types disponibles: " + ", ".join(DEFAULT_URLS.keys()))
-    model_provider = input(f"Type du modèle {model_name} [openai]: ").strip().lower()
-    if not model_provider:
-        model_provider = "openai"
-    if model_provider not in ["albert", "openai"]:
-        print("Erreur: Le type doit être 'albert' ou 'openai'")
-        sys.exit(1)
-    return model_provider
+    while True:
+        print("Available types: \033[1m" + ", ".join(DEFAULT_URLS.keys()) + "\033[0m")
+        model_provider = input(f"Model type {model_name} [openai]: ").strip().lower()
+        if not model_provider:
+            model_provider = "openai"
+        if model_provider in ["albert", "openai"]:
+            return model_provider
+        else:
+            print("\033[91mError: model type must be one of: " + ", ".join(DEFAULT_URLS.keys()) + "\033[0m")
 
 
 def get_model_id(model_name):
-    model_id = input(f"ID du modèle {model_name}: ").strip()
-    if not model_id:
-        print("Erreur: L'ID du modèle est requis")
-        sys.exit(1)
-    return model_id
+    while True:
+        model_id = input(f"Model ID {model_name}: ").strip()
+        if model_id:
+            return model_id
+        print("\033[91mError: model id is required\033[0m")
+
+
+def print_error(message: str):
+    print(f"\033[91m{message}\033[0m")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\033[91mConfiguration file generation interrupted\033[0m")
