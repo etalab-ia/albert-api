@@ -24,7 +24,7 @@ from app.utils.exceptions import NotImplementedException
 logger = logging.getLogger(__name__)
 
 
-class QdrantClient(AsyncQdrantClient):
+class QdrantVectorStoreClient(AsyncQdrantClient):
     default_method = SearchMethod.SEMANTIC
 
     def __init__(self, *args, **kwargs):

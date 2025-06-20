@@ -5,7 +5,7 @@ from app.schemas import BaseModel
 
 class Chunk(BaseModel):
     object: Literal["chunk"] = "chunk"
-    id: int | str
+    id: int
     metadata: Dict[str, Any]
     content: str
 
