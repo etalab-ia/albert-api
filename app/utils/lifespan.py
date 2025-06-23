@@ -51,6 +51,7 @@ async def lifespan(app: FastAPI):
             if settings.web_search and model.id == settings.web_search.query_model:
                 raise ValueError(f"Web search model ({model.id}) must be reachable.")
             if settings.databases.vector_store and model.id == settings.databases.vector_store.model:
+                print(client)
                 raise ValueError(f"Vector store embedding model ({model.id}) must be reachable.")
             continue
 
