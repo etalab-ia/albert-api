@@ -105,10 +105,10 @@ class Roles(BaseModel):
 
 
 class UserUpdateRequest(BaseModel):
-    name: Optional[str] = Field(default=None, description="The new user name.")
-    role: Optional[int] = Field(default=None, description="The new role ID.")
-    budget: Optional[float] = Field(default=None, description="The new budget.")
-    expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp.")
+    name: Optional[str] = Field(default=None, description="The new user name. If None, the user name is not changed.")
+    role: Optional[int] = Field(default=None, description="The new role ID. If None, the user role is not changed.")
+    budget: Optional[float] = Field(default=None, description="The new budget. If None, the user will have no budget.")
+    expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp. If None, the user will never expire.")
 
     @field_validator("expires_at", mode="before")
     def must_be_future(cls, expires_at):

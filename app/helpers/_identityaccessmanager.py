@@ -270,11 +270,13 @@ class IdentityAccessManager:
             statement=select(
                 UserTable.id,
                 UserTable.name,
+                UserTable.role_id,
                 UserTable.budget,
                 UserTable.expires_at,
-                RoleTable.id.label("role_id"),
                 RoleTable.name.label("role"),
-            ).where(UserTable.id == user_id)
+            )
+            .join(RoleTable, UserTable.role_id == RoleTable.id)
+            .where(UserTable.id == user_id)
         )
         try:
             user = result.all()[0]
@@ -285,6 +287,7 @@ class IdentityAccessManager:
         name = name if name is not None else user.name
         expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
+        print(f"role_id: {role_id}", user.role_id)
         if role_id is not None and role_id != user.role_id:
             # check if role exists
             result = await session.execute(statement=select(RoleTable.id).where(RoleTable.id == role_id))
