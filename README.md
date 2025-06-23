@@ -4,74 +4,6 @@
 
 *French version below*
 
-## 🚀 Quickstart
-### Prérequis
-- Python 3.8+
-- Docker et Docker Compose
-### Installation
-
-#### 1. Installation des dépendances
-```bash
-# Installer toutes les dépendances (app, UI, développement, tests)
-make install
-```
-
-#### 2. Configuration
-
-2.1 Copier le fichier `.env`.template en `.env` et en `.env.test`. Remplir les variables si besoin:
-- `ALBERT_API_KEY`
-- `OPENAI_API_KEY`
-
-Ces variables sont utilisées pour la configuration des modèles de l'API.
-
-
-2.2 Copier le fichier `config.example.yml` en `config.yml`. 
-```bash
-cp config.example.yml config.yml
-```
-
-Vous pouvez ensuite configurer manuellement vos modèles en vous inspirant de la configuration par défaut. 
-Vous pouvez également utiliser le CLI pour générer une configuration de modèles:
-```bash
-# Générer la configuration des modèles
-make configuration
-```
-
-La configuration des modèles doit être dans le fichier de configuration de l'API (tel que défini dans `CONFIG_FILE`)
-
-### Démarrage rapide
-
-#### Option 1 : Lancement complet avec Docker
-
-```bash
-# Démarrer tous les services (API + services externes)
-make docker-compose-albert-api-up
-
-# Arrêter tous les services
-make docker-compose-albert-api-down
-```
-
-#### Option 2 : Développement local
-
-```bash
-# 1. Démarrer uniquement les services externes (Redis, Qdrant, PostgreSQL, MCP Bridge)
-make docker-compose-services-up
-
-# 2. Appliquer les migrations de base de données
-make db-app-migrate
-make db-ui-migrate
-
-# 3. Lancer l'API (dans un terminal)
-make run-api
-# L'API sera accessible sur http://localhost:8000
-
-# 4. Lancer l'interface utilisateur (dans un autre terminal)
-make run-ui
-# L'UI sera accessible sur http://localhost:8501
-```
-
-## 📫 API Gateway
-
 **Enterprise-ready Generative AI API Gateway | Open Source | Sovereign Infrastructure**
 
 **Developed by the French Government 🇫🇷**
@@ -82,6 +14,74 @@ make run-ui
 
   </ul>
 </div>
+
+
+## 🚀 Quickstart
+
+### Prerequisites
+- Python 3.8+
+- Docker and Docker Compose
+
+### Installation
+
+#### 1. Installing dependencies
+
+```bash
+make install
+```
+
+#### 2. Configuration
+
+2.1 Copy the `.env.template` file to `.env` and `.env.test`. Fill in the variables if needed:
+- `ALBERT_API_KEY`
+- `OPENAI_API_KEY`
+
+These variables are used for API model configuration.
+
+2.2 Copy the `config.example.yml` file to `config.yml`.
+
+```bash
+cp config.example.yml config.yml
+```
+
+You can then manually configure your models based on the default configuration. You can also use the CLI to generate a model configuration:
+
+```bash
+make configuration
+```
+
+The model configuration must be in the API configuration file (as defined in `CONFIG_FILE`)
+
+### Quick Start
+
+#### Option 1: Full launch with Docker
+
+```bash
+# Start all services (API + external services)
+make docker-compose-albert-api-up
+
+# Stop all services
+make docker-compose-albert-api-down
+```
+
+#### Option 2: Local development
+
+```bash
+# 1. Start only external services (Redis, Qdrant, PostgreSQL, MCP Bridge)
+make docker-compose-services-up
+
+# 2. Apply database migrations
+make db-app-migrate
+make db-ui-migrate
+
+# 3. Launch the API (in one terminal)
+make run-api
+
+# 4. Launch the user interface (in another terminal)
+make run-ui
+```
+
+## 📫 API Gateway
 
 ## 🔥 Why Albert API?
 

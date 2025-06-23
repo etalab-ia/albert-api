@@ -32,10 +32,10 @@ databases:
     context: api
     model: my-embeddings-model
     args:
-      hosts: http://${ELASTICSEARCH_HOST}:9200
+      hosts: http://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}
       basic_auth:
-        - "elastic"
-        - "changeme"
+        - ${ELASTICSEARCH_USERNAME}
+        - ${ELASTICSEARCH_PASSWORD}
 
   - type: redis
     context: api

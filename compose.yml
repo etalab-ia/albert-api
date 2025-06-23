@@ -54,13 +54,13 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.2
     restart: always
     ports:
-      - 9200:9200
+      - ${ELASTICSEARCH_PORT}:9200"
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-      - ELASTIC_USERNAME=elastic
-      - ELASTIC_PASSWORD=changeme
+      - "ELASTIC_USERNAME=${ELASTICSEARCH_USERNAME}"
+      - "ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD}"
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
     healthcheck:
@@ -68,25 +68,6 @@ services:
       interval: 4s
       timeout: 10s
       retries: 5
-
-
-#  qdrant:
-#    image: qdrant/qdrant:v1.11.5-unprivileged
-#    restart: always
-#    environment:
-#      - "QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY}"
-#    volumes:
-#      - qdrant:/qdrant/storage
-#    ports:
-#      - "${QDRANT_PORT_HTTP}:6333"
-#      - "${QDRANT_PORT_GRPC}:6334"
-#    healthcheck:
-#      test: [ "CMD-SHELL", "bash", "-c", ":> /dev/tcp/127.0.0.1/6333" ]
-#      interval: 4s
-#      timeout: 10s
-#      retries: 5
-
-
 
   mcp-bridge:
     image: ghcr.io/etalab-ia/albert-api-mcp-bridge/albert-api-mcp-bridge:latest
