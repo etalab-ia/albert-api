@@ -18,6 +18,10 @@ class PermissionType(str, Enum):
     READ_USER = "read_user"
     UPDATE_USER = "update_user"
     DELETE_USER = "delete_user"
+    CREATE_TAG = "create_tag"
+    READ_TAG = "read_tag"
+    UPDATE_TAG = "update_tag"
+    DELETE_TAG = "delete_tag"
     CREATE_PUBLIC_COLLECTION = "create_public_collection"
     READ_METRIC = "read_metric"
 
@@ -104,10 +108,53 @@ class Roles(BaseModel):
     data: List[Role]
 
 
+class Tag(BaseModel):
+    object: Literal["tag"] = "tag"
+    id: int
+    name: str
+    created_at: int
+    updated_at: int
+
+
+class Tags(BaseModel):
+    object: Literal["list"] = "list"
+    data: List[Tag]
+
+
+class TagRequest(BaseModel):
+    name: str
+
+    @field_validator("name", mode="after")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty")
+        return name
+
+
+class TagUpdateRequest(BaseModel):
+    name: Optional[str] = Field(default=None, description="The new tag name.")
+
+    @field_validator("name", mode="after")
+    def strip_name(cls, name):
+        if isinstance(name, str):
+            name = name.strip()
+            if name == "":
+                raise ValueError("Name cannot be empty")
+        return name
+
+
+class UserTag(BaseModel):
+    id: int
+    value: str
+
+
 class UserUpdateRequest(BaseModel):
     name: Optional[str] = Field(default=None, description="The new user name. If None, the user name is not changed.")
     role: Optional[int] = Field(default=None, description="The new role ID. If None, the user role is not changed.")
     budget: Optional[float] = Field(default=None, description="The new budget. If None, the user will have no budget.")
+    tags: Optional[List[UserTag]] = Field(default=None, description="The new tags. If None, the user tags are not changed.")
     expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp. If None, the user will never expire.")
 
     @field_validator("expires_at", mode="before")
@@ -135,8 +182,9 @@ class UsersResponse(BaseModel):
 class UserRequest(BaseModel):
     name: str = Field(description="The user name.")
     role: int = Field(description="The role ID.")
-    budget: Optional[float] = Field(default=None, description="The budget.")
-    expires_at: Optional[int] = Field(default=None, description="The expiration timestamp.")
+    tags: Optional[List[UserTag]] = Field(default=None, description="The new tags. If None, the user has no tags.")
+    budget: Optional[float] = Field(default=None, description="The budget. If None, the user has no budget.")
+    expires_at: Optional[int] = Field(default=None, description="The expiration timestamp. If None, the user will never expire.")
 
     @field_validator("expires_at", mode="before")
     def must_be_future(cls, expires_at):
@@ -161,6 +209,7 @@ class User(BaseModel):
     id: int
     name: str
     role: int
+    tags: List[UserTag] = []
     budget: Optional[float] = None
     expires_at: Optional[int] = None
     created_at: int
@@ -170,6 +219,10 @@ class User(BaseModel):
 class Users(BaseModel):
     object: Literal["list"] = "list"
     data: List[User]
+
+
+class TagResponse(BaseModel):
+    id: int
 
 
 class TokensResponse(BaseModel):

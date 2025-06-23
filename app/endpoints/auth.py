@@ -12,6 +12,11 @@ from app.schemas.auth import (
     Roles,
     RolesResponse,
     RoleUpdateRequest,
+    Tag,
+    TagRequest,
+    TagResponse,
+    Tags,
+    TagUpdateRequest,
     Token,
     TokenRequest,
     Tokens,
@@ -25,7 +30,7 @@ from app.schemas.auth import (
 from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
 from app.utils.settings import settings
-from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__ROLES_ME, ENDPOINT__TOKENS, ENDPOINT__USERS, ENDPOINT__USERS_ME
+from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__ROLES_ME, ENDPOINT__TAGS, ENDPOINT__TOKENS, ENDPOINT__USERS, ENDPOINT__USERS_ME
 
 router = APIRouter()
 
@@ -175,7 +180,7 @@ async def create_user(
     Create a new user.
     """
 
-    user_id = await global_context.iam.create_user(session=session, name=body.name, role_id=body.role, budget=body.budget, expires_at=body.expires_at)  # fmt: off
+    user_id = await global_context.iam.create_user(session=session, name=body.name, role_id=body.role, tags=body.tags, budget=body.budget, expires_at=body.expires_at)  # fmt: off
 
     return JSONResponse(status_code=201, content={"id": user_id})
 
@@ -219,6 +224,7 @@ async def update_user(
         user_id=user,
         name=body.name,
         role_id=body.role,
+        tags=body.tags,
         budget=body.budget,
         expires_at=body.expires_at,
     )
@@ -356,3 +362,113 @@ async def get_tokens(
     )
 
     return JSONResponse(content=Tokens(data=data).model_dump(), status_code=200)
+
+
+@router.post(
+    path=ENDPOINT__TAGS,
+    dependencies=[Security(dependency=AccessController(permissions=[PermissionType.CREATE_TAG]))],
+    include_in_schema=settings.general.log_level == "DEBUG",
+    status_code=201,
+    response_model=TagResponse,
+)
+async def create_tag(
+    request: Request,
+    body: TagRequest = Body(description="The tag creation request."),
+    session: AsyncSession = Depends(get_session),
+) -> JSONResponse:
+    """
+    Create a new tag.
+    """
+
+    tag_id = await global_context.iam.create_tag(session=session, name=body.name)
+
+    return JSONResponse(status_code=201, content={"id": tag_id})
+
+
+@router.delete(
+    path=ENDPOINT__TAGS + "/{tag}",
+    dependencies=[Security(dependency=AccessController(permissions=[PermissionType.DELETE_TAG]))],
+    include_in_schema=settings.general.log_level == "DEBUG",
+    status_code=204,
+)
+async def delete_tag(
+    request: Request,
+    tag: int = Path(description="The ID of the tag to delete."),
+    session: AsyncSession = Depends(get_session),
+) -> Response:
+    """
+    Delete a tag.
+    """
+
+    await global_context.iam.delete_tag(session=session, tag_id=tag)
+
+    return Response(status_code=204)
+
+
+@router.patch(
+    path=ENDPOINT__TAGS + "/{tag:path}",
+    dependencies=[Security(dependency=AccessController(permissions=[PermissionType.UPDATE_TAG]))],
+    include_in_schema=settings.general.log_level == "DEBUG",
+    status_code=204,
+)
+async def update_tag(
+    request: Request,
+    tag: int = Path(description="The ID of the tag to update."),
+    body: TagUpdateRequest = Body(description="The tag update request."),
+    session: AsyncSession = Depends(get_session),
+) -> Response:
+    """
+    Update a tag.
+    """
+
+    await global_context.iam.update_tag(
+        session=session,
+        tag_id=tag,
+        name=body.name,
+    )
+
+    return Response(status_code=204)
+
+
+@router.get(
+    path=ENDPOINT__TAGS + "/{tag:path}",
+    dependencies=[Security(dependency=AccessController(permissions=[PermissionType.READ_TAG]))],
+    include_in_schema=settings.general.log_level == "DEBUG",
+    status_code=200,
+    response_model=Tag,
+)
+async def get_tag(
+    request: Request,
+    tag: int = Path(description="The ID of the tag to get."),
+    session: AsyncSession = Depends(get_session),
+) -> JSONResponse:
+    """
+    Get a tag by id.
+    """
+
+    tags = await global_context.iam.get_tags(session=session, tag_id=tag)
+
+    return JSONResponse(content=tags[0].model_dump(), status_code=200)
+
+
+@router.get(
+    path=ENDPOINT__TAGS,
+    dependencies=[Security(dependency=AccessController(permissions=[PermissionType.READ_TAG]))],
+    include_in_schema=settings.general.log_level == "DEBUG",
+    status_code=200,
+    response_model=Tags,
+)
+async def get_tags(
+    request: Request,
+    offset: int = Query(default=0, ge=0, description="The offset of the tags to get."),
+    limit: int = Query(default=10, ge=1, le=100, description="The limit of the tags to get."),
+    order_by: Literal["id", "name", "created_at", "updated_at"] = Query(default="id", description="The field to order the tags by."),
+    order_direction: Literal["asc", "desc"] = Query(default="asc", description="The direction to order the tags by."),
+    session: AsyncSession = Depends(get_session),
+) -> JSONResponse:
+    """
+    Get all tags.
+    """
+    data = await global_context.iam.get_tags(session=session, offset=offset, limit=limit, order_by=order_by, order_direction=order_direction)
+
+    return JSONResponse(content=Tags(data=data).model_dump(), status_code=200)
