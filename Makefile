@@ -17,13 +17,13 @@ docker-compose-albert-api-down:
 	docker compose --env-file ${APP_ENV_FILE} down
 
 docker-compose-services-up:
-	docker compose --env-file ${APP_ENV_FILE} up redis qdrant postgres mcp-bridge --detach
+	docker compose --env-file ${APP_ENV_FILE} up redis elasticsearch postgres mcp-bridge --detach
 
 docker-compose-services-down:
 	docker compose --env-file ${APP_ENV_FILE} down
 
 docker-compose-test-services-up:
-	docker compose --env-file ${TEST_ENV_FILE} up redis qdrant postgres mcp-bridge --detach
+	docker compose --env-file ${TEST_ENV_FILE} up redis elasticsearch postgres mcp-bridge --detach
 
 docker-compose-test-services-down:
 	docker compose --env-file ${TEST_ENV_FILE} down
@@ -61,4 +61,7 @@ install-lint:
 lint:
 	pre-commit run --all-files
 
-.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ test-snap-update lint
+setup: install configuration install-lint docker-compose-services-up db-app-migrate db-ui-migrate
+
+
+.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ test-snap-update lint setup
