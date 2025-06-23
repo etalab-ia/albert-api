@@ -22,15 +22,15 @@ mcp:
   mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
 
 web_search:
-  - type: brave
-    model: albert-small
-    args:
-      api_key: ${BRAVE_API_KEY}
+  type: brave
+  query_model: albert-small
+  args:
+    api_key: ${BRAVE_API_KEY}
 
 databases:
   - type: elasticsearch
     context: api
-    model: my-embeddings-model
+    model: ${EMBEDDINGS_MODEL}
     args:
       hosts: http://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}
       basic_auth:
@@ -89,7 +89,7 @@ models:
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
-  - id: embeddings-small
+  - id: ${EMBEDDINGS_MODEL}
     type: text-embeddings-inference
     aliases: ["BAAI/bge-m3"]
     clients:
@@ -122,26 +122,26 @@ models:
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
-  - id: my-language-model
-    type: text-generation
-    clients:
-      - model: gpt-3.5-turbo
-        type: openai
-        params:
-          total: 70
-          active: 70
-          zone: WOR
-        args:
-          api_url: https://api.openai.com
-          api_key: ${OPENAI_API_KEY}
-          timeout: 60
-
-  - id: my-embeddings-model
-    type: text-embeddings-inference
-    clients:
-      - model: text-embedding-3-small
-        type: openai
-        args:
-          api_url: https://api.openai.com
-          api_key: ${OPENAI_API_KEY}
-          timeout: 60
+#  - id: my-language-model
+#    type: text-generation
+#    clients:
+#      - model: gpt-3.5-turbo
+#        type: openai
+#        params:
+#          total: 70
+#          active: 70
+#          zone: WOR
+#        args:
+#          api_url: https://api.openai.com
+#          api_key: ${OPENAI_API_KEY}
+#          timeout: 60
+#
+#  - id: my-embeddings-model
+#    type: text-embeddings-inference
+#    clients:
+#      - model: text-embedding-3-small
+#        type: openai
+#        args:
+#          api_url: https://api.openai.com
+#          api_key: ${OPENAI_API_KEY}
+#          timeout: 60
