@@ -21,6 +21,7 @@ from app.endpoints import (
     parse,
     rerank,
     search,
+    users,
 )
 from app.helpers._accesscontroller import AccessController
 from app.schemas.auth import PermissionType
@@ -47,6 +48,7 @@ from app.utils.variables import (
     ROUTER__PARSE,
     ROUTER__RERANK,
     ROUTER__SEARCH,
+    ROUTER__USERS,
 )
 
 logger = logging.getLogger(__name__)
@@ -153,6 +155,10 @@ def create_app(*args, **kwargs) -> FastAPI:
     if ROUTER__SEARCH not in settings.general.disabled_routers:
         add_hooks(router=search.router)
         app.include_router(router=search.router, tags=[ROUTER__SEARCH.title()], prefix="/v1")
+
+    if ROUTER__USERS not in settings.general.disabled_routers:
+        add_hooks(router=users.router)
+        app.include_router(router=users.router, tags=[ROUTER__USERS.title()], prefix="/v1")
 
     # DEPRECATED LEGACY ENDPOINTS
     if ROUTER__COMPLETIONS not in settings.general.disabled_routers:
