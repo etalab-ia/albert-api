@@ -59,7 +59,7 @@ The model configuration must be in the API configuration file (as defined in `CO
 ```bash
 # Start all services (API + external services)
 make docker-compose-albert-api-up
-
+make db-app-migrate
 # Stop all services
 make docker-compose-albert-api-down
 ```
@@ -70,14 +70,10 @@ make docker-compose-albert-api-down
 # 1. Start only external services (Redis, Qdrant, PostgreSQL, MCP Bridge)
 make docker-compose-services-up
 
-# 2. Apply database migrations
-make db-app-migrate
-make db-ui-migrate
-
-# 3. Launch the API (in one terminal)
+# 2. Launch the API (in one terminal)
 make run-api
 
-# 4. Launch the user interface (in another terminal)
+# 3. Launch the user interface (in another terminal)
 make run-ui
 ```
 
