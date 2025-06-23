@@ -1,11 +1,12 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers._documentmanager import DocumentManager
-from app.schemas.parse import ParsedDocument, ParsedDocumentPage, ParsedDocumentMetadata
 from app.schemas.documents import Chunker
+from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage
 from app.utils.exceptions import CollectionNotFoundException
 
 

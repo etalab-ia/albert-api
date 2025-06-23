@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+from jose import JWTError
+import pytest
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from jose import JWTError
 
 from app.helpers._identityaccessmanager import IdentityAccessManager
 from app.utils.exceptions import TokenNotFoundException, UserNotFoundException
