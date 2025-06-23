@@ -10,7 +10,7 @@
 
 [![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/albert-api/refs/heads/main/.github/badges/coverage.json)](https://github.com/etalab-ia/albert-api)
 
-[**Changelog**](https://github.com/etalab-ia/albert-api/blob/main/CHANGELOG.md) | [**Documentation**](https://albert.api.etalab.gouv.fr/documentation) | [**Playground**](https://albert.api.etalab.gouv.fr/playground) | [**API Status**](https://albert.api.etalab.gouv.fr/status) | [**Swagger**](https://albert.api.etalab.gouv.fr/swagger)
+[**Documentation**](https://albert.api.etalab.gouv.fr/documentation) | [**Playground**](https://albert.api.etalab.gouv.fr/playground) | [**API Status**](https://albert.api.etalab.gouv.fr/status) | [**Swagger**](https://albert.api.etalab.gouv.fr/swagger)
 
   </ul>
 </div>
