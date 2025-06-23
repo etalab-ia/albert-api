@@ -4,6 +4,7 @@ PYPROJECT=pyproject.toml
 APP_ENV_FILE=.env
 TEST_ENV_FILE=.env.test
 
+
 install:
 	pip install ".[app,ui,dev,test]"
 
@@ -63,4 +64,4 @@ lint:
 
 setup: install configuration install-lint docker-compose-services-up db-app-migrate db-ui-migrate
 
-.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ test-snap-update lint setup
+.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ test-snap-update lint setup docker-compose-ci-up
