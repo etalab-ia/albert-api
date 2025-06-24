@@ -30,7 +30,7 @@ if "selected_collections" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
     st.session_state["sources"] = []
-    st.session_state["rag_chunks"] = []  # Nouveau : stockage des chunks détaillés
+    st.session_state["rag_chunks"] = []  
 
 if "document_context" not in st.session_state:
     st.session_state["document_context"] = None
