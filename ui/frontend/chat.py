@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import streamlit as st
 
-from ui.backend.chat import generate_stream
+from ui.backend.chat import generate_stream, format_chunk_for_display, get_chunk_full_content
 from ui.backend.common import get_collections, get_limits, get_models
 from ui.backend.document_parsing import (
     parse_document, 
@@ -30,6 +30,7 @@ if "selected_collections" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
     st.session_state["sources"] = []
+    st.session_state["rag_chunks"] = []  # Nouveau : stockage des chunks détaillés
 
 if "document_context" not in st.session_state:
     st.session_state["document_context"] = None
@@ -43,6 +44,7 @@ with st.sidebar:
     if new_chat:
         st.session_state.pop("messages", None)
         st.session_state.pop("sources", None)
+        st.session_state.pop("rag_chunks", None)  # Nettoyer les chunks aussi
         st.session_state.pop("document_context", None)
         st.session_state.pop("auto_created_collection", None)
         st.rerun()
@@ -167,6 +169,26 @@ with st.sidebar:
     else:
         rag = st.toggle(label="Activated RAG", value=False, disabled=True, help="You need to select at least one collection to activate RAG.")
 
+    # Section discrète pour les statistiques RAG
+    if rag and st.session_state.get("rag_chunks"):
+        total_chunks = sum(len(chunks) for chunks in st.session_state.rag_chunks if chunks)
+        if total_chunks > 0:
+            with st.expander("📊 Statistiques RAG", expanded=False):
+                st.metric("Total chunks utilisés", total_chunks)
+                st.metric("Messages avec RAG", len([c for c in st.session_state.rag_chunks if c]))
+                
+                # Répartition par document
+                doc_usage = {}
+                for chunks in st.session_state.rag_chunks:
+                    for chunk in chunks:
+                        doc_name = chunk.get("document_name", "Unknown")
+                        doc_usage[doc_name] = doc_usage.get(doc_name, 0) + 1
+                
+                if doc_usage:
+                    st.write("**Utilisation par document :**")
+                    for doc, count in sorted(doc_usage.items(), key=lambda x: x[1], reverse=True):
+                        st.write(f"• {doc}: {count} chunks")
+
 # Main
 with st.chat_message(name="assistant"):
     st.markdown(
@@ -185,8 +207,35 @@ Comment puis-je vous aider ?
 for i, message in enumerate(st.session_state.messages):
     with st.chat_message(message["role"], avatar=":material/face:" if message["role"] == "user" else None):
         st.markdown(message["content"])
+        
+        # Affichage des sources comme avant
         if st.session_state.sources[i]:
-            st.pills(key=str(uuid4()), label="Sources", options=st.session_state.sources[i], label_visibility="hidden")
+            st.pills(key=f"sources_{uuid4()}", label="Sources", options=st.session_state.sources[i], label_visibility="hidden")
+        
+        # Nouveau : Accès discret aux chunks RAG (seulement pour les réponses de l'assistant)
+        if message["role"] == "assistant" and i < len(st.session_state.rag_chunks) and st.session_state.rag_chunks[i]:
+            chunks = st.session_state.rag_chunks[i]
+            
+            with st.expander(f"🔍 Détails RAG ({len(chunks)} chunks utilisés)", expanded=False):
+                
+                # Onglets pour différentes vues
+                tab1, tab2 = st.tabs(["📋 Aperçu", "📄 Contenu complet"])
+                
+                with tab1:
+                    st.write("**Chunks utilisés dans cette réponse :**")
+                    for idx, chunk in enumerate(chunks):
+                        st.markdown(format_chunk_for_display(chunk, idx))
+                        st.divider()
+                
+                with tab2:
+                    chunk_selector = st.selectbox(
+                        "Sélectionner un chunk à examiner",
+                        range(len(chunks)),
+                        format_func=lambda x: f"Chunk {x+1}: {chunks[x]['document_name'][:30]}..."
+                    )
+                    
+                    if chunk_selector is not None:
+                        st.markdown(get_chunk_full_content(chunks[chunk_selector]))
 
 sources = []
 if prompt := st.chat_input(placeholder="Message to Albert"):
@@ -214,13 +263,14 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
     # Sauvegarder pour l'affichage (sans le contexte système)
     st.session_state.messages.append(user_message)
     st.session_state.sources.append([])
+    st.session_state.rag_chunks.append([])  # Initialiser les chunks pour ce message
     
     with st.chat_message(name="user", avatar=":material/face:"):
         st.markdown(body=prompt)
 
     with st.chat_message(name="assistant"):
         try:
-            stream, sources = generate_stream(
+            stream, sources, rag_chunks = generate_stream(
                 messages=messages_to_send,
                 params=params,
                 rag=rag,
@@ -244,6 +294,7 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
     assistant_message = {"role": "assistant", "content": response}
     st.session_state.messages.append(assistant_message)
     st.session_state.sources.append(formatted_sources)
+    st.session_state.rag_chunks.append(rag_chunks)  # Stocker les chunks détaillés
 
 with st._bottom:
     st.caption(
