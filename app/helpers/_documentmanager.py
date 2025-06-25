@@ -407,6 +407,27 @@ class DocumentManager:
         prompt: str,
         k: int = 5,
     ) -> Optional[int]:
+        
+            # Séparateurs optimisés pour Markdown
+        markdown_separators = [
+            "\n# ",      # Titres niveau 1
+            "\n## ",     # Titres niveau 2
+            "\n### ",    # Titres niveau 3
+            "\n#### ",   # Titres niveau 4
+            "\n##### ",  # Titres niveau 5
+            "\n###### ", # Titres niveau 6
+            "\n\n",      # Paragraphes (double saut de ligne)
+            "\n```",     # Blocs de code
+            "\n---",     # Séparateurs horizontaux
+            "\n- ",      # Listes à puces
+            "\n* ",      # Listes à puces (variante)
+            "\n1. ",     # Listes numérotées
+            "\n",        # Sauts de ligne simples
+            ". ",        # Fin de phrases
+            " ",         # Espaces
+            ""           # Caractères individuels (dernier recours)
+        ]
+
         web_query = await self.web_search.get_web_query(prompt=prompt)
         web_results = await self.web_search.get_results(query=web_query, k=k)
         collection_id = None
@@ -434,9 +455,9 @@ class DocumentManager:
                     chunker=Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER,
                     chunk_overlap=0,
                     chunk_min_size=20,
-                    chunk_size=2048,
+                    chunk_size=4000,
                     length_function=len,
-                    language_separators=Language.HTML.value,
+                    separators=markdown_separators,
                 )
 
         return collection_id

@@ -10,6 +10,8 @@ from app.schemas.core.documents import FileType, ParserParams
 from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage
 from app.utils.exceptions import UnsupportedFileTypeException
 
+from html_to_markdown import convert_to_markdown
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,26 +124,52 @@ class ParserManager:
     async def _parse_html(self, **params: ParserParams) -> ParsedDocument:
         params = ParserParams(**params)
 
+        # Utilise le parser_client si disponible et supporte HTML
         if self.parser_client and FileType.HTML in self.parser_client.SUPPORTED_FORMATS:
             document = await self.parser_client.parse(**params.model_dump())
             return document
 
         try:
-            document = await params.file.read()
+            # Lit le contenu du fichier HTML
+            document_content = await params.file.read()
+            
+            # S'assure que le contenu est une string (peut être en bytes)
+            if isinstance(document_content, bytes):
+                document_content = document_content.decode('utf-8', errors='ignore')
+            
+            # Convertit le HTML en Markdown
+            try:
+                markdown_content = convert_to_markdown(
+                    document_content,
+                )
+                
+                # Nettoie le markdown (optionnel)
+                markdown_content = markdown_content.strip()
+                
+            except Exception as e:
+                # En cas d'erreur lors de la conversion, log l'erreur et utilise le contenu HTML brut
+                logging.warning(f"Erreur lors de la conversion HTML vers Markdown: {e}")
+                markdown_content = document_content
+            
+            # Crée le document parsé avec le contenu Markdown
             document = ParsedDocument(
                 data=[
                     ParsedDocumentPage(
-                        content=document,
+                        content=markdown_content,
                         images={},
-                        metadata=ParsedDocumentMetadata(document_name=params.file.filename),
+                        metadata=ParsedDocumentMetadata(
+                            document_name=params.file.filename,
+                            content_type="text/markdown"  # Indique que le contenu est en Markdown
+                        ),
                     )
                 ]
             )
             return document
-
+            
         except Exception as e:
-            logger.exception(f"Failed to parse html file: {e}")
-            raise HTTPException(status_code=500, detail="Failed to parse html file.")
+            # Gestion d'erreur générale
+            logging.error(f"Erreur lors du parsing du fichier HTML {params.file.filename}: {e}")
+            raise
 
     async def _parse_md(self, **kwargs) -> ParsedDocument:
         params = ParserParams(**kwargs)
