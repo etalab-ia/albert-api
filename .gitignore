@@ -209,4 +209,5 @@ uv.lock
 .envrc
 .direnv/
 
-sandbox.ipynb
+*.ipynb
+!docs/tutorials/*.ipynb
