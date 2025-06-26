@@ -416,7 +416,7 @@ class DocumentManager:
             "\n#### ",   # Titres niveau 4
             "\n##### ",  # Titres niveau 5
             "\n###### ", # Titres niveau 6
-            "\n\n",      # Paragraphes (double saut de ligne)
+            "\n\n",      # Paragraphes
             "\n```",     # Blocs de code
             "\n---",     # Séparateurs horizontaux
             "\n- ",      # Listes à puces
@@ -425,7 +425,7 @@ class DocumentManager:
             "\n",        # Sauts de ligne simples
             ". ",        # Fin de phrases
             " ",         # Espaces
-            ""           # Caractères individuels (dernier recours)
+            ""           # Caractères individuels 
         ]
 
         web_query = await self.web_search.get_web_query(prompt=prompt)
