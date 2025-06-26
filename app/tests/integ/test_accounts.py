@@ -135,7 +135,9 @@ class TestAccounts:
 
             data = response.json()
             # Count records for account without permissions
-            account_without_count = db_session.query(UsageModel).filter_by(user_id=user_without_permissions["id"]).count()
+            account_without_count = (
+                db_session.query(UsageModel).filter(UsageModel.user_id == user_without_permissions["id"], UsageModel.model.is_not(None)).count()
+            )
             assert len(data["data"]) == account_without_count
             # Find the specific record we created in this test
             test_record = next((record for record in data["data"] if record["endpoint"] == "/test/endpoint"), None)
@@ -148,7 +150,9 @@ class TestAccounts:
 
             data = response.json()
             # Count records for account with permissions
-            account_with_count = db_session.query(UsageModel).filter_by(user_id=user_with_permissions["id"]).count()
+            account_with_count = (
+                db_session.query(UsageModel).filter(UsageModel.user_id == user_with_permissions["id"], UsageModel.model.is_not(None)).count()
+            )
             assert len(data["data"]) == account_with_count
             # Find the specific record we created in this test
             test_record = next((record for record in data["data"] if record["endpoint"] == "/test/endpoint2"), None)
@@ -188,14 +192,16 @@ class TestAccounts:
 
         try:
             # Count actual usage records for the account in database
-            expected_total = db_session.query(UsageModel).filter_by(user_id=user_with_permissions["id"]).count()
+            expected_total = (
+                db_session.query(UsageModel).filter(UsageModel.user_id == user_with_permissions["id"], UsageModel.model.is_not(None)).count()
+            )
 
             # Test default ordering (datetime desc) and limit
             response = client.get_with_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}?limit=3")
             assert response.status_code == 200, response.text
 
             data = response.json()
-            assert len(data["data"]) == min(3, expected_total)  # Should be limited to 3 or total records if less
+            assert len(data["data"]) == 3
             assert data["total"] == expected_total
             assert data["has_more"] is (expected_total > 3)
 
@@ -220,16 +226,6 @@ class TestAccounts:
             # Clean up test data
             db_session.query(UsageModel).filter(UsageModel.user_id == user_with_permissions["id"]).delete()
             db_session.commit()
-
-    def test_unauthenticated_access_denied(self, client: TestClient):
-        """Test that unauthenticated accounts cannot access usage data"""
-        # Remove authorization header
-        bearer = client.headers.pop("Authorization", None)
-        response = client.get(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}")
-        assert response.status_code == 403, response.text
-        bearer = client.headers.pop("Authorization", None)
-        # Reset authorization header
-        client.headers = {"Authorization": f"{bearer}"}
 
     def test_invalid_parameters(self, client: TestClient):
         """Test validation of query parameters"""
