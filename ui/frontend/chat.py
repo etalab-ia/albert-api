@@ -2,8 +2,14 @@ from uuid import uuid4
 
 import streamlit as st
 
-from ui.backend.chat import generate_stream
+from ui.backend.chat import generate_stream, format_chunk_for_display, get_chunk_full_content
 from ui.backend.common import get_collections, get_limits, get_models
+from ui.backend.document_parsing import (
+    parse_document, 
+    count_document_characters, 
+    extract_text_from_parsed_document,
+    process_large_document
+)
 from ui.frontend.header import header
 from ui.variables import MODEL_TYPE_IMAGE_TEXT_TO_TEXT, MODEL_TYPE_LANGUAGE
 
@@ -24,6 +30,13 @@ if "selected_collections" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
     st.session_state["sources"] = []
+    st.session_state["rag_chunks"] = []  
+
+if "document_context" not in st.session_state:
+    st.session_state["document_context"] = None
+
+if "auto_created_collection" not in st.session_state:
+    st.session_state["auto_created_collection"] = None
 
 # Sidebar
 with st.sidebar:
@@ -31,16 +44,69 @@ with st.sidebar:
     if new_chat:
         st.session_state.pop("messages", None)
         st.session_state.pop("sources", None)
+        st.session_state.pop("rag_chunks", None)  # Nettoyer les chunks aussi
+        st.session_state.pop("document_context", None)
+        st.session_state.pop("auto_created_collection", None)
         st.rerun()
 
+    # Section d'upload de document
+    st.subheader("📄 Document")
+    uploaded_file = st.file_uploader(
+        "Ajouter un document au chat",
+        type=['pdf', 'txt', 'md', 'html', 'htm'],
+        help="Les documents < 10k caractères seront ajoutés directement au contexte. Les plus volumineux créeront une collection."
+    )
+    
+    if uploaded_file is not None:
+        if st.button("🔄 Traiter le document", use_container_width=True):
+            try:
+                # Parse le document
+                with st.spinner("Parsing du document..."):
+                    parsed_document = parse_document(uploaded_file)
+                    char_count = count_document_characters(parsed_document)
+                
+                if char_count < 10000:
+                    # Ajouter au contexte direct
+                    document_text = extract_text_from_parsed_document(parsed_document)
+                    st.session_state["document_context"] = {
+                        "filename": uploaded_file.name,
+                        "content": document_text,
+                        "char_count": char_count
+                    }
+                    st.success(f"✅ Document '{uploaded_file.name}' ajouté au contexte ({char_count:,} caractères)")
+                
+                else:
+                    # Créer collection et uploader
+                    with st.spinner("Création de la collection et upload..."):
+                        collection_id = process_large_document(uploaded_file, char_count)
+                        if collection_id:
+                            st.session_state["auto_created_collection"] = collection_id
+                            # Ajouter automatiquement à la sélection
+                            if collection_id not in st.session_state.selected_collections:
+                                st.session_state.selected_collections.append(collection_id)
+                            st.success(f"✅ Document volumineux traité - Collection créée ({char_count:,} caractères)")
+                            st.rerun()
+                        else:
+                            st.error("❌ Erreur lors de la création de la collection")
+            
+            except Exception as e:
+                st.error(f"❌ Erreur: {str(e)}")
+
+    # Affichage du contexte actuel
+    if st.session_state.get("document_context"):
+        with st.expander("📄 Document en contexte"):
+            doc_info = st.session_state["document_context"]
+            st.write(f"**Fichier:** {doc_info['filename']}")
+            st.write(f"**Caractères:** {doc_info['char_count']:,}")
+            if st.button("🗑️ Retirer du contexte"):
+                st.session_state.pop("document_context", None)
+                st.rerun()
+
     # Initialize params structure
-    # sampling_params for LLM model, temperature, etc.
-    # rag_params for collections, k, method for search.
     params = {"sampling_params": {}, "rag_params": {}}
 
     st.subheader(body="Chat parameters")
     params["sampling_params"]["model"] = st.selectbox(label="Language model", options=models)
-    # Search method moved to RAG parameters section
     params["sampling_params"]["temperature"] = st.slider(label="Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
 
     max_tokens_active = st.toggle(label="Max tokens", value=None)
@@ -48,22 +114,26 @@ with st.sidebar:
     params["sampling_params"]["max_tokens"] = max_tokens if max_tokens_active else None
 
     st.subheader(body="RAG parameters")
-    # Search method selection now under RAG parameters
     params["rag_params"]["method"] = st.selectbox(label="Search method", options=SEARCH_METHODS, index=0)
 
     if collections:
-
         @st.dialog(title="Select collections")
         def add_collection(collections: list) -> None:
             selected_collections = st.session_state.selected_collections
             col1, col2 = st.columns(spec=2)
 
             for collection in collections:
+                # Marquer la collection auto-créée
+                collection_label = f"{collection['name']} ({collection['id']})"
+                if collection['id'] == st.session_state.get("auto_created_collection"):
+                    collection_label += " 🤖"
+                
                 if st.checkbox(
-                    label=f"{collection["name"]} ({collection["id"]})",
+                    label=collection_label,
                     value=False if collection["id"] not in st.session_state.selected_collections else True,
                 ):
-                    selected_collections.append(collection["id"])
+                    if collection["id"] not in selected_collections:
+                        selected_collections.append(collection["id"])
                 elif collection["id"] in selected_collections:
                     selected_collections.remove(collection["id"])
 
@@ -90,15 +160,34 @@ with st.sidebar:
 
         params["rag_params"]["collections"] = st.session_state.selected_collections
         params["rag_params"]["k"] = st.number_input(label="Number of chunks to retrieve (k)", value=5)
-    else:  # Ensure default values if no collections
+    else:
         params["rag_params"]["collections"] = []
-        # Default k, consistent with number_input default if collections were present
         params["rag_params"]["k"] = 5
 
-    if st.session_state.selected_collections:  # or params["rag_params"]["collections"]
+    if st.session_state.selected_collections:
         rag = st.toggle(label="Activated RAG", value=True, disabled=not bool(params["rag_params"]["collections"]))
     else:
         rag = st.toggle(label="Activated RAG", value=False, disabled=True, help="You need to select at least one collection to activate RAG.")
+
+    # Section discrète pour les statistiques RAG
+    if rag and st.session_state.get("rag_chunks"):
+        total_chunks = sum(len(chunks) for chunks in st.session_state.rag_chunks if chunks)
+        if total_chunks > 0:
+            with st.expander("📊 Statistiques RAG", expanded=False):
+                st.metric("Total chunks utilisés", total_chunks)
+                st.metric("Messages avec RAG", len([c for c in st.session_state.rag_chunks if c]))
+                
+                # Répartition par document
+                doc_usage = {}
+                for chunks in st.session_state.rag_chunks:
+                    for chunk in chunks:
+                        doc_name = chunk.get("document_name", "Unknown")
+                        doc_usage[doc_name] = doc_usage.get(doc_name, 0) + 1
+                
+                if doc_usage:
+                    st.write("**Utilisation par document :**")
+                    for doc, count in sorted(doc_usage.items(), key=lambda x: x[1], reverse=True):
+                        st.write(f"• {doc}: {count} chunks")
 
 # Main
 with st.chat_message(name="assistant"):
@@ -106,6 +195,10 @@ with st.chat_message(name="assistant"):
         body="""Bonjour je suis Albert, et je peux vous aider si vous avez des questions administratives !
 
 Je peux me connecter à vos bases de connaissances, pour ça sélectionnez les collections voulues dans le menu de gauche. Si vous ne souhaitez pas utiliser de collection, désactivez le RAG en décochant la fonction "Activated RAG".
+
+Vous pouvez également **uploader un document** directement dans le chat :
+- 📄 Documents < 10k caractères : ajoutés directement au contexte
+- 📁 Documents volumineux : une collection sera créée automatiquement
                 
 Comment puis-je vous aider ?
 """
@@ -114,22 +207,71 @@ Comment puis-je vous aider ?
 for i, message in enumerate(st.session_state.messages):
     with st.chat_message(message["role"], avatar=":material/face:" if message["role"] == "user" else None):
         st.markdown(message["content"])
+        
+        # Affichage des sources comme avant
         if st.session_state.sources[i]:
-            st.pills(key=str(uuid4()), label="Sources", options=st.session_state.sources[i], label_visibility="hidden")
+            st.pills(key=f"sources_{uuid4()}", label="Sources", options=st.session_state.sources[i], label_visibility="hidden")
+        
+        # Nouveau : Accès discret aux chunks RAG (seulement pour les réponses de l'assistant)
+        if message["role"] == "assistant" and i < len(st.session_state.rag_chunks) and st.session_state.rag_chunks[i]:
+            chunks = st.session_state.rag_chunks[i]
+            
+            with st.expander(f"🔍 Détails RAG ({len(chunks)} chunks utilisés)", expanded=False):
+                
+                # Onglets pour différentes vues
+                tab1, tab2 = st.tabs(["📋 Aperçu", "📄 Contenu complet"])
+                
+                with tab1:
+                    st.write("**Chunks utilisés dans cette réponse :**")
+                    for idx, chunk in enumerate(chunks):
+                        st.markdown(format_chunk_for_display(chunk, idx))
+                        st.divider()
+                
+                with tab2:
+                    chunk_selector = st.selectbox(
+                        "Sélectionner un chunk à examiner",
+                        range(len(chunks)),
+                        format_func=lambda x: f"Chunk {x+1}: {chunks[x]['document_name'][:30]}..."
+                    )
+                    
+                    if chunk_selector is not None:
+                        st.markdown(get_chunk_full_content(chunks[chunk_selector]))
 
 sources = []
 if prompt := st.chat_input(placeholder="Message to Albert"):
-    # send message to the model
+    # Préparer les messages en incluant le contexte du document si présent
+    messages_to_send = st.session_state.messages.copy()
+    
+    # Ajouter le contexte du document si présent
+    if st.session_state.get("document_context"):
+        doc_context = st.session_state["document_context"]
+        system_message = {
+            "role": "system", 
+            "content": f"Document '{doc_context['filename']}' est disponible dans le contexte:\n\n{doc_context['content']}"
+        }
+        # Insérer au début si pas déjà présent
+        if not messages_to_send or messages_to_send[0].get("role") != "system":
+            messages_to_send.insert(0, system_message)
+        else:
+            # Remplacer le message système existant
+            messages_to_send[0] = system_message
+    
+    # Ajouter le message utilisateur
     user_message = {"role": "user", "content": prompt}
+    messages_to_send.append(user_message)
+    
+    # Sauvegarder pour l'affichage (sans le contexte système)
     st.session_state.messages.append(user_message)
     st.session_state.sources.append([])
+    st.session_state.rag_chunks.append([])  # Initialiser les chunks pour ce message
+    
     with st.chat_message(name="user", avatar=":material/face:"):
         st.markdown(body=prompt)
 
     with st.chat_message(name="assistant"):
         try:
-            stream, sources = generate_stream(
-                messages=st.session_state.messages,
+            stream, sources, rag_chunks = generate_stream(
+                messages=messages_to_send,
                 params=params,
                 rag=rag,
                 rerank=False,
@@ -152,6 +294,7 @@ if prompt := st.chat_input(placeholder="Message to Albert"):
     assistant_message = {"role": "assistant", "content": response}
     st.session_state.messages.append(assistant_message)
     st.session_state.sources.append(formatted_sources)
+    st.session_state.rag_chunks.append(rag_chunks)  # Stocker les chunks détaillés
 
 with st._bottom:
     st.caption(

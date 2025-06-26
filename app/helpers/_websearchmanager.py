@@ -82,5 +82,4 @@ Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec
             file = BytesIO(response.text.encode("utf-8"))
             file = UploadFile(filename=f"{url}.html", file=file, headers=Headers({"content-type": "text/html"}))
             results.append(file)
-
         return results
