@@ -37,7 +37,7 @@ async def get_account_usage(
     """
 
     # Build the query to get usage data for the current account
-    query = select(UsageModel).where(UsageModel.user_id == current_user.id)
+    query = select(UsageModel).where(UsageModel.user_id == current_user.id).where(UsageModel.model.is_not(None))
 
     # Apply ordering
     order_field = getattr(UsageModel, order_by)
@@ -54,7 +54,7 @@ async def get_account_usage(
     usage_records = result.scalars().all()
 
     # Get total count for this account
-    count_query = select(UsageModel.id).where(UsageModel.user_id == current_user.id)
+    count_query = select(UsageModel.id).where(UsageModel.user_id == current_user.id).where(UsageModel.model.is_not(None))
     count_result = await session.execute(count_query)
     total_count = len(count_result.scalars().all())
 
