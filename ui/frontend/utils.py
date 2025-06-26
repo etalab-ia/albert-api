@@ -514,7 +514,7 @@ def input_new_user_tags(all_tags: list, selected_user: dict):
         disabled=True if disabled else ["Tag"],  # Only allow editing Value column when not disabled
         column_config={
             "Tag": st.column_config.TextColumn(label="Tag", width="large", disabled=True),
-            # "Value": st.column_config.TextColumn(label="Value", width="large"),
+            "Value": st.column_config.TextColumn(label="Value", width="large"),
         },
         height=28 * len(all_tags) + 37,
         row_height=28,

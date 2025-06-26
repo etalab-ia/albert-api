@@ -97,7 +97,7 @@ with st.sidebar:
 # -----------------------------------------------------------------------------
 # Tags management
 # -----------------------------------------------------------------------------
-
+st.markdown(body="#### Tags")
 with st.expander(
     label="Tags",
     expanded=not st.session_state.get("new_tag", False)
