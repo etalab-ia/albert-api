@@ -15,6 +15,10 @@ ADMIN_PERMISSIONS = [
     "read_user",
     "update_user",
     "delete_user",
+    "create_tag",
+    "read_tag",
+    "update_tag",
+    "delete_tag",
 ]
 
 TRANSCRIPTION_SUPPORTED_LANGUAGES = [

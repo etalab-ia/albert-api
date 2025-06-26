@@ -4,10 +4,10 @@ import pandas as pd
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
-from ui.backend.common import get_collections, get_documents, get_limits, get_models, get_roles, get_users
+from ui.backend.common import get_collections, get_documents, get_limits, get_models, get_roles, get_users, get_tags
 
 
-def ressources_selector(ressource: Literal["collection", "role", "user", "document"], filter: Any = None, per_page: int = 30):
+def ressources_selector(ressource: Literal["collection", "role", "user", "document", "tag"], filter: Any = None, per_page: int = 30):
     key = f"{ressource}-offset"
 
     if ressource == "role":
@@ -91,6 +91,34 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
             "Name": st.column_config.TextColumn(label="Name", width="medium"),
             "Chunks": st.column_config.TextColumn(label="Chunks", width="small"),
             "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
+        }
+
+    elif ressource == "tag":
+        col1, col2 = st.columns(2)
+        with col1:
+            order_by = st.selectbox(label="Order by", options=["id", "name", "created_at", "updated_at"], index=0, key=f"order_by-{ressource}")
+        with col2:
+            order_direction = st.selectbox(label="Order direction", options=["asc", "desc"], index=0, key=f"order_direction-{ressource}")
+
+        ressources = get_tags(offset=st.session_state.get(key, 0), limit=per_page, order_by=order_by, order_direction=order_direction)
+        new_ressource = {"name": None, "id": None}
+
+        data = pd.DataFrame(
+            data=[
+                {
+                    "ID": tag["id"],
+                    "Name": tag["name"],
+                    "Created at": pd.to_datetime(tag["created_at"], unit="s"),
+                    "Updated at": pd.to_datetime(tag["updated_at"], unit="s"),
+                }
+                for tag in ressources
+            ],
+        )
+        column_config = {
+            "ID": st.column_config.TextColumn(label="ID", width="small"),
+            "Name": st.column_config.TextColumn(label="Name", width="large"),
+            "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True, width="small"),
+            "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True, width="small"),
         }
 
     else:  # collection
@@ -219,7 +247,7 @@ def input_new_role_permissions(selected_role: dict):
         use_container_width=True,
     ):
         disabled = (not st.session_state.get("update_role", False) and not st.session_state.get("new_role", False)) or (st.session_state["no_roles"] and not st.session_state.get("new_role", False))  # fmt: off
-        col1, col2, col3 = st.columns(spec=3)
+        col1, col2, col3, col4 = st.columns(spec=4)
         new_role_permissions = []
         with col1:
             st.caption("Roles")
@@ -253,6 +281,37 @@ def input_new_role_permissions(selected_role: dict):
                 new_role_permissions.append("update_role")
 
         with col2:
+            st.caption("Tags")
+            if st.checkbox(
+                label="Create tag",
+                key="create_tag_checkbox",
+                value="create_tag" in selected_role.get("permissions", []),
+                disabled=disabled,
+            ):
+                new_role_permissions.append("create_tag")
+            if st.checkbox(
+                label="Read tag",
+                key="read_tag_checkbox",
+                value="read_tag" in selected_role.get("permissions", []),
+                disabled=disabled,
+            ):
+                new_role_permissions.append("read_tag")
+            if st.checkbox(
+                label="Delete tag",
+                key="delete_tag_checkbox",
+                value="delete_tag" in selected_role.get("permissions", []),
+                disabled=disabled,
+            ):
+                new_role_permissions.append("delete_tag")
+            if st.checkbox(
+                label="Update tag",
+                key="update_tag_checkbox",
+                value="update_tag" in selected_role.get("permissions", []),
+                disabled=disabled,
+            ):
+                new_role_permissions.append("update_tag")
+
+        with col3:
             st.caption("Users")
             if st.checkbox(
                 label="Create user",
@@ -283,7 +342,7 @@ def input_new_role_permissions(selected_role: dict):
             ):
                 new_role_permissions.append("update_user")
 
-        with col3:
+        with col4:
             st.caption("Others")
             if st.checkbox(
                 label="Read metric",
@@ -415,3 +474,59 @@ def input_new_user_expires_at(selected_user: dict):
     new_user_expires_at = None if no_expiration or pd.isna(new_user_expires_at) else int(pd.Timestamp(new_user_expires_at).timestamp())
 
     return new_user_expires_at
+
+
+# Admin - tags
+
+
+def input_new_tag_name(selected_tag: dict):
+    """Input text box to create or update a tag name."""
+    new_tag_name = st.text_input(
+        label="Tag name",
+        placeholder="Enter tag name",
+        icon=":material/label:",
+        value=selected_tag.get("name"),
+        disabled=(not st.session_state.get("update_tag", False) and not st.session_state.get("new_tag", False))
+        or (st.session_state.get("no_tags", False) and not st.session_state.get("new_tag", False)),
+    )
+
+    return new_tag_name
+
+
+# User tags (assign tag values to a user)
+
+
+def input_new_user_tags(all_tags: list, selected_user: dict):
+    """Return a list of dictionaries [{id, value}] based on user input for tag values."""
+    disabled = (not st.session_state.get("update_user", False) and not st.session_state.get("new_user", False)) or (
+        st.session_state.get("no_users_in_selected_role", False) and not st.session_state.get("new_user", False)
+    )
+
+    # Prepare default values mapping tag_id -> value
+    user_existing_tags = {tag["id"]: tag.get("value", "") for tag in selected_user.get("tags", [])}
+
+    # Build dataframe for editing
+    df = pd.DataFrame({"Tag": [tag["name"] for tag in all_tags], "Value": [user_existing_tags.get(tag["id"], "") for tag in all_tags]})
+
+    edited_df = st.data_editor(
+        data=df,
+        use_container_width=True,
+        disabled=True if disabled else ["Tag"],  # Only allow editing Value column when not disabled
+        column_config={
+            "Tag": st.column_config.TextColumn(label="Tag", width="large", disabled=True),
+            # "Value": st.column_config.TextColumn(label="Value", width="large"),
+        },
+        height=28 * len(all_tags) + 37,
+        row_height=28,
+    )
+
+    # Build tags list to send to API (exclude empty values)
+    new_user_tags = []
+    for tag_row in edited_df.itertuples():
+        tag_name = tag_row.Tag
+        tag_value = str(tag_row.Value).strip()
+        tag_id = next((t["id"] for t in all_tags if t["name"] == tag_name), None)
+        if tag_id is not None and tag_value != "":
+            new_user_tags.append({"id": tag_id, "value": tag_value})
+
+    return new_user_tags
