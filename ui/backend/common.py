@@ -152,3 +152,32 @@ def check_password(password: str) -> bool:
         return False
 
     return True
+
+
+@st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
+def get_usage(
+    limit: int = 50,
+    order_by: Literal["datetime", "cost", "total_tokens"] = "datetime",
+    order_direction: Literal["asc", "desc"] = "desc",
+    user_id: str = None,  # Add user_id to make cache user-specific
+) -> list:
+    """Get user usage data from the API."""
+    # Use the passed user_id or get from session state
+    if user_id is None and "user" in st.session_state:
+        user_id = st.session_state["user"].id
+
+    response = requests.get(
+        url=f"{settings.playground.api_url}/v1/accounts/usage",
+        headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"},
+        params={
+            "limit": limit,
+            "order_by": order_by,
+            "order_direction": order_direction,
+        },
+    )
+
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
+
+    return response.json()["data"]

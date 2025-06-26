@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from ui.backend.account import change_password, create_token, delete_token
-from ui.backend.common import get_limits, get_models, get_tokens
+from ui.backend.common import get_limits, get_models, get_tokens, get_usage
 from ui.frontend.header import header
 from ui.frontend.utils import pagination
 from ui.settings import settings
@@ -19,22 +19,6 @@ with st.sidebar:
 
 
 st.metric(label="User ID", value=st.session_state["user"].name, border=True)
-
-col1, col2 = st.columns(spec=2)
-with col1:
-    st.metric(
-        label="Account expiration",
-        value=pd.to_datetime(st.session_state["user"].user["expires_at"], unit="s").strftime("%d %b %Y")
-        if st.session_state["user"].user["expires_at"]
-        else None,
-        border=False,
-    )
-with col2:
-    st.metric(
-        label="Budget",
-        value=round(st.session_state["user"].user["budget"], 2) if st.session_state["user"].user["budget"] else None,
-        border=False,
-    )
 
 with st.expander(label="Change password", icon=":material/key:"):
     current_password = st.text_input(label="Current password", type="password", key="current_password", icon=":material/lock:")
@@ -53,6 +37,97 @@ with st.expander(label="Change password", icon=":material/key:"):
     )
     if submit_change_password:
         change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
+
+
+col1, col2 = st.columns(spec=2)
+with col1:
+    st.metric(
+        label="Account expiration",
+        value=pd.to_datetime(st.session_state["user"].user["expires_at"], unit="s").strftime("%d %b %Y")
+        if st.session_state["user"].user["expires_at"]
+        else None,
+        border=False,
+    )
+with col2:
+    st.metric(
+        label="Budget",
+        value=round(st.session_state["user"].user["budget"], 4) if st.session_state["user"].user["budget"] else None,
+        border=False,
+    )
+
+st.subheader("Usages")
+usage_data = get_usage(limit=100, order_by="datetime", order_direction="desc", user_id=st.session_state["user"].id)
+
+if usage_data:
+    # Summary statistics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric(
+            label="Total Requests",
+            value=len(usage_data),
+            border=True,
+        )
+    with col2:
+        st.metric(
+            label="Total ALbert coins",
+            value=f"{sum(record['cost'] for record in usage_data):.4f}",
+            border=True,
+        )
+    with col3:
+        st.metric(
+            label="Total Tokens",
+            value=f"{sum(record['total_tokens'] for record in usage_data):,}",
+            border=True,
+        )
+    co2min = sum(record["kgco2eq_min"] for record in usage_data) / len(usage_data)
+    co2max = sum(record["kgco2eq_max"] for record in usage_data) / len(usage_data)
+    co2moy = (co2min + co2max) / 2
+    with col4:
+        st.metric(
+            label="Total CO2 (g)",
+            value=f"{co2moy * 1000:.4f}",
+            border=True,
+        )
+    usage_df = pd.DataFrame(
+        data={
+            "Datetime": [pd.to_datetime(record["datetime"], unit="s") for record in usage_data],
+            "Endpoint": [record["endpoint"] for record in usage_data],
+            "Model": [record["model"] for record in usage_data],
+            # "Request Model": [record["request_model"] for record in usage_data],
+            # "Method": [record["method"] for record in usage_data],
+            # "Duration (s)": [record["duration"] for record in usage_data]
+            # "Time to First Token (s)": [record["time_to_first_token"] for record in usage_data],
+            "Tokens": [f"{record["prompt_tokens"]} → {record["completion_tokens"]}" for record in usage_data],
+            # "Completion Tokens": [record["completion_tokens"] for record in usage_data],
+            # "Total Tokens": [record["total_tokens"] for record in usage_data],
+            "Cost": [record["cost"] for record in usage_data],
+            # "Status": [record["status"] for record in usage_data],
+            # "kWh Min": [record["kwh_min"] for record in usage_data],
+            # "kWh Max": [record["kwh_max"] for record in usage_data],
+            # "CO2eq Min (kg)": [record["kgco2eq_min"] for record in usage_data],
+            # "CO2eq Max (kg)": [record["kgco2eq_max"] for record in usage_data],
+        }
+    )
+
+    st.dataframe(
+        data=usage_df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Datetime": st.column_config.DatetimeColumn(label="Datetime", format="DD/MM/YY HH:mm"),
+            # "Duration (s)": st.column_config.NumberColumn(label="Duration (s)", format="%.3f"),
+            # "Time to First Token (s)": st.column_config.NumberColumn(label="Time to First Token (s)", format="%.3f"),
+            "Cost": st.column_config.NumberColumn(label="Cost", format="%.6f"),
+            # "kWh Min": st.column_config.NumberColumn(label="kWh Min", format="%.6f"),
+            # "kWh Max": st.column_config.NumberColumn(label="kWh Max", format="%.6f"),
+            # "CO2eq Min (kg)": st.column_config.NumberColumn(label="CO2eq Min (kg)", format="%.6f"),
+            # "CO2eq Max (kg)": st.column_config.NumberColumn(label="CO2eq Max (kg)", format="%.6f"),
+        },
+    )
+
+
+else:
+    st.info("No usage data available.")
 
 
 st.subheader("API keys")
