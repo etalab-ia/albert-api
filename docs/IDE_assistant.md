@@ -116,7 +116,8 @@ You now see Albert-code in proxyAI.
     // maybe other models here
 
     "openai": {
-      "api_url": "https://albert.api.etalab.gouv.fr/v1",
+      "api_url": "https://albert.api.etalab.gouv.fr/v1",  // this should be automatically inserted
+      "api_key": "YOUR_ALBERT_API_KEY",                   // if not saved by the input from the Agent Panel
       "role": "chat",
       "available_models": [
         {
