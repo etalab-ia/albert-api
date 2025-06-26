@@ -22,7 +22,7 @@ def generate_stream(messages: List[dict], params: dict, rag: bool, rerank: bool)
     if rag:
         prompt = messages[-1]["content"]
         # Use "rag_params" instead of "rag"
-        k = params["rag_params"]["k"] * 2 if rerank else params["rag_params"]["k"]
+        k = params["rag_params"]["k"] * 4 if rerank else params["rag_params"]["k"]
         data = {
             "collections": params["rag_params"]["collections"],
             "k": k,
