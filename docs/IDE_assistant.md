@@ -93,3 +93,41 @@ model: albert-code
 
 You now see Albert-code in proxyAI.
 
+
+<h2>Zed Editor</h1>
+
+
+<p style="text-align: justify;">Zed Editor is a code editor providing native custom IA agent providers.</p>
+
+
+- Open the Zed Agent Panel
+- Open the Model drop-drown menu and select "Configure"
+- Select the provider OpenAI
+- Input your Albert API Key
+- Input the custom API URL : https://albert.api.etalab.gouv.fr/v1
+- Then in the main Zed Menu, click on "Open Settings"
+- In the `"language models"` add the provider `"openai"` :
+
+```json
+
+
+"language models: {
+    
+    // maybe other models here
+
+    "openai": {
+      "api_url": "https://albert.api.etalab.gouv.fr/v1",
+      "role": "chat",
+      "available_models": [
+        {
+          "name": "albert-code-beta",
+          "display_name": "Albert Code Beta",
+          "supports_tools": true,
+          "max_tokens": 128000
+        }
+      ],
+      "version": "1"
+    }
+  }
+}
+```
