@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Body, Depends, Path, Query, Request, Security
+from fastapi import APIRouter, Body, Path, Query, Request, Security
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,7 +22,7 @@ from app.schemas.auth import (
     UsersResponse,
     UserUpdateRequest,
 )
-from app.sql.session import get_db as get_session
+from app.utils.depends import get_db_session
 from app.utils.context import global_context, request_context
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__ROLES, ENDPOINT__ROLES_ME, ENDPOINT__TOKENS, ENDPOINT__USERS, ENDPOINT__USERS_ME
@@ -40,7 +40,7 @@ router = APIRouter()
 async def create_role(
     request: Request,
     body: RoleRequest = Body(description="The role creation request."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> JSONResponse:
     """
     Create a new role.
@@ -60,7 +60,7 @@ async def create_role(
 async def delete_role(
     request: Request,
     role: int = Path(description="The ID of the role to delete."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> Response:
     """
     Delete a role.
@@ -81,7 +81,7 @@ async def update_role(
     request: Request,
     role: int = Path(description="The ID of the role to update."),
     body: RoleUpdateRequest = Body(description="The role update request."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> Response:
     """
     Update a role.
@@ -105,7 +105,7 @@ async def update_role(
     status_code=200,
     response_model=Role,
 )
-async def get_current_role(request: Request, session: AsyncSession = Depends(get_session)) -> JSONResponse:
+async def get_current_role(request: Request, session: AsyncSession = get_db_session()) -> JSONResponse:
     """
     Get the current role.
     """
@@ -125,7 +125,7 @@ async def get_current_role(request: Request, session: AsyncSession = Depends(get
 async def get_role(
     request: Request,
     role: int = Path(description="The ID of the role to get."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> JSONResponse:
     """
     Get a role by id.
@@ -149,7 +149,7 @@ async def get_roles(
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the roles to get."),
     order_by: Literal["id", "name", "created_at", "updated_at"] = Query(default="id", description="The field to order the roles by."),
     order_direction: Literal["asc", "desc"] = Query(default="asc", description="The direction to order the roles by."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> JSONResponse:
     """
     Get all roles.
@@ -169,7 +169,7 @@ async def get_roles(
 async def create_user(
     request: Request,
     body: UserRequest = Body(description="The user creation request."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> JSONResponse:
     """
     Create a new user.
@@ -189,7 +189,7 @@ async def create_user(
 async def delete_user(
     request: Request,
     user: int = Path(description="The ID of the user to delete."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> Response:
     """
     Delete a user.
@@ -209,7 +209,7 @@ async def update_user(
     request: Request,
     user: int = Path(description="The ID of the user to update."),
     body: UserUpdateRequest = Body(description="The user update request."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> Response:
     """
     Update a user.
@@ -233,7 +233,7 @@ async def update_user(
     status_code=200,
     response_model=User,
 )
-async def get_current_user(request: Request, session: AsyncSession = Depends(get_session)) -> JSONResponse:
+async def get_current_user(request: Request, session: AsyncSession = get_db_session()) -> JSONResponse:
     """
     Get the current user.
     """
@@ -250,7 +250,7 @@ async def get_current_user(request: Request, session: AsyncSession = Depends(get
     status_code=200,
 )
 async def get_user(
-    request: Request, user: int = Path(description="The ID of the user to get."), session: AsyncSession = Depends(get_session)
+    request: Request, user: int = Path(description="The ID of the user to get."), session: AsyncSession = get_db_session()
 ) -> JSONResponse:
     """
     Get a user by id.
@@ -274,7 +274,7 @@ async def get_users(
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the users to get."),
     order_by: Literal["id", "name", "created_at", "updated_at"] = Query(default="id", description="The field to order the users by."),
     order_direction: Literal["asc", "desc"] = Query(default="asc", description="The direction to order the users by."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> JSONResponse:
     """
     Get all users.
@@ -291,7 +291,7 @@ async def get_users(
 async def create_token(
     request: Request,
     body: TokenRequest = Body(description="The token creation request."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> JSONResponse:
     """
     Create a new token.
@@ -307,7 +307,7 @@ async def create_token(
 async def delete_token(
     request: Request,
     token: int = Path(description="The token ID of the token to delete."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> Response:
     """
     Delete a token.
@@ -322,7 +322,7 @@ async def delete_token(
 async def get_token(
     request: Request,
     token: int = Path(description="The token ID of the token to get."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> JSONResponse:
     """
     Get your token by id.
@@ -340,7 +340,7 @@ async def get_tokens(
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the tokens to get."),
     order_by: Literal["id", "name", "created_at"] = Query(default="id", description="The field to order the tokens by."),
     order_direction: Literal["asc", "desc"] = Query(default="asc", description="The direction to order the tokens by."),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> JSONResponse:
     """
     Get all your tokens.

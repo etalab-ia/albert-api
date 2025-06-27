@@ -10,7 +10,7 @@ from app.helpers._accesscontroller import AccessController
 from app.schemas.auth import User
 from app.schemas.users import UserUsageResponse, UserUsage
 from app.sql.models import Usage as UsageModel
-from app.sql.session import get_db as get_session
+from app.utils.depends import get_db_session
 from app.utils.variables import ENDPOINT__USERS_USAGE
 
 router = APIRouter()
@@ -27,7 +27,7 @@ async def get_user_usage(
     limit: int = Query(default=50, ge=1, le=100, description="Number of records to return (1-100)"),
     order_by: Literal["datetime", "cost", "total_tokens"] = Query(default="datetime", description="Field to order by"),
     order_direction: Literal["asc", "desc"] = Query(default="desc", description="Order direction"),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
     current_user: User = Depends(AccessController()),
 ) -> JSONResponse:
     """
