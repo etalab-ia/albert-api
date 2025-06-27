@@ -1,4 +1,5 @@
 from typing import Literal
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query, Request, Security
 from fastapi.responses import JSONResponse
@@ -10,8 +11,9 @@ from app.helpers._accesscontroller import AccessController
 from app.schemas.auth import User
 from app.schemas.accounts import AccountUsageResponse, AccountUsage
 from app.sql.models import Usage as UsageModel
-from app.sql.session import get_db as get_session
+from app.utils.depends import get_db_session
 from app.utils.variables import ENDPOINT__ACCOUNTS_USAGE
+from sqlalchemy import func
 
 router = APIRouter()
 
@@ -27,7 +29,9 @@ async def get_account_usage(
     limit: int = Query(default=50, ge=1, le=100, description="Number of records to return (1-100)"),
     order_by: Literal["datetime", "cost", "total_tokens"] = Query(default="datetime", description="Field to order by"),
     order_direction: Literal["asc", "desc"] = Query(default="desc", description="Order direction"),
-    session: AsyncSession = Depends(get_session),
+    date_from: int = Query(default=None, description="Start date as Unix timestamp (default: 30 days ago)"),
+    date_to: int = Query(default=None, description="End date as Unix timestamp (default: now)"),
+    session: AsyncSession = get_db_session(),
     current_user: User = Depends(AccessController()),
 ) -> JSONResponse:
     """
@@ -36,8 +40,20 @@ async def get_account_usage(
     Returns usage data filtered by the current account's ID, with configurable ordering and pagination.
     """
 
+    # Set default date range if not provided
+    if date_to is None:
+        date_to = int(datetime.now().timestamp())
+    if date_from is None:
+        date_from = int((datetime.now() - timedelta(days=30)).timestamp())
+
     # Build the query to get usage data for the current account
-    query = select(UsageModel).where(UsageModel.user_id == current_user.id).where(UsageModel.model.is_not(None))
+    query = (
+        select(UsageModel)
+        .where(UsageModel.user_id == current_user.id)
+        .where(UsageModel.model.is_not(None))
+        .where(UsageModel.datetime >= datetime.fromtimestamp(date_from))
+        .where(UsageModel.datetime <= datetime.fromtimestamp(date_to))
+    )
 
     # Apply ordering
     order_field = getattr(UsageModel, order_by)
@@ -54,9 +70,9 @@ async def get_account_usage(
     usage_records = result.scalars().all()
 
     # Get total count for this account
-    count_query = select(UsageModel.id).where(UsageModel.user_id == current_user.id).where(UsageModel.model.is_not(None))
+    count_query = select(func.count(UsageModel.id)).where(UsageModel.user_id == current_user.id).where(UsageModel.model.is_not(None))
     count_result = await session.execute(count_query)
-    total_count = len(count_result.scalars().all())
+    total_count = count_result.scalar()
 
     # Convert to response format
     usage_data = []

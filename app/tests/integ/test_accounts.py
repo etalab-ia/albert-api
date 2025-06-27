@@ -183,7 +183,7 @@ class TestAccounts:
                 total_tokens=150 + i * 15,
                 cost=0.01 + i * 0.01,
                 status=200,
-                datetime=datetime.now() + timedelta(minutes=i),
+                datetime=datetime.now() - timedelta(hours=i + 1),
             )
             usage_records.append(usage)
             db_session.add(usage)

@@ -160,6 +160,8 @@ def get_usage(
     order_by: Literal["datetime", "cost", "total_tokens"] = "datetime",
     order_direction: Literal["asc", "desc"] = "desc",
     user_id: str = None,  # Add user_id to make cache user-specific
+    date_from: int = None,
+    date_to: int = None,
 ) -> list:
     """Get user usage data from the API."""
     # Use the passed user_id or get from session state
@@ -173,6 +175,8 @@ def get_usage(
             "limit": limit,
             "order_by": order_by,
             "order_direction": order_direction,
+            **({"date_from": date_from} if date_from is not None else {}),
+            **({"date_to": date_to} if date_to is not None else {}),
         },
     )
 

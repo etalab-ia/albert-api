@@ -56,7 +56,26 @@ with col2:
     )
 
 st.subheader("Usages")
-usage_data = get_usage(limit=100, order_by="datetime", order_direction="desc", user_id=st.session_state["user"].id)
+
+# Date filters
+col1, col2 = st.columns(2)
+with col1:
+    date_from = st.date_input(label="From date", value=dt.datetime.now() - dt.timedelta(days=30), key="usage_date_from")
+with col2:
+    date_to = st.date_input(label="To date", value=dt.datetime.now().date(), key="usage_date_to")
+
+# Convert dates to timestamps
+date_from_timestamp = int(dt.datetime.combine(date_from, dt.time.min).timestamp())
+date_to_timestamp = int(dt.datetime.combine(date_to, dt.time.max).timestamp())
+
+usage_data = get_usage(
+    limit=100,
+    order_by="datetime",
+    order_direction="desc",
+    user_id=st.session_state["user"].id,
+    date_from=date_from_timestamp,
+    date_to=date_to_timestamp,
+)
 
 if usage_data:
     # Summary statistics
