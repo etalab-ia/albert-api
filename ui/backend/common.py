@@ -160,17 +160,12 @@ def get_usage(
     page: int = 1,
     order_by: Literal["datetime", "cost", "total_tokens"] = "datetime",
     order_direction: Literal["asc", "desc"] = "desc",
-    user_id: str = None,  # Add user_id to make cache user-specific
     date_from: int = None,
     date_to: int = None,
 ) -> dict:
     """Get user usage data from the API."""
-    # Use the passed user_id or get from session state
-    if user_id is None and "user" in st.session_state:
-        user_id = st.session_state["user"].id
-
     response = requests.get(
-        url=f"{settings.playground.api_url}/v1/accounts/usage",
+        url=f"{settings.playground.api_url}/v1/usage",
         headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"},
         params={
             "limit": limit,

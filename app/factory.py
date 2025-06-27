@@ -12,7 +12,7 @@ from app.utils.context import generate_request_id, request_context
 from app.utils.depends import set_get_db_func
 from app.utils.hooks_decorator import hooks
 from app.utils.variables import (
-    ROUTER__ACCOUNTS,
+    ROUTER__USAGE,
     ROUTER__AGENTS,
     ROUTER__AUDIO,
     ROUTER__AUTH,
@@ -61,7 +61,6 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
     # Set up database dependency
     # If no db_func provided, the depends module will fall back to default
     from app.endpoints import (
-        accounts,
         agents,
         audio,
         auth,
@@ -77,6 +76,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         parse,
         rerank,
         search,
+        usage,
     )
     from app.helpers._accesscontroller import AccessController
 
@@ -162,9 +162,9 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         add_hooks(router=search.router)
         app.include_router(router=search.router, tags=[ROUTER__SEARCH.title()], prefix="/v1")
 
-    if ROUTER__ACCOUNTS not in settings.general.disabled_routers:
-        add_hooks(router=accounts.router)
-        app.include_router(router=accounts.router, tags=[ROUTER__ACCOUNTS.title()], prefix="/v1")
+    if ROUTER__USAGE not in settings.general.disabled_routers:
+        add_hooks(router=usage.router)
+        app.include_router(router=usage.router, tags=[ROUTER__USAGE.title()], prefix="/v1")
 
     # DEPRECATED LEGACY ENDPOINTS
     if ROUTER__COMPLETIONS not in settings.general.disabled_routers:

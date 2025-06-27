@@ -89,7 +89,6 @@ usage_response = get_usage(
     page=current_page,
     order_by="datetime",
     order_direction="desc",
-    user_id=st.session_state["user"].id,
     date_from=date_from_timestamp,
     date_to=date_to_timestamp,
 )

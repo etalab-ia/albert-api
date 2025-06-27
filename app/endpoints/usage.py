@@ -13,7 +13,7 @@ from app.schemas.auth import User
 from app.schemas.accounts import AccountUsageResponse, AccountUsage
 from app.sql.models import Usage as UsageModel
 from app.utils.depends import get_db_session
-from app.utils.variables import ENDPOINT__ACCOUNTS_USAGE
+from app.utils.variables import ENDPOINT__USAGE
 from sqlalchemy import func
 
 router = APIRouter()
@@ -183,7 +183,7 @@ def _calculate_pagination_metadata(total_count: int, page: int, limit: int) -> d
 
 
 @router.get(
-    path=ENDPOINT__ACCOUNTS_USAGE,
+    path=ENDPOINT__USAGE,
     dependencies=[Security(dependency=AccessController())],
     status_code=200,
     response_model=AccountUsageResponse,

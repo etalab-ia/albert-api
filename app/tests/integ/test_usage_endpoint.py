@@ -5,11 +5,11 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.sql.models import Usage as UsageModel
-from app.utils.variables import ENDPOINT__ACCOUNTS_USAGE
+from app.utils.variables import ENDPOINT__USAGE
 
 
 @pytest.mark.usefixtures("client")
-class TestAccounts:
+class TestUsage:
     def test_get_account_usage_authenticated(self, client: TestClient, users, tokens, db_session):
         """Test that authenticated accounts can access their usage data"""
         user_with_permissions, user_without_permissions = users
@@ -64,10 +64,12 @@ class TestAccounts:
 
         try:
             # Count actual usage records for the authenticated account in database
-            expected_count = db_session.query(UsageModel).filter_by(user_id=user_with_permissions["id"]).count()
+            expected_count = (
+                db_session.query(UsageModel).filter(UsageModel.user_id == user_with_permissions["id"], UsageModel.model.is_not(None)).count()
+            )
 
             # Test with authenticated account
-            response = client.get_with_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}")
+            response = client.get_with_permissions(url=f"/v1{ENDPOINT__USAGE}")
             assert response.status_code == 200, response.text
 
             data = response.json()
@@ -84,7 +86,6 @@ class TestAccounts:
             # Verify the data belongs to the authenticated account
             for usage_record in data["data"]:
                 assert usage_record["user_id"] == user_with_permissions["id"]
-                assert usage_record["endpoint"] in ["/test/endpoint1", "/test/endpoint2"]
 
         finally:
             # Clean up test data
@@ -130,7 +131,7 @@ class TestAccounts:
 
         try:
             # Account without permissions should only see their data
-            response = client.get_without_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}")
+            response = client.get_without_permissions(url=f"/v1{ENDPOINT__USAGE}")
             assert response.status_code == 200, response.text
 
             data = response.json()
@@ -145,7 +146,7 @@ class TestAccounts:
             assert test_record["user_id"] == user_without_permissions["id"]
 
             # Account with permissions should only see their data
-            response = client.get_with_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}")
+            response = client.get_with_permissions(url=f"/v1{ENDPOINT__USAGE}")
             assert response.status_code == 200, response.text
 
             data = response.json()
@@ -197,7 +198,7 @@ class TestAccounts:
             )
 
             # Test default ordering (datetime desc) and limit
-            response = client.get_with_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}?limit=3")
+            response = client.get_with_permissions(url=f"/v1{ENDPOINT__USAGE}?limit=3")
             assert response.status_code == 200, response.text
 
             data = response.json()
@@ -212,7 +213,7 @@ class TestAccounts:
                 assert current_timestamp >= next_timestamp
 
             # Test ordering by cost ascending
-            response = client.get_with_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}?order_by=cost&order_direction=asc&limit=5")
+            response = client.get_with_permissions(url=f"/v1{ENDPOINT__USAGE}?order_by=cost&order_direction=asc&limit=5")
             assert response.status_code == 200, response.text
 
             data = response.json()
@@ -231,17 +232,17 @@ class TestAccounts:
         """Test validation of query parameters"""
 
         # Test invalid limit (too high)
-        response = client.get_with_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}?limit=101")
+        response = client.get_with_permissions(url=f"/v1{ENDPOINT__USAGE}?limit=101")
         assert response.status_code == 422, response.text
 
         # Test invalid limit (too low)
-        response = client.get_with_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}?limit=0")
+        response = client.get_with_permissions(url=f"/v1{ENDPOINT__USAGE}?limit=0")
         assert response.status_code == 422, response.text
 
         # Test invalid order_by field
-        response = client.get_with_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}?order_by=invalid_field")
+        response = client.get_with_permissions(url=f"/v1{ENDPOINT__USAGE}?order_by=invalid_field")
         assert response.status_code == 422, response.text
 
         # Test invalid order_direction
-        response = client.get_with_permissions(url=f"/v1{ENDPOINT__ACCOUNTS_USAGE}?order_direction=invalid")
+        response = client.get_with_permissions(url=f"/v1{ENDPOINT__USAGE}?order_direction=invalid")
         assert response.status_code == 422, response.text

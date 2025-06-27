@@ -21,7 +21,7 @@ ENDPOINT__SEARCH = "/search"
 ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
 ENDPOINT__USERS_ME = "/users/me"
-ENDPOINT__ACCOUNTS_USAGE = "/accounts/usage"
+ENDPOINT__USAGE = "/usage"
 
 
 ENDPOINTS = [value for name, value in locals().items() if name.startswith("ENDPOINT__")]
@@ -42,7 +42,7 @@ ROUTER__OCR = "ocr"
 ROUTER__PARSE = "parse"
 ROUTER__RERANK = "rerank"
 ROUTER__SEARCH = "search"
-ROUTER__ACCOUNTS = "accounts"
+ROUTER__USAGE = "usage"
 ROUTER__MULTIAGENTS = "multiagents"
 
 
