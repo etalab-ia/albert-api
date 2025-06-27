@@ -35,4 +35,9 @@ class AccountUsageResponse(BaseModel):
     object: Literal["list"] = "list"
     data: List[AccountUsage]
     total: int = Field(description="Total number of records")
+    total_requests: int = Field(description="Total number of requests made")
+    total_albert_coins: Optional[float] = Field(description="Total Albert coins earned")
+    total_tokens: Optional[int] = Field(description="Total tokens used")
+    total_co2: Optional[float] = Field(description="Total CO2 emissions in grams")
+
     has_more: bool = Field(description="Whether there are more records available")

@@ -162,7 +162,7 @@ def get_usage(
     user_id: str = None,  # Add user_id to make cache user-specific
     date_from: int = None,
     date_to: int = None,
-) -> list:
+) -> dict:
     """Get user usage data from the API."""
     # Use the passed user_id or get from session state
     if user_id is None and "user" in st.session_state:
@@ -182,6 +182,6 @@ def get_usage(
 
     if response.status_code != 200:
         st.error(response.json()["detail"])
-        return []
+        return {"data": [], "total_requests": 0, "total_albert_coins": 0.0, "total_tokens": 0, "total_co2": 0.0}
 
-    return response.json()["data"]
+    return response.json()

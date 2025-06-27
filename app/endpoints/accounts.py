@@ -69,10 +69,34 @@ async def get_account_usage(
     result = await session.execute(query)
     usage_records = result.scalars().all()
 
-    # Get total count for this account
-    count_query = select(func.count(UsageModel.id)).where(UsageModel.user_id == current_user.id).where(UsageModel.model.is_not(None))
+    # Get total count and aggregated values for this account in the date range
+    base_filter = (
+        UsageModel.user_id == current_user.id,
+        UsageModel.model.is_not(None),
+        UsageModel.datetime >= datetime.fromtimestamp(date_from),
+        UsageModel.datetime <= datetime.fromtimestamp(date_to),
+    )
+
+    # Total count query (for the filtered date range)
+    count_query = select(func.count(UsageModel.id)).where(*base_filter)
     count_result = await session.execute(count_query)
     total_count = count_result.scalar()
+
+    # Aggregated values query
+    aggregation_query = select(
+        func.count(UsageModel.id).label("total_requests"),
+        func.coalesce(func.sum(UsageModel.cost), 0).label("total_albert_coins"),
+        func.coalesce(func.sum(UsageModel.total_tokens), 0).label("total_tokens"),
+        func.coalesce(func.avg((UsageModel.kgco2eq_min + UsageModel.kgco2eq_max) / 2) * 1000, 0).label("total_co2"),
+    ).where(*base_filter)
+
+    aggregation_result = await session.execute(aggregation_query)
+    aggregation_data = aggregation_result.first()
+
+    total_requests = aggregation_data.total_requests or 0
+    total_albert_coins = float(aggregation_data.total_albert_coins) if aggregation_data.total_albert_coins else 0.0
+    total_tokens = int(aggregation_data.total_tokens) if aggregation_data.total_tokens else 0
+    total_co2 = float(aggregation_data.total_co2) if aggregation_data.total_co2 else 0.0
 
     # Convert to response format
     usage_data = []
@@ -103,6 +127,14 @@ async def get_account_usage(
 
     has_more = len(usage_records) == limit and total_count > limit
 
-    response = AccountUsageResponse(data=usage_data, total=total_count, has_more=has_more)
+    response = AccountUsageResponse(
+        data=usage_data,
+        total=total_count,
+        total_requests=total_requests,
+        total_albert_coins=total_albert_coins,
+        total_tokens=total_tokens,
+        total_co2=total_co2,
+        has_more=has_more,
+    )
 
     return JSONResponse(status_code=200, content=response.model_dump())

@@ -68,7 +68,7 @@ with col2:
 date_from_timestamp = int(dt.datetime.combine(date_from, dt.time.min).timestamp())
 date_to_timestamp = int(dt.datetime.combine(date_to, dt.time.max).timestamp())
 
-usage_data = get_usage(
+usage_response = get_usage(
     limit=100,
     order_by="datetime",
     order_direction="desc",
@@ -77,34 +77,37 @@ usage_data = get_usage(
     date_to=date_to_timestamp,
 )
 
+usage_data = usage_response.get("data", [])
+total_requests = usage_response.get("total_requests", 0)
+total_albert_coins = usage_response.get("total_albert_coins", 0.0)
+total_tokens = usage_response.get("total_tokens", 0)
+total_co2 = usage_response.get("total_co2", 0.0)
+
 if usage_data:
-    # Summary statistics
+    # Summary statistics from API calculations
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(
             label="Total Requests",
-            value=len(usage_data),
+            value=total_requests,
             border=True,
         )
     with col2:
         st.metric(
-            label="Total ALbert coins",
-            value=f"{sum(record['cost'] for record in usage_data):.4f}",
+            label="Total Albert coins",
+            value=f"{total_albert_coins:.4f}",
             border=True,
         )
     with col3:
         st.metric(
             label="Total Tokens",
-            value=f"{sum(record['total_tokens'] for record in usage_data):,}",
+            value=f"{total_tokens:,}",
             border=True,
         )
-    co2min = sum(record["kgco2eq_min"] for record in usage_data) / len(usage_data)
-    co2max = sum(record["kgco2eq_max"] for record in usage_data) / len(usage_data)
-    co2moy = (co2min + co2max) / 2
     with col4:
         st.metric(
             label="Total CO2 (g)",
-            value=f"{co2moy * 1000:.4f}",
+            value=f"{total_co2:.4f}",
             border=True,
         )
     usage_df = pd.DataFrame(
