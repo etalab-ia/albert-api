@@ -5,10 +5,10 @@ general:
 
 
 playground:
-  api_url: http://${API_HOST}:8000
+  api_url: http://${API_HOST:-localhost}:8000
   max_api_key_expiration_days: 365
   cache_ttl: 1800
-  database_url: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/playground
+  database_url: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5433}/playground
 
 auth:
   master_username: master
@@ -19,35 +19,35 @@ monitoring:
     enabled: true
 
 mcp:
-  mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
+  mcp_bridge_url: http://${MCP_BRIDGE_HOST:-localhost}:${MCP_BRIDGE_PORT:-9876}
 
-web_search:
-  type: brave
-  query_model: albert-small
-  args:
-    api_key: ${BRAVE_API_KEY}
+#web_search:
+#  type: brave
+#  query_model: albert-small
+#  args:
+#    api_key: ${BRAVE_API_KEY}
 
 databases:
   - type: elasticsearch
     context: api
-    model: ${EMBEDDINGS_MODEL}
+    model: ${EMBEDDINGS_MODEL:-my-embeddings-model}
     args:
-      hosts: http://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}
+      hosts: http://${ELASTICSEARCH_HOST:-localhost}:${ELASTICSEARCH_PORT:-9200}
       basic_auth:
-        - ${ELASTICSEARCH_USERNAME}
-        - ${ELASTICSEARCH_PASSWORD}
+        - ${ELASTICSEARCH_USERNAME:-elastic}
+        - ${ELASTICSEARCH_PASSWORD:-changeme}
 
   - type: redis
     context: api
     args:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
+      host: ${REDIS_HOST:-localhost}
+      port: ${REDIS_PORT:-6379}
       password: changeme
 
   - type: sql # API database (async)
     context: api
     args:
-      url: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/api
+      url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-54332}/api
       echo: False
       pool_size: 5
       max_overflow: 10
@@ -59,7 +59,7 @@ databases:
   - type: sql # Playground database (sync)
     context: playground
     args:
-      url: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/playground
+      url: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-54331}/playground
       echo: False
       pool_size: 5
       max_overflow: 10
@@ -74,7 +74,7 @@ models:
       - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
         type: albert
         args:
-          api_url: ${ALBERT_API_URL}
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -85,18 +85,18 @@ models:
       - model: albert-small
         type: albert
         args:
-          api_url: ${ALBERT_API_URL}
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
-  - id: ${EMBEDDINGS_MODEL}
+  - id: ${EMBEDDINGS_MODEL:-my-embeddings-model}
     type: text-embeddings-inference
     aliases: ["BAAI/bge-m3"]
     clients:
       - model: BAAI/bge-m3
         type: albert
         args:
-          api_url: ${ALBERT_API_URL}
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -107,7 +107,7 @@ models:
       - model: audio-large
         type: albert
         args:
-          api_url: ${ALBERT_API_URL}
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -118,7 +118,7 @@ models:
       - model: rerank-small
         type: albert
         args:
-          api_url: ${ALBERT_API_URL}
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
