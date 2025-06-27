@@ -1,10 +1,10 @@
-import pytest
-import requests
-from fastapi import UploadFile
 from typing import List
 
-from app.helpers._websearchmanager import WebSearchManager
+from fastapi import UploadFile
+import pytest
+import requests
 
+from app.helpers._websearchmanager import WebSearchManager
 
 timeout = 5
 

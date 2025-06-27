@@ -88,6 +88,32 @@ class User(Base):
     updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())
 
 
+class Tag(Base):
+    __tablename__ = "tag"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())
+
+    __table_args__ = (UniqueConstraint("name", name="unique_tag_name"),)
+
+
+class UserTag(Base):
+    __tablename__ = "user_tag"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey(column="user.id", ondelete="CASCADE"), nullable=False)
+    tag_id = Column(Integer, ForeignKey(column="tag.id", ondelete="CASCADE"), nullable=False)
+    value = Column(String, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+    user = relationship(argument="User", backref=backref(name="user_tag", cascade="all, delete-orphan"))
+    tag = relationship(argument="Tag", backref=backref(name="user_tag", cascade="all, delete-orphan"))
+
+    __table_args__ = (UniqueConstraint("user_id", "tag_id", name="unique_user_tag"),)
+
+
 class Token(Base):
     __tablename__ = "token"
 

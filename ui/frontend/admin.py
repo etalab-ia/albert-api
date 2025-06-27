@@ -1,17 +1,31 @@
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
-from ui.backend.admin import create_role, create_user, delete_role, delete_user, refresh_playground_api_key, update_role, update_user
+from ui.backend.admin import (
+    create_role,
+    create_tag,
+    create_user,
+    delete_role,
+    delete_tag,
+    delete_user,
+    refresh_playground_api_key,
+    update_role,
+    update_tag,
+    update_user,
+)
+from ui.backend.common import get_tags
 from ui.frontend.header import header
 from ui.frontend.utils import (
     input_new_role_limits,
     input_new_role_name,
     input_new_role_permissions,
+    input_new_tag_name,
+    input_new_user_budget,
     input_new_user_expires_at,
     input_new_user_name,
     input_new_user_password,
     input_new_user_role_id,
-    input_new_user_budget,
+    input_new_user_tags,
     ressources_selector,
 )
 from ui.variables import ADMIN_PERMISSIONS
@@ -21,7 +35,10 @@ if not all(perm in st.session_state["user"].role["permissions"] for perm in ADMI
     st.info("Access denied.")
     st.stop()
 
-# Roles
+# -----------------------------------------------------------------------------
+# Roles management
+# -----------------------------------------------------------------------------
+
 with st.expander(
     label="Roles",
     expanded=not st.session_state.get("new_role", False)
@@ -77,7 +94,69 @@ with st.sidebar:
             disabled=st.session_state.get("new_role", False) or st.session_state["no_roles"],
         )
 
-# Users
+# -----------------------------------------------------------------------------
+# Tags management
+# -----------------------------------------------------------------------------
+st.markdown(body="#### Tags")
+with st.expander(
+    label="Tags",
+    expanded=not st.session_state.get("new_tag", False)
+    and not st.session_state.get("update_tag", False)
+    and not st.session_state.get("new_role", False)
+    and not st.session_state.get("update_role", False)
+    and not st.session_state.get("new_user", False)
+    and not st.session_state.get("update_user", False),
+):
+    tags, selected_tag = ressources_selector(ressource="tag")
+    st.session_state["no_tags"] = True if tags == [] else False
+    with stylable_container(key="HeaderTag", css_styles="button{float: right;}"):
+        if st.button(
+            label="**:material/delete_forever: Delete**",
+            key="delete_tag_button",
+            disabled=st.session_state.get("new_tag", False) or st.session_state["no_tags"],
+        ):
+            delete_tag(tag=selected_tag["id"])
+
+new_tag_name = input_new_tag_name(selected_tag=selected_tag)
+
+if st.session_state.get("new_tag", False):
+    with stylable_container(key="HeaderTagCreate", css_styles="button{float: right;}"):
+        if st.button(label="**Create**", key="validate_create_tag_button"):
+            create_tag(name=new_tag_name)
+
+if st.session_state.get("update_tag", False):
+    with stylable_container(key="HeaderTagUpdate", css_styles="button{float: right;}"):
+        if st.button(label="**Update**", key="validate_update_tag_button"):
+            update_tag(tag=selected_tag["id"], name=new_tag_name)
+
+with st.sidebar:
+    st.subheader("**Tags**")
+    col1, col2 = st.columns(spec=2)
+    with col1:
+        st.button(
+            label="**:material/add: Create**",
+            key="create_new_tag",
+            on_click=lambda: setattr(st.session_state, "new_tag", not st.session_state.get("new_tag", False))
+            and setattr(st.session_state, "update_tag", False),
+            use_container_width=True,
+            type="primary" if st.session_state.get("new_tag", False) else "secondary",
+            disabled=st.session_state.get("update_tag", False),
+        )
+    with col2:
+        st.button(
+            label="**:material/update: Update**",
+            key="update_tag_button",
+            on_click=lambda: setattr(st.session_state, "update_tag", not st.session_state.get("update_tag", False))
+            and setattr(st.session_state, "new_tag", False),
+            use_container_width=True,
+            type="primary" if st.session_state.get("update_tag", False) else "secondary",
+            disabled=st.session_state.get("new_tag", False) or st.session_state["no_tags"],
+        )
+
+# -----------------------------------------------------------------------------
+# Users management
+# -----------------------------------------------------------------------------
+
 if not roles or st.session_state.get("new_role", False) or st.session_state.get("update_role", False):
     st.stop()
 
@@ -112,11 +191,21 @@ new_user_role_id = input_new_user_role_id(selected_role=selected_role, roles=rol
 new_user_budget = input_new_user_budget(selected_user=selected_user)
 new_user_expires_at = input_new_user_expires_at(selected_user=selected_user)
 
+# Tag values for the user
+all_tags_for_users = get_tags(limit=100)
+new_user_tags = input_new_user_tags(all_tags=all_tags_for_users, selected_user=selected_user)
 
 if st.session_state.get("new_user", False):
     with stylable_container(key="Header", css_styles="button{float: right;}"):
         if st.button(label="**Create**", key="validate_create_user_button"):
-            create_user(name=new_user_name, password=new_user_password, budget=new_user_budget, role=new_user_role_id, expires_at=new_user_expires_at)
+            create_user(
+                name=new_user_name,
+                password=new_user_password,
+                budget=new_user_budget,
+                role=new_user_role_id,
+                expires_at=new_user_expires_at,
+                tags=new_user_tags,
+            )
 
 if st.session_state.get("update_user", False):
     with stylable_container(key="Header", css_styles="button{float: right;}"):
@@ -128,6 +217,7 @@ if st.session_state.get("update_user", False):
                 budget=new_user_budget,
                 role=new_user_role_id,
                 expires_at=new_user_expires_at,
+                tags=new_user_tags,
             )
 
 with st.sidebar:

@@ -152,3 +152,24 @@ def check_password(password: str) -> bool:
         return False
 
     return True
+
+
+def get_tags(
+    offset: int = 0,
+    limit: int = 10,
+    order_by: Literal["id", "name", "created_at", "updated_at"] = "id",
+    order_direction: Literal["asc", "desc"] = "asc",
+):
+    """Return the list of tags from the API playground.
+
+    The parameters mirror the backend /tags endpoint.
+    """
+    response = requests.get(
+        url=f"{settings.playground.api_url}/tags?offset={offset}&limit={limit}&order_by={order_by}&order_direction={order_direction}",
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
+    )
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return []
+
+    return response.json()["data"]

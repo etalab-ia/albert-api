@@ -3,19 +3,23 @@ from typing import List, Literal, Optional, Tuple
 from jose import JWTError, jwt
 from sqlalchemy import Integer, cast, delete, distinct, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import func
 
-from app.schemas.auth import Limit, PermissionType, Role, Token, User
+from app.schemas.auth import Limit, PermissionType, Role, Tag, Token, User, UserTag
 from app.sql.models import Limit as LimitTable
 from app.sql.models import Permission as PermissionTable
 from app.sql.models import Role as RoleTable
+from app.sql.models import Tag as TagTable
 from app.sql.models import Token as TokenTable
 from app.sql.models import User as UserTable
+from app.sql.models import UserTag as UserTagTable
 from app.utils.exceptions import (
     DeleteRoleWithUsersException,
     RoleAlreadyExistsException,
     RoleNotFoundException,
+    TagAlreadyExistsException,
+    TagNotFoundException,
     TokenNotFoundException,
     UserAlreadyExistsException,
     UserNotFoundException,
@@ -196,11 +200,20 @@ class IdentityAccessManager:
 
         return list(roles.values())
 
+    @staticmethod
+    async def _check_if_tags_exist(session: AsyncSession, tag_ids: List[int]) -> None:
+        result = await session.execute(statement=select(TagTable.id).where(TagTable.id.in_(tag_ids)))
+        existing_tag_ids = {row.id for row in result.all()}
+        missing_tag_ids = set(tag_ids) - existing_tag_ids
+        if missing_tag_ids:
+            raise TagNotFoundException(f"Tags with IDs {missing_tag_ids} not found")
+
     async def create_user(
         self,
         session: AsyncSession,
         name: str,
         role_id: int,
+        tags: Optional[List[UserTag]] = None,
         budget: Optional[float] = None,
         expires_at: Optional[int] = None,
     ) -> int:
@@ -229,6 +242,13 @@ class IdentityAccessManager:
         except IntegrityError:
             raise UserAlreadyExistsException()
 
+        # create the user tags
+        if tags:
+            await self._check_if_tags_exist(session=session, tag_ids=[tag.id for tag in tags])
+
+            for user_tag in tags:
+                await session.execute(statement=insert(table=UserTagTable).values(user_id=user_id, tag_id=user_tag.id, value=user_tag.value))
+
         await session.commit()
 
         return user_id
@@ -241,7 +261,7 @@ class IdentityAccessManager:
         except NoResultFound:
             raise UserNotFoundException()
 
-        # delete the user
+        # delete the user (user tags will be deleted by CASCADE)
         await session.execute(statement=delete(table=UserTable).where(UserTable.id == user_id))
         await session.commit()
 
@@ -251,6 +271,7 @@ class IdentityAccessManager:
         user_id: int,
         name: Optional[str] = None,
         role_id: Optional[int] = None,
+        tags: Optional[List[UserTag]] = None,
         budget: Optional[float] = None,
         expires_at: Optional[int] = None,
     ) -> None:
@@ -262,6 +283,7 @@ class IdentityAccessManager:
             user_id: The ID of the user to update.
             name: The new name of the user.
             role_id: The new role ID of the user.
+            tags: The new tags of the user.
             budget: The new budget of the user.
             expires_at: The new expiration timestamp of the user.
         """
@@ -270,11 +292,13 @@ class IdentityAccessManager:
             statement=select(
                 UserTable.id,
                 UserTable.name,
+                UserTable.role_id,
                 UserTable.budget,
                 UserTable.expires_at,
-                RoleTable.id.label("role_id"),
                 RoleTable.name.label("role"),
-            ).where(UserTable.id == user_id)
+            )
+            .join(RoleTable, UserTable.role_id == RoleTable.id)
+            .where(UserTable.id == user_id)
         )
         try:
             user = result.all()[0]
@@ -294,9 +318,24 @@ class IdentityAccessManager:
                 raise RoleNotFoundException()
 
         role_id = role_id if role_id is not None else user.role_id
+
+        # update user basic info
         await session.execute(
             statement=update(table=UserTable).values(name=name, role_id=role_id, budget=budget, expires_at=expires_at).where(UserTable.id == user.id)
         )
+
+        # update user tags if provided
+        if tags is not None:
+            await self._check_if_tags_exist(session=session, tag_ids=[tag.id for tag in tags])
+
+            # delete existing user tags
+            await session.execute(statement=delete(table=UserTagTable).where(UserTagTable.user_id == user.id))
+
+            # create new user tags
+            if tags:
+                for user_tag in tags:
+                    await session.execute(statement=insert(table=UserTagTable).values(user_id=user.id, tag_id=user_tag.id, value=user_tag.value))
+
         await session.commit()
 
     async def get_users(
@@ -329,10 +368,32 @@ class IdentityAccessManager:
             statement = statement.where(UserTable.role_id == role_id)
 
         result = await session.execute(statement=statement)
-        users = [User(**row._mapping) for row in result.all()]
+        user_rows = result.all()
 
-        if user_id is not None and len(users) == 0:
+        if user_id is not None and len(user_rows) == 0:
             raise UserNotFoundException()
+
+        # Get user IDs for tag query
+        user_ids = [row.id for row in user_rows]
+
+        # Get user tags
+        user_tags_dict = {}
+        if user_ids:
+            tags_statement = select(UserTagTable.user_id, UserTagTable.tag_id, UserTagTable.value).where(UserTagTable.user_id.in_(user_ids))
+
+            tags_result = await session.execute(statement=tags_statement)
+            for row in tags_result:
+                if row.user_id not in user_tags_dict:
+                    user_tags_dict[row.user_id] = []
+                user_tags_dict[row.user_id].append(UserTag(id=row.tag_id, value=row.value))
+
+        # Build users with tags
+        users = []
+        for row in user_rows:
+            user_data = row._mapping
+            user_data = dict(user_data)
+            user_data["tags"] = user_tags_dict.get(row.id, [])
+            users.append(User(**user_data))
 
         return users
 
@@ -425,3 +486,83 @@ class IdentityAccessManager:
             return None, None
 
         return claims["user_id"], claims["token_id"]
+
+    async def create_tag(self, session: AsyncSession, name: str) -> int:
+        """Create a new tag."""
+        try:
+            result = await session.execute(statement=insert(table=TagTable).values(name=name).returning(TagTable.id))
+            tag_id = result.scalar_one()
+            await session.commit()
+            return tag_id
+        except IntegrityError:
+            raise TagAlreadyExistsException()
+
+    async def delete_tag(self, session: AsyncSession, tag_id: int) -> None:
+        """Delete a tag."""
+        # check if tag exists
+        result = await session.execute(statement=select(TagTable).where(TagTable.id == tag_id))
+        try:
+            result.scalar_one()
+        except NoResultFound:
+            raise TagNotFoundException()
+
+        # delete the tag (user tags will be deleted by CASCADE)
+        await session.execute(statement=delete(table=TagTable).where(TagTable.id == tag_id))
+        await session.commit()
+
+    async def update_tag(
+        self,
+        session: AsyncSession,
+        tag_id: int,
+        name: Optional[str] = None,
+    ) -> None:
+        """Update a tag."""
+        # check if tag exists
+        result = await session.execute(statement=select(TagTable).where(TagTable.id == tag_id))
+        try:
+            tag = result.scalar_one()
+        except NoResultFound:
+            raise TagNotFoundException()
+
+        # update the tag
+        if name is not None:
+            try:
+                await session.execute(statement=update(table=TagTable).values(name=name).where(TagTable.id == tag.id))
+                await session.commit()
+            except IntegrityError:
+                raise TagAlreadyExistsException()
+
+    async def get_tags(
+        self,
+        session: AsyncSession,
+        tag_id: Optional[int] = None,
+        offset: int = 0,
+        limit: int = 10,
+        order_by: Literal["id", "name", "created_at", "updated_at"] = "id",
+        order_direction: Literal["asc", "desc"] = "asc",
+    ) -> List[Tag]:
+        """Get tags with pagination and ordering."""
+        statement = (
+            select(
+                TagTable.id,
+                TagTable.name,
+                cast(func.extract("epoch", TagTable.created_at), Integer).label("created_at"),
+                cast(func.extract("epoch", TagTable.updated_at), Integer).label("updated_at"),
+            )
+            .offset(offset=offset)
+            .limit(limit=limit)
+            .order_by(text(f"{order_by} {order_direction}"))
+        )
+
+        if tag_id is not None:
+            statement = statement.where(TagTable.id == tag_id)
+
+        result = await session.execute(statement=statement)
+        tag_rows = result.all()
+
+        if tag_id is not None and len(tag_rows) == 0:
+            raise TagNotFoundException()
+
+        tags = [Tag(**row._mapping) for row in tag_rows]
+
+        return tags

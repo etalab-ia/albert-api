@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.utils.exceptions import ToolNotFoundException
 from app.helpers.agents import AgentsManager
 from app.schemas.agents import AgentsTool
+from app.utils.exceptions import ToolNotFoundException
 
 
 class TestMCPBody(SimpleNamespace):

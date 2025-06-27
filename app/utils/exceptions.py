@@ -39,6 +39,11 @@ class UserAlreadyExistsException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
+class TagAlreadyExistsException(HTTPException):
+    def __init__(self, detail: str = "Tag already exists."):
+        super().__init__(status_code=400, detail=detail)
+
+
 class InsufficientBudgetException(HTTPException):
     def __init__(self, detail: str = "Insufficient budget."):
         super().__init__(status_code=400, detail=detail)
@@ -88,6 +93,11 @@ class ModelNotFoundException(HTTPException):
 
 class RoleNotFoundException(HTTPException):
     def __init__(self, detail: str = "Role not found.") -> None:
+        super().__init__(status_code=404, detail=detail)
+
+
+class TagNotFoundException(HTTPException):
+    def __init__(self, detail: str = "Tag not found.") -> None:
         super().__init__(status_code=404, detail=detail)
 
 
