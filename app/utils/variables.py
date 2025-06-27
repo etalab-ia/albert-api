@@ -43,6 +43,7 @@ ROUTER__PARSE = "parse"
 ROUTER__RERANK = "rerank"
 ROUTER__SEARCH = "search"
 ROUTER__USAGE = "usage"
+ROUTER__USERS = "users"
 ROUTER__MULTIAGENTS = "multiagents"
 
 
