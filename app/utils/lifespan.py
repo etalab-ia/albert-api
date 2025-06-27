@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 import traceback
 
-from coredis import ConnectionPool
+from coredis import ConnectionPool, Redis
 from fastapi import FastAPI
 
 from app.clients.mcp import SecretShellMCPBridgeClient
@@ -29,6 +29,12 @@ logger = init_logger(name=__name__)
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
+    # setup redis
+    assert settings.databases.redis is not None, "Redis database connection parameters must be set in configuration."
+    redis = ConnectionPool(**settings.databases.redis.args)
+    redis_test_client = Redis(connection_pool=redis)
+    assert (await redis_test_client.ping()).decode('ascii') == "PONG", "Redis database is not reachable."
+
     # Global context: models
     routers = []
     for model in settings.models:
@@ -36,10 +42,11 @@ async def lifespan(app: FastAPI):
         for client in model.clients:
             try:
                 # model client can be not reatachable to API start up
-                client = ModelClient.import_module(type=client.type)(
+                client = (await ModelClient.import_module(type=client.type, redis_connection_pool=redis, model_name=client.model, api_url=client.args.api_url))(
                     model=client.model,
                     costs=client.costs,
                     carbon=client.carbon,
+                    redis_connection=redis,
                     **client.args.model_dump(),
                 )
                 clients.append(client)
@@ -65,9 +72,7 @@ async def lifespan(app: FastAPI):
     global_context.iam = IdentityAccessManager()
 
     # Global context: limiter
-    redis = ConnectionPool(**settings.databases.redis.args)
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
-    assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
     # Global context: tokenizer
     global_context.tokenizer = UsageTokenizer(tokenizer=settings.general.tokenizer)
