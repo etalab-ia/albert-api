@@ -63,7 +63,6 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
     from app.endpoints import (
         agents,
         audio,
-        auth,
         chat,
         chunks,
         collections,
@@ -75,6 +74,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         ocr,
         parse,
         rerank,
+        roles,
         search,
         usage,
     )
@@ -110,8 +110,8 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         app.include_router(router=audio.router, tags=[ROUTER__AUDIO.title()], prefix="/v1")
 
     if ROUTER__AUTH not in settings.general.disabled_routers:
-        add_hooks(router=auth.router)
-        app.include_router(router=auth.router, tags=[ROUTER__AUTH.title()])
+        add_hooks(router=roles.router)
+        app.include_router(router=roles.router, tags=[ROUTER__AUTH.title()])
 
     if ROUTER__CHAT not in settings.general.disabled_routers:
         add_hooks(router=chat.router)
