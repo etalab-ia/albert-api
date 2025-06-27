@@ -5,7 +5,10 @@ general:
 
 
 playground:
-  api_url: http://${API_HOST}:8000
+  api_url: http://${API_HOST:-localhost}:8000
+  max_api_key_expiration_days: 365
+  cache_ttl: 1800
+  database_url: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5433}/playground
 
 auth:
   master_username: master
@@ -16,28 +19,35 @@ monitoring:
     enabled: true
 
 mcp:
-  mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
+  mcp_bridge_url: http://${MCP_BRIDGE_HOST:-localhost}:${MCP_BRIDGE_PORT:-9876}
+
+#web_search:
+#  type: brave
+#  query_model: albert-small
+#  args:
+#    api_key: ${BRAVE_API_KEY}
 
 databases:
   - type: elasticsearch
     context: api
-    model: my-embeddings-model
+    model: ${EMBEDDINGS_MODEL:-my-embeddings-model}
     args:
-      hosts: http://${ELASTICSEARCH_HOST}:9200
+      hosts: http://${ELASTICSEARCH_HOST:-localhost}:${ELASTICSEARCH_PORT:-9200}
       basic_auth:
-        - "elastic"
-        - "changeme"
+        - ${ELASTICSEARCH_USERNAME:-elastic}
+        - ${ELASTICSEARCH_PASSWORD:-changeme}
 
   - type: redis
     context: api
     args:
-      host: ${REDIS_HOST}
+      host: ${REDIS_HOST:-localhost}
+      port: ${REDIS_PORT:-6379}
       password: changeme
 
   - type: sql # API database (async)
     context: api
     args:
-      url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:5432/api
+      url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-54332}/api
       echo: False
       pool_size: 5
       max_overflow: 10
@@ -49,33 +59,89 @@ databases:
   - type: sql # Playground database (sync)
     context: playground
     args:
-      url: postgresql://postgres:changeme@${POSTGRES_HOST}:5432/playground
+      url: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-54331}/playground
       echo: False
       pool_size: 5
       max_overflow: 10
       pool_pre_ping: True
 
 models:
-  - id: my-language-model
+  - id: albert-large
     type: text-generation
+    owned_by: test
+    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
     clients:
-      - model: gpt-3.5-turbo
-        type: openai
-        params:
-          total: 70
-          active: 70
-          zone: WOR
+      - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
+        type: albert
         args:
-          api_url: https://api.openai.com
-          api_key: ${OPENAI_API_KEY}
-          timeout: 60
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
 
-  - id: my-embeddings-model
-    type: text-embeddings-inference
+  - id: albert-small
+    type: text-generation
+    aliases: ["meta-llama/Llama-3.1-8B-Instruct"]
     clients:
-      - model: text-embedding-3-small
-        type: openai
+      - model: albert-small
+        type: albert
         args:
-          api_url: https://api.openai.com
-          api_key: ${OPENAI_API_KEY}
-          timeout: 60
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+
+  - id: ${EMBEDDINGS_MODEL:-my-embeddings-model}
+    type: text-embeddings-inference
+    aliases: ["BAAI/bge-m3"]
+    clients:
+      - model: BAAI/bge-m3
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+
+  - id: audio-large
+    type: automatic-speech-recognition
+    aliases: ["openai/whisper-large-v3"]
+    clients:
+      - model: audio-large
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+
+  - id: rerank-small
+    type: text-classification
+    aliases: ["BAAI/bge-reranker-v2-m3"]
+    clients:
+      - model: rerank-small
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+
+#  - id: my-language-model
+#    type: text-generation
+#    clients:
+#      - model: gpt-3.5-turbo
+#        type: openai
+#        params:
+#          total: 70
+#          active: 70
+#          zone: WOR
+#        args:
+#          api_url: https://api.openai.com
+#          api_key: ${OPENAI_API_KEY}
+#          timeout: 60
+#
+#  - id: my-embeddings-model
+#    type: text-embeddings-inference
+#    clients:
+#      - model: text-embedding-3-small
+#        type: openai
+#        args:
+#          api_url: https://api.openai.com
+#          api_key: ${OPENAI_API_KEY}
+#          timeout: 60

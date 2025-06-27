@@ -1,0 +1,67 @@
+CONFIG_FILE=./config.yml
+PYPROJECT=pyproject.toml
+
+APP_ENV_FILE=.env
+TEST_ENV_FILE=.env.test
+
+
+install:
+	pip install ".[app,ui,dev,test]"
+
+configuration:
+	python scripts/generate_models_configuration.py
+
+docker-compose-albert-api-up:
+	docker compose --env-file ${APP_ENV_FILE} up --detach
+
+docker-compose-albert-api-down:
+	docker compose --env-file ${APP_ENV_FILE} down
+
+docker-compose-services-up:
+	docker compose --env-file ${APP_ENV_FILE} up redis elasticsearch postgres mcp-bridge --detach
+
+docker-compose-services-down:
+	docker compose --env-file ${APP_ENV_FILE} down
+
+docker-compose-test-services-up:
+	docker compose --env-file ${TEST_ENV_FILE} up redis elasticsearch postgres mcp-bridge --detach
+
+docker-compose-test-services-down:
+	docker compose --env-file ${TEST_ENV_FILE} down
+
+run-api:
+	bash -c 'set -a; . $(APP_ENV_FILE); ./scripts/startup_api.sh'
+
+run-ui:
+	bash -c 'set -a; . $(APP_ENV_FILE); ./scripts/startup_ui.sh'
+
+db-app-migrate:
+	bash -c 'set -a; . $(APP_ENV_FILE); alembic -c app/alembic.ini upgrade head'
+
+db-test-migrate:
+	bash -c 'set -a; . $(TEST_ENV_FILE); alembic -c app/alembic.ini upgrade head'
+
+db-ui-migrate:
+	bash -c 'set -a; . $(APP_ENV_FILE); alembic -c ui/alembic.ini upgrade head'
+
+test-all:
+	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT)'
+
+test-unit:
+	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)
+
+test-integ:
+	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
+
+test-snap-update:
+	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT) --snapshot-update
+
+install-lint:
+	pre-commit install
+
+lint:
+	pre-commit run --all-files
+
+setup: install configuration install-lint docker-compose-services-up db-app-migrate db-ui-migrate
+
+.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ test-snap-update lint setup docker-compose-ci-up

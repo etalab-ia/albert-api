@@ -15,6 +15,70 @@
   </ul>
 </div>
 
+
+## 🚀 Quickstart
+
+### Prerequisites
+- Python 3.8+
+- Docker and Docker Compose
+
+### Installation
+
+#### 1. Installing dependencies
+
+```bash
+make install
+```
+
+#### 2. Configuration
+
+2.1 Copy the `.env.template` file to `.env` and `.env.test`. Fill in the variables if needed:
+- `ALBERT_API_KEY`
+- `OPENAI_API_KEY`
+
+These variables are used for API model configuration.
+
+2.2 Copy the `config.example.yml` file to `config.yml`.
+
+```bash
+cp config.example.yml config.yml
+```
+
+You can then manually configure your models based on the default configuration. You can also use the CLI to generate a model configuration:
+
+```bash
+make configuration
+```
+
+The model configuration must be in the API configuration file (as defined in `CONFIG_FILE`)
+
+### Quick Start
+
+#### Option 1: Full launch with Docker
+
+```bash
+# Start all services (API + external services)
+make docker-compose-albert-api-up
+make db-app-migrate
+# Stop all services
+make docker-compose-albert-api-down
+```
+
+#### Option 2: Local development
+
+```bash
+# 1. Start only external services (Redis, Qdrant, PostgreSQL, MCP Bridge)
+make docker-compose-services-up
+
+# 2. Launch the API (in one terminal)
+make run-api
+
+# 3. Launch the user interface (in another terminal)
+make run-ui
+```
+
+## 📫 API Gateway
+
 ## 🔥 Why Albert API?
 
 Albert API is an **enterprise-ready open-source gateway** for deploying **generative AI models** on your infrastructure:

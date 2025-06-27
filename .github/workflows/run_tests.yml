@@ -12,32 +12,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
   
     - name: Set up Docker Compose
       run: |
-        docker compose --file ./.github/compose.test.yml up --detach
+        cp .env.template .env.test
+        make docker-compose-test-services-up
       env:
         BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
         ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
-    
-    - name: Wait for API to start
-      run: |
-        echo $(ls -la)
-        for i in {1..30}; do
-          curl -s http://localhost:8000/health -H "Authorization: Bearer changeme" > /dev/null && echo "API is ready" && break || echo "Waiting for API..." && sleep 2;
-        done
-        echo $(docker logs albert-test-api-1)
-  
+
     - name: Wait for PostgreSQL
       run: |
         for i in {1..30}; do
           nc -z localhost 8432 && echo "PostgreSQL is ready" && break || echo "Waiting for PostgreSQL..." && sleep 2;
         done
 
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pipenv'
+        cache-dependency-path: 'pyproject.toml'
+    - run: make install
+
     - name: Run tests
       run: |
-        docker exec albert-test-api-1 pytest app/tests --cov=./app --cov-report=xml
+        cp config.example.yml config.yml
+        make db-test-migrate
+        make test-all
 
     - name: Create coverage badge
       run: |
