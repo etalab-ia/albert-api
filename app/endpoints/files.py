@@ -2,7 +2,7 @@ from io import BytesIO
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, Body, Depends, File, Security, UploadFile
+from fastapi import APIRouter, Body, File, Security, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +12,7 @@ from app.helpers._accesscontroller import AccessController
 from app.schemas.core.documents import JsonFile
 from app.schemas.files import ChunkerArgs, FileResponse, FilesRequest
 from app.schemas.parse import ParsedDocumentOutputFormat
-from app.sql.session import get_db as get_session
+from app.utils.depends import get_db_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException, FileSizeLimitExceededException, InvalidJSONFormatException
 from app.utils.variables import ENDPOINT__FILES
@@ -24,7 +24,7 @@ router = APIRouter()
 async def upload_file(
     file: UploadFile = File(...),
     request: FilesRequest = Body(...),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = get_db_session(),
 ) -> JSONResponse:
     """
     **[DEPRECATED]** Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.

@@ -12,8 +12,8 @@ from starlette.responses import StreamingResponse
 from app.helpers._streamingresponsewithstatuscode import StreamingResponseWithStatusCode
 
 from app.sql.models import Usage, User
-from app.sql.session import get_db
 from app.utils.context import global_context, request_context
+from app.utils.depends import get_db_dependency
 from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -156,7 +156,6 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
                         usage.kgco2eq_min = data["usage"].get("carbon", {}).get("kgCO2eq", {}).get("min", None)
                         usage.kgco2eq_max = data["usage"].get("carbon", {}).get("kgCO2eq", {}).get("max", None)
 
-
         # Set usage.status with the captured status code before calling write_usage
         if response_status_code is not None:
             usage.status = response_status_code
@@ -184,12 +183,12 @@ async def extract_usage_from_response(response: Response, start_time: datetime, 
         usage.prompt_tokens = response_usage.get("prompt_tokens", None)
         usage.completion_tokens = response_usage.get("completion_tokens", None)
         usage.total_tokens = response_usage.get("total_tokens", None)
-        usage.cost = response_usage.get("cost", None)        
+        usage.cost = response_usage.get("cost", None)
         usage.kwh_min = response_usage.get("carbon", {}).get("kWh", {}).get("min", None)
         usage.kwh_max = response_usage.get("carbon", {}).get("kWh", {}).get("max", None)
         usage.kgco2eq_min = response_usage.get("carbon", {}).get("kgCO2eq", {}).get("min", None)
         usage.kgco2eq_max = response_usage.get("carbon", {}).get("kgCO2eq", {}).get("max", None)
-   
+
     except Exception as e:
         logger.warning(f"Failed to parse JSON response body: {response.body} ({e})")
         return
@@ -216,7 +215,7 @@ async def log_usage(response: Optional[Response], usage: Usage, start_time: date
     if usage.request_model:
         usage.request_model = global_context.models.aliases.get(usage.request_model, usage.request_model)
 
-    async for session in get_db():
+    async for session in get_db_dependency()():
         session.add(usage)
         try:
             await session.commit()
@@ -245,7 +244,7 @@ async def update_budget(usage: Usage):
         return
 
     # Decrease the user's budget by the calculated cost with proper locking
-    async for session in get_db():
+    async for session in get_db_dependency()():
         try:
             async with session.begin():
                 # Use SELECT FOR UPDATE to lock the user row during the transaction. This prevents concurrent modifications to the budget

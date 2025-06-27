@@ -42,7 +42,7 @@ def tokenizer():
 
 @pytest.fixture(scope="module")
 def text_generation_model(client: TestClient):
-    response = client.get(url=f"/v1{ENDPOINT__MODELS}")
+    response = client.get_with_permissions(url=f"/v1{ENDPOINT__MODELS}")
     assert response.status_code == 200, response.text
     model = [model["id"] for model in response.json()["data"] if model["type"] == "text-generation"][0]
 
@@ -430,7 +430,7 @@ class TestAuth:
 
     def test_web_search_limits_search(self, client: TestClient, tokenizer, text_generation_model):
         # Create a role with web search limits (only one request per day)
-        response = client.get(url=f"/v1{ENDPOINT__MODELS}")
+        response = client.get_with_permissions(url=f"/v1{ENDPOINT__MODELS}")
         assert response.status_code == 200, response.text
         models = response.json()["data"]
 
@@ -487,7 +487,7 @@ class TestAuth:
 
     def test_web_search_limits_chat_completions(self, client: TestClient, tokenizer, text_generation_model):
         # Create a role with web search limits (only one request per day)
-        response = client.get(url=f"/v1{ENDPOINT__MODELS}")
+        response = client.get_with_permissions(url=f"/v1{ENDPOINT__MODELS}")
         assert response.status_code == 200, response.text
         models = response.json()["data"]
 

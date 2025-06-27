@@ -1,6 +1,6 @@
 from typing import List, Tuple, Union
 
-from fastapi import APIRouter, Depends, Request, Security
+from fastapi import APIRouter, Request, Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,7 +9,7 @@ from app.helpers._streamingresponsewithstatuscode import StreamingResponseWithSt
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search, SearchMethod
-from app.sql.session import get_db as get_session
+from app.utils.depends import get_db_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Union[ChatCompletion, ChatCompletionChunk])  # fmt: off
-async def chat_completions(request: Request, body: ChatCompletionRequest, session: AsyncSession = Depends(get_session)) -> Union[JSONResponse, StreamingResponseWithStatusCode]:  # fmt: off
+async def chat_completions(request: Request, body: ChatCompletionRequest, session: AsyncSession = get_db_session()) -> Union[JSONResponse, StreamingResponseWithStatusCode]:  # fmt: off
     """Creates a model response for the given chat conversation.
 
     **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional
