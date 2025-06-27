@@ -55,7 +55,7 @@ with col2:
         border=False,
     )
 
-st.subheader("Usages")
+st.subheader("My Usage")
 
 # Date filters
 col1, col2 = st.columns(2)
@@ -68,8 +68,20 @@ with col2:
 date_from_timestamp = int(dt.datetime.combine(date_from, dt.time.min).timestamp())
 date_to_timestamp = int(dt.datetime.combine(date_to, dt.time.max).timestamp())
 
+# Initialize pagination state
+usage_key = "usage_pagination"
+if usage_key not in st.session_state:
+    st.session_state[usage_key] = 1
+
+# Reset pagination when date filters change
+date_key = f"{date_from_timestamp}_{date_to_timestamp}"
+if f"{usage_key}_date_key" not in st.session_state or st.session_state[f"{usage_key}_date_key"] != date_key:
+    st.session_state[usage_key] = 1
+    st.session_state[f"{usage_key}_date_key"] = date_key
+
 usage_response = get_usage(
-    limit=100,
+    limit=25,
+    page=st.session_state[usage_key],
     order_by="datetime",
     order_direction="desc",
     user_id=st.session_state["user"].id,
@@ -82,6 +94,12 @@ total_requests = usage_response.get("total_requests", 0)
 total_albert_coins = usage_response.get("total_albert_coins", 0.0)
 total_tokens = usage_response.get("total_tokens", 0)
 total_co2 = usage_response.get("total_co2", 0.0)
+
+# Pagination information
+current_page = usage_response.get("page", 1)
+total_pages = usage_response.get("total_pages", 1)
+has_more = usage_response.get("has_more", False)
+limit = usage_response.get("limit", 50)
 
 if usage_data:
     # Summary statistics from API calculations
@@ -146,6 +164,37 @@ if usage_data:
             # "CO2eq Max (kg)": st.column_config.NumberColumn(label="CO2eq Max (kg)", format="%.6f"),
         },
     )
+
+    # Add pagination controls if there are multiple pages
+    if total_pages > 1:
+        col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
+
+        with col1:
+            if st.button("⏮️", disabled=current_page == 1, key="usage_first_page"):
+                st.session_state[usage_key] = 1
+                st.rerun()
+
+        with col2:
+            if st.button("◀️", disabled=current_page == 1, key="usage_prev_page"):
+                st.session_state[usage_key] = max(1, current_page - 1)
+                st.rerun()
+
+        with col3:
+            st.markdown(f"<div style='text-align: center; padding: 0.25rem 0;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
+
+        with col4:
+            if st.button("▶️", disabled=current_page == total_pages, key="usage_next_page"):
+                st.session_state[usage_key] = min(total_pages, current_page + 1)
+                st.rerun()
+
+        with col5:
+            if st.button("⏭️", disabled=current_page == total_pages, key="usage_last_page"):
+                st.session_state[usage_key] = total_pages
+                st.rerun()
+    elif usage_data:  # Show page info even for single page
+        st.markdown(
+            f"<div style='text-align: center; padding: 0.5rem 0; color: #666;'>Showing {len(usage_data)} records</div>", unsafe_allow_html=True
+        )
 
 
 else:

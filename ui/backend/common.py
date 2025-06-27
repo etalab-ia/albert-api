@@ -157,6 +157,7 @@ def check_password(password: str) -> bool:
 @st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
 def get_usage(
     limit: int = 50,
+    page: int = 1,
     order_by: Literal["datetime", "cost", "total_tokens"] = "datetime",
     order_direction: Literal["asc", "desc"] = "desc",
     user_id: str = None,  # Add user_id to make cache user-specific
@@ -173,6 +174,7 @@ def get_usage(
         headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"},
         params={
             "limit": limit,
+            "page": page,
             "order_by": order_by,
             "order_direction": order_direction,
             **({"date_from": date_from} if date_from is not None else {}),
@@ -182,6 +184,16 @@ def get_usage(
 
     if response.status_code != 200:
         st.error(response.json()["detail"])
-        return {"data": [], "total_requests": 0, "total_albert_coins": 0.0, "total_tokens": 0, "total_co2": 0.0}
+        return {
+            "data": [],
+            "total_requests": 0,
+            "total_albert_coins": 0.0,
+            "total_tokens": 0,
+            "total_co2": 0.0,
+            "page": 1,
+            "limit": limit,
+            "total_pages": 0,
+            "has_more": False,
+        }
 
     return response.json()

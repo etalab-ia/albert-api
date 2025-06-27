@@ -40,4 +40,8 @@ class AccountUsageResponse(BaseModel):
     total_tokens: Optional[int] = Field(description="Total tokens used")
     total_co2: Optional[float] = Field(description="Total CO2 emissions in grams")
 
+    # Pagination metadata
+    page: int = Field(description="Current page number (1-based)")
+    limit: int = Field(description="Number of records per page")
+    total_pages: int = Field(description="Total number of pages")
     has_more: bool = Field(description="Whether there are more records available")

@@ -1,5 +1,6 @@
 from typing import Literal
 from datetime import datetime, timedelta
+import math
 
 from fastapi import APIRouter, Depends, Query, Request, Security
 from fastapi.responses import JSONResponse
@@ -26,7 +27,8 @@ router = APIRouter()
 )
 async def get_account_usage(
     request: Request,
-    limit: int = Query(default=50, ge=1, le=100, description="Number of records to return (1-100)"),
+    limit: int = Query(default=50, ge=1, le=100, description="Number of records to return per page (1-100)"),
+    page: int = Query(default=1, ge=1, description="Page number (1-based)"),
     order_by: Literal["datetime", "cost", "total_tokens"] = Query(default="datetime", description="Field to order by"),
     order_direction: Literal["asc", "desc"] = Query(default="desc", description="Order direction"),
     date_from: int = Query(default=None, description="Start date as Unix timestamp (default: 30 days ago)"),
@@ -38,6 +40,7 @@ async def get_account_usage(
     Get usage records for the current authenticated account.
 
     Returns usage data filtered by the current account's ID, with configurable ordering and pagination.
+    Supports pagination through page and limit parameters.
     """
 
     # Set default date range if not provided
@@ -62,8 +65,11 @@ async def get_account_usage(
     else:
         query = query.order_by(asc(order_field))
 
+    # Calculate offset for pagination
+    offset = (page - 1) * limit
+
     # Apply pagination
-    query = query.limit(limit)
+    query = query.offset(offset).limit(limit)
 
     # Execute query
     result = await session.execute(query)
@@ -125,7 +131,9 @@ async def get_account_usage(
             )
         )
 
-    has_more = len(usage_records) == limit and total_count > limit
+    # Calculate pagination metadata
+    total_pages = math.ceil(total_count / limit) if total_count > 0 else 1
+    has_more = page < total_pages
 
     response = AccountUsageResponse(
         data=usage_data,
@@ -134,6 +142,9 @@ async def get_account_usage(
         total_albert_coins=total_albert_coins,
         total_tokens=total_tokens,
         total_co2=total_co2,
+        page=page,
+        limit=limit,
+        total_pages=total_pages,
         has_more=has_more,
     )
 
