@@ -71,17 +71,22 @@ date_to_timestamp = int(dt.datetime.combine(date_to, dt.time.max).timestamp())
 # Initialize pagination state
 usage_key = "usage_pagination"
 if usage_key not in st.session_state:
-    st.session_state[usage_key] = 1
+    st.session_state[usage_key] = 0
 
 # Reset pagination when date filters change
 date_key = f"{date_from_timestamp}_{date_to_timestamp}"
 if f"{usage_key}_date_key" not in st.session_state or st.session_state[f"{usage_key}_date_key"] != date_key:
-    st.session_state[usage_key] = 1
+    st.session_state[usage_key] = 0
     st.session_state[f"{usage_key}_date_key"] = date_key
 
+# Calculate page number from offset
+per_page = 25
+current_offset = st.session_state[usage_key]
+current_page = (current_offset // per_page) + 1
+
 usage_response = get_usage(
-    limit=25,
-    page=st.session_state[usage_key],
+    limit=per_page,
+    page=current_page,
     order_by="datetime",
     order_direction="desc",
     user_id=st.session_state["user"].id,
@@ -165,36 +170,9 @@ if usage_data:
         },
     )
 
-    # Add pagination controls if there are multiple pages
-    if total_pages > 1:
-        col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
-
-        with col1:
-            if st.button("⏮️", disabled=current_page == 1, key="usage_first_page"):
-                st.session_state[usage_key] = 1
-                st.rerun()
-
-        with col2:
-            if st.button("◀️", disabled=current_page == 1, key="usage_prev_page"):
-                st.session_state[usage_key] = max(1, current_page - 1)
-                st.rerun()
-
-        with col3:
-            st.markdown(f"<div style='text-align: center; padding: 0.25rem 0;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
-
-        with col4:
-            if st.button("▶️", disabled=current_page == total_pages, key="usage_next_page"):
-                st.session_state[usage_key] = min(total_pages, current_page + 1)
-                st.rerun()
-
-        with col5:
-            if st.button("⏭️", disabled=current_page == total_pages, key="usage_last_page"):
-                st.session_state[usage_key] = total_pages
-                st.rerun()
-    elif usage_data:  # Show page info even for single page
-        st.markdown(
-            f"<div style='text-align: center; padding: 0.5rem 0; color: #666;'>Showing {len(usage_data)} records</div>", unsafe_allow_html=True
-        )
+    # Add pagination controls
+    if total_pages > 1 or has_more:
+        pagination(key=usage_key, data=usage_data, per_page=per_page)
 
 
 else:
