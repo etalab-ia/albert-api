@@ -122,7 +122,7 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
 
         return searches
 
-    async def _lexical_search(self, query_prompt: str, collection_ids: List[int], k: int) -> List[Search]:
+    async def _lexical_search(self, query_prompt: str, collection_ids: List[int], k: int, score_threshold: float = 0.0) -> List[Search]:
         collection_ids = [str(x) for x in collection_ids]
         fuzziness = {"fuzziness": "AUTO"} if len(query_prompt.split()) < 25 else {}
         body = {"query": {"multi_match": {"query": query_prompt, **fuzziness}}, "size": k, "_source": {"excludes": ["embedding"]}}
@@ -136,6 +136,10 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
             )
             for hit in hits
         ]
+
+        searches = [search for search in searches if search.score >= score_threshold]
+        searches = sorted(searches, key=lambda x: x.score, reverse=True)[:k]
+
         return searches
 
     async def _semantic_query(self, query_vector: list[float], collection_ids: List[int], k: int, score_threshold: float = 0.0) -> List[Search]:  # fmt: off
