@@ -40,7 +40,7 @@ from ._websearchmanager import WebSearchManager
 logger = logging.getLogger(__name__)
 
 
-def check_dependancy(*, dependancies: List[str]) -> Callable:
+def check_dependencies(*, dependencies: List[str]) -> Callable:
     """
     Decorator to check if the dependencies are initialized before executing the method.
     """
@@ -48,13 +48,13 @@ def check_dependancy(*, dependancies: List[str]) -> Callable:
     def decorator(method: Callable) -> Callable:
         @wraps(method)
         def wrapper(self, *args, **kwargs):
-            if "vector_store" in dependancies and not self.vector_store:
+            if "vector_store" in dependencies and not self.vector_store:
                 raise HTTPException(status_code=400, detail="Feature not available: vector store is not initialized.")
-            if "web_search" in dependancies and not self.web_search:
+            if "web_search" in dependencies and not self.web_search:
                 raise HTTPException(status_code=400, detail="Feature not available: web search is not initialized.")
-            if "parser" in dependancies and not self.parser:
+            if "parser" in dependencies and not self.parser:
                 raise HTTPException(status_code=400, detail="Feature not available: parser is not initialized.")
-            if "multi_agents" in dependancies and not self.multi_agents:
+            if "multi_agents" in dependencies and not self.multi_agents:
                 raise HTTPException(status_code=400, detail="Feature not available: multi agents is not initialized.")
 
             return method(self, *args, **kwargs)
@@ -82,7 +82,7 @@ class DocumentManager:
         if multi_agents_model and multi_agents_reranker_model:
             self.multi_agents = MultiAgents(multi_agents_model, multi_agents_reranker_model)
 
-    @check_dependancy(dependancies=["vector_store"])
+    @check_dependencies(dependencies=["vector_store"])
     async def create_collection(self, session: AsyncSession, user_id: int, name: str, visibility: CollectionVisibility, description: Optional[str] = None) -> int:  # fmt: off
         result = await session.execute(
             statement=insert(table=CollectionTable)
@@ -96,7 +96,7 @@ class DocumentManager:
 
         return collection_id
 
-    @check_dependancy(dependancies=["vector_store"])
+    @check_dependencies(dependencies=["vector_store"])
     async def delete_collection(self, session: AsyncSession, user_id: int, collection_id: int) -> None:
         # check if collection exists
         result = await session.execute(
@@ -114,7 +114,7 @@ class DocumentManager:
         # delete the collection from vector store
         await self.vector_store.delete_collection(collection_id=collection_id)
 
-    @check_dependancy(dependancies=["vector_store"])
+    @check_dependencies(dependencies=["vector_store"])
     async def update_collection(self, session: AsyncSession, user_id: int, collection_id: int, name: Optional[str] = None, visibility: Optional[CollectionVisibility] = None, description: Optional[str] = None) -> None:  # fmt: off
         # check if collection exists
         result = await session.execute(
@@ -139,7 +139,7 @@ class DocumentManager:
         )
         await session.commit()
 
-    @check_dependancy(dependancies=["vector_store"])
+    @check_dependencies(dependencies=["vector_store"])
     async def get_collections(self, session: AsyncSession, user_id: int, collection_id: Optional[int] = None, include_public: bool = True, offset: int = 0, limit: int = 10) -> List[Collection]:  # fmt: off
         # Query basic collection data
         statement = (
@@ -175,7 +175,7 @@ class DocumentManager:
 
         return collections
 
-    @check_dependancy(dependancies=["vector_store"])
+    @check_dependencies(dependencies=["vector_store"])
     async def create_document(
         self,
         session: AsyncSession,
@@ -242,7 +242,7 @@ class DocumentManager:
 
         return document_id
 
-    @check_dependancy(dependancies=["vector_store"])
+    @check_dependencies(dependencies=["vector_store"])
     async def get_documents(self, session: AsyncSession, user_id: int, collection_id: Optional[int] = None, document_id: Optional[int] = None, offset: int = 0, limit: int = 10) -> List[Document]:  # fmt: off
         statement = (
             select(
@@ -273,7 +273,7 @@ class DocumentManager:
 
         return documents
 
-    @check_dependancy(dependancies=["vector_store"])
+    @check_dependencies(dependencies=["vector_store"])
     async def delete_document(self, session: AsyncSession, user_id: int, document_id: int) -> None:
         # check if document exists
         result = await session.execute(
@@ -293,7 +293,7 @@ class DocumentManager:
         # delete the document from vector store
         await self.vector_store.delete_document(collection_id=document.collection_id, document_id=document_id)
 
-    @check_dependancy(dependancies=["vector_store"])
+    @check_dependencies(dependencies=["vector_store"])
     async def get_chunks(
         self,
         session: AsyncSession,
@@ -325,11 +325,11 @@ class DocumentManager:
 
         return chunks
 
-    @check_dependancy(dependancies=["parser"])
+    @check_dependencies(dependencies=["parser"])
     async def parse_file(self, **params: ParserParams) -> ParsedDocument:
         return await self.parser.parse_file(**params)
 
-    @check_dependancy(dependancies=["vector_store"])
+    @check_dependencies(dependencies=["vector_store"])
     async def search_chunks(
         self,
         session: AsyncSession,
@@ -399,7 +399,7 @@ class DocumentManager:
 
         return searches
 
-    @check_dependancy(dependancies=["web_search"])
+    @check_dependencies(dependencies=["web_search"])
     async def _create_web_collection(
         self,
         session: AsyncSession,
