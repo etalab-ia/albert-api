@@ -11,7 +11,7 @@ from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, selec
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.clients.vector_store import ElasticsearchVectorStoreClient, QdrantVectorStoreClient
+from app.clients.vector_store import BaseVectorStoreClient
 from app.helpers.data.chunkers import NoSplitter, RecursiveCharacterTextSplitter
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
@@ -70,7 +70,7 @@ class DocumentManager:
 
     def __init__(
         self,
-        vector_store: Union[QdrantVectorStoreClient, ElasticsearchVectorStoreClient],
+        vector_store: BaseVectorStoreClient,
         parser: ParserManager,
         web_search: Optional[WebSearchManager] = None,
         multi_agents_model: Optional[ModelRouter] = None,

@@ -21,10 +21,12 @@ from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
 from app.utils.exceptions import NotImplementedException
 
+from _basevectorstoreclient import BaseVectorStoreClient
+
 logger = logging.getLogger(__name__)
 
 
-class QdrantVectorStoreClient(AsyncQdrantClient):
+class QdrantVectorStoreClient(BaseVectorStoreClient, AsyncQdrantClient):
     default_method = SearchMethod.SEMANTIC
 
     def __init__(self, *args, **kwargs):

@@ -5,8 +5,10 @@ from elasticsearch import AsyncElasticsearch, helpers
 from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
 
+from _basevectorstoreclient import BaseVectorStoreClient
 
-class ElasticsearchVectorStoreClient(AsyncElasticsearch):
+
+class ElasticsearchVectorStoreClient(BaseVectorStoreClient, AsyncElasticsearch):
     default_method = SearchMethod.HYBRID
 
     def __init__(self, *args, **kwargs):
