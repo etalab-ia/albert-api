@@ -83,7 +83,7 @@ async def get_collections(
 
 
 @router.delete(path=ENDPOINT__COLLECTIONS + "/{collection}", dependencies=[Security(dependency=AccessController())], status_code=204)
-async def delete_collections(
+async def delete_collection(
     request: Request,
     collection: int = Path(..., description="The collection ID"),
     session: AsyncSession = Depends(get_session),

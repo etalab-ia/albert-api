@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
         clients = []
         for client in model.clients:
             try:
-                # model client can be not reatachable to API start up
+                # model client can be not reachable to API start up
                 client = ModelClient.import_module(type=client.type)(
                     model=client.model,
                     costs=client.costs,
@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
 
     # Global context: documents
 
-    ## documents dependancy: web search
+    ## documents dependency: web search
     web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
     if web_search:
         web_search = WebSearchManager(
@@ -88,18 +88,18 @@ async def lifespan(app: FastAPI):
             user_agent=settings.web_search.user_agent,
         )
 
-    ## documents dependancy: parser
+    ## documents dependency: parser
     parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
     parser = ParserManager(parser=parser)
 
-    ## documents dependancy: vector store
+    ## documents dependency: vector store
     vector_store = VectorStoreClient.import_module(type=settings.databases.vector_store.type)(**settings.databases.vector_store.args) if settings.databases.vector_store else None  # fmt: off
 
     if vector_store:
         assert await vector_store.check(), "Vector store database is not reachable."
         vector_store.model = global_context.models(model=settings.databases.vector_store.model)
 
-    ## documents dependancy: multi agents
+    ## documents dependency: multi agents
     multi_agents_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
     multi_agents_reranker_model=global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
 
