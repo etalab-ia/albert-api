@@ -161,7 +161,9 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
 
         return searches
 
-    async def _hybrid_search(self, query_prompt: str, query_vector: list[float], collection_ids: List[int], k: int, rff_k: int) -> List[Search]:
+    async def _hybrid_search(
+        self, query_prompt: str, query_vector: list[float], collection_ids: List[int], k: int, rff_k: int, expansion_factor: int = 2
+    ) -> List[Search]:
         """
         Hybrid search combines lexical and semantic search results using Reciprocal Rank Fusion (RRF).
 
@@ -171,12 +173,13 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
             collection_ids (List[int]): The collection ids
             k (int): The number of results to return
             rff_k (int): The constant k in the RRF formula
+            expansion_factor (int): The factor that increases the number of results to search in each method before reranking
 
         Returns:
             A combined list of searches with updated scores
         """
-        lexical_searches = await self._lexical_search(query_prompt=query_prompt, collection_ids=collection_ids, k=k)
-        semantic_searches = await self._semantic_query(query_vector=query_vector, collection_ids=collection_ids, k=k)
+        lexical_searches = await self._lexical_search(query_prompt=query_prompt, collection_ids=collection_ids, k=int(k * expansion_factor))
+        semantic_searches = await self._semantic_query(query_vector=query_vector, collection_ids=collection_ids, k=int(k * expansion_factor))
 
         combined_scores = {}
         search_map = {}
@@ -186,7 +189,6 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
                 if chunk_id not in combined_scores:
                     combined_scores[chunk_id] = 0
                     search_map[chunk_id] = search
-                else:
                     search_map[chunk_id].method = SearchMethod.HYBRID
                 combined_scores[chunk_id] += 1 / (rff_k + rank + 1)
 
