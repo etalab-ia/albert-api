@@ -72,19 +72,19 @@ class QdrantVectorStoreClient(BaseVectorStoreClient, AsyncQdrantClient):
             return None
 
     async def delete_document(self, collection_id: int, document_id: int) -> None:
-        filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-        await AsyncQdrantClient.delete(self, collection_name=str(collection_id), points_selector=FilterSelector(filter=filter))
+        doc_filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
+        await AsyncQdrantClient.delete(self, collection_name=str(collection_id), points_selector=FilterSelector(filter=doc_filter))
 
     async def get_chunks(self, collection_id: int, document_id: int, offset: int = 0, limit: int = 10, chunk_id: Optional[int] = None) -> List[Chunk]:
         must = [FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))]
         if chunk_id:
             must.append(FieldCondition(key="metadata.id", match=MatchValue(value=chunk_id)))
 
-        filter = Filter(must=must)
+        doc_filter = Filter(must=must)
         data = await AsyncQdrantClient.scroll(
             self,
             collection_name=str(collection_id),
-            scroll_filter=filter,
+            scroll_filter=doc_filter,
             order_by=OrderBy(key="id", start_from=offset),
             limit=limit,
         )

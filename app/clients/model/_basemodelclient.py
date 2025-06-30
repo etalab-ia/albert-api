@@ -54,18 +54,18 @@ class BaseModelClient(ABC):
         self.max_context_length = None
 
     @staticmethod
-    def import_module(type: ModelClientType) -> "Type[BaseModelClient]":
+    def import_module(model_type: ModelClientType) -> "Type[BaseModelClient]":
         """
         Static method to import a subclass of BaseModelClient.
 
         Args:
-            type(str): The type of model client to import.
+            model_type(str): The type of model client to import.
 
         Returns:
             Type[BaseModelClient]: The subclass of BaseModelClient.
         """
-        module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
-        return getattr(module, f"{type.capitalize()}ModelClient")
+        module = importlib.import_module(f"app.clients.model._{model_type.value}modelclient")
+        return getattr(module, f"{model_type.capitalize()}ModelClient")
 
     def _get_usage(self, json: dict, data: dict, stream: bool, request_latency: float = 0.0) -> Optional[Usage]:
         """

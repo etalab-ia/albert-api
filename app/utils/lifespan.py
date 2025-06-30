@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
         for client in model.clients:
             try:
                 # model client can be not reachable to API start up
-                client = ModelClient.import_module(type=client.type)(
+                client = ModelClient.import_module(model_type=client.type)(
                     model=client.model,
                     costs=client.costs,
                     carbon=client.carbon,
@@ -79,7 +79,8 @@ async def lifespan(app: FastAPI):
     # Global context: documents
 
     ## documents dependency: web search
-    web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
+    web_search = WebSearchClient.import_module(
+        websearch_type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
     if web_search:
         web_search = WebSearchManager(
             web_search=web_search,
@@ -89,14 +90,14 @@ async def lifespan(app: FastAPI):
         )
 
     ## documents dependency: parser
-    parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
+    parser = ParserClient.import_module(parser_type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
     parser = ParserManager(parser=parser)
 
     ## documents dependency: vector store
     vector_store = None
     if settings.databases.vector_store:
         vector_store = VectorStoreClient.import_module(
-            type=settings.databases.vector_store.type
+            database_type=settings.databases.vector_store.type
         )(
             **settings.databases.vector_store.args,
             model=global_context.models(model=settings.databases.vector_store.model)
