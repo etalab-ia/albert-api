@@ -14,16 +14,16 @@ class BaseVectorStoreClient(ABC):
         self.model = kwargs.get('model', None)
 
     @staticmethod
-    def import_module(type: DatabaseType) -> "Type[BaseVectorStoreClient]":
+    def import_module(database_type: DatabaseType) -> "Type[BaseVectorStoreClient]":
         """Dynamically import and return the concrete client class corresponding to *type*.
 
         Example:
             >>> client_cls = BaseVectorStoreClient.import_module(DatabaseType.ELASTICSEARCH)
             >>> client = client_cls(url="http://localhost:9200")
         """
-        module = importlib.import_module(f"app.clients.vector_store._{type.value}vectorstoreclient")
+        module = importlib.import_module(f"app.clients.vector_store._{database_type.value}vectorstoreclient")
 
-        return getattr(module, f"{type.capitalize()}VectorStoreClient")
+        return getattr(module, f"{database_type.capitalize()}VectorStoreClient")
 
     # ---------------------------------------------------------------------
     # Mandatory lifecycle helpers
