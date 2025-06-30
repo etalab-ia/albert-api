@@ -28,7 +28,7 @@ async def get_account_usage(
     order_direction: Literal["asc", "desc"] = Query(default="desc", description="Order direction"),
     date_from: int = Query(default=None, description="Start date as Unix timestamp (default: 30 days ago)"),
     date_to: int = Query(default=None, description="End date as Unix timestamp (default: now)"),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
     current_user: User = Depends(AccessController()),
 ) -> JSONResponse:
     """

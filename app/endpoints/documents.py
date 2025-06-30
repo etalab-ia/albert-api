@@ -2,7 +2,7 @@ import json
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
-from fastapi import APIRouter, Path, Query, Request, Response, Security, UploadFile
+from fastapi import APIRouter, Depends, Path, Query, Request, Response, Security, UploadFile
 from fastapi.responses import JSONResponse
 from langchain_text_splitters import Language
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,7 +43,7 @@ router = APIRouter()
 @router.post(path=ENDPOINT__DOCUMENTS, status_code=201, dependencies=[Security(dependency=AccessController())], response_model=DocumentResponse)
 async def create_document(
     request: Request,
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
     file: UploadFile = FileForm,
     collection: int = CollectionForm,
     # parse params
@@ -118,7 +118,7 @@ async def create_document(
 async def get_document(
     request: Request,
     document: int = Path(description="The document ID"),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> JSONResponse:
     """
     Get a document by ID.
@@ -137,7 +137,7 @@ async def get_documents(
     collection: Optional[int] = Query(default=None, description="Filter documents by collection ID"),
     limit: Optional[int] = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> JSONResponse:
     """
     Get all documents ID from a collection.
@@ -164,7 +164,7 @@ async def get_documents(
 async def delete_document(
     request: Request,
     document: int = Path(description="The document ID"),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Response:
     """
     Delete a document.

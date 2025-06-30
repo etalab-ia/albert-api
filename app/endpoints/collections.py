@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Path, Query, Request, Response, Security
+from fastapi import APIRouter, Body, Depends, Path, Query, Request, Response, Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post(path=ENDPOINT__COLLECTIONS, dependencies=[Security(dependency=AccessController())], status_code=201)
-async def create_collection(request: Request, body: CollectionRequest, session: AsyncSession = get_db_session()) -> JSONResponse:
+async def create_collection(request: Request, body: CollectionRequest, session: AsyncSession = Depends(get_db_session)) -> JSONResponse:
     """
     Create a new collection.
     """
@@ -40,7 +40,7 @@ async def create_collection(request: Request, body: CollectionRequest, session: 
 async def get_collection(
     request: Request,
     collection: int = Path(..., description="The collection ID"),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> JSONResponse:
     """
     Get a collection by ID.
@@ -63,7 +63,7 @@ async def get_collections(
     request: Request,
     offset: int = Query(default=0, ge=0, description="The offset of the collections to get."),
     limit: int = Query(default=10, ge=1, le=100, description="The limit of the collections to get."),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> JSONResponse:
     """
     Get list of collections.
@@ -86,7 +86,7 @@ async def get_collections(
 async def delete_collections(
     request: Request,
     collection: int = Path(..., description="The collection ID"),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Response:
     """
     Delete a collection.
@@ -108,7 +108,7 @@ async def update_collection(
     request: Request,
     collection: int = Path(..., description="The collection ID"),
     body: CollectionUpdateRequest = Body(..., description="The collection to update."),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Response:
     """
     Update a collection.

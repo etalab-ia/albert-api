@@ -1,6 +1,6 @@
 from typing import List, Tuple, Union
 
-from fastapi import APIRouter, Request, Security
+from fastapi import APIRouter, Request, Security, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.post(path=ENDPOINT__CHAT_COMPLETIONS, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Union[ChatCompletion, ChatCompletionChunk])  # fmt: off
-async def chat_completions(request: Request, body: ChatCompletionRequest, session: AsyncSession = get_db_session()) -> Union[JSONResponse, StreamingResponseWithStatusCode]:  # fmt: off
+async def chat_completions(request: Request, body: ChatCompletionRequest, session: AsyncSession = Depends(get_db_session)) -> Union[JSONResponse, StreamingResponseWithStatusCode]:  # fmt: off
     """Creates a model response for the given chat conversation.
 
     **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional

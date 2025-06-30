@@ -1,5 +1,3 @@
-from fastapi import Depends
-
 # Global variable to store the current get_db function
 _get_db_func = None
 
@@ -20,6 +18,8 @@ def get_db_dependency():
     return _get_db_func
 
 
-def get_db_session():
+async def get_db_session():
     """FastAPI dependency to get database session."""
-    return Depends(get_db_dependency())
+    get_db_func = get_db_dependency()
+    async for session in get_db_func():
+        yield session

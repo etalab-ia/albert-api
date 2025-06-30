@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Security
+from fastapi import APIRouter, Depends, Request, Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post(path=ENDPOINT__SEARCH, dependencies=[Security(dependency=AccessController())], status_code=200, response_model=Searches)
-async def search(request: Request, body: SearchRequest, session: AsyncSession = get_db_session()) -> JSONResponse:
+async def search(request: Request, body: SearchRequest, session: AsyncSession = Depends(get_db_session)) -> JSONResponse:
     """
     Get relevant chunks from the collections and a query.
     """

@@ -1,7 +1,7 @@
 from typing import Union
 from uuid import UUID
 
-from fastapi import APIRouter, Path, Query, Request, Security
+from fastapi import APIRouter, Depends, Path, Query, Request, Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers._accesscontroller import AccessController
@@ -19,7 +19,7 @@ async def get_chunk(
     request: Request,
     document: int = Path(description="The document ID"),
     chunk: int = Path(description="The chunk ID"),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Chunk:
     """
     Get a chunk of a document.
@@ -38,7 +38,7 @@ async def get_chunks(
     document: int = Path(description="The document ID"),
     limit: int = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Chunks:
     """
     Get chunks of a document.

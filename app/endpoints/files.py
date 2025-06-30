@@ -2,7 +2,7 @@ from io import BytesIO
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, Body, File, Security, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Security, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +24,7 @@ router = APIRouter()
 async def upload_file(
     file: UploadFile = File(...),
     request: FilesRequest = Body(...),
-    session: AsyncSession = get_db_session(),
+    session: AsyncSession = Depends(get_db_session),
 ) -> JSONResponse:
     """
     **[DEPRECATED]** Upload a file to be processed, chunked, and stored into a vector database. Supported file types : pdf, html, json.
