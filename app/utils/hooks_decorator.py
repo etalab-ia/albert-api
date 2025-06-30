@@ -13,7 +13,7 @@ from app.helpers._streamingresponsewithstatuscode import StreamingResponseWithSt
 
 from app.sql.models import Usage, User
 from app.utils.context import global_context, request_context
-from app.utils.depends import get_db_dependency
+from app.utils.depends import get_db_session
 from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -215,7 +215,7 @@ async def log_usage(response: Optional[Response], usage: Usage, start_time: date
     if usage.request_model:
         usage.request_model = global_context.models.aliases.get(usage.request_model, usage.request_model)
 
-    async for session in get_db_dependency()():
+    async for session in get_db_session():
         session.add(usage)
         try:
             await session.commit()
@@ -244,7 +244,7 @@ async def update_budget(usage: Usage):
         return
 
     # Decrease the user's budget by the calculated cost with proper locking
-    async for session in get_db_dependency()():
+    async for session in get_db_session():
         try:
             async with session.begin():
                 # Use SELECT FOR UPDATE to lock the user row during the transaction. This prevents concurrent modifications to the budget
