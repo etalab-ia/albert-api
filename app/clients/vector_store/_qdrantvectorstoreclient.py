@@ -21,7 +21,7 @@ from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
 from app.utils.exceptions import NotImplementedException
 
-from _basevectorstoreclient import BaseVectorStoreClient
+from app.clients.vector_store._basevectorstoreclient import BaseVectorStoreClient
 
 logger = logging.getLogger(__name__)
 
@@ -29,38 +29,41 @@ logger = logging.getLogger(__name__)
 class QdrantVectorStoreClient(BaseVectorStoreClient, AsyncQdrantClient):
     default_method = SearchMethod.SEMANTIC
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, model = None, **kwargs):
+        BaseVectorStoreClient.__init__(self, *args, model=model, **kwargs)
+        AsyncQdrantClient.__init__(self, *args, **kwargs)
         self.url = kwargs.get("url")
 
     async def check(self) -> bool:
         try:
-            await super().collection_exists(collection_name="test")  # raise error only if connection is not established
+            await AsyncQdrantClient.collection_exists(self, collection_name="test")  # raise error only if connection is not established
             return True
         except Exception as e:
             logger.exception("Qdrant client check failed: %s", e)
             return False
 
     async def close(self):
-        await super().close()
+        await AsyncQdrantClient.close(self)
 
     async def create_collection(self, collection_id: int, vector_size: int) -> None:
-        await super().create_collection(
+        await AsyncQdrantClient.create_collection(
+            self,
             collection_name=str(collection_id),
             vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
         )
         await self.create_payload_index(collection_name=str(collection_id), field_name="id", field_schema=IntegerIndexType.INTEGER)
 
     async def delete_collection(self, collection_id: int) -> None:
-        await super().delete_collection(collection_name=str(collection_id))
+        await AsyncQdrantClient.delete_collection(self, collection_name=str(collection_id))
 
     async def get_collections(self) -> list[int]:
-        collections = await super().get_collections()
+        collections = await AsyncQdrantClient.get_collections(self)
         return [int(collection.name) for collection in collections.collections]
 
     async def get_chunk_count(self, collection_id: int, document_id: int) -> Optional[int]:
         try:
-            chunks_count = await super().count(
+            chunks_count = await AsyncQdrantClient.count(
+                self,
                 collection_name=str(collection_id),
                 count_filter=Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))]),
             )
@@ -70,7 +73,7 @@ class QdrantVectorStoreClient(BaseVectorStoreClient, AsyncQdrantClient):
 
     async def delete_document(self, collection_id: int, document_id: int) -> None:
         filter = Filter(must=[FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))])
-        await super().delete(collection_name=str(collection_id), points_selector=FilterSelector(filter=filter))
+        await AsyncQdrantClient.delete(self, collection_name=str(collection_id), points_selector=FilterSelector(filter=filter))
 
     async def get_chunks(self, collection_id: int, document_id: int, offset: int = 0, limit: int = 10, chunk_id: Optional[int] = None) -> List[Chunk]:
         must = [FieldCondition(key="metadata.document_id", match=MatchAny(any=[document_id]))]
@@ -78,7 +81,8 @@ class QdrantVectorStoreClient(BaseVectorStoreClient, AsyncQdrantClient):
             must.append(FieldCondition(key="metadata.id", match=MatchValue(value=chunk_id)))
 
         filter = Filter(must=must)
-        data = await super().scroll(
+        data = await AsyncQdrantClient.scroll(
+            self,
             collection_name=str(collection_id),
             scroll_filter=filter,
             order_by=OrderBy(key="id", start_from=offset),
@@ -90,7 +94,8 @@ class QdrantVectorStoreClient(BaseVectorStoreClient, AsyncQdrantClient):
         return chunks
 
     async def upsert(self, collection_id: int, chunks: List[Chunk], embeddings: List[list[float]]) -> None:
-        await super().upsert(
+        await AsyncQdrantClient.upsert(
+            self,
             collection_name=str(collection_id),
             points=[
                 PointStruct(id=str(uuid4()), vector=embedding, payload={"id": chunk.id, "content": chunk.content, "metadata": chunk.metadata})
@@ -125,7 +130,8 @@ class QdrantVectorStoreClient(BaseVectorStoreClient, AsyncQdrantClient):
     async def _semantic_query(self, query_vector: list[float], collection_ids: List[int], k: int, score_threshold: float = 0.0) -> List[Search]:
         searches = []
         for collection_id in collection_ids:
-            results = await super().search(
+            results = await AsyncQdrantClient.search(
+                self,
                 collection_name=str(collection_id),
                 query_vector=query_vector,
                 limit=k,

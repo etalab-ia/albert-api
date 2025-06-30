@@ -98,11 +98,17 @@ async def lifespan(app: FastAPI):
     parser = ParserManager(parser=parser)
 
     ## documents dependency: vector store
-    vector_store = VectorStoreClient.import_module(type=settings.databases.vector_store.type)(**settings.databases.vector_store.args) if settings.databases.vector_store else None  # fmt: off
+    vector_store = None
+    if settings.databases.vector_store:
+        vector_store = VectorStoreClient.import_module(
+            type=settings.databases.vector_store.type
+        )(
+            **settings.databases.vector_store.args,
+            model=global_context.models(model=settings.databases.vector_store.model)
+        )  # fmt: off
 
     if vector_store:
         assert await vector_store.check(), "Vector store database is not reachable."
-        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
 
     ## documents dependency: multi agents
     multi_agents_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None

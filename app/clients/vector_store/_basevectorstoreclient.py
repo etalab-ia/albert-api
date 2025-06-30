@@ -10,6 +10,9 @@ from app.schemas.core.settings import DatabaseType
 class BaseVectorStoreClient(ABC):
     """Abstract base class for all vector store clients (Elasticsearch, Qdrant, ...)."""
 
+    def __init__(self, *args, **kwargs):
+        self.model = kwargs.get('model', None)
+
     @staticmethod
     def import_module(type: DatabaseType) -> "Type[BaseVectorStoreClient]":
         """Dynamically import and return the concrete client class corresponding to *type*.
