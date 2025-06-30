@@ -19,6 +19,9 @@ services:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
     environment:
       - MASTER_KEY=master_key
+      - "POSTGRES_HOST=${POSTGRES_HOST:-postgres}"
+      - "API_HOST=${API_HOST:-api}"
+      - "POSTGRES_PORT=${POSTGRES_PORT:-5432}"
       - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}"
       - TZ=Europe/Paris
       - STREAMLIT_CMD_ARGS=--server.baseUrlPath=/playground
