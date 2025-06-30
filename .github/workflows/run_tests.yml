@@ -17,7 +17,7 @@ jobs:
   
     - name: Set up Docker Compose
       run: |
-        cp .env.template .env.test
+        cp .env.example .env.test
         make docker-compose-test-services-up
       env:
         BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
