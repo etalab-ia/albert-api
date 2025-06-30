@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - refacto_project_installation
   release:
     types: 
       - published
@@ -18,7 +19,8 @@ jobs:
     env:
       APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app
       UI_IMAGE_NAME: ghcr.io/${{ github.repository }}/ui
-      IMAGE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || 'latest' }}
+#      IMAGE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || 'latest' }}
+      IMAGE_TAG: 'installation'
     outputs:
       commit_title: ${{ steps.get_head_commit_title.outputs.title }}
     steps:

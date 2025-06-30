@@ -3,31 +3,17 @@ PYPROJECT=pyproject.toml
 
 APP_ENV_FILE=.env
 TEST_ENV_FILE=.env.test
+QUICKSTART_ENV_FILE=.env.example
 
+env_file ?= .env
+external_services="postgres redis elasticsearch mcp-bridge"
+quickstart_services="api playground postgres"
 
 install:
 	pip install ".[app,ui,dev,test]"
 
 configuration:
 	python scripts/generate_models_configuration.py
-
-docker-compose-albert-api-up:
-	docker compose --env-file ${APP_ENV_FILE} up --detach
-
-docker-compose-albert-api-down:
-	docker compose --env-file ${APP_ENV_FILE} down
-
-docker-compose-services-up:
-	docker compose --env-file ${APP_ENV_FILE} up redis elasticsearch postgres mcp-bridge --detach
-
-docker-compose-services-down:
-	docker compose --env-file ${APP_ENV_FILE} down
-
-docker-compose-test-services-up:
-	docker compose --env-file ${TEST_ENV_FILE} up redis elasticsearch postgres mcp-bridge --detach
-
-docker-compose-test-services-down:
-	docker compose --env-file ${TEST_ENV_FILE} down
 
 run-api:
 	bash -c 'set -a; . $(APP_ENV_FILE); ./scripts/startup_api.sh'
@@ -61,6 +47,34 @@ install-lint:
 
 lint:
 	pre-commit run --all-files
+
+.docker-compose-up:
+	docker compose --env-file $(env_file) up  --detach $(services)
+
+.docker-compose-down:
+	docker compose --env-file $(env_file) down
+
+docker-compose-albert-api-up:
+	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
+
+docker-compose-albert-api-down docker-compose-services-down:
+	@$(MAKE) --silent .docker-compose-down env_file=$(APP_ENV_FILE)
+
+docker-compose-services-up:
+	@$(MAKE) --silent docker-compose-albert-api-up services=$(external_services)
+
+docker-compose-test-services-up:
+	@$(MAKE) --silent .docker-compose-up env_file=$(TEST_ENV_FILE) services=$(external_services)
+
+docker-compose-test-services-down:
+	@$(MAKE) --silent .docker-compose-down env_file=$(TEST_ENV_FILE)
+
+docker-compose-quickstart-up:
+	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
+
+
+docker-compose-quickstart-down:
+	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
 
 setup: install configuration install-lint docker-compose-services-up db-app-migrate db-ui-migrate
 

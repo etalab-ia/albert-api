@@ -15,6 +15,18 @@ services:
       elasticsearch:
         condition: service_healthy
 
+  playground:
+    image: ghcr.io/etalab-ia/albert-api/ui:latest
+    environment:
+      - MASTER_KEY=master_key
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}"
+      - TZ=Europe/Paris
+      - STREAMLIT_CMD_ARGS=--server.baseUrlPath=/playground
+    ports:
+      - 8501:8501
+    volumes:
+      - "./${CONFIGURATION_FILE:-config.example.yml}:/config.yml:ro"
+
   postgres:
     image: postgres:16.5
     restart: always
