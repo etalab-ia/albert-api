@@ -11,7 +11,7 @@ from app.schemas.auth import Limit, LimitType, PermissionType, Role, User
 from app.schemas.collections import CollectionVisibility
 from app.schemas.core.auth import UserModelLimits
 from app.utils.context import global_context, request_context
-from app.utils.depends import get_db_session
+from app.sql.session import get_db_session
 from app.utils.exceptions import (
     InsufficientBudgetException,
     InsufficientPermissionException,

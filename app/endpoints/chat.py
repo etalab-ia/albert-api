@@ -9,7 +9,7 @@ from app.helpers._streamingresponsewithstatuscode import StreamingResponseWithSt
 
 from app.schemas.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionRequest
 from app.schemas.search import Search, SearchMethod
-from app.utils.depends import get_db_session
+from app.sql.session import get_db_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS

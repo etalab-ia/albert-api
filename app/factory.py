@@ -9,7 +9,7 @@ from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
 from app.schemas.usage import Usage
 from app.utils.context import generate_request_id, request_context
-from app.utils.depends import set_get_db_func
+from app.sql.session import set_get_db_func
 from app.utils.hooks_decorator import hooks
 from app.utils.variables import (
     ROUTER__USAGE,

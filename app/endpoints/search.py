@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers._accesscontroller import AccessController
 from app.schemas.search import Searches, SearchRequest
-from app.utils.depends import get_db_session
+from app.sql.session import get_db_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.variables import ENDPOINT__SEARCH

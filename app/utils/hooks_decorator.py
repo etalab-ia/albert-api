@@ -13,7 +13,7 @@ from app.helpers._streamingresponsewithstatuscode import StreamingResponseWithSt
 
 from app.sql.models import Usage, User
 from app.utils.context import global_context, request_context
-from app.utils.depends import get_db_session
+from app.sql.session import get_db_session
 from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -222,8 +222,6 @@ async def log_usage(response: Optional[Response], usage: Usage, start_time: date
         except Exception as e:
             logger.error(f"Failed to log usage: {e}")
             await session.rollback()
-        finally:
-            await session.close()
 
 
 async def update_budget(usage: Usage):
@@ -267,5 +265,3 @@ async def update_budget(usage: Usage):
         except Exception as e:
             logger.exception(f"Failed to update budget for user {user_id}: {e}")
             return None
-        finally:
-            await session.close()

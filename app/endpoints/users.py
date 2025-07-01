@@ -13,7 +13,7 @@ from app.schemas.auth import (
     UsersResponse,
     UserUpdateRequest,
 )
-from app.utils.depends import get_db_session
+from app.sql.session import get_db_session
 from app.utils.context import global_context, request_context
 from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__USERS, ENDPOINT__USERS_ME

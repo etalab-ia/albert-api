@@ -8,7 +8,7 @@ from app.helpers._accesscontroller import AccessController
 from app.helpers._usagemanager import UsageManager
 from app.schemas.auth import User
 from app.schemas.accounts import AccountUsageResponse
-from app.utils.depends import get_db_session
+from app.sql.session import get_db_session
 from app.utils.variables import ENDPOINT__USAGE
 
 router = APIRouter()
