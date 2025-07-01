@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from ui.backend.account import change_password, create_token, delete_token
-from ui.backend.common import get_limits, get_models, get_tokens
+from ui.backend.common import get_limits, get_models, get_tokens, get_usage
 from ui.frontend.header import header
 from ui.frontend.utils import pagination
 from ui.settings import settings
@@ -19,22 +19,6 @@ with st.sidebar:
 
 
 st.metric(label="User ID", value=st.session_state["user"].name, border=True)
-
-col1, col2 = st.columns(spec=2)
-with col1:
-    st.metric(
-        label="Account expiration",
-        value=pd.to_datetime(st.session_state["user"].user["expires_at"], unit="s").strftime("%d %b %Y")
-        if st.session_state["user"].user["expires_at"]
-        else None,
-        border=False,
-    )
-with col2:
-    st.metric(
-        label="Budget",
-        value=round(st.session_state["user"].user["budget"], 2) if st.session_state["user"].user["budget"] else None,
-        border=False,
-    )
 
 with st.expander(label="Change password", icon=":material/key:"):
     current_password = st.text_input(label="Current password", type="password", key="current_password", icon=":material/lock:")
@@ -53,6 +37,145 @@ with st.expander(label="Change password", icon=":material/key:"):
     )
     if submit_change_password:
         change_password(current_password=current_password, new_password=new_password, confirm_password=confirm_password)
+
+
+col1, col2 = st.columns(spec=2)
+with col1:
+    st.metric(
+        label="Account expiration",
+        value=pd.to_datetime(st.session_state["user"].user["expires_at"], unit="s").strftime("%d %b %Y")
+        if st.session_state["user"].user["expires_at"]
+        else None,
+        border=False,
+    )
+with col2:
+    st.metric(
+        label="Budget",
+        value=round(st.session_state["user"].user["budget"], 4) if st.session_state["user"].user["budget"] else None,
+        border=False,
+    )
+
+st.subheader("My Usage")
+
+# Date filters
+col1, col2 = st.columns(2)
+with col1:
+    date_from = st.date_input(label="From date", value=dt.datetime.now() - dt.timedelta(days=30), key="usage_date_from")
+with col2:
+    date_to = st.date_input(label="To date", value=dt.datetime.now().date(), min_value=date_from, key="usage_date_to")
+
+# Convert dates to timestamps
+date_from_timestamp = int(dt.datetime.combine(date_from, dt.time.min).timestamp())
+date_to_timestamp = int(dt.datetime.combine(date_to, dt.time.max).timestamp())
+
+# Initialize pagination state
+usage_key = "usage_pagination"
+if usage_key not in st.session_state:
+    st.session_state[usage_key] = 0
+
+# Reset pagination when date filters change
+date_key = f"{date_from_timestamp}_{date_to_timestamp}"
+if f"{usage_key}_date_key" not in st.session_state or st.session_state[f"{usage_key}_date_key"] != date_key:
+    st.session_state[usage_key] = 0
+    st.session_state[f"{usage_key}_date_key"] = date_key
+
+# Calculate page number from offset
+per_page = 25
+current_offset = st.session_state[usage_key]
+current_page = (current_offset // per_page) + 1
+
+usage_response = get_usage(
+    limit=per_page,
+    page=current_page,
+    order_by="datetime",
+    order_direction="desc",
+    date_from=date_from_timestamp,
+    date_to=date_to_timestamp,
+)
+
+usage_data = usage_response.get("data", [])
+total_requests = usage_response.get("total_requests", 0)
+total_albert_coins = usage_response.get("total_albert_coins", 0.0)
+total_tokens = usage_response.get("total_tokens", 0)
+total_co2 = usage_response.get("total_co2", 0.0)
+
+# Pagination information
+current_page = usage_response.get("page", 1)
+total_pages = usage_response.get("total_pages", 1)
+has_more = usage_response.get("has_more", False)
+limit = usage_response.get("limit", 50)
+
+if usage_data:
+    # Summary statistics from API calculations
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric(
+            label="Total Requests",
+            value=total_requests,
+            border=True,
+        )
+    with col2:
+        st.metric(
+            label="Total Albert coins",
+            value=f"{total_albert_coins:.4f}",
+            border=True,
+        )
+    with col3:
+        st.metric(
+            label="Total Tokens",
+            value=f"{total_tokens:,}",
+            border=True,
+        )
+    with col4:
+        st.metric(
+            label="Total CO2 (g)",
+            value=f"{total_co2:.4f}",
+            border=True,
+        )
+    usage_df = pd.DataFrame(
+        data={
+            "Datetime": [pd.to_datetime(record["datetime"], unit="s") for record in usage_data],
+            "Endpoint": [record["endpoint"] for record in usage_data],
+            "Model": [record["model"] for record in usage_data],
+            # "Request Model": [record["request_model"] for record in usage_data],
+            # "Method": [record["method"] for record in usage_data],
+            # "Duration (s)": [record["duration"] for record in usage_data]
+            # "Time to First Token (s)": [record["time_to_first_token"] for record in usage_data],
+            "Tokens": [f"{record["prompt_tokens"]} → {record["completion_tokens"]}" for record in usage_data],
+            # "Completion Tokens": [record["completion_tokens"] for record in usage_data],
+            # "Total Tokens": [record["total_tokens"] for record in usage_data],
+            "Cost": [record["cost"] for record in usage_data],
+            # "Status": [record["status"] for record in usage_data],
+            # "kWh Min": [record["kwh_min"] for record in usage_data],
+            # "kWh Max": [record["kwh_max"] for record in usage_data],
+            # "CO2eq Min (kg)": [record["kgco2eq_min"] for record in usage_data],
+            # "CO2eq Max (kg)": [record["kgco2eq_max"] for record in usage_data],
+        }
+    )
+
+    st.dataframe(
+        data=usage_df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Datetime": st.column_config.DatetimeColumn(label="Datetime", format="DD/MM/YY HH:mm"),
+            # "Duration (s)": st.column_config.NumberColumn(label="Duration (s)", format="%.3f"),
+            # "Time to First Token (s)": st.column_config.NumberColumn(label="Time to First Token (s)", format="%.3f"),
+            "Cost": st.column_config.NumberColumn(label="Cost", format="%.6f"),
+            # "kWh Min": st.column_config.NumberColumn(label="kWh Min", format="%.6f"),
+            # "kWh Max": st.column_config.NumberColumn(label="kWh Max", format="%.6f"),
+            # "CO2eq Min (kg)": st.column_config.NumberColumn(label="CO2eq Min (kg)", format="%.6f"),
+            # "CO2eq Max (kg)": st.column_config.NumberColumn(label="CO2eq Max (kg)", format="%.6f"),
+        },
+    )
+
+    # Add pagination controls
+    if total_pages > 1 or has_more:
+        pagination(key=usage_key, data=usage_data, per_page=per_page)
+
+
+else:
+    st.info("No usage data available.")
 
 
 st.subheader("API keys")

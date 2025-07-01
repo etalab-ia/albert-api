@@ -152,3 +152,43 @@ def check_password(password: str) -> bool:
         return False
 
     return True
+
+
+@st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
+def get_usage(
+    limit: int = 50,
+    page: int = 1,
+    order_by: Literal["datetime", "cost", "total_tokens"] = "datetime",
+    order_direction: Literal["asc", "desc"] = "desc",
+    date_from: int = None,
+    date_to: int = None,
+) -> dict:
+    """Get user usage data from the API."""
+    response = requests.get(
+        url=f"{settings.playground.api_url}/v1/usage",
+        headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"},
+        params={
+            "limit": limit,
+            "page": page,
+            "order_by": order_by,
+            "order_direction": order_direction,
+            **({"date_from": date_from} if date_from is not None else {}),
+            **({"date_to": date_to} if date_to is not None else {}),
+        },
+    )
+
+    if response.status_code != 200:
+        st.error(response.json()["detail"])
+        return {
+            "data": [],
+            "total_requests": 0,
+            "total_albert_coins": 0.0,
+            "total_tokens": 0,
+            "total_co2": 0.0,
+            "page": 1,
+            "limit": limit,
+            "total_pages": 0,
+            "has_more": False,
+        }
+
+    return response.json()

@@ -10,8 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.auth import Limit, LimitType, PermissionType, Role, User
 from app.schemas.collections import CollectionVisibility
 from app.schemas.core.auth import UserModelLimits
-from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
+from app.utils.depends import get_db_session
 from app.utils.exceptions import (
     InsufficientBudgetException,
     InsufficientPermissionException,
@@ -54,7 +54,7 @@ class AccessController:
         self,
         request: Request,
         api_key: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())],
-        session: AsyncSession = Depends(get_session)
+        session: AsyncSession = Depends(get_db_session)
     ) -> User:  # fmt: off
         user, role, limits, token_id = await self._check_api_key(api_key=api_key, session=session)
 
