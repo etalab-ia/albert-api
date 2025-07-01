@@ -21,44 +21,44 @@ router = APIRouter()
 async def chat_completions(request: Request, body: ChatCompletionRequest, session: AsyncSession = Depends(get_db_session)) -> Union[JSONResponse, StreamingResponseWithStatusCode]:  # fmt: off
     """Creates a model response for the given chat conversation.
 
-    **Important**: any others parameters are authorized, depending of the model backend. For example, if model is support by vLLM backend, additional
+    **Important**: any others parameters are authorized, depending on the model backend. For example, if model is support by vLLM backend, additional
     fields are available (see https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/protocol.py#L209). Similarly, some defined fields
     may be ignored depending on the backend used and the model support.
     """
 
     # retrieval augmentation generation
-    async def retrieval_augmentation_generation(body: ChatCompletionRequest, session: AsyncSession) -> Tuple[ChatCompletionRequest, List[Search]]:
-        results = []
-        if body.search:
+    async def retrieval_augmentation_generation(initial_body: ChatCompletionRequest, inner_session: AsyncSession) -> Tuple[ChatCompletionRequest, List[Search]]:
+        res = []
+        if initial_body.search:
             if not global_context.documents:
                 raise CollectionNotFoundException()
 
-            results = await global_context.documents.search_chunks(
-                session=session,
-                collection_ids=body.search_args.collections,
-                prompt=body.messages[-1]["content"],
-                method=body.search_args.method,
-                k=body.search_args.k,
-                rff_k=body.search_args.rff_k,
-                web_search=body.search_args.web_search,
+            res = await global_context.documents.search_chunks(
+                session=inner_session,
+                collection_ids=initial_body.search_args.collections,
+                prompt=initial_body.messages[-1]["content"],
+                method=initial_body.search_args.method,
+                k=initial_body.search_args.k,
+                rff_k=initial_body.search_args.rff_k,
+                web_search=initial_body.search_args.web_search,
                 user_id=request_context.get().user_id,
             )
-            if results:
-                if body.search_args.method == SearchMethod.MULTIAGENT:
-                    body.messages[-1]["content"] = await global_context.documents.multi_agents.full_multiagents(results, body.messages[-1]["content"])
+            if res:
+                if initial_body.search_args.method == SearchMethod.MULTIAGENT:
+                    initial_body.messages[-1]["content"] = await global_context.documents.multi_agents.full_multiagents(res, initial_body.messages[-1]["content"])
                 else:
-                    chunks = "\n".join([result.chunk.content for result in results])
-                    body.messages[-1]["content"] = body.search_args.template.format(prompt=body.messages[-1]["content"], chunks=chunks)
+                    chunks = "\n".join([result.chunk.content for result in res])
+                    initial_body.messages[-1]["content"] = initial_body.search_args.template.format(prompt=initial_body.messages[-1]["content"], chunks=chunks)
 
-        body = body.model_dump()
-        body.pop("search", None)
-        body.pop("search_args", None)
+        res_body = initial_body.model_dump()
+        res_body.pop("search", None)
+        res_body.pop("search_args", None)
 
-        results = [result.model_dump() for result in results]
+        res = [result.model_dump() for result in res]
 
-        return body, results
+        return res_body, res
 
-    body, results = await retrieval_augmentation_generation(body=body, session=session)
+    body, results = await retrieval_augmentation_generation(initial_body=body, inner_session=session)
     additional_data = {"search_results": results} if results else {}
 
     # select client
