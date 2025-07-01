@@ -52,6 +52,7 @@ class BaseModelClient(ABC):
         self.timeout = timeout
         self.vector_size = None
         self.max_context_length = None
+        self.endpoint = None
 
     @staticmethod
     def import_module(model_type: ModelClientType) -> "Type[BaseModelClient]":
@@ -181,7 +182,7 @@ class BaseModelClient(ABC):
         self,
         json: dict,
         response: httpx.Response,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
         request_latency: float = 0.0,
     ) -> httpx.Response:
         """
@@ -195,6 +196,9 @@ class BaseModelClient(ABC):
         Returns:
             httpx.Response: The formatted response.
         """
+
+        if additional_data is None:
+            additional_data = {}
 
         content_type = response.headers.get("Content-Type", "")
         if content_type == "application/json":
@@ -266,7 +270,7 @@ class BaseModelClient(ABC):
         self,
         json: dict,
         response: list,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
         request_latency: float = 0.0,
     ) -> tuple:
         """
@@ -280,6 +284,9 @@ class BaseModelClient(ABC):
         Returns:
             tuple: (data, extra) where data is the processed raw data and extra is the formatted response.
         """
+
+        if additional_data is None:
+            additional_data = {}
 
         content, chunks = None, list()
         for lines in response:
@@ -315,7 +322,7 @@ class BaseModelClient(ABC):
         json: Optional[dict] = None,
         files: Optional[dict] = None,
         data: Optional[dict] = None,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
     ):
         """
         Forward a stream request to a client model and add model name to the response. Optionally, add additional data to the response.
@@ -328,6 +335,9 @@ class BaseModelClient(ABC):
             data(Optional[dict]): The data to use for the request.
             additional_data(Dict[str, Any]): The additional data to add to the response (default: {}).
         """
+
+        if additional_data is None:
+            additional_data = {}
 
         url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
 
