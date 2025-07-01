@@ -15,6 +15,9 @@ class TestUsage:
         user_with_permissions, user_without_permissions = users
         token_with_permissions, token_without_permissions = tokens
 
+        # Ensure records are created with explicit datetime within the default 30-day range
+        test_datetime = datetime.now() - timedelta(days=1)
+
         # Create test usage data for the account with permissions
         usage1 = UsageModel(
             user_id=user_with_permissions["id"],
@@ -27,6 +30,7 @@ class TestUsage:
             total_tokens=150,
             cost=0.01,
             status=200,
+            datetime=test_datetime,
         )
 
         usage2 = UsageModel(
@@ -40,6 +44,7 @@ class TestUsage:
             total_tokens=300,
             cost=0.02,
             status=200,
+            datetime=test_datetime,
         )
 
         # Create usage data for another account (should not be returned)
@@ -54,6 +59,7 @@ class TestUsage:
             total_tokens=75,
             cost=0.005,
             status=200,
+            datetime=test_datetime,
         )
 
         # Add test data to database
@@ -97,6 +103,9 @@ class TestUsage:
         user_with_permissions, user_without_permissions = users
         token_with_permissions, token_without_permissions = tokens
 
+        # Ensure records are created with explicit datetime within the default 30-day range
+        test_datetime = datetime.now() - timedelta(days=1)
+
         # Create usage data for account without permissions
         usage_user2 = UsageModel(
             user_id=user_without_permissions["id"],
@@ -109,6 +118,7 @@ class TestUsage:
             total_tokens=150,
             cost=0.01,
             status=200,
+            datetime=test_datetime,
         )
 
         # Create usage data for account with permissions
@@ -123,6 +133,7 @@ class TestUsage:
             total_tokens=300,
             cost=0.02,
             status=200,
+            datetime=test_datetime,
         )
 
         db_session.add(usage_user1)
