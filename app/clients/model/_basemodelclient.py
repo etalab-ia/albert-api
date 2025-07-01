@@ -105,7 +105,7 @@ class BaseModelClient(ABC):
             else:
                 logger.error(f"Creation of redis timeseries {latency_ts_key} failed : {e}", exc_info=True)
 
-    def _get_usage(self, json: dict, data: dict, stream: bool, request_latency: float = 0.0) -> Optional[Usage]:
+    def _get_usage(self, json: dict, data: dict | list[dict], stream: bool, request_latency: float = 0.0) -> Optional[Usage]:
         """
         Get usage data from request and response.
 
@@ -179,7 +179,7 @@ class BaseModelClient(ABC):
 
         return usage
 
-    def _get_additional_data(self, json: dict, data: dict, stream: bool, request_latency: float = 0.0) -> dict:
+    def _get_additional_data(self, json: dict, data: dict | list[dict], stream: bool, request_latency: float = 0.0) -> dict:
         """
         Get additional data from request and response.
         """
@@ -334,7 +334,7 @@ class BaseModelClient(ABC):
         response: list,
         additional_data: Dict[str, Any] = None,
         request_latency: float = 0.0,
-    ) -> tuple:
+    ) -> tuple | None:
         """
         Format streaming response data for chat completions.
 
@@ -390,7 +390,6 @@ class BaseModelClient(ABC):
         Forward a stream request to a client model and add model name to the response. Optionally, add additional data to the response.
 
         Args:
-            request(Request): The request to forward.
             method(str): The method to use for the request.
             json(Optional[dict]): The JSON body to use for the request.
             files(Optional[dict]): The files to use for the request.
