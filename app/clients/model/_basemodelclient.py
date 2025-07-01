@@ -8,7 +8,7 @@ import re
 import time
 import traceback
 from datetime import datetime
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type, Tuple
 from urllib.parse import urljoin
 
 from coredis import ConnectionPool, Redis
@@ -192,7 +192,9 @@ class BaseModelClient(ABC):
 
         return additional_data
 
-    def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+    def _format_request(
+        self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None
+    ) -> Tuple[str, Dict[str, str], Optional[dict], Optional[dict], Optional[dict]]:
         """
         Format a request to a client model. This method can be overridden by a subclass to add additional headers or parameters. This method format the requested endpoint thanks the ENDPOINT_TABLE attribute.
 
@@ -205,6 +207,7 @@ class BaseModelClient(ABC):
             tuple: The formatted request composed of the url, headers, json, files and data.
         """
         # self.endpoint is set by the ModelRouter
+        assert self.endpoint, "Endpoint has not been set; To get this object, you may use a ModelRouter instance"
         url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
         headers = {"Authorization": f"Bearer {self.api_key}"}
         if json and "model" in json:
