@@ -30,7 +30,6 @@ docker-compose-quickstart-up:
 docker-compose-quickstart-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
 
-
 install:
 	pip install ".[app,ui,dev,test]"
 
@@ -75,6 +74,12 @@ lint:
 
 .docker-compose-down:
 	docker compose --env-file $(env_file) down
+
+prepare-env-test:
+	cp .env.example .env.test
+	cp config.example.yml config.yml
+	sed -i 's/\(.*_HOST=\).*/\1localhost/' .env.test
+	sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=config.yml/' .env.test
 
 setup: install configuration install-lint docker-compose-services-up db-app-migrate db-ui-migrate
 
