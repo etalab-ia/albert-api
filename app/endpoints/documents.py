@@ -19,9 +19,9 @@ from app.schemas.documents import (
     DocumentResponse,
     Documents,
     IsSeparatorRegexForm,
-    LanguageSeparatorsForm,
     LengthFunctionForm,
     MetadataForm,
+    PresetSeparatorsForm,
     SeparatorsForm,
 )
 from app.schemas.parse import (
@@ -59,13 +59,13 @@ async def create_document(
     length_function: Literal["len"] = LengthFunctionForm,
     is_separator_regex: bool = IsSeparatorRegexForm,
     separators: List[str] = SeparatorsForm,
-    language_separators: Union[Language, Literal[""]] = LanguageSeparatorsForm,
+    preset_separators: Union[Language, Literal[""]] = PresetSeparatorsForm,
     metadata: str = MetadataForm,
 ) -> JSONResponse:
     """
     Parse a file and create a document.
     """
-    language_separators = None if language_separators == "" else language_separators
+    preset_separators = None if preset_separators == "" else preset_separators
 
     try:
         metadata = json.loads(metadata)
@@ -102,7 +102,7 @@ async def create_document(
         length_function=length_function,
         is_separator_regex=is_separator_regex,
         separators=separators,
-        language_separators=language_separators,
+        preset_separators=preset_separators,
         metadata=metadata,
     )
 

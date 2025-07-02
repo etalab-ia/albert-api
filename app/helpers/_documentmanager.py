@@ -189,7 +189,7 @@ class DocumentManager:
         chunk_min_size: int,
         is_separator_regex: Optional[bool] = None,
         separators: Optional[List[str]] = None,
-        language_separators: Optional[Language] = None,
+        preset_separators: Optional[Language] = None,
         metadata: Optional[dict] = None,
     ) -> int:
         # check if collection exists and prepare document chunks in a single transaction
@@ -211,7 +211,7 @@ class DocumentManager:
                 is_separator_regex=is_separator_regex,
                 separators=separators,
                 chunk_min_size=chunk_min_size,
-                language_separators=language_separators,
+                preset_separators=preset_separators,
                 metadata=metadata,
             )
         except Exception as e:
@@ -434,9 +434,9 @@ class DocumentManager:
                     chunker=Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER,
                     chunk_overlap=0,
                     chunk_min_size=20,
-                    chunk_size=2048,
+                    chunk_size=4000,
                     length_function=len,
-                    language_separators=Language.HTML.value,
+                    preset_separators=Language.MARKDOWN.value,
                 )
 
         return collection_id
@@ -451,7 +451,7 @@ class DocumentManager:
         length_function: Callable,
         separators: Optional[List[str]] = None,
         is_separator_regex: Optional[bool] = None,
-        language_separators: Optional[Language] = None,
+        preset_separators: Optional[Language] = None,
         metadata: Optional[dict] = None,
     ) -> List[Chunk]:
         if chunker == Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER:
@@ -462,11 +462,11 @@ class DocumentManager:
                 length_function=length_function,
                 separators=separators,
                 is_separator_regex=is_separator_regex,
-                language_separators=language_separators,
+                preset_separators=preset_separators,
                 metadata=metadata,
             )
         else:  # Chunker.NoSplitter
-            chunker = NoSplitter(chunk_min_size=chunk_min_size, language_separators=language_separators, metadata=metadata)
+            chunker = NoSplitter(chunk_min_size=chunk_min_size, preset_separators=preset_separators, metadata=metadata)
 
         chunks = chunker.split_document(document=document)
 

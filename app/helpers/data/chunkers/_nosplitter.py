@@ -13,11 +13,11 @@ class NoSplitter(BaseSplitter):
         self,
         chunk_min_size: int = 0,
         metadata: Optional[dict] = None,
-        language_separators: Optional[Language] = None,
+        preset_separators: Optional[Language] = None,
         *args,
         **kwargs,
     ) -> None:
-        super().__init__(chunk_min_size=chunk_min_size, metadata=metadata, language_separators=language_separators)
+        super().__init__(chunk_min_size=chunk_min_size, metadata=metadata, preset_separators=preset_separators)
 
     def split_document(self, document: ParsedDocument) -> List[Chunk]:
         chunks = list()
