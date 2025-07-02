@@ -3,14 +3,13 @@ from pathlib import Path
 from typing import Dict, Optional, Set
 
 from fastapi import HTTPException, UploadFile
+from html_to_markdown import convert_to_markdown
 import pymupdf
 
 from app.clients.parser import BaseParserClient as ParserClient
 from app.schemas.core.documents import FileType, ParserParams
-from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage
+from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentOutputFormat, ParsedDocumentPage
 from app.utils.exceptions import UnsupportedFileTypeException
-
-from html_to_markdown import convert_to_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +86,22 @@ class ParserManager:
 
         return detected_type
 
+    @staticmethod
+    async def _read_content(file: UploadFile) -> str:
+        content_bytes = await file.read()
+        try:
+            content = content_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                content = content_bytes.decode("latin-1")
+            except UnicodeDecodeError as e:
+                logger.debug(msg=f"Encoding problem detected for {file.filename}: {e}")
+                content = content_bytes.decode("utf-8", errors="replace")
+
+        await file.seek(0)
+
+        return content
+
     async def parse_file(self, **params) -> ParsedDocument:
         params = ParserParams(**params)
         file_type = self._detect_file_type(file=params.file)
@@ -124,52 +139,30 @@ class ParserManager:
     async def _parse_html(self, **params: ParserParams) -> ParsedDocument:
         params = ParserParams(**params)
 
-        # Utilise le parser_client si disponible et supporte HTML
         if self.parser_client and FileType.HTML in self.parser_client.SUPPORTED_FORMATS:
             document = await self.parser_client.parse(**params.model_dump())
             return document
 
         try:
-            # Lit le contenu du fichier HTML
-            document_content = await params.file.read()
-            
-            # S'assure que le contenu est une string (peut être en bytes)
-            if isinstance(document_content, bytes):
-                document_content = document_content.decode('utf-8', errors='ignore')
-            
-            # Convertit le HTML en Markdown
-            try:
-                markdown_content = convert_to_markdown(
-                    document_content,
-                )
-                
-                # Nettoie le markdown (optionnel)
-                markdown_content = markdown_content.strip()
-                
-            except Exception as e:
-                # En cas d'erreur lors de la conversion, log l'erreur et utilise le contenu HTML brut
-                logging.warning(f"Erreur lors de la conversion HTML vers Markdown: {e}")
-                markdown_content = document_content
-            
-            # Crée le document parsé avec le contenu Markdown
+            content = await self._read_content(file=params.file)
+
+            if params.output_format == ParsedDocumentOutputFormat.MARKDOWN:
+                content = convert_to_markdown(content).strip()
+
             document = ParsedDocument(
                 data=[
                     ParsedDocumentPage(
-                        content=markdown_content,
+                        content=content,
                         images={},
-                        metadata=ParsedDocumentMetadata(
-                            document_name=params.file.filename,
-                            content_type="text/markdown"  # Indique que le contenu est en Markdown
-                        ),
+                        metadata=ParsedDocumentMetadata(document_name=params.file.filename),
                     )
                 ]
             )
             return document
-            
+
         except Exception as e:
-            # Gestion d'erreur générale
-            logging.error(f"Erreur lors du parsing du fichier HTML {params.file.filename}: {e}")
-            raise
+            logger.exception(f"Failed to parse html file: {e}")
+            raise HTTPException(status_code=500, detail="Failed to parse html file.")
 
     async def _parse_md(self, **kwargs) -> ParsedDocument:
         params = ParserParams(**kwargs)
@@ -179,18 +172,7 @@ class ParserManager:
             return response
 
         try:
-            content_bytes = await params.file.read()
-
-            try:
-                content = content_bytes.decode("utf-8")
-            except UnicodeDecodeError:
-                try:
-                    content = content_bytes.decode("latin-1")
-                except UnicodeDecodeError:
-                    content = content_bytes.decode("utf-8", errors="replace")
-                    logger.debug(f"Warning: Encoding problem detected for {params.file.filename}")
-
-            await params.file.seek(0)
+            content = await self._read_content(file=params.file)
 
             document = ParsedDocument(
                 data=[

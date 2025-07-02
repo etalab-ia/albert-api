@@ -189,7 +189,7 @@ class DocumentManager:
         chunk_min_size: int,
         is_separator_regex: Optional[bool] = None,
         separators: Optional[List[str]] = None,
-        language_separators: Optional[Language] = None,
+        preset_separators: Optional[Language] = None,
         metadata: Optional[dict] = None,
     ) -> int:
         # check if collection exists and prepare document chunks in a single transaction
@@ -211,7 +211,7 @@ class DocumentManager:
                 is_separator_regex=is_separator_regex,
                 separators=separators,
                 chunk_min_size=chunk_min_size,
-                language_separators=language_separators,
+                preset_separators=preset_separators,
                 metadata=metadata,
             )
         except Exception as e:
@@ -407,27 +407,6 @@ class DocumentManager:
         prompt: str,
         k: int = 5,
     ) -> Optional[int]:
-        
-            # Séparateurs optimisés pour Markdown
-        markdown_separators = [
-            "\n# ",      # Titres niveau 1
-            "\n## ",     # Titres niveau 2
-            "\n### ",    # Titres niveau 3
-            "\n#### ",   # Titres niveau 4
-            "\n##### ",  # Titres niveau 5
-            "\n###### ", # Titres niveau 6
-            "\n\n",      # Paragraphes
-            "\n```",     # Blocs de code
-            "\n---",     # Séparateurs horizontaux
-            "\n- ",      # Listes à puces
-            "\n* ",      # Listes à puces (variante)
-            "\n1. ",     # Listes numérotées
-            "\n",        # Sauts de ligne simples
-            ". ",        # Fin de phrases
-            " ",         # Espaces
-            ""           # Caractères individuels 
-        ]
-
         web_query = await self.web_search.get_web_query(prompt=prompt)
         web_results = await self.web_search.get_results(query=web_query, k=k)
         collection_id = None
@@ -457,7 +436,7 @@ class DocumentManager:
                     chunk_min_size=20,
                     chunk_size=4000,
                     length_function=len,
-                    separators=markdown_separators,
+                    preset_separators=Language.MARKDOWN.value,
                 )
 
         return collection_id
@@ -472,7 +451,7 @@ class DocumentManager:
         length_function: Callable,
         separators: Optional[List[str]] = None,
         is_separator_regex: Optional[bool] = None,
-        language_separators: Optional[Language] = None,
+        preset_separators: Optional[Language] = None,
         metadata: Optional[dict] = None,
     ) -> List[Chunk]:
         if chunker == Chunker.RECURSIVE_CHARACTER_TEXT_SPLITTER:
@@ -483,11 +462,11 @@ class DocumentManager:
                 length_function=length_function,
                 separators=separators,
                 is_separator_regex=is_separator_regex,
-                language_separators=language_separators,
+                preset_separators=preset_separators,
                 metadata=metadata,
             )
         else:  # Chunker.NoSplitter
-            chunker = NoSplitter(chunk_min_size=chunk_min_size, language_separators=language_separators, metadata=metadata)
+            chunker = NoSplitter(chunk_min_size=chunk_min_size, preset_separators=preset_separators, metadata=metadata)
 
         chunks = chunker.split_document(document=document)
 
