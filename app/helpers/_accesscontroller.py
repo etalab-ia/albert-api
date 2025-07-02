@@ -132,7 +132,7 @@ class AccessController:
         return limits
 
     async def _check_api_key(
-            self, api_key: HTTPAuthorizationCredentials, session: AsyncSession
+        self, api_key: HTTPAuthorizationCredentials, session: AsyncSession
     ) -> tuple[User, Role, Dict[str, UserModelLimits], int | None]:
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
@@ -141,7 +141,7 @@ class AccessController:
             raise InvalidAPIKeyException()
 
         if api_key.credentials == settings.auth.master_key:  # master user can do anything
-            limits = [Limit(model=model, type=type, value=None) for model in global_context.models.models for type in LimitType]
+            limits = [Limit(model=model, type=lim_type, value=None) for model in global_context.models.models for lim_type in LimitType]
             permissions = [permission for permission in PermissionType]
 
             master_role = Role(id=0, name="master", permissions=permissions, limits=limits)
