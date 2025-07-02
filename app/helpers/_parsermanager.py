@@ -7,7 +7,7 @@ import pymupdf
 
 from app.clients.parser import BaseParserClient as ParserClient
 from app.schemas.core.documents import FileType, ParserParams
-from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage
+from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage, ParsedDocumentOutputFormat
 from app.utils.exceptions import UnsupportedFileTypeException
 
 logger = logging.getLogger(__name__)
@@ -85,8 +85,24 @@ class ParserManager:
 
         return detected_type
 
-    async def parse_file(self, **params) -> ParsedDocument:
-        params = ParserParams(**params)
+    async def parse_file(
+            self,
+            file: UploadFile,
+            output_format: Optional[ParsedDocumentOutputFormat] = None,
+            force_ocr: Optional[bool] = None,
+            page_range: str = "",
+            paginate_output: Optional[bool] = None,
+            use_llm: Optional[bool] = None
+    ) -> ParsedDocument:
+
+        params = ParserParams(
+            file=file,
+            output_format=output_format,
+            force_ocr=force_ocr,
+            page_range=page_range,
+            paginate_output=paginate_output,
+            use_llm=use_llm
+        )
         file_type = self._detect_file_type(file=params.file)
 
         method_map = {FileType.PDF: self._parse_pdf, FileType.HTML: self._parse_html, FileType.MD: self._parse_md, FileType.TXT: self._parse_txt}

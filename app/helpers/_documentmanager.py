@@ -2,10 +2,10 @@ from functools import wraps
 from itertools import batched
 import logging
 import time
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Optional
 from uuid import uuid4
 
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from langchain_text_splitters import Language
 from sqlalchemy import Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.exc import NoResultFound
@@ -16,7 +16,6 @@ from app.helpers.data.chunkers import NoSplitter, RecursiveCharacterTextSplitter
 from app.helpers.models.routers import ModelRouter
 from app.schemas.chunks import Chunk
 from app.schemas.collections import Collection, CollectionVisibility
-from app.schemas.core.documents import ParserParams
 from app.schemas.documents import Chunker, Document
 from app.schemas.parse import ParsedDocument, ParsedDocumentOutputFormat
 from app.schemas.search import Search, SearchMethod
@@ -326,8 +325,24 @@ class DocumentManager:
         return chunks
 
     @check_dependencies(dependencies=["parser"])
-    async def parse_file(self, **params: ParserParams) -> ParsedDocument:
-        return await self.parser.parse_file(**params)
+    async def parse_file(
+            self,
+            file: UploadFile,
+            output_format: Optional[ParsedDocumentOutputFormat] = None,
+            force_ocr: Optional[bool] = None,
+            page_range: str = "",
+            paginate_output: Optional[bool] = None,
+            use_llm: Optional[bool] = None
+    ) -> ParsedDocument:
+
+        return await self.parser.parse_file(
+            file=file,
+            output_format=output_format,
+            force_ocr=force_ocr,
+            page_range=page_range,
+            paginate_output=paginate_output,
+            use_llm=use_llm
+        )
 
     @check_dependencies(dependencies=["vector_store"])
     async def search_chunks(
