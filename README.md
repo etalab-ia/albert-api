@@ -18,6 +18,74 @@
 
 ## 🚀 Quickstart
 
+### Run Albert-API with basic functionalities (docker)
+Albert-API is configured by default to launch via Docker the API, the playground and a PostgreSQL database, and to connect to a small model made available for free. Simply run:
+```bash
+make docker-compose-quickstart-up
+```
+
+To stop the services, run
+```bash
+make docker-compose-quickstart-down
+```
+
+### Configure Albert-API
+Albert-API supports OpenAI and Albert-API models. To configure them, run:
+```bash
+cp config.example.yml config.yml
+```
+
+And modify the `models` section in the `config.yml` file:
+
+```yaml
+models:
+  - id: albert-large
+    type: text-generation
+    owned_by: test
+    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
+    clients:
+      - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+  - id: my-language-model
+    type: text-generation
+    clients:
+      - model: gpt-3.5-turbo
+        type: openai
+        params:
+          total: 70
+          active: 70
+          zone: WOR
+        args:
+          api_url: https://api.openai.com
+          api_key: ${OPENAI_API_KEY}
+          timeout: 60
+```
+The API keys can be defined directement in the `config.yml` file or in a `.env` file
+
+```bash
+cp .env.example .env
+
+echo 'ALBERT_API_KEY=my_albert_api_key' >> .env
+echo 'OPENAI_API_KEY=my_openai_api_key' >> .env
+```
+
+Finally, run the application:
+```bash
+make docker-compose-albert-api-up
+```
+
+To stop the application, run:
+```bash
+make docker-compose-albert-api-down
+```
+
+
+## Running locally
+
 ### Prerequisites
 - Python 3.8+
 - Docker and Docker Compose
@@ -32,34 +100,56 @@ make install
 
 #### 2. Configuration
 
-2.1 Copy the `.env.template` file to `.env` and `.env.test`. Fill in the variables if needed:
-- `ALBERT_API_KEY`
-- `OPENAI_API_KEY`
-
-These variables are used for API model configuration.
-
-2.2 Copy the `config.example.yml` file to `config.yml`.
-
+Albert-API supports OpenAI and Albert-API models, defined in the `config.yml` file :
 ```bash
 cp config.example.yml config.yml
 ```
 
-You can then manually configure your models based on the default configuration. You can also use the CLI to generate a model configuration:
+And modify the `models` section in the `config.yml` file:
+
+```yaml
+models:
+  - id: albert-large
+    type: text-generation
+    owned_by: test
+    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
+    clients:
+      - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+  - id: my-language-model
+    type: text-generation
+    clients:
+      - model: gpt-3.5-turbo
+        type: openai
+        params:
+          total: 70
+          active: 70
+          zone: WOR
+        args:
+          api_url: https://api.openai.com
+          api_key: ${OPENAI_API_KEY}
+          timeout: 60
+```
+The API keys can be defined directement in the `config.yml` file or in a `.env` file
 
 ```bash
-make configuration
+cp .env.example .env
+
+echo 'ALBERT_API_KEY=my_albert_api_key' >> .env
+echo 'OPENAI_API_KEY=my_openai_api_key' >> .env
 ```
 
-The model configuration must be in the API configuration file (as defined in `CONFIG_FILE`)
-
-### Quick Start
+### Running
 
 #### Option 1: Full launch with Docker
 
 ```bash
-# Start all services (API + external services)
+# Start all services (API, playground and external services)
 make docker-compose-albert-api-up
-make db-app-migrate
 # Stop all services
 make docker-compose-albert-api-down
 ```

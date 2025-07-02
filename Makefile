@@ -9,6 +9,28 @@ env_file ?= .env
 external_services="postgres redis elasticsearch mcp-bridge"
 quickstart_services="api playground postgres"
 
+docker-compose-albert-api-up:
+	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
+
+docker-compose-albert-api-down docker-compose-services-down:
+	@$(MAKE) --silent .docker-compose-down env_file=$(APP_ENV_FILE)
+
+docker-compose-services-up:
+	@$(MAKE) --silent docker-compose-albert-api-up services=$(external_services)
+
+docker-compose-test-services-up:
+	@$(MAKE) --silent .docker-compose-up env_file=$(TEST_ENV_FILE) services=$(external_services)
+
+docker-compose-test-services-down:
+	@$(MAKE) --silent .docker-compose-down env_file=$(TEST_ENV_FILE)
+
+docker-compose-quickstart-up:
+	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
+
+docker-compose-quickstart-down:
+	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
+
+
 install:
 	pip install ".[app,ui,dev,test]"
 
@@ -54,28 +76,6 @@ lint:
 .docker-compose-down:
 	docker compose --env-file $(env_file) down
 
-docker-compose-albert-api-up:
-	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
-
-docker-compose-albert-api-down docker-compose-services-down:
-	@$(MAKE) --silent .docker-compose-down env_file=$(APP_ENV_FILE)
-
-docker-compose-services-up:
-	@$(MAKE) --silent docker-compose-albert-api-up services=$(external_services)
-
-docker-compose-test-services-up:
-	@$(MAKE) --silent .docker-compose-up env_file=$(TEST_ENV_FILE) services=$(external_services)
-
-docker-compose-test-services-down:
-	@$(MAKE) --silent .docker-compose-down env_file=$(TEST_ENV_FILE)
-
-docker-compose-quickstart-up:
-	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
-
-
-docker-compose-quickstart-down:
-	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
-
 setup: install configuration install-lint docker-compose-services-up db-app-migrate db-ui-migrate
 
-.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ test-snap-update lint setup docker-compose-ci-up
+.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ test-snap-update lint setup docker-compose-albert-api-up docker-compose-albert-api-down docker-compose-services-down docker-compose-services-up docker-compose-test-services-up docker-compose-test-services-down docker-compose-quickstart-up docker-compose-quickstart-down
