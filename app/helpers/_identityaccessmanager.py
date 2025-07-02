@@ -1,10 +1,11 @@
+import datetime as dt
 from typing import List, Literal, Optional, Tuple
 
 from jose import JWTError, jwt
 from sqlalchemy import Integer, cast, delete, distinct, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import func
 
 from app.schemas.auth import Limit, PermissionType, Role, Token, User
 from app.sql.models import Limit as LimitTable
@@ -14,28 +15,30 @@ from app.sql.models import Token as TokenTable
 from app.sql.models import User as UserTable
 from app.utils.exceptions import (
     DeleteRoleWithUsersException,
+    InvalidTokenExpirationException,
     RoleAlreadyExistsException,
     RoleNotFoundException,
     TokenNotFoundException,
     UserAlreadyExistsException,
     UserNotFoundException,
 )
-from app.utils.settings import settings
 
 
 class IdentityAccessManager:
     TOKEN_PREFIX = "sk-"
 
-    @staticmethod
-    def _decode_token(token: str) -> dict:
-        token = token.split(IdentityAccessManager.TOKEN_PREFIX)[1]
-        return jwt.decode(token=token, key=settings.auth.master_key, algorithms=["HS256"])
+    def __init__(self, master_key: str, max_token_expiration_days: Optional[int] = None):
+        self.master_key = master_key
+        self.max_token_expiration_days = max_token_expiration_days
 
-    @staticmethod
-    def _encode_token(user_id: int, token_id: int, expires_at: Optional[int] = None) -> str:
+    def _decode_token(self, token: str) -> dict:
+        token = token.split(IdentityAccessManager.TOKEN_PREFIX)[1]
+        return jwt.decode(token=token, key=self.master_key, algorithms=["HS256"])
+
+    def _encode_token(self, user_id: int, token_id: int, expires_at: Optional[int] = None) -> str:
         return IdentityAccessManager.TOKEN_PREFIX + jwt.encode(
             claims={"user_id": user_id, "token_id": token_id, "expires_at": expires_at},
-            key=settings.auth.master_key,
+            key=self.master_key,
             algorithm="HS256",
         )
 
@@ -346,6 +349,13 @@ class IdentityAccessManager:
 
     async def create_token(self, session: AsyncSession, user_id: int, name: str, expires_at: Optional[int] = None) -> Tuple[int, str]:
         # get the user id
+
+        if self.max_token_expiration_days:
+            if expires_at is None:
+                expires_at = int(dt.datetime.now(tz=dt.UTC).timestamp()) + self.max_token_expiration_days * 86400
+            elif expires_at > int(dt.datetime.now(tz=dt.UTC).timestamp()) + self.max_token_expiration_days * 86400:
+                raise InvalidTokenExpirationException(detail=f"Token expiration timestamp cannot be greater than {self.max_token_expiration_days} days from now.")  # fmt: off
+
         result = await session.execute(statement=select(UserTable).where(UserTable.id == user_id))
         try:
             user = result.scalar_one()

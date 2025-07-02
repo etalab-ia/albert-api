@@ -15,7 +15,7 @@ async def agents_completions(request: Request, body: AgentsChatCompletionRequest
     Creates a model response for the given chat conversation with call to the MCP bridge.
     """
 
-    response = await global_context.mcp.agents_manager.get_completion(body)
+    response = await global_context.agent_manager.get_completion(body)
 
     return JSONResponse(status_code=response.status_code, content=response.json())
 
@@ -26,6 +26,6 @@ async def agents_tools(request: Request) -> JSONResponse:
     Returns the list of tools available in the MCP bridge.
     """
 
-    response = await global_context.mcp.agents_manager.get_tools_from_bridge()
+    response = await global_context.agent_manager.get_tools_from_bridge()
 
     return JSONResponse(content=AgentsTools(data=response).model_dump(), status_code=200)

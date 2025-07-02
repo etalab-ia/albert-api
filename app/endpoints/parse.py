@@ -32,7 +32,7 @@ async def parse(
     if file.size > FileSizeLimitExceededException.MAX_CONTENT_SIZE:
         raise FileSizeLimitExceededException()
 
-    document = await global_context.documents.parse_file(
+    document = await global_context.document_manager.parse_file(
         file=file,
         output_format=output_format,
         force_ocr=force_ocr,

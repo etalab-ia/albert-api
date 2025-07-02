@@ -1,10 +1,10 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from app.utils.settings import settings
+from app.utils.configuration import configuration
 
 
-engine = create_async_engine(**settings.databases.sql.args)
+engine = create_async_engine(**configuration.dependencies.postgres.model_dump())
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 # Global variable to store the current get_db function for dependency injection

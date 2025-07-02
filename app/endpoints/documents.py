@@ -72,7 +72,7 @@ async def create_document(
     except Exception as e:
         raise InvalidJSONFormatException(f"Invalid JSON string for metadata: {e}")
 
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise CollectionNotFoundException()
 
     file_size = len(file.file.read())
@@ -82,7 +82,7 @@ async def create_document(
 
     length_function = len if length_function == "len" else length_function
 
-    document = await global_context.documents.parse_file(
+    document = await global_context.document_manager.parse_file(
         file=file,
         paginate_output=paginate_output,
         page_range=page_range,
@@ -90,7 +90,7 @@ async def create_document(
         output_format=output_format,
     )
 
-    document_id = await global_context.documents.create_document(
+    document_id = await global_context.document_manager.create_document(
         user_id=request_context.get().user_id,
         session=session,
         collection_id=collection,
@@ -123,10 +123,10 @@ async def get_document(
     """
     Get a document by ID.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise DocumentNotFoundException()
 
-    documents = await global_context.documents.get_documents(session=session, document_id=document, user_id=request_context.get().user_id)
+    documents = await global_context.document_manager.get_documents(session=session, document_id=document, user_id=request_context.get().user_id)
 
     return JSONResponse(content=documents[0].model_dump(), status_code=200)
 
@@ -143,13 +143,13 @@ async def get_documents(
     Get all documents ID from a collection.
     """
 
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         if collection:
             raise CollectionNotFoundException()
 
         return Documents(data=[])
 
-    data = await global_context.documents.get_documents(
+    data = await global_context.document_manager.get_documents(
         session=session,
         collection_id=collection,
         limit=limit,
@@ -169,9 +169,9 @@ async def delete_document(
     """
     Delete a document.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise DocumentNotFoundException()
 
-    await global_context.documents.delete_document(session=session, document_id=document, user_id=request_context.get().user_id)
+    await global_context.document_manager.delete_document(session=session, document_id=document, user_id=request_context.get().user_id)
 
     return Response(status_code=204)

@@ -5,21 +5,21 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 
-from ui.settings import settings
+from ui.configuration import configuration
 
 st.set_page_config(
     page_title="Albert playground",
-    page_icon=settings.playground.page_icon,
+    page_icon=configuration.playground.page_icon,
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        "Get Help": settings.playground.menu_items.get_help,
-        "Report a bug": settings.playground.menu_items.report_a_bug,
-        "About": settings.playground.menu_items.about,
+        "Get Help": configuration.playground.menu_items.get_help,
+        "Report a bug": configuration.playground.menu_items.report_a_bug,
+        "About": configuration.playground.menu_items.about,
     },
 )
 
-st.logo(image=settings.playground.logo, link=settings.playground.home_url, size="large")
+st.logo(image=configuration.playground.logo, link=configuration.playground.home_url, size="large")
 
 # Set the width of the sidebar to 400px
 st.markdown(

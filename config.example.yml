@@ -1,121 +1,95 @@
-general:
-  log_level: DEBUG
-  tokenizer: "tiktoken_gpt2"
-
-playground:
-  api_url: http://${API_HOST:-localhost}:8000
-  max_api_key_expiration_days: 365
-  cache_ttl: 1800
-  database_url: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/playground
-
-auth:
-  master_username: master
-  master_key: changeme
-
-monitoring:
-  postgres:
-    enabled: true
-  prometheus:
-    enabled: true
-
-mcp:
-  mcp_bridge_url: http://${MCP_BRIDGE_HOST:-localhost}:${MCP_BRIDGE_PORT:-9876}
-
-databases:
-  - type: redis
-    context: api
-    args:
-      host: ${REDIS_HOST:-localhost}
-      port: ${REDIS_PORT:-6379}
-      password: changeme
-
-  - type: sql # API database (async)
-    context: api
-    args:
-      url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/api
-      echo: False
-      pool_size: 10
-      max_overflow: 5  # Allow some overflow connections
-      pool_pre_ping: True
-      pool_recycle: 3600  # Recycle connections after 1 hour
-      pool_reset_on_return: commit  # Reset connection state on return
-      connect_args:
-        server_settings:
-          statement_timeout: "120s"
-        command_timeout: 60
-
-  - type: sql # Playground database (sync)
-    context: playground
-    args:
-      url: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/playground
-      echo: False
-      pool_size: 5
-      max_overflow: 10
-      pool_pre_ping: True
-
+# ----------------------------------- models ------------------------------------
 models:
-  - id: 'albert-testbed'
+  - name: albert-testbed
     type: text-generation
-    routing_strategy: round_robin
-    aliases: ['gemma3:1b']
-    clients:
-      - model: 'gemma3:1b'
-        type: vllm
-        costs:
-          prompt_tokens: 1
-          completion_tokens: 3
-        args:
-          api_url: http://albert-testbed.etalab.gouv.fr:8000
-          timeout: 60
+    providers:
+      - type: vllm
+        url: http://albert-testbed.etalab.gouv.fr:8000
+        model_name: "gemma3:1b"
+      
+  # - name: # required - example: my-llm
+  #   type: # required - values: text-image-to-text, text-generation, text-embeddings-inference
+  #   aliases: # optional - example: ["model-alias"]
+  #   owned_by: # optional - example: "Me"
+  #   routing_strategy: # optional - default: shuffle - values: shuffle, round_robin
+  #   providers:
+  #     - type: # required - example: "openai" - values: vllm, tei, openai, albert
+  #       url: # required - example: "https://api.openai.com" (without /v1 suffix)
+  #       key: # required - example: "sk-1234567890"
+  #       timeout: # optional - default: 10
+  #       model_name: # required - example: "gpt-4o"
+  #       model_cost_prompt_tokens: # optional - default: None - example: 0.10
+  #       model_cost_completion_tokens: # optional - default: None - example: 0.10
+  #       model_carbon_footprint_zone: # optional - default: "WOR" - values: country codes (ISO 3166-1 alpha-3 format)
+  #       model_carbon_footprint_total_params: # optional - default: None - example: 8
+  #       model_carbon_footprint_active_params: # optional - default: None - example: 8
 
-#  - id: albert-large
-#    type: image-text-to-text
-#    owned_by: test
-#    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
-#    clients:
-#      - model: albert-large
-#        type: albert
-#        costs:
-#          prompt_tokens: 1
-#          completion_tokens: 3
-#        carbon:
-#          total_params: 24
-#          active_params: 24
-#          model_zone: FRA
-#        args:
-#          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-#          api_key: ${ALBERT_API_KEY}
-#          timeout: 120
-#
-#  - id: ${EMBEDDINGS_MODEL:-embeddings-small}
-#    type: text-embeddings-inference
-#    aliases: ["BAAI/bge-m3"]
-#    clients:
-#      - model: ${EMBEDDINGS_MODEL:-embeddings-small}
-#        type: albert
-#        args:
-#          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-#          api_key: ${ALBERT_API_KEY}
-#          timeout: 120
-#
-#  - id: audio-large
-#    type: automatic-speech-recognition
-#    aliases: ["openai/whisper-large-v3"]
-#    clients:
-#      - model: audio-large
-#        type: albert
-#        args:
-#          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-#          api_key: ${ALBERT_API_KEY}
-#          timeout: 120
-#
-#  - id: rerank-small
-#    type: text-classification
-#    aliases: ["BAAI/bge-reranker-v2-m3"]
-#    clients:
-#      - model: rerank-small
-#        type: albert
-#        args:
-#          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-#          api_key: ${ALBERT_API_KEY}
-#          timeout: 120
+# -------------------------------- dependencies ---------------------------------
+dependencies:
+  postgres: # required
+    url: postgresql+asyncpg://postgres@localhost:5432/api
+    echo: False
+    pool_size: 5
+    connect_args:
+      server_settings:
+        statement_timeout: "120s"
+      command_timeout: 60
+
+  redis: # required
+    host: localhost
+
+  # qdrant: # optional
+  # elastic: # optional
+  # marker: # optional
+  # albert: # optional
+  # brave: # optional
+  # duckduckgo: # optional
+  # secretiveshell: # optional
+  # sentry: # optional
+
+# ---------------------------------- settings -----------------------------------
+# settings:
+
+  # disabled_routers: # optional - default: [] - values: ["agents", "audio", "chat", "chunks", "collections", "completions", "documents", "embeddings", "files", "models", "ocr", "parse", "rerank", "roles", "search", "tokens", "users", "usage"]
+
+  # usage_tokenizer: # optional - default: tiktoken_gpt2 - values: tiktoken_gpt2, tiktoken_r50k_base, tiktoken_p50k_base, tiktoken_p50k_edit, tiktoken_cl100k_base, tiktoken_o200k_base
+
+  # log_level: # optional - default: INFO - values: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  # log_format: # optional - default: "[%(asctime)s][%(process)d:%(name)s][%(levelname)s] %(client_ip)s - %(message)s"
+
+  # swagger_title: # optional - default: Albert API
+  # swagger_version: # optional - default: 1.0.0
+  # swagger_contact_url: # optional - default: https://github.com/etalab-ia/albert-api
+  # swagger_contact_email: # optional - default: None - example: john.doe@example.com
+  # swagger_docs_url: # optional - default: /docs
+  # swagger_redoc_url: # optional - default: /redoc
+
+  # mcp_max_iterations: # optional - default: 2
+
+  # auth_master_username: # optional - default: master
+  # auth_master_key: # optional - default: changeme
+  # auth_max_token_expiration_days: # optional - default: None, ex: 365
+
+  # rate_limiting_strategy: # optional - default: fixed_window - values: fixed_window, sliding_window
+
+  # monitoring_sentry_enabled: # optional - default: False
+  # monitoring_postgres_enabled: # optional - default: False
+  # monitoring_prometheus_enabled: # optional - default: False
+
+  # vector_store_model: # optional - default: None - required if elasticsearch or qdrant in dependencies - example: "my-model"
+
+  # search_web_query_model: # optional - default: None - required if brave or duckduckgo in dependencies
+  # search_web_limited_domains: # optional - default: None - example: ["google.com", "wikipedia.org"]
+  # search_web_user_agent: # optional - default: None
+
+  # search_multi_agents_synthesis_model: # optional - default: None - example: "my-model"
+  # search_multi_agents_reranker_model: # optional - default: None - example: "my-model"
+
+
+  # playground ---------------------------------------------------------------------------------------------------------------------------------------
+playground:
+  api_url: http://${API_HOST:-localhost}:8080
+  postgres:
+    url: postgresql+asyncpg://postgres:@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/playground
+  # auth_master_username: master # optional - default: master
+  # auth_master_key: changeme # optional - default: changeme

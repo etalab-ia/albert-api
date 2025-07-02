@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, List, Literal, Optional
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, constr, model_validator
 
 from app.schemas import BaseModel
 from app.schemas.chunks import Chunk
@@ -35,13 +35,7 @@ class SearchArgs(BaseModel):
 
 
 class SearchRequest(SearchArgs):
-    prompt: str = Field(description="Prompt related to the search")
-
-    @field_validator("prompt")
-    def blank_string(cls, prompt) -> str:
-        if prompt.strip() == "":
-            raise ValueError("Prompt cannot be empty")
-        return prompt
+    prompt: constr(strip_whitespace=True, min_length=1) = Field(description="Prompt related to the search")
 
 
 class Search(BaseModel):

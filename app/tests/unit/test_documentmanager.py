@@ -1,11 +1,12 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers._documentmanager import DocumentManager
-from app.schemas.parse import ParsedDocument, ParsedDocumentPage, ParsedDocumentMetadata
 from app.schemas.documents import Chunker
+from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage
 from app.utils.exceptions import CollectionNotFoundException
 
 
@@ -15,11 +16,12 @@ async def test_create_document_collection_no_longer_exists():
 
     # Mock dependencies
     mock_vectore_store = AsyncMock()
+    mock_vector_store_model = AsyncMock()
     mock_parser = AsyncMock()
     mock_session = AsyncMock(spec=AsyncSession)
 
     # Create DocumentManager instance
-    document_manager = DocumentManager(vector_store=mock_vectore_store, parser=mock_parser)
+    document_manager = DocumentManager(vector_store=mock_vectore_store, vector_store_model=mock_vector_store_model, parser_manager=mock_parser)
 
     # Mock the collection existence check to pass initially
     mock_collection_result = MagicMock()
@@ -75,11 +77,12 @@ async def test_create_document_collection_no_longer_exists_with_fkey_error():
 
     # Mock dependencies
     mock_vectore_store = AsyncMock()
+    mock_vector_store_model = AsyncMock()
     mock_parser = AsyncMock()
     mock_session = AsyncMock(spec=AsyncSession)
 
     # Create DocumentManager instance
-    document_manager = DocumentManager(vector_store=mock_vectore_store, parser=mock_parser)
+    document_manager = DocumentManager(vector_store=mock_vectore_store, vector_store_model=mock_vector_store_model, parser_manager=mock_parser)
 
     # Mock the collection existence check to pass initially
     mock_collection_result = MagicMock()
@@ -134,10 +137,11 @@ async def test_create_document_other_integrity_error_not_collection_related():
     # Mock dependencies
     mock_vectore_store = AsyncMock()
     mock_parser = AsyncMock()
+    mock_vector_store_model = AsyncMock()
     mock_session = AsyncMock(spec=AsyncSession)
 
     # Create DocumentManager instance
-    document_manager = DocumentManager(vector_store=mock_vectore_store, parser=mock_parser)
+    document_manager = DocumentManager(vector_store=mock_vectore_store, vector_store_model=mock_vector_store_model, parser_manager=mock_parser)
 
     # Mock the collection existence check to pass initially
     mock_collection_result = MagicMock()

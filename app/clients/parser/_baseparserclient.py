@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 import importlib
 from typing import List, Type
 
+from app.schemas.core.configuration import ParserType
 from app.schemas.core.documents import ParserParams
-from app.schemas.core.settings import ParserType
 from app.schemas.parse import ParsedDocument
 
 
@@ -11,12 +11,18 @@ class BaseParserClient(ABC):
     SUPPORTED_FORMATS = []
 
     @staticmethod
-    def import_module(parser_type: ParserType) -> "Type[BaseParserClient]":
+    def import_module(type: ParserType) -> "Type[BaseParserClient]":
         """
-        Import the module for the given parser type.
+        Static method to import a subclass of BaseParserClient.
+
+        Args:
+            type(str): The type of parser client to import.
+
+        Returns:
+            Type[BaseParserClient]: The subclass of BaseParserClient.
         """
-        module = importlib.import_module(f"app.clients.parser._{parser_type.value}parserclient")
-        return getattr(module, f"{parser_type.capitalize()}ParserClient")
+        module = importlib.import_module(f"app.clients.parser._{type.value}parserclient")
+        return getattr(module, f"{type.capitalize()}ParserClient")
 
     def convert_page_range(self, page_range: str, page_count: int) -> List[int]:
         if not page_range:

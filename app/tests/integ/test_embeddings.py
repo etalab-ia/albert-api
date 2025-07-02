@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.schemas.models import ModelType
-from app.utils.settings import settings
+from app.utils.configuration import configuration
 from app.utils.variables import ENDPOINT__EMBEDDINGS, ENDPOINT__MODELS
 
 
@@ -114,7 +114,7 @@ class TestEmbeddings:
         """Test the POST /embeddings endpoint with a model alias."""
         MODEL_ID = setup
 
-        aliases = {model.id: model.aliases for model in settings.models}
+        aliases = {model.name: model.aliases for model in configuration.models}
         aliases = aliases[MODEL_ID]
         input = "Hello, this is a test."
 

@@ -40,10 +40,10 @@ async def audio_transcriptions(
     # @TODO: Implement verbose response format
 
     file_content = await file.read()
-    model = global_context.models(model=model)
+    model = global_context.model_registry(model=model)
     client = model.get_client(endpoint=ENDPOINT__AUDIO_TRANSCRIPTIONS)
     payload = {
-        "model": client.model,
+        "model": client.name,
         "response_format": response_format,
         "temperature": temperature,
         "timestamp_granularities": timestamp_granularities,

@@ -3,25 +3,24 @@ from typing import List
 
 import httpx
 
-from app.clients.mcp import SecretShellMCPBridgeClient
+from app.clients.mcp_bridge import BaseMCPBridgeClient as MCPBridgeClient
 from app.helpers.models import ModelRegistry
 from app.schemas.agents import AgentsTool, AgentsChatCompletionRequest
 from app.utils.exceptions import ToolNotFoundException
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 
-class AgentsManager:
-    MAX_ITERATIONS = 2
-
-    def __init__(self, mcp_bridge: SecretShellMCPBridgeClient, model_registry: ModelRegistry):
+class AgentManager:
+    def __init__(self, mcp_bridge: MCPBridgeClient, model_registry: ModelRegistry, max_iterations: int = 2):
         self.model_registry = model_registry
         self.mcp_bridge = mcp_bridge
+        self.max_iterations = max_iterations
 
     async def get_completion(self, body: AgentsChatCompletionRequest):
         body = await self.set_tools_for_llm_request(body)
         http_llm_response = None
         number_of_iterations = 0
-        while number_of_iterations < self.MAX_ITERATIONS:
+        while number_of_iterations < self.max_iterations:
             http_llm_response = await self.get_llm_http_response(body)
             llm_response = json.loads(http_llm_response.text)
             finish_reason = llm_response["choices"][0]["finish_reason"]
