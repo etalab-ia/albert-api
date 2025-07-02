@@ -12,7 +12,7 @@ from app.helpers._accesscontroller import AccessController
 from app.schemas.core.documents import JsonFile
 from app.schemas.files import ChunkerArgs, FileResponse, FilesRequest
 from app.schemas.parse import ParsedDocumentOutputFormat
-from app.utils.depends import get_db_session
+from app.sql.session import get_db_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException, FileSizeLimitExceededException, InvalidJSONFormatException
 from app.utils.variables import ENDPOINT__FILES

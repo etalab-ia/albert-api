@@ -33,7 +33,7 @@ from app.schemas.parse import (
     ParsedDocumentOutputFormat,
 )
 from app.utils.context import global_context, request_context
-from app.utils.depends import get_db_session
+from app.sql.session import get_db_session
 from app.utils.exceptions import CollectionNotFoundException, DocumentNotFoundException, FileSizeLimitExceededException, InvalidJSONFormatException
 from app.utils.variables import ENDPOINT__DOCUMENTS
 
