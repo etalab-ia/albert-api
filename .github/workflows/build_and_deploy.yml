@@ -8,6 +8,7 @@ on:
     types: 
       - published
       - edited
+  workflow_dispatch: # Add this to allow manual triggering
 
 
 jobs:
