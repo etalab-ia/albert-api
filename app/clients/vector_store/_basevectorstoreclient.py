@@ -10,6 +10,8 @@ from app.schemas.core.settings import DatabaseType
 class BaseVectorStoreClient(ABC):
     """Abstract base class for all vector store clients (Elasticsearch, Qdrant, ...)."""
 
+    default_method = None  # SearchMethod, it needs to be overridden by child classes.
+
     def __init__(self, *args, **kwargs):
         self.model = kwargs.get('model', None)
 
