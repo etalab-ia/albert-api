@@ -119,7 +119,7 @@ class Model(ConfigBaseModel):
 
 class WebSearchClientDuckDuckGoArgs(ConfigBaseModel):
     """
-    All additionnal parameters for the DuckDuckGo API requests can be found here: https://www.searchapi.io/docs/duckduckgo-api
+    All additional parameters for the DuckDuckGo API requests can be found here: https://www.searchapi.io/docs/duckduckgo-api
     """
 
     api_key: Optional[str] = Field(default=None, description="API key to use for the DuckDuckGo API requests.")
@@ -128,7 +128,7 @@ class WebSearchClientDuckDuckGoArgs(ConfigBaseModel):
 
 class WebSearchClientBraveArgs(ConfigBaseModel):
     """
-    All additionnal parameters for the Brave API requests can be found here: https://api-dashboard.search.brave.com/app/documentation/web-search/query
+    All additional parameters for the Brave API requests can be found here: https://api-dashboard.search.brave.com/app/documentation/web-search/query
     """
 
     api_key: str = Field(description="API key to use for the Brave API requests.")
@@ -297,7 +297,7 @@ class Config(ConfigBaseModel):
         return values
 
     @model_validator(mode="after")
-    def validate_databases(cls, values) -> Any:
+    def validate_databases(cls, values: SimpleNamespace[Database | List[Database]]) -> Any:
         redis_databases = [database for database in values.databases if database.type == DatabaseType.REDIS]
         assert len(redis_databases) == 1, "There must be only one redis database."
 
