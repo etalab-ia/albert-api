@@ -14,15 +14,15 @@ class RecursiveCharacterTextSplitter(BaseSplitter):
         self,
         chunk_min_size: int = 0,
         metadata: Optional[dict] = None,
-        language_separators: Optional[Language] = None,
+        preset_separators: Optional[Language] = None,
         *args,
         **kwargs,
     ) -> None:
-        super().__init__(chunk_min_size=chunk_min_size, metadata=metadata, language_separators=language_separators)
-        if language_separators:
+        super().__init__(chunk_min_size=chunk_min_size, metadata=metadata, preset_separators=preset_separators)
+        if preset_separators:
             kwargs.pop("separators")
             kwargs.pop("is_separator_regex")
-            self.splitter = LangChainRecursiveCharacterTextSplitter.from_language(language=self.language_separators, *args, **kwargs)
+            self.splitter = LangChainRecursiveCharacterTextSplitter.from_language(language=self.preset_separators, *args, **kwargs)
         else:
             self.splitter = LangChainRecursiveCharacterTextSplitter(*args, **kwargs)
 

@@ -17,7 +17,7 @@ from vcr.request import Request as VcrRequest
 import vcr.stubs.httpx_stubs
 
 from app.clients.vector_store import BaseVectorStoreClient as VectorStoreClient
-from app.main import create_app
+from app.factory import create_app
 from app.schemas.auth import LimitType, PermissionType
 from app.sql.models import Base
 from app.utils.settings import settings
@@ -75,16 +75,13 @@ def engine(worker_id):
     """Create database engine for tests"""
 
     db_url = settings.databases.sql.args.get("url").replace("+asyncpg", "")
-    db_url = f"{db_url}_{worker_id}" if worker_id != "master" else db_url
+    db_url = f"{db_url}_{worker_id}" if worker_id != "master" else f"{db_url}_test"
 
     # Create database if it doesn't exist
     if not database_exists(url=db_url):
         create_database(url=db_url)
 
     engine = create_engine(url=db_url)
-
-    Base.metadata.drop_all(engine)  # Clean state
-    Base.metadata.create_all(engine)
 
     yield engine
 
@@ -93,7 +90,7 @@ def engine(worker_id):
 def async_engine(worker_id):
     """Create asynchronous database engine for tests"""
     db_url = settings.databases.sql.args.get("url").replace("+asyncpg", "")
-    db_url = f"{db_url}_{worker_id}" if worker_id != "master" else db_url
+    db_url = f"{db_url}_{worker_id}" if worker_id != "master" else f"{db_url}_test"
 
     # Ensure the URL uses the asyncpg driver
     async_db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
@@ -104,6 +101,11 @@ def async_engine(worker_id):
         Base.metadata.create_all(bind=create_engine(url=db_url))
 
     async_engine = create_async_engine(url=async_db_url)
+
+    # Use sync engine for metadata operations
+    sync_engine = create_engine(url=db_url)
+    Base.metadata.drop_all(sync_engine)  # Clean state
+    Base.metadata.create_all(sync_engine)
 
     yield async_engine
 
@@ -126,13 +128,15 @@ async def async_db_session(async_engine):
 
 
 @pytest.fixture(scope="session")
-def app_with_test_db(engine, db_session):
+def app_with_test_db(async_engine):
     """Create FastAPI app with test database"""
 
-    def get_test_db():
-        yield db_session
+    async def get_test_db():
+        AsyncSessionMaker = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
+        async with AsyncSessionMaker() as session:
+            yield session
 
-    # Create app with test config
+    # Create app with test database dependency
     app = create_app(db_func=get_test_db)
     return app
 

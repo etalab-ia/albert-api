@@ -10,7 +10,7 @@ dependencies = [
     "pydantic==2.10.6",
     "pydantic-settings==2.7.1",
     "alembic==1.15.1",
-    "psycopg2==2.9.10",
+    "psycopg2-binary==2.9.10",
     "asyncpg==0.30.0",
     "sqlalchemy[asyncio]==2.0.38",
     "sqlalchemy-utils==0.41.2",
@@ -37,7 +37,7 @@ app = [
     "elasticsearch[async]==9.0.1",
     "qdrant-client==1.10.1",
     "redis==5.2.1",
-    "beautifulsoup4==4.13.3",
+    "beautifulsoup4==4.13.4",
     "PyMuPDF==1.26.0",
 
     # app
@@ -47,6 +47,8 @@ app = [
     "pyyaml==6.0.2",
     "uvicorn==0.34.0",
     "python-multipart==0.0.20",
+    "html-to-markdown==1.4.0"
+
 ]
 dev = [
     "uvicorn==0.34.0",

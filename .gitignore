@@ -208,3 +208,6 @@ uv.lock
 
 .envrc
 .direnv/
+
+*.ipynb
+!docs/tutorials/*.ipynb

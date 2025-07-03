@@ -3,11 +3,12 @@ from pathlib import Path
 from typing import Dict, Optional, Set
 
 from fastapi import HTTPException, UploadFile
+from html_to_markdown import convert_to_markdown
 import pymupdf
 
 from app.clients.parser import BaseParserClient as ParserClient
 from app.schemas.core.documents import FileType, ParserParams
-from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentPage, ParsedDocumentOutputFormat
+from app.schemas.parse import ParsedDocument, ParsedDocumentMetadata, ParsedDocumentOutputFormat, ParsedDocumentPage
 from app.utils.exceptions import UnsupportedFileTypeException
 
 logger = logging.getLogger(__name__)
@@ -85,6 +86,22 @@ class ParserManager:
 
         return detected_type
 
+    @staticmethod
+    async def _read_content(file: UploadFile) -> str:
+        content_bytes = await file.read()
+        try:
+            content = content_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                content = content_bytes.decode("latin-1")
+            except UnicodeDecodeError as e:
+                logger.debug(msg=f"Encoding problem detected for {file.filename}: {e}")
+                content = content_bytes.decode("utf-8", errors="replace")
+
+        await file.seek(0)
+
+        return content
+
     async def parse_file(
             self,
             file: UploadFile,
@@ -141,11 +158,15 @@ class ParserManager:
             return document
 
         try:
-            document = await params.file.read()
+            content = await self._read_content(file=params.file)
+
+            if params.output_format == ParsedDocumentOutputFormat.MARKDOWN:
+                content = convert_to_markdown(content).strip()
+
             document = ParsedDocument(
                 data=[
                     ParsedDocumentPage(
-                        content=document,
+                        content=content,
                         images={},
                         metadata=ParsedDocumentMetadata(document_name=params.file.filename),
                     )
@@ -164,18 +185,7 @@ class ParserManager:
             return response
 
         try:
-            content_bytes = await params.file.read()
-
-            try:
-                content = content_bytes.decode("utf-8")
-            except UnicodeDecodeError:
-                try:
-                    content = content_bytes.decode("latin-1")
-                except UnicodeDecodeError:
-                    content = content_bytes.decode("utf-8", errors="replace")
-                    logger.debug(f"Warning: Encoding problem detected for {params.file.filename}")
-
-            await params.file.seek(0)
+            content = await self._read_content(file=params.file)
 
             document = ParsedDocument(
                 data=[

@@ -270,11 +270,13 @@ class IdentityAccessManager:
             statement=select(
                 UserTable.id,
                 UserTable.name,
+                UserTable.role_id,
                 UserTable.budget,
                 UserTable.expires_at,
-                RoleTable.id.label("role_id"),
                 RoleTable.name.label("role"),
-            ).where(UserTable.id == user_id)
+            )
+            .join(RoleTable, UserTable.role_id == RoleTable.id)
+            .where(UserTable.id == user_id)
         )
         try:
             user = result.all()[0]

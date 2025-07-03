@@ -19,9 +19,9 @@ from app.schemas.documents import (
     DocumentResponse,
     Documents,
     IsSeparatorRegexForm,
-    LanguageSeparatorsForm,
     LengthFunctionForm,
     MetadataForm,
+    PresetSeparatorsForm,
     SeparatorsForm,
 )
 from app.schemas.parse import (
@@ -32,8 +32,8 @@ from app.schemas.parse import (
     PaginateOutputForm,
     ParsedDocumentOutputFormat,
 )
-from app.sql.session import get_db as get_session
 from app.utils.context import global_context, request_context
+from app.sql.session import get_db_session
 from app.utils.exceptions import CollectionNotFoundException, DocumentNotFoundException, FileSizeLimitExceededException, InvalidJSONFormatException
 from app.utils.variables import ENDPOINT__DOCUMENTS
 
@@ -43,7 +43,7 @@ router = APIRouter()
 @router.post(path=ENDPOINT__DOCUMENTS, status_code=201, dependencies=[Security(dependency=AccessController())], response_model=DocumentResponse)
 async def create_document(
     request: Request,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db_session),
     file: UploadFile = FileForm,
     collection: int = CollectionForm,
     # parse params
@@ -59,13 +59,13 @@ async def create_document(
     length_function: Literal["len"] = LengthFunctionForm,
     is_separator_regex: bool = IsSeparatorRegexForm,
     separators: List[str] = SeparatorsForm,
-    language_separators: Union[Language, Literal[""]] = LanguageSeparatorsForm,
+    preset_separators: Union[Language, Literal[""]] = PresetSeparatorsForm,
     metadata: str = MetadataForm,
 ) -> JSONResponse:
     """
     Parse a file and create a document.
     """
-    language_separators = None if language_separators == "" else language_separators
+    preset_separators = None if preset_separators == "" else preset_separators
 
     try:
         metadata = json.loads(metadata)
@@ -102,7 +102,7 @@ async def create_document(
         length_function=length_function,
         is_separator_regex=is_separator_regex,
         separators=separators,
-        language_separators=language_separators,
+        preset_separators=preset_separators,
         metadata=metadata,
     )
 
@@ -118,7 +118,7 @@ async def create_document(
 async def get_document(
     request: Request,
     document: int = Path(description="The document ID"),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db_session),
 ) -> JSONResponse:
     """
     Get a document by ID.
@@ -137,7 +137,7 @@ async def get_documents(
     collection: Optional[int] = Query(default=None, description="Filter documents by collection ID"),
     limit: Optional[int] = Query(default=10, ge=1, le=100, description="The number of documents to return"),
     offset: Union[int, UUID] = Query(default=0, description="The offset of the first document to return"),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db_session),
 ) -> JSONResponse:
     """
     Get all documents ID from a collection.
@@ -164,7 +164,7 @@ async def get_documents(
 async def delete_document(
     request: Request,
     document: int = Path(description="The document ID"),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Response:
     """
     Delete a document.
