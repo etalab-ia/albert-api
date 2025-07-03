@@ -15,7 +15,7 @@ class BaseWebSearchClient(ABC):
         return getattr(module, f"{websearch_type.capitalize()}WebSearchClient")
 
     @abstractmethod
-    def search(self, query: str, n: int = 3) -> List[str]:
+    async def search(self, query: str, n: int = 3) -> List[str]:
         """
         Get the URLs of the search results for a given query.
 
