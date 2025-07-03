@@ -297,7 +297,7 @@ class Config(ConfigBaseModel):
         return values
 
     @model_validator(mode="after")
-    def validate_databases(cls, values: SimpleNamespace[Database | List[Database]]) -> Any:
+    def validate_databases(cls, values) -> Any:
         redis_databases = [database for database in values.databases if database.type == DatabaseType.REDIS]
         assert len(redis_databases) == 1, "There must be only one redis database."
 
