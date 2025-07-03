@@ -22,9 +22,9 @@ class RequestContext(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     id: Optional[str] = None
-    user_id: Optional[str] = None
-    role_id: Optional[str] = None
-    token_id: Optional[str] = None
+    user_id: Optional[int] = None
+    role_id: Optional[int] = None
+    token_id: Optional[int] = None
     method: Optional[str] = None
     endpoint: Optional[str] = None
     client: Optional[str] = None

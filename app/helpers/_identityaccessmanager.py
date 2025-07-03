@@ -43,9 +43,15 @@ class IdentityAccessManager:
         self,
         session: AsyncSession,
         name: str,
-        limits: List[Limit] = [],
-        permissions: List[PermissionType] = [],
+        limits: List[Limit] = None,
+        permissions: List[PermissionType] = None,
     ) -> int:
+        if limits is None:
+            limits = []
+
+        if permissions is None:
+            permissions = []
+
         # create the role
         try:
             result = await session.execute(statement=insert(table=RoleTable).values(name=name).returning(RoleTable.id))

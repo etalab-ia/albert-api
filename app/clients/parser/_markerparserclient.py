@@ -47,8 +47,7 @@ class MarkerParserClient(BaseParserClient):
 
         return pages
 
-    async def parse(self, **params: ParserParams) -> ParsedDocument:
-        params = ParserParams(**params)
+    async def parse(self, params: ParserParams) -> ParsedDocument:
         file_content = await params.file.read()
 
         try:

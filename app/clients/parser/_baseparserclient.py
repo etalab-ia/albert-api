@@ -11,12 +11,12 @@ class BaseParserClient(ABC):
     SUPPORTED_FORMATS = []
 
     @staticmethod
-    def import_module(type: ParserType) -> "Type[BaseParserClient]":
+    def import_module(parser_type: ParserType) -> "Type[BaseParserClient]":
         """
         Import the module for the given parser type.
         """
-        module = importlib.import_module(f"app.clients.parser._{type.value}parserclient")
-        return getattr(module, f"{type.capitalize()}ParserClient")
+        module = importlib.import_module(f"app.clients.parser._{parser_type.value}parserclient")
+        return getattr(module, f"{parser_type.capitalize()}ParserClient")
 
     def convert_page_range(self, page_range: str, page_count: int) -> List[int]:
         if not page_range:
@@ -37,5 +37,5 @@ class BaseParserClient(ABC):
         return pages
 
     @abstractmethod
-    def parse(self, **params: ParserParams) -> ParsedDocument:
+    def parse(self, params: ParserParams) -> ParsedDocument:
         pass

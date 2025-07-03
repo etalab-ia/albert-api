@@ -34,7 +34,7 @@ class AgentsChatCompletionRequest(BaseModel):
     tools: Optional[List[Dict[str, Any]]] = Field(default=[{"type": "all"}], description="A list of tools the model may call. Get the list of tools with the `/v1/tools` endpoint. Tools must be provide as dict `{'type': 'tool_name'}`.")  # fmt: off
     tool_choice: Any = Field(default="auto", description="Controls which (if any) tool is called by the model. `none` means the model will not call any tool and instead generates a message. `auto` means the model can pick between generating a message or calling one or more tools. `required` means the model must call one or more tools. Specifying a particular tool via `{\"type\": \"function\", \"function\": {\"name\": \"my_function\"}}` forces the model to call that tool.<br>`none` is the default when no tools are present. `auto` is the default if tools are present.")  # fmt: off
 
-    # search additionnal fields
+    # search additional fields
     search: bool = Field(default=False, deprecated=True)  # fmt: off
     search_args: Optional[ChatSearchArgs] = Field(default=None, deprecated=True)  # fmt: off
 

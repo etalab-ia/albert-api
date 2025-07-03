@@ -1,5 +1,5 @@
 from json import dumps
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 from urllib.parse import urljoin
 
 import httpx
@@ -64,7 +64,9 @@ class TeiModelClient(BaseModelClient):
         else:
             self.vector_size = None
 
-    def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+    def _format_request(
+        self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None
+    ) -> Tuple[str, Dict[str, str], Optional[dict], Optional[dict], Optional[dict]]:
         """
         Format a request to a client model. Overridden base class method to support TEI Reranking.
 
@@ -91,7 +93,7 @@ class TeiModelClient(BaseModelClient):
         self,
         json: dict,
         response: httpx.Response,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
         request_latency: float = 0.0,
     ) -> httpx.Response:
         """
@@ -105,6 +107,9 @@ class TeiModelClient(BaseModelClient):
         Returns:
             httpx.Response: The formatted response.
         """
+
+        if additional_data is None:
+            additional_data = {}
 
         content_type = response.headers.get("Content-Type", "")
         if content_type == "application/json":

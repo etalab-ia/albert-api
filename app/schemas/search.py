@@ -38,7 +38,7 @@ class SearchRequest(SearchArgs):
     prompt: str = Field(description="Prompt related to the search")
 
     @field_validator("prompt")
-    def blank_string(prompt) -> str:
+    def blank_string(cls, prompt) -> str:
         if prompt.strip() == "":
             raise ValueError("Prompt cannot be empty")
         return prompt

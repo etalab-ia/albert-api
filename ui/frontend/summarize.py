@@ -6,7 +6,7 @@ from streamlit_extras.stylable_container import stylable_container
 from ui.backend.common import get_limits, get_models
 from ui.backend.summarize import generate_summary, generate_toc, get_chunks, summary_with_feedback
 from ui.frontend.header import header
-from ui.frontend.utils import ressources_selector
+from ui.frontend.utils import resources_selector
 from ui.variables import MODEL_TYPE_LANGUAGE, MODEL_TYPE_IMAGE_TEXT_TO_TEXT
 
 header()
@@ -18,13 +18,13 @@ models = [model for model in models if model in limits]
 
 @st.dialog(title="Select a document", width="large")
 def select_document():
-    collections, selected_collection = ressources_selector(ressource="collection")
+    collections, selected_collection = resources_selector(resource="collection")
     if not collections:
         st.warning(body="First create a collection on the *Documents* page.")
         return
 
     with st.spinner("Loading documents..."):
-        documents, selected_document = ressources_selector(ressource="document", per_page=10, filter=selected_collection["id"])
+        documents, selected_document = resources_selector(resource="document", per_page=10, resource_filter=selected_collection["id"])
 
     if not documents:
         st.warning(body="No documents found in this collection, please add a document in *Documents* page.")
