@@ -29,8 +29,7 @@ class AlbertParserClient(BaseParserClient):
         response = httpx.get(f"{self.api_url}/health", headers=self.headers, timeout=self.timeout)
         assert response.status_code == 200, f"Albert API is not reachable: {response.text} {response.status_code}"
 
-    async def parse(self, **params: ParserParams) -> ParsedDocument:
-        params = ParserParams(**params)
+    async def parse(self, params: ParserParams) -> ParsedDocument:
         file_content = await params.file.read()
 
         try:

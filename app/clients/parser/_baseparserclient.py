@@ -37,5 +37,5 @@ class BaseParserClient(ABC):
         return pages
 
     @abstractmethod
-    def parse(self, **params: ParserParams) -> ParsedDocument:
+    def parse(self, params: ParserParams) -> ParsedDocument:
         pass
