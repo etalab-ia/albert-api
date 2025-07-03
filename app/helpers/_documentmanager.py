@@ -326,22 +326,16 @@ class DocumentManager:
 
     @check_dependencies(dependencies=["parser"])
     async def parse_file(
-            self,
-            file: UploadFile,
-            output_format: Optional[ParsedDocumentOutputFormat] = None,
-            force_ocr: Optional[bool] = None,
-            page_range: str = "",
-            paginate_output: Optional[bool] = None,
-            use_llm: Optional[bool] = None
+        self,
+        file: UploadFile,
+        output_format: Optional[ParsedDocumentOutputFormat] = None,
+        force_ocr: Optional[bool] = None,
+        page_range: str = "",
+        paginate_output: Optional[bool] = None,
+        use_llm: Optional[bool] = None,
     ) -> ParsedDocument:
-
         return await self.parser.parse_file(
-            file=file,
-            output_format=output_format,
-            force_ocr=force_ocr,
-            page_range=page_range,
-            paginate_output=paginate_output,
-            use_llm=use_llm
+            file=file, output_format=output_format, force_ocr=force_ocr, page_range=page_range, paginate_output=paginate_output, use_llm=use_llm
         )
 
     @check_dependencies(dependencies=["vector_store"])

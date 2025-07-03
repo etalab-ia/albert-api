@@ -111,7 +111,6 @@ class ParserManager:
         return await method_map[file_type](params)
 
     async def _parse_pdf(self, params: ParserParams) -> ParsedDocument:
-
         if self.parser_client and FileType.PDF in self.parser_client.SUPPORTED_FORMATS:
             document = await self.parser_client.parse(params)
             return document
@@ -136,7 +135,6 @@ class ParserManager:
             raise HTTPException(status_code=500, detail="Failed to parse pdf file.")
 
     async def _parse_html(self, params: ParserParams) -> ParsedDocument:
-
         if self.parser_client and FileType.HTML in self.parser_client.SUPPORTED_FORMATS:
             document = await self.parser_client.parse(params)
             return document
@@ -163,7 +161,6 @@ class ParserManager:
             raise HTTPException(status_code=500, detail="Failed to parse html file.")
 
     async def _parse_md(self, params: ParserParams) -> ParsedDocument:
-
         if self.parser_client and FileType.MD in self.parser_client.SUPPORTED_FORMATS:
             response = await self.parser_client.parse(params)
             return response
@@ -187,7 +184,6 @@ class ParserManager:
             raise HTTPException(status_code=500, detail="Failed to parse markdown file.")
 
     async def _parse_txt(self, params: ParserParams) -> ParsedDocument:
-
         if self.parser_client and FileType.TXT in self.parser_client.SUPPORTED_FORMATS:
             document = await self.parser_client.parse(params)
             return document

@@ -27,7 +27,9 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
     """
 
     # retrieval augmentation generation
-    async def retrieval_augmentation_generation(initial_body: ChatCompletionRequest, inner_session: AsyncSession) -> Tuple[ChatCompletionRequest, List[Search]]:
+    async def retrieval_augmentation_generation(
+        initial_body: ChatCompletionRequest, inner_session: AsyncSession
+    ) -> Tuple[ChatCompletionRequest, List[Search]]:
         res = []
         if initial_body.search:
             if not global_context.documents:
@@ -45,10 +47,14 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
             )
             if res:
                 if initial_body.search_args.method == SearchMethod.MULTIAGENT:
-                    initial_body.messages[-1]["content"] = await global_context.documents.multi_agents.full_multiagents(res, initial_body.messages[-1]["content"])
+                    initial_body.messages[-1]["content"] = await global_context.documents.multi_agents.full_multiagents(
+                        res, initial_body.messages[-1]["content"]
+                    )
                 else:
                     chunks = "\n".join([result.chunk.content for result in res])
-                    initial_body.messages[-1]["content"] = initial_body.search_args.template.format(prompt=initial_body.messages[-1]["content"], chunks=chunks)
+                    initial_body.messages[-1]["content"] = initial_body.search_args.template.format(
+                        prompt=initial_body.messages[-1]["content"], chunks=chunks
+                    )
 
         res_body = initial_body.model_dump()
         res_body.pop("search", None)
