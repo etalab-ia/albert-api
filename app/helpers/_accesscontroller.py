@@ -146,7 +146,7 @@ class AccessController:
 
             master_role = Role(id=0, name="master", permissions=permissions, limits=limits)
             master_user = User(id=0, name="master", role=0, expires_at=None, created_at=0, updated_at=0)
-            master_limits = self.__get_user_limits(role=master_role)
+            master_limits = await self.__get_user_limits(role=master_role)
 
             return master_user, master_role, master_limits, None
 
@@ -160,7 +160,7 @@ class AccessController:
         roles = await global_context.iam.get_roles(session=session, role_id=user.role)
         role = roles[0]
 
-        limits = self.__get_user_limits(role=role)
+        limits = await self.__get_user_limits(role=role)
 
         return user, role, limits, token_id
 

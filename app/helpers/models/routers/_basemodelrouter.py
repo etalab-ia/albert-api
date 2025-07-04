@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from asyncio import Lock
 from itertools import cycle
 import time
+from typing import Callable, Union, Any, Awaitable
+import inspect
 
 from app.clients.model import BaseModelClient as ModelClient
 from app.schemas.models import ModelCosts, ModelType
@@ -77,4 +79,32 @@ class BaseModelRouter(ABC):
         """
         Delete a client.
         """
+        # async with self._lock:
+        #     client.lock.acquire()
         pass
+
+    async def safe_client_access[R](
+            self,
+            endpoint: str,
+            handler: Callable[[ModelClient], Union[R, Awaitable[R]]]
+    ) -> R:
+        """
+        Thread-safely access a BaseModelClient.
+        This method calls the given callback with the current instance lock acquired,
+        to prevent race conditions on the selected BaseModelClient.
+        Unattended disconnections may still happen (the function may raise an HTTPException).
+        The Function
+        """
+        async with self._lock:
+            client = await self.get_client(endpoint)
+            # Client lock is acquired within this block to prevent
+            # another thread to remove it while in use
+            client.lock.acquire()
+
+        if inspect.isawaitable(handler):
+            result = await handler(client)
+        else:
+            result = handler(client)
+
+        client.lock.release()
+        return result

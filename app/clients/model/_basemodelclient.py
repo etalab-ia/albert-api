@@ -1,6 +1,7 @@
 from abc import ABC
 import ast
 import importlib
+from asyncio import Lock
 from json import JSONDecodeError, dumps, loads
 import logging
 import re
@@ -52,6 +53,7 @@ class BaseModelClient(ABC):
         self.timeout = timeout
         self.vector_size = None
         self.max_context_length = None
+        self.lock = Lock()  # Used by ModelRouter to determine whether the Client is in use
 
     @staticmethod
     def import_module(type: ModelClientType) -> "Type[BaseModelClient]":

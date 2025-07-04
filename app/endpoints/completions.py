@@ -15,8 +15,11 @@ async def completions(request: Request, body: CompletionRequest) -> JSONResponse
     Completion API similar to OpenAI's API.
     """
 
-    model = await global_context.models(model=body.model)
-    client = await model.get_client(endpoint=ENDPOINT__COMPLETIONS)
-    response = await client.forward_request(method="POST", json=body.model_dump())
+    async def handler(client):
+        response = await client.forward_request(method="POST", json=body.model_dump())
+        return JSONResponse(content=Completions(**response.json()).model_dump(), status_code=response.status_code)
 
-    return JSONResponse(content=Completions(**response.json()).model_dump(), status_code=response.status_code)
+    return await global_context.models(model=body.model).safe_client_access(
+        endpoint=ENDPOINT__COMPLETIONS,
+        handler=handler
+    )

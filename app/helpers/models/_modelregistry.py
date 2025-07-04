@@ -93,5 +93,5 @@ class ModelRegistry:
         """
         Get all ModelRouter.
         """
-        with self._lock:
+        async with self._lock:
             return self.models
