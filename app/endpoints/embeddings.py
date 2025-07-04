@@ -16,7 +16,7 @@ async def embeddings(request: Request, body: EmbeddingsRequest) -> JSONResponse:
     """
 
     model = global_context.models(model=body.model)
-    client = model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
+    client = await model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
     response = await client.forward_request(method="POST", json=body.model_dump())
 
     return JSONResponse(content=Embeddings(**response.json()).model_dump(), status_code=response.status_code)

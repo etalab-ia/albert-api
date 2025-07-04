@@ -63,7 +63,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
 
     # select client
     model = global_context.models(model=body["model"])
-    client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+    client = await model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case
     if not body["stream"]:

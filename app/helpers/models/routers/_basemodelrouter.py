@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from asyncio import Lock
 from itertools import cycle
 import time
 
@@ -51,8 +52,10 @@ class BaseModelRouter(ABC):
         self._cycle = cycle(clients)
         self._clients = clients
 
+        self._lock = Lock()
+
     @abstractmethod
-    def get_client(self, endpoint: str) -> ModelClient:
+    async def get_client(self, endpoint: str) -> ModelClient:
         """
         Get a client to handle the request
 
@@ -61,5 +64,17 @@ class BaseModelRouter(ABC):
 
         Returns:
             BaseModelClient: The available client
+        """
+        pass
+
+    async def add_client(self, client: ModelClient):
+        """
+        Adds a new client.
+        """
+        pass
+
+    async def delete_client(self, api_url: str, model: str):
+        """
+        Delete a client.
         """
         pass
