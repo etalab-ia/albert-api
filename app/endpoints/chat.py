@@ -62,7 +62,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
     additional_data = {"search_results": results} if results else {}
 
     # select client
-    model = global_context.models(model=body["model"])
+    model = await global_context.models(model=body["model"])
     client = await model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
 
     # not stream case

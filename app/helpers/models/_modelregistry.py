@@ -22,18 +22,32 @@ class ModelRegistry:
             for alias in model.aliases:
                 self.aliases[alias] = model.id
 
-    def __call__(self, model: str) -> ModelRouter:
+    async def __call__(self, model: str) -> ModelRouter:
         model = self.aliases.get(model, model)
 
         if model in self.models:
             return self.__dict__[model]
         raise ModelNotFoundException()
 
-    def list(self, model: Optional[str] = None) -> List[ModelSchema]:
+    async def get_original_name(self, model: str) -> str:
+        """
+        Given an alias, returns the original name of the model.
+        Given an original name, simply returns it.
+
+        Args:
+            model(str): A model name.
+
+        Returns:
+            The original name of the model.
+        """
+        # return self.aliases.get(model, model)
+        pass
+
+    async def list(self, model: Optional[str] = None) -> List[ModelSchema]:
         data = list()
         models = [model] if model else self.models
         for model in models:
-            model = self.__call__(model=model)
+            model = await self.__call__(model=model)
 
             data.append(
                 ModelSchema(
@@ -67,5 +81,11 @@ class ModelRegistry:
             api_url(str): The model API URL.
             model_type(str): The model kind. With the API, uniquely identify the model entry.
             provider(str): Provider API key (used as a unique ID).
+        """
+        pass
+
+    async def get_models(self) -> List[ModelRouter]:
+        """
+        Get all ModelRouter.
         """
         pass

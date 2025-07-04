@@ -29,7 +29,7 @@ async def ocr(request: Request, file: UploadFile = FileForm, model: str = ModelF
         raise FileSizeLimitExceededException()
 
     # get model client
-    model = global_context.models(model=model)
+    model = await global_context.models(model=model)
     client = await model.get_client(endpoint=ENDPOINT__OCR)
 
     file_content = await file.read()  # open document

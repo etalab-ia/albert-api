@@ -213,7 +213,7 @@ async def log_usage(response: Optional[Response], usage: Usage, start_time: date
         usage.status = response.status_code if hasattr(response, "status_code") else None
 
     if usage.request_model:
-        usage.request_model = global_context.models.aliases.get(usage.request_model, usage.request_model)
+        usage.request_model = await global_context.models.get_original_name(usage.request_model, usage.request_model)
 
     async for session in get_db_session():
         session.add(usage)

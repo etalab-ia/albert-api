@@ -83,7 +83,7 @@ async def lifespan(app: FastAPI):
     if web_search:
         web_search = WebSearchManager(
             web_search=web_search,
-            model=global_context.models(model=settings.web_search.query_model),
+            model=await global_context.models(model=settings.web_search.query_model),
             limited_domains=settings.web_search.limited_domains,
             user_agent=settings.web_search.user_agent,
         )
@@ -97,11 +97,11 @@ async def lifespan(app: FastAPI):
 
     if vector_store:
         assert await vector_store.check(), "Vector store database is not reachable."
-        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
+        vector_store.model = await global_context.models(model=settings.databases.vector_store.model)
 
     ## documents dependancy: multi agents
-    multi_agents_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-    multi_agents_reranker_model=global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
+    multi_agents_model = await global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
+    multi_agents_reranker_model = await global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
 
     global_context.documents = DocumentManager(
         vector_store=vector_store,

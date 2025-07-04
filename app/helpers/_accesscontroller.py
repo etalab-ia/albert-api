@@ -17,7 +17,7 @@ from app.utils.exceptions import (
     InsufficientPermissionException,
     InvalidAPIKeyException,
     InvalidAuthenticationSchemeException,
-    RateLimitExceeded,
+    RateLimitExceeded, ModelNotFoundException,
 )
 from app.utils.settings import settings
 from app.utils.variables import (
@@ -107,9 +107,10 @@ class AccessController:
 
         return user
 
-    def __get_user_limits(self, role: Role) -> Dict[str, UserModelLimits]:
+    async def __get_user_limits(self, role: Role) -> Dict[str, UserModelLimits]:
         limits = {}
-        for model in global_context.models.models:
+        models = await global_context.models.get_models()
+        for model in models:
             limits[model] = UserModelLimits()
             for limit in role.limits:
                 if limit.model == model and limit.type == LimitType.TPM:
@@ -139,7 +140,8 @@ class AccessController:
             raise InvalidAPIKeyException()
 
         if api_key.credentials == settings.auth.master_key:  # master user can do anything
-            limits = [Limit(model=model, type=type, value=None) for model in global_context.models.models for type in LimitType]
+            models = await global_context.models.get_models()
+            limits = [Limit(model=model, type=type, value=None) for model in models for type in LimitType]
             permissions = [permission for permission in PermissionType]
 
             master_role = Role(id=0, name="master", permissions=permissions, limits=limits)
@@ -170,7 +172,7 @@ class AccessController:
         if not model:
             return
 
-        model = global_context.models.aliases.get(model, model)
+        model = await global_context.models.get_original_name(model)
 
         if model not in limits:  # unkown model (404 will be raised by the model client)
             return
@@ -192,7 +194,7 @@ class AccessController:
         if not model or not prompt_tokens:
             return
 
-        model = global_context.models.aliases.get(model, model)
+        model = await global_context.models.get_original_name(model)
 
         if model not in limits:  # unkown model (404 will be raised by the model client)
             return
@@ -216,12 +218,11 @@ class AccessController:
         if not model:
             return
 
-        model = global_context.models.aliases.get(model, model)
-
-        if model not in global_context.models.models:
+        try:
+            model = await global_context.models(model=model)
+        except ModelNotFoundException:
             return
 
-        model = global_context.models(model=model)
         if model.costs.prompt_tokens == 0 and model.costs.completion_tokens == 0:  # free model
             return
 

@@ -15,7 +15,7 @@ async def get_model(request: Request, model: str = Path(description="The name of
     Get a model by name and provide basic informations.
     """
 
-    model = global_context.models.list(model=model)[0]
+    model = await global_context.models.list(model=model)[0]
 
     return JSONResponse(content=model.model_dump(), status_code=200)
 
@@ -26,6 +26,6 @@ async def get_models(request: Request) -> JSONResponse:
     Lists the currently available models and provides basic informations.
     """
 
-    data = global_context.models.list()
+    data = await global_context.models.list()
 
     return JSONResponse(content=Models(data=data).model_dump(), status_code=200)
