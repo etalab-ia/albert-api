@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from app.clients.model import BaseModelClient
 from app.schemas.models import Model as ModelSchema
 from app.utils.exceptions import ModelNotFoundException
 
@@ -47,3 +48,24 @@ class ModelRegistry:
             )
 
         return data
+
+    async def add_client(self, model_client: BaseModelClient, provider: str):
+        """
+        Adds a new client.
+
+        Args:
+            model_client(ModelClient): The model client itself.
+            provider(str): Provider API key (used as a unique ID).
+        """
+        pass
+
+    async def remove_client(self, api_url: str, model_type: str, provider: str):
+        """
+        Removes a client.
+
+        Args:
+            api_url(str): The model API URL.
+            model_type(str): The model kind. With the API, uniquely identify the model entry.
+            provider(str): Provider API key (used as a unique ID).
+        """
+        pass
