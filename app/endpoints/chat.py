@@ -73,7 +73,8 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
             media_type="text/event-stream",
         )
 
-    return await global_context.models(model=body["model"]).safe_client_access(
+    model = await global_context.models(model=body["model"])
+    return await model.safe_client_access(
         endpoint=ENDPOINT__CHAT_COMPLETIONS,
         handler=handler
     )

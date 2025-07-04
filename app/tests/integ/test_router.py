@@ -10,9 +10,9 @@ class TestModels:
         router = await global_context.models(model="albert-small")
 
         # With roundrobin client should be different at each call
-        client_1 = await router.get_client(endpoint="")
-        client_2 = await router.get_client(endpoint="")
-        client_3 = await router.get_client(endpoint="")
+        client_1 = router.get_client(endpoint="")
+        client_2 = router.get_client(endpoint="")
+        client_3 = router.get_client(endpoint="")
 
         assert client_1.timeout != client_2.timeout
         assert client_1.timeout == client_3.timeout

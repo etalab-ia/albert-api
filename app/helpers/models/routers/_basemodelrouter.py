@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from asyncio import Lock
 from itertools import cycle
@@ -57,9 +58,9 @@ class BaseModelRouter(ABC):
         self._lock = Lock()
 
     @abstractmethod
-    async def get_client(self, endpoint: str) -> ModelClient:
+    def get_client(self, endpoint: str) -> ModelClient:
         """
-        Get a client to handle the request
+        Get a client to handle the request.
 
         Args:
             endpoint(str): The type of endpoint called
@@ -93,15 +94,14 @@ class BaseModelRouter(ABC):
         This method calls the given callback with the current instance lock acquired,
         to prevent race conditions on the selected BaseModelClient.
         Unattended disconnections may still happen (the function may raise an HTTPException).
-        The Function
         """
         async with self._lock:
-            client = await self.get_client(endpoint)
+            client = self.get_client(endpoint)
             # Client lock is acquired within this block to prevent
             # another thread to remove it while in use
-            client.lock.acquire()
+            await client.lock.acquire()
 
-        if inspect.isawaitable(handler):
+        if inspect.iscoroutinefunction(handler):
             result = await handler(client)
         else:
             result = handler(client)

@@ -52,7 +52,8 @@ class ModelRegistry:
         async with self._lock:
             models = [model] if model else self.models
             for model in models:
-                model = await self.__call__(model=model)
+                # Avoid self.__call__, deadlock otherwise
+                model = self.__dict__[self.aliases.get(model, model)]
 
                 data.append(
                     ModelSchema(

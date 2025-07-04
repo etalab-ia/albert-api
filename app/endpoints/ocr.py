@@ -73,7 +73,8 @@ async def ocr(request: Request, file: UploadFile = FileForm, model: str = ModelF
 
 
     # get model client
-    return await global_context.models(model=model).safe_client_access(
+    model = await global_context.models(model=model)
+    return await model.safe_client_access(
         endpoint=ENDPOINT__OCR,
         handler=handler
     )

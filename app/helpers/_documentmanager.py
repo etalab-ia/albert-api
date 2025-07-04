@@ -473,10 +473,17 @@ class DocumentManager:
         return chunks
 
     async def _create_embeddings(self, input: List[str]) -> list[float] | list[list[float]] | dict:
-        client = await self.vector_store.model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
-        response = await client.forward_request(method="POST", json={"input": input, "model": self.vector_store.model.id, "encoding_format": "float"})
+        async def handler(client):
+            response = await client.forward_request(method="POST",
+                                                    json={"input": input, "model": self.vector_store.model.id,
+                                                          "encoding_format": "float"})
 
-        return [vector["embedding"] for vector in response.json()["data"]]
+            return [vector["embedding"] for vector in response.json()["data"]]
+
+        return await self.vector_store.model.safe_client_access(
+            endpoint=ENDPOINT__EMBEDDINGS,
+            handler=handler
+        )
 
     async def _upsert(self, chunks: List[Chunk], collection_id: int) -> None:
         batches = batched(iterable=chunks, n=self.BATCH_SIZE)
