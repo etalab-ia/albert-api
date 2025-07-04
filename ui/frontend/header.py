@@ -5,6 +5,7 @@ from streamlit_extras.stylable_container import stylable_container
 
 from ui.backend.login import login
 from ui.backend.sql.session import get_session
+from .css import css_proconnect
 
 
 def header():
@@ -24,6 +25,31 @@ def header():
                 submit = st.form_submit_button(label="Submit")
                 if submit:
                     login(user_name, user_password, session)
+
+                with stylable_container(key="ProConnect", css_styles=css_proconnect):
+                    # ProConnect Button
+                    st.markdown(
+                        """
+                      <div>
+                        <form action="#" method="post">
+                          <button class="proconnect-button">
+                            <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
+                          </button>
+                        </form>
+                        <p>
+                          <a
+                            href="https://www.proconnect.gouv.fr/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Qu’est-ce que ProConnect ? - nouvelle fenêtre"
+                          >
+                            Qu’est-ce que ProConnect ?
+                          </a>
+                        </p>
+                      </div>
+                      """,
+                        unsafe_allow_html=True,
+                    )
 
         if st.session_state.get("login_status") is None:
             login_form()
