@@ -61,6 +61,7 @@ class BaseModelRouter(ABC):
     def get_client(self, endpoint: str) -> ModelClient:
         """
         Get a client to handle the request.
+        NB: this method is not thread-safe, you probably want to use safe_client_access.
 
         Args:
             endpoint(str): The type of endpoint called
