@@ -1,3 +1,4 @@
+from asyncio import Lock
 from typing import List, Optional
 
 from app.clients.model import BaseModelClient
@@ -11,6 +12,7 @@ class ModelRegistry:
     def __init__(self, routers: List[ModelRouter]) -> None:
         self.models = list()
         self.aliases = dict()
+        self._lock = Lock()
 
         for model in routers:
             if "id" not in model.__dict__:  # no clients available
@@ -23,10 +25,12 @@ class ModelRegistry:
                 self.aliases[alias] = model.id
 
     async def __call__(self, model: str) -> ModelRouter:
-        model = self.aliases.get(model, model)
+        async with self._lock:
+            model = self.aliases.get(model, model)
 
-        if model in self.models:
-            return self.__dict__[model]
+            if model in self.models:
+                return self.__dict__[model]
+
         raise ModelNotFoundException()
 
     async def get_original_name(self, model: str) -> str:
@@ -40,26 +44,27 @@ class ModelRegistry:
         Returns:
             The original name of the model.
         """
-        # return self.aliases.get(model, model)
-        pass
+        async with self._lock:
+           return self.aliases.get(model, model)
 
     async def list(self, model: Optional[str] = None) -> List[ModelSchema]:
         data = list()
-        models = [model] if model else self.models
-        for model in models:
-            model = await self.__call__(model=model)
+        async with self._lock:
+            models = [model] if model else self.models
+            for model in models:
+                model = await self.__call__(model=model)
 
-            data.append(
-                ModelSchema(
-                    id=model.id,
-                    type=model.type,
-                    max_context_length=model.max_context_length,
-                    owned_by=model.owned_by,
-                    created=model.created,
-                    aliases=model.aliases,
-                    costs=model.costs,
+                data.append(
+                    ModelSchema(
+                        id=model.id,
+                        type=model.type,
+                        max_context_length=model.max_context_length,
+                        owned_by=model.owned_by,
+                        created=model.created,
+                        aliases=model.aliases,
+                        costs=model.costs,
+                    )
                 )
-            )
 
         return data
 
@@ -88,4 +93,5 @@ class ModelRegistry:
         """
         Get all ModelRouter.
         """
-        pass
+        with self._lock:
+            return self.models
