@@ -1,8 +1,6 @@
 general:
   log_level: DEBUG
-  # disabled_routers:
-  #   - ocr
-
+  tokenizer: "tiktoken_gpt2"
 
 playground:
   api_url: http://${API_HOST:-localhost}:8000
@@ -17,26 +15,13 @@ auth:
 monitoring:
   postgres:
     enabled: true
+  prometheus:
+    enabled: true
 
 mcp:
   mcp_bridge_url: http://${MCP_BRIDGE_HOST:-localhost}:${MCP_BRIDGE_PORT:-9876}
 
-#web_search:
-#  type: brave
-#  query_model: albert-small
-#  args:
-#    api_key: ${BRAVE_API_KEY}
-
 databases:
-  - type: elasticsearch
-    context: api
-    model: ${EMBEDDINGS_MODEL:-my-embeddings-model}
-    args:
-      hosts: http://${ELASTICSEARCH_HOST:-localhost}:${ELASTICSEARCH_PORT:-9200}
-      basic_auth:
-        - ${ELASTICSEARCH_USERNAME:-elastic}
-        - ${ELASTICSEARCH_PASSWORD:-changeme}
-
   - type: redis
     context: api
     args:
@@ -49,12 +34,15 @@ databases:
     args:
       url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/api
       echo: False
-      pool_size: 5
-      max_overflow: 10
+      pool_size: 10
+      max_overflow: 5  # Allow some overflow connections
       pool_pre_ping: True
+      pool_recycle: 3600  # Recycle connections after 1 hour
+      pool_reset_on_return: commit  # Reset connection state on return
       connect_args:
         server_settings:
           statement_timeout: "120s"
+        command_timeout: 60
 
   - type: sql # Playground database (sync)
     context: playground
@@ -66,82 +54,30 @@ databases:
       pool_pre_ping: True
 
 models:
-  - id: albert-large
-    type: text-generation
-    owned_by: test
-    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
-    clients:
-      - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
-        type: albert
-        args:
-          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-          api_key: ${ALBERT_API_KEY}
-          timeout: 120
-
   - id: albert-small
     type: text-generation
+    routing_strategy: round_robin
     aliases: ["meta-llama/Llama-3.1-8B-Instruct"]
     clients:
       - model: albert-small
         type: albert
+        costs:
+          prompt_tokens: 1
+          completion_tokens: 3
+        carbon:
+          total_params: 8
+          active_params: 8
+          model_zone: FRA
         args:
           api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
-
-  - id: ${EMBEDDINGS_MODEL:-my-embeddings-model}
-    type: text-embeddings-inference
-    aliases: ["BAAI/bge-m3"]
-    clients:
-      - model: BAAI/bge-m3
+      - model: albert-small
         type: albert
+        costs:
+          prompt_tokens: 1
+          completion_tokens: 3
         args:
           api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
-          timeout: 120
-
-  - id: audio-large
-    type: automatic-speech-recognition
-    aliases: ["openai/whisper-large-v3"]
-    clients:
-      - model: audio-large
-        type: albert
-        args:
-          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-          api_key: ${ALBERT_API_KEY}
-          timeout: 120
-
-  - id: rerank-small
-    type: text-classification
-    aliases: ["BAAI/bge-reranker-v2-m3"]
-    clients:
-      - model: rerank-small
-        type: albert
-        args:
-          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-          api_key: ${ALBERT_API_KEY}
-          timeout: 120
-
-#  - id: my-language-model
-#    type: text-generation
-#    clients:
-#      - model: gpt-3.5-turbo
-#        type: openai
-#        params:
-#          total: 70
-#          active: 70
-#          zone: WOR
-#        args:
-#          api_url: https://api.openai.com
-#          api_key: ${OPENAI_API_KEY}
-#          timeout: 60
-#
-#  - id: my-embeddings-model
-#    type: text-embeddings-inference
-#    clients:
-#      - model: text-embedding-3-small
-#        type: openai
-#        args:
-#          api_url: https://api.openai.com
-#          api_key: ${OPENAI_API_KEY}
-#          timeout: 60
+          timeout: 60

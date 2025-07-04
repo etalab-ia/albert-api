@@ -17,16 +17,24 @@ jobs:
   
     - name: Set up Docker Compose
       run: |
-        make prepare-env-test
-        make docker-compose-test-services-up
+        make docker-compose-test-ci-up
       env:
         BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
         ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
 
+    - name: Wait for API to start
+      run: |
+        echo $(ls -la)
+        for i in {1..30}; do
+          curl -s http://localhost:8000/health -H "Authorization: Bearer changeme" > /dev/null && echo "API is ready" && break || echo "Waiting for API..." && sleep 2;
+        done
+        echo $(docker logs albert-test-api-1)
+
+
     - name: Wait for PostgreSQL
       run: |
         for i in {1..30}; do
-          nc -z localhost 8432 && echo "PostgreSQL is ready" && break || echo "Waiting for PostgreSQL..." && sleep 2;
+          nc -z localhost 5432 && echo "PostgreSQL is ready" && break || echo "Waiting for PostgreSQL..." && sleep 2;
         done
 
     - name: Set up Python
