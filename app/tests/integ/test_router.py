@@ -7,7 +7,7 @@ from app.utils.context import global_context
 class TestModels:
     async def test_get_model_client(self):
         # Get a language model with more than 1 client
-        router = global_context.models(model="albert-small")
+        router = await global_context.models(model="albert-small")
 
         # With roundrobin client should be different at each call
         client_1 = await router.get_client(endpoint="")
