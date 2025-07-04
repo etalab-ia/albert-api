@@ -274,6 +274,15 @@ class MCP(ConfigBaseModel):
     mcp_bridge_url: str = "changeme"
 
 
+class OAuth2(ConfigBaseModel):
+    client_id: str = Field(default="")
+    client_secret: str = Field(default="")
+    token_url: str = Field(default="https://auth.proconnect.gouv.fr/auth/realms/ProConnect/protocol/openid-connect/token")
+    authorization_url: str = Field(default="https://auth.proconnect.gouv.fr/auth/realms/ProConnect/protocol/openid-connect/auth")
+    scope: str = Field(default="openid profile email")
+    allowed_origins: List[str] = Field(default_factory=list)
+
+
 class Config(ConfigBaseModel):
     general: General = Field(default_factory=General)
     auth: Auth = Field(default_factory=Auth)
@@ -284,6 +293,7 @@ class Config(ConfigBaseModel):
     parser: Optional[Parser] = None
     web_search: Optional[WebSearch] = Field(default=None, description="Web search feature. Pre-requisite: vector database and text-generation or image-text-to-text model.")  # fmt: off
     monitoring: Monitoring = Field(default_factory=Monitoring)
+    oauth2: Optional[OAuth2] = Field(default=None)
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
