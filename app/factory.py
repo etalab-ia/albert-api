@@ -30,6 +30,7 @@ from app.utils.variables import (
     ROUTER__RERANK,
     ROUTER__SEARCH,
     ROUTER__USERS,
+    ROUTER__OAUTH2,
 )
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         search,
         usage,
         users,
+        oauth2callback,
     )
     from app.helpers._accesscontroller import AccessController
 
@@ -182,5 +184,9 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
     if ROUTER__FILES not in configuration.settings.disabled_routers:
         # hooks does not work with files endpoint (request is overwritten by the file upload)
         app.include_router(router=files.router, tags=["Legacy"], prefix="/v1")
+
+    if settings.oauth2 and ROUTER__OAUTH2 not in settings.general.disabled_routers:
+        add_hooks(router=oauth2callback.router)
+        app.include_router(router=oauth2callback.router, tags=[ROUTER__OAUTH2.title()], prefix="/v1")
 
     return app

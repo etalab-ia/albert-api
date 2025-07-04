@@ -26,6 +26,7 @@ ui = [
 ]
 app = [
     # auth
+    "authlib>=1.6.0",
     "python-jose==3.4.0",
     "limits==5.1.0",
     "coredis==4.20.0",

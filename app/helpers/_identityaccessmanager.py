@@ -212,6 +212,8 @@ class IdentityAccessManager:
         role_id: int,
         budget: Optional[float] = None,
         expires_at: Optional[int] = None,
+        sub: Optional[str] = None,
+        email: Optional[str] = None,
     ) -> int:
         expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
@@ -231,6 +233,8 @@ class IdentityAccessManager:
                     role_id=role_id,
                     budget=budget,
                     expires_at=expires_at,
+                    sub=sub,
+                    email=email,
                 )
                 .returning(UserTable.id)
             )
@@ -443,3 +447,26 @@ class IdentityAccessManager:
             return None, None
 
         return claims["user_id"], claims["token_id"]
+
+    async def get_user(
+        self,
+        session: AsyncSession,
+        user_id: Optional[int] = None,
+        sub: Optional[str] = None,
+        email: Optional[str] = None,
+    ) -> Optional[User]:
+        query = select(UserTable).where(
+            or_(
+                UserTable.id == user_id if user_id else False,
+                UserTable.sub == sub if sub else False,
+                UserTable.email == email if email else False,
+            )
+        )
+
+        result = await session.execute(query)
+        user = result.scalar_one_or_none()
+
+        if user and user.expires_at and user.expires_at < func.now():
+            return None
+
+        return user
