@@ -67,10 +67,10 @@ models:
 The API keys can be defined directement in the `config.yml` file or in a `.env` file
 
 ```bash
-cp .env.example .env
+cp .env.test.example .env.test
 
-echo 'ALBERT_API_KEY=my_albert_api_key' >> .env
-echo 'OPENAI_API_KEY=my_openai_api_key' >> .env
+echo 'ALBERT_API_KEY=my_albert_api_key' >> .env.test
+echo 'OPENAI_API_KEY=my_openai_api_key' >> .env.test
 ```
 
 Finally, run the application:
@@ -137,10 +137,10 @@ models:
 The API keys can be defined directement in the `config.yml` file or in a `.env` file
 
 ```bash
-cp .env.example .env
+cp .env.test.example .env.test
 
-echo 'ALBERT_API_KEY=my_albert_api_key' >> .env
-echo 'OPENAI_API_KEY=my_openai_api_key' >> .env
+echo 'ALBERT_API_KEY=my_albert_api_key' >> .env.test
+echo 'OPENAI_API_KEY=my_openai_api_key' >> .env.test
 ```
 
 ### Running

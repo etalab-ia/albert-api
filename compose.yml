@@ -4,15 +4,13 @@ services:
     restart: always
     env_file: "${APP_ENV_FILE:-.env.example}"
     ports:
-      - 8000:8000
+      - 8080:8000
     volumes:
       - "./${CONFIGURATION_FILE:-config.example.yml}:/config.yml:ro"
     depends_on:
       redis:
         condition: service_healthy
       postgres:
-        condition: service_healthy
-      elasticsearch:
         condition: service_healthy
 
   playground:

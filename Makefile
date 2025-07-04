@@ -1,4 +1,5 @@
 CONFIG_FILE=./config.yml
+CONFIG_TEST_FILE=app/tests/config.test.yml
 PYPROJECT=pyproject.toml
 
 APP_ENV_FILE=.env
@@ -7,7 +8,8 @@ QUICKSTART_ENV_FILE=.env.example
 
 env_file ?= .env
 external_services="postgres redis elasticsearch mcp-bridge"
-quickstart_services="api playground postgres"
+quickstart_services="api playground postgres redis"
+ci_services="api postgres redis elasticsearch mcp-bridge"
 
 docker-compose-albert-api-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
@@ -28,7 +30,16 @@ docker-compose-quickstart-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
 
 docker-compose-quickstart-down:
-	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
+	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE)
+
+docker-compose-ci-up:
+	cp .env.example .github/.env.ci
+	sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/config.test.yml/' .github/.env.ci
+	sed -i 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=albert-api-ci/' .github/.env.ci
+	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --detach
+
+docker-compose-ci-down:
+	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci down
 
 install:
 	pip install ".[app,ui,dev,test]"
@@ -52,13 +63,13 @@ db-ui-migrate:
 	bash -c 'set -a; . $(APP_ENV_FILE); alembic -c ui/alembic.ini upgrade head'
 
 test-all:
-	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT)'
+	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT)'
 
 test-unit:
-	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)
+	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)'
 
 test-integ:
-	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
+	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
 
 test-snap-update:
 	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT) --snapshot-update
@@ -70,16 +81,14 @@ lint:
 	pre-commit run --all-files
 
 .docker-compose-up:
-	docker compose --env-file $(env_file) up  --detach $(services)
+	docker compose --env-file $(env_file) up $(services) --detach
 
 .docker-compose-down:
 	docker compose --env-file $(env_file) down
 
 prepare-env-test:
 	cp .env.example .env.test
-	cp config.example.yml config.yml
-	sed -i 's/\(.*_HOST=\).*/\1localhost/' .env.test
-	sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=config.yml/' .env.test
+	sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=app/tests/config.test.yml/' .env.test
 
 setup: install configuration install-lint docker-compose-services-up db-app-migrate db-ui-migrate
 

@@ -164,7 +164,7 @@ models:
           api_key: sf...Df
           timeout: 60
 
-  - id: my-embeddings-model
+  - id: embeddings-small
     type: text-embeddings-inference
     clients:
       - model: text-embedding-ada-003
@@ -238,7 +238,7 @@ Only the root of the URL should be provided, do not include `/v1` in the URL.
 ```yaml
 databases:
   - type: qdrant
-    model: my-embeddings-model
+    model: embeddings-small
     args:
       url: http://localhost:6333
       api_key: yU..SB
