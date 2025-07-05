@@ -77,13 +77,25 @@ class BaseModelRouter(ABC):
         """
         pass
 
-    async def delete_client(self, api_url: str, model: str):
+    async def delete_client(self, api_url: str) -> bool:
         """
         Delete a client.
+
+        Returns:
+            True if the router still has active ModelClients
+            False otherwise
         """
-        # async with self._lock:
-        #     client.lock.acquire()
-        pass
+        async with self._lock:
+            client = None
+            for c in self._clients:
+                if c.api_url == api_url:
+                    client = c
+                    break
+
+            await client.lock.acquire()
+            self._clients.remove(client)
+            client.lock.release()
+            return len(self._clients) > 0
 
     async def safe_client_access[R](
             self,
@@ -92,8 +104,8 @@ class BaseModelRouter(ABC):
     ) -> R:
         """
         Thread-safely access a BaseModelClient.
-        This method calls the given callback with the current instance lock acquired,
-        to prevent race conditions on the selected BaseModelClient.
+        This method calls the given callback with the current instance and BaseModelClient
+            lock acquired just in time, to prevent race conditions on the selected BaseModelClient.
         Unattended disconnections may still happen (the function may raise an HTTPException).
         """
         async with self._lock:

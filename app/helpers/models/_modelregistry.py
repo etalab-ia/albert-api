@@ -2,10 +2,10 @@ from asyncio import Lock
 from typing import List, Optional
 
 from app.clients.model import BaseModelClient
-from app.schemas.models import Model as ModelSchema
+from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.exceptions import ModelNotFoundException
 
-from app.helpers.models.routers import ModelRouter
+from app.helpers.models.routers import ModelRouter, BaseModelRouter
 
 
 class ModelRegistry:
@@ -13,6 +13,10 @@ class ModelRegistry:
         self.models = list()
         self.aliases = dict()
         self._lock = Lock()
+
+        self._provider_models = {
+            # provider[str]: {type[ModelType]: router[ModelRouter]}
+        }
 
         for model in routers:
             if "id" not in model.__dict__:  # no clients available
@@ -79,16 +83,37 @@ class ModelRegistry:
         """
         pass
 
-    async def remove_client(self, api_url: str, model_type: str, provider: str):
+    async def remove_client(self, api_url: str, model_type: ModelType, provider: str):
         """
         Removes a client.
 
         Args:
             api_url(str): The model API URL.
-            model_type(str): The model kind. With the API, uniquely identify the model entry.
+            model_type(ModelType): The model kind. With the API, uniquely identify the model entry.
             provider(str): Provider API key (used as a unique ID).
         """
-        pass
+        async with self._lock:
+            type_routers: dict | None = self._provider_models.get(provider, None)
+            if type_routers is None:  # Provider didn't provide anything
+                return
+
+            router: BaseModelRouter | None = type_routers.get(model_type, None)
+            if router is None:  # Provider didn't provide such ModelType
+                return
+
+            # ModelClient is removed within instance lock because to prevent
+            # any other threads to access self._models before we completely removed
+            # the client.
+            still_has_clients = await router.delete_client(api_url)
+
+            if not still_has_clients:
+                aliases = [al for al, model_id in self.aliases.items() if model_id == router.id]
+                for a in aliases:
+                    del self.aliases[a]
+
+                del self.__dict__[router.id]
+                self.models.remove(router)
+
 
     async def get_models(self) -> List[ModelRouter]:
         """
