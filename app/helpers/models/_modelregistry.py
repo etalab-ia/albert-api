@@ -2,6 +2,7 @@ from asyncio import Lock
 from typing import List, Optional
 
 from app.clients.model import BaseModelClient
+from app.schemas.core.models import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.exceptions import ModelNotFoundException
 
@@ -73,17 +74,47 @@ class ModelRegistry:
 
         return data
 
-    async def add_client(self, model_client: BaseModelClient, provider: str):
+    async def add_client(
+            self,
+            provider: str,
+            model_client: BaseModelClient,
+            model_type: ModelType,
+            aliases: List[str] = None
+        ):
         """
         Adds a new client.
 
         Args:
             model_client(ModelClient): The model client itself.
+            model_type(ModelType): The type of model.
             provider(str): Provider API key (used as a unique ID).
+            aliases(List[str]): List of aliases.
         """
-        pass
+        if aliases is None:
+            aliases = []
 
-    async def remove_client(self, api_url: str, model_type: ModelType, provider: str):
+        async with self._lock:
+            if not provider in self._provider_models or model_type not in self._provider_models[provider]:
+                router = ModelRouter(
+                    id=f"{provider}-{model_type}",
+                    model_type=model_type,
+                    owned_by=provider,
+                    aliases=aliases,
+                    routing_strategy=RoutingStrategy.ROUND_ROBIN,
+                    clients=[model_client],
+                )
+                self.__dict__[router.id] = router
+                self.models.append(router.id)
+
+                self._provider_models[provider] = dict(self._provider_models.get(provider, {}), **{model_type: router})
+            else:
+                await self._provider_models[provider][model_type].add_client(model_client)
+
+            # The caller may want to add aliases to an existing model
+            for alias in aliases:
+                self.aliases[alias] = router.id
+
+    async def remove_client(self, provider: str, api_url: str, model_type: ModelType):
         """
         Removes a client.
 

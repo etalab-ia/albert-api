@@ -1,4 +1,3 @@
-import logging
 from abc import ABC, abstractmethod
 from asyncio import Lock
 from itertools import cycle
@@ -75,9 +74,28 @@ class BaseModelRouter(ABC):
         """
         Adds a new client.
         """
-        # async with self._lock:
-        #     self._clients.append(client)
+        async with self._lock:
+            for c in self._clients:
+                if c.api_url == client.api_url: # The client already exists; we don't want to double it
+                    return
 
+            self._clients.append(client)
+
+            # consistency checks
+
+            if client.vector_size != self._vector_size:
+                raise ValueError("All embeddings models in the same model group must have the same vector size.")
+
+            if client.max_context_length is not None:
+                if self.max_context_length is None:
+                    self.max_context_length = client.max_context_length
+                else:
+                    self.max_context_length = min(self.max_context_length, client.max_context_length)
+
+            self._cycle = cycle(self._clients)
+            prompt_tokens = max(self.costs.prompt_tokens, client.costs.prompt_tokens)
+            completion_tokens = max(self.costs.completion_tokens, client.costs.completion_tokens)
+            self.costs = ModelCosts(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
 
     async def delete_client(self, api_url: str) -> bool:
         """
