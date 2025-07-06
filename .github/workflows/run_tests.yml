@@ -37,18 +37,9 @@ jobs:
           nc -z localhost 5432 && echo "PostgreSQL is ready" && break || echo "Waiting for PostgreSQL..." && sleep 2;
         done
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-        cache: 'pipenv'
-        cache-dependency-path: 'pyproject.toml'
-    - run: make install
-
     - name: Run tests
       run: |
-        make db-test-migrate
-        make test-all
+        docker exec albert-api-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
 
     - name: Create coverage badge
       run: |
@@ -67,4 +58,4 @@ jobs:
     - name: Tear down Docker Compose
       if: always()
       run: |
-        docker compose down
+        make docker-compose-test-ci-down
