@@ -17,7 +17,7 @@ jobs:
   
     - name: Set up Docker Compose
       run: |
-        make docker-compose-test-ci-up
+        make docker-compose-ci-up
       env:
         BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
         ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
@@ -58,4 +58,4 @@ jobs:
     - name: Tear down Docker Compose
       if: always()
       run: |
-        make docker-compose-test-ci-down
+        make docker-compose-ci-down
