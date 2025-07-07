@@ -1,6 +1,6 @@
 services:
   api:
-    image: ghcr.io/etalab-ia/albert-api/app:installation
+    image: ghcr.io/etalab-ia/albert-api/app:latest
     restart: always
     env_file: "${APP_ENV_FILE:-.env.example}"
     ports:
@@ -14,7 +14,7 @@ services:
         condition: service_healthy
 
   playground:
-    image: ghcr.io/etalab-ia/albert-api/ui:installation
+    image: ghcr.io/etalab-ia/albert-api/ui:latest
     environment:
       - MASTER_KEY=master_key
       - "POSTGRES_HOST=${POSTGRES_HOST:-postgres}"
