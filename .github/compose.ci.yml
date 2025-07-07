@@ -1,0 +1,45 @@
+name: albert-test
+services:
+  api:
+    restart: always
+    env_file: "${APP_ENV_FILE:-.env.ci}"
+    ports:
+      - 8080:8000
+    environment:
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+      - ALBERT_API_KEY=${ALBERT_API_KEY}
+      - COVERAGE_RCFILE=./app/.coveragerc
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    build:
+      context: ..
+      dockerfile: app/Dockerfile
+
+  postgres:
+    extends:
+      file: ../compose.yml
+      service: postgres
+
+  elasticsearch:
+    extends:
+      file: ../compose.yml
+      service: elasticsearch
+
+
+  redis:
+    extends:
+      file: ../compose.yml
+      service: redis
+
+  mcp-bridge:
+    extends:
+      file: ../compose.yml
+      service: mcp-bridge
+
+volumes:
+  postgres:
+  redis:
+  elasticsearch:

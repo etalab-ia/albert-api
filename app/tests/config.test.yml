@@ -2,6 +2,9 @@ general:
   log_level: DEBUG
   tokenizer: "tiktoken_gpt2"
 
+playground:
+  api_url: http://${API_HOST}:8000
+
 auth:
   master_key: changeme
   max_token_expiration_days: 365
@@ -77,12 +80,24 @@ databases:
     args:
       url: postgresql+asyncpg://postgres:changeme@${POSTGRES_HOST}:${POSTGRES_PORT}/api
       echo: False
-      pool_size: 5
-      max_overflow: 10
+      pool_size: 10
+      max_overflow: 5  # Allow some overflow connections
       pool_pre_ping: True
+      pool_recycle: 3600  # Recycle connections after 1 hour
+      pool_reset_on_return: commit  # Reset connection state on return
       connect_args:
         server_settings:
           statement_timeout: "120s"
+        command_timeout: 60
+
+  - type: sql # Playground database (sync)
+    context: playground
+    args:
+      url: postgresql://postgres:changeme@${POSTGRES_HOST}:5432/playground
+      echo: False
+      pool_size: 5
+      max_overflow: 10
+      pool_pre_ping: True
 
 models:
   - id: albert-large
@@ -100,7 +115,7 @@ models:
           active_params: 24
           model_zone: FRA
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -119,7 +134,7 @@ models:
           active_params: 8
           model_zone: FRA
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
       - model: albert-small
@@ -132,25 +147,25 @@ models:
           api_key: ${ALBERT_API_KEY}
           timeout: 60
 
-  - id: embeddings-small
+  - id: ${EMBEDDINGS_MODEL:-embeddings-small}
     type: text-embeddings-inference
     aliases: ["BAAI/bge-m3"]
     clients:
-      - model: embeddings-small
+      - model: ${EMBEDDINGS_MODEL:-embeddings-small}
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
   - id: audio-large
     type: automatic-speech-recognition
     aliases: ["openai/whisper-large-v3"]
-    clients: 
+    clients:
       - model: audio-large
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
 
@@ -161,6 +176,6 @@ models:
       - model: rerank-small
         type: albert
         args:
-          api_url: https://albert.api.etalab.gouv.fr
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
           api_key: ${ALBERT_API_KEY}
           timeout: 120
