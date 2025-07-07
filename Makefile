@@ -14,25 +14,25 @@ ci_services="api postgres redis elasticsearch mcp-bridge"
 docker-compose-albert-api-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
 
-docker-compose-albert-api-down docker-compose-services-down:
+docker-compose-albert-api-down env-services-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(APP_ENV_FILE)
 
-docker-compose-services-up:
+env-services-up:
 	@$(MAKE) --silent docker-compose-albert-api-up services=$(external_services)
 
-docker-compose-test-services-up:
+env-test-services-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(TEST_ENV_FILE) services=$(external_services)
 
-docker-compose-test-services-down:
+env-test-services-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(TEST_ENV_FILE)
 
-docker-compose-quickstart-up:
+quickstart-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
 
-docker-compose-quickstart-down:
+quickstart-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE)
 
-docker-compose-ci-up:
+env-ci-up:
 	@if [ ! -f .github/.env.ci ]; then \
 		cp .env.example .github/.env.ci; \
 		sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/config.test.yml/' .github/.env.ci; \
@@ -40,7 +40,7 @@ docker-compose-ci-up:
 	fi
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --detach
 
-docker-compose-ci-down:
+env-ci-down:
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci down
 
 install:
@@ -73,8 +73,8 @@ test-unit:
 test-integ:
 	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
 
-test-snap-update:
-	CONFIG_FILE=$(CONFIG_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT) --snapshot-update
+test-ci:
+	docker exec albert-api-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
 
 install-lint:
 	pre-commit install
@@ -88,10 +88,6 @@ lint:
 .docker-compose-down:
 	docker compose --env-file $(env_file) down
 
-prepare-env-test:
-	cp .env.example .env.test
-	sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=app/tests/config.test.yml/' .env.test
+setup: install configuration install-lint env-services-up db-app-migrate db-ui-migrate
 
-setup: install configuration install-lint docker-compose-services-up db-app-migrate db-ui-migrate
-
-.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ test-snap-update lint setup docker-compose-albert-api-up docker-compose-albert-api-down docker-compose-services-down docker-compose-services-up docker-compose-test-services-up docker-compose-test-services-down docker-compose-quickstart-up docker-compose-quickstart-down
+.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ lint setup docker-compose-albert-api-up docker-compose-albert-api-down env-services-down env-services-up env-test-services-up env-test-services-down quickstart-up quickstart-down env-ci-up env-ci-down
