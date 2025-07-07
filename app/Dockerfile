@@ -51,4 +51,4 @@ ENV PATH="/.venv/bin:${PATH}"
 ENV PYTHONPATH="/app:${PYTHONPATH}"
 
 # Launch the application
-CMD ["/startup.sh"]
+CMD ["./startup.sh"]
