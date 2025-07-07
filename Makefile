@@ -11,6 +11,12 @@ external_services="postgres redis elasticsearch mcp-bridge"
 quickstart_services="api playground postgres redis"
 ci_services="api postgres redis elasticsearch mcp-bridge"
 
+quickstart-up:
+	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
+
+quickstart-down:
+	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE)
+
 docker-compose-albert-api-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
 
@@ -26,11 +32,11 @@ env-test-services-up:
 env-test-services-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(TEST_ENV_FILE)
 
-quickstart-up:
-	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
+.docker-compose-up:
+	docker compose --env-file $(env_file) up $(services) --detach
 
-quickstart-down:
-	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE)
+.docker-compose-down:
+	docker compose --env-file $(env_file) down
 
 env-ci-up:
 	@if [ ! -f .github/.env.ci ]; then \
@@ -48,6 +54,12 @@ install:
 
 configuration:
 	python scripts/generate_models_configuration.py
+
+install-lint:
+	pre-commit install
+
+lint:
+	pre-commit run --all-files
 
 run-api:
 	bash -c 'set -a; . $(APP_ENV_FILE); ./scripts/startup_api.sh'
@@ -75,18 +87,6 @@ test-integ:
 
 test-ci:
 	docker exec albert-api-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
-
-install-lint:
-	pre-commit install
-
-lint:
-	pre-commit run --all-files
-
-.docker-compose-up:
-	docker compose --env-file $(env_file) up $(services) --detach
-
-.docker-compose-down:
-	docker compose --env-file $(env_file) down
 
 setup: install configuration install-lint env-services-up db-app-migrate db-ui-migrate
 
