@@ -374,6 +374,7 @@ class Settings(BaseSettings):
         values.multi_agents_search = config.multi_agents_search
         values.mcp = config.mcp
         values.parser = config.parser
+        values.oauth2 = config.oauth2
 
         if values.databases.vector_store:
             assert values.databases.sql, "SQL database is required to use vector store features."
