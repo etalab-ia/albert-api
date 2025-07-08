@@ -6,6 +6,7 @@ from streamlit_extras.stylable_container import stylable_container
 from ui.backend.login import login
 from ui.backend.sql.session import get_session
 from .css import css_proconnect
+from ui.settings import settings  # Ensure settings is imported
 
 
 def header():
@@ -15,10 +16,11 @@ def header():
         @st.dialog(title="Login")
         def login_form():
             with st.form(key="login"):
+                # Traditional login
                 user_name = st.text_input(label="Email", type="default", key="user_id", icon=":material/email:")
                 user_password = st.text_input(label="Password", type="password", key="password", icon=":material/lock:")
 
-                # strip input
+                # Strip input
                 user_name = user_name.strip()
                 user_password = user_password.strip()
 
@@ -26,30 +28,34 @@ def header():
                 if submit:
                     login(user_name, user_password, session)
 
-                with stylable_container(key="ProConnect", css_styles=css_proconnect):
-                    # ProConnect Button
-                    st.markdown(
-                        """
-                      <div>
-                        <form action="#" method="post">
-                          <button class="proconnect-button">
-                            <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
-                          </button>
+            # ProConnect login
+            with stylable_container(key="ProConnect", css_styles=css_proconnect):
+                st.markdown(
+                    f"""
+                    <div>
+                        <form action="{settings.oauth2.authorization_url}" method="get">
+                            <input type="hidden" name="client_id" value="{settings.oauth2.client_id}">
+                            <input type="hidden" name="redirect_uri" value="{settings.oauth2.redirect_uri}">
+                            <input type="hidden" name="response_type" value="code">
+                            <input type="hidden" name="scope" value="{settings.oauth2.scope}">
+                            <button class="proconnect-button">
+                                <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
+                            </button>
                         </form>
                         <p>
-                          <a
-                            href="https://www.proconnect.gouv.fr/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Qu’est-ce que ProConnect ? - nouvelle fenêtre"
-                          >
-                            Qu’est-ce que ProConnect ?
-                          </a>
+                            <a
+                                href="https://www.proconnect.gouv.fr/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Qu’est-ce que ProConnect ? - nouvelle fenêtre"
+                            >
+                                Qu’est-ce que ProConnect ?
+                            </a>
                         </p>
-                      </div>
-                      """,
-                        unsafe_allow_html=True,
-                    )
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
         if st.session_state.get("login_status") is None:
             login_form()

@@ -11,15 +11,17 @@ from app.sql.session import get_db_session
 
 router = APIRouter()
 
-oauth = OAuth()
-oauth2 = oauth.register(
-    name="proconnect",
-    client_id=settings.oauth2.client_id,
-    client_secret=settings.oauth2.client_secret,
-    access_token_url=settings.oauth2.token_url,
-    authorize_url=settings.oauth2.authorization_url,
-    client_kwargs={"scope": settings.oauth2.scope},
-)
+# TODO : we should not initialize OAuth2 on module import, but rather on application startup
+if settings.oauth2 is not None:
+    oauth = OAuth()
+    oauth2 = oauth.register(
+        name="proconnect",
+        client_id=settings.oauth2.client_id,
+        client_secret=settings.oauth2.client_secret,
+        access_token_url=settings.oauth2.token_url,
+        authorize_url=settings.oauth2.authorization_url,
+        client_kwargs={"scope": settings.oauth2.scope},
+    )
 
 
 @router.get(f"/{ROUTER__OAUTH2}/callback")
