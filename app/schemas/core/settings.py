@@ -267,6 +267,7 @@ class General(ConfigBaseModel):
     # Others
     disabled_routers: List[Literal[*ROUTERS]] = []
     tokenizer: LimitsTokenizer = LimitsTokenizer.TIKTOKEN_O200K_BASE
+    metrics_retention_ms: int = 40_000
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 
