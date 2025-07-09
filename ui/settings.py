@@ -69,7 +69,7 @@ class Playground(ConfigBaseModel):
     menu_items: MenuItems = MenuItems()
     logo: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"
     cache_ttl: int = 1800  # 30 minutes
-    default_model: Optional[str] = None
+    default_model: str = "albert-small"
 
 class Config(ConfigBaseModel):
     auth: Auth
