@@ -22,10 +22,10 @@ docker-compose-quickstart-down:
 docker-compose-albert-api-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
 
-docker-compose-albert-api-down env-services-down:
+docker-compose-albert-api-down docker-compose-services-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(APP_ENV_FILE)
 
-env-services-up:
+docker-compose-services-up:
 	@$(MAKE) --silent docker-compose-albert-api-up services=$(external_services)
 
 env-test-services-up:
