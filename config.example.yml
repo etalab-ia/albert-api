@@ -7,6 +7,7 @@ playground:
   max_api_key_expiration_days: 365
   cache_ttl: 1800
   database_url: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/playground
+  default_model: "albert-small"
 
 auth:
   master_username: master
