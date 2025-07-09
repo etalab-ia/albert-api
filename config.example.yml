@@ -54,30 +54,68 @@ databases:
       pool_pre_ping: True
 
 models:
-  - id: albert-small
+  - id: 'albert-testbed'
     type: text-generation
     routing_strategy: round_robin
-    aliases: ["meta-llama/Llama-3.1-8B-Instruct"]
+    aliases: ['gemma3:1b']
     clients:
-      - model: albert-small
-        type: albert
-        costs:
-          prompt_tokens: 1
-          completion_tokens: 3
-        carbon:
-          total_params: 8
-          active_params: 8
-          model_zone: FRA
-        args:
-          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-          api_key: ${ALBERT_API_KEY}
-          timeout: 120
-      - model: albert-small
-        type: albert
+      - model: 'gemma3:1b'
+        type: vllm
         costs:
           prompt_tokens: 1
           completion_tokens: 3
         args:
-          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-          api_key: ${ALBERT_API_KEY}
+          api_url: http://albert-testbed.etalab.gouv.fr:8000
           timeout: 60
+
+#  - id: albert-large
+#    type: image-text-to-text
+#    owned_by: test
+#    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
+#    clients:
+#      - model: albert-large
+#        type: albert
+#        costs:
+#          prompt_tokens: 1
+#          completion_tokens: 3
+#        carbon:
+#          total_params: 24
+#          active_params: 24
+#          model_zone: FRA
+#        args:
+#          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+#          api_key: ${ALBERT_API_KEY}
+#          timeout: 120
+#
+#  - id: ${EMBEDDINGS_MODEL:-embeddings-small}
+#    type: text-embeddings-inference
+#    aliases: ["BAAI/bge-m3"]
+#    clients:
+#      - model: ${EMBEDDINGS_MODEL:-embeddings-small}
+#        type: albert
+#        args:
+#          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+#          api_key: ${ALBERT_API_KEY}
+#          timeout: 120
+#
+#  - id: audio-large
+#    type: automatic-speech-recognition
+#    aliases: ["openai/whisper-large-v3"]
+#    clients:
+#      - model: audio-large
+#        type: albert
+#        args:
+#          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+#          api_key: ${ALBERT_API_KEY}
+#          timeout: 120
+#
+#  - id: rerank-small
+#    type: text-classification
+#    aliases: ["BAAI/bge-reranker-v2-m3"]
+#    clients:
+#      - model: rerank-small
+#        type: albert
+#        args:
+#          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+#          api_key: ${ALBERT_API_KEY}
+#          timeout: 120
