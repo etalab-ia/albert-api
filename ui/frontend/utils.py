@@ -7,18 +7,18 @@ from streamlit_extras.stylable_container import stylable_container
 from ui.backend.common import get_collections, get_documents, get_limits, get_models, get_roles, get_users
 
 
-def ressources_selector(ressource: Literal["collection", "role", "user", "document"], filter: Any = None, per_page: int = 30):
-    key = f"{ressource}-offset"
+def resources_selector(resource: Literal["collection", "role", "user", "document"], resource_filter: Any = None, per_page: int = 30):
+    key = f"{resource}-offset"
 
-    if ressource == "role":
+    if resource == "role":
         col1, col2 = st.columns(2)
         with col1:
-            order_by = st.selectbox(label="Order by", options=["id", "name", "created_at", "updated_at"], index=0, key=f"order_by-{ressource}")
+            order_by = st.selectbox(label="Order by", options=["id", "name", "created_at", "updated_at"], index=0, key=f"order_by-{resource}")
         with col2:
-            order_direction = st.selectbox(label="Order direction", options=["asc", "desc"], index=0, key=f"order_direction-{ressource}")
+            order_direction = st.selectbox(label="Order direction", options=["asc", "desc"], index=0, key=f"order_direction-{resource}")
 
-        ressources = get_roles(offset=st.session_state.get(key, 0), limit=per_page, order_by=order_by, order_direction=order_direction)
-        new_ressource = {"name": None, "permissions": [], "limits": [], "id": None}
+        resources = get_roles(offset=st.session_state.get(key, 0), limit=per_page, order_by=order_by, order_direction=order_direction)
+        new_resource = {"name": None, "permissions": [], "limits": [], "id": None}
 
         data = pd.DataFrame(
             data=[
@@ -29,7 +29,7 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
                     "Created at": pd.to_datetime(role["created_at"], unit="s"),
                     "Updated at": pd.to_datetime(role["updated_at"], unit="s"),
                 }
-                for role in ressources
+                for role in resources
             ],
         )
         column_config = {
@@ -38,17 +38,17 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
             "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True, width="small"),
             "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", disabled=True, width="small"),
         }
-        new_ressource = {"name": None, "permissions": [], "limits": [], "id": None}
+        new_resource = {"name": None, "permissions": [], "limits": [], "id": None}
 
-    elif ressource == "user":
+    elif resource == "user":
         col1, col2 = st.columns(2)
         with col1:
-            order_by = st.selectbox(label="Order by", options=["id", "name", "created_at", "updated_at"], index=0, key=f"order_by-{ressource}")
+            order_by = st.selectbox(label="Order by", options=["id", "name", "created_at", "updated_at"], index=0, key=f"order_by-{resource}")
         with col2:
-            order_direction = st.selectbox(label="Order direction", options=["asc", "desc"], index=0, key=f"order_direction-{ressource}")
+            order_direction = st.selectbox(label="Order direction", options=["asc", "desc"], index=0, key=f"order_direction-{resource}")
 
-        ressources = get_users(offset=st.session_state.get(key, 0), limit=per_page, role=filter, order_by=order_by, order_direction=order_direction)
-        new_ressource = {"name": None, "access_ui": False, "expires_at": None, "id": None, "role": None}
+        resources = get_users(offset=st.session_state.get(key, 0), limit=per_page, role=resource_filter, order_by=order_by, order_direction=order_direction)
+        new_resource = {"name": None, "access_ui": False, "expires_at": None, "id": None, "role": None}
 
         data = pd.DataFrame(
             data=[
@@ -60,7 +60,7 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
                     "Created at": pd.to_datetime(user["created_at"], unit="s"),
                     "Updated at": pd.to_datetime(user["updated_at"], unit="s"),
                 }
-                for user in ressources
+                for user in resources
             ],
         )
         column_config = {
@@ -71,9 +71,9 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
             "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY", width="small"),
             "Updated at": st.column_config.DatetimeColumn(format="D MMM YYYY", width="small"),
         }
-    elif ressource == "document":
-        ressources = get_documents(offset=st.session_state.get(key, 0), limit=per_page, collection_id=filter)
-        new_ressource = {}
+    elif resource == "document":
+        resources = get_documents(offset=st.session_state.get(key, 0), limit=per_page, collection_id=resource_filter)
+        new_resource = {}
 
         data = pd.DataFrame(
             data=[
@@ -83,7 +83,7 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
                     "Chunks": document["chunks"],
                     "Created at": pd.to_datetime(document["created_at"], unit="s"),
                 }
-                for document in ressources
+                for document in resources
             ]
         )
         column_config = {
@@ -94,8 +94,8 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
         }
 
     else:  # collection
-        ressources = get_collections(offset=st.session_state.get(key, 0), limit=per_page)
-        new_ressource = {"name": None, "description": None, "id": None}
+        resources = get_collections(offset=st.session_state.get(key, 0), limit=per_page)
+        new_resource = {"name": None, "description": None, "id": None}
 
         data = pd.DataFrame(
             data=[
@@ -109,7 +109,7 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
                     "Updated at": pd.to_datetime(collection["updated_at"], unit="s"),
                     "Created at": pd.to_datetime(collection["created_at"], unit="s"),
                 }
-                for collection in ressources
+                for collection in resources
             ],
         )
         column_config = {
@@ -123,26 +123,26 @@ def ressources_selector(ressource: Literal["collection", "role", "user", "docume
             "Created at": st.column_config.DatetimeColumn(format="D MMM YYYY"),
         }
 
-    st.dataframe(data=data, hide_index=True, use_container_width=True, column_config=column_config, height=28 * len(ressources) + 37, row_height=28)
-    pagination(key, data=ressources, per_page=per_page)
+    st.dataframe(data=data, hide_index=True, use_container_width=True, column_config=column_config, height=28 * len(resources) + 37, row_height=28)
+    pagination(key, data=resources, per_page=per_page)
 
-    selected_ressource_name = st.selectbox(
-        label=f"Selected {ressource}",
-        options=[f"{ressource["name"]} ({ressource["id"]})" for ressource in ressources],
-        disabled=st.session_state.get(f"new_{ressource}", False) or st.session_state.get(f"update_{ressource}", False),
+    selected_resource_name = st.selectbox(
+        label=f"Selected {resource}",
+        options=[f"{resource["name"]} ({resource["id"]})" for resource in resources],
+        disabled=st.session_state.get(f"new_{resource}", False) or st.session_state.get(f"update_{resource}", False),
     )
 
     # reset pagination if filter is changed
-    if filter and st.session_state.get(f"filter_{ressource}", None) != filter:
+    if resource_filter and st.session_state.get(f"filter_{resource}", None) != resource_filter:
         st.session_state[key] = 0
-        st.session_state[f"filter_{ressource}"] = filter
+        st.session_state[f"filter_{resource}"] = resource_filter
         st.rerun()
 
-    selected_ressource = [ressource for ressource in ressources if f"{ressource['name']} ({ressource['id']})" == selected_ressource_name][0] if ressources else {}  # fmt: off
-    selected_ressource = new_ressource if st.session_state.get(f"new_{ressource}", False) else selected_ressource
-    st.session_state[f"selected_{ressource}"] = selected_ressource
+    selected_resource = [resource for resource in resources if f"{resource['name']} ({resource['id']})" == selected_resource_name][0] if resources else {}  # fmt: off
+    selected_resource = new_resource if st.session_state.get(f"new_{resource}", False) else selected_resource
+    st.session_state[f"selected_{resource}"] = selected_resource
 
-    return ressources, selected_ressource
+    return resources, selected_resource
 
 
 def pagination(key: str, data: list, per_page: int = 10):
@@ -343,13 +343,13 @@ def input_new_role_limits(selected_role: dict):
         )
         new_role_limits = []
         for model, row in edited_limits.iterrows():
-            for type in row.index:
-                value = None if pd.isna(row[type]) else int(row[type])
-                type = "tpm" if type == "Tokens per minute" else type
-                type = "tpd" if type == "Tokens per day" else type
-                type = "rpm" if type == "Request per minute" else type
-                type = "rpd" if type == "Request per day" else type
-                new_role_limits.append({"model": model, "type": type, "value": value})
+            for rate_type in row.index:
+                value = None if pd.isna(row[rate_type]) else int(row[rate_type])
+                rate_type = "tpm" if rate_type == "Tokens per minute" else rate_type
+                rate_type = "tpd" if rate_type == "Tokens per day" else rate_type
+                rate_type = "rpm" if rate_type == "Request per minute" else rate_type
+                rate_type = "rpd" if rate_type == "Request per day" else rate_type
+                new_role_limits.append({"model": model, "type": rate_type, "value": value})
 
     return new_role_limits
 

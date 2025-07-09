@@ -8,7 +8,7 @@ import re
 import time
 import traceback
 from datetime import datetime
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type, Tuple
 from urllib.parse import urljoin
 
 from coredis import ConnectionPool, Redis
@@ -105,7 +105,7 @@ class BaseModelClient(ABC):
             else:
                 logger.error(f"Creation of redis timeseries {latency_ts_key} failed : {e}", exc_info=True)
 
-    def _get_usage(self, json: dict, data: dict, stream: bool, request_latency: float = 0.0) -> Optional[Usage]:
+    def _get_usage(self, json: dict, data: dict | list[dict], stream: bool, request_latency: float = 0.0) -> Optional[Usage]:
         """
         Get usage data from request and response.
 
@@ -179,7 +179,7 @@ class BaseModelClient(ABC):
 
         return usage
 
-    def _get_additional_data(self, json: dict, data: dict, stream: bool, request_latency: float = 0.0) -> dict:
+    def _get_additional_data(self, json: dict, data: dict | list[dict], stream: bool, request_latency: float = 0.0) -> dict:
         """
         Get additional data from request and response.
         """
@@ -192,7 +192,9 @@ class BaseModelClient(ABC):
 
         return additional_data
 
-    def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+    def _format_request(
+        self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None
+    ) -> Tuple[str, Dict[str, str], Optional[dict], Optional[dict], Optional[dict]]:
         """
         Format a request to a client model. This method can be overridden by a subclass to add additional headers or parameters. This method format the requested endpoint thanks the ENDPOINT_TABLE attribute.
 
@@ -205,6 +207,7 @@ class BaseModelClient(ABC):
             tuple: The formatted request composed of the url, headers, json, files and data.
         """
         # self.endpoint is set by the ModelRouter
+        assert self.endpoint, "Endpoint has not been set; To get this object, you may use a ModelRouter instance"
         url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
         headers = {"Authorization": f"Bearer {self.api_key}"}
         if json and "model" in json:
@@ -216,7 +219,7 @@ class BaseModelClient(ABC):
         self,
         json: dict,
         response: httpx.Response,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
         request_latency: float = 0.0,
     ) -> httpx.Response:
         """
@@ -230,6 +233,9 @@ class BaseModelClient(ABC):
         Returns:
             httpx.Response: The formatted response.
         """
+
+        if additional_data is None:
+            additional_data = {}
 
         content_type = response.headers.get("Content-Type", "")
         if content_type == "application/json":
@@ -326,9 +332,9 @@ class BaseModelClient(ABC):
         self,
         json: dict,
         response: list,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
         request_latency: float = 0.0,
-    ) -> tuple:
+    ) -> tuple | None:
         """
         Format streaming response data for chat completions.
 
@@ -340,6 +346,9 @@ class BaseModelClient(ABC):
         Returns:
             tuple: (data, extra) where data is the processed raw data and extra is the formatted response.
         """
+
+        if additional_data is None:
+            additional_data = {}
 
         content, chunks = None, list()
         for lines in response:
@@ -375,19 +384,21 @@ class BaseModelClient(ABC):
         json: Optional[dict] = None,
         files: Optional[dict] = None,
         data: Optional[dict] = None,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
     ):
         """
         Forward a stream request to a client model and add model name to the response. Optionally, add additional data to the response.
 
         Args:
-            request(Request): The request to forward.
             method(str): The method to use for the request.
             json(Optional[dict]): The JSON body to use for the request.
             files(Optional[dict]): The files to use for the request.
             data(Optional[dict]): The data to use for the request.
             additional_data(Dict[str, Any]): The additional data to add to the response (default: {}).
         """
+
+        if additional_data is None:
+            additional_data = {}
 
         url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
 

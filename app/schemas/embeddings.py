@@ -14,9 +14,9 @@ class EmbeddingsRequest(BaseModel):
     encoding_format: Optional[Literal["float"]] = Field(default="float", description="The format of the output embeddings. Only `float` is supported.")  # fmt: off
 
     @field_validator("input")
-    def validate_input(cls, input):
-        assert input, "input must not be an empty string"
-        return input
+    def validate_input(cls, input_):
+        assert input_, "input must not be an empty string"
+        return input_
 
 
 class Embeddings(CreateEmbeddingResponse):

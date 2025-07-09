@@ -6,7 +6,7 @@ from io import BytesIO
 
 from app.helpers._parsermanager import ParserManager
 from app.clients.parser import BaseParserClient as ParserClient
-from app.schemas.core.documents import FileType
+from app.schemas.core.documents import FileType, ParserParams
 from app.schemas.parse import ParsedDocument, ParsedDocumentOutputFormat
 from app.utils.exceptions import UnsupportedFileTypeException
 
@@ -214,7 +214,7 @@ class TestParserManagerParsePdf:
 
         manager = ParserManager(parser=mock_parser)
 
-        result = await manager._parse_pdf(file=file)
+        result = await manager._parse_pdf(ParserParams(file=file))
 
         assert result == expected_document
         mock_parser.parse.assert_called_once()
@@ -233,7 +233,7 @@ class TestParserManagerParsePdf:
         manager = ParserManager()
 
         with patch("pymupdf.open", return_value=mock_pdf):
-            result = await manager._parse_pdf(file=file)
+            result = await manager._parse_pdf(ParserParams(file=file))
 
             assert isinstance(result, ParsedDocument)
             assert len(result.data) == 1
@@ -250,7 +250,7 @@ class TestParserManagerParsePdf:
 
         with patch("pymupdf.open", side_effect=Exception("Read error")):
             with pytest.raises(HTTPException) as exc_info:
-                await manager._parse_pdf(file=file)
+                await manager._parse_pdf(ParserParams(file=file))
 
             assert exc_info.value.status_code == 500
             assert "Failed to parse pdf file." in str(exc_info.value.detail)
@@ -272,7 +272,7 @@ class TestParserManagerParseHtml:
 
         manager = ParserManager(parser=mock_parser)
 
-        result = await manager._parse_html(file=file)
+        result = await manager._parse_html(ParserParams(file=file))
 
         assert result == expected_document
         mock_parser.parse.assert_called_once()
@@ -287,7 +287,7 @@ class TestParserManagerParseHtml:
         with patch("app.helpers._parsermanager.convert_to_markdown") as mock_convert:
             mock_convert.return_value = "# Title\n\nContent"
 
-            result = await manager._parse_html(file=file, output_format=ParsedDocumentOutputFormat.MARKDOWN)
+            result = await manager._parse_html(ParserParams(file=file, output_format=ParsedDocumentOutputFormat.MARKDOWN))
 
             assert isinstance(result, ParsedDocument)
             assert len(result.data) == 1
@@ -302,7 +302,7 @@ class TestParserManagerParseHtml:
 
         manager = ParserManager()
 
-        result = await manager._parse_html(file=file)
+        result = await manager._parse_html(ParserParams(file=file))
 
         assert isinstance(result, ParsedDocument)
         assert len(result.data) == 1
@@ -317,7 +317,7 @@ class TestParserManagerParseHtml:
 
         with patch.object(manager, "_read_content", side_effect=Exception("Read error")):
             with pytest.raises(HTTPException) as exc_info:
-                await manager._parse_html(file=file)
+                await manager._parse_html(ParserParams(file=file))
 
             assert exc_info.value.status_code == 500
             assert "Failed to parse html file." in str(exc_info.value.detail)
@@ -339,7 +339,7 @@ class TestParserManagerParseMd:
 
         manager = ParserManager(parser=mock_parser)
 
-        result = await manager._parse_md(file=file)
+        result = await manager._parse_md(ParserParams(file=file))
 
         assert result == expected_document
         mock_parser.parse.assert_called_once()
@@ -352,7 +352,7 @@ class TestParserManagerParseMd:
 
         manager = ParserManager()
 
-        result = await manager._parse_md(file=file)
+        result = await manager._parse_md(ParserParams(file=file))
 
         assert isinstance(result, ParsedDocument)
         assert len(result.data) == 1
@@ -368,7 +368,7 @@ class TestParserManagerParseMd:
 
         with patch.object(manager, "_read_content", side_effect=Exception("Read error")):
             with pytest.raises(HTTPException) as exc_info:
-                await manager._parse_md(file=file)
+                await manager._parse_md(ParserParams(file=file))
 
             assert exc_info.value.status_code == 500
             assert "Failed to parse markdown file." in str(exc_info.value.detail)
@@ -390,7 +390,7 @@ class TestParserManagerParseTxt:
 
         manager = ParserManager(parser=mock_parser)
 
-        result = await manager._parse_txt(file=file)
+        result = await manager._parse_txt(ParserParams(file=file))
 
         assert result == expected_document
         mock_parser.parse.assert_called_once()
@@ -403,7 +403,7 @@ class TestParserManagerParseTxt:
 
         manager = ParserManager()
 
-        result = await manager._parse_txt(file=file)
+        result = await manager._parse_txt(ParserParams(file=file))
 
         assert isinstance(result, ParsedDocument)
         assert len(result.data) == 1
@@ -420,7 +420,7 @@ class TestParserManagerParseTxt:
 
         with patch.object(file, "read", side_effect=Exception("Read error")):
             with pytest.raises(HTTPException) as exc_info:
-                await manager._parse_txt(file=file)
+                await manager._parse_txt(ParserParams(file=file))
 
             assert exc_info.value.status_code == 500
             assert "Failed to parse text file." in str(exc_info.value.detail)
@@ -466,7 +466,7 @@ class TestParserManagerEdgeCases:
             mock_pdf.__len__.return_value = 0
             mock_pymupdf.return_value = mock_pdf
 
-            result = await manager._parse_pdf(file=file)
+            result = await manager._parse_pdf(ParserParams(file=file))
 
             assert isinstance(result, ParsedDocument)
             mock_pymupdf.assert_called_once()

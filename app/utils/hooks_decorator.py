@@ -139,7 +139,7 @@ def extract_usage_from_streaming_response(response: StreamingResponse, start_tim
                     try:
                         data = json.loads(line)
                     except json.JSONDecodeError as e:
-                        logger.debug(f"Failed to decode JSON from streaming response ({e}) on the following chunk: {chunk}.")
+                        logger.debug(f"Failed to decode JSON from streaming response ({e}) on the following chunk: {line}.")
                         continue
 
                     # last chunk overrides previous chunks
@@ -264,4 +264,4 @@ async def update_budget(usage: Usage):
 
         except Exception as e:
             logger.exception(f"Failed to update budget for user {user_id}: {e}")
-            return None
+            return
