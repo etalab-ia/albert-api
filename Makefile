@@ -11,12 +11,12 @@ external_services="postgres redis elasticsearch mcp-bridge"
 quickstart_services="api playground postgres redis"
 ci_services="api postgres redis elasticsearch mcp-bridge"
 
-quickstart-up:
+docker-compose-quickstart-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
 	@echo "API URL: http://localhost:8080"
 	@echo "Playground URL: http://localhost:8501"
 
-quickstart-down:
+docker-compose-quickstart-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE)
 
 docker-compose-albert-api-up:
