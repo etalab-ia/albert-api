@@ -11,6 +11,7 @@ from ui.backend.document_parsing import (
     process_large_document
 )
 from ui.frontend.header import header
+from ui.settings import settings
 from ui.variables import MODEL_TYPE_IMAGE_TEXT_TO_TEXT, MODEL_TYPE_LANGUAGE
 
 SEARCH_METHODS = ["multiagent", "hybrid", "semantic", "lexical"]
@@ -106,13 +107,11 @@ with st.sidebar:
     params = {"sampling_params": {}, "rag_params": {}}
 
     st.subheader(body="Chat parameters")
-    if 'albert-small' in models:
-
 
     params["sampling_params"]["model"] = st.selectbox(
         label="Language model",
         options=models,
-        index=models.index("albert-small") if "albert-small" in models else 0
+        index=models.index(f"{settings.playground.default_model}") if f"{settings.playground.default_model}" in models else 0
     )
 
     # Search method moved to RAG parameters section
