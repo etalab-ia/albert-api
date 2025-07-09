@@ -15,6 +15,7 @@ services:
 
   playground:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
+    env_file: "${APP_ENV_FILE:-.env.example}"
     environment:
       - MASTER_KEY=master_key
       - "POSTGRES_HOST=${POSTGRES_HOST:-postgres}"
@@ -31,6 +32,7 @@ services:
   postgres:
     image: postgres:16.5
     restart: always
+    env_file: "${APP_ENV_FILE:-.env.example}"
     user: postgres
     environment:
       - CREATE_DB=api,playground
@@ -52,6 +54,7 @@ services:
   redis:
     image: redis/redis-stack-server:7.2.0-v11
     restart: always
+    env_file: "${APP_ENV_FILE:-.env.example}"
     environment:
       REDIS_ARGS: "--dir /data --requirepass ${REDIS_PASSWORD:-changeme} --user ${REDIS_USER:-username} on >password ~* allcommands --save 60 1 --appendonly yes"
     ports:
@@ -67,6 +70,7 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.2
     restart: always
+    env_file: "${APP_ENV_FILE:-.env.example}"
     ports:
       - "${ELASTICSEARCH_PORT:-9200}:9200"
     environment:
@@ -85,6 +89,7 @@ services:
 
   mcp-bridge:
     image: ghcr.io/etalab-ia/albert-api-mcp-bridge/albert-api-mcp-bridge:latest
+    env_file: "${APP_ENV_FILE:-.env.example}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: always
