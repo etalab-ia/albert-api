@@ -114,6 +114,7 @@ with st.sidebar:
         options=models,
         index=models.index("albert-small") if "albert-small" in models else 0
     )
+
     # Search method moved to RAG parameters section
     params["sampling_params"]["temperature"] = st.slider(label="Temperature", value=0.2, min_value=0.0, max_value=1.0, step=0.1)
 
