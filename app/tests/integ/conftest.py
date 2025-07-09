@@ -145,7 +145,7 @@ def app_with_test_db(async_engine):
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
     async def init_vector_store():
         """Initialize vector store by deleting all collections"""
-        vector_store = VectorStoreClient.import_module(type=settings.databases.vector_store.type)(**settings.databases.vector_store.args)
+        vector_store = VectorStoreClient.import_module(database_type=settings.databases.vector_store.type)(**settings.databases.vector_store.args)
 
         collections = await vector_store.get_collections()
         # Clean the vector store

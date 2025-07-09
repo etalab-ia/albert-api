@@ -1,3 +1,4 @@
+import asyncio
 from abc import ABC
 import ast
 import importlib
@@ -6,13 +7,16 @@ import logging
 import re
 import time
 import traceback
-from typing import Any, Dict, Optional, Type
+from datetime import datetime
+from typing import Any, Dict, Optional, Type, Tuple
 from urllib.parse import urljoin
 
+from coredis import ConnectionPool, Redis
 from fastapi import HTTPException
 import httpx
 
 from app.schemas.core.settings import ModelClientCarbonFootprint, ModelClientType
+from app.schemas.core.metric import Metric
 from app.schemas.models import ModelCosts
 from app.schemas.usage import Detail, Usage
 from app.utils.carbon import get_carbon_footprint
@@ -26,6 +30,7 @@ from app.utils.variables import (
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
+from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +47,7 @@ class BaseModelClient(ABC):
     }
 
     def __init__(
-        self, model: str, costs: ModelCosts, carbon: ModelClientCarbonFootprint, api_url: str, api_key: str, timeout: int, *args, **kwargs
+        self, model: str, costs: ModelCosts, carbon: ModelClientCarbonFootprint, api_url: str, api_key: str, timeout: int, connection_pool: ConnectionPool, *args, **kwargs
     ) -> None:
         self.model = model
         self.costs = costs
@@ -52,22 +57,55 @@ class BaseModelClient(ABC):
         self.timeout = timeout
         self.vector_size = None
         self.max_context_length = None
+        self.connection_pool = connection_pool
 
     @staticmethod
-    def import_module(type: ModelClientType) -> "Type[BaseModelClient]":
+    async def import_module(
+            type: ModelClientType,
+            connection_pool: ConnectionPool,
+            model_name: str,
+            api_url: str,
+    ) -> "Type[BaseModelClient]":
         """
         Static method to import a subclass of BaseModelClient.
 
         Args:
             type(str): The type of model client to import.
+            connection_pool(ConnectionPool): Connection pool to redis database.
+            model_name(str): The name of the model this client gives access to.
+            api_url(str): The uri of the API serving this client's model.
 
         Returns:
             Type[BaseModelClient]: The subclass of BaseModelClient.
         """
+        await BaseModelClient.setup_metrics_storage(connection_pool, model_name, api_url)
+
         module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
         return getattr(module, f"{type.capitalize()}ModelClient")
 
-    def _get_usage(self, json: dict, data: dict, stream: bool, request_latency: float = 0.0) -> Optional[Usage]:
+    @staticmethod
+    async def setup_metrics_storage(connection_pool: ConnectionPool, model: str, api_url: str) -> None:
+        redis_client = Redis(connection_pool=connection_pool)
+        time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{model}:{api_url}"
+        try:
+            await redis_client.timeseries.create(key=time_to_first_token_ts_key, retention=settings.general.metrics_retention_ms)
+        except Exception as e:
+            if str(e) == "TSDB: key already exists":
+                logger.debug(f"Redis timeseries {time_to_first_token_ts_key} already exists.")
+            else:
+                logger.error(f"Creation of redis timeseries {time_to_first_token_ts_key} failed : {e}", exc_info=True)
+                await redis_client.reset()
+
+        latency_ts_key = f"metrics_ts:latency:{model}:{api_url}"
+        try:
+            await redis_client.timeseries.create(key=latency_ts_key, retention=settings.general.metrics_retention_ms)
+        except Exception as e:
+            if str(e) == "TSDB: key already exists":
+                logger.debug(f"Redis timeseries {latency_ts_key} already exists.")
+            else:
+                logger.error(f"Creation of redis timeseries {latency_ts_key} failed : {e}", exc_info=True)
+
+    def _get_usage(self, json: dict, data: dict | list[dict], stream: bool, request_latency: float = 0.0) -> Optional[Usage]:
         """
         Get usage data from request and response.
 
@@ -141,7 +179,7 @@ class BaseModelClient(ABC):
 
         return usage
 
-    def _get_additional_data(self, json: dict, data: dict, stream: bool, request_latency: float = 0.0) -> dict:
+    def _get_additional_data(self, json: dict, data: dict | list[dict], stream: bool, request_latency: float = 0.0) -> dict:
         """
         Get additional data from request and response.
         """
@@ -154,7 +192,9 @@ class BaseModelClient(ABC):
 
         return additional_data
 
-    def _format_request(self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None) -> dict:
+    def _format_request(
+        self, json: Optional[dict] = None, files: Optional[dict] = None, data: Optional[dict] = None
+    ) -> Tuple[str, Dict[str, str], Optional[dict], Optional[dict], Optional[dict]]:
         """
         Format a request to a client model. This method can be overridden by a subclass to add additional headers or parameters. This method format the requested endpoint thanks the ENDPOINT_TABLE attribute.
 
@@ -167,6 +207,7 @@ class BaseModelClient(ABC):
             tuple: The formatted request composed of the url, headers, json, files and data.
         """
         # self.endpoint is set by the ModelRouter
+        assert self.endpoint, "Endpoint has not been set; To get this object, you may use a ModelRouter instance"
         url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
         headers = {"Authorization": f"Bearer {self.api_key}"}
         if json and "model" in json:
@@ -178,7 +219,7 @@ class BaseModelClient(ABC):
         self,
         json: dict,
         response: httpx.Response,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
         request_latency: float = 0.0,
     ) -> httpx.Response:
         """
@@ -193,6 +234,9 @@ class BaseModelClient(ABC):
             httpx.Response: The formatted response.
         """
 
+        if additional_data is None:
+            additional_data = {}
+
         content_type = response.headers.get("Content-Type", "")
         if content_type == "application/json":
             data = response.json()
@@ -201,6 +245,25 @@ class BaseModelClient(ABC):
             response = httpx.Response(status_code=response.status_code, content=dumps(data))
 
         return response
+
+    async def _log_performance_metric(self, metric: Metric) -> None:
+        redis_client = Redis(connection_pool=self.connection_pool)
+        time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{metric.model_name}:{metric.api_url}"
+        try:
+            if metric.time_to_first_token_us is not None:
+                await redis_client.timeseries.add(
+                    key=time_to_first_token_ts_key, value=metric.time_to_first_token_us, timestamp=metric.timestamp
+                )
+        except Exception as e:
+            logger.error(f"Failed to log request metrics in redis ts {time_to_first_token_ts_key}: {e}", exc_info=True)
+            await redis_client.reset()
+
+        latency_ts_key = f"metrics_ts:latency:{metric.model_name}:{metric.api_url}"
+        try:
+            if metric.latency_ms is not None:
+                await redis_client.timeseries.add(key=latency_ts_key, value=metric.latency_ms, timestamp=metric.timestamp)
+        except Exception as e:
+            logger.error(f"Failed to log request metrics in redis ts {latency_ts_key}: {e}", exc_info=True)
 
     async def forward_request(
         self,
@@ -256,6 +319,12 @@ class BaseModelClient(ABC):
         # add additional data to the response
         request_latency = end_time - start_time
         response = self._format_response(json=json, response=response, additional_data=additional_data, request_latency=request_latency)
+        asyncio.create_task(self._log_performance_metric(Metric(
+            timestamp=datetime.now(),
+            model_name=self.model,
+            api_url=self.api_url,
+            latency_ms=int(request_latency * 1_000)
+        )))
 
         return response
 
@@ -263,9 +332,9 @@ class BaseModelClient(ABC):
         self,
         json: dict,
         response: list,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
         request_latency: float = 0.0,
-    ) -> tuple:
+    ) -> tuple | None:
         """
         Format streaming response data for chat completions.
 
@@ -277,6 +346,9 @@ class BaseModelClient(ABC):
         Returns:
             tuple: (data, extra) where data is the processed raw data and extra is the formatted response.
         """
+
+        if additional_data is None:
+            additional_data = {}
 
         content, chunks = None, list()
         for lines in response:
@@ -312,19 +384,21 @@ class BaseModelClient(ABC):
         json: Optional[dict] = None,
         files: Optional[dict] = None,
         data: Optional[dict] = None,
-        additional_data: Dict[str, Any] = {},
+        additional_data: Dict[str, Any] = None,
     ):
         """
         Forward a stream request to a client model and add model name to the response. Optionally, add additional data to the response.
 
         Args:
-            request(Request): The request to forward.
             method(str): The method to use for the request.
             json(Optional[dict]): The JSON body to use for the request.
             files(Optional[dict]): The files to use for the request.
             data(Optional[dict]): The data to use for the request.
             additional_data(Dict[str, Any]): The additional data to add to the response (default: {}).
         """
+
+        if additional_data is None:
+            additional_data = {}
 
         url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
 
@@ -333,6 +407,7 @@ class BaseModelClient(ABC):
                 async with async_client.stream(method=method, url=url, headers=headers, json=json, files=files, data=data) as response:
                     buffer = list()
                     start_time = time.perf_counter()
+                    first_token_time = None
                     async for chunk in response.aiter_raw():
                         # error case
                         if response.status_code // 100 != 2:
@@ -349,6 +424,13 @@ class BaseModelClient(ABC):
                             match = re.search(rb"data: \[DONE\]", chunk)
                             if not match:
                                 buffer.append(chunk)
+                                if first_token_time is None:
+                                    try:
+                                        # The first token comes in the first non-empty chunk of the stream
+                                        if loads((chunk.decode(encoding="utf-8")).removeprefix("data: "))["choices"][0]["delta"]["content"] != "":
+                                            first_token_time = time.perf_counter()
+                                    except Exception as e:
+                                        logger.debug("Chunk data could not be processed to compute time to first token")
 
                                 yield chunk, response.status_code
 
@@ -356,10 +438,19 @@ class BaseModelClient(ABC):
                             else:
                                 last_chunks = chunk[: match.start()]
                                 done_chunk = chunk[match.start() :]
+
+                                # Edge case: the stream consists in just one group of chunks
+                                if first_token_time is None and last_chunks != "" and len(buffer) == 0:
+                                    first_token_time = time.perf_counter()
+
                                 buffer.append(last_chunks)
 
                                 end_time = time.perf_counter()
                                 request_latency = end_time - start_time
+                                if first_token_time is not None:
+                                    request_time_to_first_token = first_token_time - start_time
+                                else:
+                                    logger.warning(f"Time to first token could not be determined for request {request_context.get().id}.")
 
                                 extra_chunk = self._format_stream_response(
                                     json=json,
@@ -367,6 +458,13 @@ class BaseModelClient(ABC):
                                     additional_data=additional_data,
                                     request_latency=request_latency,
                                 )
+                                asyncio.create_task(self._log_performance_metric(Metric(
+                                    timestamp=datetime.now(),
+                                    time_to_first_token_us=int(request_time_to_first_token * 1_000_000) if first_token_time is not None else None,
+                                    latency_ms=int(request_latency * 1_000),
+                                    model_name=self.model,
+                                    api_url=self.api_url,
+                                )))
 
                                 # if error case, yield chunk
                                 if extra_chunk is None:

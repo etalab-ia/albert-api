@@ -119,7 +119,7 @@ class Model(ConfigBaseModel):
 
 class WebSearchClientDuckDuckGoArgs(ConfigBaseModel):
     """
-    All additionnal parameters for the DuckDuckGo API requests can be found here: https://www.searchapi.io/docs/duckduckgo-api
+    All additional parameters for the DuckDuckGo API requests can be found here: https://www.searchapi.io/docs/duckduckgo-api
     """
 
     api_key: Optional[str] = Field(default=None, description="API key to use for the DuckDuckGo API requests.")
@@ -128,7 +128,7 @@ class WebSearchClientDuckDuckGoArgs(ConfigBaseModel):
 
 class WebSearchClientBraveArgs(ConfigBaseModel):
     """
-    All additionnal parameters for the Brave API requests can be found here: https://api-dashboard.search.brave.com/app/documentation/web-search/query
+    All additional parameters for the Brave API requests can be found here: https://api-dashboard.search.brave.com/app/documentation/web-search/query
     """
 
     api_key: str = Field(description="API key to use for the Brave API requests.")
@@ -267,6 +267,7 @@ class General(ConfigBaseModel):
     # Others
     disabled_routers: List[Literal[*ROUTERS]] = []
     tokenizer: LimitsTokenizer = LimitsTokenizer.TIKTOKEN_O200K_BASE
+    metrics_retention_ms: int = 40_000
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 

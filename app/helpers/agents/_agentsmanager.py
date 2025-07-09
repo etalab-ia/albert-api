@@ -5,7 +5,7 @@ import httpx
 
 from app.clients.mcp import SecretShellMCPBridgeClient
 from app.helpers.models import ModelRegistry
-from app.schemas.agents import AgentsTool
+from app.schemas.agents import AgentsTool, AgentsChatCompletionRequest
 from app.utils.exceptions import ToolNotFoundException
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
@@ -17,7 +17,7 @@ class AgentsManager:
         self.model_registry = model_registry
         self.mcp_bridge = mcp_bridge
 
-    async def get_completion(self, body: dict):
+    async def get_completion(self, body: AgentsChatCompletionRequest):
         body = await self.set_tools_for_llm_request(body)
         http_llm_response = None
         number_of_iterations = 0
@@ -45,14 +45,14 @@ class AgentsManager:
         )
         return llm_response_with_new_finish_reason
 
-    async def get_llm_http_response(self, body):
+    async def get_llm_http_response(self, body: AgentsChatCompletionRequest):
         model = self.model_registry(model=body.model)
         client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
         http_llm_response = await client.forward_request(method="POST", json=body.model_dump())
 
         return http_llm_response
 
-    async def set_tools_for_llm_request(self, body: dict) -> dict:
+    async def set_tools_for_llm_request(self, body: AgentsChatCompletionRequest) -> AgentsChatCompletionRequest:
         if hasattr(body, "tools") and body.tools is not None:
             tools = await self.get_tools_from_bridge()
             available_tools = [{"type": "function", "function": {"name": tool.name, "description": tool.description, "parameters": tool.input_schema}} for tool in tools]  # fmt:off

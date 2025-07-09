@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 import traceback
 
-from coredis import ConnectionPool
+from coredis import ConnectionPool, Redis
 from fastapi import FastAPI
 
 from app.clients.mcp import SecretShellMCPBridgeClient
@@ -29,6 +29,12 @@ logger = init_logger(name=__name__)
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
+    # setup redis
+    assert settings.databases.redis is not None, "Redis database connection parameters must be set in configuration."
+    redis = ConnectionPool(**settings.databases.redis.args)
+    redis_test_client = Redis(connection_pool=redis)
+    assert (await redis_test_client.ping()).decode('ascii') == "PONG", "Redis database is not reachable."
+
     # Global context: models
     routers = []
     for model in settings.models:
@@ -36,10 +42,11 @@ async def lifespan(app: FastAPI):
         for client in model.clients:
             try:
                 # model client can be not reatachable to API start up
-                client = ModelClient.import_module(type=client.type)(
+                client = (await ModelClient.import_module(type=client.type, connection_pool=redis, model_name=client.model, api_url=client.args.api_url))(
                     model=client.model,
                     costs=client.costs,
                     carbon=client.carbon,
+                    connection_pool=redis,
                     **client.args.model_dump(),
                 )
                 clients.append(client)
@@ -65,9 +72,7 @@ async def lifespan(app: FastAPI):
     global_context.iam = IdentityAccessManager()
 
     # Global context: limiter
-    redis = ConnectionPool(**settings.databases.redis.args)
     global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
-    assert await global_context.limiter.redis.check(), "Redis database is not reachable."
 
     # Global context: tokenizer
     global_context.tokenizer = UsageTokenizer(tokenizer=settings.general.tokenizer)
@@ -78,8 +83,9 @@ async def lifespan(app: FastAPI):
 
     # Global context: documents
 
-    ## documents dependancy: web search
-    web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
+    ## documents dependency: web search
+    web_search = WebSearchClient.import_module(
+        websearch_type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
     if web_search:
         web_search = WebSearchManager(
             web_search=web_search,
@@ -88,18 +94,24 @@ async def lifespan(app: FastAPI):
             user_agent=settings.web_search.user_agent,
         )
 
-    ## documents dependancy: parser
-    parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
+    ## documents dependency: parser
+    parser = ParserClient.import_module(parser_type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
     parser = ParserManager(parser=parser)
 
-    ## documents dependancy: vector store
-    vector_store = VectorStoreClient.import_module(type=settings.databases.vector_store.type)(**settings.databases.vector_store.args) if settings.databases.vector_store else None  # fmt: off
+    ## documents dependency: vector store
+    vector_store = None
+    if settings.databases.vector_store:
+        vector_store = VectorStoreClient.import_module(
+            database_type=settings.databases.vector_store.type
+        )(
+            **settings.databases.vector_store.args,
+            model=global_context.models(model=settings.databases.vector_store.model)
+        )  # fmt: off
 
     if vector_store:
         assert await vector_store.check(), "Vector store database is not reachable."
-        vector_store.model = global_context.models(model=settings.databases.vector_store.model)
 
-    ## documents dependancy: multi agents
+    ## documents dependency: multi agents
     multi_agents_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
     multi_agents_reranker_model=global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
 

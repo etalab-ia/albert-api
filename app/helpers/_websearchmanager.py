@@ -15,21 +15,21 @@ logger = logging.getLogger(__name__)
 
 
 class WebSearchManager:
-    GET_WEB_QUERY_PROMPT = """Tu es un spécialiste pour transformer des demandes en requête google. Tu sais écrire les meilleurs types de recherches pour arriver aux meilleurs résultats.
+    GET_WEB_QUERY_PROMPT = """Tu es un spécialiste pour transformer des demandes en requête google. Tu sais écrire les meilleurs types de recherche pour arriver aux meilleurs résultats.
 Voici la demande : {prompt}
-Réponds en donnant uniquement une requête google qui permettrait de trouver des informations pour répondre à la question.
+Réponds en donnant uniquement une requête Google qui permettrait de trouver des informations pour répondre à la question.
 
 Exemples :
 - Question: Peut-on avoir des jours de congé pour un mariage ?
   Réponse: jour de congé mariage conditions
 
-- Question: Donnes-moi des informations sur Jules Verne.
+- Question: Donne-moi des informations sur Jules Verne.
   Réponse: Jules Verne
 
 - Question: Comment refaire une pièce d'identité ?
   Réponse: renouvellement pièce identité France
 
-Ne donnes pas d'explication, ne mets pas de guillemets, réponds uniquement avec la requête google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
+Ne donne pas d'explications, ne mets pas de guillemets, réponds uniquement avec la requête Google qui renverra les meilleurs résultats pour la demande. Ne mets pas de mots qui ne servent à rien dans la requête Google.
 """
 
     def __init__(
