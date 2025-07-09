@@ -5,12 +5,15 @@ from elasticsearch import AsyncElasticsearch, helpers
 from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
 
+from app.clients.vector_store._basevectorstoreclient import BaseVectorStoreClient
 
-class ElasticsearchVectorStoreClient(AsyncElasticsearch):
+
+class ElasticsearchVectorStoreClient(BaseVectorStoreClient, AsyncElasticsearch):
     default_method = SearchMethod.HYBRID
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, model=None, **kwargs):
+        BaseVectorStoreClient.__init__(self, *args, model=model, **kwargs)
+        AsyncElasticsearch.__init__(self, *args, **kwargs)
         self.url = kwargs.get("url")
 
     async def check(self) -> bool:
@@ -21,7 +24,7 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
             return False
 
     async def close(self) -> None:
-        await super().transport.close()
+        await super(AsyncElasticsearch, self).transport.close()
 
     async def create_collection(self, collection_id: int, vector_size: int) -> None:
         settings = {
@@ -61,14 +64,14 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
     async def get_chunk_count(self, collection_id: int, document_id: int) -> Optional[int]:
         try:
             body = {"query": {"match": {"metadata.document_id": document_id}}}
-            result = await super().count(index=str(collection_id), body=body)
+            result = await AsyncElasticsearch.count(self, index=str(collection_id), body=body)
             return result["count"]
         except Exception:
             return None
 
     async def delete_document(self, collection_id: int, document_id: int) -> None:
         body = {"query": {"match": {"metadata.document_id": document_id}}}
-        await super().delete_by_query(index=str(collection_id), body=body)
+        await AsyncElasticsearch.delete_by_query(self, index=str(collection_id), body=body)
         await self.indices.refresh(index=str(collection_id))
 
     async def get_chunks(self, collection_id: int, document_id: int, offset: int = 0, limit: int = 10, chunk_id: Optional[int] = None) -> List[Chunk]:
@@ -76,7 +79,7 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
         if chunk_id is not None:
             body["query"]["bool"]["must"].append({"term": {"id": chunk_id}})
 
-        results = await super().search(index=str(collection_id), body=body, from_=offset, size=limit)
+        results = await AsyncElasticsearch.search(self, index=str(collection_id), body=body, from_=offset, size=limit)
 
         chunks = []
         for hit in results["hits"]["hits"]:
@@ -126,7 +129,7 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
         collection_ids = [str(x) for x in collection_ids]
         fuzziness = {"fuzziness": "AUTO"} if len(query_prompt.split()) < 25 else {}
         body = {"query": {"multi_match": {"query": query_prompt, **fuzziness}}, "size": k, "_source": {"excludes": ["embedding"]}}
-        results = await super().search(index=collection_ids, body=body)
+        results = await AsyncElasticsearch.search(self, index=collection_ids, body=body)
         hits = [hit for hit in results["hits"]["hits"] if hit]
         searches = [
             Search(
@@ -145,7 +148,7 @@ class ElasticsearchVectorStoreClient(AsyncElasticsearch):
     async def _semantic_query(self, query_vector: list[float], collection_ids: List[int], k: int, score_threshold: float = 0.0) -> List[Search]:  # fmt: off
         collection_ids = [str(x) for x in collection_ids]
         body = {"knn": {"field": "embedding", "query_vector": query_vector, "k": k, "num_candidates": 200}}
-        results = await super().search(index=collection_ids, body=body)
+        results = await AsyncElasticsearch.search(self, index=collection_ids, body=body)
         hits = [hit for hit in results["hits"]["hits"] if hit]
         searches = [
             Search(

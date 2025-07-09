@@ -7,15 +7,15 @@ from app.schemas.core.settings import WebSearchType
 
 class BaseWebSearchClient(ABC):
     @staticmethod
-    def import_module(type: WebSearchType) -> "Type[BaseWebSearchClient]":
+    def import_module(websearch_type: WebSearchType) -> "Type[BaseWebSearchClient]":
         """
         Import the module for the given web search type.
         """
-        module = importlib.import_module(f"app.clients.web_search._{type.value}websearchclient")
-        return getattr(module, f"{type.capitalize()}WebSearchClient")
+        module = importlib.import_module(f"app.clients.web_search._{websearch_type.value}websearchclient")
+        return getattr(module, f"{websearch_type.capitalize()}WebSearchClient")
 
     @abstractmethod
-    def search(self, query: str, n: int = 3) -> List[str]:
+    async def search(self, query: str, n: int = 3) -> List[str]:
         """
         Get the URLs of the search results for a given query.
 

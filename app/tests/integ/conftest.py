@@ -145,7 +145,7 @@ def app_with_test_db(async_engine):
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
     async def init_vector_store():
         """Initialize vector store by deleting all collections"""
-        vector_store = VectorStoreClient.import_module(type=settings.databases.vector_store.type)(**settings.databases.vector_store.args)
+        vector_store = VectorStoreClient.import_module(database_type=settings.databases.vector_store.type)(**settings.databases.vector_store.args)
 
         collections = await vector_store.get_collections()
         # Clean the vector store
@@ -154,7 +154,20 @@ def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
 
     # Lifespan requests API to get models and initialize the app
     if VCR_ENABLED:
-        with VCR_INSTANCE.use_cassette("lifespan_init.yaml"):
+        # Create a custom VCR instance with new_episodes record mode for lifespan_init
+        cassette_library_dir = Path(__file__).parent / "cassettes"
+        ignore_hosts = ["testserver", os.environ.get("MCP_BRIDGE_HOST"), os.environ.get("QDRANT_HOST"), os.environ.get("ELASTICSEARCH_HOST")]
+
+        lifespan_vcr = vcr.VCR(
+            cassette_library_dir=str(cassette_library_dir),
+            record_mode="new_episodes",  # Use new_episodes for lifespan_init
+            match_on=["method", "scheme", "host", "port", "path", "query"],
+            filter_headers=[("Authorization", "Bearer dummy_token_for_test")],
+            before_record_request=lambda request: None if request.host in ignore_hosts else request,
+            decode_compressed_response=True,
+        )
+
+        with lifespan_vcr.use_cassette("lifespan_init.yaml"):
             with TestClient(app=app_with_test_db) as client:
                 client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
                 asyncio.run(init_vector_store())  # Initialize vector store

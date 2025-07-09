@@ -47,8 +47,8 @@ class AccessController:
     Access controller is used as a dependency of all endpoints.
     """
 
-    def __init__(self, permissions: List[PermissionType] = []):
-        self.permissions = permissions
+    def __init__(self, permissions: List[PermissionType] = None):
+        self.permissions = permissions if permissions is not None else []
 
     async def __call__(
         self,
@@ -132,7 +132,9 @@ class AccessController:
 
         return limits
 
-    async def _check_api_key(self, api_key: HTTPAuthorizationCredentials, session: AsyncSession) -> tuple[User, Role, Dict[str, UserModelLimits]]:
+    async def _check_api_key(
+        self, api_key: HTTPAuthorizationCredentials, session: AsyncSession
+    ) -> tuple[User, Role, Dict[str, UserModelLimits], int | None]:
         if api_key.scheme != "Bearer":
             raise InvalidAuthenticationSchemeException()
 
@@ -141,7 +143,7 @@ class AccessController:
 
         if api_key.credentials == settings.auth.master_key:  # master user can do anything
             models = await global_context.models.get_models()
-            limits = [Limit(model=model, type=type, value=None) for model in models for type in LimitType]
+            limits = [Limit(model=model, type=lim_type, value=None) for model in models for lim_type in LimitType]
             permissions = [permission for permission in PermissionType]
 
             master_role = Role(id=0, name="master", permissions=permissions, limits=limits)
@@ -174,7 +176,7 @@ class AccessController:
 
         model = await global_context.models.get_original_name(model)
 
-        if model not in limits:  # unkown model (404 will be raised by the model client)
+        if model not in limits:  # unknown model (404 will be raised by the model client)
             return
 
         if limits[model].rpm == 0 or limits[model].rpd == 0:
@@ -196,7 +198,7 @@ class AccessController:
 
         model = await global_context.models.get_original_name(model)
 
-        if model not in limits:  # unkown model (404 will be raised by the model client)
+        if model not in limits:  # unknown model (404 will be raised by the model client)
             return
 
         if limits[model].tpm == 0 or limits[model].tpd == 0:

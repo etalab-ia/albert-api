@@ -30,7 +30,7 @@ async def audio_transcriptions(
     response_format: Literal["json", "text"] = AudioTranscriptionResponseFormatForm,
     temperature: float = AudioTranscriptionTemperatureForm,
     timestamp_granularities: List[str] = AudioTranscriptionTimestampGranularitiesForm,
-) -> AudioTranscription:
+) -> JSONResponse | PlainTextResponse:
     """
     Transcribes audio into the input language.
     """

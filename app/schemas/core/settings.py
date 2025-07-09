@@ -119,7 +119,7 @@ class Model(ConfigBaseModel):
 
 class WebSearchClientDuckDuckGoArgs(ConfigBaseModel):
     """
-    All additionnal parameters for the DuckDuckGo API requests can be found here: https://www.searchapi.io/docs/duckduckgo-api
+    All additional parameters for the DuckDuckGo API requests can be found here: https://www.searchapi.io/docs/duckduckgo-api
     """
 
     api_key: Optional[str] = Field(default=None, description="API key to use for the DuckDuckGo API requests.")
@@ -128,7 +128,7 @@ class WebSearchClientDuckDuckGoArgs(ConfigBaseModel):
 
 class WebSearchClientBraveArgs(ConfigBaseModel):
     """
-    All additionnal parameters for the Brave API requests can be found here: https://api-dashboard.search.brave.com/app/documentation/web-search/query
+    All additional parameters for the Brave API requests can be found here: https://api-dashboard.search.brave.com/app/documentation/web-search/query
     """
 
     api_key: str = Field(description="API key to use for the Brave API requests.")
@@ -267,6 +267,7 @@ class General(ConfigBaseModel):
     # Others
     disabled_routers: List[Literal[*ROUTERS]] = []
     tokenizer: LimitsTokenizer = LimitsTokenizer.TIKTOKEN_O200K_BASE
+    metrics_retention_ms: int = 40_000
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 
@@ -343,16 +344,10 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def setup_config(cls, values) -> Any:
         with open(file=values.config_file, mode="r") as file:
-            file_content = file.read()
-            file.close()
+            lines = file.readlines()
 
-        # replace environment variables (pattern: ${VARIABLE_NAME})
-        for match in set(re.findall(pattern=r"\${[A-Z0-9_]*}", string=file_content)):
-            variable = match.replace("${", "").replace("}", "")
-            if os.getenv(variable) is None or os.getenv(variable) == "":
-                logging.warning(f"Environment variable {variable} not found or empty to replace {match}.")
-            file_content = file_content.replace(match, os.getenv(variable, match))
-
+        non_comment_lines = [line for line in lines if not line.lstrip().startswith("#")]
+        file_content = cls.replace_all_variables_in_file("".join(non_comment_lines))
         config = Config(**yaml.safe_load(file_content))
 
         values.general = config.general
@@ -378,3 +373,25 @@ class Settings(BaseSettings):
             assert values.multi_agents_search.model in [model.id for model in values.models if model.type == ModelType.TEXT_GENERATION], f"Multi-agents search model is not defined in models section with type {ModelType.TEXT_GENERATION}."  # fmt: off
 
         return values
+
+    @classmethod
+    def replace_all_variables_in_file(cls, file_content):
+        env_variable_pattern = re.compile(r"\${([A-Z0-9_]+)(:-[^}]*)?}")
+
+        def replace_env_var(match):
+            env_variable_definition = match.group(0)
+            env_variable_name = match.group(1)
+            default_env_variable_value = match.group(2)[2:] if match.group(2) else None
+
+            env_variable_value = os.getenv(env_variable_name)
+
+            if env_variable_value is not None and env_variable_value != "":
+                return env_variable_value
+            elif default_env_variable_value is not None:
+                return default_env_variable_value
+            else:
+                logging.warning(f"Environment variable {env_variable_name} not found or empty to replace {env_variable_definition}.")
+                return env_variable_definition
+
+        file_content = env_variable_pattern.sub(replace_env_var, file_content)
+        return file_content

@@ -13,38 +13,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
   
     - name: Set up Docker Compose
       run: |
-        docker compose --file ./.github/compose.test.yml up --detach
+        make env-ci-up
       env:
         BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
         ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
-    
+
     - name: Wait for API to start
       run: |
         echo $(ls -la)
         for i in {1..30}; do
           curl -s http://localhost:8000/health -H "Authorization: Bearer changeme" > /dev/null && echo "API is ready" && break || echo "Waiting for API..." && sleep 2;
         done
-        echo $(docker logs albert-test-api-1)
-  
+        echo $(docker logs albert-api-ci-api-1)
+
+
     - name: Wait for PostgreSQL
       run: |
         for i in {1..30}; do
-          nc -z localhost 8432 && echo "PostgreSQL is ready" && break || echo "Waiting for PostgreSQL..." && sleep 2;
+          nc -z localhost 5432 && echo "PostgreSQL is ready" && break || echo "Waiting for PostgreSQL..." && sleep 2;
         done
 
     - name: Run tests
       run: |
-        docker exec albert-test-api-1 pytest app/tests --cov=./app --cov-report=xml
+        make test-ci
 
     - name: Create coverage badge
       run: |
         mkdir -p .github/badges
         # Extract coverage percentage from coverage.xml
-        COVERAGE=$(docker exec albert-test-api-1 python -c "import xml.etree.ElementTree as ET; print(ET.parse('app/coverage.xml').getroot().get('line-rate'))")
+        COVERAGE=$(docker exec albert-api-ci-api-1 python -c "import xml.etree.ElementTree as ET; print(ET.parse('app/coverage.xml').getroot().get('line-rate'))")
         COVERAGE_PCT=$(printf "%.2f" $(echo "${COVERAGE} * 100" | bc))
         echo "{\"schemaVersion\":1,\"label\":\"coverage\",\"message\":\"${COVERAGE_PCT}%\",\"color\":\"$(if (( $(echo "${COVERAGE_PCT} >= 80" | bc -l) )); then echo "green"; elif (( $(echo "${COVERAGE_PCT} >= 70" | bc -l) )); then echo "yellow"; else echo "red"; fi)\"}" > .github/badges/coverage.json
 
@@ -57,4 +58,4 @@ jobs:
     - name: Tear down Docker Compose
       if: always()
       run: |
-        docker compose down
+        make env-ci-down
