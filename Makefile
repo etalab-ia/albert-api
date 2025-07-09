@@ -25,7 +25,7 @@ docker-compose-albert-api-up:
 docker-compose-albert-api-down docker-compose-services-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(APP_ENV_FILE)
 
-docker-compose-services-up:
+docker-compose-services-up env-services-up:
 	@$(MAKE) --silent docker-compose-albert-api-up services=$(external_services)
 
 env-test-services-up:
