@@ -26,7 +26,7 @@ services:
     ports:
       - 8501:8501
     volumes:
-      - "./${CONFIGURATION_FILE:-config.example.yml}:/config.yml:ro"
+      - "./${CONFIG_FILE:-config.example.yml}:/config.yml:ro"
 
   postgres:
     image: postgres:16.5
