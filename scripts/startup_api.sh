@@ -8,6 +8,11 @@ TIMEOUT=${TIMEOUT:-30}
 KEEP_ALIVE=${KEEP_ALIVE:-75}
 GRACEFUL_TIMEOUT=${GRACEFUL_TIMEOUT:-75}
 GUNICORN_CMD_ARGS=${GUNICORN_CMD_ARGS:-""} # ex: --log-config app/log.conf
+PYTHON_VENV_PATH=${PYTHON_VENV_PATH:-""}
+
+if [ ! -z "$PYTHON_VENV_PATH" ]; then
+  source "$PYTHON_VENV_PATH/bin/activate"
+fi
 
 # Set default hosts if not already defined
 if [ -z "$POSTGRES_HOST" ]; then
