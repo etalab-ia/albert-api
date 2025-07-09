@@ -6,7 +6,7 @@ services:
     ports:
       - 8080:8000
     volumes:
-      - "./${CONFIGURATION_FILE:-config.example.yml}:/config.yml:ro"
+      - "./${CONFIG_FILE:-config.example.yml}:/config.yml:ro"
     depends_on:
       redis:
         condition: service_healthy
