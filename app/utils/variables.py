@@ -42,6 +42,7 @@ ROUTER__PARSE = "parse"
 ROUTER__RERANK = "rerank"
 ROUTER__SEARCH = "search"
 ROUTER__MULTIAGENTS = "multiagents"
+ROUTER__DEEPSEARCH = "deepsearch"
 
 
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]

@@ -3,7 +3,7 @@ import traceback
 
 from coredis import ConnectionPool
 from fastapi import FastAPI
-
+import os
 from app.clients.mcp import SecretShellMCPBridgeClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.parser import BaseParserClient as ParserClient
@@ -21,9 +21,9 @@ from app.helpers.models.routers import ModelRouter
 from app.utils.context import global_context
 from app.utils.logging import init_logger
 from app.utils.settings import settings
+from app.helpers._deepsearch import DeepSearchAgent
 
 logger = init_logger(name=__name__)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -111,8 +111,46 @@ async def lifespan(app: FastAPI):
         multi_agents_reranker_model=multi_agents_reranker_model,
     )
 
+    deepsearch_agent = None
+    try:
+        # Vérifier si WebSearchManager est disponible et configuré
+        if web_search and global_context.models:
+            # Obtenir le modèle pour DeepSearch
+            deepsearch_model_id = os.getenv('DEEPSEARCH_MODEL_ID')
+            
+            # Utiliser le modèle configuré ou le modèle par défaut de multi_agents
+            if not deepsearch_model_id:
+                if settings.multi_agents_search:
+                    deepsearch_model_id = settings.multi_agents_search.model
+                else:
+                    # Utiliser le premier modèle disponible
+                    deepsearch_model_id = routers[0].id if routers else None
+            
+            if deepsearch_model_id:
+                try:
+                    deepsearch_model = global_context.models(model=deepsearch_model_id)
+                    deepsearch_agent = DeepSearchAgent(
+                        model=deepsearch_model,
+                        web_search_manager=web_search  # Utilise votre WebSearchManager
+                    )
+                    logger.info(f"✅ DeepSearch agent initialized with WebSearchManager and model {deepsearch_model_id}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to initialize DeepSearch with model {deepsearch_model_id}: {e}")
+            else:
+                logger.warning("⚠️ No model available for DeepSearch")
+        else:
+            if not web_search:
+                logger.info("ℹ️ Web search not configured - DeepSearch disabled")
+            if not global_context.models:
+                logger.warning("⚠️ No models available for DeepSearch")
+    except Exception as e:
+        logger.error(f"❌ Error initializing DeepSearch: {e}")
+
+    global_context.deepsearch_agent = deepsearch_agent
+
     yield
 
     # cleanup resources when app shuts down
     if vector_store:
         await vector_store.close()
+

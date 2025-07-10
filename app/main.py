@@ -21,6 +21,7 @@ from app.endpoints import (
     parse,
     rerank,
     search,
+    deepsearch,
 )
 from app.helpers._accesscontroller import AccessController
 from app.schemas.auth import PermissionType
@@ -47,6 +48,7 @@ from app.utils.variables import (
     ROUTER__PARSE,
     ROUTER__RERANK,
     ROUTER__SEARCH,
+    ROUTER__DEEPSEARCH,
 )
 
 logger = logging.getLogger(__name__)
@@ -162,7 +164,11 @@ def create_app(*args, **kwargs) -> FastAPI:
     if ROUTER__FILES not in settings.general.disabled_routers:
         # hooks does not work with files endpoint (request is overwritten by the file upload)
         app.include_router(router=files.router, tags=["Legacy"], prefix="/v1")
-
+        
+    if ROUTER__DEEPSEARCH not in settings.general.disabled_routers:
+        add_hooks(router=deepsearch.router)
+        app.include_router(router=deepsearch.router, tags=[ROUTER__DEEPSEARCH.title()], prefix="/v1")
+        
     return app
 
 
