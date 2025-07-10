@@ -1,6 +1,9 @@
+from http.client import HTTPException
+
 from fastapi import APIRouter, Request, Response
 from starlette.responses import JSONResponse
 
+from app.clients.model import BaseModelClient
 from app.schemas.models_providing import AddModelRequest, DeleteModelRequest, AddAliasesRequest, DeleteAliasesRequest, \
     RoutersResponse, ModelRouterSchema, ModelClientSchema
 
@@ -23,6 +26,34 @@ async def add_model(
     request: Request,
     body: AddModelRequest,
 ) -> Response:
+
+    client_kwargs = body.additional_field if body.additional_field is not None else {}
+
+    redis = global_context.limiter.connection_pool  # not quite clean
+
+    client = (await BaseModelClient.import_module(type=body.api_type, connection_pool=redis, model_name=body.model.name, api_url=body.model.api_url))(
+        model=body.model.name,
+        costs=body.model.costs,
+        carbon=body.model.carbon_footprint,
+        api_url=body.model.api_url,
+        api_key=body.model.api_key,
+        timeout=body.model.timeout,
+        connection_pool=redis,
+        **client_kwargs,
+    )
+
+    try:
+        await global_context.models.add_client(
+            body.router_id,
+            client,
+            model_type=body.model_type,
+            aliases=body.aliases,
+            routing_strategy=body.routing_strategy,
+            owner=body.owner
+        )
+    except AssertionError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
     return Response(status_code=201)
 
 
@@ -68,12 +99,10 @@ async def get_routers(
             continue
 
         client_schemas = []
-        print(clients)
 
         for c in clients[i]:
-            print(c)
             client_schemas.append(ModelClientSchema(
-                model=c.model,
+                name=c.model,
                 api_url=None,
                 timeout=c.timeout,
                 costs=c.costs,

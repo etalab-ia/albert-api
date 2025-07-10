@@ -1,8 +1,8 @@
 from pydantic import Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from app.schemas import BaseModel
-from app.schemas.core.models import RoutingStrategy
+from app.schemas.core.models import RoutingStrategy, ModelClientType
 from app.schemas.core.settings import ModelClientCarbonFootprint
 from app.schemas.models import ModelType, ModelCosts
 
@@ -11,7 +11,7 @@ URL_PATTERN = r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{
 
 
 class ModelClientSchema(BaseModel):
-    model: str = Field(min_length=1, description="Name of the model.")
+    name: str = Field(min_length=1, description="Name of the model.")
     api_url: str | None = Field(pattern=URL_PATTERN, description="URL to the model API.")
     api_key: Optional[str] = Field(default=None, description="Key to access the API.")
     timeout: int = Field(default=10, description="Duration before connection is considered timed out, in seconds")
@@ -21,6 +21,7 @@ class ModelClientSchema(BaseModel):
 
 class AddModelRequest(BaseModel):
     router_id: str = Field(min_length=1, description="ID of the ModelRouter to add the ModelClient to.")
+    api_type: ModelClientType = Field(description="Type of API used.")
     model: ModelClientSchema = Field(description="Model to add.")
 
     # Optional fields
@@ -29,6 +30,7 @@ class AddModelRequest(BaseModel):
     routing_strategy: Optional[RoutingStrategy] = Field(default=RoutingStrategy.ROUND_ROBIN, description="Routing Strategy when creating a new router.")
     owner: Optional[str] = Field(default="Albert API", description="ModelRouter owner when creating a new one.")
 
+    additional_field: Optional[Dict[str, Any]] = Field(default=None, description="Additional or specific data")
 
 class DeleteModelRequest(BaseModel):
     router_id: str = Field(min_length=1, description="ID of the ModelRouter to add the ModelClient to.")

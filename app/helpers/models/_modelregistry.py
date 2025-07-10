@@ -119,7 +119,7 @@ class ModelRegistry:
 
         router = ModelRouter(
             id=router_id,
-            model_type=model_type,
+            type=model_type,
             owned_by=owner,
             aliases=aliases,
             routing_strategy=routing_strategy,
