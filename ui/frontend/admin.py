@@ -12,7 +12,7 @@ from ui.frontend.utils import (
     input_new_user_password,
     input_new_user_role_id,
     input_new_user_budget,
-    ressources_selector,
+    resources_selector,
 )
 from ui.variables import ADMIN_PERMISSIONS
 
@@ -29,7 +29,7 @@ with st.expander(
     and not st.session_state.get("new_user", False)
     and not st.session_state.get("update_user", False),
 ):
-    roles, selected_role = ressources_selector(ressource="role")
+    roles, selected_role = resources_selector(resource="role")
     st.session_state["no_roles"] = True if roles == [] else False
     with stylable_container(key="Header", css_styles="button{float: right;}"):
         if st.button(
@@ -83,7 +83,7 @@ if not roles or st.session_state.get("new_role", False) or st.session_state.get(
 
 st.markdown(body=f"#### Users of the *{"new" if st.session_state.get("new_role", False) else selected_role["name"]}* role")
 with st.expander(label="Users", expanded=not st.session_state.get("new_user", False)):
-    users, selected_user = ressources_selector(ressource="user", filter=selected_role["id"])
+    users, selected_user = resources_selector(resource="user", resource_filter=selected_role["id"])
     st.session_state["no_users_in_selected_role"] = True if users == [] else False
     col1, col2 = st.columns(spec=2)
     with col1:

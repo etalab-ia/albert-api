@@ -31,7 +31,7 @@ class UsageManager:
         return date_from, date_to
 
     @staticmethod
-    def build_base_filter(user_id: str, date_from: int, date_to: int) -> tuple:
+    def build_base_filter(user_id: int, date_from: int, date_to: int) -> tuple:
         """
         Build base filter conditions for usage queries.
 

@@ -3,7 +3,7 @@ from streamlit_extras.stylable_container import stylable_container
 
 from ui.backend.documents import create_collection, delete_collection, delete_document, update_collection, upload_document
 from ui.frontend.header import header
-from ui.frontend.utils import input_new_collection_description, input_new_collection_name, ressources_selector
+from ui.frontend.utils import input_new_collection_description, input_new_collection_name, resources_selector
 
 header()
 if st.session_state["user"].id == 0:
@@ -13,7 +13,7 @@ if st.session_state["user"].id == 0:
 
 # Collections
 with st.expander(label="Collections", expanded=not st.session_state.get("new_collection", False)):
-    collections, selected_collection = ressources_selector(ressource="collection")
+    collections, selected_collection = resources_selector(resource="collection")
     st.session_state["no_collections"] = True if collections == [] else False
     with stylable_container(key="Header", css_styles="button{float: right;}"):
         if st.button(
@@ -66,7 +66,7 @@ if not collections or st.session_state.get("new_collection", False) or st.sessio
 st.markdown(body=f"#### Documents of the *{"new" if st.session_state.get("new_collection", False) else selected_collection["name"]}* collection")
 with st.expander(label="Documents", expanded=not st.session_state.get("new_document", False)):
     with st.spinner(text="Loading documents...", show_time=False):
-        documents, selected_document = ressources_selector(ressource="document", filter=selected_collection["id"], per_page=10)
+        documents, selected_document = resources_selector(resource="document", resource_filter=selected_collection["id"], per_page=10)
     with stylable_container(key="Header", css_styles="button{float: right;}"):
         if st.button(
             label="**:material/delete_forever: Delete**",

@@ -17,8 +17,9 @@ class BraveWebSearchClient(BaseWebSearchClient):
         self.headers = {"Accept": "application/json", "X-Subscription-Token": self.api_key}
         self.additional_params = kwargs
 
-    async def search(self, query: str, k: int) -> List[str]:
+    async def search(self, query: str, k: int = 3) -> List[str]:
         params = {"q": query, "count": k, "country": "fr", "safesearch": "strict"} | self.additional_params
+        results = []
 
         try:
             async with httpx.AsyncClient(timeout=self.DEFAULT_TIMEOUT) as client:
@@ -26,6 +27,5 @@ class BraveWebSearchClient(BaseWebSearchClient):
                 results = response.json().get("web", {}).get("results", [])
         except Exception:
             logger.exception(msg="Brave Search API unreachable.")
-            results = []
 
         return [result["url"].lower() for result in results]
