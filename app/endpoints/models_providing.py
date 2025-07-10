@@ -75,7 +75,11 @@ async def add_alias(
     request: Request,
     body: AddAliasesRequest,
 ) -> Response:
-    return Response(status_code=204)
+    await global_context.models.add_aliases(
+        router_id=body.router_id,
+        aliases=body.aliases,
+    )
+    return Response(status_code=201)
 
 
 @router.delete(path=ENDPOINT__ALIAS_DELETE, status_code=204)
@@ -83,6 +87,10 @@ async def delete_alias(
     request: Request,
     body: DeleteAliasesRequest,
 ) -> Response:
+    await global_context.models.delete_aliases(
+        router_id=body.router_id,
+        aliases=body.aliases,
+    )
     return Response(status_code=204)
 
 

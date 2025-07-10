@@ -153,6 +153,22 @@ class BaseModelRouter(ABC):
             # TODO: remove from DB
             return True
 
+    async def add_alias(self, alias: str):
+        """
+        Thread-safely adds an alias.
+        """
+        async with self._lock:
+            if alias not in self.aliases:  # Silent error?
+                self.aliases.append(alias)
+
+    async def delete_alias(self, alias):
+        """
+        Thread-safely removes an alias.
+        """
+        async with self._lock:
+            if alias in self.aliases:  # Silent error?
+                self.aliases.remove(alias)
+
     async def safe_client_access[R](
             self,
             endpoint: str,

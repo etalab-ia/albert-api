@@ -192,6 +192,43 @@ class ModelRegistry:
                 self.models.remove(router_id)
                 # TODO remove ModelRouter from db.
 
+    async def add_aliases(self, router_id: str, aliases: List[str]):
+        """
+        Adds aliases of a ModelRouter.
+
+        Args:
+            router_id(str): The ID of a ModelRouter. Can also be an alias itself.
+            aliases(List(str)): aliases to add.
+        """
+        # TODO update db?
+        async with self._lock:
+            assert router_id in self.aliases or router_id in self.models, f"ModelRouter \"{router_id}\" does not exist."
+
+            real_id = self.aliases.get(router_id, router_id)
+
+            for al in aliases:
+                if al not in self.aliases:  # Error when alias linked to another ModelRouter?
+                    self.aliases[al] = real_id
+                    await self.__dict__[real_id].add_alias(al)
+
+    async def delete_aliases(self, router_id: str, aliases: List[str]):
+        """
+        Removes aliases of a ModelRouter.
+
+        Args:
+            router_id(str): The ID of a ModelRouter. Can also be an alias itself.
+            aliases(List(str)): aliases to remove.
+        """
+        # TODO update db?
+        async with self._lock:
+            assert router_id in self.aliases or router_id in self.models, f"ModelRouter \"{router_id}\" does not exist."
+
+            real_id = self.aliases.get(router_id, router_id)
+
+            for al in aliases:
+                if al in self.aliases:  # Error when alias linked to another ModelRouter?
+                    del self.aliases[al]
+                    await self.__dict__[real_id].delete_alias(al)
 
     async def get_models(self) -> List[str]:
         """
