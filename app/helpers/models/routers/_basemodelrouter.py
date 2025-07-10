@@ -96,6 +96,7 @@ class BaseModelRouter(ABC):
             prompt_tokens = max(self.costs.prompt_tokens, client.costs.prompt_tokens)
             completion_tokens = max(self.costs.completion_tokens, client.costs.completion_tokens)
             self.costs = ModelCosts(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+            # TODO: add to DB (with lock, in case delete is called right after)
 
     async def delete_client(self, api_url: str) -> bool:
         """
@@ -133,6 +134,7 @@ class BaseModelRouter(ABC):
             self.costs = ModelCosts(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
 
             client.lock.release()
+            # TODO: remove from DB
             return len(self._clients) > 0
 
     async def safe_client_access[R](

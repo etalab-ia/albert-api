@@ -15,10 +15,6 @@ class ModelRegistry:
         self.aliases = dict()
         self._lock = Lock()
 
-        self._provider_models = {
-            # provider[str]: {type[ModelType]: router[ModelRouter]}
-        }
-
         for model in routers:
             if "id" not in model.__dict__:  # no clients available
                 continue
@@ -74,76 +70,133 @@ class ModelRegistry:
 
         return data
 
-    async def add_client(
-            self,
-            provider: str,
-            model_client: BaseModelClient,
-            model_type: ModelType,
-            aliases: List[str] = None
-        ):
+    async def __add_client_to_existing_router(
+        self,
+        router_id: str,
+        model_client: BaseModelClient,
+        **__
+    ):
         """
-        Adds a new client.
+        Adds a new client to an existing ModelRouter. Method is thread-unsafe.
+
+        Args:
+            model_client(ModelClient): The model client itself.
+            router_id(str): The id of the ModelRouter.
+        """
+        assert router_id in self.__dict__, f"No ModelRouter has ID {router_id}."
+
+        await self.__dict__[router_id].add_client(model_client)
+        # TODO: add ModelClient to DB.
+
+
+    async def __add_client_to_new_router(
+        self,
+        router_id: str,
+        model_client: BaseModelClient,
+        model_type: ModelType = None,
+        aliases: List[str] = None,
+        routing_strategy: RoutingStrategy = RoutingStrategy.ROUND_ROBIN,
+        owner: str = "albert-api",
+        **__
+    ):
+        """
+        Adds a new client to a new ModelRouter. Method is thread-unsafe.
 
         Args:
             model_client(ModelClient): The model client itself.
             model_type(ModelType): The type of model.
-            provider(str): Provider API key (used as a unique ID).
-            aliases(List[str]): List of aliases.
+            router_id(str): The id of the ModelRouter.
+            aliases(List[str]): The list of aliases of the ModelRouter.
+            routing_strategy: The routing strategy (ie how a ModelRouter choose a ModelClient).
+            owner: The owner of the ModelRouter.
         """
+
+        assert model_type is not None, "A ModelType needs to be provided"
+        assert router_id not in self.__dict__, "A ModelRouter with id {router_id} already exists"
+
         if aliases is None:
             aliases = []
 
+        router = ModelRouter(
+            id=router_id,
+            model_type=model_type,
+            owned_by=owner,
+            aliases=aliases,
+            routing_strategy=routing_strategy,
+            clients=[model_client],
+        )
+        self.__dict__[router_id] = router
+        self.models.append(router)
+
+        for a in aliases:
+            if a not in self.aliases:
+                self.aliases[a] = router_id
+
+        # TODO: add ModelRouter to db
+        # TODO: add ModelClient to db
+
+    async def add_client(
+        self,
+        router_id: str,
+        model_client: BaseModelClient,
+        model_type: ModelType,
+        **kwargs
+    ):
+        """
+        Adds a new client, and creates a ModelRouter if needed.
+        This method is thread safe.
+
+        Args:
+            model_client(ModelClient): The model client itself.
+            model_type(ModelType): The type of model.
+            router_id(str): Provider API key (used as a unique ID).
+            kwargs: Arguments for ModelRouter creation. Must contain at least a model_type to create a ModelRouter.
+        """
+
         async with self._lock:
-            if not provider in self._provider_models or model_type not in self._provider_models[provider]:
-                router = ModelRouter(
-                    id=f"{provider}-{model_type}",
-                    model_type=model_type,
-                    owned_by=provider,
-                    aliases=aliases,
-                    routing_strategy=RoutingStrategy.ROUND_ROBIN,
-                    clients=[model_client],
+            if router_id in self.__dict__:
+                # ModelRouter exists
+                assert self.__dict__[router_id].type == model_type, "Provided model type differs from existing ModelRouter's"
+
+                await self.__add_client_to_new_router(
+                    router_id, model_client, model_type, **kwargs
                 )
-                self.__dict__[router.id] = router
-                self.models.append(router.id)
-
-                self._provider_models[provider] = dict(self._provider_models.get(provider, {}), **{model_type: router})
             else:
-                await self._provider_models[provider][model_type].add_client(model_client)
+                await self.__add_client_to_new_router(
+                    router_id, model_client, model_type, **kwargs
+                )
 
-            # The caller may want to add aliases to an existing model
-            for alias in aliases:
-                self.aliases[alias] = router.id
-
-    async def remove_client(self, provider: str, api_url: str, model_type: ModelType):
+    async def delete_client(self, router_id: str, api_url: str, model_type: ModelType):
         """
         Removes a client.
 
         Args:
+            router_id(str): id of the ModelRouter instance, where lies the ModelClient.
             api_url(str): The model API URL.
             model_type(ModelType): The model kind. With the API, uniquely identify the model entry.
-            provider(str): Provider API key (used as a unique ID).
         """
         async with self._lock:
-            type_routers: dict | None = self._provider_models.get(provider, None)
-            if type_routers is None:  # Provider didn't provide anything
-                return
 
-            router: BaseModelRouter | None = type_routers.get(model_type, None)
-            if router is None:  # Provider didn't provide such ModelType
-                return
+            assert router_id in self.__dict__, f"No ModelRouter has ID {router_id}"
 
-            # ModelClient is removed within instance lock because to prevent
-            # any other threads to access self._models before we completely removed
+            router = self.__dict__[router_id]
+
+            # ModelClient is removed within instance lock to prevent
+            # any other threads to access self.__dict__ or self.models before we completely removed
             # the client.
             still_has_clients = await router.delete_client(api_url)
 
+            # TODO ModelClient remove from db.
+
             if not still_has_clients:
-                aliases = [al for al, model_id in self.aliases.items() if model_id == router.id]
+                # ModelRouter with no clients left gets wipe out.
+                aliases = [al for al, model_id in self.aliases.items() if model_id == router_id]
                 for a in aliases:
                     del self.aliases[a]
 
-                del self.__dict__[router.id]
+                del self.__dict__[router_id]
                 self.models.remove(router)
+                # TODO remove ModelRouter from db.
 
 
     async def get_models(self) -> List[ModelRouter]:
