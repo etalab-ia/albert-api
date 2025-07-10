@@ -133,6 +133,15 @@ class BaseModelRouter(ABC):
             await client.lock.acquire()
             self._clients.remove(client)
 
+            if len(self._clients) == 0:
+                # No more clients, the ModelRouter is about to get deleted.
+                # There is no need to try to "update" it further.
+                # NB: there is no chance that another ModelClient gets added right after,
+                # as ModelRegistry's requires its lock for the whole removing process.
+                # If needed, "this" router will be recreated.
+                client.lock.release()  # Who knows
+                return False
+
             self.max_context_length = min(max_context_lengths) if max_context_lengths else None
             self._cycle = cycle(self._clients)
 
@@ -142,7 +151,7 @@ class BaseModelRouter(ABC):
 
             client.lock.release()
             # TODO: remove from DB
-            return len(self._clients) > 0
+            return True
 
     async def safe_client_access[R](
             self,

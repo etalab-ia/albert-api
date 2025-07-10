@@ -189,7 +189,7 @@ class ModelRegistry:
                     del self.aliases[a]
 
                 del self.__dict__[router_id]
-                self.models.remove(router)
+                self.models.remove(router_id)
                 # TODO remove ModelRouter from db.
 
 
@@ -205,4 +205,4 @@ class ModelRegistry:
         Returns existing ModelRouter instances.
         """
         async with self._lock:
-            return [m for m in self.__dict__.values() if isinstance(m, ModelRouter)]
+            return [m for m in self.__dict__.values() if isinstance(m, ModelRouter)]  # TODO refactor
