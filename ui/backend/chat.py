@@ -5,7 +5,6 @@ import streamlit as st
 
 from ui.settings import settings
 
-
 def generate_stream(messages: List[dict], params: dict, rag: bool, rerank: bool) -> Tuple[str, List[str], List[Dict[str, Any]]]:
     """
     Génère un stream de réponse avec les sources et les détails des chunks utilisés.
@@ -19,6 +18,11 @@ def generate_stream(messages: List[dict], params: dict, rag: bool, rerank: bool)
     sources = []
     rag_chunks = []  # Nouveau : stockage des chunks détaillés
     
+    # NOUVEAU: Gestion DeepSearch
+    if rag and params["rag_params"]["method"] == "deepsearch":
+        return generate_deepsearch_stream(messages, params)
+    
+    # Code RAG existant inchangé
     if rag:
         prompt = messages[-1]["content"]
         # Use "rag_params" instead of "rag"
@@ -90,6 +94,73 @@ Les documents sont :
     return stream, sources, rag_chunks
 
 
+def generate_deepsearch_stream(messages: List[dict], params: dict) -> Tuple[str, List[str], List[Dict[str, Any]]]:
+    """
+    Génère une réponse DeepSearch avec recherche web approfondie.
+    
+    Returns:
+        Tuple contenant:
+        - La réponse complète (string directe pour DeepSearch)
+        - La liste des sources (URLs)
+        - Une liste vide (pas de chunks pour DeepSearch)
+    """
+    prompt = messages[-1]["content"]
+    
+    # Appel à l'endpoint DeepSearch
+    data = {
+        "prompt": prompt,
+        "k": params["rag_params"].get("k", 5),
+        "iteration_limit": params["rag_params"].get("iteration_limit", 2),
+        "num_queries": params["rag_params"].get("num_queries", 2),
+        "lang": params["rag_params"].get("lang", "fr")
+    }
+    
+    response = requests.post(
+        url=f"{settings.playground.api_url}/v1/deepsearch", 
+        json=data, 
+        headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"}
+    )
+    
+    if response.status_code != 200:
+        error_detail = response.json().get("detail", "Erreur DeepSearch")
+        raise Exception(f"DeepSearch failed: {error_detail}")
+    
+    result = response.json()
+    
+    # Extraire les données
+    deepsearch_response = result["response"]
+    sources = result["sources"]
+    metadata = result["metadata"]
+    
+    # Stocker les métadonnées dans la session pour affichage
+    if "deepsearch_metadata" not in st.session_state:
+        st.session_state["deepsearch_metadata"] = []
+    st.session_state["deepsearch_metadata"].append(metadata)
+    
+    # Pas de chunks pour DeepSearch (recherche web directe)
+    rag_chunks = []
+    
+    # Retourner directement la réponse (pas de stream pour DeepSearch)
+    return deepsearch_response, sources, rag_chunks
+
+
+def check_deepsearch_status() -> dict:
+    """
+    Vérifie si DeepSearch est disponible.
+    """
+    try:
+        response = requests.get(
+            url=f"{settings.playground.api_url}/v1/deepsearch/status",
+            headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"}
+        )
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"available": False, "message": f"Status check failed: {response.status_code}"}
+    except Exception as e:
+        return {"available": False, "message": f"Error: {str(e)}"}
+
+
 def format_chunk_for_display(chunk: Dict[str, Any], index: int) -> str:
     """
     Formate un chunk pour l'affichage dans l'interface.
@@ -128,4 +199,21 @@ def get_chunk_full_content(chunk: Dict[str, Any]) -> str:
 ```
 {chunk['content']}
 ```
+"""
+
+
+def format_deepsearch_metadata(metadata: Dict[str, Any]) -> str:
+    """
+    Formate les métadonnées DeepSearch pour l'affichage.
+    """
+    return f"""
+### 🔍 Métadonnées DeepSearch
+
+- **Temps d'exécution :** {metadata['elapsed_time']:.1f}s
+- **Itérations :** {metadata['iterations']}
+- **Requêtes générées :** {metadata['total_queries']}
+- **Sources trouvées :** {metadata['sources_found']}
+- **Tokens utilisés :** {metadata['total_input_tokens'] + metadata['total_output_tokens']:,}
+  - Entrée : {metadata['total_input_tokens']:,}
+  - Sortie : {metadata['total_output_tokens']:,}
 """
