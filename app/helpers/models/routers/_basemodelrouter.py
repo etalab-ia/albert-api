@@ -49,7 +49,7 @@ class BaseModelRouter(ABC):
         self.max_context_length = max_context_length
         self.costs = costs
 
-        self._vector_size = vector_sizes[0]
+        self.vector_size = vector_sizes[0]
         self.routing_strategy = routing_strategy
         self._cycle = cycle(clients)
         self._clients = clients
@@ -90,7 +90,7 @@ class BaseModelRouter(ABC):
 
             # consistency checks
 
-            if client.vector_size != self._vector_size:
+            if client.vector_size != self.vector_size:
                 raise ValueError("All embeddings models in the same model group must have the same vector size.")
 
             if client.max_context_length is not None:

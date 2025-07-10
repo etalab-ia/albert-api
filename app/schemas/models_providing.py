@@ -6,15 +6,13 @@ from app.schemas.core.models import RoutingStrategy
 from app.schemas.core.settings import ModelClientCarbonFootprint
 from app.schemas.models import ModelType, ModelCosts
 
-from app.schemas.models import Model as ModelSchema
-
 
 URL_PATTERN = r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 
 
 class ModelClientSchema(BaseModel):
     model: str = Field(min_length=1, description="Name of the model.")
-    api_url: str = Field(pattern=URL_PATTERN, description="URL to the model API.")
+    api_url: str | None = Field(pattern=URL_PATTERN, description="URL to the model API.")
     api_key: Optional[str] = Field(default=None, description="Key to access the API.")
     timeout: int = Field(default=10, description="Duration before connection is considered timed out, in seconds")
     costs: ModelCosts = Field(description="Model costs.")
@@ -29,7 +27,7 @@ class AddModelRequest(BaseModel):
     model_type: Optional[ModelType] = Field(default=None, description="Model type. Required when creating a new ModelRouter.")
     aliases: Optional[List[str]] = Field(default=[], description="Aliases, to add for existing router, to set for new instance.")
     routing_strategy: Optional[RoutingStrategy] = Field(default=RoutingStrategy.ROUND_ROBIN, description="Routing Strategy when creating a new router.")
-    owner: Optional[str] = Field(default="albert-api", description="ModelRouter owner when creating a new one.")
+    owner: Optional[str] = Field(default="Albert API", description="ModelRouter owner when creating a new one.")
 
 
 class DeleteModelRequest(BaseModel):
@@ -53,7 +51,10 @@ class ModelRouterSchema(BaseModel):
     owned_by: str = Field(description="Name of ModelRouter's owner")
     aliases: List[str] = Field(description="List of id's aliases.")
     routing_strategy: RoutingStrategy = Field(description="Describes how the model router chooses between its ModelClients")
-    clients: List[ModelSchema] = Field(description="Router's ModelClients.")
+    vector_size: int | None = Field(description="Size of vectors stored.")
+    max_context_length: int = Field(description="Greatest amount of token a context can have.")
+    created: int = Field("Time when the Router was created (Unix time).")
+    clients: List[ModelClientSchema] = Field(description="Router's ModelClients.")
 
 
 class RoutersResponse(BaseModel):

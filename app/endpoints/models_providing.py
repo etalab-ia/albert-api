@@ -2,8 +2,7 @@ from fastapi import APIRouter, Request, Response
 from starlette.responses import JSONResponse
 
 from app.schemas.models_providing import AddModelRequest, DeleteModelRequest, AddAliasesRequest, DeleteAliasesRequest, \
-    RoutersResponse, ModelRouterSchema
-
+    RoutersResponse, ModelRouterSchema, ModelClientSchema
 
 from app.utils.variables import (
     ENDPOINT__MODEL_ADD,
@@ -58,16 +57,28 @@ async def get_routers(
     # We get client & router "quickly" (before processing data) to avoid
     # weird data and inconsistency due to concurrence.
     routers = await global_context.models.get_router_instances()
-    print(routers)
-    client_schemas = [await global_context.models.list(r.id) for r in routers]
+    clients = [await r.get_clients() for r in routers]
 
     router_schemas = []
 
     for i, r in enumerate(routers):
 
-        if len(client_schemas[i]) == 0:
+        if len(clients[i]) == 0:
             # No clients, ModelRouter is about to get deleted
             continue
+
+        client_schemas = []
+        print(clients)
+
+        for c in clients[i]:
+            print(c)
+            client_schemas.append(ModelClientSchema(
+                model=c.model,
+                api_url=None,
+                timeout=c.timeout,
+                costs=c.costs,
+                carbon_footprint=c.carbon
+            ))
 
         router_schemas.append(ModelRouterSchema(
             id=r.id,
@@ -75,7 +86,10 @@ async def get_routers(
             owned_by=r.owned_by,
             aliases=r.aliases,
             routing_strategy=r.routing_strategy,
-            clients=client_schemas[i]
+            vector_size=r.vector_size,
+            max_context_length=r.max_context_length,
+            created=r.created,
+            clients=client_schemas
         ))
 
     return JSONResponse(content=RoutersResponse(routers=router_schemas).model_dump(), status_code=200)

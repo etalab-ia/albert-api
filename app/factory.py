@@ -171,8 +171,8 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         app.include_router(router=usage.router, tags=[ROUTER__USAGE.title()], prefix="/v1")
 
     if ROUTER__MODEL_PROVIDING not in settings.general.disabled_routers:
-        add_hooks(router=models_providings.router)
-        app.include_router(router=models_providings.router, tags=[ROUTER__MODEL_PROVIDING.title()], prefix="/v1")
+        add_hooks(router=models_providing.router)
+        app.include_router(router=models_providing.router, tags=[ROUTER__MODEL_PROVIDING.title()], prefix="/v1")
 
     if ROUTER__USERS not in settings.general.disabled_routers:
         add_hooks(router=users.router)

@@ -91,7 +91,7 @@ class DocumentManager:
         collection_id = result.scalar_one()
         await session.commit()
 
-        await self.vector_store.create_collection(collection_id=collection_id, vector_size=self.vector_store.model._vector_size)
+        await self.vector_store.create_collection(collection_id=collection_id, vector_size=self.vector_store.model.vector_size)
 
         return collection_id
 
