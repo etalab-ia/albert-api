@@ -6,7 +6,7 @@ from app.schemas.core.models import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.exceptions import ModelNotFoundException
 
-from app.helpers.models.routers import ModelRouter, BaseModelRouter
+from app.helpers.models.routers import ModelRouter
 
 
 class ModelRegistry:
@@ -139,7 +139,6 @@ class ModelRegistry:
         self,
         router_id: str,
         model_client: BaseModelClient,
-        model_type: ModelType,
         **kwargs
     ):
         """
@@ -148,35 +147,30 @@ class ModelRegistry:
 
         Args:
             model_client(ModelClient): The model client itself.
-            model_type(ModelType): The type of model.
-            router_id(str): Provider API key (used as a unique ID).
-            kwargs: Arguments for ModelRouter creation. Must contain at least a model_type to create a ModelRouter.
+            router_id(str): ID of the targeted ModelRouter.
+            kwargs: Additional arguments, mainly for ModelRouter creation.
+                Must contain at least a model_type to create a ModelRouter.
         """
 
         async with self._lock:
-            if router_id in self.__dict__:
-                # ModelRouter exists
-                assert self.__dict__[router_id].type == model_type, "Provided model type differs from existing ModelRouter's"
-
-                await self.__add_client_to_new_router(
-                    router_id, model_client, model_type, **kwargs
+            if router_id in self.__dict__: # ModelRouter exists
+                await self.__add_client_to_existing_router(
+                    router_id, model_client, **kwargs
                 )
             else:
                 await self.__add_client_to_new_router(
-                    router_id, model_client, model_type, **kwargs
+                    router_id, model_client, **kwargs
                 )
 
-    async def delete_client(self, router_id: str, api_url: str, model_type: ModelType):
+    async def delete_client(self, router_id: str, api_url: str):
         """
         Removes a client.
 
         Args:
             router_id(str): id of the ModelRouter instance, where lies the ModelClient.
             api_url(str): The model API URL.
-            model_type(ModelType): The model kind. With the API, uniquely identify the model entry.
         """
         async with self._lock:
-
             assert router_id in self.__dict__, f"No ModelRouter has ID {router_id}"
 
             router = self.__dict__[router_id]
