@@ -50,7 +50,7 @@ class BaseModelRouter(ABC):
         self.costs = costs
 
         self._vector_size = vector_sizes[0]
-        self._routing_strategy = routing_strategy
+        self.routing_strategy = routing_strategy
         self._cycle = cycle(clients)
         self._clients = clients
 
@@ -69,6 +69,13 @@ class BaseModelRouter(ABC):
             BaseModelClient: The available client
         """
         pass
+
+    async def get_clients(self):
+        """
+        Return the current list of ModelClient thread-safely.
+        """
+        async with self._lock:
+            return self._clients
 
     async def add_client(self, client: ModelClient):
         """

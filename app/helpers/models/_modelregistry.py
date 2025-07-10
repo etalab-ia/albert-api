@@ -193,9 +193,16 @@ class ModelRegistry:
                 # TODO remove ModelRouter from db.
 
 
-    async def get_models(self) -> List[ModelRouter]:
+    async def get_models(self) -> List[str]:
         """
-        Get all ModelRouter.
+        Get all ModelRouter IDs.
         """
         async with self._lock:
             return self.models
+
+    async def get_router_instances(self) -> List[ModelRouter]:
+        """
+        Returns existing ModelRouter instances.
+        """
+        async with self._lock:
+            return [m for m in self.__dict__.values() if isinstance(m, ModelRouter)]
