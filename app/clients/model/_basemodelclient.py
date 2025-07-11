@@ -3,6 +3,7 @@ import ast
 import asyncio
 from datetime import datetime
 import importlib
+from asyncio import Lock
 from json import JSONDecodeError, dumps, loads
 import logging
 import re
@@ -75,6 +76,8 @@ class BaseModelClient(ABC):
         self.metrics_retention_ms = metrics_retention_ms
 
         self.headers = {"Authorization": f"Bearer {self.key}"} if self.key else {}
+        self.endpoint = None
+        self.lock = Lock()  # Used by ModelRouter to determine whether the Client is in use
 
     @staticmethod
     def import_module(type: ModelProviderType) -> "Type[BaseModelClient]":
