@@ -3,7 +3,7 @@ import requests
 import traceback
 import streamlit as st
 
-from ui.settings import settings
+from ui.configuration import configuration
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def get_chunks(document_id: str) -> list:
     response = requests.get(
-        f"{settings.playground.api_url}/v1/chunks/{document_id}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+        f"{configuration.playground.api_url}/v1/chunks/{document_id}", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
     )
     assert response.status_code == 200, f"{response.status_code} - {response.json()}"
     chunks = response.json()["data"]
@@ -21,7 +21,7 @@ def get_chunks(document_id: str) -> list:
 
 
 def generate_toc(chunks: list, model: str):
-    client = OpenAI(base_url=settings.playground.api_url + "/v1", api_key=st.session_state["user"].api_key)
+    client = OpenAI(base_url=configuration.playground.api_url + "/v1", api_key=st.session_state["user"].api_key)
     text = "\n".join([chunk["content"] for chunk in chunks])
 
     system_prompt = """Tu es un agent de l'administration française qui fait des synthèses de textes. Tu sais en particulier faire des plans de synthèses. Tu parles en français. Tu ne réponds que des chapitres."""
@@ -61,7 +61,7 @@ Réponds uniquement avec le plan, pas de commentaires et en français.
 
 
 def generate_summary(toc: str, chunks: list, model: str):
-    client = OpenAI(base_url=settings.playground.api_url + "/v1", api_key=st.session_state["user"].api_key)
+    client = OpenAI(base_url=configuration.playground.api_url + "/v1", api_key=st.session_state["user"].api_key)
 
     system_prompt = """Tu es un agent de l'administration française qui fait des synthèses de textes. Tu sais en particulier faire des plans de synthèses. Tu parles en français. Tu ne réponds que des chapitres."""
     sumarize_prompt = """Génère un résumé du texte suivant :
@@ -118,7 +118,7 @@ Instructions :
 
 
 def summary_with_feedback(feedback: str, summary: str, model: str):
-    client = OpenAI(base_url=settings.playground.api_url + "/v1", api_key=st.session_state["user"].api_key)
+    client = OpenAI(base_url=configuration.playground.api_url + "/v1", api_key=st.session_state["user"].api_key)
 
     system_prompt = """Tu es un agent de l'administration française qui fait des synthèses de textes. Tu sais en particulier faire des plans de synthèses. Tu parles en français. Tu ne réponds que des chapitres."""
 

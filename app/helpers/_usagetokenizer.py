@@ -4,7 +4,7 @@ from typing import List, Union
 import tiktoken
 from app.schemas.chat import ChatCompletionChunk, ChatCompletion
 
-from app.schemas.core.settings import LimitsTokenizer
+from app.schemas.core.configuration import Tokenizer
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS, ENDPOINT__EMBEDDINGS, ENDPOINT__OCR, ENDPOINT__RERANK, ENDPOINT__SEARCH
 
 logger = logging.getLogger(__name__)
@@ -19,18 +19,18 @@ class UsageTokenizer:
         ENDPOINT__SEARCH: False,
     }
 
-    def __init__(self, tokenizer: LimitsTokenizer):
-        if tokenizer == LimitsTokenizer.TIKTOKEN_O200K_BASE:
+    def __init__(self, tokenizer: Tokenizer):
+        if tokenizer == Tokenizer.TIKTOKEN_O200K_BASE:
             self.tokenizer = tiktoken.get_encoding("o200k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_BASE:
+        elif tokenizer == Tokenizer.TIKTOKEN_P50K_BASE:
             self.tokenizer = tiktoken.get_encoding("p50k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_R50K_BASE:
+        elif tokenizer == Tokenizer.TIKTOKEN_R50K_BASE:
             self.tokenizer = tiktoken.get_encoding("r50k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_P50K_EDIT:
+        elif tokenizer == Tokenizer.TIKTOKEN_P50K_EDIT:
             self.tokenizer = tiktoken.get_encoding("p50k_edit")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_CL100K_BASE:
+        elif tokenizer == Tokenizer.TIKTOKEN_CL100K_BASE:
             self.tokenizer = tiktoken.get_encoding("cl100k_base")
-        elif tokenizer == LimitsTokenizer.TIKTOKEN_GPT2:
+        elif tokenizer == Tokenizer.TIKTOKEN_GPT2:
             self.tokenizer = tiktoken.get_encoding("gpt2")
 
     def get_prompt_tokens(self, endpoint: str, body: dict) -> int:

@@ -19,7 +19,6 @@ from app.utils.exceptions import (
     InvalidAuthenticationSchemeException,
     RateLimitExceeded,
 )
-from app.utils.settings import settings
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -109,7 +108,7 @@ class AccessController:
 
     def __get_user_limits(self, role: Role) -> Dict[str, UserModelLimits]:
         limits = {}
-        for model in global_context.models.models:
+        for model in global_context.model_registry.models:
             limits[model] = UserModelLimits()
             for limit in role.limits:
                 if limit.model == model and limit.type == LimitType.TPM:
@@ -140,8 +139,8 @@ class AccessController:
         if not api_key.credentials:
             raise InvalidAPIKeyException()
 
-        if api_key.credentials == settings.auth.master_key:  # master user can do anything
-            limits = [Limit(model=model, type=lim_type, value=None) for model in global_context.models.models for lim_type in LimitType]
+        if api_key.credentials == global_context.identity_access_manager.master_key:  # master user can do anything
+            limits = [Limit(model=model, type=type, value=None) for model in global_context.model_registry.models for type in LimitType]
             permissions = [permission for permission in PermissionType]
 
             master_role = Role(id=0, name="master", permissions=permissions, limits=limits)
@@ -150,14 +149,14 @@ class AccessController:
 
             return master_user, master_role, master_limits, None
 
-        user_id, token_id = await global_context.iam.check_token(session=session, token=api_key.credentials)
+        user_id, token_id = await global_context.identity_access_manager.check_token(session=session, token=api_key.credentials)
         if not user_id:
             raise InvalidAPIKeyException()
 
-        users = await global_context.iam.get_users(session=session, user_id=user_id)
+        users = await global_context.identity_access_manager.get_users(session=session, user_id=user_id)
         user = users[0]
 
-        roles = await global_context.iam.get_roles(session=session, role_id=user.role)
+        roles = await global_context.identity_access_manager.get_roles(session=session, role_id=user.role)
         role = roles[0]
 
         limits = self.__get_user_limits(role=role)
@@ -172,7 +171,7 @@ class AccessController:
         if not model:
             return
 
-        model = global_context.models.aliases.get(model, model)
+        model = global_context.model_registry.aliases.get(model, model)
 
         if model not in limits:  # unknown model (404 will be raised by the model client)
             return
@@ -194,7 +193,7 @@ class AccessController:
         if not model or not prompt_tokens:
             return
 
-        model = global_context.models.aliases.get(model, model)
+        model = global_context.model_registry.aliases.get(model, model)
 
         if model not in limits:  # unknown model (404 will be raised by the model client)
             return
@@ -218,13 +217,13 @@ class AccessController:
         if not model:
             return
 
-        model = global_context.models.aliases.get(model, model)
+        model = global_context.model_registry.aliases.get(model, model)
 
-        if model not in global_context.models.models:
+        if model not in global_context.model_registry.models:
             return
 
-        model = global_context.models(model=model)
-        if model.costs.prompt_tokens == 0 and model.costs.completion_tokens == 0:  # free model
+        model = global_context.model_registry(model=model)
+        if model.cost_prompt_tokens == 0 and model.cost_completion_tokens == 0:  # free model
             return
 
         if user.budget == 0:
@@ -243,7 +242,7 @@ class AccessController:
         await self._check_request_limits(request=request, user=user, limits=limits, model=body.get("model"))
 
         if body.get("search", False):  # count the search request as one request to the search model (embeddings)
-            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
+            await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.document_manager.vector_store_model.name)
             if body.get("search_args", {}).get("web_search", False):
                 await self._check_request_limits(request=request, user=user, limits=limits, model="web-search")
 
@@ -275,9 +274,9 @@ class AccessController:
         await self._check_budget(user=user, model=body.get("model"))
 
     async def _check_files_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
-        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.document_manager.vector_store_model.name)
 
-        await self._check_budget(user=user, model=global_context.documents.vector_store.model.id)
+        await self._check_budget(user=user, model=global_context.document_manager.vector_store_model.name)
 
     async def _check_ocr_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         form = await request.form()
@@ -304,7 +303,7 @@ class AccessController:
         body = await self._safely_parse_body(request)
 
         # count the search request as one request to the search model (embeddings)
-        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.documents.vector_store.model.id)
+        await self._check_request_limits(request=request, user=user, limits=limits, model=global_context.document_manager.vector_store_model.name)
 
         if body.get("web_search", False):
             await self._check_request_limits(request=request, user=user, limits=limits, model="web-search")
@@ -315,10 +314,10 @@ class AccessController:
             user=user,
             limits=limits,
             prompt_tokens=prompt_tokens,
-            model=global_context.documents.vector_store.model.id,
+            model=global_context.document_manager.vector_store_model.name,
         )
 
-        await self._check_budget(user=user, model=global_context.documents.vector_store.model.id)
+        await self._check_budget(user=user, model=global_context.document_manager.vector_store_model.name)
 
     async def _check_tokens_post(self, user: User, role: Role, limits: Dict[str, UserModelLimits], request: Request) -> None:
         body = await self._safely_parse_body(request)

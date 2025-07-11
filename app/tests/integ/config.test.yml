@@ -1,0 +1,163 @@
+# ----------------------------------- models ------------------------------------
+models:
+  - name: albert-large
+    type: image-text-to-text
+    owned_by: test
+    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
+    providers:
+      - type: albert
+        key: ${ALBERT_API_KEY}
+        timeout: 120
+        model_name: albert-large
+        model_cost_prompt_tokens: 1
+        model_cost_completion_tokens: 3
+        model_carbon_footprint_total_params: 24
+        model_carbon_footprint_active_params: 24
+        model_carbon_footprint_zone: FRA
+  
+  - name: albert-small
+    type: text-generation
+    routing_strategy: round_robin
+    aliases: ["meta-llama/Llama-3.1-8B-Instruct"]
+    providers:
+      - type: albert
+        key: ${ALBERT_API_KEY}
+        timeout: 120
+        model_name: albert-small
+        model_cost_prompt_tokens: 1
+        model_cost_completion_tokens: 3
+        model_carbon_footprint_total_params: 8
+        model_carbon_footprint_active_params: 8
+        model_carbon_footprint_zone: FRA
+      - type: albert
+        key: ${ALBERT_API_KEY}
+        timeout: 80
+        model_name: albert-small
+        model_cost_prompt_tokens: 1
+        model_cost_completion_tokens: 3
+        model_carbon_footprint_total_params: 8
+        model_carbon_footprint_active_params: 8
+        model_carbon_footprint_zone: FRA
+
+  - name: embeddings-small
+    type: text-embeddings-inference
+    aliases: ["BAAI/bge-m3"]
+    providers:
+      - type: albert
+        key: ${ALBERT_API_KEY}
+        timeout: 120
+        model_name: embeddings-small
+        model_cost_prompt_tokens: 1
+        model_cost_completion_tokens: 3
+        model_carbon_footprint_total_params: 8
+        model_carbon_footprint_active_params: 8
+        model_carbon_footprint_zone: FRA
+
+  - name: audio-large
+    type: automatic-speech-recognition
+    aliases: ["openai/whisper-large-v3"]
+    providers:
+      - type: albert
+        key: ${ALBERT_API_KEY}
+        timeout: 120
+        model_name: audio-large
+        model_cost_prompt_tokens: 1
+        model_cost_completion_tokens: 3
+        model_carbon_footprint_total_params: 8
+        model_carbon_footprint_active_params: 8
+        model_carbon_footprint_zone: FRA
+
+  - name: rerank-small
+    type: text-classification
+    aliases: ["BAAI/bge-reranker-v2-m3"]
+    providers:
+      - type: albert
+        key: ${ALBERT_API_KEY}
+        timeout: 120
+        model_name: rerank-small
+        model_cost_prompt_tokens: 1
+        model_cost_completion_tokens: 3
+        model_carbon_footprint_total_params: 8
+        model_carbon_footprint_active_params: 8
+        model_carbon_footprint_zone: FRA
+
+# -------------------------------- dependencies ---------------------------------
+dependencies:
+  postgres:
+    url: postgresql+asyncpg://postgres@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/api
+    echo: False
+    pool_size: 10
+    max_overflow: 5
+    pool_pre_ping: True
+    pool_recycle: 3600 
+    pool_reset_on_return: commit
+    connect_args:
+      server_settings:
+        statement_timeout: "120s"
+      command_timeout: 60
+
+  redis:
+    host: ${REDIS_HOST:-redis}
+    port: ${REDIS_PORT:-6379}
+
+  elasticsearch:
+    hosts: http://${ELASTICSEARCH_HOST:-elasticsearch}:${ELASTICSEARCH_PORT:-9200}
+    basic_auth:
+      - "elastic"
+
+  secretiveshell:
+    url: http://${SECRETIVESHELL_HOST:-secretiveshell}:${SECRETIVESHELL_PORT:-8000}
+
+  albert:
+    headers:
+      Authorization: "Bearer ${ALBERT_API_KEY}"
+
+  brave:
+    headers:
+      Accept: application/json
+      X-Subscription-Token: ${BRAVE_API_KEY}
+    country: "fr"
+    safesearch: "strict"
+
+# ---------------------------------- settings -----------------------------------
+settings:
+  usage_tokenizer: tiktoken_gpt2
+  log_level: DEBUG
+  auth_max_token_expiration_days: 365
+  monitoring_sentry_enabled: False
+  monitoring_postgres_enabled: True
+  monitoring_prometheus_enabled: True
+  vector_store_model: embeddings-small
+  search_web_query_model: albert-small
+  search_web_limited_domains:
+      - service-public.fr
+      - gouv.fr
+      - caf.fr
+      - info-retraite.fr
+      - ameli.fr
+      - elysee.fr
+      - wikipedia.org
+      - autoritedelaconcurrence.fr
+      - assemblee-nationale.fr
+      - elysee.fr
+      - conseil-etat.fr
+      - departements.fr
+      - courdecassation.fr
+      - lcp.fr
+      - senat.fr
+      - gouvernement.fr
+      - vie-publique.fr
+      - elections-legislatives.fr
+      - ccomptes.fr
+      - conseil-constitutionnel.fr
+      - ladocumentationfrancaise.fr
+      - franceinfo.fr
+      - lefigaro.fr
+      - ouest-france.fr
+      - lemonde.fr
+      - leparisien.fr
+      - refugies.info
+      - stackoverflow.com
+  search_web_user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+  search_multi_agents_synthesis_model: albert-large
+  search_multi_agents_reranker_model: albert-small

@@ -1,192 +1,39 @@
 <div id="toc">
   <ul align="center" style="list-style: none">
-    <summary><h1>🚀 Albert API</h1></summary>
 
-*French version below*
+# Albert API
 
-**Enterprise-ready Generative AI API Gateway | Open Source | Sovereign Infrastructure**
-
-**Developed by the French Government 🇫🇷**
-
+[![Version](https://img.shields.io/github/v/release/etalab-ia/albert-api?color=orange&label=version)](https://github.com/etalab-ia/albert-api/releases) 
 [![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/albert-api/refs/heads/main/.github/badges/coverage.json)](https://github.com/etalab-ia/albert-api)
+[![License](https://img.shields.io/github/license/etalab-ia/albert-api?color=red&label=license)](https://github.com/etalab-ia/albert-api/blob/main/LICENSE)
+[![French version](https://img.shields.io/badge/🇫🇷-French%20version-blue)](./docs/README_fr.md)
 
-[**Documentation**](https://albert.api.etalab.gouv.fr/documentation) | [**Playground**](https://albert.api.etalab.gouv.fr/playground) | [**API Status**](https://albert.api.etalab.gouv.fr/status) | [**Swagger**](https://albert.api.etalab.gouv.fr/swagger)
+### *✨ Serve all your self-hosted models in one place and manage your users ✨*
+
+[**API Reference**](https://albert.api.etalab.gouv.fr/documentation) | [**Swagger**](https://albert.api.etalab.gouv.fr/swagger)
 
   </ul>
 </div>
 
-
-## 🚀 Quickstart
-
-### Run Albert-API with basic functionalities (docker)
-Albert-API is configured by default to launch via Docker the API, the playground and a PostgreSQL database, and to connect to a small model made available for free. Simply run:
-```bash
-make docker-compose-quickstart-up
-```
-
-To stop the services, run
-```bash
-make docker-compose-quickstart-down
-```
-
-### Configure Albert-API
-Albert-API supports OpenAI and Albert-API models. To configure them, run:
-```bash
-cp config.example.yml config.yml
-```
-
-And modify the `models` section in the `config.yml` file:
-
-```yaml
-models:
-  - id: albert-large
-    type: text-generation
-    owned_by: test
-    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
-    clients:
-      - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
-        type: albert
-        args:
-          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-          api_key: ${ALBERT_API_KEY}
-          timeout: 120
-  - id: my-language-model
-    type: text-generation
-    clients:
-      - model: gpt-3.5-turbo
-        type: openai
-        params:
-          total: 70
-          active: 70
-          zone: WOR
-        args:
-          api_url: https://api.openai.com
-          api_key: ${OPENAI_API_KEY}
-          timeout: 60
-```
-The API keys can be defined directement in the `config.yml` file or in a `.env` file
-
-```bash
-cp .env.test.example .env.test
-
-echo 'ALBERT_API_KEY=my_albert_api_key' >> .env.test
-echo 'OPENAI_API_KEY=my_openai_api_key' >> .env.test
-```
-
-Finally, run the application:
-```bash
-make docker-compose-albert-api-up
-```
-
-To stop the application, run:
-```bash
-make docker-compose-albert-api-down
-```
-
-
-## Running locally
-
-### Prerequisites
-- Python 3.8+
-- Docker and Docker Compose
-
-### Installation
-
-#### 1. Installing dependencies
-
-```bash
-make install
-```
-
-#### 2. Configuration
-
-Albert-API supports OpenAI and Albert-API models, defined in the `config.yml` file :
-```bash
-cp config.example.yml config.yml
-```
-
-And modify the `models` section in the `config.yml` file:
-
-```yaml
-models:
-  - id: albert-large
-    type: text-generation
-    owned_by: test
-    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
-    clients:
-      - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
-        type: albert
-        args:
-          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
-          api_key: ${ALBERT_API_KEY}
-          timeout: 120
-  - id: my-language-model
-    type: text-generation
-    clients:
-      - model: gpt-3.5-turbo
-        type: openai
-        params:
-          total: 70
-          active: 70
-          zone: WOR
-        args:
-          api_url: https://api.openai.com
-          api_key: ${OPENAI_API_KEY}
-          timeout: 60
-```
-The API keys can be defined directement in the `config.yml` file or in a `.env` file
-
-```bash
-cp .env.test.example .env.test
-
-echo 'ALBERT_API_KEY=my_albert_api_key' >> .env.test
-echo 'OPENAI_API_KEY=my_openai_api_key' >> .env.test
-```
-
-### Running
-
-#### Option 1: Full launch with Docker
-
-```bash
-# Start all services (API, playground and external services)
-make docker-compose-albert-api-up
-# Stop all services
-make docker-compose-albert-api-down
-```
-
-#### Option 2: Local development
-
-```bash
-# 1. Start only external services (Redis, Qdrant, PostgreSQL, MCP Bridge)
-make docker-compose-services-up
-
-# 2. Launch the API (in one terminal)
-make run-api
-
-# 3. Launch the user interface (in another terminal)
-make run-ui
-```
-
-## 📫 API Gateway
-
 ## 🔥 Why Albert API?
 
-Albert API is an **enterprise-ready open-source gateway** for deploying **generative AI models** on your infrastructure:
-
+- 🌐 **OpenAI standards**: based on OpenAI API conventions. Easy to use with OpenAI SDKs, LangChain, LlamaIndex, etc.
 * 🚦 **Robust API Gateway:** Load balancing, authentication, and seamless integration with OpenAI, vLLM, HuggingFace TEI.
-* 📚 **Advanced Features:** Built-in Retrieval-Augmented Generation (RAG), OCR, audio transcription, and more.
-* 🌐 **Open Standards:** Compatible with OpenAI APIs, LangChain, and LlamaIndex.
-* 🛠️ **Deployment Flexibility:** Host generative AI securely on your own infrastructure, ensuring full data sovereignty.
+- 📖 **Open Source**: developed by the French Government, fully open-source forever.
+- ⚙️ **Production-ready**: ready to serve your models in production.
+* 📚 **Full stack genAI API:** Built-in Retrieval-Augmented Generation (RAG), OCR, audio transcription, and more.
+- ✍️ **High code standards**
 
 ## 🎯 Key Features
 
-### API Gateway
+### API Gateway: supported providers
 
-* **Unified Access:** Single API gateway for multiple generative AI model backends:
-
-  * **OpenAI** (Language, Embeddings, Reranking, Transcription)
-  * **vLLM** (Language)
-  * **HuggingFace TEI** (Embeddings, Reranking)
+| Provider | Supported endpoints |
+| -------- | ------------------- |
+| Albert   | Language, Embeddings, Reranking, Transcription |
+| OpenAI   | Language, Embeddings, Reranking, Transcription |
+| vLLM     | Language |
+| HuggingFace TEI | Embeddings, Reranking |
 
 ### Advanced AI Capabilities
 
@@ -198,20 +45,14 @@ Albert API is an **enterprise-ready open-source gateway** for deploying **genera
 
 | Feature              | Albert API ✅ | LiteLLM   | OpenRouter | OpenAI API |
 | -------------------- | ------------ | --------- | ---------- | ---------- |
-| Fully Open Source    | ✔️           | Partially | ❌          | ❌          |
-| Data Sovereignty     | ✔️           | ✔️        | ❌          | ❌          |
-| Multiple AI Backends | ✔️           | ✔️        | ✔️         | ❌          |
-| Built-in RAG         | ✔️           | ❌         | ❌          | ❌          |
-| Built-in OCR         | ✔️           | ❌         | ❌          | ❌          |
-| Audio Transcription  | ✔️           | ❌         | ❌          | ✔️         |
-| Flexible Deployment  | ✔️           | ✔️        | ❌          | ❌          |
-| OpenAI Compatibility | ✔️           | ✔️        | ✔️         | ✔️         |
-
-## 🚀 Quickstart
-
-Deploy Albert API quickly on your own infrastructure:
-
-* [Deployment Guide](./docs/deployment.md)
+| Fully Open Source    | ✔️ | ❌ | ❌ | ❌ |
+| Data Sovereignty     | ✔️ | ✔️ | ❌ | ❌ |
+| Multiple AI Backends | ✔️ | ✔️ | ✔️ | ❌ |
+| Built-in RAG         | ✔️ | ❌ | ❌ | ❌ |
+| Built-in OCR         | ✔️ | ❌ | ❌ | ❌ |
+| Audio Transcription  | ✔️ | ❌ | ❌ | ❌ |
+| Flexible Deployment  | ✔️ | ✔️ | ❌ | ❌ |
+| OpenAI Compatibility | ✔️ | ✔️ | ✔️ | ❌ |
 
 ## 📘 Tutorials & Guides
 
@@ -224,26 +65,59 @@ Explore practical use cases:
 * [**Audio Transcriptions**](https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/audio_transcriptions.ipynb)
 * [**PDF OCR**](https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/pdf_ocr.ipynb)
 
+## 🚀 Quickstart
+
+Deploy Albert API quickly with Docker connected to own free model and start using it:
+
+```bash
+make quickstart
+```
+Test the API:
+
+```bash 
+curl -X POST "http://localhost:8000/v1/chat/completions" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer changeme" \
+-d '{"model": "albert-testbed", "messages": [{"role": "user", "content": "Hello, how are you?"}]}'
+```
+The default master API key is `changeme`.
+
+### Create a first user
+
+```bash
+python scripts/create_first_user.py
+```
+
+### Configure your models and add features
+
+With configuration file, you can connect to your own models and add addtionnal services to Albert API. Start by creating a configuration file:
+
+```bash
+cp config.example.yml config.yml && export CONFIG_FILE=config.yml
+```
+
+Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.
+
+Then, add additional services to Albert API in regard of your configuration file with the following command:
+
+```bash
+make add service=<service_name>
+
+# example:
+make add service=elasticsearch
+```
+
 ## 🤝 Contribute
 
-Albert API thrives on open-source contributions. Join our community!
+This project exists thanks to all the people who contribute. Albert API thrives on open-source contributions. Join our community!
 
 * [Contribution Guide](./CONTRIBUTING.md)
 
----
+## Sponsors
 
-# 🇫🇷 Albert API (version française)
-
-**API open source pour modèles d'IA générative | Infrastructure souveraine**
-
-Albert API, porté par l'[OPI de la DINUM](https://www.numerique.gouv.fr/dinum/), est le service d'IA générative de référence de l'État français, homologué pour des traitements sécurisés. Il propose une solution prête pour la production destinée à l’hébergement souverain et performant d’IA génératives avancées sur votre infrastructure.
-
-## Points forts
-
-* 🔐 Sécurité et souveraineté des données
-* 🧩 API unique compatible OpenAI, vLLM et HuggingFace
-* 🔎 Recherche avancée par RAG et vector stores
-
-Consultez la [documentation](https://albert.api.etalab.gouv.fr/documentation) ou déployez rapidement votre instance via le [guide de déploiement](./docs/deployment.md).
-
-[Contribuez au projet !](./CONTRIBUTING.md)
+<div id="toc">
+  <ul align="center" style="list-style: none">
+<a href="https://www.numerique.gouv.fr/numerique-etat/dinum/" ><img src="./docs/assets/dinum_logo.png" alt="DINUM logo" width="300" style="margin-right: 40px"></a>
+<a href="https://www.centralesupelec.fr"><img src="./docs/assets/centralsupelec_logo.png" alt="CentraleSupélec logo" width="200" style="margin-right: 40px"></a>
+  </ul>
+</div>

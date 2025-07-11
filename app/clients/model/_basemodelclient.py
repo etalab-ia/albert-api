@@ -1,23 +1,22 @@
-import asyncio
 from abc import ABC
 import ast
+import asyncio
+from datetime import datetime
 import importlib
 from json import JSONDecodeError, dumps, loads
 import logging
 import re
 import time
 import traceback
-from datetime import datetime
-from typing import Any, Dict, Optional, Type, Tuple
+from typing import Any, Dict, Optional, Tuple, Type
 from urllib.parse import urljoin
 
 from coredis import ConnectionPool, Redis
 from fastapi import HTTPException
 import httpx
 
-from app.schemas.core.settings import ModelClientCarbonFootprint, ModelClientType
+from app.schemas.core.configuration import ModelProviderType
 from app.schemas.core.metric import Metric
-from app.schemas.models import ModelCosts
 from app.schemas.usage import Detail, Usage
 from app.utils.carbon import get_carbon_footprint
 from app.utils.context import generate_request_id, global_context, request_context
@@ -30,7 +29,6 @@ from app.utils.variables import (
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
-from app.utils.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -47,58 +45,67 @@ class BaseModelClient(ABC):
     }
 
     def __init__(
-        self, model: str, costs: ModelCosts, carbon: ModelClientCarbonFootprint, api_url: str, api_key: str, timeout: int, connection_pool: ConnectionPool, *args, **kwargs
+        self,
+        url: str,
+        key: str,
+        timeout: int,
+        model_name: str,
+        model_carbon_footprint_zone: str,
+        model_carbon_footprint_total_params: int,
+        model_carbon_footprint_active_params: int,
+        model_cost_prompt_tokens: float,
+        model_cost_completion_tokens: float,
+        redis: ConnectionPool,
+        metrics_retention_ms: int,
+        *args,
+        **kwargs,
     ) -> None:
-        self.model = model
-        self.costs = costs
-        self.carbon = carbon
-        self.api_url = api_url
-        self.api_key = api_key
+        self.name = model_name
+        self.cost_prompt_tokens = model_cost_prompt_tokens
+        self.cost_completion_tokens = model_cost_completion_tokens
+        self.carbon_footprint_zone = model_carbon_footprint_zone
+        self.carbon_footprint_total_params = model_carbon_footprint_total_params
+        self.carbon_footprint_active_params = model_carbon_footprint_active_params
+        self.url = url
+        self.key = key
         self.timeout = timeout
         self.vector_size = None
         self.max_context_length = None
-        self.connection_pool = connection_pool
+        self.redis = Redis(redis=redis)
+        self.metrics_retention_ms = metrics_retention_ms
+
+        self.headers = {"Authorization": f"Bearer {self.key}"} if self.key else {}
 
     @staticmethod
-    async def import_module(
-            type: ModelClientType,
-            connection_pool: ConnectionPool,
-            model_name: str,
-            api_url: str,
-    ) -> "Type[BaseModelClient]":
+    def import_module(type: ModelProviderType) -> "Type[BaseModelClient]":
         """
         Static method to import a subclass of BaseModelClient.
 
         Args:
             type(str): The type of model client to import.
-            connection_pool(ConnectionPool): Connection pool to redis database.
-            model_name(str): The name of the model this client gives access to.
-            api_url(str): The uri of the API serving this client's model.
 
         Returns:
             Type[BaseModelClient]: The subclass of BaseModelClient.
         """
-        await BaseModelClient.setup_metrics_storage(connection_pool, model_name, api_url)
 
         module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
+
         return getattr(module, f"{type.capitalize()}ModelClient")
 
-    @staticmethod
-    async def setup_metrics_storage(connection_pool: ConnectionPool, model: str, api_url: str) -> None:
-        redis_client = Redis(connection_pool=connection_pool)
-        time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{model}:{api_url}"
+    async def setup_metrics_storage(self) -> None:
+        time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{self.name}:{self.url}"
         try:
-            await redis_client.timeseries.create(key=time_to_first_token_ts_key, retention=settings.general.metrics_retention_ms)
+            await self.redis.timeseries.create(key=time_to_first_token_ts_key, retention=self.metrics_retention_ms)
         except Exception as e:
             if str(e) == "TSDB: key already exists":
                 logger.debug(f"Redis timeseries {time_to_first_token_ts_key} already exists.")
             else:
                 logger.error(f"Creation of redis timeseries {time_to_first_token_ts_key} failed : {e}", exc_info=True)
-                await redis_client.reset()
+                await self.redis.reset()
 
-        latency_ts_key = f"metrics_ts:latency:{model}:{api_url}"
+        latency_ts_key = f"metrics_ts:latency:{self.name}:{self.url}"
         try:
-            await redis_client.timeseries.create(key=latency_ts_key, retention=settings.general.metrics_retention_ms)
+            await self.redis.timeseries.create(key=latency_ts_key, retention=self.metrics_retention_ms)
         except Exception as e:
             if str(e) == "TSDB: key already exists":
                 logger.debug(f"Redis timeseries {latency_ts_key} already exists.")
@@ -126,7 +133,7 @@ class BaseModelClient(ABC):
 
                 # compute usage for the current (add a detail object)
                 detail_id = data[0].get("id", generate_request_id()) if stream else data.get("id", generate_request_id())
-                detail = Detail(id=detail_id, model=self.model, usage=Usage())
+                detail = Detail(id=detail_id, model=self.name, usage=Usage())
                 detail.usage.prompt_tokens = global_context.tokenizer.get_prompt_tokens(endpoint=self.endpoint, body=json)
 
                 if global_context.tokenizer.USAGE_COMPLETION_ENDPOINTS[self.endpoint]:
@@ -139,13 +146,13 @@ class BaseModelClient(ABC):
                 # @TODO: don't compute carbon if model type is not text-generation or image-text-to-text
                 detail.usage.total_tokens = detail.usage.prompt_tokens + detail.usage.completion_tokens
                 detail.usage.carbon = get_carbon_footprint(
-                    active_params=self.carbon.active_params,
-                    total_params=self.carbon.total_params,
-                    model_zone=self.carbon.model_zone,
+                    active_params=self.carbon_footprint_active_params,
+                    total_params=self.carbon_footprint_total_params,
+                    model_zone=self.carbon_footprint_zone,
                     token_count=detail.usage.total_tokens,
                     request_latency=request_latency,
                 )
-                detail.usage.cost = round(detail.usage.prompt_tokens / 1000000 * self.costs.prompt_tokens + detail.usage.completion_tokens / 1000000 * self.costs.completion_tokens, ndigits=6)  # fmt: off
+                detail.usage.cost = round(detail.usage.prompt_tokens / 1000000 * self.cost_prompt_tokens + detail.usage.completion_tokens / 1000000 * self.cost_completion_tokens, ndigits=6)  # fmt: off
                 usage.details.append(detail)
 
                 # add token usage to the total usage
@@ -185,7 +192,7 @@ class BaseModelClient(ABC):
         """
         usage = self._get_usage(json=json, data=data, stream=stream, request_latency=request_latency)
         request_id = usage.details[-1].id if usage and usage.details else generate_request_id()
-        additional_data = {"model": self.model, "id": request_id}
+        additional_data = {"model": self.name, "id": request_id}
 
         if usage:
             additional_data["usage"] = usage.model_dump()
@@ -208,12 +215,11 @@ class BaseModelClient(ABC):
         """
         # self.endpoint is set by the ModelRouter
         assert self.endpoint, "Endpoint has not been set; To get this object, you may use a ModelRouter instance"
-        url = urljoin(base=self.api_url, url=self.ENDPOINT_TABLE[self.endpoint])
-        headers = {"Authorization": f"Bearer {self.api_key}"}
+        url = urljoin(base=self.url, url=self.ENDPOINT_TABLE[self.endpoint])
         if json and "model" in json:
-            json["model"] = self.model
+            json["model"] = self.name
 
-        return url, headers, json, files, data
+        return url, json, files, data
 
     def _format_response(
         self,
@@ -247,21 +253,18 @@ class BaseModelClient(ABC):
         return response
 
     async def _log_performance_metric(self, metric: Metric) -> None:
-        redis_client = Redis(connection_pool=self.connection_pool)
-        time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{metric.model_name}:{metric.api_url}"
+        time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{metric.model_name}:{metric.provider_url}"
         try:
             if metric.time_to_first_token_us is not None:
-                await redis_client.timeseries.add(
-                    key=time_to_first_token_ts_key, value=metric.time_to_first_token_us, timestamp=metric.timestamp
-                )
+                await self.redis.timeseries.add(key=time_to_first_token_ts_key, value=metric.time_to_first_token_us, timestamp=metric.timestamp)
         except Exception as e:
             logger.error(f"Failed to log request metrics in redis ts {time_to_first_token_ts_key}: {e}", exc_info=True)
-            await redis_client.reset()
+            await self.redis.reset()
 
-        latency_ts_key = f"metrics_ts:latency:{metric.model_name}:{metric.api_url}"
+        latency_ts_key = f"metrics_ts:latency:{metric.model_name}:{metric.provider_url}"
         try:
             if metric.latency_ms is not None:
-                await redis_client.timeseries.add(key=latency_ts_key, value=metric.latency_ms, timestamp=metric.timestamp)
+                await self.redis.timeseries.add(key=latency_ts_key, value=metric.latency_ms, timestamp=metric.timestamp)
         except Exception as e:
             logger.error(f"Failed to log request metrics in redis ts {latency_ts_key}: {e}", exc_info=True)
 
@@ -287,19 +290,19 @@ class BaseModelClient(ABC):
             httpx.Response: The response from the API.
         """
 
-        url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
+        url, json, files, data = self._format_request(json=json, files=files, data=data)
         if not additional_data:
             additional_data = {}
 
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
                 start_time = time.perf_counter()
-                response = await async_client.request(method=method, url=url, headers=headers, json=json, files=files, data=data)
+                response = await async_client.request(method=method, url=url, headers=self.headers, json=json, files=files, data=data)
                 end_time = time.perf_counter()
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
                 raise HTTPException(status_code=504, detail="Request timed out, model is too busy.")
             except Exception as e:
-                logger.exception(msg=f"Failed to forward request to {self.model}: {e}.")
+                logger.exception(msg=f"Failed to forward request to {self.name}: {e}.")
                 raise HTTPException(status_code=500, detail=type(e).__name__)
             try:
                 response.raise_for_status()
@@ -319,12 +322,16 @@ class BaseModelClient(ABC):
         # add additional data to the response
         request_latency = end_time - start_time
         response = self._format_response(json=json, response=response, additional_data=additional_data, request_latency=request_latency)
-        asyncio.create_task(self._log_performance_metric(Metric(
-            timestamp=datetime.now(),
-            model_name=self.model,
-            api_url=self.api_url,
-            latency_ms=int(request_latency * 1_000)
-        )))
+        asyncio.create_task(
+            self._log_performance_metric(
+                metric=Metric(
+                    timestamp=datetime.now(),
+                    model_name=self.name,
+                    provider_url=self.url,
+                    latency_ms=int(request_latency * 1_000),
+                )
+            )
+        )
 
         return response
 
@@ -400,11 +407,11 @@ class BaseModelClient(ABC):
         if additional_data is None:
             additional_data = {}
 
-        url, headers, json, files, data = self._format_request(json=json, files=files, data=data)
+        url, json, files, data = self._format_request(json=json, files=files, data=data)
 
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
-                async with async_client.stream(method=method, url=url, headers=headers, json=json, files=files, data=data) as response:
+                async with async_client.stream(method=method, url=url, headers=self.headers, json=json, files=files, data=data) as response:
                     buffer = list()
                     start_time = time.perf_counter()
                     first_token_time = None
@@ -458,13 +465,19 @@ class BaseModelClient(ABC):
                                     additional_data=additional_data,
                                     request_latency=request_latency,
                                 )
-                                asyncio.create_task(self._log_performance_metric(Metric(
-                                    timestamp=datetime.now(),
-                                    time_to_first_token_us=int(request_time_to_first_token * 1_000_000) if first_token_time is not None else None,
-                                    latency_ms=int(request_latency * 1_000),
-                                    model_name=self.model,
-                                    api_url=self.api_url,
-                                )))
+                                asyncio.create_task(
+                                    self._log_performance_metric(
+                                        Metric(
+                                            timestamp=datetime.now(),
+                                            time_to_first_token_us=int(request_time_to_first_token * 1_000_000)
+                                            if first_token_time is not None
+                                            else None,
+                                            latency_ms=int(request_latency * 1_000),
+                                            model_name=self.name,
+                                            provider_url=self.url,
+                                        )
+                                    )
+                                )
 
                                 # if error case, yield chunk
                                 if extra_chunk is None:

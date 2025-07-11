@@ -1719,4 +1719,978 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, zstd
+      connection:
+      - keep-alive
+      host:
+      - api.search.brave.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-subscription-token:
+      - BSAHUAJdQ7ZZTtK8cUhcP5qcK_AKShy
+    method: GET
+    uri: https://api.search.brave.com/res/v1/web/search?q=DINUM+France+digital+transformation&count=5&country=fr&safesearch=strict&type=WebSearchEngineType.BRAVE
+  response:
+    body:
+      string: "{\"query\":{\"original\":\"DINUM France digital transformation\",\"show_strict_warning\":false,\"is_navigational\":true,\"is_news_breaking\":false,\"spellcheck_off\":true,\"country\":\"fr\",\"bad_results\":false,\"should_fallback\":false,\"postal_code\":\"\",\"city\":\"\",\"header_country\":\"\",\"more_results_available\":true,\"state\":\"\"},\"mixed\":{\"type\":\"mixed\",\"main\":[{\"type\":\"web\",\"index\":0,\"all\":false},{\"type\":\"web\",\"index\":1,\"all\":false},{\"type\":\"videos\",\"all\":true},{\"type\":\"web\",\"index\":2,\"all\":false},{\"type\":\"web\",\"index\":3,\"all\":false},{\"type\":\"web\",\"index\":4,\"all\":false},{\"type\":\"web\",\"index\":5,\"all\":false},{\"type\":\"web\",\"index\":6,\"all\":false},{\"type\":\"web\",\"index\":7,\"all\":false},{\"type\":\"web\",\"index\":8,\"all\":false},{\"type\":\"web\",\"index\":9,\"all\":false},{\"type\":\"web\",\"index\":10,\"all\":false},{\"type\":\"web\",\"index\":11,\"all\":false},{\"type\":\"web\",\"index\":12,\"all\":false},{\"type\":\"web\",\"index\":13,\"all\":false},{\"type\":\"web\",\"index\":14,\"all\":false},{\"type\":\"web\",\"index\":15,\"all\":false},{\"type\":\"web\",\"index\":16,\"all\":false}],\"top\":[],\"side\":[]},\"type\":\"search\",\"videos\":{\"type\":\"videos\",\"results\":[{\"type\":\"video_result\",\"url\":\"https://www.dailymotion.com/video/x9ak9fm\",\"title\":\"Dailymotion\",\"description\":\"Skip
+        to playerSkip to main contentSkip to footer \xB7 Watch fullscreen\",\"fetched_content_timestamp\":1743761580,\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"dailymotion.com\",\"hostname\":\"www.dailymotion.com\",\"favicon\":\"https://imgs.search.brave.com/eT-9fAHd-dbH53yGn6ATXAaD-bfBVauU52kMa6Bd-MM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTk0NzliNzg4/ZmZjM2U0OTg2ZDNm/YThiMWNlZGE0YTlh/NTljYTVkNDY1MjA1/OWZjNGYzNDY5NTk0/MzBkMmMyYi93d3cu/ZGFpbHltb3Rpb24u/Y29tLw\",\"path\":\"\u203A
+        video  \u203A x9ak9fm\"}},{\"type\":\"video_result\",\"url\":\"https://www.dailymotion.com/playlist/x79i7t\",\"title\":\"France
+        Relance - Transfo num\xE9rique collectivit\xE9s par DINUM\",\"description\":\"\",\"fetched_content_timestamp\":1745864211,\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"dailymotion.com\",\"hostname\":\"www.dailymotion.com\",\"favicon\":\"https://imgs.search.brave.com/eT-9fAHd-dbH53yGn6ATXAaD-bfBVauU52kMa6Bd-MM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTk0NzliNzg4/ZmZjM2U0OTg2ZDNm/YThiMWNlZGE0YTlh/NTljYTVkNDY1MjA1/OWZjNGYzNDY5NTk0/MzBkMmMyYi93d3cu/ZGFpbHltb3Rpb24u/Y29tLw\",\"path\":\"\u203A
+        playlist  \u203A x79i7t\"}},{\"type\":\"video_result\",\"url\":\"https://www.dailymotion.com/video/x84uqp2\",\"title\":\"[France
+        Relance] Appel \xE0 projets Donn\xE9e - Fonds ...\",\"description\":\"Skip
+        to playerSkip to main contentSkip to footer \xB7 Watch fullscreen\",\"fetched_content_timestamp\":1745513917,\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"dailymotion.com\",\"hostname\":\"www.dailymotion.com\",\"favicon\":\"https://imgs.search.brave.com/eT-9fAHd-dbH53yGn6ATXAaD-bfBVauU52kMa6Bd-MM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTk0NzliNzg4/ZmZjM2U0OTg2ZDNm/YThiMWNlZGE0YTlh/NTljYTVkNDY1MjA1/OWZjNGYzNDY5NTk0/MzBkMmMyYi93d3cu/ZGFpbHltb3Rpb24u/Y29tLw\",\"path\":\"\u203A
+        video  \u203A x84uqp2\"}},{\"type\":\"video_result\",\"url\":\"https://www.dailymotion.com/video/x84ulso\",\"title\":\"[France
+        Relance] Pr\xE9sentation g\xE9n\xE9rale des appels \xE0 projets ...\",\"description\":\"Skip
+        to playerSkip to main contentSkip to footer \xB7 Watch fullscreen\",\"fetched_content_timestamp\":1751806951,\"video\":{},\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"dailymotion.com\",\"hostname\":\"www.dailymotion.com\",\"favicon\":\"https://imgs.search.brave.com/eT-9fAHd-dbH53yGn6ATXAaD-bfBVauU52kMa6Bd-MM/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZTk0NzliNzg4/ZmZjM2U0OTg2ZDNm/YThiMWNlZGE0YTlh/NTljYTVkNDY1MjA1/OWZjNGYzNDY5NTk0/MzBkMmMyYi93d3cu/ZGFpbHltb3Rpb24u/Y29tLw\",\"path\":\"\u203A
+        video  \u203A x84ulso\"}}],\"mutated_by_goggles\":false},\"web\":{\"type\":\"search\",\"results\":[{\"title\":\"La
+        DINUM\",\"url\":\"https://www.numerique.gouv.fr/dinum\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"profile\":{\"name\":\"Numerique\",\"url\":\"https://www.numerique.gouv.fr/dinum\",\"long_name\":\"numerique.gouv.fr\",\"img\":\"https://imgs.search.brave.com/CY-QFYEdoB7S0eHPPja5hWZTP-cIBsGSQuYIUsZZFsk/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNjMxYzZhN2E4/MTM4ZjI0YTQ1Yjg4/ZjkzY2I2MTcxYWY5/NTk1NTA0YTY1YWJj/NDNmMjAwZGYzZWI5/MWFiMmExOS93d3cu/bnVtZXJpcXVlLmdv/dXYuZnIv\"},\"language\":\"unk\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"numerique.gouv.fr\",\"hostname\":\"www.numerique.gouv.fr\",\"favicon\":\"https://imgs.search.brave.com/CY-QFYEdoB7S0eHPPja5hWZTP-cIBsGSQuYIUsZZFsk/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNjMxYzZhN2E4/MTM4ZjI0YTQ1Yjg4/ZjkzY2I2MTcxYWY5/NTk1NTA0YTY1YWJj/NDNmMjAwZGYzZWI5/MWFiMmExOS93d3cu/bnVtZXJpcXVlLmdv/dXYuZnIv\",\"path\":\"\u203A
+        dinum\"},\"cluster_type\":\"generic\",\"cluster\":[{\"title\":\"La DINUM\",\"url\":\"https://www.numerique.gouv.fr/numerique-etat/dinum/\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"family_friendly\":true},{\"title\":\"A Digital Strategy for Efficient
+        Public Action\",\"url\":\"https://www.numerique.gouv.fr/uploads/DINUM-roadmap_EN.pdf\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Le
+        JavaScript n&#x27;est pas activ\xE9 sur votre navigateur \xB7 Le JavaScript
+        n&#x27;est pas activ\xE9 sur votre navigateur. Pour vous permettre de naviguer
+        correctement sur notre site, il est n\xE9cessaire qu&#x27;il soit activ\xE9
+        \xB7 Comment activer le JavaScript \xB7 Chrome \xB7 https://support.google.com/chrome
+        \xB7 ...\",\"family_friendly\":true}]},{\"title\":\"Direction Interminist\xE9rielle
+        du Num\xE9rique (DINUM) | transformation.gouv.fr\",\"url\":\"https://www.transformation.gouv.fr/le-ministere/directions/dinum\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"La
+        direction interminist\xE9rielle du num\xE9rique (<strong>DINUM</strong>) est
+        en charge de la <strong>transformation</strong> num\xE9rique de l\u2019\xC9tat
+        au b\xE9n\xE9fice du citoyen comme de l\u2019agent, sous tous ses aspects
+        : modernisation du syst\xE8me d\u2019information de l\u2019\xC9tat, qualit\xE9
+        des services publics num\xE9riques, cr\xE9ation ...\",\"profile\":{\"name\":\"Transformation\",\"url\":\"https://www.transformation.gouv.fr/le-ministere/directions/dinum\",\"long_name\":\"transformation.gouv.fr\",\"img\":\"https://imgs.search.brave.com/MKY-rLxWsbVHs3fT9eur3JdUFfRkiuHRuB8yOiI9Fog/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGM0MGZhMTkx/NjA5MDk5MGJiYjU3/ZmNhZTJkY2NmY2Zi/NDJkZGIyMzYzZWZl/ZDJlNGM4NTNhZjNj/NmQxZTZhMS93d3cu/dHJhbnNmb3JtYXRp/b24uZ291di5mci8\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"transformation.gouv.fr\",\"hostname\":\"www.transformation.gouv.fr\",\"favicon\":\"https://imgs.search.brave.com/MKY-rLxWsbVHs3fT9eur3JdUFfRkiuHRuB8yOiI9Fog/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGM0MGZhMTkx/NjA5MDk5MGJiYjU3/ZmNhZTJkY2NmY2Zi/NDJkZGIyMzYzZWZl/ZDJlNGM4NTNhZjNj/NmQxZTZhMS93d3cu/dHJhbnNmb3JtYXRp/b24uZ291di5mci8\",\"path\":\"\u203A
+        le-ministere  \u203A directions  \u203A dinum\"}},{\"title\":\"Direction interminist\xE9rielle
+        du num\xE9rique (DINUM) - Annuaire | Service-Public.fr\",\"url\":\"https://lannuaire.service-public.fr/gouvernement/d1a97841-b4bf-46df-a089-1003e4e266b4\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"Direction
+        interminist\xE9rielle du num\xE9rique (<strong>DINUM</strong>) : informations
+        et coordonn\xE9es de l\u2019organisme\",\"profile\":{\"name\":\"Service-Public.fr\",\"url\":\"https://lannuaire.service-public.fr/gouvernement/d1a97841-b4bf-46df-a089-1003e4e266b4\",\"long_name\":\"lannuaire.service-public.fr\",\"img\":\"https://imgs.search.brave.com/6hknG5zYaF_BtQmFPu4yERKllMar6I_yjhaxfExeP38/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGE3NzdmODI3/YTkyZTBjZDY4ZmY1/MzhkYjE1ZGJhZTU3/MmU4NDE3MTQxZGYx/ZDc4ZDc5ZTAyZDUz/YTBlMTA2My9sYW5u/dWFpcmUuc2Vydmlj/ZS1wdWJsaWMuZnIv\"},\"language\":\"fr\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"location\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"lannuaire.service-public.fr\",\"hostname\":\"lannuaire.service-public.fr\",\"favicon\":\"https://imgs.search.brave.com/6hknG5zYaF_BtQmFPu4yERKllMar6I_yjhaxfExeP38/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGE3NzdmODI3/YTkyZTBjZDY4ZmY1/MzhkYjE1ZGJhZTU3/MmU4NDE3MTQxZGYx/ZDc4ZDc5ZTAyZDUz/YTBlMTA2My9sYW5u/dWFpcmUuc2Vydmlj/ZS1wdWJsaWMuZnIv\",\"path\":\"\u203A
+        gouvernement  \u203A d1a97841-b4bf-46df-a089-1003e4e266b4\"}},{\"title\":\"France\u2019s
+        Dinum roadmap towards sovereign cloud | Interoperable Europe Portal\",\"url\":\"https://interoperable-europe.ec.europa.eu/collection/open-source-observatory-osor/news/frances-dinum-roadmap-towards-sovereign-cloud\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"These
+        are elements that we want ... (<strong>Dinum</strong>) was presenting the
+        organisation\u2019s new roadmap for a <strong>digital</strong> strategy aimed
+        at improving the efficiency of public action in <strong>France</strong>.  \xB7
+        The strategy focuses on four priorities. It is first calling for a <strong>transformation</strong>
+        of public ...\",\"page_age\":\"2023-06-21T09:04:51\",\"profile\":{\"name\":\"Interoperable
+        Europe\",\"url\":\"https://interoperable-europe.ec.europa.eu/collection/open-source-observatory-osor/news/frances-dinum-roadmap-towards-sovereign-cloud\",\"long_name\":\"interoperable-europe.ec.europa.eu\",\"img\":\"https://imgs.search.brave.com/OoiDggQlNMLoZmeBG_h0y4NA4DpuU2dsBVvpVEPwoZE/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGVjYjM2N2Ri/ZGE0Mzg1MTI5Mzkw/MjFhMTQ0M2IyODFl/MjljZDBhZWIzNDYx/MmM5Mjk0NWQxNzM2/OWY0N2EzNS9pbnRl/cm9wZXJhYmxlLWV1/cm9wZS5lYy5ldXJv/cGEuZXUv\"},\"language\":\"en\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"article\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"interoperable-europe.ec.europa.eu\",\"hostname\":\"interoperable-europe.ec.europa.eu\",\"favicon\":\"https://imgs.search.brave.com/OoiDggQlNMLoZmeBG_h0y4NA4DpuU2dsBVvpVEPwoZE/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGVjYjM2N2Ri/ZGE0Mzg1MTI5Mzkw/MjFhMTQ0M2IyODFl/MjljZDBhZWIzNDYx/MmM5Mjk0NWQxNzM2/OWY0N2EzNS9pbnRl/cm9wZXJhYmxlLWV1/cm9wZS5lYy5ldXJv/cGEuZXUv\",\"path\":\"\u203A
+        collection  \u203A open-source-observatory-osor  \u203A news  \u203A frances-dinum-roadmap-towards-sovereign-cloud\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/o-nyhJ1rkXLeP5Ims0Xo8HpEEIJh-DVg0uFzS89jGns/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pbnRl/cm9wZXJhYmxlLWV1/cm9wZS5lYy5ldXJv/cGEuZXUvc2l0ZXMv/ZGVmYXVsdC9maWxl/cy9uZXdzL2xvZ28v/MjAyMy0wNi9tYXJr/LWtvbmlnLUVDR3Y4/czJJUEcwLXVuc3Bs/YXNoLmpwZw\",\"original\":\"https://interoperable-europe.ec.europa.eu/sites/default/files/news/logo/2023-06/mark-konig-ECGv8s2IPG0-unsplash.jpg\",\"logo\":true},\"age\":\"June
+        21, 2023\"},{\"title\":\"Direction interminist\xE9rielle du Num\xE9rique (DINUM)
+        | Viva Technology \u2605\",\"url\":\"https://vivatechnology.com/partners/direction-interministerielle-du-numerique-dinum\",\"is_source_local\":false,\"is_source_both\":false,\"description\":\"The
+        interministerial <strong>digital</strong> directorate (<strong>DINUM</strong>)
+        is tasked with developing and overseeing the implementation of the State&#x27;s
+        <strong>digital</strong> strategy. As a department of the Prime Minister&#x27;s
+        office, under the Ministry of the Civil Service, Simplification, and <strong>Transformation</strong>
+        of Public Action, <strong>DINUM</strong> serves ...\",\"profile\":{\"name\":\"Vivatechnology\",\"url\":\"https://vivatechnology.com/partners/direction-interministerielle-du-numerique-dinum\",\"long_name\":\"vivatechnology.com\",\"img\":\"https://imgs.search.brave.com/kpDhMtxJFL8z9y3jh5305WKAWAD64umLtbhwPGNFHRo/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZDlmYjE4Mzlm/YzU3MWVhOTRkZmQz/NzI0MzJiNmJmYjA0/ODRjNDdkNGI2ZjQy/MjIyMDVlMDM1MWUy/YTUzYTgzOC92aXZh/dGVjaG5vbG9neS5j/b20v\"},\"language\":\"en\",\"family_friendly\":true,\"type\":\"search_result\",\"subtype\":\"generic\",\"is_live\":false,\"meta_url\":{\"scheme\":\"https\",\"netloc\":\"vivatechnology.com\",\"hostname\":\"vivatechnology.com\",\"favicon\":\"https://imgs.search.brave.com/kpDhMtxJFL8z9y3jh5305WKAWAD64umLtbhwPGNFHRo/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvZDlmYjE4Mzlm/YzU3MWVhOTRkZmQz/NzI0MzJiNmJmYjA0/ODRjNDdkNGI2ZjQy/MjIyMDVlMDM1MWUy/YTUzYTgzOC92aXZh/dGVjaG5vbG9neS5j/b20v\",\"path\":\"\u203A
+        partners  \u203A direction-interministerielle-du-numerique-dinum\"},\"thumbnail\":{\"src\":\"https://imgs.search.brave.com/Q7OjYDc4sC90NXeGkCiveim9ThXtYogsvGR7EIIZDYU/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9jZG4u/dml2YXRlY2hub2xv/Z3kuY29tL3Z0LWFs/bC9hc3NldHMvaW1h/Z2VzL29wZW5ncmFw/aC9kZWZhdWx0LnBu/Zw\",\"original\":\"https://cdn.vivatechnology.com/vt-all/assets/images/opengraph/default.png\",\"logo\":false}}],\"family_friendly\":true}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 11 Jul 2025 15:14:16 GMT
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User
+      X-Content-Type-Options:
+      - nosniff
+      X-Download-Options:
+      - noopen
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '13356'
+      server-timing:
+      - search-roundtrip;dur=557.333
+      x-ratelimit-limit:
+      - 1, 2000
+      x-ratelimit-policy:
+      - 1;w=1, 2000;w=2678400,
+      x-ratelimit-remaining:
+      - 0, 1862
+      x-ratelimit-reset:
+      - 1, 1759543
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/58.0.3029.110 Safari/537.3
+    method: GET
+    uri: https://lannuaire.service-public.fr/gouvernement/d1a97841-b4bf-46df-a089-1003e4e266b4
+  response:
+    body:
+      string: "<!DOCTYPE html><html xmlns:ff4j=\"http://www.w3.org/1999/xhtml\"\n
+        \     xmlns:esi=\"http://www.edge-delivery.org/esi/1.0\"\n      dir=\"ltr\"
+        data-fr-scheme=\"light\"\n      data-fr-js=\"false\" lang=\"fr\"><head>\n\t<title>Direction
+        interminist\xE9rielle du num\xE9rique (DINUM) - Annuaire | Service-Public.fr</title>\n\t<meta
+        charset=\"utf-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"><meta
+        name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"><meta
+        name=\"description\"\n        content=\"Direction interminist\xE9rielle du
+        num\xE9rique (DINUM) : informations et coordonn\xE9es de l\u2019organisme\"><meta
+        name=\"audience\" content=\"annuaire\"><script id=\"abtasty\" type=\"opt-in\"
+        data-type=\"text/javascript\" data-name=\"ab-tasty\"\n            data-src=\"https://try.abtasty.com/f2a27ecc441fb1662a47bee9ea97d2ea.js\"></script><script
+        crossorigin=\"anonymous\"\n            id=\"readspeaker_script\"\n            src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/js/readspeaker/webReader.js?pids=wr&amp;notools=1\"\n
+        \           integrity=\"sha384-lzKF3q93rwr6Dkx85dTWD73+IApvfO/ZfAeThrWcxQW6VdVUlHXEEv3kVyK04oYp\"\n
+        \           type=\"text/javascript\"></script><meta http-equiv=\"X-UA-Compatible\"
+        content=\"IE=edge\"><meta name=\"viewport\" content=\"width=device-width,
+        initial-scale=1, shrink-to-fit=no\"><meta name=\"description\"\r\n        content=\"Direction
+        interminist\xE9rielle du num\xE9rique (DINUM) : informations et coordonn\xE9es
+        de l\u2019organisme\"><meta name=\"audience\" content=\"annuaire\"><meta name=\"sp_cookie_domain\"
+        content=\"service-public.fr\"><meta name=\"annuaire_root\" content=\"https://lannuaire.service-public.fr\"><meta
+        name=\"sp_root\" content=\"https://www.service-public.fr\"><meta name=\"ressources_url\"
+        content=\"/resources/v-d1e3e2871c/assets/js\"><link rel=\"apple-touch-icon\"
+        href=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/favicon/apple-touch-icon.png\"><!--
+        180\xD7180 --><link rel=\"icon\" href=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/favicon/favicon.svg\"
+        type=\"image/svg+xml\"><link rel=\"shortcut icon\" href=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/favicon/favicon.ico/\"
+        type=\"image/x-icon\"><!-- 32\xD732 --><link rel=\"manifest\" href=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/favicon/manifest.webmanifest\"
+        crossorigin=\"use-credentials\"><link href=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/dsfr.min.css\"
+        rel=\"stylesheet\"><link href=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/utility/utility.min.css\"
+        rel=\"stylesheet\"><link href=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/css/sp-dsfr.css\"
+        rel=\"stylesheet\"><link href=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/js/leaflet/leaflet.css\"
+        rel=\"stylesheet\"><script type=\"application/ld+json\" data-test=\"micro-datas-ld-json\">{\n
+        \ \"serviceType\" : \"Administration centrale (ou Minist\xE8re)\",\n  \"address\"
+        : {\n    \"streetAddress\" : \"\",\n    \"@type\" : \"PostalAddress\",\n    \"postalCode\"
+        : \"75334\",\n    \"addressLocality\" : \"Paris Cedex 07\",\n    \"postOfficeBoxNumber\"
+        : \"TSA 30719\",\n    \"url\" : \"https://www.numerique.gouv.fr\"\n  },\n
+        \ \"@type\" : \"GovernmentOffice\",\n  \"name\" : \"Direction interminist\xE9rielle
+        du num\xE9rique (DINUM)\",\n  \"member\" : [ {\n    \"@type\" : \"Person\",\n
+        \   \"jobTitle\" : \"Directrice\",\n    \"name\" : \"St\xE9phanie SCHAER\",\n
+        \   \"telephone\" : null\n  }, {\n    \"@type\" : \"Person\",\n    \"jobTitle\"
+        : \"Adjoint \xE0 la directrice\",\n    \"name\" : \"J\xE9r\xE9mie VALLET\",\n
+        \   \"telephone\" : null\n  }, {\n    \"@type\" : \"Person\",\n    \"jobTitle\"
+        : \"Cheffe de la mission communication\",\n    \"name\" : \"Floriane BEAUDRON\",\n
+        \   \"telephone\" : null\n  }, {\n    \"@type\" : \"Person\",\n    \"jobTitle\"
+        : \"Responsable de la mission juridique\",\n    \"name\" : \"Perica SUCEVIC\",\n
+        \   \"telephone\" : null\n  }, {\n    \"@type\" : \"Person\",\n    \"jobTitle\"
+        : \"Cheffe de la mission Europe et International\",\n    \"name\" : \"Emmanuelle
+        MERLIN\",\n    \"telephone\" : null\n  } ],\n  \"description\" : \"La Direction
+        interminist\xE9rielle du num\xE9rique (DINUM) accompagne les minist\xE8res
+        dans leur transformation num\xE9rique, conseille le gouvernement et d\xE9veloppe
+        des services et ressources partag\xE9es comme le r\xE9seau interminist\xE9riel
+        de l\u2019\xC9tat, FranceConnect, data.gouv.fr ou api.gouv.fr. Elle pilote,
+        avec l\u2019appui des minist\xE8res, le programme Tech.gouv d\u2019acc\xE9l\xE9ration
+        de la transformation num\xE9rique du service public. Cr\xE9\xE9e par le d\xE9cret
+        du 25 octobre 2019, la DINUM a pris la suite de la Direction interminist\xE9rielle
+        du num\xE9rique et du syst\xE8me d\u2019information et de communication de
+        l\u2019\xC9tat (DINSIC).\",\n  \"location\" : {\n    \"address\" : {\n      \"streetAddress\"
+        : \"20 avenue de S\xE9gur\",\n      \"@type\" : \"Place\",\n      \"postalCode\"
+        : \"75007\",\n      \"addressLocality\" : \"Paris\"\n    },\n    \"@type\"
+        : \"Place\"\n  },\n  \"@context\" : \"https://schema.org\"\n}</script></head><body
+        lang=\"fr\"><noscript><div class=\"fr-container fr-mb-10v\" id=\"top\"><p
+        class=\"sp-text--center\">Javascript est desactiv\xE9 dans votre navigateur.</p></div></noscript><div
+        class=\"fr-skiplinks\"><nav class=\"fr-container\" role=\"navigation\" aria-label=\"Acc\xE8s
+        rapide\" lang=\"fr\" ><ul class=\"fr-skiplinks__list\"><li><a class=\"fr-link\"
+        href=\"#main\">Contenu</a></li><li class=\"sp-display-lg\"><a class=\"fr-link\"
+        href=\"#header-navigation\">Menu</a></li><li class=\"sp-display-lg\"><a class=\"fr-link\"
+        href=\"#searchMultiCriteriaForm\">Recherche</a></li><li><a class=\"fr-link\"
+        href=\"#footer\">Pied de page</a></li></ul></nav></div><header role=\"banner\"
+        id=\"banner\"><script data-test=\"marquage_authentication\">\n      var marquage_authentication
+        = {\n        connected: false,\n        id: null,\n        category: null\n
+        \     };\n    </script><div class=\"fr-header\"><div class=\"fr-header__body\"><div
+        class=\"fr-container\"><div class=\"fr-header__body-row\"><div class=\"fr-header__brand
+        fr-enlarge-link\"><div class=\"fr-header__brand-top\"><div class=\"fr-header__logo\"><p
+        class=\"sp-print-only\"><img src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/img/logo-rf-top.svg\"
+        alt=\"\" width=\"50\"></p><p class=\"fr-logo fr-logo--lg\">\n                    R\xE9publique
+        <br>Fran\xE7aise\n                  </p><p class=\"sp-print-only\"><img src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/img/logo-rf-bottom.svg\"
+        alt=\"\" width=\"80\"></p></div><div class=\"fr-header__navbar\" id=\"header-search-mobile\"><button
+        type=\"button\" class=\"fr-btn--search fr-btn\" data-fr-opened=\"false\" aria-controls=\"header-search\"\n
+        \                           title=\"Ouvrir la recherche\" id=\"fr-btn-header-search-mobile\">\n
+        \                     Ouvrir la recherche\n                    </button><button
+        type=\"button\" class=\"fr-btn--menu fr-btn sp-btn--menu\" data-fr-opened=\"false\"\n
+        \                         aria-controls=\"header-navigation\" id=\"fr-btn-menu-mobile-3\">\n
+        \                   Menu\n                  </button></div></div><div class=\"fr-header__service\"><a
+        href=\"https://www.service-public.fr/\" title=\"Accueil Service-Public.fr\"><p
+        class=\"fr-header__service-title\">Service-Public.fr</p></a><p class=\"fr-header__service-tagline\">Le
+        site officiel de l\u2019administration fran\xE7aise</p></div></div><div class=\"fr-header__tools\"><div
+        class=\"fr-header__tools-links\"><ul class=\"fr-btns-group fr-links-group
+        sp-links-group\"><li data-test=\"profil\"><a href=\"https://www.service-public.fr/compte/se-connecter\"\n
+        \                          class=\"fr-btn fr-fi-user-fill fr-btn--icon-left\"\n
+        \                          ><span>Se connecter</span></a></li><li><a href=\"https://entreprendre.service-public.fr\"\n
+        \                      class=\"fr-btn fr-displayed-lg sp-link-switch-site
+        sp-text-color--red fr-fi-arrow-right-line fr-btn--icon-right\"\n                       target=\"_blank\"
+        rel=\"noopener noreferrer\"\n                       title=\"Acc\xE9der au
+        site pour les entreprises - nouvelle fen\xEAtre\"\n                       data-test=\"lien-entreprendre\"><span>Acc\xE9der
+        au site pour les entreprises</span></a></li></ul></div><div class=\"fr-header__search
+        fr-modal\" id=\"header-search\"><div class=\"fr-container fr-container-lg--fluid\"><button
+        class=\"fr-link--close fr-link\" aria-controls=\"header-search\" title=\"Fermer
+        la recherche\" data-fr-js-modal-button=\"true\">Fermer</button><div class=\"sp-bloc-autocomplete\"
+        id=\"search\"><form\n              id=\"header-search-main\"\n              method=\"get\"\n
+        \             action=\"https://www.service-public.fr/particuliers/recherche\"\n
+        \             role=\"search\"\n              class=\"fr-search-bar sp-autocomplete\"\n
+        \             aria-label=\"Tout le site\"><label class=\"fr-label\" for=\"header-search-input\">\n
+        \               Recherche\n              </label><input\n                class=\"fr-input\"\n
+        \               title=\"Rechercher sur le site\"\n                type=\"search\"\n
+        \               id=\"header-search-input\"\n                name=\"keyword\"\n
+        \               autocomplete=\"off\"\n                autocapitalize=\"off\"\n
+        \               spellcheck=\"false\"\n                value=\"\" placeholder=\"Rechercher
+        sur le site\" maxlength=\"300\" data-test=\"search-input\"\n              ><button\n
+        \               class=\"fr-btn\"\n                type=\"submit\"\n                title=\"Rechercher
+        sur le site\"><span>\n              Rechercher sur le site\n              </span></button></form></div></div></div></div></div></div></div><div
+        class=\"fr-header__menu fr-modal\" id=\"header-navigation\" data-_csrf=\"598afa0b-ba24-4511-83fc-2c00d8c1d7ad\"
+        data-_csrf_header=\"X-CSRF-TOKEN\"><div class=\"fr-container\"><button type=\"button\"
+        class=\"fr-link--close fr-link\" aria-controls=\"header-navigation\" title=\"Fermer
+        le menu\">\n            Fermer\n          </button><div class=\"fr-header__menu-links\"></div><nav
+        class=\"fr-nav sp-nav\" id=\"header-navigation-bar\" role=\"navigation\" aria-label=\"Menu
+        principal\"><ul class=\"fr-nav__list\"><li class=\"fr-nav__item\"><a class=\"fr-nav__link\"\n
+        \        href=\"https://www.service-public.fr/particuliers\"\n         title=\"Accueil\"><svg
+        aria-hidden=\"true\" focusable=\"false\" class=\" fr-displayed-lg  sp-icon
+        \ sp-icon-ri-home-line \" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\"><path
+        d=\"M21 20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.49a1 1 0 0 1 .386-.79l8-6.222a1
+        1 0 0 1 1.228 0l8 6.222a1 1 0 0 1 .386.79V20zm-2-1V9.978l-7-5.444-7 5.444V19h14z\"></path></svg><span
+        class=\"fr-sr-only-lg fr-displayed-xs\">Accueil</span></a></li><li class=\"fr-nav__item\"><a
+        class=\"fr-nav__link\"\n         href=\"https://www.service-public.fr/particuliers/actualites\">\n
+        \       Actualit\xE9<br class=\"fr-displayed-lg\"/> de vos droits et d\xE9marches\n
+        \     </a></li><li class=\"fr-nav__item\"><button type=\"button\" class=\"fr-nav__btn\"
+        aria-expanded=\"false\" aria-controls=\"menu-sp-1\">\n        Fiches pratiques
+        <br class=\"fr-displayed-lg\"/>par \xE9v\xE9nement de vie\n      </button><div
+        class=\"fr-collapse fr-menu\" id=\"menu-sp-1\"><ul class=\"fr-menu__list\"><li><a
+        class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/vosdroits/F14128\">Je
+        d\xE9m\xE9nage</a></li><li><a class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/vosdroits/F17556\">Je
+        cherche un emploi</a></li><li><a class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/vosdroits/F16225\">J\u2019attends
+        un enfant</a></li><li><a class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/vosdroits/F16123\">Je
+        veux obtenir un cr\xE9dit immobilier</a></li><li><a class=\"fr-nav__link\"\n
+        \              href=\"https://www.service-public.fr/particuliers/vosdroits/F15913\">J'ach\xE8te
+        un logement</a></li><li><a class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/vosdroits/F17904\">Je
+        pr\xE9pare ma retraite</a></li><li><a class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/vosdroits/F16507\">Un
+        proche est d\xE9c\xE9d\xE9</a></li><li><a class=\"fr-nav__link fr-text--bold
+        sp-item-see-more\"\n               href=\"https://www.service-public.fr/particuliers/vosdroits/comment-faire-si\"><span
+        class=\"fr-icon-add-line fr-icon--sm\" aria-hidden=\"true\"></span>Voir tous
+        les \xE9v\xE9nements de vie</a></li></ul></div></li><li class=\"fr-nav__item\"><button
+        type=\"button\" class=\"fr-nav__btn\" aria-expanded=\"false\" aria-controls=\"menu-sp-2\">\n
+        \       Fiches pratiques <br class=\"fr-displayed-lg\"/>par th\xE8me\n      </button><div
+        class=\"fr-collapse fr-menu\" id=\"menu-sp-2\"><ul class=\"fr-menu__list\"><li><a
+        class=\"fr-nav__link\"\n                 href=\"https://www.service-public.fr/particuliers/vosdroits/N19810\">Papiers
+        - Citoyennet\xE9 - \xC9lections</a></li><li><a class=\"fr-nav__link\"\n                 href=\"https://www.service-public.fr/particuliers/vosdroits/N19805\">Famille
+        - Scolarit\xE9</a></li><li><a class=\"fr-nav__link\"\n                 href=\"https://www.service-public.fr/particuliers/vosdroits/N19811\">Social
+        - Sant\xE9</a></li><li><a class=\"fr-nav__link\"\n                 href=\"https://www.service-public.fr/particuliers/vosdroits/N19806\">Travail
+        - Formation</a></li><li><a class=\"fr-nav__link\"\n                 href=\"https://www.service-public.fr/particuliers/vosdroits/N19808\">Logement</a></li><li><a
+        class=\"fr-nav__link\"\n                 href=\"https://www.service-public.fr/particuliers/vosdroits/N19812\">Transports
+        - Mobilit\xE9</a></li><li><a class=\"fr-nav__link\"\n                 href=\"https://www.service-public.fr/particuliers/vosdroits/N19803\">Argent
+        - Imp\xF4ts - Consommation</a></li><li><a class=\"fr-nav__link fr-text--bold
+        sp-item-see-more\"\n               href=\"https://www.service-public.fr/particuliers/vosdroits/theme\"><span
+        class=\"fr-icon-add-line fr-icon--sm\" aria-hidden=\"true\"></span>Voir tous
+        les th\xE8mes</a></li></ul></div></li><li class=\"fr-nav__item\"><button type=\"button\"
+        class=\"fr-nav__btn\" aria-expanded=\"false\" aria-controls=\"menu-sp-3\">\n
+        \       D\xE9marches <br class=\"fr-displayed-lg\"/>et outils\n      </button><div
+        class=\"fr-collapse fr-menu\" id=\"menu-sp-3\"><ul class=\"fr-menu__list\"><li><a
+        class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=teleservice\">D\xE9marches
+        en ligne</a></li><li><a class=\"fr-nav__link\"\n               data-test=\"aides-financieres\"\n
+        \              href=\"https://www.service-public.fr/particuliers/vosdroits/N32475\">Aides
+        financi\xE8res</a></li><li><a class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=simulateur\">Simulateurs</a></li><li><a
+        class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=modeleLettre\">Mod\xE8les
+        de lettres</a></li><li><a class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=formulaire\">Formulaires
+        administratifs (cerfas)</a></li><li><a class=\"fr-nav__link\"\n               href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=outilrecherche\">Outils
+        de recherche</a></li></ul></div></li><li class=\"fr-nav__item\"><a class=\"fr-nav__link\"\n
+        \        href=\"https://lannuaire.service-public.fr\">\n        Annuaire <br
+        class=\"fr-displayed-lg\"/>de l\u2019administration\n      </a></li><li class=\"fr-nav__item\"><a
+        class=\"fr-nav__link\"\n         href=\"https://www.service-public.fr/P10017\">\n
+        \       Contacter<br class=\"fr-displayed-lg\"/> Service-Public.fr\n      </a></li></ul></nav><div
+        class=\"fr-header__menu-links sp-header__menu-links-bottom fr-hidden-lg\"><div
+        class=\"fr-btns-group\" ><a href=\"https://entreprendre.service-public.fr\"\n
+        \                class=\"fr-btn sp-link-switch-site sp-text-color--red fr-icon-arrow-right-line
+        fr-btn--icon-right\"\n                 target=\"_blank\"\n                 rel=\"noopener
+        noreferrer\"\n                 title=\"Acc\xE9der au site pour les entreprises
+        - nouvelle fen\xEAtre\"\n                 data-test=\"lien-entreprendre\"\n\n
+        \                ><span class=\"\">Acc\xE9der au site pour les entreprises
+        \ </span></a></div></div></div></div></div></header><div class=\"sp-search-container\"><div
+        class=\"fr-container sp-search-bloc\"><form role=\"search\"\n              aria-labelledby=\"fieldset-search-message\"
+        action=\"https://lannuaire.service-public.fr/recherche\" method=\"get\"\n
+        \             id=\"directorySearchForm\" autocomplete=\"off\"><p id=\"fieldset-search-message\"
+        class=\"fr-h6 fr-pt-3w\"><span class=\"fr-icon-road-map-line fr-mr-1w\" aria-hidden=\"true\"></span>\n
+        \           Annuaire de l\u2019administration\n          </p><fieldset class=\"fr-fieldset
+        fr-mx-n1w\"><legend id=\"fieldset-search\" class=\"fr-fieldset__legend\">\n
+        \             Rechercher un service public, une administration, une personne\n
+        \           </legend><div class=\"fr-fieldset__element\"><div id=\"fr-input-group-searchWho\"
+        class=\"fr-input-group sp-bloc-autocomplete fr-mb-2w \"><label for=\"whoWhatDirectorySearchForm\"
+        class=\"fr-label\">Qui ? Quoi ?<span class=\"fr-hint-text\"\n                        id=\"hint-searchWho\"
+        data-test=\"whowhat-sr-only-example\"> Exemple : Mairie, CAF, Pr\xE9sidente,
+        Claude Larivi\xE8re</span></label><div id=\"input-search-searchWho\" class=\"sp-autocomplete
+        fr-mt-1w\"><input id=\"whoWhatDirectorySearchForm\" class=\"fr-input\" type=\"search\"\n
+        \                        autocomplete=\"off\"\n                         autocapitalize=\"off\"\n
+        \                        spellcheck=\"false\"\n                         data-test=\"whowhat-search-input\"
+        name=\"whoWhat\" value=\"\"></div></div></div><div class=\"fr-fieldset__element\"><div
+        id=\"fr-input-group-searchWhere\" class=\"fr-input-group sp-bloc-autocomplete
+        fr-mb-2w \"><label for=\"whereSearchForm\" class=\"fr-label \">O\xF9 ?<span
+        class=\"fr-hint-text\" id=\"hint-searchWhere\" data-test=\"where-sr-only-example\">Exemple
+        : 59000, Toulouse, Bretagne</span></label><div id=\"input-search-searchWhere\"
+        class=\"sp-autocomplete  fr-mt-1w\"><input id=\"whereSearchForm\" class=\"fr-input\"
+        type=\"search\"\n                         autocomplete=\"off\"\n                         autocapitalize=\"off\"\n
+        \                        spellcheck=\"false\"\n                         data-test=\"where-search-input\"
+        name=\"where\" value=\"\"></div></div></div><div class=\"fr-fieldset__element
+        sp-search-btn\"><button class=\"fr-btn fr-my-2w sp-text--left\" type=\"submit\"
+        id=\"directorySearchSubmit\"\n                      title=\"Rechercher dans
+        l'annuaire\"\n                      ><span aria-hidden=\"true\">Rechercher
+        dans l'annuaire</span></button></div></fieldset></form><script>\n          document.urlSuggestAnnuaire
+        = \"https:\\/\\/lannuaire.service-public.fr\\/suggestion\\/\";\n        </script></div></div><div
+        class=\"fr-container fr-pb-2w\"><main class=\"main\" id=\"main\" role=\"main\"
+        lang=\"fr\"><nav role=\"navigation\" class=\"fr-breadcrumb\" aria-label=\"Vous
+        \xEAtes ici :\"><button class=\"fr-breadcrumb__button\" aria-expanded=\"false\"
+        aria-controls=\"breadcrumb-1\">\n        Voir le fil d&#39;ariane\n      </button><div
+        class=\"fr-collapse\" id=\"breadcrumb-1\"><ol class=\"fr-breadcrumb__list\"><li><a
+        class=\"fr-breadcrumb__link\" href=\"https://www.service-public.fr/\" data-test=\"breadcrumb_element\">Accueil</a></li><li><a
+        class=\"fr-breadcrumb__link\" href=\"https://lannuaire.service-public.fr\"
+        data-test=\"breadcrumb_element\">Annuaire</a></li><li><a class=\"fr-breadcrumb__link\"
+        href=\"https://lannuaire.service-public.fr/navigation/ministeres\" data-test=\"breadcrumb_element\">Minist\xE8res</a></li><li><a
+        class=\"fr-breadcrumb__link\" href=\"https://lannuaire.service-public.fr/gouvernement/9f101ac7-9a0e-4d62-8b27-8109876dff94\"
+        data-test=\"breadcrumb_element\">Minist\xE8re de l\u2019Action publique, de
+        la Fonction publique et de la Simplification</a></li><li><span class=\"fr-breadcrumb__link\"
+        aria-current=\"page\" data-test=\"breadcrumb_element\">Direction interminist\xE9rielle
+        du num\xE9rique (DINUM)</span></li></ol></div></nav><div class=\"sp-container\"><div
+        class=\"container main-container\"><article class=\"article\" role=\"article\"><div
+        class=\"fr-mb-3w sp-no-print rs_skip\" data-test=\"div-toolbar\" lang=\"fr\"><div
+        class=\"sp-toolbar fr-mb-2w\"><ul class=\"fr-raw-list sp-toolbar-list\" data-test=\"ul-toolbarShare\"><li><a
+        id=\"telecharger-pdf\" class=\"sp-toolbar-item fr-btn\" title=\"T\xE9l\xE9charger
+        au format pdf\" href=\"https://lannuaire.service-public.fr:443/telecharger-pdf\"
+        download=\"\" data-test=\"linkToDownloadPdf\"><svg aria-hidden=\"true\" focusable=\"false\"
+        class=\"sp-icon sp-icon-ri-download-line\" viewBox=\"0 0 24 24\" width=\"24\"
+        height=\"24\"><path d=\"M3 19h18v2H3v-2zm10-5.828L19.071 7.1l1.414 1.414L12
+        17 3.515 8.515 4.929 7.1 11 13.17V2h2v11.172z\"></path></svg></a></li><li
+        ><button id=\"imprimer\"\n                  type=\"button\"\n                  data-test=\"linkToolBarImprimer\"\n
+        \                 class=\"sp-toolbar-item fr-btn\"\n                  data-control-print=\"\"\n
+        \                 title=\"Imprimer\"\n                  ><svg aria-hidden=\"true\"
+        focusable=\"false\" class=\" sp-icon  sp-icon-ri-printer-line \" viewBox=\"0
+        0 24 24\"\n                 width=\"24\" height=\"24\"><path\n                d=\"M6
+        19H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h3V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v4h3a1
+        1 0 0 1 1 1v10a1 1 0 0 1-1 1h-3v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-2zm0-2v-1a1
+        1 0 0 1 1-1h10a1 1 0 0 1 1 1v1h2V9H4v8h2zM8 4v3h8V4H8zm0 13v3h8v-3H8zm-3-7h3v2H5v-2z\"></path></svg></button></li><li><button
+        id=\"simple-btn-share-mobile\"\n            type=\"button\"\n            hidden=\"\"\n
+        \           class=\"sp-toolbar-item fr-btn\"\n            title=\"Partager
+        la page\"\n            data-control-sharemobile=\"/annuaire/gouvernement/d1a97841-b4bf-46df-a089-1003e4e266b4\"
+        data-lang-sharetxt=\"Fiche provenant de Entreprendre.Service-Public.fr : \"\n
+        \         ><svg aria-hidden=\"true\" focusable=\"false\" class=\" sp-icon
+        \ sp-icon-ri-share-line \" viewBox=\"0 0 24 24\"\n                 width=\"24\"
+        height=\"24\"><path\n                d=\"M13.12 17.023l-4.199-2.29a4 4 0 1
+        1 0-5.465l4.2-2.29a4 4 0 1 1 .959 1.755l-4.2 2.29a4.008 4.008 0 0 1 0 1.954l4.199
+        2.29a4 4 0 1 1-.959 1.755zM6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm11-6a2 2 0 1
+        0 0-4 2 2 0 0 0 0 4zm0 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z\"></path></svg></button><button\n
+        \           id=\"sp-btn-shareLinks\"\n            type=\"button\"\n            class=\"sp-toolbar-item
+        collapsed fr-btn\"\n            title=\"Partager la page\"\n            data-toggle=\"collapse\"\n
+        \           data-target=\"#sp-shareBoxLinks\"\n            aria-expanded=\"false\"\n
+        \           aria-controls=\"sp-shareBoxLinks\"><svg aria-hidden=\"true\" focusable=\"false\"
+        class=\" sp-icon  sp-icon-ri-share-line \" viewBox=\"0 0 24 24\"\n                 width=\"24\"
+        height=\"24\"><path\n                d=\"M13.12 17.023l-4.199-2.29a4 4 0 1
+        1 0-5.465l4.2-2.29a4 4 0 1 1 .959 1.755l-4.2 2.29a4.008 4.008 0 0 1 0 1.954l4.199
+        2.29a4 4 0 1 1-.959 1.755zM6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm11-6a2 2 0 1
+        0 0-4 2 2 0 0 0 0 4zm0 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z\"></path></svg></button></li><li><div
+        id=\"readspeaker_button1\" class=\"rs_skip rsbtn rs_preserve rs_mobile rsplaying\"
+        lang=\"fr-FR\"><a id=\"vocalisation\" rel=\"nofollow\" class=\"sp-toolbar-item
+        rsbtn_play fr-btn\" accesskey=\"L\"\n                   title=\"Ecouter le
+        texte\"\n                   href=\"//app-eu.readspeaker.com/cgi-bin/rsent?customerid=12082&amp;lang=fr_fr&amp;voice=Roxane&amp;readclass=sp-container&amp;url=\"\n
+        \                  aria-expanded=\"false\" data-rsevent-id=\"rs_482743\" role=\"button\"
+        aria-label=\"Ecouter le texte\"\n                   ><svg aria-hidden=\"true\"
+        focusable=\"false\" class=\" sp-icon  sp-icon-ri-user-voice-line \"\n                       viewBox=\"0
+        0 24 24\" width=\"24\" height=\"24\"><path\n                      d=\"M1 22a8
+        8 0 1 1 16 0h-2a6 6 0 1 0-12 0H1zm8-9c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685
+        6 6-2.685 6-6 6zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM21.548.784A13.942
+        13.942 0 0 1 23 7c0 2.233-.523 4.344-1.452 6.216l-1.645-1.196A11.955 11.955
+        0 0 0 21 7c0-1.792-.393-3.493-1.097-5.02L21.548.784zm-3.302 2.4A9.97 9.97
+        0 0 1 19 7a9.97 9.97 0 0 1-.754 3.816l-1.677-1.22A7.99 7.99 0 0 0 17 7a7.99
+        7.99 0 0 0-.43-2.596l1.676-1.22z\"></path></svg></a><button id=\"sp-btn-readspeakerFR\"
+        class=\"rsbtn_focusforward\" data-rsevent-id=\"rs_40770\" tabindex=\"-1\"\n
+        \                       accesskey=\"k\" aria-hidden=\"true\" style=\"position:
+        absolute; top: -10000px;\">Focus\n                </button></div></li></ul></div><div
+        data-control-collapse-content class=\"sp-toolbar-collapse-content collapse\"
+        id=\"sp-shareBoxLinks\"\n         aria-labelledby=\"sp-btn-shareLinks\" aria-hidden=\"true\"
+        style=\"\"><button class=\"fr-link fr-link--close sp-toolbar-content-close
+        collapsed\"\n              type=\"button\"\n              data-control-btn=\"btn\"\n
+        \             data-control-toolbar-content-close=\"\"\n              data-toggle=\"collapse\"\n
+        \             data-target=\"#sp-shareBoxLinks\"\n              title=\"Fermer\"\n
+        \             aria-expanded=\"false\" aria-label=\"Fermer :Partager la page\"></button><p
+        class=\"sp-toolbar-content-intro fr-text--bold\">Partager la page</p><ul class=\"fr-raw-list\"><li><a
+        data-test=\"linkToolBarFacebook\"\n             class=\"fr-btn sp-toolbar-content-link
+        fr-btn--tertiary-no-outline fr-icon-facebook-circle-line\"\n             title=\"Partager
+        sur Facebook - facebook.com - Nouvelle fen\xEAtre\"\n             href=\"https://www.facebook.com/sharer/sharer.php?u=https://lannuaire.service-public.fr/gouvernement/d1a97841-b4bf-46df-a089-1003e4e266b4\"
+        target=\"_blank\"\n             rel=\"noopener noreferrer\"\n          ><span>Facebook</span></a></li><li><a
+        data-test=\"linkToolBarTwitter\"\n             class=\"fr-btn sp-toolbar-content-link
+        fr-btn--tertiary-no-outline fr-icon-twitter-x-line\"\n             target=\"_blank\"
+        rel=\"noopener noreferrer\"\n             title=\"Partager sur X (anciennement
+        Twitter) - x.com - Nouvelle fen\xEAtre\"\n             href=\"https://x.com/intent/tweet?text=&amp;url=https://lannuaire.service-public.fr/gouvernement/d1a97841-b4bf-46df-a089-1003e4e266b4\"\n
+        \         ><span>X</span></a></li><li><a data-test=\"linkToolBarLinkedin\"\n
+        \            class=\"fr-btn sp-toolbar-content-link fr-btn--tertiary-no-outline
+        \ fr-icon-linkedin-box-line\"\n             target=\"_blank\" rel=\"noopener
+        noreferrer\"\n             title=\"Partager sur LinkedIn - linkedin.com -
+        Nouvelle fen\xEAtre\"\n             href=\"https://www.linkedin.com/shareArticle?mini=true&amp;url=https://lannuaire.service-public.fr/gouvernement/d1a97841-b4bf-46df-a089-1003e4e266b4&amp;title=\"\n
+        \         ><span>Linkedin</span></a></li><li><a class=\"fr-btn sp-toolbar-content-link
+        fr-btn--tertiary-no-outline fr-icon-mail-line\"\n     data-control-mailto=\"\"\n
+        \    title=\"Envoyer par Email\"\n\n     href=\"mailto:%20?subject=Service-Public.fr%20-%20&amp;body=Bonjour,%0D%0A%0D%0ACette
+        information de service-public.fr vous est conseill\xE9e : %0D%0A%0D%0A%0D%0A%0D%0A\">\n
+        \   Email\n  </a></li><li><button data-control-lastlink=\"\"\n                  class=\"fr-btn
+        sp-toolbar-content-link fr-btn--tertiary-no-outline fr-icon-links-line\"\n
+        \                 title=\"Partager - copier le lien\" data-control-copy=\"https://lannuaire.service-public.fr/gouvernement/d1a97841-b4bf-46df-a089-1003e4e266b4\"><span>Copier
+        le lien</span></button><p hidden=\"\" role=\"status\" class=\"fr-link sp-toolbar-content-link
+        sp-msg-copied\" tabindex=\"-1\"\n             data-control-lastlink=\"\"><svg
+        aria-hidden=\"true\" focusable=\"false\" class=\" sp-icon  sp-icon-ri-check-line
+        \" viewBox=\"0 0 24 24\"\n                 width=\"24\" height=\"24\"><path
+        d=\"M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z\"></path></svg>\n
+        \           Lien copi\xE9\n          </p></li></ul></div></div><h1 id=\"titlePage\">Direction
+        interminist\xE9rielle du num\xE9rique (DINUM)</h1><div class=\"fr-mt-n1w fr-mb-4w\"><h2
+        class=\"fr-h5 fr-mt-4w\">Lieu</h2><p class=\"sp-text-icon fr-mb-3w\" data-test=\"adaAddress-bloc\"><svg
+        role=\"img\" aria-label=\"Lieu\" focusable=\"false\" class=\"sp-icon sp-blue
+        sp-icon-ri-map-pin-2-line\"\n           viewBox=\"0 0 24 24\" width=\"24\"
+        height=\"24\"><title>Lieu</title><path\n          d=\"M12 23.728l-6.364-6.364a9
+        9 0 1 1 12.728 0L12 23.728zm4.95-7.778a7 7 0 1 0-9.9 0L12 20.9l4.95-4.95zM12
+        13a2 2 0 1 1 0-4 2 2 0 0 1 0 4z\"></path></svg><span class=\"\"><span itemprop=\"streetAddress\">20
+        avenue de S\xE9gur </span><span itemprop=\"postalCode\">75007 </span><span
+        itemprop=\"addressLocality\">Paris </span></span></p><ul class=\"sp-item-list
+        fr-ml-4w\"></li></ul><h2 class=\"fr-h5 fr-mt-4w\">Contacts</h2><ul class=\"fr-raw-list\"
+        data-test=\"contacts\"><li class=\"sp-text-icon fr-pb-3w\" data-test=\"websites\"><span
+        class=\"sp-icon fr-icon-global-line sp-blue\" title=\"Site web\"><span class=\"fr-sr-only\">Site
+        web</span></span><span class=\"\"><a href=\"https://www.numerique.gouv.fr\"\n
+        \            target=\"_blank\"\n             rel=\"noopener noreferrer\"\n
+        \            title=\"numerique.gouv.fr - Nouvelle fen\xEAtre\"\n\n             itemprop=\"url\"\n
+        \            id=\"websites\">https://www.numerique.gouv.fr<span class=\"fr-icon-external-link-line
+        fr-fi--sm fr-ml-1v\"></span></a></span></li><li class=\"sp-text-icon fr-pb-3w\"
+        data-test=\"adresse-postale\"><span class=\"sp-icon fr-icon-ball-pen-line
+        \ sp-blue\" title=\"Adresse postale\"><span class=\"fr-sr-only\">Adresse postale</span></span><span
+        data-test=\"writeAddress\" class=\"\"><span itemprop=\"postOfficeBoxNumber\"
+        data-test=\"address-serviceDistribution\">TSA 30719</span><br/><span itemprop=\"postalCode\">75334
+        </span><span itemprop=\"addressLocality\" data-test=\"address-ville\">Paris
+        Cedex 07</span><br/></span></li></ul><h2 class=\"fr-h5 fr-mt-4w\" data-test=\"missions-et-organisation\">Missions
+        et organisation</h2><div class=\"sp-panel sp-blue-panel\" data-test=\"missions\"><h3
+        class=\"sp-panel-title\"><button class=\"sp-btn sp-btn-collapse\" type=\"button\"
+        data-toggle=\"collapse\" data-target=\"#sp-panel-panel_missions\" aria-expanded=\"false\"
+        id=\"sp-panel-aria-panel_missions\" aria-controls=\"sp-panel-panel_missions\"><span
+        class=\"sp-panel-btn-text fr-text--bold fr-py-1v sp-panel-with-icon\"><svg
+        aria-hidden=\"true\" focusable=\"false\" class=\"sp-icon sp-panel-icon fr-mr-1w
+        sp-icon-ri-crosshair-2-line\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\"><path
+        d=\"M11 5.07089C7.93431 5.5094 5.5094 7.93431 5.07089 11H7V13H5.07089C5.5094
+        16.0657 7.93431 18.4906 11 18.9291V17H13V18.9291C16.0657 18.4906 18.4906 16.0657
+        18.9291 13H17V11H18.9291C18.4906 7.93431 16.0657 5.5094 13 5.07089V7H11V5.07089ZM3.05493
+        11C3.51608 6.82838 6.82838 3.51608 11 3.05493V1H13V3.05493C17.1716 3.51608
+        20.4839 6.82838 20.9451 11H23V13H20.9451C20.4839 17.1716 17.1716 20.4839 13
+        20.9451V23H11V20.9451C6.82838 20.4839 3.51608 17.1716 3.05493 13H1V11H3.05493ZM14
+        12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954
+        10 12 10C13.1046 10 14 10.8954 14 12Z\"></path></svg>\n            Missions\n
+        \        </span><svg aria-hidden=\"true\" focusable=\"false\" class=\"sp-icon
+        \ sp-icon-ri-arrow-down-s-line\" viewBox=\"0 0 24 24\" width=\"20\" height=\"20\"><path
+        d=\"M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z\"></path></svg></button></h3><div
+        class=\"sp-panel-content showRS_sp-panel-panel_missions fr-mx-1w collapse\"
+        id=\"sp-panel-panel_missions\" aria-labelledby=\"sp-panel-aria-panel_missions\"
+        aria-hidden=\"false\"><p>La Direction interminist\xE9rielle du num\xE9rique
+        (DINUM) accompagne les minist\xE8res dans leur transformation num\xE9rique,
+        conseille le gouvernement et d\xE9veloppe des services et ressources partag\xE9es
+        comme le r\xE9seau interminist\xE9riel de l\u2019\xC9tat, FranceConnect, data.gouv.fr
+        ou api.gouv.fr. Elle pilote, avec l\u2019appui des minist\xE8res, le programme
+        Tech.gouv d\u2019acc\xE9l\xE9ration de la transformation num\xE9rique du service
+        public. Cr\xE9\xE9e par le d\xE9cret du 25 octobre 2019, la DINUM a pris la
+        suite de la Direction interminist\xE9rielle du num\xE9rique et du syst\xE8me
+        d\u2019information et de communication de l\u2019\xC9tat (DINSIC).</p></div></div><div
+        class=\"sp-panel sp-blue-panel\" data-test=\"responsables\"\n         itemprop=\"member\"><h3
+        class=\"sp-panel-title\"><button class=\"sp-btn sp-btn-collapse\" type=\"button\"
+        data-toggle=\"collapse\" data-target=\"#sp-panel-panel_responsables\" aria-expanded=\"false\"
+        id=\"sp-panel-aria-panel_responsables\" aria-controls=\"sp-panel-panel_responsables\"><span
+        class=\"sp-panel-btn-text fr-text--bold fr-py-1v  sp-panel-with-icon\"><span
+        class=\"sp-icon fr-icon-team-line sp-panel-icon fr-mr-1w\" aria-hidden=\"true\"></span>Responsable(s)</span><svg
+        aria-hidden=\"true\" focusable=\"false\" class=\"sp-icon sp-icon-ri-arrow-down-s-line\"
+        viewBox=\"0 0 24 24\" width=\"20\" height=\"20\"><path d=\"M12 13.172l4.95-4.95
+        1.414 1.414L12 16 5.636 9.636 7.05 8.222z\"></path></svg></button></h3><div
+        class=\"sp-panel-content showRS_sp-panel-panel_responsables fr-mx-1w collapse\"
+        id=\"sp-panel-panel_responsables\" aria-labelledby=\"sp-panel-aria-panel_responsables\"
+        aria-hidden=\"true\" style=\"\"><p data-test=\"occupant\"><strong>Directrice</strong><br>St\xE9phanie
+        SCHAER<br></p><p data-test=\"occupant\"><strong>Adjoint \xE0 la directrice</strong><br>J\xE9r\xE9mie
+        VALLET, ing\xE9nieur en chef des mines<br></p><p data-test=\"occupant\"><strong>Cheffe
+        de la mission communication</strong><br>Floriane BEAUDRON<br></p><p data-test=\"occupant\"><strong>Responsable
+        de la mission juridique</strong><br>Perica SUCEVIC<br></p><p data-test=\"occupant\"><strong>Cheffe
+        de la mission Europe et International</strong><br>Emmanuelle MERLIN, ing\xE9nieur
+        de recherche<br></p></div></div><div class=\"sp-panel sp-blue-panel\" data-test=\"organisation\"><h3
+        class=\"sp-panel-title\"><button class=\"sp-btn sp-btn-collapse collapsed\"
+        type=\"button\" data-toggle=\"collapse\"\n                data-target=\"#sp-panel-panel_organisation\"
+        aria-expanded=\"false\" id=\"sp-panel-aria-panel_organisation\"\n                aria-controls=\"sp-panel-panel_organisation\"><span
+        class=\"sp-panel-btn-text fr-text--bold fr-py-1v  sp-panel-with-icon\"><svg
+        aria-hidden=\"true\" focusable=\"false\" class=\"sp-icon sp-panel-icon fr-mr-1w
+        sp-icon-ri-organization-chart\"\n                  viewBox=\"0 0 24 24\" width=\"24\"
+        height=\"24\"><path\n                        d=\"M15 3C15.5523 3 16 3.44772
+        16 4V8C16 8.55228 15.5523 9 15 9H13V11H17C17.5523 11 18 11.4477 18 12V15H20C20.5523
+        15 21 15.4477 21 16V20C21 20.5523 20.5523 21 20 21H14C13.4477 21 13 20.5523
+        13 20V16C13 15.4477 13.4477 15 14 15H16V13H8V15H10C10.5523 15 11 15.4477 11
+        16V20C11 20.5523 10.5523 21 10 21H4C3.44772 21 3 20.5523 3 20V16C3 15.4477
+        3.44772 15 4 15H6V12C6 11.4477 6.44772 11 7 11H11V9H9C8.44772 9 8 8.55228
+        8 8V4C8 3.44772 8.44772 3 9 3H15ZM9 17H5V19H9V17ZM19 17H15V19H19V17ZM14 5H10V7H14V5Z\"></path></svg>\n
+        \            Organisation\n          </span><svg aria-hidden=\"true\" focusable=\"false\"
+        class=\"sp-icon sp-icon-ri-arrow-down-s-line\" viewBox=\"0 0 24 24\"\n               width=\"20\"
+        height=\"20\"><path d=\"M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636
+        7.05 8.222z\"></path></svg></button></h3><div class=\"sp-panel-content showRS_sp-panel-panel_organisation
+        fr-mx-1w collapse\"\n           id=\"sp-panel-panel_organisation\" aria-labelledby=\"sp-panel-aria-panel_organisation\"
+        aria-hidden=\"false\"\n           style=\"\"><p><a href=\"#\"><strong>Direction
+        interminist\xE9rielle du num\xE9rique (DINUM)</strong></a></p><ul class=\"sp-item-list
+        fr-mb-1w\" data-test=\"organisations-list\" itemprop=\"subOrganization\" itemscope=\"\"\n
+        \     itemtype=\"http://schema.org/subOrganization\"><li itemprop=\"Organization\"><a
+        href=\"https://lannuaire.service-public.fr/gouvernement/da23723e-a4aa-4fad-8619-2e16d5e41b90\">D\xE9partement
+        Appui, conseil et expertise (ACE)</a></li><li itemprop=\"Organization\"><a
+        href=\"https://lannuaire.service-public.fr/gouvernement/c21fa08e-f09e-4312-a6d8-400e812454c4\">D\xE9partement
+        Incubateur des services num\xE9riques (ISN)</a></li><li itemprop=\"Organization\"><a
+        href=\"https://lannuaire.service-public.fr/gouvernement/db2b74d4-4dbc-4d7d-ba1b-5762e2cb06b8\">D\xE9partement
+        Etalab</a></li><li itemprop=\"Organization\"><a href=\"https://lannuaire.service-public.fr/gouvernement/b81d5686-a935-4964-b9b0-735c1222b63a\">D\xE9partement
+        Infrastructures et services op\xE9r\xE9s (ISO)</a></li><li itemprop=\"Organization\"><a
+        href=\"https://lannuaire.service-public.fr/gouvernement/e5299ba4-7aa4-4f95-aa82-7e765d5648fe\">D\xE9partement
+        Op\xE9rateur des produits interminist\xE9riels (OPI)</a></li><li itemprop=\"Organization\"><a
+        href=\"https://lannuaire.service-public.fr/gouvernement/a28dd434-aeb9-4ea6-9fad-b515b1493844\">D\xE9partement
+        RH de la fili\xE8re num\xE9rique de l&#39;Etat (RHN)</a></li></ul><p class=\"fr-mt-3w\"><strong>Pour
+        en savoir plus</strong></p><ul class=\"sp-item-list fr-mb-1w\" data-test=\"pour-en-savoir-plus\"><li><a
+        target=\"_blank\" rel=\"noopener noreferrer\" id=\"contentenSavoirPlus_1\"\n
+        \                    title=\"Organigramme de la direction interminist\xE9rielle
+        du num\xE9rique - numerique.gouv.fr - Nouvelle fen\xEAtre\"\n                     href=\"https://www.numerique.gouv.fr/dinum/\"\n
+        \                    class=\"fr-link sp-text fr-link--sm\"\n                     data-fr-js-link-actionee=\"true\"\n
+        \                    ><span class=\"\">Organigramme de la direction interminist\xE9rielle
+        du num\xE9rique<span class=\"fr-icon-external-link-line fr-fi--sm\"></span></span></a></li></ul></div></div><div
+        class=\"sp-panel sp-blue-panel\" data-test=\"references\"><h3 class=\"sp-panel-title\"><button
+        class=\"sp-btn sp-btn-collapse collapsed\" type=\"button\" data-toggle=\"collapse\"
+        data-target=\"#sp-panel-panel_textes\" aria-expanded=\"false\" id=\"sp-panel-aria-panel_textes\"
+        aria-controls=\"sp-panel-panel_textes\"><span class=\"sp-panel-btn-text fr-text--bold
+        fr-py-1v sp-panel-with-icon\"><span class=\"sp-icon fr-icon-scales-3-line
+        sp-panel-icon fr-mr-1w\" aria-hidden=\"true\"></span>\n         Textes de
+        loi et r\xE9f\xE9rences\n         </span><svg aria-hidden=\"true\" focusable=\"false\"
+        class=\"sp-icon       sp-icon-ri-arrow-down-s-line \" viewBox=\"0 0 24 24\"
+        width=\"20\" height=\"20\"><path d=\"M12 13.172l4.95-4.95 1.414 1.414L12 16
+        5.636 9.636 7.05 8.222z\"></path></svg></button></h3><div class=\"sp-panel-content
+        showRS_sp-panel-panel_textes fr-mx-1w collapse\" id=\"sp-panel-panel_textes\"
+        aria-labelledby=\"sp-panel-aria-panel_textes\" aria-hidden=\"true\" style=\"\"><p><a
+        target=\"_blank\" rel=\"noopener noreferrer\"\n               id=\"contentReferences_1\"\n
+        \              href=\"https://www.legifrance.gouv.fr/affichTexte.do?cidTexte=JORFTEXT000039281619\"\n
+        \              class=\"fr-link sp-text fr-link--sm\"\n               title=\"Direction
+        interminist\xE9rielle du num\xE9rique (d\xE9cret) - legifrance.gouv.fr - Nouvelle
+        fen\xEAtre\"\n               ><span class=\"\">Direction interminist\xE9rielle
+        du num\xE9rique (d\xE9cret)</span><span class=\"fr-icon-external-link-line
+        fr-fi--sm\"></span></a></p><p><strong>SIREN</strong> : 130025265<br><strong>SIRET</strong>
+        : 13002526500013</p></div></div><div id=\"display-access\" class=\"fr-mb-4w\"
+        data-test=\"display-access\"><h2 class=\"fr-h5 fr-mt-4w\">Accessibilit\xE9
+        de l'\xE9tablissement</h2><!-- Acc\xE8s --><div class=\"sp-panel sp-blue-panel
+        fr-py-1v\" data-test=\"donneeAcceslibre\"><h3 class=\"sp-panel-title\"><button
+        class=\"sp-btn sp-btn-collapse\" type=\"button\" data-toggle=\"collapse\"
+        data-target=\"#sp-panel-1\" aria-expanded=\"false\" id=\"sp-panel-aria-1\"
+        aria-controls=\"sp-panel-1\"  ><span class=\"sp-panel-btn-text sp-panel-with-icon
+        fr-text--bold fr-py-1v\"><svg aria-hidden=\"true\" focusable=\"false\" class=\"sp-icon
+        sp-panel-icon fr-mr-1w sp-icon-ri-bus-line \" viewBox=\"0 0 24 24\" width=\"24\"
+        height=\"24\"><path d=\"M17 20H7v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9H2V8h1V5a2
+        2 0 0 1 2-2h14a2 2 0 0 1 2 2v3h1v4h-1v9a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-1zM5
+        5v6h14V5H5zm14 8H5v5h14v-5zM7.5 17a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm9
+        0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z\"></path></svg>\n            Acc\xE8s\n
+        \         </span><svg aria-hidden=\"true\" focusable=\"false\" class=\"sp-icon
+        sp-icon-ri-arrow-down-s-line \" viewBox=\"0 0 24 24\" width=\"20\" height=\"20\"><path
+        d=\"M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z\"></path></svg></button></h3><div
+        class=\"sp-panel-content showRS_sp-panel-1 fr-mx-1w collapse\" id=\"sp-panel-1\"
+        aria-labelledby=\"sp-panel-aria-1\" aria-hidden=\"false\" data-test=\"donneeAcceslibreContent\"><!--
+        donneeAcceslibre est non null --><!-- donneeAcceslibre est null --><p data-test=\"donneeAccesslibreNoInfo\">\n
+        \   Pas d'information disponible. Si vous connaissez ces informations, <strong>partagez-les</strong>
+        via Acc\xE8sLibre.\n  </p><p class=\"acces-libre fr-mb-1v\" data-test='pAccesLibreLinkEmpty'><a
+        data-test='aAccesLibreLinkEmpty'\n       href=\"https://acceslibre.beta.gouv.fr/contrib/admin-infos/?data=eyJjb2RlX3Bvc3RhbCI6Ijc1MDA3Iiwic2l0ZV9pbnRlcm5ldCI6bnVsbCwidm9pZSI6IjIwIGF2ZW51ZSBkZSBTw6lndXIiLCJudW1lcm8iOm51bGwsImNvbW11bmUiOiJQYXJpcyIsImNvZGVfaW5zZWUiOm51bGwsInRlbGVwaG9uZSI6bnVsbCwic291cmNlIjoic2VydmljZV9wdWJsaWMiLCJjb29yZG9ubmVlcyI6W251bGwsbnVsbF0sIm5vbSI6IkRpcmVjdGlvbiBpbnRlcm1pbmlzdMOpcmllbGxlIGR1IG51bcOpcmlxdWUgKERJTlVNKSIsInNpcmV0IjoiMTMwMDI1MjY1MDAwMTMiLCJjb250YWN0X2VtYWlsIjpudWxsLCJuYWYiOm51bGwsImFzcF9pZCI6bnVsbCwiYWN0aXZpdGVfc2x1ZyI6bnVsbCwibGlldV9kaXQiOm51bGwsInNvdXJjZV9pZCI6bnVsbH0=\"\n
+        \      target=\"_blank\"\n       class=\"fr-link sp-text fr-text--sm fr-link--sm\"\n
+        \      title=\"Am\xE9liorer les informations d\u2019accessibilit\xE9 via Acc\xE8sLibre
+        - acceslibre.beta.gouv.fr - nouvelle fen\xEAtre\"><span class=\"\">Am\xE9liorer
+        les informations d\u2019accessibilit\xE9 via Acc\xE8sLibre&nbsp;<span class=\"fr-icon-external-link-line
+        fr-fi--sm\"></span></span></a></p></div></div><!-- Chemin ext\xE9rieur --><div
+        class=\"sp-panel sp-blue-panel fr-py-1v\" data-test=\"donneeAcceslibre\"><h3
+        class=\"sp-panel-title\"><button class=\"sp-btn sp-btn-collapse\" type=\"button\"
+        data-toggle=\"collapse\" data-target=\"#sp-panel-2\" aria-expanded=\"false\"
+        id=\"sp-panel-aria-2\" aria-controls=\"sp-panel-2\" ><span class=\"sp-panel-btn-text
+        sp-panel-with-icon fr-text--bold fr-py-1v\"><svg aria-hidden=\"true\" focusable=\"false\"
+        class=\"sp-icon sp-panel-icon fr-mr-1w sp-icon-ri-bus-line \" viewBox=\"0
+        0 24 24\" width=\"24\" height=\"24\"><path d=\"M8 10.341v2.194C6.804 13.227
+        6 14.52 6 16c0 2.21 1.79 4 4 4 1.48 0 2.773-.804 3.465-2h2.193c-.823 2.33-3.046
+        4-5.658 4-3.314 0-6-2.686-6-6 0-2.613 1.67-4.835 4-5.659zM12 17c-1.657 0-3-1.343-3-3v-4c0-1.044.534-1.964
+        1.343-2.501C9.533 6.964 9 6.044 9 5c0-1.657 1.343-3 3-3s3 1.343 3 3c0 1.044-.534
+        1.964-1.343 2.501C14.467 8.036 15 8.956 15 10v4.999l1.434.001c.648 0 1.253.314
+        1.626.836l.089.135 2.708 4.515-1.714 1.028L16.433 17 15 16.999 12 17zm0-8c-.552
+        0-1 .448-1 1v4c0 .552.448 1 1 1h.999L13 10c0-.552-.448-1-1-1zm0-5c-.552 0-1
+        .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1z\"></path></svg>\n            Chemin
+        ext\xE9rieur\n          </span><svg aria-hidden=\"true\" focusable=\"false\"
+        class=\"sp-icon sp-icon-ri-arrow-down-s-line \" viewBox=\"0 0 24 24\" width=\"20\"
+        height=\"20\"><path d=\"M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636
+        7.05 8.222z\"></path></svg></button></h3><div class=\"sp-panel-content showRS_sp-panel-2
+        fr-mx-1w collapse\" id=\"sp-panel-2\" aria-labelledby=\"sp-panel-aria-2\"
+        aria-hidden=\"false\" data-test=\"donneeAcceslibreContent\"><!-- donneeAcceslibre
+        est non null --><!-- donneeAcceslibre est null --><p data-test=\"donneeAccesslibreNoInfo\">\n
+        \   Pas d'information disponible. Si vous connaissez ces informations, <strong>partagez-les</strong>
+        via Acc\xE8sLibre.\n  </p><p class=\"acces-libre fr-mb-1v\" data-test='pAccesLibreLinkEmpty'><a
+        data-test='aAccesLibreLinkEmpty'\n       href=\"https://acceslibre.beta.gouv.fr/contrib/admin-infos/?data=eyJjb2RlX3Bvc3RhbCI6Ijc1MDA3Iiwic2l0ZV9pbnRlcm5ldCI6bnVsbCwidm9pZSI6IjIwIGF2ZW51ZSBkZSBTw6lndXIiLCJudW1lcm8iOm51bGwsImNvbW11bmUiOiJQYXJpcyIsImNvZGVfaW5zZWUiOm51bGwsInRlbGVwaG9uZSI6bnVsbCwic291cmNlIjoic2VydmljZV9wdWJsaWMiLCJjb29yZG9ubmVlcyI6W251bGwsbnVsbF0sIm5vbSI6IkRpcmVjdGlvbiBpbnRlcm1pbmlzdMOpcmllbGxlIGR1IG51bcOpcmlxdWUgKERJTlVNKSIsInNpcmV0IjoiMTMwMDI1MjY1MDAwMTMiLCJjb250YWN0X2VtYWlsIjpudWxsLCJuYWYiOm51bGwsImFzcF9pZCI6bnVsbCwiYWN0aXZpdGVfc2x1ZyI6bnVsbCwibGlldV9kaXQiOm51bGwsInNvdXJjZV9pZCI6bnVsbH0=\"\n
+        \      target=\"_blank\"\n       class=\"fr-link sp-text fr-text--sm fr-link--sm\"\n
+        \      title=\"Am\xE9liorer les informations d\u2019accessibilit\xE9 via Acc\xE8sLibre
+        - acceslibre.beta.gouv.fr - nouvelle fen\xEAtre\"><span class=\"\">Am\xE9liorer
+        les informations d\u2019accessibilit\xE9 via Acc\xE8sLibre&nbsp;<span class=\"fr-icon-external-link-line
+        fr-fi--sm\"></span></span></a></p></div></div><!-- Entr\xE9e --><div class=\"sp-panel
+        sp-blue-panel fr-py-1v\" data-test=\"donneeAcceslibre\"><h3 class=\"sp-panel-title\"><button
+        class=\"sp-btn sp-btn-collapse\" type=\"button\" data-toggle=\"collapse\"
+        data-target=\"#sp-panel-3\" aria-expanded=\"false\" id=\"sp-panel-aria-3\"
+        aria-controls=\"sp-panel-3\" ><span class=\"sp-panel-btn-text sp-panel-with-icon
+        fr-text--bold fr-py-1v\"><svg aria-hidden=\"true\" focusable=\"false\" class=\"sp-icon
+        sp-panel-icon fr-mr-1w sp-icon-ri-bus-line \" viewBox=\"0 0 24 24\" width=\"24\"
+        height=\"24\"><path d=\"M2 21v-2h2V4.835c0-.484.346-.898.821-.984l9.472-1.722c.326-.06.638.157.697.483.007.035.01.07.01.107v1.28L19
+        4c.552 0 1 .448 1 1v14h2v2h-4V6h-3v15H2zM13 4.396L6 5.67V19h7V4.396zM12 11v2h-2v-2h2z\"></path></svg>\n
+        \           Entr\xE9e\n          </span><svg aria-hidden=\"true\" focusable=\"false\"
+        class=\"sp-icon sp-icon-ri-arrow-down-s-line \" viewBox=\"0 0 24 24\" width=\"20\"
+        height=\"20\"><path d=\"M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636
+        7.05 8.222z\"></path></svg></button></h3><div class=\"sp-panel-content showRS_sp-panel-3
+        fr-mx-1w collapse\" id=\"sp-panel-3\" aria-labelledby=\"sp-panel-aria-3\"
+        aria-hidden=\"false\" data-test=\"donneeAcceslibreContent\"><!-- donneeAcceslibre
+        est non null --><!-- donneeAcceslibre est null --><p data-test=\"donneeAccesslibreNoInfo\">\n
+        \   Pas d'information disponible. Si vous connaissez ces informations, <strong>partagez-les</strong>
+        via Acc\xE8sLibre.\n  </p><p class=\"acces-libre fr-mb-1v\" data-test='pAccesLibreLinkEmpty'><a
+        data-test='aAccesLibreLinkEmpty'\n       href=\"https://acceslibre.beta.gouv.fr/contrib/admin-infos/?data=eyJjb2RlX3Bvc3RhbCI6Ijc1MDA3Iiwic2l0ZV9pbnRlcm5ldCI6bnVsbCwidm9pZSI6IjIwIGF2ZW51ZSBkZSBTw6lndXIiLCJudW1lcm8iOm51bGwsImNvbW11bmUiOiJQYXJpcyIsImNvZGVfaW5zZWUiOm51bGwsInRlbGVwaG9uZSI6bnVsbCwic291cmNlIjoic2VydmljZV9wdWJsaWMiLCJjb29yZG9ubmVlcyI6W251bGwsbnVsbF0sIm5vbSI6IkRpcmVjdGlvbiBpbnRlcm1pbmlzdMOpcmllbGxlIGR1IG51bcOpcmlxdWUgKERJTlVNKSIsInNpcmV0IjoiMTMwMDI1MjY1MDAwMTMiLCJjb250YWN0X2VtYWlsIjpudWxsLCJuYWYiOm51bGwsImFzcF9pZCI6bnVsbCwiYWN0aXZpdGVfc2x1ZyI6bnVsbCwibGlldV9kaXQiOm51bGwsInNvdXJjZV9pZCI6bnVsbH0=\"\n
+        \      target=\"_blank\"\n       class=\"fr-link sp-text fr-text--sm fr-link--sm\"\n
+        \      title=\"Am\xE9liorer les informations d\u2019accessibilit\xE9 via Acc\xE8sLibre
+        - acceslibre.beta.gouv.fr - nouvelle fen\xEAtre\"><span class=\"\">Am\xE9liorer
+        les informations d\u2019accessibilit\xE9 via Acc\xE8sLibre&nbsp;<span class=\"fr-icon-external-link-line
+        fr-fi--sm\"></span></span></a></p></div></div><!-- Accueil --><div class=\"sp-panel
+        sp-blue-panel fr-py-1v\" data-test=\"donneeAcceslibre\"><h3 class=\"sp-panel-title\"><button
+        class=\"sp-btn sp-btn-collapse\" type=\"button\" data-toggle=\"collapse\"
+        data-target=\"#sp-panel-4\" aria-expanded=\"false\" id=\"sp-panel-aria-4\"
+        aria-controls=\"sp-panel-4\" ><span class=\"sp-panel-btn-text sp-panel-with-icon
+        fr-text--bold fr-py-1v\"><svg aria-hidden=\"true\" focusable=\"false\" class=\"sp-icon
+        sp-panel-icon fr-mr-1w sp-icon-ri-bus-line \" viewBox=\"0 0 24 24\" width=\"24\"
+        height=\"24\"><path d=\"M5 9a1 1 0 0 1 1 1 6.97 6.97 0 0 1 4.33 1.5h2.17c1.332
+        0 2.53.579 3.353 1.499L19 13a5 5 0 0 1 4.516 2.851C21.151 18.972 17.322 21
+        13 21c-2.79 0-5.15-.603-7.06-1.658A.998.998 0 0 1 5 20H2a1 1 0 0 1-1-1v-9a1
+        1 0 0 1 1-1h3zm1.001 3L6 17.021l.045.033C7.84 18.314 10.178 19 13 19c3.004
+        0 5.799-1.156 7.835-3.13l.133-.133-.12-.1a2.994 2.994 0 0 0-1.643-.63L19 15l-2.112-.001c.073.322.112.657.112
+        1.001v1H8v-2l6.79-.001-.034-.078a2.501 2.501 0 0 0-2.092-1.416L12.5 13.5H9.57A4.985
+        4.985 0 0 0 6.002 12zM4 11H3v7h1v-7zm9.646-7.425L14 3.93l.354-.354a2.5 2.5
+        0 1 1 3.535 3.536L14 11l-3.89-3.89a2.5 2.5 0 1 1 3.536-3.535zm-2.12 1.415a.5.5
+        0 0 0-.06.637l.058.069L14 8.17l2.476-2.474a.5.5 0 0 0 .058-.638l-.058-.07a.5.5
+        0 0 0-.638-.057l-.07.058-1.769 1.768-1.767-1.77-.068-.056a.5.5 0 0 0-.638.058z\"></path></svg>\n
+        \           Accueil\n          </span><svg aria-hidden=\"true\" focusable=\"false\"
+        class=\"sp-icon sp-icon-ri-arrow-down-s-line \" viewBox=\"0 0 24 24\" width=\"20\"
+        height=\"20\"><path d=\"M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636
+        7.05 8.222z\"></path></svg></button></h3><div class=\"sp-panel-content showRS_sp-panel-4
+        fr-mx-1w collapse\" id=\"sp-panel-4\" aria-labelledby=\"sp-panel-aria-4\"
+        aria-hidden=\"false\" data-test=\"donneeAcceslibreContent\"><!-- donneeAcceslibre
+        est non null --><!-- donneeAcceslibre est null --><p data-test=\"donneeAccesslibreNoInfo\">\n
+        \   Pas d'information disponible. Si vous connaissez ces informations, <strong>partagez-les</strong>
+        via Acc\xE8sLibre.\n  </p><p class=\"acces-libre fr-mb-1v\" data-test='pAccesLibreLinkEmpty'><a
+        data-test='aAccesLibreLinkEmpty'\n       href=\"https://acceslibre.beta.gouv.fr/contrib/admin-infos/?data=eyJjb2RlX3Bvc3RhbCI6Ijc1MDA3Iiwic2l0ZV9pbnRlcm5ldCI6bnVsbCwidm9pZSI6IjIwIGF2ZW51ZSBkZSBTw6lndXIiLCJudW1lcm8iOm51bGwsImNvbW11bmUiOiJQYXJpcyIsImNvZGVfaW5zZWUiOm51bGwsInRlbGVwaG9uZSI6bnVsbCwic291cmNlIjoic2VydmljZV9wdWJsaWMiLCJjb29yZG9ubmVlcyI6W251bGwsbnVsbF0sIm5vbSI6IkRpcmVjdGlvbiBpbnRlcm1pbmlzdMOpcmllbGxlIGR1IG51bcOpcmlxdWUgKERJTlVNKSIsInNpcmV0IjoiMTMwMDI1MjY1MDAwMTMiLCJjb250YWN0X2VtYWlsIjpudWxsLCJuYWYiOm51bGwsImFzcF9pZCI6bnVsbCwiYWN0aXZpdGVfc2x1ZyI6bnVsbCwibGlldV9kaXQiOm51bGwsInNvdXJjZV9pZCI6bnVsbH0=\"\n
+        \      target=\"_blank\"\n       class=\"fr-link sp-text fr-text--sm fr-link--sm\"\n
+        \      title=\"Am\xE9liorer les informations d\u2019accessibilit\xE9 via Acc\xE8sLibre
+        - acceslibre.beta.gouv.fr - nouvelle fen\xEAtre\"><span class=\"\">Am\xE9liorer
+        les informations d\u2019accessibilit\xE9 via Acc\xE8sLibre&nbsp;<span class=\"fr-icon-external-link-line
+        fr-fi--sm\"></span></span></a></p></div></div></div><p><a rel=\"nofollow\"
+        data-test=\"suggest-annuaire-link\" class=\"fr-tag fr-icon-pencil-line fr-tag--icon-left
+        sp-no-print\" href=\"https://lannuaire.service-public.fr/gouvernement/d1a97841-b4bf-46df-a089-1003e4e266b4/avertissement-demande-de-mise-a-jour\"\n
+        \      ><span>Mettre cette page \xE0 jour (r\xE9serv\xE9 aux services publics)</span></a></p><p
+        data-test=\"lastUpdate\"\n     class=\"fr-text--xs sp-text--mention\">Modifi\xE9
+        le\_24 avril 2025 - Direction de l&#39;information l\xE9gale et administrative
+        (Premier ministre)</p></div></article></div></div></main></div><footer role=\"contentinfo\"
+        id=\"footer\"><div class=\"fr-follow\"><div class=\"fr-container\"><div class=\"fr-grid-row\"><div
+        class=\"fr-col-12 fr-col-md-8\"><div class=\"fr-follow__newsletter\"><div><h2
+        class=\"fr-h5 fr-follow__title\">Recevoir la lettre de Service-Public.fr</h2><p
+        class=\"fr-text--sm fr-follow__desc\">Abonnement hebdomadaire gratuit</p></div><div><a
+        href=\"https://www.service-public.fr/actualites/lettresp/abonnement\" class=\"fr-btn\"\n
+        \                title=\"S\u2019abonner \xE0 notre lettre d\u2019information\">\n
+        \               S\u2019abonner\n              </a></div><ul id=\"fr-newsletter-hint-text\"
+        class=\"fr-hint-text sp-list-link-newsletter\"><li class=\"sp-item-link-newsletter\"><a
+        href=\"https://www.service-public.fr/actualites/lettresp/archives/\"\n                   class=\"sp-link-newsletter\">Lire
+        la derni\xE8re lettre</a></li><li class=\"sp-item-link-newsletter\"><a href=\"https://www.service-public.fr/actualites/lettresp/archives\"
+        class=\"sp-link-newsletter\">Voir toutes les lettres</a></li></ul></div></div><div
+        class=\"fr-col-12 fr-col-md-4\"><div class=\"fr-follow__social\"><h2 class=\"fr-h5
+        fr-mb-3v fr-mb-3v\">Suivez-nous\n              <br> sur les r\xE9seaux sociaux</h2><ul
+        class=\"fr-btns-group\" data-test=\"reseaux-links\"><li><a class=\"fr-btn--facebook
+        fr-btn\" title=\"facebook - nouvelle fen\xEAtre\" href=\"https://www.facebook.com/ServicePublicFr\"
+        target=\"_blank\">\n                  facebook\n                </a></li><li><a
+        class=\"fr-btn--twitter-x fr-btn\" title=\"X (anciennement twitter) - nouvelle
+        fen\xEAtre\" href=\"https://x.com/servicepublicfr\" target=\"_blank\">\n                  X
+        (anciennement twitter)\n                </a></li><li><a class=\"fr-btn--linkedin
+        fr-btn\" title=\"linkedin - nouvelle fen\xEAtre\" href=\"https://www.linkedin.com/company/service-public-fr\"
+        target=\"_blank\">\n                  linkedin\n                </a></li><li><a
+        class=\"fr-btn--instagram fr-btn\" title=\"instagram - nouvelle fen\xEAtre\"
+        href=\"https://www.instagram.com/servicepublicfr/\" target=\"_blank\">\n                  instagram\n
+        \               </a></li><li><a class=\"fr-btn--youtube fr-btn\" title=\"youtube
+        - nouvelle fen\xEAtre\" href=\"https://www.youtube.com/ServicePublicFrance\"
+        target=\"_blank\">\n                  youtube\n                </a></li></ul></div></div></div></div></div><div
+        class=\"fr-footer\"><div class=\"fr-footer__top\"><div class=\"fr-container\"><div
+        role=\"list\" class=\"fr-grid-row fr-grid-row--start fr-grid-row--gutters\"
+        data-test=\"particulier-sur-footer\"><div role=\"listitem\" class=\"fr-col-12
+        fr-col-sm-12 fr-col-md-6\"><div class=\"fr-footer__top-cat\">Fiches pratiques
+        par th\xE8mes</div><ul class=\"fr-footer__top-list sp-theme-list\"><li><a
+        class=\"fr-footer__top-link\"\n                   href=\"https://www.service-public.fr/particuliers/vosdroits/N19810\">Papiers
+        - Citoyennet\xE9 - \xC9lections</a></li><li><a class=\"fr-footer__top-link\"\n
+        \                  href=\"https://www.service-public.fr/particuliers/vosdroits/N19805\">Famille
+        - Scolarit\xE9</a></li><li><a class=\"fr-footer__top-link\"\n                   href=\"https://www.service-public.fr/particuliers/vosdroits/N19811\">Social
+        - Sant\xE9</a></li><li><a class=\"fr-footer__top-link\"\n                   href=\"https://www.service-public.fr/particuliers/vosdroits/N19806\">Travail
+        - Formation</a></li><li><a class=\"fr-footer__top-link\"\n                   href=\"https://www.service-public.fr/particuliers/vosdroits/N19808\">Logement</a></li><li><a
+        class=\"fr-footer__top-link\"\n                   href=\"https://www.service-public.fr/particuliers/vosdroits/N19812\">Transports
+        - Mobilit\xE9</a></li><li><a class=\"fr-footer__top-link\"\n                   href=\"https://www.service-public.fr/particuliers/vosdroits/N19803\">Argent
+        - Imp\xF4ts - Consommation</a></li><li><a class=\"fr-footer__top-link\"\n
+        \                  href=\"https://www.service-public.fr/particuliers/vosdroits/N19807\">Justice</a></li><li><a
+        class=\"fr-footer__top-link\"\n                   href=\"https://www.service-public.fr/particuliers/vosdroits/N19804\">\xC9tranger
+        - Europe</a></li><li><a class=\"fr-footer__top-link\"\n                   href=\"https://www.service-public.fr/particuliers/vosdroits/N19809\">Loisirs
+        - Sports - Culture</a></li><li><a class=\"fr-footer__top-link\"\n                   href=\"https://www.service-public.fr/particuliers/vosdroits/N31931\">Associations,
+        fondations et fonds de dotation</a></li></ul></div><div role=\"listitem\"
+        class=\"fr-col-12 fr-col-sm-6 fr-col-md-3\"><div class=\"fr-footer__top-cat\">D\xE9marches
+        et outils</div><ul class=\"fr-footer__top-list\"><li><a class=\"fr-footer__top-link\"\n
+        \    rel=\"noopener noreferrer\"\n     target=\"_self\"\n     href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=teleservice\"\n
+        \    title=\"D\xE9marches en ligne - www.service-public.fr - Nouvelle fen\xEAtre\"\n
+        \    >D\xE9marches en ligne</a></li><li><a class=\"fr-footer__top-link\"\n
+        \    rel=\"noopener noreferrer\"\n     target=\"_self\"\n     href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=formulaire\"\n
+        \    title=\"Formulaires administratifs (cerfas) - www.service-public.fr -
+        Nouvelle fen\xEAtre\"\n     >Formulaires administratifs (cerfas)</a></li><li><a
+        class=\"fr-footer__top-link\"\n     rel=\"noopener noreferrer\"\n     target=\"_self\"\n
+        \    href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=simulateur\"\n
+        \    title=\"Simulateurs - www.service-public.fr - Nouvelle fen\xEAtre\"\n
+        \    >Simulateurs</a></li><li><a class=\"fr-footer__top-link\"\n     rel=\"noopener
+        noreferrer\"\n     target=\"_self\"\n     href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=modeleLettre\"\n
+        \    title=\"Mod\xE8les de lettres - www.service-public.fr - Nouvelle fen\xEAtre\"\n
+        \    >Mod\xE8les de lettres</a></li><li><a class=\"fr-footer__top-link\"\n
+        \    rel=\"noopener noreferrer\"\n     target=\"_self\"\n     href=\"https://www.service-public.fr/particuliers/recherche?rubricFilter=serviceEnLigne&amp;rubricTypeFilter=outilrecherche\"\n
+        \    title=\"Outils de recherche - www.service-public.fr - Nouvelle fen\xEAtre\"\n
+        \    >Outils de recherche</a></li><li><a class=\"fr-footer__top-link\"\n     rel=\"noopener
+        noreferrer\"\n     target=\"_self\"\n     href=\"https://www.service-public.fr/particuliers/vosdroits/F33683\"\n
+        \    title=\"Allo Service Public - www.service-public.fr - Nouvelle fen\xEAtre\"\n
+        \    >Allo Service Public</a></li><li><a class=\"fr-footer__top-link\"\n     rel=\"noopener
+        noreferrer\"\n     target=\"_self\"\n     href=\"https://lannuaire.service-public.fr/\"\n
+        \    title=\"Annuaire de l&#39;administration - lannuaire.service-public.fr
+        - Nouvelle fen\xEAtre\"\n     >Annuaire de l&#39;administration</a></li></ul></div><div
+        role=\"listitem\" class=\"fr-col-12 fr-col-sm-6 fr-col-md-3\"><div class=\"fr-footer__top-cat\">Nous
+        conna\xEEtre</div><ul class=\"fr-footer__top-list\"><li><a class=\"fr-footer__top-link\"\n
+        \                    href=\"https://www.service-public.fr/D10002\"\n                     >Chiffres</a></li><li><a
+        class=\"fr-footer__top-link\"\n                     href=\"https://www.service-public.fr/P10004\"\n
+        \                    >Mise \xE0 disposition des donn\xE9es</a></li><li><a
+        class=\"fr-footer__top-link\"\n                     href=\"https://www.service-public.fr/P10002\"\n
+        \                    >Missions et valeurs</a></li><li><a class=\"fr-footer__top-link\"\n
+        \                    href=\"https://www.service-public.fr/D10003\"\n                     >Aide</a></li><li><a
+        class=\"fr-footer__top-link\"\n                     href=\"https://www.service-public.fr/D10000\"\n
+        \                    >Vous \xEAtes une administration\_?</a></li><li><a class=\"fr-footer__top-link\"\n
+        \                    href=\"https://www.service-public.fr/P10026\"\n                     >Vous
+        \xEAtes journaliste\_?</a></li><li><a class=\"fr-footer__top-link\"\n                     href=\"https://www.service-public.fr/P10017\"\n
+        \                    >Contacter Service-Public.fr</a></li></ul></div></div></div></div><div
+        class=\"fr-container\"><div class=\"fr-footer__body\"><div class=\"fr-footer__brand
+        fr-enlarge-link\"><p class=\"fr-logo fr-logo--lg\">R\xE9publique <br>Fran\xE7aise</p></div><div
+        class=\"fr-footer__content\"><p class=\"fr-footer__content-desc\">Service
+        Public vous informe et vous oriente vers les services qui\n            permettent
+        de conna\xEEtre vos obligations, d\u2019exercer vos droits et de faire vos
+        d\xE9marches du quotidien.</p><p class=\"fr-footer__content-desc\">\n            Il
+        est \xE9dit\xE9 par la\n            <a target=\"_blank\" rel=\"noopener noreferrer\"
+        href=\"https://www.dila.premier-ministre.gouv.fr/\"\n               title=\"Direction
+        de l'information l\xE9gale et administrative - Nouvelle fen\xEAtre\"\n                >\n
+        \             Direction de l\u2019information l\xE9gale et administrative
+        <span class=\"fr-icon-external-link-fill fr-icon--sm fr-ml-1v\" aria-hidden=\"true\"></span></a>
+        et r\xE9alis\xE9 en partenariat avec les administrations nationales et locales.\n
+        \         </p><ul class=\"fr-footer__content-list\"><li><a class=\"fr-footer__content-link\"\n
+        \    rel=\"noopener noreferrer\"\n     target=\"_blank\"\n     href=\"https://www.legifrance.gouv.fr/\"\n
+        \    title=\"legifrance.gouv.fr - Nouvelle fen\xEAtre\">legifrance.gouv.fr<span
+        class=\"fr-icon-external-link-fill fr-icon--sm fr-ml-1v\" aria-hidden=\"true\"></span></a></li><li><a
+        class=\"fr-footer__content-link\"\n     rel=\"noopener noreferrer\"\n     target=\"_blank\"\n
+        \    href=\"https://www.info.gouv.fr/\"\n     title=\"info.gouv.fr - Nouvelle
+        fen\xEAtre\">info.gouv.fr<span class=\"fr-icon-external-link-fill fr-icon--sm
+        fr-ml-1v\" aria-hidden=\"true\"></span></a></li><li><a class=\"fr-footer__content-link\"\n
+        \    rel=\"noopener noreferrer\"\n     target=\"_blank\"\n     href=\"https://www.data.gouv.fr/\"\n
+        \    title=\"data.gouv.fr - Nouvelle fen\xEAtre\">data.gouv.fr<span class=\"fr-icon-external-link-fill
+        fr-icon--sm fr-ml-1v\" aria-hidden=\"true\"></span></a></li></ul></div></div><div
+        class=\"fr-footer__partners\"><div class=\"fr-footer__partners-title fr-text--bold\"
+        role=\"heading\" aria-level=\"2\">Nos partenaires</div><div class=\"fr-footer__partners-logos\"><div
+        class=\"fr-footer__partners-main\"><a class=\"footer__partners-link\" href=\"https://europa.eu/youreurope/index.htm#en\"\n
+        \              title=\"Your Europe - europa.eu - Nouvelle fen\xEAtre\" target=\"_blank\"><img
+        src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/img/partenaires/logo-your-europe.svg\"\n
+        \                  class=\"fr-footer__logo fr-responsive-img\" alt=\"Your
+        Europe\" width=\"160\" loading=\"lazy\"></a></div><div class=\"fr-footer__partners-sub\"><ul><li
+        class=\"sp-footer-link\"><a class=\"fr-footer__partners-link\" href=\"https://www.vie-publique.fr/\"\n
+        \                  title=\"Vie publique, au c\u0153ur du d\xE9bat public -
+        vie-publique.fr - Nouvelle fen\xEAtre\" target=\"_blank\"><img src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/img/partenaires/logo-VP.svg\"\n
+        \                      class=\"fr-footer__logo fr-responsive-img\" alt=\"Vie
+        publique, au c\u0153ur du d\xE9bat public\"\n                       width=\"120\"
+        loading=\"lazy\"></a></li><li class=\"sp-footer-link\"><a class=\"fr-footer__partners-link\"
+        href=\"https://entreprendre.service-public.fr/\"\n                   title=\"Entreprendre.Service-Public
+        - entreprendre.service-public.fr - Nouvelle fen\xEAtre\"\n                   data-test=\"logo-entreprendre\"\n
+        \                  target=\"_blank\"><img src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/img/partenaires/logo-entreprendre-sp.svg\"\n
+        \                      class=\"fr-footer__logo fr-responsive-img\" alt=\"Entreprendre.Service-Public.fr\"
+        width=\"160\" loading=\"lazy\"></a></li><li class=\"sp-footer-link\"><a class=\"fr-footer__partners-link\"
+        href=\"https://www.plus.transformation.gouv.fr/\"\n                   title=\"Services
+        Publics + - plus.transformation.gouv.fr - Nouvelle fen\xEAtre\"\n                   target=\"_blank\"><img
+        src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/img/partenaires/logo-spplus-footer.svg\"\n
+        \                      class=\"fr-footer__logo fr-responsive-img\" alt=\"Service
+        Publics +\" width=\"120\" loading=\"lazy\"></a></li></ul></div></div></div><div
+        class=\"fr-footer__bottom\"><ul class=\"fr-footer__bottom-list\"><li class=\"fr-footer__bottom-item\"><a
+        class=\"fr-footer__bottom-link\"\n                 href=\"https://www.service-public.fr/P10003\"\n
+        \                >Plan du site</a></li><li class=\"fr-footer__bottom-item\"><a
+        class=\"fr-footer__bottom-link\"\n                 href=\"https://www.service-public.fr/P10000\"\n
+        \                >Accessibilit\xE9\_: totalement conforme</a></li><li class=\"fr-footer__bottom-item\"><a
+        class=\"fr-footer__bottom-link\"\n                 href=\"https://www.service-public.fr/P10125\"\n
+        \                >Accessibilit\xE9 des services en ligne</a></li><li class=\"fr-footer__bottom-item\"><a
+        class=\"fr-footer__bottom-link\"\n                 href=\"https://www.service-public.fr/P10025\"\n
+        \                >Mentions l\xE9gales</a></li><li class=\"fr-footer__bottom-item\"><a
+        class=\"fr-footer__bottom-link\"\n                 href=\"https://www.service-public.fr/P10001\"\n
+        \                >Donn\xE9es personnelles et s\xE9curit\xE9</a></li><li class=\"fr-footer__bottom-item\"><a
+        class=\"fr-footer__bottom-link\"\n                 href=\"https://www.service-public.fr/P10050\"\n
+        \                >Conditions g\xE9n\xE9rales d'utilisation</a></li><li class=\"fr-footer__bottom-item\"><a
+        class=\"fr-footer__bottom-link\"\n                 target=\"_blank\" rel=\"noopener
+        noreferrer\"\n                 href=\"https://www.service-public.fr/P10001\"\n
+        \                title=\"Gestion des cookies\"\n                 >Gestion
+        des cookies</a></li></ul><div class=\"fr-footer__bottom-copy\"><p><span>Sauf
+        mention contraire, tous les contenus de ce site sont sous </span><a href=\"https://github.com/etalab/licence-ouverte/blob/master/LO.md\"
+        rel=\"noopener noreferrer\"\n               target=\"_blank\" title=\"licence
+        etalab-2.0 - nouvelle fen\xEAtre\">licence etalab-2.0 <span class=\"fr-icon-external-link-fill
+        fr-icon--sm fr-ml-1v\" aria-hidden=\"true\"></span></a></p></div></div></div></div></footer><script
+        data-type=\"application/javascript\" data-test=\"eulerian\">\n        window.dsfr
+        = {\n            analytics: {\n              domain: \"jcmm.service-public.fr\",\n
+        \             page: {\n                id: \"\",\n                title: \"Direction_interministerielle_du_numerique__DINUM_\",\n
+        \               labels: [\"annuaire\", \"national_\", \"Administration_Nationale\",
+        \"Administration_centrale__ou_Ministere_\", \"d1a97841-b4bf-46df-a089-1003e4e266b4\"],\n
+        \               categories: [\"Administration_Nationale\", \"Administration_centrale__ou_Ministere_\",
+        \"d1a97841-b4bf-46df-a089-1003e4e266b4\"],\n                template: \"national_\",\n
+        \               group: \"\",\n                theme: \"annuaire\",\n                current:
+        \"0\",\n                path: document.location.pathname\n              },\n
+        \             user: {\n                uid: \"\",\n                status:
+        \"anonym\",\n                language: \"FR\",\n                type: \"annuaire\"\n
+        \             },\n              site: {\n                entity: \"SPM ||
+        DILA\",\n                language: \"FR\",\n                target: \"information\",\n
+        \               type: \"standard\",\n                environnement: \"production\"\n
+        \             },\n              isActionEnabled: true\n          }\n        };\n
+        \     </script><script data-test=\"eulerian-prod-mode\">\n      window.dsfr.production
+        = true;\n    </script><script> document.urlResourcesRoot = \"https:\\/\\/www.service-public.fr\\/resources\\/v-d1e3e2871c\";</script><script
+        type=\"module\" src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/dsfr.module.min.js\"></script><script
+        type=\"text/javascript\" nomodule\n          src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/dsfr.nomodule.min.js\"></script><script
+        type=\"module\"\n          src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/analytics/analytics.module.min.js\"></script><script
+        type=\"text/javascript\" nomodule\n          src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/dist/analytics/analytics.nomodule.min.js\"></script><script
+        type=\"text/javascript\" src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/js/require.js\"></script><script
+        type=\"text/javascript\" src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/js/common.js\"></script><script
+        type=\"text/javascript\" src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/dsfr-1.12/js/configRgpdPart.js\"></script><script
+        type=\"text/javascript\" src=\"https://www.service-public.fr/resources/v-d1e3e2871c/assets/js/coperia.js\"></script><script>\n
+        \   require(['entreprendre/vdd', 'domReady'], function (vdd, domReady) {\n
+        \     domReady(function () {\n        vdd.loadInfoBulleDefinitionTooltip();\n
+        \       vdd.loadInfoBulleAbreviation();\n        vdd.loadTooltip();\n        vdd.initFocusInterlocuteur();\n
+        \     });\n    });\n  </script><script data-test=\"script_dropdown_list\">\n
+        \   require(['jquery', 'domReady'], function ($, domReady) {\n      domReady(function
+        () {\n        var currentURL = window.location.href;\n        var langParam
+        = new URL(currentURL).searchParams.get('lang');\n        var currentLanguage
+        = (langParam === 'en') ? 'en' : 'fr';\n        $('.fr-translate__language').removeAttr('aria-current');\n
+        \       if (currentLanguage === 'en') {\n          $('#language-en').attr('aria-current',
+        'true');\n        } else {\n          $('#language-fr').attr('aria-current',
+        'true');\n        }\n      });\n    });\n  </script><script>\n        require(['annuaire/ign',
+        'domReady'], function (ign, domReady) {\n            domReady(function ()
+        {\n                if (typeof (ignParam) !== 'undefined') {\n                    ign.preInitMap(ignParam);\n
+        \               }\n            });\n        });\n    </script><script>\n    requirejs(['jquery'],
+        function ($) {\n      $(document).ready(function () {\n        if (/Android|webOS|BlackBerry|IEMobile|Opera
+        Mini/i.test(navigator.userAgent) && $(\"[data-link-map-mobile]\").length)
+        {\n          $(\"[data-link-map-mobile]\").removeAttr(\"hidden\");\n          $(\"[data-link-map-android]\").removeAttr(\"hidden\");\n
+        \         $(\"[data-link-map-desktop]\").attr(\"hidden\", \"hidden\");\n        }
+        else if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && $(\"[data-link-map-mobile]\").length)
+        {\n          $(\"[data-link-map-mobile]\").removeAttr(\"hidden\");\n          $(\"[data-link-map-ios]\").removeAttr(\"hidden\");\n
+        \         $(\"[data-link-map-desktop]\").attr(\"hidden\", \"hidden\")\n        }\n
+        \     });\n    });\n  </script><script type=\"text/javascript\">\n  window.rsConf
+        = {general: {usePost: true}};\n</script></body></html>\n"
+    headers:
+      Age:
+      - '24199'
+      Cache-Control:
+      - max-age=0, s-maxage=28800, public
+      Connection:
+      - keep-alive
+      Content-Language:
+      - fr
+      Content-Security-Policy:
+      - frame-ancestors 'self' https://www.service-public.fr https://entreprendre.service-public.fr
+      Content-Type:
+      - text/html;charset=UTF-8
+      Cross-Origin-Embedder-Policy:
+      - unsafe-none
+      Cross-Origin-Opener-Policy:
+      - same-origin-allow-popups
+      Cross-Origin-Resource-Policy:
+      - cross-origin
+      Date:
+      - Fri, 11 Jul 2025 15:14:16 GMT
+      Expires:
+      - Fri, 11 Jul 2025 08:30:57 GMT
+      Permissions-Policy:
+      - accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(),
+        cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(),
+        execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=*,
+        geolocation=(self), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(),
+        midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(),
+        screen-wake-lock=(), sync-xhr=*, usb=(), xr-spatial-tracking=()
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Set-Cookie:
+      - SP_SESSION=ZWNmNDEwY2EtZmVkNS00N2Y2LTk0MjAtMWEzNGFjNGY3ZmFi; Domain=service-public.fr;
+        Path=/; Secure; HttpOnly; SameSite=Lax
+      - 'TS01ad993f=012a7f58e06eb072f98c06db13f58db112e484d208e1ba77a99a30e922c5d699048f0097dc732843673dab2fd74153c79e97fc700e;
+        Path=/; Secure; HttpOnly; '
+      - TS01425d24=012a7f58e007cc96ee0f9c1175c88f2d09f9ac6101e1ba77a99a30e922c5d699048f0097dc861bc9ac6c2fcf6e406de4a85beca3eac09a10fe9bca46d976e0c60aabfb882e;
+        path=/; domain=service-public.fr; HttpOnly; Secure
+      Strict-Transport-Security:
+      - max-age=63072000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+      content-length:
+      - '68118'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"input":["Can you find information about the DINUM, the French government
+      agency responsible for digital transformation?"],"model":"embeddings-small","encoding_format":"float"}'
+    headers:
+      Authorization:
+      - Bearer dummy_token_for_test
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate, zstd
+      connection:
+      - keep-alive
+      content-length:
+      - '177'
+      content-type:
+      - application/json
+      host:
+      - albert.api.etalab.gouv.fr
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: https://albert.api.etalab.gouv.fr/v1/embeddings
+  response:
+    body:
+      string: '{"data":[{"embedding":[-0.031833608,-0.009869889,-0.038340017,-0.036906403,-0.026907854,0.033836994,-0.012865777,0.02075066,-0.012488994,0.043559846,0.019978715,0.0218902,-0.030877866,-0.0011797459,-0.037623208,-0.030197818,0.017561786,-0.02955453,0.0066626347,-0.058814984,0.04620652,-0.013509066,0.024077384,-0.028525267,0.018398061,0.058447387,0.025878591,-0.009961788,0.038376775,-0.01624764,-0.027496004,0.039516315,-0.007232405,-0.04668439,-0.024573635,-0.009419587,-0.023011362,-0.023378955,-0.04455235,-0.02666892,-0.008013541,-0.0013830711,-0.029903743,0.005564449,0.08447302,-0.03863409,-0.047566615,0.018398061,-0.03135574,-0.041721877,0.025933731,-0.0066120904,0.047199022,0.0050038686,0.048632637,0.019960335,-0.00202636,-0.028506886,-0.100794174,-0.02780846,-0.011762996,0.001091868,0.021026356,-0.049588382,0.035068434,0.056315344,0.028139293,-0.03870761,0.0075035053,-0.015411363,-0.027073272,0.014841593,-0.025878591,-0.021467468,-0.08550228,0.007563239,0.018967832,0.0053852466,0.018986212,0.033083428,0.0035656583,-0.018664567,-0.033855375,-0.00047930764,-0.031410877,0.056462385,0.026852716,0.044846423,0.027624661,-0.008854412,-0.02663216,0.0019310153,0.0066810143,-0.048191525,-0.035858758,0.0014278715,-0.016946066,-0.047162265,0.060910266,0.037788626,-0.008422489,0.03878113,0.010770493,-0.014657796,-0.01042128,-0.0033726715,-0.01096348,-0.012608462,-0.0520145,-0.0011148426,-9.9580546e-05,-0.012580892,0.030988144,0.026907854,-0.0254191,-0.017212572,0.014088026,-0.033377502,-0.0058723083,-0.061424896,0.0046684393,-0.029223694,0.020291168,-0.044331793,0.046721153,-0.016532524,0.018931072,0.035141952,-0.014565898,-0.00038051684,0.025363961,0.02663216,-0.0041193464,0.024114143,-0.07822393,-0.037715107,0.040325023,0.0052749687,-0.05962369,-0.02832309,0.02426118,-0.016293587,-0.12446721,-0.061645452,0.012378716,-0.039369278,0.023011362,-0.017598545,0.0016863358,0.01506215,0.015953563,0.036759365,-0.016615232,-0.023985485,-0.026393224,0.018306164,0.0135274455,0.0053852466,-0.05252913,0.025235303,-0.034829497,0.015999513,-0.07043094,-0.036649086,-0.02538234,0.010136395,-0.031374115,0.019335425,0.010825633,0.015282705,-0.0005602931,0.004500725,0.0029637236,0.04466263,0.0043192254,-0.00067545334,0.024426598,0.023305437,-0.025051506,-0.029186934,-0.051021997,0.012351146,-0.028745823,0.021816682,-0.026191046,-0.018912693,-0.007880288,0.0077194665,-0.0041515105,0.008872791,0.0055368794,0.0196295,0.02019927,-0.023342196,-0.028764201,0.014804834,-0.01445562,-0.006575331,-0.005256589,-0.07138669,-0.01847158,0.027937116,0.0033726715,0.014326962,0.0019723696,-0.04403772,-0.00060595514,-0.034553804,0.007402417,-0.07675355,0.012994435,-0.016697941,-0.01617412,-0.005026843,-0.028562026,0.0382665,0.035399266,0.0021125148,0.008509792,-0.029003138,0.029591288,0.06649769,-0.0062720664,-0.030455133,0.036796123,-0.020052234,0.009465536,0.013141473,0.02602563,0.013628534,0.011652718,0.020309549,-0.03701668,-0.0013141473,0.00867521,0.025658036,-0.014474,0.020144131,-0.004500725,0.0015806527,-0.0007748185,-0.06238064,0.017359609,0.016707132,-0.031080043,0.060395636,0.05149987,0.011395403,-0.045214016,0.0038620306,0.014106406,-0.023415715,0.016017893,0.048448842,0.04969866,0.013251751,-0.02137557,-0.026227806,-0.0041515105,0.0059871813,-0.034002412,0.027404105,0.0300324,0.0068096723,0.009796371,0.0016059247,-0.017212572,-0.015007011,0.050617643,-0.008027326,-0.035638202,-0.009520675,0.012204109,0.015374604,0.05675646,0.026356464,0.003294558,-0.0047695274,0.079988375,0.034406766,-0.030234577,0.005426601,-0.006373155,0.011946794,0.02663216,-0.016927687,0.022698907,0.0025777505,0.004213542,-0.12284979,-0.015916804,0.002073458,0.06050591,0.011422972,0.027606282,-0.006465053,-0.03889141,-0.13733299,-0.028139293,-0.019960335,0.0041101566,-0.026981372,-0.029168556,-0.04506698,-0.015328655,-0.03995743,-0.041391045,-0.021908581,-0.044221513,-0.032973148,-0.018986212,0.015981134,0.0031980646,0.0070164436,-0.023875207,-0.049955975,-0.01273712,-0.046574116,-0.038854647,0.016936878,0.006428294,0.057969518,0.03005078,-0.01730447,0.019206768,-0.040582336,-0.01847158,0.035436027,-0.041280765,-0.00055914436,0.022845944,0.04561837,-0.016854169,0.018600238,-0.0020102777,0.0069015706,0.022625389,0.011753807,0.014060456,0.011983553,0.023378955,-0.009437967,-0.0054220064,0.0065661413,-0.005541474,0.0011113964,-0.012029502,-0.03775187,-0.01446481,0.052492373,0.018352112,-0.016946066,-0.024518495,0.027477624,0.041832156,-0.0069658994,-0.030161059,-0.038376775,-0.0100444965,-0.020033853,0.0035426838,-0.009777991,-0.019519223,0.057124052,-0.011404593,-0.014786454,0.01617412,0.043670125,0.011266745,-0.029848604,0.000772521,0.010540748,0.056352105,0.0022377262,-0.029278833,-0.044368554,-0.10807253,-0.0026627565,0.014363721,-0.016302777,0.027385727,-0.039663352,-0.009493106,0.0026926233,0.05194098,0.03459056,0.22393805,-0.035399266,-0.033175327,-0.0031153562,0.047051985,-0.0050222483,0.015990322,0.030271336,-0.011606769,-0.0037471578,0.0531908,0.060542673,0.020989597,0.0072507844,-0.005247399,0.009437967,-0.007825149,-0.00605151,0.076091886,0.01274631,0.012773879,-0.011900844,0.018361302,0.01733204,-0.0037609425,-0.09006044,0.02892962,0.027624661,-0.016890928,0.037439413,-0.0005261184,-0.0042962506,0.009989358,-0.012930106,0.005118741,0.027643042,-0.041464563,-0.008537362,-0.019776538,0.04624328,-0.041758638,-0.05488173,0.0473093,-0.008725754,0.0064374837,-0.0061709783,0.0416116,-0.015144858,0.015190807,-0.018278593,7.581619e-05,-0.035932276,-0.005265779,-0.035546307,0.022331314,-0.005610398,-0.0035702533,-0.016504955,-0.014758885,-0.0038459485,0.09498619,-0.006952115,-0.046721153,0.0028143888,-0.00838573,-0.029370733,0.031466015,-0.048191525,0.0061709783,0.019298665,-0.039442796,-0.009575814,0.012810638,-8.974454e-05,0.04841208,0.03929576,0.029260453,0.005026843,-0.04003095,0.032201204,-0.019445704,-0.000621463,-0.023140019,-0.018609429,0.02075066,-0.037218858,-0.012727929,0.05543312,-0.0063272053,-0.021871822,0.018545099,-0.029940503,-0.008661425,0.039442796,-0.014216684,-0.054109782,0.07594485,-0.032697454,-0.051536627,-0.048044488,0.005270374,-0.028543646,-0.03135574,0.0032003622,0.021577746,0.021430708,0.026687298,0.032807734,-0.0016507251,0.024573635,-0.0056149927,0.026797576,-0.057013772,-0.026191046,-0.039442796,0.013031195,0.00693833,-0.0077286563,-0.0052979435,0.024683913,0.0017345825,0.011156467,-0.006993469,-0.0031268434,-0.019225147,0.0044754525,0.035068434,0.0060928646,0.029958881,0.052933484,0.022662148,0.01037533,0.030234577,0.01728609,0.040766135,0.005679322,-0.011386213,0.01856348,0.00033973693,-0.019243527,0.0069475197,0.014198304,-0.040655855,-0.022570249,0.010549937,0.026448362,-0.012884157,0.0404353,-0.009401207,0.024187662,-0.021743163,0.035472788,0.0012509672,-0.035932276,0.0043100356,-0.033598058,0.0044134213,-0.028194431,-0.01623845,0.0029958882,0.009520675,-0.015245946,0.042567343,0.082267456,7.215461e-05,0.025051506,-0.031043284,0.06421861,0.07002659,0.0053990316,0.002361789,-0.013729623,-0.055984512,-0.0101272045,-0.046610873,-0.020438205,-0.036704224,-0.011845705,-0.014804834,0.011597579,0.031999025,-0.0484856,0.0055368794,-0.015815716,-0.018103987,0.04282466,0.012443044,-0.010752114,0.0031934697,0.001970072,0.00923579,0.027569523,0.031245459,-0.012397096,0.026742438,0.020934457,0.023746548,-0.014951872,0.00978718,0.010274243,-0.015374604,-0.011505681,-0.0011866383,-0.08917822,0.019408945,-0.021504227,-0.020254409,0.0104396595,-0.02310326,0.03343264,-0.032881252,0.00840411,0.007884883,0.0022285364,0.014602657,0.006180168,0.022478351,0.03460894,0.02889286,-0.018811604,-0.027606282,0.03767835,0.0017035668,0.011450542,-0.029885363,-0.004422611,0.033230465,-0.048632637,0.028800962,0.027459245,0.0076137832,-0.0064972173,-0.01792019,-0.020419827,-0.00043335845,0.02654026,-0.044772904,0.018131556,-0.058190074,-0.06462296,0.0077654156,-0.05205126,-0.00034375748,-0.0015990323,-0.0073794425,0.02367303,0.03523385,-0.023599511,0.052235056,0.044331793,-0.026724057,0.0067407484,-0.03231148,0.010163964,-0.012001933,0.0070118485,-0.019261906,0.005904473,-0.03745779,-0.030712448,-0.022202656,-0.010301812,-0.014207494,-0.028672304,-8.8308625e-05,0.026393224,0.018260214,0.009447156,-0.027569523,-0.03411269,0.0015002416,-0.014317772,-0.042934936,-0.0056287777,0.05131607,0.008840627,-0.0041354285,-0.03685126,-0.021614507,0.029278833,0.044147994,0.033083428,-0.029793464,-0.05326432,-0.04679467,0.008188148,0.042677622,-0.019206768,-0.049514864,-0.016293587,-0.004098669,-0.027643042,-0.044956703,0.02714679,-0.050029494,-0.0046983063,-0.029572908,0.02258863,-0.008477628,-0.0075035053,-0.0057482454,0.045765407,-0.0029384517,-0.02075066,0.013123093,-0.043559846,0.00983313,0.01856348,0.031484395,0.024720673,0.0254191,-0.051757183,0.005927447,0.012645221,-0.03940604,-0.06704908,-0.036171213,0.0016449816,-0.026172668,0.023544373,-0.006690204,0.029039897,0.0009603384,-0.013407978,0.0037701323,0.011900844,-0.023415715,2.137715e-05,-0.021026356,0.036667466,-0.023581132,0.023875207,0.04223651,-0.0038941952,0.0030533248,-0.01561354,0.009511486,0.015457313,0.016357917,0.020107372,0.019739779,-0.015190807,0.026117528,-0.016091412,0.00046782035,-0.021026356,0.033212084,0.011110518,-0.008969285,0.012525753,-0.0023307735,0.016992016,0.024996368,-0.020162512,-0.018618617,0.061608694,-0.010136395,0.011753807,0.01273712,-0.005550664,-0.0148599725,0.0026030224,0.032789353,0.069658995,-0.002536396,-0.012838208,0.029811844,-0.024665533,-0.03231148,0.023305437,0.018756466,-1.7886086e-05,0.004576541,-0.07072502,-0.031300597,0.044772904,-0.020088993,-0.041391045,0.0088819815,-0.058631185,0.031594675,-0.046978466,-0.04333929,-0.03361644,0.029095037,0.00433301,0.038045943,-0.03457218,0.004038935,-0.01213059,-0.014970251,-0.059881005,-0.01961112,-0.009107132,-0.120056085,0.05422006,-0.021191774,-0.007361063,0.0017426236,-0.0180029,0.04337605,0.009989358,0.062086567,0.00080353674,0.0072645694,0.03694316,-0.003055622,-0.010016927,0.04745634,0.032274723,-0.0013968558,0.027293827,-0.010752114,0.036814503,-0.029958881,0.02598887,0.027018132,-0.016073031,0.02534558,-0.011450542,0.010807253,0.05076468,-0.029131796,0.020879319,0.024059003,0.048889954,0.019408945,0.012314387,-0.030326474,-0.006005561,-0.0034461904,-0.005766625,-0.046500597,-0.008734944,-0.04554485,0.04212623,-0.03995743,-0.0024697697,0.009355258,0.043633364,0.01446481,-0.0066764196,-0.05885174,0.014069647,0.009640143,0.016403867,-0.077121146,0.0025295038,-0.026907854,0.033800237,-0.0015634217,0.019500842,-0.00048217946,0.09719176,0.01155163,0.01676227,-0.026282946,-0.011873274,-0.017313661,0.050139774,-0.0062123323,0.03940604,0.036593948,0.012360336,-0.030841107,0.0071359114,0.06609333,-0.043045215,-0.010853202,0.023709789,0.020107372,0.013555015,-0.0071726707,-0.028966378,-0.02889286,-0.023378955,-0.06370398,-0.058447387,0.04517726,0.012810638,0.021302052,0.013931799,-0.05131607,0.027036512,-0.06885029,-0.0028235787,0.0001725967,0.0219821,-0.08594339,0.005247399,-0.04098669,-0.023967106,-0.023525992,0.020952838,-0.017083915,0.026356464,-0.013196612,0.020916078,-0.011404593,-0.0041423207,0.051021997,-0.04451559,0.0059917765,-0.003299153,0.012351146,0.028249571,0.024610395,0.0014359127,0.020125752,0.01387666,-0.017010396,-0.009989358,-0.010246673,-0.017773153,-0.024371458,-0.025253683,-0.029315593,-0.03354292,0.014648606,0.050139774,0.057418127,0.036667466,0.0034117284,-0.03571172,0.014363721,0.030804347,-0.0032876655,5.8046768e-05,0.025235303,-0.041758638,0.04223651,0.040619098,-0.010283432,-0.018636998,-0.052859966,0.0518307,-0.019225147,0.004378959,0.0025019343,-0.009796371,-0.017194193,0.018591048,0.010154774,-0.014106406,-0.011689478,-0.017966138,0.0028787176,-0.04168512,0.021816682,0.046647634,-0.0150162,-0.032660697,-0.0013440142,0.059182577,-0.00064156577,-0.009943408,-0.045765407,-0.030289715,-0.004907375,-0.01904135,0.0066856095,-0.046574116,-0.013141473,-0.013058764,0.041979194,0.028176052,0.008027326,0.02018089,0.0010189236,0.01857267,0.0024192256,-0.00662128,0.0020321035,0.020144131,0.034388386,-0.020474965,0.031466015,0.027293827,0.004238814,0.049514864,-0.030859485,-0.019978715,-0.006589116,0.0073748473,-0.034847878,0.005660942,0.032017406,-0.0077837952,0.041133728,0.052418854,0.031613052,0.021853441,0.007361063,0.010917531,0.0013417167,0.037090197,-0.0324769,0.014409671,-0.031613052,0.034994915,-0.009630953,-0.040655855,0.020052234,-0.008583312,0.012250058,-0.006304231,0.030436752,0.052418854,0.0087395385,0.010228293,0.0065064076,-0.028506886,0.046353556,0.014529139,-0.01098186,0.036263112,-0.024353078,6.526223e-05,-0.053411357,-0.03310181,0.012213299,0.024592014,-0.014271823,-0.0052933483,0.009630953,0.009162271,0.019225147,0.028212812,0.04734606,0.017837482,0.021651266,0.034204587,-0.012158159,-0.025308821,0.020162512,-0.023525992,-0.06653445,-0.038744368],"index":0,"object":"embedding"}],"model":"BAAI/bge-m3","object":"list","usage":{"prompt_tokens":18,"completion_tokens":0,"total_tokens":18,"cost":0.0,"carbon":{"kWh":{"min":0.0,"max":0.0},"kgCO2eq":{"min":0.0,"max":0.0}},"details":[{"id":"request-8e04191cf3cc41cda50275c0fcb33fbd","model":"BAAI/bge-m3","usage":{"prompt_tokens":18,"completion_tokens":0,"total_tokens":18,"cost":0.0,"carbon":{"kWh":{"min":0.0,"max":0.0},"kgCO2eq":{"min":0.0,"max":0.0}}}}]},"id":"request-8e04191cf3cc41cda50275c0fcb33fbd"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 11 Jul 2025 15:14:17 GMT
+      Server:
+      - nginx/1.27.4
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      content-length:
+      - '13305'
+    status:
+      code: 200
+      message: OK
 version: 1

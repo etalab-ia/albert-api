@@ -7,7 +7,7 @@ from app.utils.context import global_context
 class TestModels:
     def test_get_model_client(self):
         # Get a language model with more than 1 client
-        router = global_context.models(model="albert-small")
+        router = global_context.model_registry(model="albert-small")
 
         # With roundrobin client should be different at each call
         client_1 = router.get_client(endpoint="")

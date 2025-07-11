@@ -10,11 +10,10 @@ from sqlalchemy import func, select, update
 from starlette.responses import StreamingResponse
 
 from app.helpers._streamingresponsewithstatuscode import StreamingResponseWithStatusCode
-
 from app.sql.models import Usage, User
-from app.utils.context import global_context, request_context
 from app.sql.session import get_db_session
-from app.utils.settings import settings
+from app.utils.configuration import configuration
+from app.utils.context import global_context, request_context
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +202,7 @@ async def log_usage(response: Optional[Response], usage: Usage, start_time: date
     This function captures the duration of the request and sets the status code of the response if available.
     """
 
-    if settings.monitoring.postgres is None or settings.monitoring.postgres.enabled is False:
+    if configuration.settings.monitoring_postgres_enabled is False:
         return
 
     usage.duration = int((datetime.now() - start_time).total_seconds() * 1000)
@@ -213,7 +212,7 @@ async def log_usage(response: Optional[Response], usage: Usage, start_time: date
         usage.status = response.status_code if hasattr(response, "status_code") else None
 
     if usage.request_model:
-        usage.request_model = global_context.models.aliases.get(usage.request_model, usage.request_model)
+        usage.request_model = global_context.model_registry.aliases.get(usage.request_model, usage.request_model)
 
     async for session in get_db_session():
         session.add(usage)

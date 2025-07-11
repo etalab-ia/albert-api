@@ -3,7 +3,7 @@ from logging import Filter, Formatter, Logger, StreamHandler, getLogger
 import sys
 from typing import Optional
 
-from app.utils.settings import settings
+from app.utils.configuration import configuration
 
 client_ip: ContextVar[Optional[str]] = ContextVar("client_ip", default=None)
 
@@ -17,9 +17,9 @@ class ClientIPFilter(Filter):
 
 def init_logger(name) -> Logger:
     logger = getLogger(name=name)
-    logger.setLevel(level=settings.general.log_level)
+    logger.setLevel(level=configuration.settings.log_level)
     handler = StreamHandler(stream=sys.stdout)
-    formatter = Formatter("[%(asctime)s][%(process)d:%(name)s][%(levelname)s] %(client_ip)s - %(message)s")
+    formatter = Formatter(configuration.settings.log_format)
     handler.setFormatter(formatter)
     handler.addFilter(ClientIPFilter())
 

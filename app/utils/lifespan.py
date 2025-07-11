@@ -1,26 +1,30 @@
 from contextlib import asynccontextmanager
 import traceback
+from types import SimpleNamespace
 
 from coredis import ConnectionPool, Redis
 from fastapi import FastAPI
 
-from app.clients.mcp import SecretShellMCPBridgeClient
+from app.clients.mcp_bridge import BaseMCPBridgeClient as MCPBridgeClient
 from app.clients.model import BaseModelClient as ModelClient
 from app.clients.parser import BaseParserClient as ParserClient
 from app.clients.vector_store import BaseVectorStoreClient as VectorStoreClient
-from app.clients.web_search import BaseWebSearchClient as WebSearchClient
+from app.clients.web_search_engine import BaseWebSearchEngineClient as WebSearchEngineClient
+from app.helpers._agentmanager import AgentManager
 from app.helpers._documentmanager import DocumentManager
 from app.helpers._identityaccessmanager import IdentityAccessManager
 from app.helpers._limiter import Limiter
+from app.helpers._multiagentmanager import MultiAgentManager
 from app.helpers._parsermanager import ParserManager
 from app.helpers._usagetokenizer import UsageTokenizer
 from app.helpers._websearchmanager import WebSearchManager
-from app.helpers.agents import AgentsManager
 from app.helpers.models import ModelRegistry
 from app.helpers.models.routers import ModelRouter
+from app.schemas.core.configuration import Configuration
+from app.schemas.core.context import GlobalContext
+from app.utils.configuration import get_configuration
 from app.utils.context import global_context
 from app.utils.logging import init_logger
-from app.utils.settings import settings
 
 logger = init_logger(name=__name__)
 
@@ -29,102 +33,131 @@ logger = init_logger(name=__name__)
 async def lifespan(app: FastAPI):
     """Lifespan event to initialize clients (models API and databases)."""
 
-    # setup redis
-    assert settings.databases.redis is not None, "Redis database connection parameters must be set in configuration."
-    redis = ConnectionPool(**settings.databases.redis.args)
+    configuration = get_configuration()
+
+    # Dependencies
+    mcp_bridge = MCPBridgeClient.import_module(type=configuration.dependencies.mcp_bridge.type)(**configuration.dependencies.mcp_bridge.model_dump()) if configuration.dependencies.mcp_bridge else None  # fmt: off
+    parser = ParserClient.import_module(type=configuration.dependencies.parser.type)(**configuration.dependencies.parser.model_dump()) if configuration.dependencies.parser else None  # fmt: off
+    redis = ConnectionPool(**configuration.dependencies.redis.model_dump())
+    vector_store = VectorStoreClient.import_module(type=configuration.dependencies.vector_store.type)(**configuration.dependencies.vector_store.model_dump()) if configuration.dependencies.vector_store else None  # fmt: off
+    web_search_engine = WebSearchEngineClient.import_module(type=configuration.dependencies.web_search_engine.type)(**configuration.dependencies.web_search_engine.model_dump()) if configuration.dependencies.web_search_engine else None  # fmt: off
+
     redis_test_client = Redis(connection_pool=redis)
-    assert (await redis_test_client.ping()).decode('ascii') == "PONG", "Redis database is not reachable."
+    assert (await redis_test_client.ping()).decode("ascii") == "PONG", "Redis database is not reachable."
+    assert await vector_store.check() if vector_store else True, "Vector store database is not reachable."
 
-    # Global context: models
-    routers = []
-    for model in settings.models:
-        clients = []
-        for client in model.clients:
-            try:
-                # model client can be not reatachable to API start up
-                client = (await ModelClient.import_module(type=client.type, connection_pool=redis, model_name=client.model, api_url=client.args.api_url))(
-                    model=client.model,
-                    costs=client.costs,
-                    carbon=client.carbon,
-                    connection_pool=redis,
-                    **client.args.model_dump(),
-                )
-                clients.append(client)
-            except Exception:
-                logger.debug(msg=traceback.format_exc())
-                continue
-        if not clients:
-            logger.error(msg=f"skip model {model.id} (0/{len(model.clients)} clients).")
-            if settings.web_search and model.id == settings.web_search.query_model:
-                raise ValueError(f"Web search model ({model.id}) must be reachable.")
-            if settings.databases.vector_store and model.id == settings.databases.vector_store.model:
-                raise ValueError(f"Vector store embedding model ({model.id}) must be reachable.")
-            continue
+    dependencies = SimpleNamespace(mcp_bridge=mcp_bridge, parser=parser, redis=redis, vector_store=vector_store, web_search_engine=web_search_engine)
 
-        logger.info(msg=f"add model {model.id} ({len(clients)}/{len(model.clients)} clients).")
-        model = model.model_dump()
-        model["clients"] = clients
-        routers.append(ModelRouter(**model))
-
-    global_context.models = ModelRegistry(routers=routers)
-
-    # Global context: iam
-    global_context.iam = IdentityAccessManager()
-
-    # Global context: limiter
-    global_context.limiter = Limiter(connection_pool=redis, strategy=settings.auth.limiting_strategy)
-
-    # Global context: tokenizer
-    global_context.tokenizer = UsageTokenizer(tokenizer=settings.general.tokenizer)
-
-    # Global context: mcp
-    mcp_bridge = SecretShellMCPBridgeClient(mcp_bridge_url=settings.mcp.mcp_bridge_url)
-    global_context.mcp.agents_manager = AgentsManager(mcp_bridge=mcp_bridge, model_registry=global_context.models)
-
-    # Global context: documents
-
-    ## documents dependency: web search
-    web_search = WebSearchClient.import_module(
-        websearch_type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
-    if web_search:
-        web_search = WebSearchManager(
-            web_search=web_search,
-            model=global_context.models(model=settings.web_search.query_model),
-            limited_domains=settings.web_search.limited_domains,
-            user_agent=settings.web_search.user_agent,
-        )
-
-    ## documents dependency: parser
-    parser = ParserClient.import_module(parser_type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
-    parser = ParserManager(parser=parser)
-
-    ## documents dependency: vector store
-    vector_store = None
-    if settings.databases.vector_store:
-        vector_store = VectorStoreClient.import_module(
-            database_type=settings.databases.vector_store.type
-        )(
-            **settings.databases.vector_store.args,
-            model=global_context.models(model=settings.databases.vector_store.model)
-        )  # fmt: off
-
-    if vector_store:
-        assert await vector_store.check(), "Vector store database is not reachable."
-
-    ## documents dependency: multi agents
-    multi_agents_model = global_context.models(model=settings.multi_agents_search.model) if settings.multi_agents_search else None
-    multi_agents_reranker_model=global_context.models(model=settings.multi_agents_search.ranker_model) if settings.multi_agents_search else None  # fmt: off
-
-    global_context.documents = DocumentManager(
-        vector_store=vector_store,
-        parser=parser,
-        web_search=web_search,
-        multi_agents_model=multi_agents_model,
-        multi_agents_reranker_model=multi_agents_reranker_model,
-    )
+    # setup global context
+    await _setup_model_registry(configuration=configuration, global_context=global_context, dependencies=dependencies)
+    await _setup_identity_access_manager(configuration=configuration, global_context=global_context, dependencies=dependencies)
+    await _setup_limiter(configuration=configuration, global_context=global_context, dependencies=dependencies)
+    await _setup_tokenizer(configuration=configuration, global_context=global_context, dependencies=dependencies)
+    await _setup_agent_manager(configuration=configuration, global_context=global_context, dependencies=dependencies)
+    await _setup_document_manager(configuration=configuration, global_context=global_context, dependencies=dependencies)
 
     yield
 
     # cleanup resources when app shuts down
     if vector_store:
         await vector_store.close()
+
+
+async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
+    routers = []
+    for model in configuration.models:
+        providers = []
+        for provider in model.providers:
+            try:
+                # model provider can be not reatachable to API start up
+                provider = ModelClient.import_module(type=provider.type)(
+                    redis=dependencies.redis,
+                    metrics_retention_ms=configuration.settings.metrics_retention_ms,
+                    **provider.model_dump(),
+                )
+                providers.append(provider)
+            except Exception:
+                logger.debug(msg=traceback.format_exc())
+                continue
+        if not providers:
+            logger.error(msg=f"skip model {model.name} (0/{len(model.providers)} providers).")
+
+            # check if models specified in configuration are reachable
+            if configuration.settings.search_web_query_model and model.name == configuration.settings.search_web_query_model:
+                raise ValueError(f"Query web search model ({model.name}) must be reachable.")
+            if configuration.settings.vector_store_model and model.name == configuration.settings.vector_store_model:
+                raise ValueError(f"Vector store embedding model ({model.name}) must be reachable.")
+            if model.name == configuration.settings.search_multi_agents_synthesis_model:
+                raise ValueError(f"Multi agents synthesis model ({model.name}) must be reachable.")
+            if model.name == configuration.settings.search_multi_agents_reranker_model:
+                raise ValueError(f"Multi agents reranker model ({model.name}) must be reachable.")
+
+            continue
+
+        logger.info(msg=f"add model {model.name} ({len(providers)}/{len(model.providers)} providers).")
+        model = model.model_dump()
+        model["providers"] = providers
+        routers.append(ModelRouter(**model))
+
+    global_context.model_registry = ModelRegistry(routers=routers)
+
+
+async def _setup_identity_access_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
+    global_context.identity_access_manager = IdentityAccessManager(
+        master_key=configuration.settings.auth_master_key,
+        max_token_expiration_days=configuration.settings.auth_max_token_expiration_days,
+    )
+
+
+async def _setup_limiter(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
+    limiter = Limiter(redis=dependencies.redis, strategy=configuration.settings.rate_limiting_strategy)
+
+    global_context.limiter = limiter
+
+
+async def _setup_tokenizer(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
+    global_context.tokenizer = UsageTokenizer(tokenizer=configuration.settings.usage_tokenizer)
+
+
+async def _setup_agent_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
+    assert global_context.model_registry, "Set model registry in global context before setting up agent manager."
+    global_context.agent_manager = AgentManager(
+        mcp_bridge=dependencies.mcp_bridge,
+        model_registry=global_context.model_registry,
+        max_iterations=configuration.settings.mcp_max_iterations,
+    )
+
+
+async def _setup_document_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
+    assert global_context.model_registry, "Set model registry in global context before setting up document manager."
+
+    web_search_manager, parser_manager, multi_agent_manager = None, None, None
+
+    if dependencies.vector_store is None:
+        global_context.document_manager = None
+        return
+
+    if dependencies.web_search_engine:
+        web_search_manager = WebSearchManager(
+            web_search_engine=dependencies.web_search_engine,
+            query_model=global_context.model_registry(model=configuration.settings.search_web_query_model),
+            limited_domains=configuration.settings.search_web_limited_domains,
+            user_agent=configuration.settings.search_web_user_agent,
+        )
+
+    if dependencies.parser:
+        parser_manager = ParserManager(parser=dependencies.parser)
+
+    if configuration.settings.search_multi_agents_synthesis_model:
+        multi_agent_manager = MultiAgentManager(
+            synthesis_model=global_context.model_registry(model=configuration.settings.search_multi_agents_synthesis_model),
+            reranker_model=global_context.model_registry(model=configuration.settings.search_multi_agents_reranker_model),
+        )
+
+    global_context.document_manager = DocumentManager(
+        vector_store=dependencies.vector_store,
+        vector_store_model=global_context.model_registry(model=configuration.settings.vector_store_model),
+        parser_manager=parser_manager,
+        web_search_manager=web_search_manager,
+        multi_agent_manager=multi_agent_manager,
+    )

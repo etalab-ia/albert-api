@@ -17,11 +17,10 @@ from qdrant_client.http.models import (
     VectorParams,
 )
 
+from app.clients.vector_store._basevectorstoreclient import BaseVectorStoreClient
 from app.schemas.chunks import Chunk
 from app.schemas.search import Search, SearchMethod
 from app.utils.exceptions import NotImplementedException
-
-from app.clients.vector_store._basevectorstoreclient import BaseVectorStoreClient
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +28,9 @@ logger = logging.getLogger(__name__)
 class QdrantVectorStoreClient(BaseVectorStoreClient, AsyncQdrantClient):
     default_method = SearchMethod.SEMANTIC
 
-    def __init__(self, *args, model = None, **kwargs):
-        BaseVectorStoreClient.__init__(self, *args, model=model, **kwargs)
+    def __init__(self, *args, **kwargs):
+        kwargs.pop("type")  # remove type from kwargs to avoid passing it to the super class
         AsyncQdrantClient.__init__(self, *args, **kwargs)
-        self.url = kwargs.get("url")
 
     async def check(self) -> bool:
         try:

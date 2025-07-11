@@ -6,15 +6,17 @@ import streamlit as st
 
 from ui.backend.sql.models import User as UserTable
 from ui.backend.sql.session import get_session
-from ui.settings import settings
+from ui.configuration import configuration
 from ui.variables import MODEL_TYPE_AUDIO, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_IMAGE_TEXT_TO_TEXT, MODEL_TYPE_LANGUAGE, MODEL_TYPE_RERANK
 
 
-@st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
+@st.cache_data(show_spinner=False, ttl=configuration.playground.cache_ttl)
 def get_models(
     types: list[Literal[MODEL_TYPE_LANGUAGE, MODEL_TYPE_IMAGE_TEXT_TO_TEXT, MODEL_TYPE_EMBEDDINGS, MODEL_TYPE_AUDIO, MODEL_TYPE_RERANK]] = [],
 ) -> list:
-    response = requests.get(url=f"{settings.playground.api_url}/v1/models", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"})
+    response = requests.get(
+        url=f"{configuration.playground.api_url}/v1/models", headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"}
+    )
     if response.status_code != 200:
         st.error(response.json()["detail"])
         return []
@@ -30,7 +32,7 @@ def get_models(
 
 def get_collections(offset: int = 0, limit: int = 10) -> list:
     response = requests.get(
-        url=f"{settings.playground.api_url}/v1/collections?offset={offset}&limit={limit}",
+        url=f"{configuration.playground.api_url}/v1/collections?offset={offset}&limit={limit}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
@@ -45,7 +47,7 @@ def get_collections(offset: int = 0, limit: int = 10) -> list:
 
 def get_documents(collection_id: int, offset: int = 0, limit: int = 10) -> dict:
     response = requests.get(
-        url=f"{settings.playground.api_url}/v1/documents?collection={collection_id}&offset={offset}&limit={limit}",
+        url=f"{configuration.playground.api_url}/v1/documents?collection={collection_id}&offset={offset}&limit={limit}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
@@ -60,7 +62,7 @@ def get_documents(collection_id: int, offset: int = 0, limit: int = 10) -> dict:
 
 def get_tokens(offset: int = 0, limit: int = 10) -> list:
     response = requests.get(
-        url=f"{settings.playground.api_url}/tokens?offset={offset}&limit={limit}",
+        url=f"{configuration.playground.api_url}/tokens?offset={offset}&limit={limit}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
@@ -78,7 +80,7 @@ def get_roles(
     order_direction: Literal["asc", "desc"] = "asc",
 ):
     response = requests.get(
-        url=f"{settings.playground.api_url}/roles?offset={offset}&limit={limit}&order_by={order_by}&order_direction={order_direction}",
+        url=f"{configuration.playground.api_url}/roles?offset={offset}&limit={limit}&order_by={order_by}&order_direction={order_direction}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
     if response.status_code != 200:
@@ -98,7 +100,7 @@ def get_users(
     order_direction: Literal["asc", "desc"] = "asc",
 ):
     response = requests.get(
-        url=f"{settings.playground.api_url}/users?offset={offset}&limit={limit}&role={role}&order_by={order_by}&order_direction={order_direction}",
+        url=f"{configuration.playground.api_url}/users?offset={offset}&limit={limit}&role={role}&order_by={order_by}&order_direction={order_direction}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
     if response.status_code != 200:
@@ -154,7 +156,7 @@ def check_password(password: str) -> bool:
     return True
 
 
-@st.cache_data(show_spinner=False, ttl=settings.playground.cache_ttl)
+@st.cache_data(show_spinner=False, ttl=configuration.playground.cache_ttl)
 def get_usage(
     limit: int = 50,
     page: int = 1,
@@ -165,8 +167,8 @@ def get_usage(
 ) -> dict:
     """Get user usage data from the API."""
     response = requests.get(
-        url=f"{settings.playground.api_url}/v1/usage",
-        headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"},
+        url=f"{configuration.playground.api_url}/v1/usage",
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
         params={
             "limit": limit,
             "page": page,

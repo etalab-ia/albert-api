@@ -3,11 +3,11 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from ui.settings import settings
+from ui.configuration import configuration
 from ui.backend.sql.models import Base
 
 config = context.config
-config.set_main_option(name="sqlalchemy.url", value=settings.databases.sql.args.get("url").replace("+asyncpg", ""))
+config.set_main_option(name="sqlalchemy.url", value=configuration.playground.postgres.get("url").replace("+asyncpg", ""))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

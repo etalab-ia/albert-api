@@ -14,8 +14,8 @@ from app.schemas.auth import (
     UserUpdateRequest,
 )
 from app.sql.session import get_db_session
+from app.utils.configuration import configuration
 from app.utils.context import global_context, request_context
-from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__USERS, ENDPOINT__USERS_ME
 
 router = APIRouter()
@@ -24,7 +24,7 @@ router = APIRouter()
 @router.post(
     path=ENDPOINT__USERS,
     dependencies=[Security(dependency=AccessController(permissions=[PermissionType.CREATE_USER]))],
-    include_in_schema=settings.general.log_level == "DEBUG",
+    include_in_schema=configuration.settings.log_level == "DEBUG",
     status_code=201,
     response_model=UsersResponse,
 )
@@ -37,7 +37,7 @@ async def create_user(
     Create a new user.
     """
 
-    user_id = await global_context.iam.create_user(session=session, name=body.name, role_id=body.role, budget=body.budget, expires_at=body.expires_at)  # fmt: off
+    user_id = await global_context.identity_access_manager.create_user(session=session, name=body.name, role_id=body.role, budget=body.budget, expires_at=body.expires_at)  # fmt: off
 
     return JSONResponse(status_code=201, content={"id": user_id})
 
@@ -45,7 +45,7 @@ async def create_user(
 @router.delete(
     path=ENDPOINT__USERS + "/{user:path}",
     dependencies=[Security(dependency=AccessController(permissions=[PermissionType.DELETE_USER]))],
-    include_in_schema=settings.general.log_level == "DEBUG",
+    include_in_schema=configuration.settings.log_level == "DEBUG",
     status_code=204,
 )
 async def delete_user(
@@ -56,7 +56,7 @@ async def delete_user(
     """
     Delete a user.
     """
-    await global_context.iam.delete_user(session=session, user_id=user)
+    await global_context.identity_access_manager.delete_user(session=session, user_id=user)
 
     return Response(status_code=204)
 
@@ -64,7 +64,7 @@ async def delete_user(
 @router.patch(
     path=ENDPOINT__USERS + "/{user:path}",
     dependencies=[Security(dependency=AccessController(permissions=[PermissionType.UPDATE_USER]))],
-    include_in_schema=settings.general.log_level == "DEBUG",
+    include_in_schema=configuration.settings.log_level == "DEBUG",
     status_code=204,
 )
 async def update_user(
@@ -76,7 +76,7 @@ async def update_user(
     """
     Update a user.
     """
-    await global_context.iam.update_user(
+    await global_context.identity_access_manager.update_user(
         session=session,
         user_id=user,
         name=body.name,
@@ -91,7 +91,7 @@ async def update_user(
 @router.get(
     path=ENDPOINT__USERS_ME,
     dependencies=[Security(dependency=AccessController())],
-    include_in_schema=settings.general.log_level == "DEBUG",
+    include_in_schema=configuration.settings.log_level == "DEBUG",
     status_code=200,
     response_model=User,
 )
@@ -100,7 +100,7 @@ async def get_current_user(request: Request, session: AsyncSession = Depends(get
     Get the current user.
     """
 
-    users = await global_context.iam.get_users(session=session, user_id=request_context.get().user_id)
+    users = await global_context.identity_access_manager.get_users(session=session, user_id=request_context.get().user_id)
 
     return JSONResponse(content=users[0].model_dump(), status_code=200)
 
@@ -108,7 +108,7 @@ async def get_current_user(request: Request, session: AsyncSession = Depends(get
 @router.get(
     path=ENDPOINT__USERS + "/{user:path}",
     dependencies=[Security(dependency=AccessController(permissions=[PermissionType.READ_USER]))],
-    include_in_schema=settings.general.log_level == "DEBUG",
+    include_in_schema=configuration.settings.log_level == "DEBUG",
     status_code=200,
 )
 async def get_user(
@@ -118,7 +118,7 @@ async def get_user(
     Get a user by id.
     """
 
-    users = await global_context.iam.get_users(session=session, user_id=user)
+    users = await global_context.identity_access_manager.get_users(session=session, user_id=user)
 
     return JSONResponse(content=users[0].model_dump(), status_code=200)
 
@@ -126,7 +126,7 @@ async def get_user(
 @router.get(
     path=ENDPOINT__USERS,
     dependencies=[Security(dependency=AccessController(permissions=[PermissionType.READ_USER]))],
-    include_in_schema=settings.general.log_level == "DEBUG",
+    include_in_schema=configuration.settings.log_level == "DEBUG",
     status_code=200,
 )
 async def get_users(
@@ -142,7 +142,7 @@ async def get_users(
     Get all users.
     """
 
-    data = await global_context.iam.get_users(
+    data = await global_context.identity_access_manager.get_users(
         session=session, role_id=role, offset=offset, limit=limit, order_by=order_by, order_direction=order_direction
     )
 

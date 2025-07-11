@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.utils.exceptions import ToolNotFoundException
-from app.helpers.agents import AgentsManager
+from app.helpers._agentmanager import AgentManager
 from app.schemas.agents import AgentsTool
+from app.utils.exceptions import ToolNotFoundException
 
 
 class TestMCPBody(SimpleNamespace):
@@ -31,7 +31,7 @@ class TestMCPLoop:
 
     @pytest.fixture
     def agent_manager(self, mock_mcp_bridge, mock_llm_registry):
-        return AgentsManager(mock_mcp_bridge, mock_llm_registry)
+        return AgentManager(mock_mcp_bridge, mock_llm_registry)
 
     class TestGetToolsFromBridge:
         @pytest.mark.asyncio

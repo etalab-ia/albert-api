@@ -4,7 +4,7 @@ import traceback
 from openai import OpenAI
 import streamlit as st
 
-from ui.backend.common import get_models, settings
+from ui.backend.common import get_models, configuration
 from ui.frontend.header import header
 from ui.variables import MODEL_TYPE_AUDIO, TRANSCRIPTION_SUPPORTED_LANGUAGES
 
@@ -18,7 +18,7 @@ except Exception:
     logging.error(traceback.format_exc())
     st.stop()
 
-openai_client = OpenAI(base_url=f"{settings.playground.api_url}/v1", api_key=st.session_state["user"].api_key)
+openai_client = OpenAI(base_url=f"{configuration.playground.api_url}/v1", api_key=st.session_state["user"].api_key)
 
 # Sidebar
 with st.sidebar:
