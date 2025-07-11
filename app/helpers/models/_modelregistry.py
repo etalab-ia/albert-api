@@ -126,7 +126,6 @@ class ModelRegistry:
             clients=[model_client],
         )
         self.__dict__[router_id] = router
-        self.models.append(router)
 
         for a in aliases:
             if a not in self.aliases:
@@ -162,13 +161,16 @@ class ModelRegistry:
                     router_id, model_client, **kwargs
                 )
 
-    async def delete_client(self, router_id: str, api_url: str):
+            self.models.append(router_id)
+
+    async def delete_client(self, router_id: str, api_url: str, model_name: str):
         """
         Removes a client.
 
         Args:
             router_id(str): id of the ModelRouter instance, where lies the ModelClient.
             api_url(str): The model API URL.
+            model_name(str): The model name.
         """
         async with self._lock:
             assert router_id in self.__dict__, f"No ModelRouter has ID {router_id}"
@@ -178,7 +180,7 @@ class ModelRegistry:
             # ModelClient is removed within instance lock to prevent
             # any other threads to access self.__dict__ or self.models before we completely removed
             # the client.
-            still_has_clients = await router.delete_client(api_url)
+            still_has_clients = await router.delete_client(api_url, model_name)
 
             # TODO ModelClient remove from db.
 

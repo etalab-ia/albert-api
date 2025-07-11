@@ -83,7 +83,7 @@ class BaseModelRouter(ABC):
         """
         async with self._lock:
             for c in self._clients:
-                if c.api_url == client.api_url: # The client already exists; we don't want to double it
+                if c.api_url == client.api_url and c.model == client.model: # The client already exists; we don't want to double it
                     return
 
             self._clients.append(client)
@@ -105,7 +105,7 @@ class BaseModelRouter(ABC):
             self.costs = ModelCosts(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
             # TODO: add to DB (with lock, in case delete is called right after)
 
-    async def delete_client(self, api_url: str) -> bool:
+    async def delete_client(self, api_url: str, name: str) -> bool:
         """
         Delete a client.
 
@@ -119,7 +119,7 @@ class BaseModelRouter(ABC):
             max_context_lengths = []
 
             for c in self._clients:
-                if c.api_url == api_url:
+                if c.api_url == api_url and c.model == name:
                     client = c
                 else:
                     if c.max_context_length is not None:

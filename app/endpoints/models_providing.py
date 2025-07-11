@@ -63,7 +63,11 @@ async def delete_model(
     body: DeleteModelRequest,
 ) -> Response:
     try:
-        await global_context.models.delete_client(router_id=body.router_id, api_url=body.api_url)
+        await global_context.models.delete_client(
+            router_id=body.router_id,
+            api_url=body.api_url,
+            model_name=body.model_name,
+        )
     except AssertionError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
