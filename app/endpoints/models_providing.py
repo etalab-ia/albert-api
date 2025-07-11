@@ -6,6 +6,7 @@ from starlette.responses import JSONResponse
 from app.clients.model import BaseModelClient
 from app.schemas.models_providing import AddModelRequest, DeleteModelRequest, AddAliasesRequest, DeleteAliasesRequest, \
     RoutersResponse, ModelRouterSchema, ModelClientSchema
+from app.utils.configuration import configuration
 
 from app.utils.variables import (
     ENDPOINT__MODEL_ADD,
@@ -31,14 +32,18 @@ async def add_model(
 
     redis = global_context.limiter.connection_pool  # not quite clean
 
-    client = BaseModelClient.import_module(type=body.api_type, connection_pool=redis, model_name=body.model.name, api_url=body.model.api_url)(
-        model=body.model.name,
-        costs=body.model.costs,
-        carbon=body.model.carbon_footprint,
-        api_url=body.model.api_url,
-        api_key=body.model.api_key,
+    client = BaseModelClient.import_module(type=body.api_type)(
+        model_name=body.model.name,
+        model_cost_prompt_tokens=body.model.prompt_tokens,
+        model_cost_completion_tokens=body.model.completion_tokens,
+        model_carbon_footprint_zone=body.model.carbon_footprint_zone,
+        model_carbon_footprint_active_params=body.model.carbon_footprint_active_params,
+        model_carbon_footprint_total_params=body.model.carbon_footprint_total_params,
+        url=body.model.url,
+        key=body.model.key,
         timeout=body.model.timeout,
-        connection_pool=redis,
+        redis=redis,
+        metrics_retention_ms=configuration.settings.metrics_retention_ms,
         **client_kwargs,
     )
 
@@ -119,15 +124,18 @@ async def get_routers(
 
         for c in clients[i]:
             client_schemas.append(ModelClientSchema(
-                name=c.model,
-                api_url=None,
+                name=c.name,
+                url=None,
                 timeout=c.timeout,
-                costs=c.costs,
-                carbon_footprint=c.carbon
+                prompt_tokens=c.cost_prompt_tokens,
+                completion_tokens=c.cost_completion_tokens,
+                carbon_footprint_zone=c.carbon_footprint_zone,
+                carbon_footprint_total_params=c.carbon_footprint_total_params,
+                carbon_footprint_active_params=c.carbon_footprint_active_params,
             ))
 
         router_schemas.append(ModelRouterSchema(
-            id=r.id,
+            id=r.name,
             type=r.type,
             owned_by=r.owned_by,
             aliases=r.aliases,
