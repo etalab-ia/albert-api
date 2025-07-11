@@ -71,9 +71,9 @@ For more information to configure model providers, see the [ModelProvider sectio
 | key | string | Model provider API key. | False | None |  | sk-1234567890 |
 | model_carbon_footprint_active_params | number | Active params of the model in billions of parameters for carbon footprint computation. If not provided, the total params will be used if provided, else carbon footprint will not be computed. For more information, see https://ecologits.ai | False | None |  | 8 |
 | model_carbon_footprint_total_params | number | Total params of the model in billions of parameters for carbon footprint computation. If not provided, the active params will be used if provided, else carbon footprint will not be computed. For more information, see https://ecologits.ai | False | None |  | 8 |
-| model_carbon_footprint_zone | string | Model hosting zone for carbon footprint computation (with ISO 3166-1 alpha-3 code format). For more information, see https://ecologits.ai | False | None | • ABW<br/>• AFG<br/>• AGO<br/>• AIA<br/>• ALA<br/>• ALB<br/>• AND<br/>• ARE<br/>• ... | WOR |
-| model_cost_completion_tokens | number | Model costs completion tokens for user budget computation. The cost is by 1M tokens. | False | None |  | 0.1 |
-| model_cost_prompt_tokens | number | Model costs prompt tokens for user budget computation. The cost is by 1M tokens. | False | None |  | 0.1 |
+| model_carbon_footprint_zone | string | Model hosting zone for carbon footprint computation (with ISO 3166-1 alpha-3 code format). For more information, see https://ecologits.ai | False | WOR | • ABW<br/>• AFG<br/>• AGO<br/>• AIA<br/>• ALA<br/>• ALB<br/>• AND<br/>• ARE<br/>• ... | WOR |
+| model_cost_completion_tokens | number | Model costs completion tokens for user budget computation. The cost is by 1M tokens. | False | 0.0 |  | 0.1 |
+| model_cost_prompt_tokens | number | Model costs prompt tokens for user budget computation. The cost is by 1M tokens. | False | 0.0 |  | 0.1 |
 | model_name | string | Model name from the model provider. | True |  |  | gpt-4o |
 | timeout | integer | Timeout for the model provider requests, after user receive an 500 error (model is too busy). | False | 300 |  | 10 |
 | type | string | Model provider type. | True |  | • albert<br/>• openai<br/>• tei<br/>• vllm | openai |
@@ -144,8 +144,9 @@ See https://github.com/SecretiveShell/MCP-Bridge for more information.
 ### DuckDuckGoDependency
 | Attribute | Type | Description | Required | Default | Values | Examples |
 | --- | --- | --- | --- | --- | --- | --- |
-| headers | object | DuckDuckGo API request headers. | False |  |  | {'Authorization': 'Bearer my-api-key'} |
+| headers | object | DuckDuckGo API request headers. | False |  |  | {} |
 | timeout | integer | Timeout for the DuckDuckGo API requests. | False | 300 |  | 10 |
+| url | string | DuckDuckGo API url. | False | https://api.duckduckgo.com/ |  |  |
 
 <br>
 
@@ -154,6 +155,7 @@ See https://github.com/SecretiveShell/MCP-Bridge for more information.
 | --- | --- | --- | --- | --- | --- | --- |
 | headers | object | Brave API request headers. | True |  |  | {'X-Subscription-Token': 'my-api-key'} |
 | timeout | integer | Timeout for the Brave API requests. | False | 300 |  | 10 |
+| url | string | Brave API url. | False | https://api.search.brave.com/res/v1/web/search |  |  |
 
 <br>
 
@@ -162,5 +164,6 @@ See https://github.com/SecretiveShell/MCP-Bridge for more information.
 | --- | --- | --- | --- | --- | --- | --- |
 | headers | object | Albert API request headers. | False |  |  | {'Authorization': 'Bearer my-api-key'} |
 | timeout | integer | Timeout for the Albert API requests. | False | 300 |  | 10 |
+| url | string | Albert API url. | False | https://albert.api.etalab.gouv.fr |  |  |
 
 <br>
