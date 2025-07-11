@@ -27,8 +27,11 @@ class AlbertParserClient(BaseParserClient):
         self.timeout = timeout
 
         # Keep health check synchronous in __init__
-        response = httpx.get(f"{self.URL}/health", headers=self.headers, timeout=self.timeout)
-        assert response.status_code == 200, f"Albert API is not reachable: {response.text} {response.status_code}"
+        try:
+            response = httpx.get(f"{self.URL}/health", headers=self.headers, timeout=self.timeout)
+            assert response.status_code == 200, f"Albert API is not reachable: {response.text} {response.status_code}"
+        except Exception as e:
+            raise Exception(f"Albert API is not reachable: {e}") from e
 
     async def parse(self, params: ParserParams) -> ParsedDocument:
         file_content = await params.file.read()
