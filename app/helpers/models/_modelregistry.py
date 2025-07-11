@@ -11,26 +11,27 @@ from app.helpers.models.routers import ModelRouter
 
 class ModelRegistry:
     def __init__(self, routers: List[ModelRouter]) -> None:
-        self.models = list()
+        self._router_ids = list()
+        self._routers = dict()
         self.aliases = dict()
         self._lock = Lock()
 
-        for model in routers:
-            if "id" not in model.__dict__:  # no clients available
+        for r in routers:
+            if "id" not in r.__dict__:  # no clients available
                 continue
 
-            self.__dict__[model.id] = model
-            self.models.append(model.id)
+            self._routers[r.id] = r
+            self._router_ids.append(r.id)
 
-            for alias in model.aliases:
-                self.aliases[alias] = model.id
+            for alias in r.aliases:
+                self.aliases[alias] = r.id
 
     async def __call__(self, model: str) -> ModelRouter:
         async with self._lock:
             model = self.aliases.get(model, model)
 
-            if model in self.models:
-                return self.__dict__[model]
+            if model in self._router_ids:
+                return self._routers[model]
 
         raise ModelNotFoundException()
 
@@ -51,10 +52,10 @@ class ModelRegistry:
     async def list(self, model: Optional[str] = None) -> List[ModelSchema]:
         data = list()
         async with self._lock:
-            models = [model] if model else self.models
+            models = [model] if model else self._router_ids
             for model in models:
                 # Avoid self.__call__, deadlock otherwise
-                model = self.__dict__[self.aliases.get(model, model)]
+                model = self._routers[self.aliases.get(model, model)]
 
                 data.append(
                     ModelSchema(
@@ -83,9 +84,9 @@ class ModelRegistry:
             model_client(ModelClient): The model client itself.
             router_id(str): The id of the ModelRouter.
         """
-        assert router_id in self.__dict__, f"No ModelRouter has ID {router_id}."
+        assert router_id in self._routers, f"No ModelRouter has ID {router_id}."
 
-        await self.__dict__[router_id].add_client(model_client)
+        await self._routers[router_id].add_client(model_client)
         # TODO: add ModelClient to DB.
 
 
@@ -112,7 +113,7 @@ class ModelRegistry:
         """
 
         assert model_type is not None, "A ModelType needs to be provided"
-        assert router_id not in self.__dict__, "A ModelRouter with id {router_id} already exists"
+        assert router_id not in self._routers, "A ModelRouter with id {router_id} already exists"
 
         if aliases is None:
             aliases = []
@@ -125,7 +126,7 @@ class ModelRegistry:
             routing_strategy=routing_strategy,
             clients=[model_client],
         )
-        self.__dict__[router_id] = router
+        self._routers[router_id] = router
 
         for a in aliases:
             if a not in self.aliases:
@@ -146,13 +147,16 @@ class ModelRegistry:
 
         Args:
             model_client(ModelClient): The model client itself.
-            router_id(str): ID of the targeted ModelRouter.
+            router_id(str): ID of the targeted ModelRouter. IT can be an alias.
             kwargs: Additional arguments, mainly for ModelRouter creation.
                 Must contain at least a model_type to create a ModelRouter.
         """
 
         async with self._lock:
-            if router_id in self.__dict__: # ModelRouter exists
+
+            router_id = self.aliases.get(router_id, router_id)  # If alias, gets id.
+
+            if router_id in self._routers: # ModelRouter exists
                 await self.__add_client_to_existing_router(
                     router_id, model_client, **kwargs
                 )
@@ -161,7 +165,7 @@ class ModelRegistry:
                     router_id, model_client, **kwargs
                 )
 
-            self.models.append(router_id)
+            self._router_ids.append(router_id)
 
     async def delete_client(self, router_id: str, api_url: str, model_name: str):
         """
@@ -173,12 +177,12 @@ class ModelRegistry:
             model_name(str): The model name.
         """
         async with self._lock:
-            assert router_id in self.__dict__, f"No ModelRouter has ID {router_id}"
+            assert router_id in self._routers, f"No ModelRouter has ID {router_id}"
 
-            router = self.__dict__[router_id]
+            router = self._routers[router_id]
 
             # ModelClient is removed within instance lock to prevent
-            # any other threads to access self.__dict__ or self.models before we completely removed
+            # any other threads to access self._routers or self.router_ids before we completely removed
             # the client.
             still_has_clients = await router.delete_client(api_url, model_name)
 
@@ -190,8 +194,8 @@ class ModelRegistry:
                 for a in aliases:
                     del self.aliases[a]
 
-                del self.__dict__[router_id]
-                self.models.remove(router_id)
+                del self._routers[router_id]
+                self._router_ids.remove(router_id)
                 # TODO remove ModelRouter from db.
 
     async def add_aliases(self, router_id: str, aliases: List[str]):
@@ -204,14 +208,14 @@ class ModelRegistry:
         """
         # TODO update db?
         async with self._lock:
-            assert router_id in self.aliases or router_id in self.models, f"ModelRouter \"{router_id}\" does not exist."
+            assert router_id in self.aliases or router_id in self._router_ids, f"ModelRouter \"{router_id}\" does not exist."
 
-            real_id = self.aliases.get(router_id, router_id)
+            router_id = self.aliases.get(router_id, router_id)
 
             for al in aliases:
                 if al not in self.aliases:  # Error when alias linked to another ModelRouter?
-                    self.aliases[al] = real_id
-                    await self.__dict__[real_id].add_alias(al)
+                    self.aliases[al] = router_id
+                    await self._routers[router_id].add_alias(al)
 
     async def delete_aliases(self, router_id: str, aliases: List[str]):
         """
@@ -223,25 +227,25 @@ class ModelRegistry:
         """
         # TODO update db?
         async with self._lock:
-            assert router_id in self.aliases or router_id in self.models, f"ModelRouter \"{router_id}\" does not exist."
+            assert router_id in self.aliases or router_id in self._router_ids, f"ModelRouter \"{router_id}\" does not exist."
 
             real_id = self.aliases.get(router_id, router_id)
 
             for al in aliases:
                 if al in self.aliases:  # Error when alias linked to another ModelRouter?
                     del self.aliases[al]
-                    await self.__dict__[real_id].delete_alias(al)
+                    await self._routers[real_id].delete_alias(al)
 
     async def get_models(self) -> List[str]:
         """
         Get all ModelRouter IDs.
         """
         async with self._lock:
-            return self.models
+            return self._router_ids
 
     async def get_router_instances(self) -> List[ModelRouter]:
         """
         Returns existing ModelRouter instances.
         """
         async with self._lock:
-            return [m for m in self.__dict__.values() if isinstance(m, ModelRouter)]  # TODO refactor
+            return [r for r in self._routers.values()]
