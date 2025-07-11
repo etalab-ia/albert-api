@@ -4,10 +4,10 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.sql.models import Base
-from app.utils.settings import settings
+from app.utils.configuration import configuration
 
 config = context.config
-config.set_main_option(name="sqlalchemy.url", value=settings.databases.sql.args.get("url").replace("+asyncpg", "").replace("+aiosqlite", ""))
+config.set_main_option(name="sqlalchemy.url", value=configuration.dependencies.postgres.url.replace("+asyncpg", "").replace("+aiosqlite", ""))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

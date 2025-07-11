@@ -20,7 +20,7 @@ from app.clients.vector_store import BaseVectorStoreClient as VectorStoreClient
 from app.factory import create_app
 from app.schemas.auth import LimitType, PermissionType
 from app.sql.models import Base
-from app.utils.settings import settings
+from app.utils.configuration import configuration
 from app.utils.variables import ENDPOINT__MODELS, ENDPOINT__ROLES, ENDPOINT__TOKENS, ENDPOINT__USERS
 
 # Define global VCR instance
@@ -74,7 +74,7 @@ def pytest_configure(config):
 def engine(worker_id):
     """Create database engine for tests"""
 
-    db_url = settings.databases.sql.args.get("url").replace("+asyncpg", "")
+    db_url = configuration.dependencies.postgres.model_dump().get("url").replace("+asyncpg", "")
     db_url = f"{db_url}_{worker_id}" if worker_id != "master" else f"{db_url}_test"
 
     # Create database if it doesn't exist
@@ -89,7 +89,7 @@ def engine(worker_id):
 @pytest.fixture(scope="session")
 def async_engine(worker_id):
     """Create asynchronous database engine for tests"""
-    db_url = settings.databases.sql.args.get("url").replace("+asyncpg", "")
+    db_url = configuration.dependencies.postgres.model_dump().get("url").replace("+asyncpg", "")
     db_url = f"{db_url}_{worker_id}" if worker_id != "master" else f"{db_url}_test"
 
     # Ensure the URL uses the asyncpg driver
@@ -145,7 +145,9 @@ def app_with_test_db(async_engine):
 def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
     async def init_vector_store():
         """Initialize vector store by deleting all collections"""
-        vector_store = VectorStoreClient.import_module(database_type=settings.databases.vector_store.type)(**settings.databases.vector_store.args)
+        vector_store = VectorStoreClient.import_module(type=configuration.dependencies.vector_store.type)(
+            **configuration.dependencies.vector_store.model_dump()
+        )
 
         collections = await vector_store.get_collections()
         # Clean the vector store
@@ -169,12 +171,12 @@ def test_client(app_with_test_db) -> Generator[TestClient, None, None]:
 
         with lifespan_vcr.use_cassette("lifespan_init.yaml"):
             with TestClient(app=app_with_test_db) as client:
-                client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+                client.headers = {"Authorization": f"Bearer {configuration.settings.auth_master_key}"}
                 asyncio.run(init_vector_store())  # Initialize vector store
                 yield client
     else:
         with TestClient(app=app_with_test_db) as client:
-            client.headers = {"Authorization": f"Bearer {settings.auth.master_key}"}
+            client.headers = {"Authorization": f"Bearer {configuration.settings.auth_master_key}"}
             asyncio.run(init_vector_store())  # Initialize vector store
             yield client
 
@@ -357,9 +359,9 @@ def client(test_client: TestClient, tokens: tuple[dict, dict]) -> Generator[Test
     client.patch_with_permissions = partial(client.patch, headers={"Authorization": f"Bearer {token_with_permissions["token"]}"})
 
     # root
-    client.get_master = partial(client.get, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
-    client.post_master = partial(client.post, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
-    client.delete_master = partial(client.delete, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
-    client.patch_master = partial(client.patch, headers={"Authorization": f"Bearer {settings.auth.master_key}"})
+    client.get_master = partial(client.get, headers={"Authorization": f"Bearer {configuration.settings.auth_master_key}"})
+    client.post_master = partial(client.post, headers={"Authorization": f"Bearer {configuration.settings.auth_master_key}"})
+    client.delete_master = partial(client.delete, headers={"Authorization": f"Bearer {configuration.settings.auth_master_key}"})
+    client.patch_master = partial(client.patch, headers={"Authorization": f"Bearer {configuration.settings.auth_master_key}"})
 
     yield client

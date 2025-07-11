@@ -208,7 +208,10 @@ terraform.rc
 uv.lock
 
 .envrc
+**/.env*
+!.env.example
 .direnv/
+
 
 *.ipynb
 !docs/tutorials/*.ipynb

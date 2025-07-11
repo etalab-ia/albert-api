@@ -1,8 +1,8 @@
+from fastapi.testclient import TestClient
 import pytest
 
 from app.schemas.models import Model, Models
-from app.utils.settings import settings
-from fastapi.testclient import TestClient
+from app.utils.configuration import configuration
 from app.utils.variables import ENDPOINT__MODELS
 
 
@@ -31,10 +31,10 @@ class TestModels:
 
     def test_get_models_aliases(self, client: TestClient):
         """Test the GET /models response status code for a non-existing model."""
-        model = settings.models[0]
+        model = configuration.models[0]
 
-        response = client.get_without_permissions(url=f"/v1{ENDPOINT__MODELS}/{model.id}")
+        response = client.get_without_permissions(url=f"/v1{ENDPOINT__MODELS}/{model.name}")
         assert response.json()["aliases"] == model.aliases
 
         response = client.get_without_permissions(url=f"/v1{ENDPOINT__MODELS}/{model.aliases[0]}")
-        assert response.json()["id"] == model.id
+        assert response.json()["id"] == model.name

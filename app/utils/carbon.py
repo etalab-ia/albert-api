@@ -3,7 +3,7 @@ from typing import Optional
 
 from ecologits.tracers.utils import compute_llm_impacts, electricity_mixes
 
-from app.schemas.core.usage import CountryCodes
+from app.schemas.core.configuration import CountryCodes
 from app.schemas.usage import CarbonFootprintUsage, CarbonFootprintUsageKgCO2eq, CarbonFootprintUsageKWh
 
 logger = logging.getLogger(__name__)

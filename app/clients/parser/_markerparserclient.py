@@ -1,6 +1,6 @@
 from io import BytesIO
 import json
-from typing import List, Optional
+from typing import Dict, List
 
 from fastapi import HTTPException
 import httpx
@@ -19,15 +19,17 @@ class MarkerParserClient(BaseParserClient):
 
     SUPPORTED_FORMATS = [FileType.PDF]
 
-    def __init__(self, api_url: str, api_key: Optional[str] = None, timeout=120, *args, **kwargs) -> None:
-        self.api_url = api_url
-        self.api_key = api_key
+    def __init__(self, url: str, headers: Dict[str, str], timeout: int, *args, **kwargs) -> None:
+        self.url = url
+        self.headers = headers
         self.timeout = timeout
-        self.headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
 
         # Keep health check synchronous in __init__
-        response = httpx.get(f"{self.api_url}/health", headers=self.headers, timeout=self.timeout)
-        assert response.status_code == 200, "Marker API is not reachable."
+        try:
+            response = httpx.get(f"{self.url}/health", headers=self.headers, timeout=self.timeout)
+            assert response.status_code == 200, "Marker API is not reachable."
+        except Exception as e:
+            raise Exception(f"Marker API is not reachable: {e}") from e
 
     def convert_page_range(self, page_range: str, page_count: int) -> List[int]:
         if page_range == "":
@@ -72,7 +74,7 @@ class MarkerParserClient(BaseParserClient):
                 payload["page_range"] = str(i)
 
                 response = await client.post(
-                    url=f"{self.api_url}/marker/upload",
+                    url=f"{self.url}/marker/upload",
                     files=files,
                     data=payload,
                     headers=self.headers,

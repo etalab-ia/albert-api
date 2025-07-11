@@ -18,10 +18,10 @@ async def search(request: Request, body: SearchRequest, session: AsyncSession = 
     Get relevant chunks from the collections and a query.
     """
 
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise CollectionNotFoundException()
 
-    data = await global_context.documents.search_chunks(
+    data = await global_context.document_manager.search_chunks(
         session=session,
         collection_ids=body.collections,
         prompt=body.prompt,

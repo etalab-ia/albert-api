@@ -36,5 +36,5 @@ exec gunicorn app.main:app \
     --worker-class uvicorn.workers.UvicornWorker \
     --keep-alive $KEEP_ALIVE \
     --graceful-timeout $GRACEFUL_TIMEOUT \
-    --bind 0.0.0.0:8000 \
+    --bind 0.0.0.0:8080 \
     $GUNICORN_CMD_ARGS

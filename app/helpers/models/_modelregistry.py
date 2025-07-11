@@ -12,14 +12,14 @@ class ModelRegistry:
         self.aliases = dict()
 
         for model in routers:
-            if "id" not in model.__dict__:  # no clients available
+            if "name" not in model.__dict__:  # no clients available
                 continue
 
-            self.__dict__[model.id] = model
-            self.models.append(model.id)
+            self.__dict__[model.name] = model
+            self.models.append(model.name)
 
             for alias in model.aliases:
-                self.aliases[alias] = model.id
+                self.aliases[alias] = model.name
 
     def __call__(self, model: str) -> ModelRouter:
         model = self.aliases.get(model, model)
@@ -36,13 +36,13 @@ class ModelRegistry:
 
             data.append(
                 ModelSchema(
-                    id=model.id,
+                    id=model.name,
                     type=model.type,
                     max_context_length=model.max_context_length,
                     owned_by=model.owned_by,
                     created=model.created,
                     aliases=model.aliases,
-                    costs=model.costs,
+                    costs={"prompt_tokens": model.cost_prompt_tokens, "completion_tokens": model.cost_completion_tokens},
                 )
             )
 

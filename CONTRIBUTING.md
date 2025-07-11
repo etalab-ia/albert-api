@@ -78,7 +78,8 @@ alembic -c ui/alembic.ini upgrade head
 
 ```bash
 docker compose --file ./.github/compose.test.yml up --detach
-docker exec -it albert-api-api-1 pytest app/tests
+docker exec -it 
+-1 pytest app/tests
 ```
 
 ### Outside Docker environment
@@ -163,4 +164,110 @@ Please respect the following convention for your commits:
 
 # example
 feat(collections): collection name retriever
+```
+
+
+And modify the `models` section in the `config.yml` file:
+
+The API keys can be defined directement in the `config.yml` file or in a `.env` file
+
+```bash
+cp .env.test.example .env.test
+
+echo 'ALBERT_API_KEY=my_albert_api_key' >> .env.test
+echo 'OPENAI_API_KEY=my_openai_api_key' >> .env.test
+```
+
+Finally, run the application:
+```bash
+make docker-compose-albert-api-up
+```
+
+To stop the application, run:
+```bash
+make docker-compose-albert-api-down
+```
+
+
+## Running locally
+
+### Prerequisites
+- Python 3.8+
+- Docker and Docker Compose
+
+### Installation
+
+#### 1. Installing dependencies
+
+```bash
+make install
+```
+
+#### 2. Configuration
+
+Albert-API supports OpenAI and Albert-API models, defined in the `config.yml` file :
+```bash
+cp config.example.yml config.yml
+```
+
+And modify the `models` section in the `config.yml` file:
+
+```yaml
+models:
+  - id: albert-large
+    type: text-generation
+    owned_by: test
+    aliases: ["mistralai/Mistral-Small-3.1-24B-Instruct-2503"]
+    clients:
+      - model: mistralai/Mistral-Small-3.1-24B-Instruct-2503
+        type: albert
+        args:
+          api_url: ${ALBERT_API_URL:-https://albert.api.etalab.gouv.fr}
+          api_key: ${ALBERT_API_KEY}
+          timeout: 120
+  - id: my-language-model
+    type: text-generation
+    clients:
+      - model: gpt-3.5-turbo
+        type: openai
+        params:
+          total: 70
+          active: 70
+          zone: WOR
+        args:
+          api_url: https://api.openai.com
+          api_key: ${OPENAI_API_KEY}
+          timeout: 60
+```
+The API keys can be defined directement in the `config.yml` file or in a `.env` file
+
+```bash
+cp .env.test.example .env.test
+
+echo 'ALBERT_API_KEY=my_albert_api_key' >> .env.test
+echo 'OPENAI_API_KEY=my_openai_api_key' >> .env.test
+```
+
+### Running
+
+#### Option 1: Full launch with Docker
+
+```bash
+# Start all services (API, playground and external services)
+make docker-compose-albert-api-up
+# Stop all services
+make docker-compose-albert-api-down
+```
+
+#### Option 2: Local development
+
+```bash
+# 1. Start only external services (Redis, Qdrant, PostgreSQL, MCP Bridge)
+make docker-compose-services-up
+
+# 2. Launch the API (in one terminal)
+make run-api
+
+# 3. Launch the user interface (in another terminal)
+make run-ui
 ```

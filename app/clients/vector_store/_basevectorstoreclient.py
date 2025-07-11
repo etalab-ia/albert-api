@@ -3,33 +3,31 @@ import importlib
 from typing import List, Optional, Type
 
 from app.schemas.chunks import Chunk
+from app.schemas.core.configuration import VectorStoreType
 from app.schemas.search import Search, SearchMethod
-from app.schemas.core.settings import DatabaseType
 
 
 class BaseVectorStoreClient(ABC):
-    """Abstract base class for all vector store clients (Elasticsearch, Qdrant, ...)."""
+    """Abstract base class for all vector store clients."""
 
     default_method = None  # SearchMethod, it needs to be overridden by child classes.
 
-    def __init__(self, *args, **kwargs):
-        self.model = kwargs.get('model', None)
-
     @staticmethod
-    def import_module(database_type: DatabaseType) -> "Type[BaseVectorStoreClient]":
-        """Dynamically import and return the concrete client class corresponding to *type*.
-
-        Example:
-            >>> client_cls = BaseVectorStoreClient.import_module(DatabaseType.ELASTICSEARCH)
-            >>> client = client_cls(url="http://localhost:9200")
+    def import_module(type: VectorStoreType) -> "Type[BaseVectorStoreClient]":
         """
-        module = importlib.import_module(f"app.clients.vector_store._{database_type.value}vectorstoreclient")
+        Static method to import a subclass of BaseVectorStoreClient.
 
-        return getattr(module, f"{database_type.capitalize()}VectorStoreClient")
+        Args:
+            type(str): The type of vector store client to import.
 
-    # ---------------------------------------------------------------------
-    # Mandatory lifecycle helpers
-    # ---------------------------------------------------------------------
+        Returns:
+            Type[BaseVectorStoreClient]: The subclass of BaseVectorStoreClient.
+        """
+
+        module = importlib.import_module(f"app.clients.vector_store._{type.value}vectorstoreclient")
+
+        return getattr(module, f"{type.capitalize()}VectorStoreClient")
+
     @abstractmethod
     async def check(self) -> bool:
         """Check the health of the underlying vector store connection."""
@@ -38,9 +36,6 @@ class BaseVectorStoreClient(ABC):
     async def close(self) -> None:
         """Cleanly close the underlying connection/pool."""
 
-    # ---------------------------------------------------------------------
-    # Collection helpers
-    # ---------------------------------------------------------------------
     @abstractmethod
     async def create_collection(self, collection_id: int, vector_size: int) -> None:
         """Create a new collection (index) inside the vector store."""
@@ -53,9 +48,6 @@ class BaseVectorStoreClient(ABC):
     async def get_collections(self) -> list[int]:
         """Return the list of existing collection identifiers."""
 
-    # ---------------------------------------------------------------------
-    # Document / Chunk helpers
-    # ---------------------------------------------------------------------
     @abstractmethod
     async def get_chunk_count(self, collection_id: int, document_id: int) -> Optional[int]:
         """Return the number of chunks for *document_id* inside *collection_id* (or *None* if unavailable)."""
@@ -79,9 +71,6 @@ class BaseVectorStoreClient(ABC):
     async def upsert(self, collection_id: int, chunks: List[Chunk], embeddings: List[list[float]]) -> None:
         """Insert or update *chunks* along with their *embeddings* inside *collection_id*."""
 
-    # ---------------------------------------------------------------------
-    # Search
-    # ---------------------------------------------------------------------
     @abstractmethod
     async def search(
         self,

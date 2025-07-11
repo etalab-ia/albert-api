@@ -30,7 +30,7 @@ def collection_id(client: TestClient, record_with_vcr):
 
 
 @pytest.mark.usefixtures("client", "collection_id")
-class TestMultiAgents:
+class TestMultiAgent:
     def test_multiagent_rag(self, client: TestClient, collection_id: str):
         """
         Test the /multiagents endpoint after uploading a PDF file,
@@ -81,10 +81,10 @@ class TestMultiAgents:
 
     def test_multiagents_not_available(self, client: TestClient, monkeypatch, collection_id: str):
         """
-        Test that MultiAgentsSearchNotAvailableException is raised when multi_agents_search setting is None.
+        Test that MultiAgentSearchNotAvailableException is raised when multi_agents_search setting is None.
         """
         # Disable multi-agents search in settings
-        monkeypatch.setattr(global_context.documents, "multi_agents", None)
+        monkeypatch.setattr(global_context.document_manager, "multi_agent_manager", None)
 
         # Build payload with MULTIAGENT method
         payload = {
@@ -103,4 +103,3 @@ class TestMultiAgents:
         assert response.status_code == 400, response.text
         # Verify correct exception detail
         assert response.json().get("detail") == "Multi agents search is not available."
-

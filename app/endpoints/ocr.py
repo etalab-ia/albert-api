@@ -22,14 +22,14 @@ async def ocr(request: Request, file: UploadFile = FileForm, model: str = ModelF
     Extracts text from PDF files using OCR.
     """
     # check if file is a pdf (raises UnsupportedFileTypeException if not a PDF)
-    global_context.documents.parser._detect_file_type(file=file, type=FileType.PDF)
+    global_context.document_manager.parser_manager._detect_file_type(file=file, type=FileType.PDF)
 
     # check file size
     if file.size > FileSizeLimitExceededException.MAX_CONTENT_SIZE:
         raise FileSizeLimitExceededException()
 
     # get model client
-    model = global_context.models(model=model)
+    model = global_context.model_registry(model=model)
     client = model.get_client(endpoint=ENDPOINT__OCR)
 
     file_content = await file.read()  # open document

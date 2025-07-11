@@ -1,8 +1,14 @@
-name: albert-test
+name: albert-ci
+
 services:
   api:
+    build:
+      context: ..
+      dockerfile: app/Dockerfile
     restart: always
     env_file: "${APP_ENV_FILE:-.env.ci}"
+    volumes:
+      - ../scripts/generate_configuration_documentation.py:/scripts/generate_configuration_documentation.py:ro
     ports:
       - 8080:8000
     environment:
@@ -14,31 +20,27 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    build:
-      context: ..
-      dockerfile: app/Dockerfile
 
   postgres:
     extends:
       file: ../compose.yml
       service: postgres
 
-  elasticsearch:
-    extends:
-      file: ../compose.yml
-      service: elasticsearch
-
-
   redis:
     extends:
       file: ../compose.yml
       service: redis
 
-  mcp-bridge:
+  secretiveshell:
     extends:
       file: ../compose.yml
-      service: mcp-bridge
+      service: secretiveshell
 
+  elasticsearch:
+    extends:
+      file: ../compose.yml
+      service: elasticsearch
+      
 volumes:
   postgres:
   redis:
