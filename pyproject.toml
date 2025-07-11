@@ -33,6 +33,7 @@ app = [
     "tiktoken==0.9.0",
     "ecologits==0.6.2",
     "pycountry==24.6.1",
+    "itsdangerous>=2.2.0",
 
     # data
     "langchain-text-splitters==0.3.8",
