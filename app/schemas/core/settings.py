@@ -277,8 +277,9 @@ class MCP(ConfigBaseModel):
 class OAuth2(ConfigBaseModel):
     client_id: str = Field(default="")
     client_secret: str = Field(default="")
-    token_url: str = Field(default="https://auth.proconnect.gouv.fr/auth/realms/ProConnect/protocol/openid-connect/token")
-    authorization_url: str = Field(default="https://auth.proconnect.gouv.fr/auth/realms/ProConnect/protocol/openid-connect/auth")
+    # OpenID Connect discovery endpoint for server metadata
+    server_metadata_url: str = Field(default="https://identite-sandbox.proconnect.gouv.fr/.well-known/openid-configuration")
+    redirect_uri: str = Field(default="https://albert.api.etalab.gouv.fr/v1/oauth2/login")
     scope: str = Field(default="openid profile email")
     allowed_origins: List[str] = Field(default_factory=list)
 
@@ -294,6 +295,7 @@ class Config(ConfigBaseModel):
     web_search: Optional[WebSearch] = Field(default=None, description="Web search feature. Pre-requisite: vector database and text-generation or image-text-to-text model.")  # fmt: off
     monitoring: Monitoring = Field(default_factory=Monitoring)
     oauth2: Optional[OAuth2] = Field(default=None)
+    session_secret_key: str = Field(default="", description="Secret key for session middleware.")
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
@@ -375,6 +377,7 @@ class Settings(BaseSettings):
         values.mcp = config.mcp
         values.parser = config.parser
         values.oauth2 = config.oauth2
+        values.session_secret_key = config.session_secret_key
 
         if values.databases.vector_store:
             assert values.databases.sql, "SQL database is required to use vector store features."

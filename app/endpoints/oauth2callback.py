@@ -18,10 +18,24 @@ if settings.oauth2 is not None:
         name="proconnect",
         client_id=settings.oauth2.client_id,
         client_secret=settings.oauth2.client_secret,
-        access_token_url=settings.oauth2.token_url,
-        authorize_url=settings.oauth2.authorization_url,
+        server_metadata_url=settings.oauth2.server_metadata_url,
         client_kwargs={"scope": settings.oauth2.scope},
     )
+
+
+@router.get(f"/{ROUTER__OAUTH2}/login")
+async def oauth2_login(request: Request):
+    """
+    Initiate the OAuth2 login flow with ProConnect
+    """
+    try:
+        # Utiliser l'URL de redirection configurée plutôt que de la générer dynamiquement
+        redirect_uri = settings.oauth2.redirect_uri
+
+        # Redirect the user to the authorization URL
+        return await oauth2.authorize_redirect(request, redirect_uri)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"OAuth2 login failed: {str(e)}")
 
 
 @router.get(f"/{ROUTER__OAUTH2}/callback")
@@ -29,7 +43,30 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
     try:
         # Exchange the authorization code for a token
         token = await oauth2.authorize_access_token(request)
-        user_info = await oauth2.parse_id_token(request, token)
+
+        # DEBUG: Voir ce qui est retourné
+        print(f"Token reçu: {token}")
+        print(f"Access token: {token.get('access_token')}")
+        print(f"Scope: {token.get('scope')}")
+
+        # Récupérer les informations utilisateur via l'endpoint userinfo
+        try:
+            print("Tentative d'appel à userinfo...")
+            user_info = await oauth2.userinfo(token=token)
+            print(f"SUCCESS - User info from userinfo endpoint: {user_info}")
+        except Exception as userinfo_error:
+            print(f"ERREUR lors de l'appel userinfo: {userinfo_error}")
+            print(f"Type d'erreur: {type(userinfo_error)}")
+            # Réessayer avec juste l'access token
+            try:
+                print("Tentative avec access_token uniquement...")
+                user_info = await oauth2.userinfo(token=token["access_token"])
+                print(f"SUCCESS avec access_token - User info: {user_info}")
+            except Exception as second_error:
+                print(f"Échec aussi avec access_token: {second_error}")
+                # Fallback: utiliser les infos déjà dans le token
+                user_info = token.get("userinfo", {})
+                print(f"Fallback - Using userinfo from token: {user_info}")
 
         # Extract user information
         sub = user_info.get("sub")
@@ -37,6 +74,12 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
         given_name = user_info.get("given_name")
         usual_name = user_info.get("usual_name")
         expires_at = user_info.get("exp")
+
+        print(f"Informations extraites - sub: {sub}, email: {email}, given_name: {given_name}, usual_name: {usual_name}")
+
+        # Vérifier les informations obligatoires
+        if not sub:
+            raise HTTPException(status_code=400, detail="Missing subject (sub) in user info")
 
         # Initialize IdentityAccessManager
         iam = IdentityAccessManager()
@@ -48,7 +91,7 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
         if not user:
             user_id = await iam.create_user(
                 session=session,
-                name=f"{given_name} {usual_name}",
+                name=f"{given_name or ''} {usual_name or ''}".strip() or "Unknown User",
                 role_id=1,  # TODO : create a default role for ProConnect users
                 email=email,
                 sub=sub,
@@ -70,4 +113,5 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
         redirect_url = f"{origin}?api_key={app_token}"
         return RedirectResponse(url=redirect_url)
     except Exception as e:
+        print(f"Erreur générale: {e}")
         raise HTTPException(status_code=400, detail=f"OAuth2 callback failed: {str(e)}")

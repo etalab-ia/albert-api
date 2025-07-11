@@ -71,21 +71,10 @@ class Playground(ConfigBaseModel):
     cache_ttl: int = 1800  # 30 minutes
 
 
-class OAuth2(ConfigBaseModel):
-    client_id: str
-    client_secret: str
-    token_url: str
-    authorization_url: str
-    scope: str = "openid profile email"
-    redirect_uri: str
-    allowed_origins: List[str] = []
-
-
 class Config(ConfigBaseModel):
     auth: Auth
     playground: Playground
     databases: List[Database]
-    oauth2: OAuth2  # Add the OAuth2 section
 
     @model_validator(mode="after")
     def validate_databases(cls, values) -> Any:
