@@ -13,8 +13,11 @@ class SecretiveshellMCPBridgeClient(BaseMCPBridgeClient):
         super().__init__(url=url, headers=headers, timeout=timeout)
 
         # Keep health check synchronous in __init__
-        response = httpx.get(f"{self.url}/health", headers=self.headers, timeout=self.timeout)
-        assert response.status_code == 200, f"Secretiveshell API is not reachable: {response.text} {response.status_code}"
+        try:
+            response = httpx.get(f"{self.url}/health", headers=self.headers, timeout=self.timeout)
+            assert response.status_code == 200, f"Secretiveshell API is not reachable: {response.text} {response.status_code}"
+        except Exception as e:
+            raise Exception(f"Secretiveshell API is not reachable: {e}") from e
 
     async def get_tool_list(self) -> List[AgentsTool]:
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
