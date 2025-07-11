@@ -3,10 +3,9 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Literal, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, constr, field_validator
 
 from app.schemas import BaseModel
-from app.utils.settings import settings
 
 
 class PermissionType(str, Enum):
@@ -36,16 +35,9 @@ class Limit(BaseModel):
 
 
 class RoleUpdateRequest(BaseModel):
-    name: Optional[str] = Field(default=None, description="The new role name.")
+    name: Optional[constr(strip_whitespace=True, min_length=1)] = Field(default=None, description="The new role name.")
     permissions: Optional[List[PermissionType]] = Field(default=None, description="The new permissions.")
     limits: Optional[List[Limit]] = Field(default=None, description="The new limits.")
-
-    @field_validator("name", mode="after")
-    def strip_name(cls, name):
-        if isinstance(name, str):
-            if name == "":
-                raise ValueError("Name cannot be empty")
-        return name
 
     @field_validator("limits", mode="after")
     def check_duplicate_limits(cls, limits):
@@ -64,17 +56,9 @@ class RolesResponse(BaseModel):
 
 
 class RoleRequest(BaseModel):
-    name: str
+    name: constr(strip_whitespace=True, min_length=1)
     permissions: Optional[List[PermissionType]] = []
     limits: List[Limit] = []
-
-    @field_validator("name", mode="after")
-    def strip_name(cls, name):
-        if isinstance(name, str):
-            name = name.strip()
-            if name == "":
-                raise ValueError("Name cannot be empty")
-        return name
 
     @field_validator("limits", mode="after")
     def check_duplicate_limits(cls, limits):
@@ -105,7 +89,7 @@ class Roles(BaseModel):
 
 
 class UserUpdateRequest(BaseModel):
-    name: Optional[str] = Field(default=None, description="The new user name. If None, the user name is not changed.")
+    name: Optional[constr(strip_whitespace=True, min_length=1)] = Field(default=None, description="The new user name. If None, the user name is not changed.")  # fmt: off
     role: Optional[int] = Field(default=None, description="The new role ID. If None, the user role is not changed.")
     budget: Optional[float] = Field(default=None, description="The new budget. If None, the user will have no budget.")
     expires_at: Optional[int] = Field(default=None, description="The new expiration timestamp. If None, the user will never expire.")
@@ -118,22 +102,13 @@ class UserUpdateRequest(BaseModel):
 
         return expires_at
 
-    @field_validator("name", mode="after")
-    def strip_name(cls, name):
-        if name is not None:
-            name = name.strip()
-            if name == "":
-                raise ValueError("Name cannot be empty.")
-
-        return name
-
 
 class UsersResponse(BaseModel):
     id: int
 
 
 class UserRequest(BaseModel):
-    name: str = Field(description="The user name.")
+    name: constr(strip_whitespace=True, min_length=1) = Field(description="The user name.")
     role: int = Field(description="The role ID.")
     budget: Optional[float] = Field(default=None, description="The budget.")
     expires_at: Optional[int] = Field(default=None, description="The expiration timestamp.")
@@ -145,15 +120,6 @@ class UserRequest(BaseModel):
                 raise ValueError("Wrong timestamp, must be in the future.")
 
         return expires_at
-
-    @field_validator("name", mode="after")
-    def strip_name(cls, name):
-        if isinstance(name, str):
-            name = name.strip()
-            if name == "":
-                raise ValueError("Name cannot be empty.")
-
-        return name
 
 
 class User(BaseModel):
@@ -178,27 +144,15 @@ class TokensResponse(BaseModel):
 
 
 class TokenRequest(BaseModel):
-    name: str
+    name: constr(strip_whitespace=True, min_length=1)
     user: Optional[int] = Field(default=None, description="User ID to create the token for another user (by default, the current user). Required CREATE_USER permission.")  # fmt: off
     expires_at: Optional[int] = Field(None, description="Timestamp in seconds")
-
-    @field_validator("name", mode="after")
-    def strip_name(cls, name):
-        if isinstance(name, str):
-            name = name.strip()
-            if name == "":
-                raise ValueError("Name cannot be empty.")
-
-        return name
 
     @field_validator("expires_at", mode="before")
     def must_be_future(cls, expires_at):
         if isinstance(expires_at, int):
             if expires_at <= int(dt.datetime.now(tz=dt.UTC).timestamp()):
                 raise ValueError("Wrong timestamp, must be in the future.")
-        if settings.auth.max_token_expiration_days:
-            if expires_at > int(dt.datetime.now(tz=dt.UTC).timestamp()) + settings.auth.max_token_expiration_days * 86400:
-                raise ValueError(f"Token expiration timestamp cannot be greater than {settings.auth.max_token_expiration_days} days from now.")  # fmt: off
 
         return expires_at
 

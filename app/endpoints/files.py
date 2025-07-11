@@ -39,7 +39,7 @@ async def upload_file(
 
     Max file size is 20MB.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise CollectionNotFoundException()
 
     file_size = len(file.file.read())
@@ -80,7 +80,7 @@ async def upload_file(
         files = [(file, None)]
 
     for file, metadata in files:
-        document = await global_context.documents.parse_file(
+        document = await global_context.document_manager.parse_file(
             file=file,
             output_format=ParsedDocumentOutputFormat.MARKDOWN.value,
             force_ocr=False,
@@ -89,7 +89,7 @@ async def upload_file(
             use_llm=False,
         )
 
-        document_id = await global_context.documents.create_document(
+        document_id = await global_context.document_manager.create_document(
             user_id=request_context.get().user_id,
             session=session,
             collection_id=request.collection,

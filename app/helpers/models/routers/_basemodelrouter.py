@@ -6,27 +6,28 @@ from typing import Callable, Union, Awaitable
 import inspect
 
 from app.clients.model import BaseModelClient as ModelClient
-from app.schemas.models import ModelCosts, ModelType
+from app.schemas.models import ModelType
 
 
 class BaseModelRouter(ABC):
     def __init__(
-            self,
-            id: str,
-            type: ModelType,
-            owned_by: str,
-            aliases: list[str],
-            routing_strategy: str,
-            clients: list[ModelClient],
-            *args,
-            **kwargs,
+        self,
+        name: str,
+        type: ModelType,
+        owned_by: str,
+        aliases: list[str],
+        routing_strategy: str,
+        providers: list[ModelClient],
+        *args,
+        **kwargs,
     ) -> None:
-        vector_sizes, max_context_lengths, costs = list(), list(), list()
+        vector_sizes, max_context_lengths, costs_prompt_tokens, costs_completion_tokens = list(), list(), list(), list()
 
-        for client in clients:
-            vector_sizes.append(client.vector_size)
-            max_context_lengths.append(client.max_context_length)
-            costs.append(client.costs)
+        for provider in providers:
+            vector_sizes.append(provider.vector_size)
+            max_context_lengths.append(provider.max_context_length)
+            costs_prompt_tokens.append(provider.cost_prompt_tokens)
+            costs_completion_tokens.append(provider.cost_completion_tokens)
 
         # consistency checks
         assert len(set(vector_sizes)) < 2, "All embeddings models in the same model group must have the same vector size."
@@ -36,23 +37,23 @@ class BaseModelRouter(ABC):
         max_context_length = min(max_context_lengths) if max_context_lengths else None
 
         # if there are several models with different costs, it will return the max value for consistency of /v1/models response
-        prompt_tokens = max(costs.prompt_tokens for costs in costs)
-        completion_tokens = max(costs.completion_tokens for costs in costs)
-        costs = ModelCosts(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+        prompt_tokens = max(costs_prompt_tokens)
+        completion_tokens = max(costs_completion_tokens)
 
         # set attributes of the model (returned by /v1/models endpoint)
-        self.id = id
+        self.name = name
         self.type = type
         self.owned_by = owned_by
         self.created = round(time.time())
         self.aliases = aliases
         self.max_context_length = max_context_length
-        self.costs = costs
+        self.cost_prompt_tokens = prompt_tokens
+        self.cost_completion_tokens = completion_tokens
 
         self.vector_size = vector_sizes[0]
         self.routing_strategy = routing_strategy
-        self._cycle = cycle(clients)
-        self._clients = clients
+        self._cycle = cycle(providers)
+        self._providers = providers
 
         self._lock = Lock()
 
@@ -75,18 +76,18 @@ class BaseModelRouter(ABC):
         Return the current list of ModelClient thread-safely.
         """
         async with self._lock:
-            return self._clients
+            return self._providers
 
     async def add_client(self, client: ModelClient):
         """
         Adds a new client.
         """
         async with self._lock:
-            for c in self._clients:
-                if c.api_url == client.api_url and c.model == client.model: # The client already exists; we don't want to double it
+            for c in self._providers:
+                if c.url == client.url and c.name == client.name: # The client already exists; we don't want to double it
                     return
 
-            self._clients.append(client)
+            self._providers.append(client)
 
             # consistency checks
 
@@ -99,10 +100,9 @@ class BaseModelRouter(ABC):
                 else:
                     self.max_context_length = min(self.max_context_length, client.max_context_length)
 
-            self._cycle = cycle(self._clients)
-            prompt_tokens = max(self.costs.prompt_tokens, client.costs.prompt_tokens)
-            completion_tokens = max(self.costs.completion_tokens, client.costs.completion_tokens)
-            self.costs = ModelCosts(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+            self._cycle = cycle(self._providers)
+            self.cost_prompt_tokens = max(self.cost_prompt_tokens, client.cost_prompt_tokens)
+            self.cost_completion_tokens = max(self.cost_completion_tokens, client.cost_completion_tokens)
             # TODO: add to DB (with lock, in case delete is called right after)
 
     async def delete_client(self, api_url: str, name: str) -> bool:
@@ -115,25 +115,32 @@ class BaseModelRouter(ABC):
         """
         async with self._lock:
             client = None
+            cost_prompt_tokens = self.cost_prompt_tokens
+            cost_completion_tokens = self.cost_completion_tokens
+            max_context_length = self.max_context_length
             costs = []
             max_context_lengths = []
 
-            for c in self._clients:
-                if c.api_url == api_url and c.model == name:
+            for c in self._providers:
+                if c.url == api_url and c.name == name:
                     client = c
                 else:
-                    if c.max_context_length is not None:
-                        max_context_lengths.append(c.max_context_length)
+                    if c.max_context_length is not None and c.max_context_length > max_context_length:
+                        max_context_length = c.max_context_length
 
-                    costs.append(c.costs)
+                    if c.cost_prompt_tokens > cost_prompt_tokens:
+                        cost_prompt_tokens = c.cost_prompt_tokens
+
+                    if c.cost_completion_tokens > c.cost_completion_tokens:
+                        cost_completion_tokens = c.cost_completion_tokens
 
             if client is None:
-                return len(self._clients) > 0
+                return len(self._providers) > 0
 
             await client.lock.acquire()
-            self._clients.remove(client)
+            self._providers.remove(client)
 
-            if len(self._clients) == 0:
+            if len(self._providers) == 0:
                 # No more clients, the ModelRouter is about to get deleted.
                 # There is no need to try to "update" it further.
                 # NB: there is no chance that another ModelClient gets added right after,
@@ -143,11 +150,11 @@ class BaseModelRouter(ABC):
                 return False
 
             self.max_context_length = min(max_context_lengths) if max_context_lengths else None
-            self._cycle = cycle(self._clients)
+            self._cycle = cycle(self._providers)
 
-            prompt_tokens = max(costs.prompt_tokens for costs in costs)
-            completion_tokens = max(costs.completion_tokens for costs in costs)
-            self.costs = ModelCosts(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+            self.cost_prompt_tokens = cost_prompt_tokens
+            self.cost_completion_tokens = cost_completion_tokens
+            self.max_context_length = max_context_length
 
             client.lock.release()
             # TODO: remove from DB

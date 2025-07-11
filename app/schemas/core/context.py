@@ -1,4 +1,3 @@
-from types import SimpleNamespace
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict
@@ -9,13 +8,13 @@ from app.schemas.usage import Usage
 class GlobalContext(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    tokenizer: Optional[Any] = None
-    models: Optional[Any] = None
-    iam: Optional[Any] = None
+    agent_manager: Optional[Any] = None
+    document_manager: Optional[Any] = None
+    identity_access_manager: Optional[Any] = None
     limiter: Optional[Any] = None
-    documents: Optional[Any] = None
-    parser: Optional[Any] = None
-    mcp: Optional[Any] = SimpleNamespace()
+    model_registry: Optional[Any] = None
+    parser_manager: Optional[Any] = None
+    tokenizer: Optional[Any] = None
 
 
 class RequestContext(BaseModel):

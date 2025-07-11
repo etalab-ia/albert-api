@@ -7,7 +7,7 @@ WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-1000}
 TIMEOUT=${TIMEOUT:-30}
 KEEP_ALIVE=${KEEP_ALIVE:-75}
 GRACEFUL_TIMEOUT=${GRACEFUL_TIMEOUT:-75}
-GUNICORN_CMD_ARGS=${GUNICORN_CMD_ARGS:-""} # ex: --log-config app/log.conf
+GUNICORN_CMD_ARGS=${GUNICORN_CMD_ARGS:-""} # ex: --log-config app/log.conf --reload
 
 # Set default hosts if not already defined
 if [ -z "$POSTGRES_HOST" ]; then

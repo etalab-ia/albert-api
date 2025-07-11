@@ -8,7 +8,7 @@ from redis import Redis
 
 from app.helpers._usagetokenizer import UsageTokenizer
 from app.schemas.auth import LimitType
-from app.utils.settings import settings
+from app.utils.configuration import configuration
 from app.utils.variables import (
     ENDPOINT__CHAT_COMPLETIONS,
     ENDPOINT__COLLECTIONS,
@@ -25,7 +25,7 @@ from app.utils.variables import (
 @pytest.fixture(scope="module")
 def clean_redis() -> None:
     """Delete all redis keys for rate limiting conflicts."""
-    r = Redis(**settings.databases.redis.args)
+    r = Redis(**configuration.dependencies.redis.model_dump())
     assert r.ping(), "Redis database is not reachable."
 
     for key in r.keys():
@@ -34,7 +34,7 @@ def clean_redis() -> None:
 
 @pytest.fixture(scope="module")
 def tokenizer():
-    tokenizer = UsageTokenizer(settings.general.tokenizer)
+    tokenizer = UsageTokenizer(tokenizer=configuration.settings.usage_tokenizer)
     tokenizer = tokenizer.tokenizer
 
     yield tokenizer
@@ -169,10 +169,10 @@ class TestAuth:
             json={
                 "name": f"test_token_{str(uuid4())}",
                 "user": user_id,
-                "expires_at": int((time.time()) + (settings.auth.max_token_expiration_days + 10) * 86400 + 1),
+                "expires_at": int((time.time()) + (configuration.settings.auth_max_token_expiration_days + 10) * 86400 + 1),
             },
         )
-        assert response.status_code == 422, response.text
+        assert response.status_code == 400, response.text
 
     def test_token_rate_limits(self, client: TestClient, tokenizer, text_generation_model):
         # Create a role with token limits

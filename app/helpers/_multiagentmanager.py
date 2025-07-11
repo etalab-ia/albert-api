@@ -3,25 +3,25 @@ import logging
 import re
 from typing import List
 
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers.models.routers._modelrouter import ModelRouter
 from app.schemas.search import Search
-from app.utils.settings import settings
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 logger = logging.getLogger(__name__)
 
 
-CHOICES = {
-    0: "Je ne comprends pas la demande.",
-    1: "Des informations pertinentes ont été trouvées dans la base de données cherchée.",
-    2: "Je n'ai pas trouvé d'informations pertinentes en base de données, mais il me semblait juste de répondre avec mes connaissances générales.",
-    3: "Je n'ai pas trouvé d'informations pertinentes en base de données, et je ne veux pas me mouiller en répondant quelque chose de faux.",
-}
+class MultiAgentManager:
+    """Multi Agent manager for handling complex search queries with multiple models."""
 
+    CHOICES = {
+        0: "Je ne comprends pas la demande.",
+        1: "Des informations pertinentes ont été trouvées dans la base de données cherchée.",
+        2: "Je n'ai pas trouvé d'informations pertinentes en base de données, mais il me semblait juste de répondre avec mes connaissances générales.",
+        3: "Je n'ai pas trouvé d'informations pertinentes en base de données, et je ne veux pas me mouiller en répondant quelque chose de faux.",
+    }
 
-_PROMPT_TELLER_1 = """
+    PROMPT_TELLER_1 = """
 Tu es un assistant administratif qui répond à des questions sur le droit et l'administratif en français. Tes réponses doivent être succinctes et claires. Ne détaille pas inutilement.
 Voilà un contexte : \n{doc}\n
 Voilà une question : {question}
@@ -33,7 +33,7 @@ question : {question}
 réponse ("Rien ici" ou ta réponse):
 """
 
-_PROMPT_TELLER_2 = """
+    PROMPT_TELLER_2 = """
 Tu es un assistant administratif qui répond à des questions sur le droit et l'administratif en français. Nous sommes en 2024. Tes réponses doivent être succinctes et claires. Ne détaille pas inutilement.
 Voilà une demande utilisateur : {question}
 Réponds à cette question comme tu peux.
@@ -44,8 +44,7 @@ La réponse doit être la plus courte possible.  Mets en forme ta réponse avec 
 Réponse :
 """
 
-
-PROMPT_CHOICER = """
+    PROMPT_CHOICER = """
 Tu es un expert en compréhension et en évaluation des besoins en information pour répondre à un message utilisateur. Ton travail est de juger la possibilité de répondre à un message utilisateur en fonction d'un contexte donné.
 Nous sommes en 2024 et ton savoir s'arrête en 2023.
 
@@ -96,9 +95,7 @@ context : {{docs}}
 question : {{prompt}}
 reponse :
 """
-
-
-_PROMPT_CONCAT = """
+    PROMPT_CONCAT = """
 Tu es un expert pour rédiger les bonnes réponses et expliquer les choses.
 Voila plusieurs réponses générées par des agents : {answers}
 En te basant sur ces réponses, ne garde que ce qui est utile pour répondre à la question : {prompt}
@@ -109,27 +106,22 @@ Réponds juste à la question, ne dis rien d'autre. Tu dois faire un mélange de
 Réponse :
 """
 
+    def __init__(self, synthesis_model: ModelRouter, reranker_model: ModelRouter) -> None:
+        """Initialize MultiAgent with the given models."""
 
-class MultiAgents:
-    """Multi Agents researcher for handling complex search queries with multiple models."""
-
-    def __init__(self, model: ModelRouter, ranker_model: ModelRouter):
-        """Initialize MultiAgents with the given models."""
-        self.model = model
-        self.ranker_model = ranker_model
+        self.synthesis_model = synthesis_model
+        self.reranker_model = reranker_model
 
     async def search(
         self,
         searches: List[Search],
         prompt: str,
-        session: AsyncSession,
-        k: int,
     ) -> List[Search]:
         """Multi Agents researcher."""
 
         async def _go_agents(prompt_text, docs, refs, n_retry=0, max_retry=5, window=5):
             chunk_batch = docs[n_retry * window : (n_retry + 1) * window]
-            inputs = [f"(Extrait : {refs[i]}) {chunk[: settings.multi_agents_search.extract_length]}..." for i, chunk in enumerate(chunk_batch)]
+            inputs = [f"(Extrait : {refs[i]}) {chunk}..." for i, chunk in enumerate(chunk_batch)]
             choice = (await self._get_rank(prompt_text, inputs))[0]
             if choice in (0, 3) and n_retry < max_retry:
                 return await _go_agents(prompt_text, docs, refs, n_retry + 1)
@@ -146,7 +138,7 @@ class MultiAgents:
 
         for s in searches_out:
             s.chunk.metadata["choice"] = choice
-            s.chunk.metadata["choice_desc"] = CHOICES[choice]
+            s.chunk.metadata["choice_desc"] = self.CHOICES[choice]
             s.chunk.metadata["n_retry"] = n_retry
 
         return searches_out
@@ -154,28 +146,21 @@ class MultiAgents:
     async def full_multiagents(self, searches: List[Search], prompt: str) -> str:
         prompts = self._get_prompts(prompt, searches)
         answers = await self._ask_in_parallel(prompts)
-        return _PROMPT_CONCAT.format(prompt=prompt, answers=answers)
-
-    # --- private helpers ---
+        return self.PROMPT_CONCAT.format(prompt=prompt, answers=answers)
 
     def _get_prompts(self, question: str, searches: List[Search]) -> List[str]:
         choice = searches[0].chunk.metadata["choice"]
         if choice == 1:
-            return [_PROMPT_TELLER_1.format(doc=s.chunk.content, question=question) for s in searches]
+            return [self.PROMPT_TELLER_1.format(doc=s.chunk.content, question=question) for s in searches]
         if choice == 2:
-            return [_PROMPT_TELLER_2.format(question=question)]
+            return [self.PROMPT_TELLER_2.format(question=question)]
         return []
 
     async def _get_completion(self, prompt: str, temperature=0.2) -> str:
-        client = self.model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+        client = self.synthesis_model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
         resp = await client.forward_request(
             method="POST",
-            json={
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": temperature,
-                "max_tokens": settings.multi_agents_search.max_tokens,
-                "model": self.model,
-            },
+            json={"messages": [{"role": "user", "content": prompt}], "temperature": temperature, "max_tokens": 1024, "model": self.synthesis_model},
         )
         return resp.json()["choices"][0]["message"]["content"]
 
@@ -184,8 +169,8 @@ class MultiAgents:
         return await asyncio.gather(*tasks)
 
     async def _get_rank(self, prompt: str, inputs: List[str]) -> List[int]:
-        client = self.ranker_model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
-        query = PROMPT_CHOICER.format(prompt=prompt, docs=inputs)
+        client = self.reranker_model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+        query = self.PROMPT_CHOICER.format(prompt=prompt, docs=inputs)
         resp = await client.forward_request(
             method="POST",
             json={
@@ -193,7 +178,7 @@ class MultiAgents:
                 "temperature": 0.1,
                 "max_tokens": 3,
                 "stream": False,
-                "model": self.ranker_model,
+                "model": self.reranker_model,
             },
         )
         text = resp.json()["choices"][0]["message"]["content"]

@@ -1,6 +1,6 @@
 from io import BytesIO
 import json
-from typing import Optional
+from typing import Dict, Optional
 
 from fastapi import HTTPException
 import httpx
@@ -17,16 +17,17 @@ class AlbertParserClient(BaseParserClient):
     Class to interact with the Albert PDF API for document analysis.
     """
 
+    URL = "https://albert.api.etalab.gouv.fr"
+
     SUPPORTED_FORMATS = [FileType.PDF]
 
-    def __init__(self, api_url: str, api_key: Optional[str] = None, timeout=120, *args, **kwargs) -> None:
-        self.api_url = api_url
-        self.api_key = api_key
+    def __init__(self, headers: Dict[str, str], timeout: int, url: Optional[str] = None, *args, **kwargs) -> None:
+        self.url = url or self.URL
+        self.headers = headers
         self.timeout = timeout
-        self.headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
 
         # Keep health check synchronous in __init__
-        response = httpx.get(f"{self.api_url}/health", headers=self.headers, timeout=self.timeout)
+        response = httpx.get(f"{self.URL}/health", headers=self.headers, timeout=self.timeout)
         assert response.status_code == 200, f"Albert API is not reachable: {response.text} {response.status_code}"
 
     async def parse(self, params: ParserParams) -> ParsedDocument:
@@ -49,7 +50,7 @@ class AlbertParserClient(BaseParserClient):
         async with httpx.AsyncClient() as client:
             files = {"file": (params.file.filename, BytesIO(file_content), "application/pdf")}
             response = await client.post(
-                url=f"{self.api_url}/v1/parse-beta",
+                url=f"{self.URL}/v1/parse-beta",
                 files=files,
                 data=payload,
                 headers=self.headers,

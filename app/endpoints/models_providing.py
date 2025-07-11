@@ -31,7 +31,7 @@ async def add_model(
 
     redis = global_context.limiter.connection_pool  # not quite clean
 
-    client = (await BaseModelClient.import_module(type=body.api_type, connection_pool=redis, model_name=body.model.name, api_url=body.model.api_url))(
+    client = BaseModelClient.import_module(type=body.api_type, connection_pool=redis, model_name=body.model.name, api_url=body.model.api_url)(
         model=body.model.name,
         costs=body.model.costs,
         carbon=body.model.carbon_footprint,
@@ -43,7 +43,7 @@ async def add_model(
     )
 
     try:
-        await global_context.models.add_client(
+        await global_context.model_registry.add_client(
             body.router_id,
             client,
             model_type=body.model_type,
@@ -63,7 +63,7 @@ async def delete_model(
     body: DeleteModelRequest,
 ) -> Response:
     try:
-        await global_context.models.delete_client(
+        await global_context.model_registry.delete_client(
             router_id=body.router_id,
             api_url=body.api_url,
             model_name=body.model_name,
@@ -79,7 +79,7 @@ async def add_alias(
     request: Request,
     body: AddAliasesRequest,
 ) -> Response:
-    await global_context.models.add_aliases(
+    await global_context.model_registry.add_aliases(
         router_id=body.router_id,
         aliases=body.aliases,
     )
@@ -91,7 +91,7 @@ async def delete_alias(
     request: Request,
     body: DeleteAliasesRequest,
 ) -> Response:
-    await global_context.models.delete_aliases(
+    await global_context.model_registry.delete_aliases(
         router_id=body.router_id,
         aliases=body.aliases,
     )
@@ -104,7 +104,7 @@ async def get_routers(
 ) -> JSONResponse:
     # We get client & router "quickly" (before processing data) to avoid
     # weird data and inconsistency due to concurrence.
-    routers = await global_context.models.get_router_instances()
+    routers = await global_context.model_registry.get_router_instances()
     clients = [await r.get_clients() for r in routers]
 
     router_schemas = []

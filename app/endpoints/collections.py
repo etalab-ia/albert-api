@@ -17,10 +17,10 @@ async def create_collection(request: Request, body: CollectionRequest, session: 
     """
     Create a new collection.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise CollectionNotFoundException()
 
-    collection_id = await global_context.documents.create_collection(
+    collection_id = await global_context.document_manager.create_collection(
         session=session,
         name=body.name,
         visibility=body.visibility,
@@ -45,10 +45,10 @@ async def get_collection(
     """
     Get a collection by ID.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise CollectionNotFoundException()
 
-    collections = await global_context.documents.get_collections(
+    collections = await global_context.document_manager.get_collections(
         session=session,
         collection_id=collection,
         user_id=request_context.get().user_id,
@@ -68,10 +68,10 @@ async def get_collections(
     """
     Get list of collections.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         data = []
     else:
-        data = await global_context.documents.get_collections(
+        data = await global_context.document_manager.get_collections(
             session=session,
             user_id=request_context.get().user_id,
             include_public=True,
@@ -91,10 +91,10 @@ async def delete_collection(
     """
     Delete a collection.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise CollectionNotFoundException()
 
-    await global_context.documents.delete_collection(
+    await global_context.document_manager.delete_collection(
         session=session,
         user_id=request_context.get().user_id,
         collection_id=collection,
@@ -113,10 +113,10 @@ async def update_collection(
     """
     Update a collection.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise CollectionNotFoundException()
 
-    await global_context.documents.update_collection(
+    await global_context.document_manager.update_collection(
         session=session,
         user_id=request_context.get().user_id,
         collection_id=collection,

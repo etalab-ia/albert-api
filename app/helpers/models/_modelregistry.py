@@ -2,7 +2,7 @@ from asyncio import Lock
 from typing import List, Optional
 
 from app.clients.model import BaseModelClient
-from app.schemas.core.models import RoutingStrategy
+from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.exceptions import ModelNotFoundException
 
@@ -17,14 +17,14 @@ class ModelRegistry:
         self._lock = Lock()
 
         for r in routers:
-            if "id" not in r.__dict__:  # no clients available
+            if "name" not in r.__dict__:  # no clients available
                 continue
 
-            self._routers[r.id] = r
-            self._router_ids.append(r.id)
+            self._routers[r.name] = r
+            self._router_ids.append(r.name)
 
             for alias in r.aliases:
-                self.aliases[alias] = r.id
+                self.aliases[alias] = r.name
 
     async def __call__(self, model: str) -> ModelRouter:
         async with self._lock:
@@ -57,17 +57,17 @@ class ModelRegistry:
                 # Avoid self.__call__, deadlock otherwise
                 model = self._routers[self.aliases.get(model, model)]
 
-                data.append(
-                    ModelSchema(
-                        id=model.id,
-                        type=model.type,
-                        max_context_length=model.max_context_length,
-                        owned_by=model.owned_by,
-                        created=model.created,
-                        aliases=model.aliases,
-                        costs=model.costs,
-                    )
+            data.append(
+                ModelSchema(
+                    id=model.name,
+                    type=model.type,
+                    max_context_length=model.max_context_length,
+                    owned_by=model.owned_by,
+                    created=model.created,
+                    aliases=model.aliases,
+                    costs={"prompt_tokens": model.cost_prompt_tokens, "completion_tokens": model.cost_completion_tokens},
                 )
+            )
 
         return data
 
@@ -119,7 +119,7 @@ class ModelRegistry:
             aliases = []
 
         router = ModelRouter(
-            id=router_id,
+            name=router_id,
             type=model_type,
             owned_by=owner,
             aliases=aliases,

@@ -25,7 +25,7 @@ class Model(Model):
     max_context_length: Optional[int] = None
     type: ModelType
     aliases: Optional[List[str]] = []
-    costs: ModelCosts
+    costs: dict[str, float] = Field(default_factory=dict)
 
 
 class Models(BaseModel):

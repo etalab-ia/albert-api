@@ -1,21 +1,25 @@
 import json
-from typing import List
+from typing import Dict, List
 
 from fastapi import HTTPException
 import httpx
 
+from app.clients.mcp_bridge._basemcpbridgeclient import BaseMCPBridgeClient
 from app.schemas.agents import AgentsTool
 
 
-class SecretShellMCPBridgeClient:
-    def __init__(self, mcp_bridge_url: str):
-        self.url = mcp_bridge_url
-        self.timeout = 10
+class SecretiveshellMCPBridgeClient(BaseMCPBridgeClient):
+    def __init__(self, url: str, headers: Dict[str, str], timeout: int, *args, **kwargs):
+        super().__init__(url=url, headers=headers, timeout=timeout)
+
+        # Keep health check synchronous in __init__
+        response = httpx.get(f"{self.url}/health", headers=self.headers, timeout=self.timeout)
+        assert response.status_code == 200, f"Secretiveshell API is not reachable: {response.text} {response.status_code}"
 
     async def get_tool_list(self) -> List[AgentsTool]:
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
-                response = await async_client.request(method="GET", url=self.url + "/mcp/tools", headers={})
+                response = await async_client.request(method="GET", url=self.url + "/mcp/tools", headers=self.headers)
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
                 raise HTTPException(status_code=504, detail="Request timed out")
             except Exception as e:
@@ -45,7 +49,7 @@ class SecretShellMCPBridgeClient:
             return None
         async with httpx.AsyncClient(timeout=self.timeout) as async_client:
             try:
-                response = await async_client.request(method="POST", json=params, url=self.url + f"/mcp/tools/{tool_name}/call", headers={})
+                response = await async_client.request(method="POST", json=params, url=self.url + f"/mcp/tools/{tool_name}/call", headers=self.headers)
             except (httpx.TimeoutException, httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
                 raise HTTPException(status_code=504, detail="Request timed out")
             except Exception as e:

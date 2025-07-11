@@ -43,7 +43,7 @@ async def audio_transcriptions(
 
     async def handler(client):
         payload = {
-            "model": client.model,
+            "model": client.name,
             "response_format": response_format,
             "temperature": temperature,
             "timestamp_granularities": timestamp_granularities,
@@ -62,7 +62,7 @@ async def audio_transcriptions(
         return JSONResponse(content=AudioTranscription(**response.json()).model_dump(),
                             status_code=response.status_code)
 
-    model = await global_context.models(model=model)
+    model = await global_context.model_registry(model=model)
     return await model.safe_client_access(
         endpoint=ENDPOINT__AUDIO_TRANSCRIPTIONS,
         handler=handler

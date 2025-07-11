@@ -4,13 +4,13 @@ from typing import Optional
 import requests
 import streamlit as st
 
-from ui.settings import settings
+from ui.configuration import configuration
 
 
 def create_collection(name: str, description: str) -> None:
     """Version originale pour compatibilité"""
     response = requests.post(
-        url=f"{settings.playground.api_url}/v1/collections",
+        url=f"{configuration.playground.api_url}/v1/collections",
         json={"name": name, "description": description},
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
@@ -30,9 +30,9 @@ def create_collection_with_id(name: str, description: str) -> Optional[int]:
     Crée une collection et retourne son ID.
     """
     response = requests.post(
-        url=f"{settings.playground.api_url}/v1/collections",
+        url=f"{configuration.playground.api_url}/v1/collections",
         json={"name": name, "description": description},
-        headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"},
+        headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
     if response.status_code != 201:
@@ -42,7 +42,7 @@ def create_collection_with_id(name: str, description: str) -> Optional[int]:
     # Récupérer l'ID de la collection créée
     collection_data = response.json()
     collection_id = collection_data.get("id")
-    
+
     st.toast("Collection créée avec succès", icon="✅")
     return collection_id
 
@@ -55,7 +55,7 @@ def update_collection(collection_id: int, name: Optional[str] = None, descriptio
         params["description"] = description
 
     response = requests.patch(
-        url=f"{settings.playground.api_url}/v1/collections/{collection_id}",
+        url=f"{configuration.playground.api_url}/v1/collections/{collection_id}",
         json=params,
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
@@ -71,7 +71,7 @@ def update_collection(collection_id: int, name: Optional[str] = None, descriptio
 
 def delete_collection(collection_id: int) -> None:
     response = requests.delete(
-        url=f"{settings.playground.api_url}/v1/collections/{collection_id}",
+        url=f"{configuration.playground.api_url}/v1/collections/{collection_id}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 
@@ -91,10 +91,10 @@ def upload_document(file, collection_id: str) -> bool:
     """
     try:
         response = requests.post(
-            url=f"{settings.playground.api_url}/v1/documents",
+            url=f"{configuration.playground.api_url}/v1/documents",
             data={"collection": collection_id},
             files={"file": (file.name, file.getvalue(), file.type)},
-            headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"},
+            headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
         )
 
         if response.status_code != 201:
@@ -103,7 +103,7 @@ def upload_document(file, collection_id: str) -> bool:
 
         st.toast("Upload succeed", icon="✅")
         return True
-        
+
     except Exception as e:
         st.toast(f"Erreur upload: {str(e)}", icon="❌")
         return False
@@ -111,7 +111,7 @@ def upload_document(file, collection_id: str) -> bool:
 
 def delete_document(document_id: str) -> None:
     response = requests.delete(
-        url=f"{settings.playground.api_url}/v1/documents/{document_id}",
+        url=f"{configuration.playground.api_url}/v1/documents/{document_id}",
         headers={"Authorization": f"Bearer {st.session_state["user"].api_key}"},
     )
 

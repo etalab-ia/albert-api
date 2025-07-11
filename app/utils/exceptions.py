@@ -19,7 +19,7 @@ class WebSearchNotAvailableException(HTTPException):
         super().__init__(status_code=400, detail=detail)
 
 
-class MultiAgentsSearchNotAvailableException(HTTPException):
+class MultiAgentSearchNotAvailableException(HTTPException):
     def __init__(self, detail: str = "Multi agents search is not available."):
         super().__init__(status_code=400, detail=detail)
 
@@ -41,6 +41,11 @@ class UserAlreadyExistsException(HTTPException):
 
 class InsufficientBudgetException(HTTPException):
     def __init__(self, detail: str = "Insufficient budget."):
+        super().__init__(status_code=400, detail=detail)
+
+
+class InvalidTokenExpirationException(HTTPException):
+    def __init__(self, detail: str = "Invalid token expiration."):
         super().__init__(status_code=400, detail=detail)
 
 

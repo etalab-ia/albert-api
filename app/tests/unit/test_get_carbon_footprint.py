@@ -2,8 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.schemas.core.usage import CountryCodes
-from app.schemas.usage import CarbonFootprintUsage, CarbonFootprintUsageKWh, CarbonFootprintUsageKgCO2eq
+from app.schemas.core.configuration import CountryCodes
+from app.schemas.usage import CarbonFootprintUsage, CarbonFootprintUsageKgCO2eq, CarbonFootprintUsageKWh
 from app.utils.carbon import get_carbon_footprint
 
 
@@ -98,7 +98,10 @@ class TestGetCarbonFootprint:
         mocked_electricity_mix.return_value = SimpleNamespace(adpe=1, pe=2, gwp=3)
         mocked_compute_llm_impacts = mocker.patch("app.utils.carbon.compute_llm_impacts")
         mocked_compute_llm_impacts.return_value = dict_to_namespace(
-            {"energy": {"value": {"min": 1, "max": 2}}, "gwp": {"value": {"min": 0, "max": 3}}}
+            {
+                "energy": {"value": {"min": 1, "max": 2}},
+                "gwp": {"value": {"min": 0, "max": 3}},
+            }
         )
         active_params = 1
         total_params = 1

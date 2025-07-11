@@ -24,10 +24,12 @@ async def get_chunk(
     """
     Get a chunk of a document.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         raise ChunkNotFoundException()
 
-    chunks = await global_context.documents.get_chunks(session=session, document_id=document, chunk_id=chunk, user_id=request_context.get().user_id)
+    chunks = await global_context.document_manager.get_chunks(
+        session=session, document_id=document, chunk_id=chunk, user_id=request_context.get().user_id
+    )
 
     return chunks[0]
 
@@ -43,10 +45,10 @@ async def get_chunks(
     """
     Get chunks of a document.
     """
-    if not global_context.documents:  # no vector store available
+    if not global_context.document_manager:  # no vector store available
         data = []
     else:
-        data = await global_context.documents.get_chunks(
+        data = await global_context.document_manager.get_chunks(
             session=session,
             document_id=document,
             limit=limit,

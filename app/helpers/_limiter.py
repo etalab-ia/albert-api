@@ -7,14 +7,14 @@ from limits import RateLimitItemPerDay, RateLimitItemPerMinute
 from limits.aio import storage, strategies
 
 from app.schemas.auth import LimitType
-from app.schemas.core.auth import LimitingStrategy
+from app.schemas.core.configuration import LimitingStrategy
 
 logger = logging.getLogger(__name__)
 
 
 class Limiter:
-    def __init__(self, connection_pool: ConnectionPool, strategy: LimitingStrategy):
-        self.connection_pool = connection_pool
+    def __init__(self, redis: ConnectionPool, strategy: LimitingStrategy):
+        self.connection_pool = redis
         self.redis_host = self.connection_pool.connection_kwargs.get("host", "localhost")
         self.redis_port = self.connection_pool.connection_kwargs.get("port", 6379)
         self.redis_password = self.connection_pool.connection_kwargs.get("password", "")

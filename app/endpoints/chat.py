@@ -30,12 +30,12 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
     async def retrieval_augmentation_generation(
         initial_body: ChatCompletionRequest, inner_session: AsyncSession
     ) -> Tuple[ChatCompletionRequest, List[Search]]:
-        res = []
+        results = []
         if initial_body.search:
-            if not global_context.documents:
+            if not global_context.document_manager:
                 raise CollectionNotFoundException()
 
-            res = await global_context.documents.search_chunks(
+            results = await global_context.document_manager.search_chunks(
                 session=inner_session,
                 collection_ids=initial_body.search_args.collections,
                 prompt=initial_body.messages[-1]["content"],
@@ -45,24 +45,24 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
                 web_search=initial_body.search_args.web_search,
                 user_id=request_context.get().user_id,
             )
-            if res:
+            if results:
                 if initial_body.search_args.method == SearchMethod.MULTIAGENT:
-                    initial_body.messages[-1]["content"] = await global_context.documents.multi_agents.full_multiagents(
-                        res, initial_body.messages[-1]["content"]
+                    initial_body.messages[-1]["content"] = await global_context.document_manager.multi_agent_manager.full_multiagents(
+                        results, initial_body.messages[-1]["content"]
                     )
                 else:
-                    chunks = "\n".join([result.chunk.content for result in res])
+                    chunks = "\n".join([result.chunk.content for result in results])
                     initial_body.messages[-1]["content"] = initial_body.search_args.template.format(
                         prompt=initial_body.messages[-1]["content"], chunks=chunks
                     )
 
-        res_body = initial_body.model_dump()
-        res_body.pop("search", None)
-        res_body.pop("search_args", None)
+        new_body = initial_body.model_dump()
+        new_body.pop("search", None)
+        new_body.pop("search_args", None)
 
-        res = [result.model_dump() for result in res]
+        results = [result.model_dump() for result in results]
 
-        return res_body, res
+        return new_body, results
 
     body, results = await retrieval_augmentation_generation(initial_body=body, inner_session=session)
     additional_data = {"search_results": results} if results else {}
@@ -79,7 +79,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
             media_type="text/event-stream",
         )
 
-    model = await global_context.models(model=body["model"])
+    model = await global_context.model_registry(model=body["model"])
     return await model.safe_client_access(
         endpoint=ENDPOINT__CHAT_COMPLETIONS,
         handler=handler
