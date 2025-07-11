@@ -30,14 +30,13 @@ def header():
 
             # ProConnect login
             with stylable_container(key="ProConnect", css_styles=css_proconnect):
+                # Determine the API base URL
+                proconnect_login_url = f"{settings.playground.api_url}/v1/oauth2/login"
+
                 st.markdown(
                     f"""
                     <div>
-                        <form action="{settings.oauth2.authorization_url}" method="get">
-                            <input type="hidden" name="client_id" value="{settings.oauth2.client_id}">
-                            <input type="hidden" name="redirect_uri" value="{settings.oauth2.redirect_uri}">
-                            <input type="hidden" name="response_type" value="code">
-                            <input type="hidden" name="scope" value="{settings.oauth2.scope}">
+                        <form action="{proconnect_login_url}" method="get">
                             <button class="proconnect-button">
                                 <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
                             </button>
@@ -47,9 +46,9 @@ def header():
                                 href="https://www.proconnect.gouv.fr/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                title="Qu’est-ce que ProConnect ? - nouvelle fenêtre"
+                                title="Qu'est-ce que ProConnect ? - nouvelle fenêtre"
                             >
-                                Qu’est-ce que ProConnect ?
+                                Qu'est-ce que ProConnect ?
                             </a>
                         </p>
                     </div>
