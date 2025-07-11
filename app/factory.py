@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, FastAPI, Request, Response, Security
 from fastapi.dependencies.utils import get_dependant
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
+from starlette.middleware.sessions import SessionMiddleware
+
 
 from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
@@ -59,6 +61,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         docs_url=settings.general.docs_url,
         redoc_url=settings.general.redoc_url,
     )
+    app.add_middleware(SessionMiddleware, secret_key=settings.session_secret_key)
 
     # Set up database dependency
     # If no db_func provided, the depends module will fall back to default
