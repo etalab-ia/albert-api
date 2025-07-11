@@ -25,8 +25,11 @@ class MarkerParserClient(BaseParserClient):
         self.timeout = timeout
 
         # Keep health check synchronous in __init__
-        response = httpx.get(f"{self.url}/health", headers=self.headers, timeout=self.timeout)
-        assert response.status_code == 200, "Marker API is not reachable."
+        try:
+            response = httpx.get(f"{self.url}/health", headers=self.headers, timeout=self.timeout)
+            assert response.status_code == 200, "Marker API is not reachable."
+        except Exception as e:
+            raise Exception(f"Marker API is not reachable: {e}") from e
 
     def convert_page_range(self, page_range: str, page_count: int) -> List[int]:
         if page_range == "":

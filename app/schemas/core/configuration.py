@@ -37,11 +37,13 @@ def custom_validation_error(url: Optional[str] = None):
                 if error["type"] == "assertion_error":
                     message += f"{error["msg"]}\n"
                 else:
-                    message += f"{error["loc"][0]}\n"
+                    if len(error["loc"]) > 0:
+                        message += f"{error["loc"][0]}\n"
                     message += f"  {error["msg"]} [type={error["type"]}, input_value={error.get("input", "")}, input_type={type(error.get("input")).__name__}]\n"  # fmt: off
-                    description = cls.__pydantic_fields__[error["loc"][0]].description
-                    if description:
-                        message += f"\n  {description}\n"
+                    if len(error["loc"]) > 0:
+                        description = cls.__pydantic_fields__[error["loc"][0]].description
+                        if description:
+                            message += f"\n  {description}\n"
                 message += f"    For further information visit {url}\n\n"
 
             self.message = message
@@ -438,8 +440,12 @@ class ConfigFile(ConfigBaseModel):
             models[model_type.value] = []
             for model in values.models:
                 if model.type == model_type:
-                    models[model_type.value].extend([alias for alias in model.aliases] + [model.name])
-                    models["all"].extend(models[model_type.value])
+                    model_names_and_aliases = [alias for alias in model.aliases] + [model.name]
+                    models[model_type.value].extend(model_names_and_aliases)
+
+        # build the complete list of all models
+        for model_type in ModelType:
+            models["all"].extend(models[model_type.value])
 
         # check for duplicated name in models and aliases
         duplicated_models = [model for model in models["all"] if models["all"].count(model) > 1]
