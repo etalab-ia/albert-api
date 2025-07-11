@@ -2,7 +2,7 @@ from pydantic import Field
 from typing import List, Optional, Dict, Any
 
 from app.schemas import BaseModel
-from app.schemas.core.configuration import RoutingStrategy, ModelProviderType
+from app.schemas.core.configuration import RoutingStrategy, ModelProviderType, CountryCodes
 from app.schemas.models import ModelType, ModelCosts
 
 
@@ -11,11 +11,21 @@ URL_PATTERN = r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{
 # TODO refacto: ModelCost and ModelClientCarbonFootprint were deleted, and several field names changed.
 class ModelClientSchema(BaseModel):
     name: str = Field(min_length=1, description="Name of the model.")
-    api_url: str | None = Field(pattern=URL_PATTERN, description="URL to the model API.")
-    api_key: Optional[str] = Field(default=None, description="Key to access the API.")
+    url: str | None = Field(pattern=URL_PATTERN, description="URL to the model API.")
+    key: Optional[str] = Field(default=None, description="Key to access the API.")
     timeout: int = Field(default=10, description="Duration before connection is considered timed out, in seconds")
-    costs: ModelCosts = Field(description="Model costs.")
-#    carbon_footprint: ModelClientCarbonFootprint = Field(description="Model carbon footprint.")
+
+    # Model costs
+    prompt_tokens: float = Field(default=0.0, ge=0.0,
+                                 description="Cost of a million prompt tokens (decrease user budget)")
+    completion_tokens: float = Field(default=0.0, ge=0.0,
+                                     description="Cost of a million completion tokens (decrease user budget)")
+
+    # Carbon Footprint
+    carbon_footprint_zone: CountryCodes = Field(default=CountryCodes.WOR,
+                                                description="Country code of the location of the model (ISO 3166-1 alpha-3 format)")
+    carbon_footprint_active_params: Optional[int] = Field(default=None, description="Active parameters, for carbon footprint calculation")
+    carbon_footprint_total_params: Optional[int] = Field(default=None, description="Total parameters, for carbon footprint calculation")
 
 
 class AddModelRequest(BaseModel):
