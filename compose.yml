@@ -5,7 +5,7 @@ services:
   api:
     image: ghcr.io/etalab-ia/albert-api/app:latest
     restart: always
-    env_file: "${APP_ENV_FILE:-.env.example}"
+    env_file: "${APP_ENV_FILE:-./.env.example}"
     environment:
       - "CONFIG_FILE=config.yml" # inside the container, do not change this line
     ports:
@@ -20,6 +20,7 @@ services:
 
   playground:
     image: ghcr.io/etalab-ia/albert-api/ui:latest
+    env_file: "${APP_ENV_FILE:-./.env.example}"
     environment:
       - "API_HOST=${API_HOST:-api}"
       - "POSTGRES_HOST=${POSTGRES_HOST:-postgres}"
@@ -32,6 +33,7 @@ services:
   postgres:
     image: postgres:16.5
     restart: always
+    env_file: "${APP_ENV_FILE:-./.env.example}"
     user: postgres
     environment:
       - "CREATE_DB=api,playground"
@@ -51,6 +53,7 @@ services:
   redis:
     image: redis/redis-stack-server:7.2.0-v11
     restart: always
+    env_file: "${APP_ENV_FILE:-./.env.example}"
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
@@ -65,6 +68,7 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.2
     restart: always
+    env_file: "${APP_ENV_FILE:-./.env.example}"
     ports:
       - "${ELASTICSEARCH_PORT:-9200}:9200"
     environment:
@@ -82,6 +86,7 @@ services:
   qdrant:
    image: qdrant/qdrant:v1.11.5-unprivileged
    restart: always
+   env_file: "${APP_ENV_FILE:-./.env.example}"
    volumes:
      - qdrant:/qdrant/storage
    ports:
@@ -95,6 +100,7 @@ services:
   marker:
     image: ghcr.io/etalab-ia/albert-marker/server:latest
     restart: always
+    env_file: "${APP_ENV_FILE:-./.env.example}"
     ports:
       - "${MARKER_PORT:-9876}:8000"
     deploy:
@@ -107,6 +113,7 @@ services:
 
   secretiveshell:
     image: ghcr.io/etalab-ia/albert-api-mcp-bridge/albert-api-mcp-bridge:latest
+    env_file: "${APP_ENV_FILE:-./.env.example}"
     restart: always
     ports:
       - "${SECRETIVESHELL_PORT:-8000}:8000"

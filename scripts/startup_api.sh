@@ -7,7 +7,12 @@ WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-1000}
 TIMEOUT=${TIMEOUT:-30}
 KEEP_ALIVE=${KEEP_ALIVE:-75}
 GRACEFUL_TIMEOUT=${GRACEFUL_TIMEOUT:-75}
-GUNICORN_CMD_ARGS=${GUNICORN_CMD_ARGS:-""} # ex: --log-config app/log.conf --reload
+GUNICORN_CMD_ARGS=${GUNICORN_CMD_ARGS:-""} # ex: --log-config app/log.conf
+PYTHON_VENV_PATH=${PYTHON_VENV_PATH:-""}
+
+if [ ! -z "$PYTHON_VENV_PATH" ]; then
+  source "$PYTHON_VENV_PATH/bin/activate"
+fi
 
 # Set default hosts if not already defined
 if [ -z "$POSTGRES_HOST" ]; then
@@ -31,5 +36,5 @@ exec gunicorn app.main:app \
     --worker-class uvicorn.workers.UvicornWorker \
     --keep-alive $KEEP_ALIVE \
     --graceful-timeout $GRACEFUL_TIMEOUT \
-    --bind 0.0.0.0:8000 \
+    --bind 0.0.0.0:8080 \
     $GUNICORN_CMD_ARGS

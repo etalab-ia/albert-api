@@ -4,6 +4,12 @@ set -e
 # Environment variables
 MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE:-20}
 STREAMLIT_CMD_ARGS=${STREAMLIT_CMD_ARGS:-""}  # ex: --server.baseUrlPath=/playground
+PYTHON_VENV_PATH=${PYTHON_VENV_PATH:-""}
+
+if [ ! -z "$PYTHON_VENV_PATH" ]; then
+  source "$PYTHON_VENV_PATH/bin/activate"
+fi
+
 # Set default hosts if not already defined
 if [ -z "$POSTGRES_HOST" ]; then
   export POSTGRES_HOST=localhost
