@@ -4,6 +4,7 @@ from itertools import cycle
 import time
 from typing import Callable, Union, Awaitable
 import inspect
+from uuid import uuid4
 
 from app.clients.model import BaseModelClient as ModelClient
 from app.schemas.models import ModelType
@@ -56,6 +57,9 @@ class BaseModelRouter(ABC):
         self._providers = providers
 
         self._lock = Lock()
+
+        self._handler_lock = Lock()
+        self._handler_register = dict()
 
     @abstractmethod
     def get_client(self, endpoint: str) -> ModelClient:
@@ -175,6 +179,12 @@ class BaseModelRouter(ABC):
         async with self._lock:
             if alias in self.aliases:  # Silent error?
                 self.aliases.remove(alias)
+
+    async def register_handler[R](self, handler: Callable[[ModelClient], Union[R, Awaitable[R]]]):
+        async with self._handler_lock:  # We use a different lock as this operation has nothing to do with other fields
+            key = str(uuid4())
+            self._handler_register[key] = handler
+            return key
 
     async def safe_client_access[R](
             self,

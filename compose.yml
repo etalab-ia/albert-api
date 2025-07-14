@@ -122,8 +122,20 @@ services:
     volumes:
       - ./mcp/config.json:/mcp_bridge/config.json
 
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: master
+      RABBITMQ_DEFAULT_PASS: changeme
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+
 volumes:
   elasticsearch:
   qdrant:
   postgres:
   redis:
+  rabbitmq:
