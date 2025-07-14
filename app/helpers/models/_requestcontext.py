@@ -4,6 +4,7 @@ from typing import Callable, Union, Awaitable
 from app.clients.model import BaseModelClient
 import inspect
 
+from uuid import uuid4
 
 class RequestContext:
     def __init__[R](
@@ -11,6 +12,8 @@ class RequestContext:
         handler: Callable[[BaseModelClient], Union[R, Awaitable[R]]],
     ):
         self.handler = handler
+
+        self.id = str(uuid4())
 
         self.loop = asyncio.get_running_loop()  # get the loop the RequestContext was created in
         self.future = self.loop.create_future()
