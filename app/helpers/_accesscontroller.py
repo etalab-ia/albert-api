@@ -224,7 +224,7 @@ class AccessController:
         except ModelNotFoundException:
             return
 
-        if model.costs.prompt_tokens == 0 and model.costs.completion_tokens == 0:  # free model
+        if model.cost_prompt_tokens == 0 and model.cost_completion_tokens == 0:  # free model
             return
 
         if user.budget == 0:
