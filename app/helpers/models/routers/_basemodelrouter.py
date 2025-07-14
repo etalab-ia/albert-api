@@ -1,3 +1,6 @@
+import asyncio
+import functools
+import threading
 from abc import ABC, abstractmethod
 from asyncio import Lock
 from itertools import cycle
@@ -5,10 +8,19 @@ import time
 from typing import Callable, Union, Awaitable
 import inspect
 from uuid import uuid4
+import pika
 
 from app.clients.model import BaseModelClient as ModelClient
-from app.schemas.core.context import RequestContext
+from app.helpers.models._requestcontext import RequestContext
 from app.schemas.models import ModelType
+
+
+def sync(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        # TODO create new event loop each time sucks
+        return asyncio.new_event_loop().run_until_complete(f(*args, **kwargs))
+    return wrapper
 
 
 class BaseModelRouter(ABC):
@@ -61,6 +73,29 @@ class BaseModelRouter(ABC):
 
         self._context_lock = Lock()
         self._context_register = dict()
+
+        credentials = pika.PlainCredentials('master', 'changeme')
+
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost', 5672, '/', credentials))
+        channel = connection.channel()
+        channel.queue_declare(queue='router-queue')
+        channel.basic_consume(queue="router-queue", auto_ack=True, on_message_callback=lambda *cargs: self._queue_callback(*cargs))
+        threading.Thread(target=channel.start_consuming).start()
+
+    @sync
+    async def _queue_callback(self, channel, method, properties, body):
+        ctx = await self.get_context(body.decode('utf8'))
+        print(self._context_register)
+        if ctx is None:
+            return
+
+        async with self._lock:
+            client = self.get_client(ctx.endpoint)
+            await client.lock.acquire()
+
+        ctx.complete(client)
+        client.lock.release()
+
 
     @abstractmethod
     def get_client(self, endpoint: str) -> ModelClient:
@@ -185,7 +220,7 @@ class BaseModelRouter(ABC):
         async with self._context_lock:  # We use a different lock as this operation has nothing to do with other fields
             self._context_register[req_ctx.id] = req_ctx
 
-    async def pop_context(self, ctx_id: str):
+    async def pop_context(self, ctx_id: str) -> RequestContext | None:
         async with self._context_lock:
 
             if ctx_id not in self._context_register:
@@ -193,7 +228,7 @@ class BaseModelRouter(ABC):
 
             return self._context_register.pop(ctx_id)
 
-    async def get_context(self, ctx_id: str):
+    async def get_context(self, ctx_id: str) -> RequestContext | None:
         async with self._context_lock:
             return self._context_register.get(ctx_id, None)
 

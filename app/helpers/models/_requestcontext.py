@@ -1,6 +1,5 @@
 import asyncio
 from typing import Callable, Union, Awaitable
-
 from app.clients.model import BaseModelClient
 import inspect
 
@@ -9,14 +8,16 @@ from uuid import uuid4
 class RequestContext:
     def __init__[R](
         self,
+        endpoint: str,
         handler: Callable[[BaseModelClient], Union[R, Awaitable[R]]],
     ):
         self.handler = handler
+        self.endpoint = endpoint
 
         self.id = str(uuid4())
 
         self.loop = asyncio.get_running_loop()  # get the loop the RequestContext was created in
-        self.future = self.loop.create_future()
+        self.result = self.loop.create_future()
 
     def _get_callback(self, client: BaseModelClient):
         """
@@ -27,9 +28,9 @@ class RequestContext:
                 async def _run_and_set_async():
                     try:
                         result = await self.handler(client)
-                        self.future.set_result(result)
+                        self.result.set_result(result)
                     except Exception as exc:
-                        self.future.set_exception(exc)
+                        self.result.set_exception(exc)
 
                 # schedule the coroutine on the same loop
                 self.loop.create_task(_run_and_set_async())
@@ -39,9 +40,9 @@ class RequestContext:
         def _run_and_set():
             try:
                 result = self.handler(client)
-                self.future.set_result(result)
+                self.result.set_result(result)
             except Exception as exc:
-                self.future.set_exception(exc)
+                self.result.set_exception(exc)
 
         return _run_and_set
 

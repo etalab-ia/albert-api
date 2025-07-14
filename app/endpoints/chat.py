@@ -1,7 +1,10 @@
+import asyncio
 from typing import List, Tuple, Union
 
+import pika
 from fastapi import APIRouter, Request, Security, Depends
 from fastapi.responses import JSONResponse
+from qdrant_client.http import model
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers._accesscontroller import AccessController
@@ -13,6 +16,7 @@ from app.sql.session import get_db_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
+from app.helpers.models import RequestContext
 
 router = APIRouter()
 
@@ -79,10 +83,26 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
             media_type="text/event-stream",
         )
 
-    model = await global_context.model_registry(model=body["model"])
-    return await model.safe_client_access(
+    router = await global_context.model_registry(model=body["model"])
+    ctx = RequestContext(
         endpoint=ENDPOINT__CHAT_COMPLETIONS,
         handler=handler
     )
+
+    credentials = pika.PlainCredentials('master', 'changeme')
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost', 5672, '/', credentials))
+    channel = connection.channel()
+    channel.queue_declare(queue='router-queue')
+
+    await router.register_context(ctx)
+    channel.basic_publish(exchange='', routing_key="router-queue", body=str(ctx.id))
+    return await asyncio.wait_for(ctx.result, timeout=5.0)
+
+    #model = await global_context.model_registry(model=body["model"])
+    #return await model.safe_client_access(
+    #    endpoint=ENDPOINT__CHAT_COMPLETIONS,
+    #    handler=handler
+    #)
 
 
