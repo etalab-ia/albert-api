@@ -282,6 +282,7 @@ class OAuth2(ConfigBaseModel):
     redirect_uri: str = Field(default="https://albert.api.etalab.gouv.fr/v1/oauth2/login")
     scope: str = Field(default="openid profile email")
     allowed_origins: List[str] = Field(default_factory=list)
+    default_role: str = Field(default="Freemium", description="Default role assigned to users when they log in for the first time.")
 
 
 class Config(ConfigBaseModel):
