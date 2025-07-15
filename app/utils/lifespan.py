@@ -46,7 +46,14 @@ async def lifespan(app: FastAPI):
     assert (await redis_test_client.ping()).decode("ascii") == "PONG", "Redis database is not reachable."
     assert await vector_store.check() if vector_store else True, "Vector store database is not reachable."
 
-    dependencies = SimpleNamespace(mcp_bridge=mcp_bridge, parser=parser, redis=redis, vector_store=vector_store, web_search_engine=web_search_engine)
+    dependencies = SimpleNamespace(
+        mcp_bridge=mcp_bridge,
+        parser=parser,
+        redis=redis,
+        vector_store=vector_store,
+        web_search_engine=web_search_engine,
+        rabbitmq=None,
+    )
 
     # setup global context
     await _setup_model_registry(configuration=configuration, global_context=global_context, dependencies=dependencies)

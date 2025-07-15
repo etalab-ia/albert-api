@@ -6,19 +6,13 @@ TODO: maybe a dedicated thread, wrapped in a class with locks?
 Consumers need their own channel to run in a separated thread though.
 """
 import pika
+from app.utils.configuration import configuration
 
-# TODO: use settings to adapt to the configuration
-_credentials = pika.PlainCredentials('master', 'changeme')
-_parameters = pika.ConnectionParameters('localhost', 5672, '/', _credentials)
+rmq_config = configuration.dependencies.rabbitmq
 
-
-# TODO refactor this to avoid confusion
-
-def get_rabbitmq_connection():
-    return pika.BlockingConnection(_parameters)
-
-def get_rabbitmq_channel():
-    return get_rabbitmq_connection().channel()
+if rmq_config:
+    _credentials = pika.PlainCredentials(configuration.settings.auth_master_username, configuration.settings.auth_master_key)
+    _parameters = pika.ConnectionParameters(rmq_config.host, rmq_config.port, '/', _credentials)
 
 
 class SenderRabbitMQConnection:

@@ -12,6 +12,7 @@ from uuid import uuid4
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.models._requestcontext import WorkingContext
 from app.schemas.models import ModelType
+from app.utils.configuration import configuration
 from app.utils.rabbitmq import ConsumerRabbitMQConnection
 
 
@@ -75,13 +76,16 @@ class BaseModelRouter(ABC):
         self._context_register = dict()
 
         self.queue_name = str(uuid4())  # TODO maybe use type + name?
-        channel = ConsumerRabbitMQConnection().channel
-        channel.queue_declare(queue=self.queue_name)
-        channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=lambda *cargs: self._queue_callback(*cargs))
-        threading.Thread(target=channel.start_consuming).start()
+
+        if configuration.dependencies.rabbitmq:
+            channel = ConsumerRabbitMQConnection().channel
+            channel.queue_declare(queue=self.queue_name)
+            channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=lambda *cargs: self._queue_callback(*cargs))
+            threading.Thread(target=channel.start_consuming).start()
 
     @sync
     async def _queue_callback(self, channel, method, properties, body):
+        print("[*] Callback!")
         ctx = await self.get_context(body.decode('utf8'))
         if ctx is None:
             return

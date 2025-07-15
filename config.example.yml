@@ -38,6 +38,7 @@ dependencies:
   redis: # required
     host: localhost
 
+  # rabbitmq: # optional
   # qdrant: # optional
   # elastic: # optional
   # marker: # optional

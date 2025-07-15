@@ -5,6 +5,7 @@ from app.clients.model import BaseModelClient
 from app.helpers.models._requestcontext import WorkingContext
 from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
+from app.utils.configuration import configuration
 from app.utils.exceptions import ModelNotFoundException
 
 from app.helpers.models.routers import ModelRouter
@@ -258,14 +259,12 @@ class ModelRegistry:
         endpoint: str,
         handler: Callable[[BaseModelClient], Union[R, Awaitable[R]]]
     ):
-        is_rabbitmq_on = False  # TODO check config
-
         # TODO careful memory leak in context
 
         # TODO lock for whole execution?
         model_router = await self(model=router)
 
-        if is_rabbitmq_on:
+        if configuration.dependencies.rabbitmq:  # RabbitMQ is on
             ctx = WorkingContext(
                 endpoint=endpoint,
                 handler=handler

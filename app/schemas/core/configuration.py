@@ -291,6 +291,10 @@ class RedisDependency(ConfigBaseModel):
     pass
     # All args of pydantic redis client is allowed
 
+# TODO: add link to documentation once written
+class RabbitMQDependency(ConfigBaseModel):
+    host: Optional[str] = Field(default="localhost", required=False, description="RabbitMQ host.")
+    port: Optional[int] = Field(default=5672, required=False, description="Port RabbitMQ listens to.")
 
 @custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#dependencies")
 class Dependencies(ConfigBaseModel):
@@ -305,6 +309,7 @@ class Dependencies(ConfigBaseModel):
     redis: RedisDependency  = Field(required=True, description="Pass all redis python SDK arguments, see https://redis.readthedocs.io/en/stable/connections.html for more information.")  # fmt: off
     secretiveshell: Optional[SecretiveshellDependency] = Field(default=None, required=False, description="If provided, MCP agents can use tools from SecretiveShell MCP Bridge. Pass arguments to call Secretiveshell API in this section, see https://github.com/SecretiveShell/MCP-Bridge for more information.")  # fmt: off
     sentry: Optional[SentryDependency] = Field(default=None, required=False, description="Pass all sentry python SDK arguments, see https://docs.sentry.io/platforms/python/configuration/options/ for more information.")  # fmt: off
+    rabbitmq: Optional[RabbitMQDependency] = Field(default=None, required=False, description="If provided, pass values to modify the behavior of RabbitMQ.")
 
     @model_validator(mode="after")
     def validate_dependencies(cls, values):
@@ -333,8 +338,10 @@ class Dependencies(ConfigBaseModel):
                 if hasattr(values, item.value):
                     delattr(values, item.value)
 
+
             return values
 
+        print(values)
         values = create_attribute(name="web_search_engine", type=WebSearchEngineType, values=values)
         values = create_attribute(name="parser", type=ParserType, values=values)
         values = create_attribute(name="vector_store", type=VectorStoreType, values=values)
@@ -396,6 +403,7 @@ class Settings(ConfigBaseModel):
     mcp_max_iterations: int = Field(default=2, ge=2, description="Maximum number of iterations for MCP agents in `/v1/agents/completions` endpoint.")  # fmt: off
 
     # auth
+    auth_master_username: constr(strip_whitespace=True, min_length=1) = Field(default="master", required=False, description="Username of the master user.")
     auth_master_key: constr(strip_whitespace=True, min_length=1) = Field(default="changeme", required=False, description="Master key for the API. This key has all permissions and cannot be modified or deleted. This key is used to create the first role and the first user. This key is also used to encrypt user tokens, watch out if you modify the master key, you'll need to update all user API keys.")  # fmt: off
     auth_max_token_expiration_days: Optional[int] = Field(default=None, ge=1, description="Maximum number of days for a token to be valid.")  # fmt: off
 
@@ -510,6 +518,8 @@ class Configuration(BaseSettings):
         values.models = config.models
         values.dependencies = config.dependencies
         values.settings = config.settings
+
+        print(values.dependencies)
 
         return values
 
