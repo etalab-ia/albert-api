@@ -1,12 +1,14 @@
-from asyncio import Lock
-from typing import List, Optional
+from asyncio import Lock, wait_for
+from typing import List, Optional, Callable, Union, Awaitable
 
 from app.clients.model import BaseModelClient
+from app.helpers.models._requestcontext import RequestContext
 from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.exceptions import ModelNotFoundException
 
 from app.helpers.models.routers import ModelRouter
+from app.utils.rabbitmq import SenderRabbitMQConnection
 
 
 class ModelRegistry:
@@ -249,3 +251,36 @@ class ModelRegistry:
         """
         async with self._lock:
             return [r for r in self._routers.values()]
+
+    async def execute_request[R](
+        self,
+        router: str,
+        endpoint: str,
+        handler: Callable[[BaseModelClient], Union[R, Awaitable[R]]]
+    ):
+        is_rabbitmq_on = False  # TODO check config
+
+        # TODO careful memory leak in context
+
+        # TODO lock for whole execution?
+        model_router = await self(model=router)
+
+        if is_rabbitmq_on:
+            ctx = RequestContext(
+                endpoint=endpoint,
+                handler=handler
+            )
+
+            await model_router.register_context(ctx)
+
+            with SenderRabbitMQConnection() as conn:
+                conn.channel.queue_declare(queue=model_router.queue_name)  # Make sure the queue exists (probably useless)
+                conn.channel.basic_publish(exchange='', routing_key=model_router.queue_name, body=str(ctx.id))
+
+            return await wait_for(ctx.result, timeout=5.0)
+
+        # if no RabbitMQ, classic access
+        return await model_router.safe_client_access(
+            endpoint=endpoint,
+            handler=handler
+        )

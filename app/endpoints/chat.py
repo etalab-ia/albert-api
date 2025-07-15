@@ -1,4 +1,3 @@
-import asyncio
 from typing import List, Tuple, Union
 
 from fastapi import APIRouter, Request, Security, Depends
@@ -13,9 +12,7 @@ from app.schemas.search import Search, SearchMethod
 from app.sql.session import get_db_session
 from app.utils.context import global_context, request_context
 from app.utils.exceptions import CollectionNotFoundException
-from app.utils.rabbitmq import get_rabbitmq_channel, SenderRabbitMQConnection
 from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
-from app.helpers.models import RequestContext
 
 router = APIRouter()
 
@@ -82,25 +79,8 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
             media_type="text/event-stream",
         )
 
-    model_router = await global_context.model_registry(model=body["model"])
-    ctx = RequestContext(
+    return await global_context.model_registry.execute_request(
+        router=body['model'],
         endpoint=ENDPOINT__CHAT_COMPLETIONS,
         handler=handler
     )
-
-    # TODO careful memory leak in context
-
-    await model_router.register_context(ctx)
-
-    with SenderRabbitMQConnection() as conn:
-        conn.channel.queue_declare(queue='router-queue')
-        conn.channel.basic_publish(exchange='', routing_key=model_router.queue_name, body=str(ctx.id))
-    return await asyncio.wait_for(ctx.result, timeout=5.0)
-
-    #model = await global_context.model_registry(model=body["model"])
-    #return await model.safe_client_access(
-    #    endpoint=ENDPOINT__CHAT_COMPLETIONS,
-    #    handler=handler
-    #)
-
-
