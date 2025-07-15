@@ -2,7 +2,7 @@ from asyncio import Lock, wait_for
 from typing import List, Optional, Callable, Union, Awaitable
 
 from app.clients.model import BaseModelClient
-from app.helpers.models._requestcontext import RequestContext
+from app.helpers.models._requestcontext import WorkingContext
 from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.exceptions import ModelNotFoundException
@@ -266,7 +266,7 @@ class ModelRegistry:
         model_router = await self(model=router)
 
         if is_rabbitmq_on:
-            ctx = RequestContext(
+            ctx = WorkingContext(
                 endpoint=endpoint,
                 handler=handler
             )

@@ -10,7 +10,7 @@ import inspect
 from uuid import uuid4
 
 from app.clients.model import BaseModelClient as ModelClient
-from app.helpers.models._requestcontext import RequestContext
+from app.helpers.models._requestcontext import WorkingContext
 from app.schemas.models import ModelType
 from app.utils.rabbitmq import ConsumerRabbitMQConnection
 
@@ -213,11 +213,11 @@ class BaseModelRouter(ABC):
             if alias in self.aliases:  # Silent error?
                 self.aliases.remove(alias)
 
-    async def register_context(self, req_ctx: RequestContext):
+    async def register_context(self, req_ctx: WorkingContext):
         async with self._context_lock:  # We use a different lock as this operation has nothing to do with other fields
             self._context_register[req_ctx.id] = req_ctx
 
-    async def pop_context(self, ctx_id: str) -> RequestContext | None:
+    async def pop_context(self, ctx_id: str) -> WorkingContext | None:
         async with self._context_lock:
 
             if ctx_id not in self._context_register:
@@ -225,7 +225,7 @@ class BaseModelRouter(ABC):
 
             return self._context_register.pop(ctx_id)
 
-    async def get_context(self, ctx_id: str) -> RequestContext | None:
+    async def get_context(self, ctx_id: str) -> WorkingContext | None:
         async with self._context_lock:
             return self._context_register.get(ctx_id, None)
 

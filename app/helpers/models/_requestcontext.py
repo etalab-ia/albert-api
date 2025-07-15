@@ -5,7 +5,7 @@ import inspect
 
 from uuid import uuid4
 
-class RequestContext:
+class WorkingContext:
     def __init__[R](
         self,
         endpoint: str,
