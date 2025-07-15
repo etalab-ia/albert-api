@@ -255,31 +255,43 @@ class ModelRegistry:
 
     async def execute_request[R](
         self,
-        router: str,
+        router_id: str,
         endpoint: str,
         handler: Callable[[BaseModelClient], Union[R, Awaitable[R]]]
     ):
-        # TODO careful memory leak in context
 
-        # TODO lock for whole execution?
-        model_router = await self(model=router)
+        # We lock to prevent any race condition while working
+        async with self._lock:
 
-        if configuration.dependencies.rabbitmq:  # RabbitMQ is on
-            ctx = WorkingContext(
+            router_id = self.aliases.get(router_id, router_id)
+
+            if router_id not in self._router_ids:
+                raise ModelNotFoundException()
+
+            model_router = self._routers[router_id]
+
+            if configuration.dependencies.rabbitmq:  # RabbitMQ is on
+                ctx = WorkingContext(
+                    endpoint=endpoint,
+                    handler=handler
+                )
+
+                await model_router.register_context(ctx)
+
+                try:
+                    with SenderRabbitMQConnection() as conn:
+                        conn.channel.queue_declare(queue=model_router.queue_name)  # Make sure the queue exists (probably useless)
+                        conn.channel.basic_publish(exchange='', routing_key=model_router.queue_name, body=str(ctx.id))
+
+                    return await wait_for(ctx.result, timeout=5.0)
+
+                except Exception as e:
+                    # Anyway, we pop the context, to prevent memory leaks
+                    await model_router.pop_context(ctx.id)
+                    raise e
+
+            # if no RabbitMQ, classic access
+            return await model_router.safe_client_access(
                 endpoint=endpoint,
                 handler=handler
             )
-
-            await model_router.register_context(ctx)
-
-            with SenderRabbitMQConnection() as conn:
-                conn.channel.queue_declare(queue=model_router.queue_name)  # Make sure the queue exists (probably useless)
-                conn.channel.basic_publish(exchange='', routing_key=model_router.queue_name, body=str(ctx.id))
-
-            return await wait_for(ctx.result, timeout=5.0)
-
-        # if no RabbitMQ, classic access
-        return await model_router.safe_client_access(
-            endpoint=endpoint,
-            handler=handler
-        )
