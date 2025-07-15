@@ -80,7 +80,7 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
         )
 
     return await global_context.model_registry.execute_request(
-        router=body['model'],
+        router_id=body['model'],
         endpoint=ENDPOINT__CHAT_COMPLETIONS,
         handler=handler
     )

@@ -341,7 +341,6 @@ class Dependencies(ConfigBaseModel):
 
             return values
 
-        print(values)
         values = create_attribute(name="web_search_engine", type=WebSearchEngineType, values=values)
         values = create_attribute(name="parser", type=ParserType, values=values)
         values = create_attribute(name="vector_store", type=VectorStoreType, values=values)
@@ -518,8 +517,6 @@ class Configuration(BaseSettings):
         values.models = config.models
         values.dependencies = config.dependencies
         values.settings = config.settings
-
-        print(values.dependencies)
 
         return values
 
