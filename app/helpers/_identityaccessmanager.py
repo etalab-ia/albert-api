@@ -239,8 +239,8 @@ class IdentityAccessManager:
                 .returning(UserTable.id)
             )
             user_id = result.scalar_one()
-        except IntegrityError:
-            raise UserAlreadyExistsException()
+        except IntegrityError as e:
+            raise UserAlreadyExistsException(detail=str(e))
 
         await session.commit()
 
@@ -333,6 +333,8 @@ class IdentityAccessManager:
                 cast(func.extract("epoch", UserTable.expires_at), Integer).label("expires_at"),
                 cast(func.extract("epoch", UserTable.created_at), Integer).label("created_at"),
                 cast(func.extract("epoch", UserTable.updated_at), Integer).label("updated_at"),
+                UserTable.email,
+                UserTable.sub,
             )
             .offset(offset=offset)
             .limit(limit=limit)

@@ -4,7 +4,8 @@ from authlib.integrations.starlette_client import OAuth
 from app.utils.settings import settings
 from app.helpers._identityaccessmanager import IdentityAccessManager
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.sql.models import User as UserTable
+from sqlalchemy import select
+from app.sql.models import User as UserTable, Role
 from app.utils.variables import ROUTER__OAUTH2
 from urllib.parse import urlparse
 from app.sql.session import get_db_session
@@ -46,27 +47,22 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
 
         # DEBUG: Voir ce qui est retourné
         print(f"Token reçu: {token}")
-        print(f"Access token: {token.get('access_token')}")
-        print(f"Scope: {token.get('scope')}")
+        print(f"Access token: {token.get("access_token")}")
+        print(f"Scope: {token.get("scope")}")
 
-        # Récupérer les informations utilisateur via l'endpoint userinfo
+        # Récupérer les informations utilisateur via oauth2.userinfo()
         try:
-            print("Tentative d'appel à userinfo...")
             user_info = await oauth2.userinfo(token=token)
-            print(f"SUCCESS - User info from userinfo endpoint: {user_info}")
+            print(f"SUCCESS avec oauth2.userinfo - User info: {user_info}")
         except Exception as userinfo_error:
-            print(f"ERREUR lors de l'appel userinfo: {userinfo_error}")
-            print(f"Type d'erreur: {type(userinfo_error)}")
-            # Réessayer avec juste l'access token
-            try:
-                print("Tentative avec access_token uniquement...")
-                user_info = await oauth2.userinfo(token=token["access_token"])
-                print(f"SUCCESS avec access_token - User info: {user_info}")
-            except Exception as second_error:
-                print(f"Échec aussi avec access_token: {second_error}")
-                # Fallback: utiliser les infos déjà dans le token
-                user_info = token.get("userinfo", {})
-                print(f"Fallback - Using userinfo from token: {user_info}")
+            print(f"ERREUR lors de l'appel oauth2.userinfo: {userinfo_error}")
+            # Fallback: utiliser les infos du token si disponibles
+            user_info = token.get("userinfo", {})
+            print(f"Fallback - Using userinfo from token: {user_info}")
+
+        # Vérifier que nous avons bien récupéré des informations utilisateur
+        if not user_info:
+            raise HTTPException(status_code=400, detail="Impossible de récupérer les informations utilisateur")
 
         # Extract user information
         sub = user_info.get("sub")
@@ -89,10 +85,21 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
 
         # If no user is found, create a new one
         if not user:
+            # Get the default role ID
+            default_role_query = select(Role.id).where(Role.name == settings.oauth2.default_role)
+            default_role_result = await session.execute(default_role_query)
+            default_role_id = default_role_result.scalar_one_or_none()
+
+            if default_role_id is None:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Default role for OAuth user not found in database, please create a role named {settings.oauth2.default_role} in the database or update the settings.",
+                )
+
             user_id = await iam.create_user(
                 session=session,
-                name=f"{given_name or ''} {usual_name or ''}".strip() or "Unknown User",
-                role_id=1,  # TODO : create a default role for ProConnect users
+                name=f"{given_name or ""} {usual_name or ""}".strip() or "Unknown User",
+                role_id=default_role_id,
                 email=email,
                 sub=sub,
                 expires_at=expires_at,

@@ -131,6 +131,8 @@ class User(BaseModel):
     expires_at: Optional[int] = None
     created_at: int
     updated_at: int
+    email: Optional[str] = None
+    sub: Optional[str] = None
 
 
 class Users(BaseModel):
