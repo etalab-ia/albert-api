@@ -52,5 +52,3 @@ class WorkingContext:
             return
 
         self.loop.call_soon_threadsafe(self._get_callback(client))
-
-

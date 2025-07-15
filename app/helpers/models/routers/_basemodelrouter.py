@@ -10,7 +10,7 @@ import inspect
 from uuid import uuid4
 
 from app.clients.model import BaseModelClient as ModelClient
-from app.helpers.models._requestcontext import WorkingContext
+from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.models import ModelType
 from app.utils.configuration import configuration
 from app.utils.rabbitmq import ConsumerRabbitMQConnection

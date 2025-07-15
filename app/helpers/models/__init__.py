@@ -1,4 +1,4 @@
 from ._modelregistry import ModelRegistry
-from ._requestcontext import WorkingContext
+from ._workingcontext import WorkingContext
 
 __all__ = ["ModelRegistry", "WorkingContext"]

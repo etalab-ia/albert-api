@@ -2,7 +2,7 @@ from asyncio import Lock, wait_for
 from typing import List, Optional, Callable, Union, Awaitable
 
 from app.clients.model import BaseModelClient
-from app.helpers.models._requestcontext import WorkingContext
+from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.configuration import configuration

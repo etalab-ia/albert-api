@@ -71,8 +71,8 @@ async def ocr(request: Request, file: UploadFile = FileForm, model: str = ModelF
 
         return JSONResponse(content=document.model_dump(), status_code=200)
 
-    model = await global_context.model_registry(model=model)
-    return await model.safe_client_access(
+    return await global_context.model_registry.execute_request(
+        router_id=model,
         endpoint=ENDPOINT__OCR,
         handler=handler
     )
