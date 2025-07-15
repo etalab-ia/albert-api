@@ -8,11 +8,11 @@ import time
 from typing import Callable, Union, Awaitable
 import inspect
 from uuid import uuid4
-import pika
 
 from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.models._requestcontext import RequestContext
 from app.schemas.models import ModelType
+from app.utils.rabbitmq import ConsumerRabbitMQConnection
 
 
 def sync(f):
@@ -74,18 +74,15 @@ class BaseModelRouter(ABC):
         self._context_lock = Lock()
         self._context_register = dict()
 
-        credentials = pika.PlainCredentials('master', 'changeme')
-
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost', 5672, '/', credentials))
-        channel = connection.channel()
-        channel.queue_declare(queue='router-queue')
-        channel.basic_consume(queue="router-queue", auto_ack=True, on_message_callback=lambda *cargs: self._queue_callback(*cargs))
+        self.queue_name = str(uuid4())  # TODO maybe use type + name?
+        channel = ConsumerRabbitMQConnection().channel
+        channel.queue_declare(queue=self.queue_name)
+        channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=lambda *cargs: self._queue_callback(*cargs))
         threading.Thread(target=channel.start_consuming).start()
 
     @sync
     async def _queue_callback(self, channel, method, properties, body):
         ctx = await self.get_context(body.decode('utf8'))
-        print(self._context_register)
         if ctx is None:
             return
 
