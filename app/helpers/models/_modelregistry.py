@@ -1,7 +1,6 @@
 from asyncio import Lock, wait_for
-from typing import List, Optional, Callable, Union, Awaitable
+from typing import List, Optional, Callable, Union, Awaitable, TYPE_CHECKING
 
-from app.clients.model import BaseModelClient
 from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
@@ -10,6 +9,12 @@ from app.utils.exceptions import ModelNotFoundException
 
 from app.helpers.models.routers import ModelRouter
 from app.utils.rabbitmq import SenderRabbitMQConnection
+
+
+if TYPE_CHECKING:
+    # only for type‐checkers and linters, not at runtime
+    # Used to break circular import
+    from app.clients.model import BaseModelClient
 
 
 class ModelRegistry:
@@ -77,7 +82,7 @@ class ModelRegistry:
     async def __add_client_to_existing_router(
         self,
         router_id: str,
-        model_client: BaseModelClient,
+        model_client: "BaseModelClient",
         **__
     ):
         """
@@ -96,7 +101,7 @@ class ModelRegistry:
     async def __add_client_to_new_router(
         self,
         router_id: str,
-        model_client: BaseModelClient,
+        model_client: "BaseModelClient",
         model_type: ModelType = None,
         aliases: List[str] = None,
         routing_strategy: RoutingStrategy = RoutingStrategy.ROUND_ROBIN,
@@ -141,7 +146,7 @@ class ModelRegistry:
     async def add_client(
         self,
         router_id: str,
-        model_client: BaseModelClient,
+        model_client: "BaseModelClient",
         **kwargs
     ):
         """
@@ -257,7 +262,7 @@ class ModelRegistry:
         self,
         router_id: str,
         endpoint: str,
-        handler: Callable[[BaseModelClient], Union[R, Awaitable[R]]]
+        handler: Callable[["BaseModelClient"], Union[R, Awaitable[R]]]
     ):
 
         # We lock to prevent any race condition while working

@@ -5,15 +5,20 @@ from abc import ABC, abstractmethod
 from asyncio import Lock
 from itertools import cycle
 import time
-from typing import Callable, Union, Awaitable
+from typing import Callable, Union, Awaitable, TYPE_CHECKING
 import inspect
 from uuid import uuid4
 
-from app.clients.model import BaseModelClient as ModelClient
 from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.models import ModelType
 from app.utils.configuration import configuration
 from app.utils.rabbitmq import ConsumerRabbitMQConnection
+
+
+if TYPE_CHECKING:
+    # only for type‐checkers and linters, not at runtime
+    # Used to break circular import
+    from app.clients.model import BaseModelClient
 
 
 def sync(f):
@@ -32,7 +37,7 @@ class BaseModelRouter(ABC):
         owned_by: str,
         aliases: list[str],
         routing_strategy: str,
-        providers: list[ModelClient],
+        providers: list["BaseModelClient"],
         *args,
         **kwargs,
     ) -> None:
@@ -80,7 +85,7 @@ class BaseModelRouter(ABC):
         if configuration.dependencies.rabbitmq:
             channel = ConsumerRabbitMQConnection().channel
             channel.queue_declare(queue=self.queue_name)
-            channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=lambda *cargs: self._queue_callback(*cargs))
+            channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=self._queue_callback)
             threading.Thread(target=channel.start_consuming).start()
 
     @sync
@@ -98,7 +103,7 @@ class BaseModelRouter(ABC):
 
 
     @abstractmethod
-    def get_client(self, endpoint: str) -> ModelClient:
+    def get_client(self, endpoint: str) -> "BaseModelClient":
         """
         Get a client to handle the request.
         NB: this method is not thread-safe, you probably want to use safe_client_access.
@@ -118,7 +123,7 @@ class BaseModelRouter(ABC):
         async with self._lock:
             return self._providers
 
-    async def add_client(self, client: ModelClient):
+    async def add_client(self, client: "BaseModelClient"):
         """
         Adds a new client.
         """
@@ -198,6 +203,7 @@ class BaseModelRouter(ABC):
 
             client.lock.release()
             # TODO: remove from DB
+            # TODO: if RabbitMQ, flush queue and reroute.
             return True
 
     async def add_alias(self, alias: str):
@@ -231,7 +237,7 @@ class BaseModelRouter(ABC):
     async def safe_client_access[R](
             self,
             endpoint: str,
-            handler: Callable[[ModelClient], Union[R, Awaitable[R]]]
+            handler: Callable[["BaseModelClient"], Union[R, Awaitable[R]]]
     ) -> R:
         """
         Thread-safely access a BaseModelClient.

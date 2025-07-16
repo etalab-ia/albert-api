@@ -1,3 +1,5 @@
+import functools
+import threading
 from abc import ABC
 import ast
 import asyncio
@@ -16,11 +18,15 @@ from coredis import ConnectionPool, Redis
 from fastapi import HTTPException
 import httpx
 
+from uuid import uuid4
+
+from app.helpers.models import WorkingContext
 from app.schemas.core.configuration import ModelProviderType
 from app.schemas.core.metric import Metric
 from app.schemas.usage import Detail, Usage
 from app.utils.carbon import get_carbon_footprint
 from app.utils.context import generate_request_id, global_context, request_context
+from app.utils.rabbitmq import ConsumerRabbitMQConnection
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -30,8 +36,17 @@ from app.utils.variables import (
     ENDPOINT__OCR,
     ENDPOINT__RERANK,
 )
+from app.utils.configuration import configuration
 
 logger = logging.getLogger(__name__)
+
+
+def sync(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        # TODO create new event loop each time sucks
+        return asyncio.new_event_loop().run_until_complete(f(*args, **kwargs))
+    return wrapper
 
 
 class BaseModelClient(ABC):
@@ -79,6 +94,25 @@ class BaseModelClient(ABC):
         self.endpoint = None
         self.lock = Lock()  # Used by ModelRouter to determine whether the Client is in use
 
+        self._context_register = {}  # One per client to avoid competition between threads
+        self._context_lock = Lock()
+        self.queue_name = str(uuid4())
+
+        if configuration.dependencies.rabbitmq:  # RabbitMQ enabled
+            channel = ConsumerRabbitMQConnection().channel
+            channel.queue_declare(queue=self.queue_name)
+            channel.basic_consume(queue=self.queue_name, auto_ack=True,
+                                  on_message_callback=lambda *cargs: self._rabbitmq_worker(*cargs))
+            threading.Thread(target=channel.start_consuming).start()
+
+    @sync
+    async def _rabbitmq_worker(self, channel, method, properties, body):
+        ctx = await self.pop_context(body.decode('utf8'))
+        if ctx is None:
+            return
+
+        ctx.complete(self)
+
     @staticmethod
     def import_module(type: ModelProviderType) -> "Type[BaseModelClient]":
         """
@@ -94,6 +128,18 @@ class BaseModelClient(ABC):
         module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
 
         return getattr(module, f"{type.capitalize()}ModelClient")
+
+    async def register_context(self, req_ctx: WorkingContext):
+        async with self._context_lock:  # We use a different lock as this operation has nothing to do with other fields
+            self._context_register[req_ctx.id] = req_ctx
+
+    async def pop_context(self, ctx_id: str) -> WorkingContext | None:
+        async with self._context_lock:
+            return self._context_register.pop(ctx_id, None)
+
+    async def get_context(self, ctx_id: str) -> WorkingContext | None:
+        async with self._context_lock:
+            return self._context_register.get(ctx_id, None)
 
     async def setup_metrics_storage(self) -> None:
         time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{self.name}:{self.url}"
