@@ -67,17 +67,22 @@ async def chat_completions(request: Request, body: ChatCompletionRequest, sessio
     body, results = await retrieval_augmentation_generation(initial_body=body, inner_session=session)
     additional_data = {"search_results": results} if results else {}
 
-    # select client
-    model = global_context.models(model=body["model"])
-    client = await model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
+    async def handler(client):
+        # not stream case
+        if not body["stream"]:
+            response = await client.forward_request(method="POST", json=body, additional_data=additional_data)
+            return JSONResponse(content=response.json(), status_code=response.status_code)
 
-    # not stream case
-    if not body["stream"]:
-        response = await client.forward_request(method="POST", json=body, additional_data=additional_data)
-        return JSONResponse(content=response.json(), status_code=response.status_code)
+        # stream case
+        return StreamingResponseWithStatusCode(
+            content=client.forward_stream(method="POST", json=body, additional_data=additional_data),
+            media_type="text/event-stream",
+        )
 
-    # stream case
-    return StreamingResponseWithStatusCode(
-        content=client.forward_stream(method="POST", json=body, additional_data=additional_data),
-        media_type="text/event-stream",
+    model = await global_context.model_registry(model=body["model"])
+    return await model.safe_client_access(
+        endpoint=ENDPOINT__CHAT_COMPLETIONS,
+        handler=handler
     )
+
+

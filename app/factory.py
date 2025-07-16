@@ -30,6 +30,7 @@ from app.utils.variables import (
     ROUTER__RERANK,
     ROUTER__SEARCH,
     ROUTER__USERS,
+    ROUTER__MODEL_PROVIDING,
 )
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         search,
         usage,
         users,
+        models_providing,
     )
     from app.helpers._accesscontroller import AccessController
 
@@ -169,6 +171,10 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
     if ROUTER__USAGE not in configuration.settings.disabled_routers:
         add_hooks(router=usage.router)
         app.include_router(router=usage.router, tags=[ROUTER__USAGE.title()], prefix="/v1")
+
+    if ROUTER__MODEL_PROVIDING not in configuration.settings.disabled_routers:
+        add_hooks(router=models_providing.router)
+        app.include_router(router=models_providing.router, tags=[ROUTER__MODEL_PROVIDING.title()], prefix="/v1")
 
     if ROUTER__USERS not in configuration.settings.disabled_routers:
         add_hooks(router=users.router)

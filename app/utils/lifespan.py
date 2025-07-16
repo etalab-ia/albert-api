@@ -162,7 +162,7 @@ async def _setup_document_manager(configuration: Configuration, global_context: 
     if dependencies.web_search_engine:
         web_search_manager = WebSearchManager(
             web_search_engine=dependencies.web_search_engine,
-            query_model=global_context.model_registry(model=configuration.settings.search_web_query_model),
+            query_model=await global_context.model_registry(model=configuration.settings.search_web_query_model),
             limited_domains=configuration.settings.search_web_limited_domains,
             user_agent=configuration.settings.search_web_user_agent,
         )
@@ -172,13 +172,13 @@ async def _setup_document_manager(configuration: Configuration, global_context: 
 
     if configuration.settings.search_multi_agents_synthesis_model:
         multi_agent_manager = MultiAgentManager(
-            synthesis_model=global_context.model_registry(model=configuration.settings.search_multi_agents_synthesis_model),
-            reranker_model=global_context.model_registry(model=configuration.settings.search_multi_agents_reranker_model),
+            synthesis_model=await global_context.model_registry(model=configuration.settings.search_multi_agents_synthesis_model),
+            reranker_model=await global_context.model_registry(model=configuration.settings.search_multi_agents_reranker_model),
         )
 
     global_context.document_manager = DocumentManager(
         vector_store=dependencies.vector_store,
-        vector_store_model=global_context.model_registry(model=configuration.settings.vector_store_model),
+        vector_store_model=await global_context.model_registry(model=configuration.settings.vector_store_model),
         parser_manager=parser_manager,
         web_search_manager=web_search_manager,
         multi_agent_manager=multi_agent_manager,

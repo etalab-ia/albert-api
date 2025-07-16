@@ -48,7 +48,7 @@ class ChatCompletionRequest(BaseModel):
     tools: Optional[List] = Field(default=None, description="A list of tools the model may call. Currently, only functions are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.")  # fmt: off
     tool_choice: Any = Field(default="none", description="Controls which (if any) tool is called by the model. `none` means the model will not call any tool and instead generates a message. `auto` means the model can pick between generating a message or calling one or more tools. `required` means the model must call one or more tools. Specifying a particular tool via `{\"type\": \"function\", \"function\": {\"name\": \"my_function\"}}` forces the model to call that tool.<br>`none` is the default when no tools are present. `auto` is the default if tools are present.")  # fmt: off
 
-    # search additionnal fields
+    # search additional fields
     search: bool = Field(default=False)  # fmt: off
     search_args: Optional[ChatSearchArgs] = Field(default=None)  # fmt: off
 

@@ -22,6 +22,11 @@ ENDPOINT__TOKENS = "/tokens"
 ENDPOINT__USERS = "/users"
 ENDPOINT__USERS_ME = "/users/me"
 ENDPOINT__USAGE = "/usage"
+ENDPOINT__MODEL_ADD = "/models/add"
+ENDPOINT__MODEL_DELETE = "/models/delete"
+ENDPOINT__ALIAS_ADD = "/alias/add"
+ENDPOINT__ALIAS_DELETE = "/alias/delete"
+ENDPOINT__ROUTERS = "/routers"
 
 
 ENDPOINTS = [value for name, value in locals().items() if name.startswith("ENDPOINT__")]
@@ -45,6 +50,7 @@ ROUTER__SEARCH = "search"
 ROUTER__USAGE = "usage"
 ROUTER__USERS = "users"
 ROUTER__MULTIAGENTS = "multiagents"
+ROUTER__MODEL_PROVIDING = "model_providing"
 
 
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
