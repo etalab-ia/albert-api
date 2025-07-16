@@ -12,8 +12,7 @@ from uuid import uuid4
 from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.models import ModelType
 from app.utils.configuration import configuration
-from app.utils.rabbitmq import ConsumerRabbitMQConnection
-
+from app.utils.rabbitmq import ConsumerRabbitMQConnection, SenderRabbitMQConnection
 
 if TYPE_CHECKING:
     # only for type‐checkers and linters, not at runtime
@@ -90,17 +89,16 @@ class BaseModelRouter(ABC):
 
     @sync
     async def _queue_callback(self, channel, method, properties, body):
-        ctx = await self.get_context(body.decode('utf8'))
+        ctx = await self.pop_context(body.decode('utf8'))
         if ctx is None:
             return
 
         async with self._lock:
             client = self.get_client(ctx.endpoint)
-            await client.lock.acquire()
-
-        ctx.complete(client)
-        client.lock.release()
-
+            await client.register_context(ctx)
+            with SenderRabbitMQConnection() as conn:
+                conn.channel.queue_declare(queue=client.queue_name)  # Make sure the queue exists (probably useless)
+                conn.channel.basic_publish(exchange='', routing_key=client.queue_name, body=str(ctx.id))
 
     @abstractmethod
     def get_client(self, endpoint: str) -> "BaseModelClient":

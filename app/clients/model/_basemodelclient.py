@@ -101,8 +101,7 @@ class BaseModelClient(ABC):
         if configuration.dependencies.rabbitmq:  # RabbitMQ enabled
             channel = ConsumerRabbitMQConnection().channel
             channel.queue_declare(queue=self.queue_name)
-            channel.basic_consume(queue=self.queue_name, auto_ack=True,
-                                  on_message_callback=lambda *cargs: self._rabbitmq_worker(*cargs))
+            channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=self._rabbitmq_worker)
             threading.Thread(target=channel.start_consuming).start()
 
     @sync
