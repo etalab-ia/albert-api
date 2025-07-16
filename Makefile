@@ -82,7 +82,7 @@ test-integ:
 	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
 
 test-ci:
-	docker exec albert-api-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
+	docker exec albert-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
 
 setup: install configuration install-lint env-services-up db-app-migrate db-ui-migrate
 
