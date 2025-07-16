@@ -106,7 +106,13 @@ class BaseModelClient(ABC):
 
     @sync
     async def _rabbitmq_worker(self, channel, method, properties, body):
-        ctx = await self.pop_context(body.decode('utf8'))
+        message = body.decode('utf8')
+
+        if message == WorkingContext.SHUTDOWN_MESSAGE:
+            channel.stop_consuming()
+            return
+
+        ctx = await self.pop_context(message)
         if ctx is None:
             return
 

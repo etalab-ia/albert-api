@@ -12,6 +12,9 @@ if TYPE_CHECKING:
 
 
 class WorkingContext:
+
+    SHUTDOWN_MESSAGE = "shutdown"
+
     def __init__[R](
         self,
         endpoint: str,

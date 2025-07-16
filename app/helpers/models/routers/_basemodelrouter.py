@@ -9,6 +9,8 @@ from typing import Callable, Union, Awaitable, TYPE_CHECKING
 import inspect
 from uuid import uuid4
 
+import pika
+
 from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.models import ModelType
 from app.utils.configuration import configuration
@@ -89,7 +91,16 @@ class BaseModelRouter(ABC):
 
     @sync
     async def _queue_callback(self, channel, method, properties, body):
-        ctx = await self.pop_context(body.decode('utf8'))
+
+        message = body.decode('utf8')
+
+        if message == WorkingContext.SHUTDOWN_MESSAGE:
+            # Let all requests expire
+            channel.stop_consuming()
+            channel.queue_purge(self.queue_name)
+            return
+
+        ctx = await self.pop_context(message)
         if ctx is None:
             return
 
@@ -183,12 +194,56 @@ class BaseModelRouter(ABC):
             await client.lock.acquire()
             self._providers.remove(client)
 
+            # Cleaning RabbitMQ setup
+            if configuration.dependencies.rabbitmq:
+                # Send shutdown for background thread to stop
+                with SenderRabbitMQConnection() as conn:
+                    conn.channel.queue_declare(client.queue_name)
+                    conn.channel.basic_publish(
+                        exchange='',
+                        routing_key=client.queue_name,
+                        body=WorkingContext.SHUTDOWN_MESSAGE,
+                        properties=pika.BasicProperties(priority=10)  # Max priority
+                    )
+
+                    # Retrieve existing in the queue to republish them
+                    pending = []
+                    while True:
+                        method, header, body = conn.channel.basic_get(queue=client.queue_name, auto_ack=False)
+                        if method:
+                            pending.append(body)
+                            conn.channel.basic_ack(method.delivery_tag)
+                        else:
+                            break
+
+                    # Republishing. Processed request have had their context popped
+                    for message in pending:
+                        ctx = await client.get_context(message.decode('utf8'))
+
+                        if ctx is None:
+                            continue
+
+                        await self.register_context(ctx)
+                        conn.channel.basic_publish(exchange='', routing_key=self.queue_name, body=message)
+
             if len(self._providers) == 0:
                 # No more clients, the ModelRouter is about to get deleted.
                 # There is no need to try to "update" it further.
                 # NB: there is no chance that another ModelClient gets added right after,
                 # as ModelRegistry's requires its lock for the whole removing process.
                 # If needed, "this" router will be recreated.
+
+                # Requests might be pending if we are using RabbitMQ
+                if configuration.dependencies.rabbitmq:
+                    with SenderRabbitMQConnection() as conn:
+                        conn.channel.basic_publish(
+                            exchange='',
+                            routing_key=self.queue_name,
+                            body=WorkingContext.SHUTDOWN_MESSAGE,
+                            properties=pika.BasicProperties(priority=10)  # Max priority
+                        )
+
+
                 client.lock.release()  # Who knows
                 return False
 
@@ -201,7 +256,6 @@ class BaseModelRouter(ABC):
 
             client.lock.release()
             # TODO: remove from DB
-            # TODO: if RabbitMQ, flush queue and reroute.
             return True
 
     async def add_alias(self, alias: str):
