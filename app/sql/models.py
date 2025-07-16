@@ -87,7 +87,7 @@ class User(Base):
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), nullable=False, onupdate=func.now())
     sub = Column(String, unique=True, nullable=True)
-    email = Column(String, index=True, unique=True, nullable=False)
+    email = Column(String, index=True, nullable=True)
 
 
 class Token(Base):
