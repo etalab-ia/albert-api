@@ -17,7 +17,7 @@ from app.utils.exceptions import (
     InsufficientPermissionException,
     InvalidAPIKeyException,
     InvalidAuthenticationSchemeException,
-    RateLimitExceeded,
+    RateLimitExceeded, ModelNotFoundException,
 )
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
@@ -106,9 +106,10 @@ class AccessController:
 
         return user
 
-    def __get_user_limits(self, role: Role) -> Dict[str, UserModelLimits]:
+    async def __get_user_limits(self, role: Role) -> Dict[str, UserModelLimits]:
         limits = {}
-        for model in global_context.model_registry.models:
+        models = await global_context.model_registry.get_models()
+        for model in models:
             limits[model] = UserModelLimits()
             for limit in role.limits:
                 if limit.model == model and limit.type == LimitType.TPM:
@@ -140,12 +141,13 @@ class AccessController:
             raise InvalidAPIKeyException()
 
         if api_key.credentials == global_context.identity_access_manager.master_key:  # master user can do anything
-            limits = [Limit(model=model, type=type, value=None) for model in global_context.model_registry.models for type in LimitType]
+            models = await global_context.model_registry.get_models()
+            limits = [Limit(model=model, type=lim_type, value=None) for model in models for lim_type in LimitType]
             permissions = [permission for permission in PermissionType]
 
             master_role = Role(id=0, name="master", permissions=permissions, limits=limits)
             master_user = User(id=0, name="master", role=0, expires_at=None, created_at=0, updated_at=0)
-            master_limits = self.__get_user_limits(role=master_role)
+            master_limits = await self.__get_user_limits(role=master_role)
 
             return master_user, master_role, master_limits, None
 
@@ -159,7 +161,7 @@ class AccessController:
         roles = await global_context.identity_access_manager.get_roles(session=session, role_id=user.role)
         role = roles[0]
 
-        limits = self.__get_user_limits(role=role)
+        limits = await self.__get_user_limits(role=role)
 
         return user, role, limits, token_id
 
@@ -171,7 +173,7 @@ class AccessController:
         if not model:
             return
 
-        model = global_context.model_registry.aliases.get(model, model)
+        model = await global_context.model_registry.get_original_name(model)
 
         if model not in limits:  # unknown model (404 will be raised by the model client)
             return
@@ -193,7 +195,7 @@ class AccessController:
         if not model or not prompt_tokens:
             return
 
-        model = global_context.model_registry.aliases.get(model, model)
+        model = await global_context.model_registry.get_original_name(model)
 
         if model not in limits:  # unknown model (404 will be raised by the model client)
             return
@@ -217,12 +219,11 @@ class AccessController:
         if not model:
             return
 
-        model = global_context.model_registry.aliases.get(model, model)
-
-        if model not in global_context.model_registry.models:
+        try:
+            model = await global_context.model_registry(model=model)
+        except ModelNotFoundException:
             return
 
-        model = global_context.model_registry(model=model)
         if model.cost_prompt_tokens == 0 and model.cost_completion_tokens == 0:  # free model
             return
 

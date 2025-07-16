@@ -45,11 +45,16 @@ class AgentManager:
         return llm_response_with_new_finish_reason
 
     async def get_llm_http_response(self, body: AgentsChatCompletionRequest):
-        model = self.model_registry(model=body.model)
-        client = model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
-        http_llm_response = await client.forward_request(method="POST", json=body.model_dump())
+        model = await self.model_registry(model=body.model)
 
-        return http_llm_response
+        async def handler(client):
+            http_llm_response = await client.forward_request(method="POST", json=body.model_dump())
+            return http_llm_response
+
+        return await model.safe_client_access(
+            endpoint=ENDPOINT__CHAT_COMPLETIONS,
+            handler=handler,
+        )
 
     async def set_tools_for_llm_request(self, body: AgentsChatCompletionRequest) -> AgentsChatCompletionRequest:
         if hasattr(body, "tools") and body.tools is not None:

@@ -40,6 +40,7 @@ dependencies:
       port: ${REDIS_PORT:-6379}
       password: changeme
 
+  # rabbitmq: # optional
   # qdrant: # optional
   # elastic: # optional
   # marker: # optional

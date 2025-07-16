@@ -14,9 +14,12 @@ async def rerank(request: Request, body: RerankRequest) -> JSONResponse:
     """
     Creates an ordered array with each text assigned a relevance score, based on the query.
     """
+    async def handler(client):
+        response = await client.forward_request(method="POST", json=body.model_dump())
+        return JSONResponse(content=Reranks(**response.json()).model_dump(), status_code=response.status_code)
 
-    model = global_context.model_registry(model=body.model)
-    client = model.get_client(endpoint=ENDPOINT__RERANK)
-    response = await client.forward_request(method="POST", json=body.model_dump())
-
-    return JSONResponse(content=Reranks(**response.json()).model_dump(), status_code=response.status_code)
+    return await global_context.model_registry.execute_request(
+        router_id=body.model,
+        endpoint=ENDPOINT__RERANK,
+        handler=handler
+    )

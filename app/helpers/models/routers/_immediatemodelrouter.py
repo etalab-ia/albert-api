@@ -34,7 +34,7 @@ class ImmediateModelRouter(BaseModelRouter):
         if endpoint and self.type not in self.ENDPOINT_MODEL_TYPE_TABLE[endpoint]:
             raise WrongModelTypeException()
 
-        if self._routing_strategy == RoutingStrategy.ROUND_ROBIN:
+        if self.routing_strategy == RoutingStrategy.ROUND_ROBIN:
             strategy = RoundRobinRoutingStrategy(self._clients, self._cycle)
         else:  # ROUTER_STRATEGY__SHUFFLE
             strategy = ShuffleRoutingStrategy(self._clients)
