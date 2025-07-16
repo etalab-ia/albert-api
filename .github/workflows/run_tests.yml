@@ -49,11 +49,6 @@ jobs:
         commit_message: Update coverage badge
         file_pattern: .github/badges/coverage.json
 
-    - name: Generate documentation
-      run: |
-        SETTINGS_FILE=$(docker exec albert-ci-api-1 python scripts/generate_configuration_documentation.py)
-        echo "SETTINGS_FILE=${SETTINGS_FILE}" >> $GITHUB_OUTPUT
-
     - name: Tear down Docker Compose
       if: always()
       run: |
