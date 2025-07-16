@@ -80,6 +80,7 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
           assert router in db_routers_from_config, f"{router}" # requires defining equality
       routers = db_routers
     else:
+      logger.warning(msg="no modelrouter found in database. initializing from configuration file.")
       routers = config_routers
       for router in routers:
         await dependencies.model_database_manager.add_router(router)
