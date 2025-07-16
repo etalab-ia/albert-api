@@ -65,8 +65,8 @@ class ModelRouterSchema(BaseModel):
     aliases: List[str] = Field(description="List of id's aliases.")
     routing_strategy: RoutingStrategy = Field(description="Describes how the model router chooses between its ModelClients")
     vector_size: int | None = Field(description="Size of vectors stored.")
-    max_context_length: int = Field(description="Greatest amount of token a context can have.")
-    created: int | None = Field("Time when the Router was created (Unix time).")
+    max_context_length: int | None = Field(description="Greatest amount of token a context can have.")
+    created: int = Field("Time when the Router was created (Unix time).")
     clients: List[ModelClientSchema] = Field(description="Router's ModelClients.")
 
 
