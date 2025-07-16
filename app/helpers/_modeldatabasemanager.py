@@ -1,8 +1,6 @@
 from sqlalchemy import select, insert, delete  # Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
 
-from app.sql.session import get_db_session
 from app.sql.models import ModelRouter as ModelRouterTable
 from app.sql.models import ModelRouterAlias as ModelRouterAliasTable
 from app.sql.models import ModelClient as ModelClientTable
@@ -13,7 +11,7 @@ class ModelDatabaseManager:
     def __init__(self):
         pass
     
-    async def get_routers(self, session: AsyncSession = Depends(get_db_session)):
+    async def get_routers(self, session: AsyncSession):
         routers = []
         # Get all ModelRouter rows and cnvert it from a list of 1-dimensional vectors to a list of ModelRouters
         db_routers = [row[0] for row in (await session.execute(select(ModelRouterTable))).fetchall()]
@@ -36,6 +34,7 @@ class ModelDatabaseManager:
 
             clients = []
             for client in db_clients:
+                clients.append(ModelClient.from_orm(client))
                 #clients.append(ModelClient(model=client.model, costs=client.costs, carbon=client.carbon))
                 pass
                 # @TODO functional client creation from database

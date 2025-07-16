@@ -26,6 +26,7 @@ from app.schemas.core.context import GlobalContext
 from app.utils.configuration import get_configuration
 from app.utils.context import global_context
 from app.utils.logging import init_logger
+from app.sql.session import get_db_session
 
 logger = init_logger(name=__name__)
 
@@ -68,7 +69,8 @@ async def lifespan(app: FastAPI):
 async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
     routers = []
 
-    db_routers = await dependencies.model_database_manager.get_routers()
+    async for session in get_db_session():
+        db_routers = await dependencies.model_database_manager.get_routers(session)
     
     db_routers_from_config = [router for router in db_routers if router.from_config == True]
 
