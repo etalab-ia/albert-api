@@ -1,6 +1,6 @@
 from http import HTTPMethod
 
-from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String, Boolean, UniqueConstraint, func
 from sqlalchemy.orm import backref, declarative_base, relationship
 
 from app.schemas.auth import LimitType, PermissionType
@@ -124,3 +124,41 @@ class Document(Base):
     created_at = Column(DateTime, default=func.now(), nullable=False)
 
     collection = relationship(argument="Collection", backref=backref(name="document", cascade="all, delete-orphan"))
+
+class ModelRouter(Base):
+    __tablename__ = "modelrouter"
+
+    id = Column(String, primary_key=True, index=True)
+    type = Column(String, nullable=False)
+    routing_strategy = Column(String, nullable=False)
+    from_config = Column(Boolean, nullable=False)
+
+
+class ModelRouterAlias(Base):
+    __tablename__ = "modelrouteralias"
+
+    id = Column(Integer, primary_key=True, index=True)
+    alias = Column(String, nullable=False)
+    model_router_id = Column(String, ForeignKey(column="modelrouter.id", ondelete="CASCADE"), nullable=False)
+
+    model_router = relationship(argument="ModelRouter", backref=backref(name="alias", cascade="all, delete-orphan"))
+
+class ModelClient(Base):
+    __tablename__ = "modelclient"
+
+    id = Column(Integer, primary_key=True, index=True)
+    url = Column(String, nullable=False)
+    key = Column(String, nullable=False)
+    timeout = Column(Integer, nullable=False)
+    model_name = Column(String, nullable=False)
+    model_carbon_footprint_zone = Column(Integer, nullable=False)
+    model_carbon_footprint_total_params = Column(Integer, nullable=False)
+    model_carbon_footprint_active_params = Column(Integer, nullable=False)
+    model_cost_prompt_tokens = Column(Float, nullable=False)
+    model_cost_completion_tokens = Column(Float, nullable=False)
+    metrics_retention_ms = Column(Integer, nullable=False)
+    type = Column(String, nullable=False)
+
+    model_router_id = Column(String, ForeignKey(column="modelrouter.id", ondelete="CASCADE"), nullable=False)
+    
+    model_router = relationship(argument="ModelRouter", backref=backref(name="client", cascade="all, delete-orphan"))
