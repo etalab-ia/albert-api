@@ -174,4 +174,164 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate, zstd
+      connection:
+      - keep-alive
+      host:
+      - secretiveshell:8000
+      user-agent:
+      - python-httpx/0.28.1
+    method: GET
+    uri: http://secretiveshell:8000/mcp/tools
+  response:
+    body:
+      string: "{\"data-gouv\":{\"_meta\":null,\"nextCursor\":null,\"tools\":[{\"name\":\"search_datasets\",\"description\":\"\\n
+        \           Recherche des jeux de donn\xE9es sur data.gouv.fr\\n\\n            Args:\\n
+        \               query: La requ\xEAte de recherche (mots-cl\xE9s)\\n                limit:
+        Nombre maximum de r\xE9sultats \xE0 retourner (d\xE9faut: 10)\\n\\n            Returns:\\n
+        \               Dict contenant les r\xE9sultats de la recherche\\n            \",\"inputSchema\":{\"properties\":{\"query\":{\"title\":\"Query\",\"type\":\"string\"},\"limit\":{\"default\":10,\"title\":\"Limit\",\"type\":\"integer\"}},\"required\":[\"query\"],\"title\":\"search_datasetsArguments\",\"type\":\"object\"},\"annotations\":null,\"outputSchema\":{\"properties\":{\"result\":{\"additionalProperties\":true,\"title\":\"Result\",\"type\":\"object\"}},\"required\":[\"result\"],\"title\":\"search_datasetsOutput\",\"type\":\"object\"}}]}}"
+    headers:
+      content-length:
+      - '819'
+      content-type:
+      - application/json
+      date:
+      - Wed, 16 Jul 2025 13:14:31 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"query":"accidents de la route"}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate, zstd
+      connection:
+      - keep-alive
+      content-length:
+      - '33'
+      content-type:
+      - application/json
+      host:
+      - secretiveshell:8000
+      user-agent:
+      - python-httpx/0.28.1
+    method: POST
+    uri: http://secretiveshell:8000/mcp/tools/search_datasets/call
+  response:
+    body:
+      string: "{\"_meta\":null,\"content\":[{\"type\":\"text\",\"text\":\"{\\n  \\\"query\\\":
+        \\\"accidents de la route\\\",\\n  \\\"nombre_resultats\\\": 5,\\n  \\\"total_disponible\\\":
+        5,\\n  \\\"resultats\\\": [\\n    {\\n      \\\"id\\\": \\\"53698e4ba3a729239d203415\\\",\\n
+        \     \\\"titre\\\": \\\"Accidents de la route\\\",\\n      \\\"description\\\":
+        \\\" \\\\r\\\\nExport : CSV, HTML et XLS  \\\\r\\\\nSource : [www.ecosante.fr](http://www.ecosante.fr/)
+        Irdes d'apr\xE8s donn\xE9es de l'Observatoire national interminist\xE9riel
+        de la s\xE9curit\xE9 routi\xE8re (Onisr)\\\\r\\\\n\\\",\\n      \\\"url\\\":
+        \\\"https://www.data.gouv.fr/fr/datasets/accidents-de-la-route/\\\",\\n      \\\"organisation\\\":
+        \\\"IRDES & ECOSANTE.FR : Institut de Recherche et Documentation en Economie
+        de la Sant\xE9\\\",\\n      \\\"tags\\\": [\\n        \\\"accident-circulation\\\",\\n
+        \       \\\"blesse\\\",\\n        \\\"departement\\\",\\n        \\\"facteur-risque\\\",\\n
+        \       \\\"hospitalise\\\"\\n      ],\\n      \\\"formats_disponibles\\\":
+        [\\n        \\\"HTML\\\"\\n      ],\\n      \\\"date_creation\\\": \\\"2013-12-16\\\",\\n
+        \     \\\"derniere_modification\\\": \\\"2016-03-16\\\",\\n      \\\"nombre_ressources\\\":
+        2\\n    },\\n    {\\n      \\\"id\\\": \\\"6662501aa070d9b3ee9fc8f3\\\",\\n
+        \     \\\"titre\\\": \\\"Tableau de bord   Accidents de la route en Seine-Maritime
+        en 2021\\\",\\n      \\\"description\\\": \\\"Pour chaque accident corporel
+        (soit un accident survenu sur une voie ouverte \xE0 la circulation publique,
+        impliquant au moins un v\xE9hicule et ayant fait au moins une victime ayant
+        n\xE9cessit\xE9 des soins), des saisies d\u2019information d\xE9crivant l\u2019accident
+        sont effectu\xE9es par l\u2019unit\xE9 des forces de l\u2019ordre (police,
+        gendarmerie, etc.) qui est intervenue sur le lieu de l\u2019accident. Ces
+        saisies sont rassembl\xE9es dans une fiche intitul\xE9e bulletin d\u2019analyse
+        des accidents corporels. L\u2019ensemble de ces fiches constit...\\\",\\n
+        \     \\\"url\\\": \\\"https://www.data.gouv.fr/fr/datasets/tableau-de-bord-accidents-de-la-route-en-seine-maritime-en-2021/\\\",\\n
+        \     \\\"organisation\\\": \\\"D\xE9partement de la Seine-Maritime\\\",\\n
+        \     \\\"tags\\\": [\\n        \\\"accidents\\\",\\n        \\\"circulation\\\",\\n
+        \       \\\"geospatial\\\",\\n        \\\"routes\\\"\\n      ],\\n      \\\"formats_disponibles\\\":
+        [\\n        \\\"WEB PAGE\\\"\\n      ],\\n      \\\"date_creation\\\": \\\"2023-01-16\\\",\\n
+        \     \\\"derniere_modification\\\": \\\"2024-01-30\\\",\\n      \\\"nombre_ressources\\\":
+        1\\n    },\\n    {\\n      \\\"id\\\": \\\"53699a1fa3a729239d2053f2\\\",\\n
+        \     \\\"titre\\\": \\\"Mortalit\xE9 due aux accidents de la route\\\",\\n
+        \     \\\"description\\\": \\\"Export : CSV, HTML et XLS\\\\r\\\\nSource :
+        [www.ecosante.fr](http://www.ecosante.fr/) Irdes d'apr\xE8s donn\xE9es Inserm
+        C\xE9piDC\\\\r\\\\n\\\",\\n      \\\"url\\\": \\\"https://www.data.gouv.fr/fr/datasets/mortalite-due-aux-accidents-de-la-route/\\\",\\n
+        \     \\\"organisation\\\": \\\"IRDES & ECOSANTE.FR : Institut de Recherche
+        et Documentation en Economie de la Sant\xE9\\\",\\n      \\\"tags\\\": [\\n
+        \       \\\"accident-circulation\\\",\\n        \\\"cepidc\\\",\\n        \\\"femme\\\",\\n
+        \       \\\"homme\\\",\\n        \\\"mortalite\\\"\\n      ],\\n      \\\"formats_disponibles\\\":
+        [\\n        \\\"HTML\\\",\\n        \\\"DATA\\\"\\n      ],\\n      \\\"date_creation\\\":
+        \\\"2014-02-21\\\",\\n      \\\"derniere_modification\\\": \\\"2015-12-01\\\",\\n
+        \     \\\"nombre_ressources\\\": 2\\n    },\\n    {\\n      \\\"id\\\": \\\"6662501c4aef32f7859fc8f3\\\",\\n
+        \     \\\"titre\\\": \\\"Accidents de la route en Seine-Maritime en 2021\\\",\\n
+        \     \\\"description\\\": \\\"\\\",\\n      \\\"url\\\": \\\"https://www.data.gouv.fr/fr/datasets/accidents-de-la-route-en-seine-maritime-en-2021/\\\",\\n
+        \     \\\"organisation\\\": \\\"D\xE9partement de la Seine-Maritime\\\",\\n
+        \     \\\"tags\\\": [\\n        \\\"accidents\\\",\\n        \\\"circulation\\\",\\n
+        \       \\\"geospatial\\\",\\n        \\\"routes\\\"\\n      ],\\n      \\\"formats_disponibles\\\":
+        [\\n        \\\"WEB PAGE\\\"\\n      ],\\n      \\\"date_creation\\\": \\\"2023-01-16\\\",\\n
+        \     \\\"derniere_modification\\\": \\\"2023-01-17\\\",\\n      \\\"nombre_ressources\\\":
+        1\\n    },\\n    {\\n      \\\"id\\\": \\\"5d3a7d1206e3e70553e75019\\\",\\n
+        \     \\\"titre\\\": \\\"Localisation des accidents sur les routes d\xE9partementales
+        de Loire-Atlantique\\\",\\n      \\\"description\\\": \\\"Localisation des
+        accidents mortels et des accidents avec au moins un bless\xE9 sur les routes
+        d\xE9partementales de Loire-Atlantique depuis 1998. \\\\n\\\\n* * *\\\\n\\\\nCe
+        fichier se base sur les donn\xE9es du jeu \\\\\\\"Base de donn\xE9es accidents
+        corporels de la circulation\\\\\\\" du Minist\xE8re de l'Int\xE9rieur.\\\",\\n
+        \     \\\"url\\\": \\\"https://www.data.gouv.fr/fr/datasets/localisation-des-accidents-sur-les-routes-departementales-de-loire-atlantique/\\\",\\n
+        \     \\\"organisation\\\": \\\"D\xE9partement de Loire-Atlantique\\\",\\n
+        \     \\\"tags\\\": [\\n        \\\"implantation\\\",\\n        \\\"mobilite\\\",\\n
+        \       \\\"securite-routiere\\\"\\n      ],\\n      \\\"formats_disponibles\\\":
+        [\\n        \\\"CSV\\\",\\n        \\\"ZIP\\\",\\n        \\\"JSON\\\"\\n
+        \     ],\\n      \\\"date_creation\\\": \\\"2012-04-02\\\",\\n      \\\"derniere_modification\\\":
+        \\\"2019-09-06\\\",\\n      \\\"nombre_ressources\\\": 4\\n    }\\n  ]\\n}\",\"annotations\":null}],\"isError\":false,\"structuredContent\":{\"result\":{\"query\":\"accidents
+        de la route\",\"nombre_resultats\":5,\"total_disponible\":5,\"resultats\":[{\"id\":\"53698e4ba3a729239d203415\",\"titre\":\"Accidents
+        de la route\",\"description\":\" \\r\\nExport : CSV, HTML et XLS  \\r\\nSource
+        : [www.ecosante.fr](http://www.ecosante.fr/) Irdes d'apr\xE8s donn\xE9es de
+        l'Observatoire national interminist\xE9riel de la s\xE9curit\xE9 routi\xE8re
+        (Onisr)\\r\\n\",\"url\":\"https://www.data.gouv.fr/fr/datasets/accidents-de-la-route/\",\"organisation\":\"IRDES
+        & ECOSANTE.FR : Institut de Recherche et Documentation en Economie de la Sant\xE9\",\"tags\":[\"accident-circulation\",\"blesse\",\"departement\",\"facteur-risque\",\"hospitalise\"],\"formats_disponibles\":[\"HTML\"],\"date_creation\":\"2013-12-16\",\"derniere_modification\":\"2016-03-16\",\"nombre_ressources\":2},{\"id\":\"6662501aa070d9b3ee9fc8f3\",\"titre\":\"Tableau
+        de bord   Accidents de la route en Seine-Maritime en 2021\",\"description\":\"Pour
+        chaque accident corporel (soit un accident survenu sur une voie ouverte \xE0
+        la circulation publique, impliquant au moins un v\xE9hicule et ayant fait
+        au moins une victime ayant n\xE9cessit\xE9 des soins), des saisies d\u2019information
+        d\xE9crivant l\u2019accident sont effectu\xE9es par l\u2019unit\xE9 des forces
+        de l\u2019ordre (police, gendarmerie, etc.) qui est intervenue sur le lieu
+        de l\u2019accident. Ces saisies sont rassembl\xE9es dans une fiche intitul\xE9e
+        bulletin d\u2019analyse des accidents corporels. L\u2019ensemble de ces fiches
+        constit...\",\"url\":\"https://www.data.gouv.fr/fr/datasets/tableau-de-bord-accidents-de-la-route-en-seine-maritime-en-2021/\",\"organisation\":\"D\xE9partement
+        de la Seine-Maritime\",\"tags\":[\"accidents\",\"circulation\",\"geospatial\",\"routes\"],\"formats_disponibles\":[\"WEB
+        PAGE\"],\"date_creation\":\"2023-01-16\",\"derniere_modification\":\"2024-01-30\",\"nombre_ressources\":1},{\"id\":\"53699a1fa3a729239d2053f2\",\"titre\":\"Mortalit\xE9
+        due aux accidents de la route\",\"description\":\"Export : CSV, HTML et XLS\\r\\nSource
+        : [www.ecosante.fr](http://www.ecosante.fr/) Irdes d'apr\xE8s donn\xE9es Inserm
+        C\xE9piDC\\r\\n\",\"url\":\"https://www.data.gouv.fr/fr/datasets/mortalite-due-aux-accidents-de-la-route/\",\"organisation\":\"IRDES
+        & ECOSANTE.FR : Institut de Recherche et Documentation en Economie de la Sant\xE9\",\"tags\":[\"accident-circulation\",\"cepidc\",\"femme\",\"homme\",\"mortalite\"],\"formats_disponibles\":[\"HTML\",\"DATA\"],\"date_creation\":\"2014-02-21\",\"derniere_modification\":\"2015-12-01\",\"nombre_ressources\":2},{\"id\":\"6662501c4aef32f7859fc8f3\",\"titre\":\"Accidents
+        de la route en Seine-Maritime en 2021\",\"description\":\"\",\"url\":\"https://www.data.gouv.fr/fr/datasets/accidents-de-la-route-en-seine-maritime-en-2021/\",\"organisation\":\"D\xE9partement
+        de la Seine-Maritime\",\"tags\":[\"accidents\",\"circulation\",\"geospatial\",\"routes\"],\"formats_disponibles\":[\"WEB
+        PAGE\"],\"date_creation\":\"2023-01-16\",\"derniere_modification\":\"2023-01-17\",\"nombre_ressources\":1},{\"id\":\"5d3a7d1206e3e70553e75019\",\"titre\":\"Localisation
+        des accidents sur les routes d\xE9partementales de Loire-Atlantique\",\"description\":\"Localisation
+        des accidents mortels et des accidents avec au moins un bless\xE9 sur les
+        routes d\xE9partementales de Loire-Atlantique depuis 1998. \\n\\n* * *\\n\\nCe
+        fichier se base sur les donn\xE9es du jeu \\\"Base de donn\xE9es accidents
+        corporels de la circulation\\\" du Minist\xE8re de l'Int\xE9rieur.\",\"url\":\"https://www.data.gouv.fr/fr/datasets/localisation-des-accidents-sur-les-routes-departementales-de-loire-atlantique/\",\"organisation\":\"D\xE9partement
+        de Loire-Atlantique\",\"tags\":[\"implantation\",\"mobilite\",\"securite-routiere\"],\"formats_disponibles\":[\"CSV\",\"ZIP\",\"JSON\"],\"date_creation\":\"2012-04-02\",\"derniere_modification\":\"2019-09-06\",\"nombre_ressources\":4}]}}}"
+    headers:
+      content-length:
+      - '8415'
+      content-type:
+      - application/json
+      date:
+      - Wed, 16 Jul 2025 13:14:31 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
 version: 1

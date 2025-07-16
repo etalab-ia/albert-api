@@ -26,7 +26,7 @@ jobs:
       run: |
         echo $(ls -la)
         for i in {1..30}; do
-          curl -s http://localhost:8000/health -H "Authorization: Bearer changeme" > /dev/null && echo "API is ready" && break || echo "Waiting for API..." && sleep 2;
+          curl -s http://localhost:8080/health -H "Authorization: Bearer changeme" > /dev/null && echo "API is ready" && break || echo "Waiting for API..." && sleep 2;
         done
         echo $(docker logs albert-ci-api-1)
 

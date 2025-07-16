@@ -1,5 +1,5 @@
 CONFIG_FILE=./config.yml
-CONFIG_TEST_FILE=app/tests/config.test.yml
+CONFIG_TEST_FILE=app/tests/integ/config.test.yml
 PYPROJECT=pyproject.toml
 
 APP_ENV_FILE=.env
@@ -38,29 +38,10 @@ env-test-services-up:
 	docker compose --env-file $(env_file) down
 
 env-ci-up:
-	@SED_INPLACE=$$(if [ "$$(uname)" = "Darwin" ]; then echo "sed -i ''"; else echo "sed -i"; fi); \
-	if [ ! -f .github/.env.ci ]; then \
-		if [ -z "${ALBERT_API_KEY}" ]; then \
-			echo "ALBERT_API_KEY environment variable is not set"; \
-			exit 1; \
-		fi; \
-		if [ -z "${BRAVE_API_KEY}" ]; then \
-			echo "BRAVE_API_KEY environment variable is not set"; \
-			exit 1; \
-		fi; \
+	@if [ ! -f .github/.env.ci ]; then \
 		cp .env.example .github/.env.ci; \
-		echo "" >> .github/.env.ci; \
-		echo "ALBERT_API_KEY=${ALBERT_API_KEY}" >> .github/.env.ci; \
-		echo "BRAVE_API_KEY=${BRAVE_API_KEY}" >> .github/.env.ci; \
-		$$SED_INPLACE 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
-	else \
-		if [ -n "${ALBERT_API_KEY}" ]; then \
-			$$SED_INPLACE 's/ALBERT_API_KEY=.*/ALBERT_API_KEY=${ALBERT_API_KEY}/' .github/.env.ci; \
-		fi; \
-		if [ -n "${BRAVE_API_KEY}" ]; then \
-			$$SED_INPLACE 's/BRAVE_API_KEY=.*/BRAVE_API_KEY=${BRAVE_API_KEY}/' .github/.env.ci; \
-		fi; \
-		$$SED_INPLACE 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
+		sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
+		sed -i 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=albert-api-ci/' .github/.env.ci; \
 	fi
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach
 
@@ -95,7 +76,7 @@ test-all:
 	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT)'
 
 test-unit:
-	PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)'
+	PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)
 
 test-integ:
 	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
