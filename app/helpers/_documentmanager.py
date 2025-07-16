@@ -472,11 +472,8 @@ class DocumentManager:
         return chunks
 
     async def _create_embeddings(self, input: List[str]) -> list[float] | list[list[float]] | dict:
-        client = self.vector_store_model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
-        response = await client.forward_request(
-            method="POST",
-            json={"input": input, "model": self.vector_store_model.name, "encoding_format": "float"},
-        )
+        client = await self.vector_store.model.get_client(endpoint=ENDPOINT__EMBEDDINGS)
+        response = await client.forward_request(method="POST", json={"input": input, "model": self.vector_store.model.id, "encoding_format": "float"})
 
         return [vector["embedding"] for vector in response.json()["data"]]
 
