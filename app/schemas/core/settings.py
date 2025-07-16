@@ -279,9 +279,9 @@ class OAuth2(ConfigBaseModel):
     client_secret: str = Field(default="")
     # OpenID Connect discovery endpoint for server metadata
     server_metadata_url: str = Field(default="https://identite-sandbox.proconnect.gouv.fr/.well-known/openid-configuration")
-    redirect_uri: str = Field(default="https://albert.api.etalab.gouv.fr/v1/oauth2/login")
+    redirect_uri: str = Field(default="https://albert.api.etalab.gouv.fr/v1/oauth2/callback")
     scope: str = Field(default="openid profile email")
-    allowed_origins: List[str] = Field(default_factory=list)
+    allowed_domains: List[str] = Field(default=["localhost", "gouv.fr"], description="List of allowed domains for OAuth2 login. This is used to restrict the domains that can use the OAuth2 login flow.")  # fmt: off
     default_role: str = Field(default="Freemium", description="Default role assigned to users when they log in for the first time.")
 
 

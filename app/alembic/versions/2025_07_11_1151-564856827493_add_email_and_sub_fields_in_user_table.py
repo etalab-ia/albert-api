@@ -31,10 +31,6 @@ def upgrade() -> None:
     # Move data from name to email
     connection = op.get_bind()
     connection.execute(sa.text('UPDATE "user" SET email = name'))
-
-    # Now make email non-nullable and add constraints
-    op.alter_column("user", "email", nullable=False)
-    op.create_index(op.f("ix_user_email"), "user", ["email"], unique=True)
     op.create_unique_constraint(None, "user", ["sub"])
     # ### end Alembic commands ###
 
@@ -49,7 +45,6 @@ def downgrade() -> None:
 
     # Drop constraints and columns
     op.drop_constraint(None, "user", type_="unique")
-    op.drop_index(op.f("ix_user_email"), table_name="user")
     op.drop_column("user", "sub")
     op.drop_column("user", "email")
     # ### end Alembic commands ###

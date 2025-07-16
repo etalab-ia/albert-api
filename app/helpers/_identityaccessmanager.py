@@ -3,8 +3,8 @@ from typing import List, Literal, Optional, Tuple
 from jose import JWTError, jwt
 from sqlalchemy import Integer, cast, delete, distinct, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import func
 
 from app.schemas.auth import Limit, PermissionType, Role, Token, User
 from app.sql.models import Limit as LimitTable
@@ -441,18 +441,29 @@ class IdentityAccessManager:
         sub: Optional[str] = None,
         email: Optional[str] = None,
     ) -> Optional[User]:
-        query = select(UserTable).where(
-            or_(
-                UserTable.id == user_id if user_id else False,
-                UserTable.sub == sub if sub else False,
-                UserTable.email == email if email else False,
-            )
-        )
+        # Build conditions list only for non-None values
+        conditions = []
+        if user_id is not None:
+            conditions.append(UserTable.id == user_id)
+        if sub is not None:
+            conditions.append(UserTable.sub == sub)
+        if email is not None:
+            conditions.append(UserTable.email == email)
+
+        # If no conditions, return None
+        if not conditions:
+            return None
+
+        # Build query with OR conditions
+        query = select(UserTable).where(or_(*conditions))
 
         result = await session.execute(query)
         user = result.scalar_one_or_none()
 
-        if user and user.expires_at and user.expires_at < func.now():
-            return None
+        # Check expiration using Python datetime comparison : disabled because ProConnect returns an expiration of 1 minute
+        # if user and user.expires_at:
+        #     current_time = datetime.now(timezone.utc)
+        #     if user.expires_at.replace(tzinfo=timezone.utc) < current_time:
+        #         return None
 
         return user
