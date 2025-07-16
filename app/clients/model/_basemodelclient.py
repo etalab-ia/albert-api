@@ -71,7 +71,7 @@ class BaseModelClient(ABC):
         self.timeout = timeout
         self.vector_size = None
         self.max_context_length = None
-        self.redis = Redis(redis=redis)
+        self.redis = Redis(connection_pool=redis)
         self.metrics_retention_ms = metrics_retention_ms
 
         self.headers = {"Authorization": f"Bearer {self.key}"} if self.key else {}
