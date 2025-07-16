@@ -84,7 +84,7 @@ models:
 # -------------------------------- dependencies ---------------------------------
 dependencies:
   postgres:
-    url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/api
+    url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/api
     echo: False
     pool_size: 10
     max_overflow: 5
@@ -97,7 +97,7 @@ dependencies:
       command_timeout: 60
 
   redis:
-    host: ${REDIS_HOST:-localhost}
+    host: ${REDIS_HOST:-redis}
     port: ${REDIS_PORT:-6379}
     password: changeme
 
