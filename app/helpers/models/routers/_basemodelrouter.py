@@ -85,7 +85,6 @@ class BaseModelRouter(ABC):
 
     @sync
     async def _queue_callback(self, channel, method, properties, body):
-        print("[*] Callback!")
         ctx = await self.get_context(body.decode('utf8'))
         if ctx is None:
             return
@@ -223,11 +222,7 @@ class BaseModelRouter(ABC):
 
     async def pop_context(self, ctx_id: str) -> WorkingContext | None:
         async with self._context_lock:
-
-            if ctx_id not in self._context_register:
-                return None
-
-            return self._context_register.pop(ctx_id)
+            return self._context_register.pop(ctx_id, None)
 
     async def get_context(self, ctx_id: str) -> WorkingContext | None:
         async with self._context_lock:

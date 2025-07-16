@@ -283,7 +283,9 @@ class ModelRegistry:
                         conn.channel.queue_declare(queue=model_router.queue_name)  # Make sure the queue exists (probably useless)
                         conn.channel.basic_publish(exchange='', routing_key=model_router.queue_name, body=str(ctx.id))
 
-                    return await wait_for(ctx.result, timeout=5.0)
+                    result = await wait_for(ctx.result, timeout=5.0)
+                    await model_router.pop_context(ctx)  # free space once finished
+                    return result
 
                 except Exception as e:
                     # Anyway, we pop the context, to prevent memory leaks
