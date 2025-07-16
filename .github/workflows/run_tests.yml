@@ -32,6 +32,7 @@ jobs:
 
     - name: Run tests
       run: |
+        docker ps
         make test-ci
 
     - name: Create coverage badge
