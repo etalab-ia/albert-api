@@ -18,6 +18,7 @@ from app.helpers._multiagentmanager import MultiAgentManager
 from app.helpers._parsermanager import ParserManager
 from app.helpers._usagetokenizer import UsageTokenizer
 from app.helpers._websearchmanager import WebSearchManager
+from app.helpers._modeldatabasemanager import ModelDatabaseManager
 from app.helpers.models import ModelRegistry
 from app.helpers.models.routers import ModelRouter
 from app.schemas.core.configuration import Configuration
@@ -41,12 +42,13 @@ async def lifespan(app: FastAPI):
     redis = ConnectionPool(**configuration.dependencies.redis.model_dump())
     vector_store = VectorStoreClient.import_module(type=configuration.dependencies.vector_store.type)(**configuration.dependencies.vector_store.model_dump()) if configuration.dependencies.vector_store else None  # fmt: off
     web_search_engine = WebSearchEngineClient.import_module(type=configuration.dependencies.web_search_engine.type)(**configuration.dependencies.web_search_engine.model_dump()) if configuration.dependencies.web_search_engine else None  # fmt: off
+    model_database_manager = ModelDatabaseManager()
 
     redis_test_client = Redis(connection_pool=redis)
     assert (await redis_test_client.ping()).decode("ascii") == "PONG", "Redis database is not reachable."
     assert await vector_store.check() if vector_store else True, "Vector store database is not reachable."
 
-    dependencies = SimpleNamespace(mcp_bridge=mcp_bridge, parser=parser, redis=redis, vector_store=vector_store, web_search_engine=web_search_engine)
+    dependencies = SimpleNamespace(mcp_bridge=mcp_bridge, parser=parser, redis=redis, vector_store=vector_store, web_search_engine=web_search_engine, model_database_manager=model_database_manager)
 
     # setup global context
     await _setup_model_registry(configuration=configuration, global_context=global_context, dependencies=dependencies)
@@ -64,6 +66,27 @@ async def lifespan(app: FastAPI):
 
 
 async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
+    routers = []
+
+    db_routers = await dependencies.model_database_manager.get_routers()
+    
+    db_routers_from_config = [router for router in db_routers if router.from_config == True]
+
+    config_routers = await _get_routers_from_config(configuration=configuration, dependencies=dependencies)
+
+    if db_routers:
+      for router in config_routers:
+          # @TODO show diff, log when adding model
+          assert router in db_routers_from_config, f"{router}" # requires defining equality
+      routers = db_routers
+    else:
+      routers = config_routers
+      for router in routers:
+        await dependencies.model_database_manager.add_router(router)
+    
+    global_context.model_registry = ModelRegistry(routers=routers)
+
+async def _get_routers_from_config(configuration: Configuration, dependencies: SimpleNamespace):
     routers = []
     for model in configuration.models:
         providers = []
@@ -98,9 +121,7 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
         model = model.model_dump()
         model["providers"] = providers
         routers.append(ModelRouter(**model))
-
-    global_context.model_registry = ModelRegistry(routers=routers)
-
+    return routers
 
 async def _setup_identity_access_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
     global_context.identity_access_manager = IdentityAccessManager(
