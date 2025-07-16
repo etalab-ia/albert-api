@@ -1,5 +1,5 @@
 CONFIG_FILE=./config.yml
-CONFIG_TEST_FILE=app/tests/config.test.yml
+CONFIG_TEST_FILE=app/tests/integ/config.test.yml
 PYPROJECT=pyproject.toml
 
 APP_ENV_FILE=.env
@@ -95,7 +95,7 @@ test-all:
 	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest --config-file=$(PYPROJECT)'
 
 test-unit:
-	PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)'
+	PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)
 
 test-integ:
 	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
