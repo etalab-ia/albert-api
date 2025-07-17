@@ -91,7 +91,6 @@ def login(user_name: str, user_password: str, session: Session, oauth2=False) ->
 
     st.session_state["login_status"] = True
     st.session_state["user"] = user
-    st.warning(user)
     st.rerun()
 
 
