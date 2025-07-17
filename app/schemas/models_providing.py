@@ -8,7 +8,6 @@ from app.schemas.models import ModelType, ModelCosts
 
 URL_PATTERN = r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 
-# TODO refacto: ModelCost and ModelClientCarbonFootprint were deleted, and several field names changed.
 class ModelClientSchema(BaseModel):
     name: str = Field(min_length=1, description="Name of the model.")
     url: str | None = Field(pattern=URL_PATTERN, description="URL to the model API.")
