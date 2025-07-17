@@ -118,7 +118,6 @@ class Settings(BaseSettings):
         values.auth = config.auth
         values.playground = config.playground
         values.databases = config.databases
-        values.oauth2 = config.oauth2  # Load the OAuth2 section
 
         return values
 

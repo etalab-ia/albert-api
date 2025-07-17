@@ -3,7 +3,7 @@ import time
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 
-from ui.backend.login import login
+from ui.backend.login import login, oauth_login
 from ui.backend.sql.session import get_session
 from .css import css_proconnect
 from ui.settings import settings  # Ensure settings is imported
@@ -15,7 +15,38 @@ def header():
 
         @st.dialog(title="Login")
         def login_form():
-            with st.form(key="login"):
+            with st.form(key="login"):  # ProConnect login
+                with stylable_container(key="ProConnect", css_styles=css_proconnect):
+                    # Determine the API base URL
+                    proconnect_login_url = f"{settings.playground.api_url}/v1/oauth2/login"
+
+                    st.markdown(
+                        f"""
+                        <div style="text-align: center;">
+                            <form action="{proconnect_login_url}" method="get" style="display: inline-block;">
+                                <button class="proconnect-button">
+                                    <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
+                                </button>
+                            </form>
+                            <p>
+                                <a
+                                    href="https://www.proconnect.gouv.fr/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="Qu'est-ce que ProConnect ? - nouvelle fenêtre"
+                                >
+                                    Qu'est-ce que ProConnect ?
+                                </a>
+                            </p>
+                            <div style="display: flex; align-items: center; margin: 20px 0;">
+                                <hr style="flex: 1; border: none; border-top: 1px solid #ccc;">
+                                <span style="margin: 0 15px; color: #666; font-size: 14px;">OU</span>
+                                <hr style="flex: 1; border: none; border-top: 1px solid #ccc;">
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
                 # Traditional login
                 user_name = st.text_input(label="Email", type="default", key="user_id", icon=":material/email:")
                 user_password = st.text_input(label="Password", type="password", key="password", icon=":material/lock:")
@@ -28,33 +59,12 @@ def header():
                 if submit:
                     login(user_name, user_password, session)
 
-            # ProConnect login
-            with stylable_container(key="ProConnect", css_styles=css_proconnect):
-                # Determine the API base URL
-                proconnect_login_url = f"{settings.playground.api_url}/v1/oauth2/login"
+        # Access the 'api_key' parameter
+        api_key = st.query_params.get("token", None)
+        api_key_id = st.query_params.get("token_id", None)
 
-                st.markdown(
-                    f"""
-                    <div>
-                        <form action="{proconnect_login_url}" method="get">
-                            <button class="proconnect-button">
-                                <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
-                            </button>
-                        </form>
-                        <p>
-                            <a
-                                href="https://www.proconnect.gouv.fr/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title="Qu'est-ce que ProConnect ? - nouvelle fenêtre"
-                            >
-                                Qu'est-ce que ProConnect ?
-                            </a>
-                        </p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+        if st.session_state.get("login_status") is None and api_key and api_key_id:
+            oauth_login(session, api_key, api_key_id)
 
         if st.session_state.get("login_status") is None:
             login_form()
