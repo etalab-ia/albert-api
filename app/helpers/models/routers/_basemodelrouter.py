@@ -1,8 +1,6 @@
 import asyncio
 import functools
-import threading
 from abc import ABC, abstractmethod
-from asyncio import Lock
 from itertools import cycle
 import time
 from typing import Callable, Union, Awaitable, TYPE_CHECKING
@@ -11,11 +9,12 @@ from uuid import uuid4
 
 import aio_pika
 import pika
+from aio_pika import IncomingMessage
 
 from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.models import ModelType
 from app.utils.configuration import configuration
-from app.utils.rabbitmq import ConsumerRabbitMQConnection, SenderRabbitMQConnection, AsyncRabbitMQConnection
+from app.utils.rabbitmq import SenderRabbitMQConnection, AsyncRabbitMQConnection
 
 if TYPE_CHECKING:
     # only for type‐checkers and linters, not at runtime
@@ -77,42 +76,50 @@ class BaseModelRouter(ABC):
         self._cycle = cycle(providers)
         self._providers = providers
 
-        self._lock = Lock()
+        self._lock = asyncio.Lock()
 
-        self._context_lock = Lock()
+        self._context_lock = asyncio.Lock()
         self._context_register = dict()
 
+        self.queue = None
+        self.shutdown_future = asyncio.Future()
         self.queue_name = str(uuid4())  # TODO maybe use type + name?
 
         if configuration.dependencies.rabbitmq:
-            channel = ConsumerRabbitMQConnection().channel
-            channel.queue_declare(queue=self.queue_name)
-            channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=self._queue_callback)
-            threading.Thread(target=channel.start_consuming).start()
+            self._dispatch_task = AsyncRabbitMQConnection().consumer_loop.create_task(self.dispatch_callback())
+            # channel = ConsumerRabbitMQConnection().channel
+            # channel.queue_declare(queue=self.queue_name)
+            # channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=self._queue_callback)
+            # threading.Thread(target=channel.start_consuming).start()
 
-    @sync
-    async def _queue_callback(self, channel, method, properties, body):
+    async def dispatch_callback(self):
+        channel = await AsyncRabbitMQConnection().connection.channel()
+        await channel.set_qos(prefetch_count=1)
+        self.queue = await channel.declare_queue(self.queue_name, robust=True)
 
-        message = body.decode('utf8')
+        # No need to bind as we are using the default_exchange
+        await self.queue.consume(self._dispatch, no_ack=False)
+        await self.shutdown_future  # keep this coroutine alive
 
-        if message == WorkingContext.SHUTDOWN_MESSAGE:
-            # Let all requests expire
-            channel.stop_consuming()
-            channel.queue_purge(self.queue_name)
-            return
+        await self.queue.purge()
+        await channel.close()
 
-        ctx = await self.pop_context(message)
-        if ctx is None:
-            return
+    async def _dispatch(self, message: IncomingMessage):
+        async with message.process():
+            content = message.body.decode('utf8')
 
-        async with self._lock:
-            client = self.get_client(ctx.endpoint)
-            await client.register_context(ctx)
+            ctx = await self.pop_context(content)
+            if ctx is None:
+                return
 
-            await AsyncRabbitMQConnection().publish_default_exchange(
-                message=aio_pika.Message(body=ctx.id.encode('utf8')),
-                routing_key=client.queue_name
-            )
+            async with self._lock:
+                client = self.get_client(ctx.endpoint)
+                await client.register_context(ctx)
+
+                await AsyncRabbitMQConnection().publish_default_exchange(
+                    message=aio_pika.Message(body=ctx.id.encode('utf8')),
+                    routing_key=client.queue_name
+                )
 
     @abstractmethod
     def get_client(self, endpoint: str) -> "BaseModelClient":

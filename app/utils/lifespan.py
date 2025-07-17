@@ -55,6 +55,9 @@ async def lifespan(app: FastAPI):
         web_search_engine=web_search_engine,
     )
 
+    if configuration.dependencies.rabbitmq:
+        await AsyncRabbitMQConnection().setup()
+
     # setup global context
     await _setup_model_registry(configuration=configuration, global_context=global_context, dependencies=dependencies)
     await _setup_identity_access_manager(configuration=configuration, global_context=global_context, dependencies=dependencies)
@@ -63,9 +66,6 @@ async def lifespan(app: FastAPI):
     await _setup_agent_manager(configuration=configuration, global_context=global_context, dependencies=dependencies)
     await _setup_document_manager(configuration=configuration, global_context=global_context, dependencies=dependencies)
 
-    if configuration.dependencies.rabbitmq:
-        await AsyncRabbitMQConnection().connect()
-
     yield
 
     # cleanup resources when app shuts down
@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
         await vector_store.close()
 
     if configuration.dependencies.rabbitmq:
-        await AsyncRabbitMQConnection().connection.close()
+        await AsyncRabbitMQConnection().close()
 
 
 async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):

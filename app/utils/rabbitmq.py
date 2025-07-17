@@ -62,12 +62,14 @@ class AsyncRabbitMQConnection:
         # To send request down to Router and then clients, we use a pool of channels,
         # as they are only sending one message.
         self.sender_pool = None
-        self.loop = None
+        self.sender_loop = None
+
+        self.consumer_loop = None
 
         # Call init once
         self._initialized = True
 
-    async def connect(self):
+    async def setup(self):
         self.connection = await aio_pika.connect_robust(
             host=rmq_config.host,
             port=rmq_config.port,
@@ -75,29 +77,31 @@ class AsyncRabbitMQConnection:
             password=configuration.settings.auth_master_key,
         )
 
-        self.loop = asyncio.get_event_loop()  # FastAPI event loop
-        # TODO: same loop or another one running in a dedicated thread?
+        self.sender_loop = asyncio.get_running_loop()  # FastAPI event loop
 
         self.sender_pool = aio_pika.pool.Pool(
             self.connection.channel,
             max_size=100,  # TODO config parameter?
-            loop=self.loop
+            loop=self.sender_loop
         )
+
+        self.consumer_loop = asyncio.get_running_loop() # FastAPI event loop
+
+        # If using dedicated event loop, they need to be started
 
     async def publish_default_exchange(self, routing_key: str, message: aio_pika.Message):
 
         async def do_publish():
-            print("Acquiring a mofo channel")
             async with self.sender_pool.acquire() as channel:
-                print("[*] Sending...")
                 ex = channel.default_exchange
                 await ex.publish(
                     message,
                     routing_key=routing_key
                 )
-                print("[*] Sent!")
 
-        print("[!] Attaching to loop...")
         # self.loop.call_soon_threadsafe(lambda: self.loop.create_task(do_publish()))
-        self.loop.create_task(do_publish())
-        print("I've done my part!")
+        self.sender_loop.create_task(do_publish())
+
+    async def close(self):
+        await self.connection.close()
+        # Careful if using dedicated loop, shutdown needed here

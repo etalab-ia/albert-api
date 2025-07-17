@@ -1,11 +1,9 @@
 import functools
-import threading
 from abc import ABC
 import ast
 import asyncio
 from datetime import datetime
 import importlib
-from asyncio import Lock
 from json import JSONDecodeError, dumps, loads
 import logging
 import re
@@ -14,6 +12,7 @@ import traceback
 from typing import Any, Dict, Optional, Tuple, Type
 from urllib.parse import urljoin
 
+from aio_pika import IncomingMessage
 from coredis import ConnectionPool, Redis
 from fastapi import HTTPException
 import httpx
@@ -26,7 +25,7 @@ from app.schemas.core.metric import Metric
 from app.schemas.usage import Detail, Usage
 from app.utils.carbon import get_carbon_footprint
 from app.utils.context import generate_request_id, global_context, request_context
-from app.utils.rabbitmq import ConsumerRabbitMQConnection
+from app.utils.rabbitmq import AsyncRabbitMQConnection
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -92,31 +91,43 @@ class BaseModelClient(ABC):
 
         self.headers = {"Authorization": f"Bearer {self.key}"} if self.key else {}
         self.endpoint = None
-        self.lock = Lock()  # Used by ModelRouter to determine whether the Client is in use
+        self.lock = asyncio.Lock()  # Used by ModelRouter to determine whether the Client is in use
 
         self._context_register = {}  # One per client to avoid competition between threads
-        self._context_lock = Lock()
+        self._context_lock = asyncio.Lock()
         self.queue_name = str(uuid4())
 
+        self.queue = None
+        self.shutdown_future = asyncio.Future()
+
         if configuration.dependencies.rabbitmq:  # RabbitMQ enabled
-            channel = ConsumerRabbitMQConnection().channel
-            channel.queue_declare(queue=self.queue_name)
-            channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=self._rabbitmq_worker)
-            threading.Thread(target=channel.start_consuming).start()
+            self.working_task = AsyncRabbitMQConnection().consumer_loop.create_task(self._rabbitmq_worker())
 
-    @sync
-    async def _rabbitmq_worker(self, channel, method, properties, body):
-        message = body.decode('utf8')
+            # channel = ConsumerRabbitMQConnection().channel
+            # channel.queue_declare(queue=self.queue_name)
+            # channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=self._rabbitmq_worker)
+            # threading.Thread(target=channel.start_consuming).start()
 
-        if message == WorkingContext.SHUTDOWN_MESSAGE:
-            channel.stop_consuming()
-            return
 
-        ctx = await self.pop_context(message)
-        if ctx is None:
-            return
+    async def _rabbitmq_worker(self):
+        channel = await AsyncRabbitMQConnection().connection.channel()
+        await channel.set_qos(prefetch_count=1)
+        self.queue = await channel.declare_queue(self.queue_name, robust=True)
 
-        ctx.complete(self)
+        # No need to bind as we are using the default_exchange
+        await self.queue.consume(self._rabbitmq_callback, no_ack=False)
+        await self.shutdown_future  # keep this coroutine alive
+        await channel.close()
+
+
+    async def _rabbitmq_callback(self, message: IncomingMessage):
+        async with message.process():
+            content = message.body.decode('utf8')
+            ctx = await self.pop_context(content)
+            if ctx is None:
+                return
+
+            ctx.complete(self)
 
     @staticmethod
     def import_module(type: ModelProviderType) -> "Type[BaseModelClient]":
