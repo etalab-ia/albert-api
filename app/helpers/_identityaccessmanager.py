@@ -397,6 +397,20 @@ class IdentityAccessManager:
         await session.execute(statement=delete(table=TokenTable).where(TokenTable.id == token_id))
         await session.commit()
 
+    async def delete_tokens(self, session: AsyncSession, user_id: int, name: str):
+        """
+        Delete tokens for a specific user, optionally filtered by token name
+
+        Args:
+            session: Database session
+            user_id: ID of the user whose tokens should be deleted
+            name: name filter for tokens to delete
+        """
+        query = delete(TokenTable).where(TokenTable.user_id == user_id).where(TokenTable.name == name)
+
+        await session.execute(query)
+        await session.commit()
+
     async def get_tokens(
         self,
         session: AsyncSession,
