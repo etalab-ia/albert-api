@@ -7,6 +7,7 @@ import sentry_sdk
 from starlette.middleware.sessions import SessionMiddleware
 
 
+from app.endpoints import oauth2
 from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
 from app.schemas.usage import Usage
@@ -85,7 +86,6 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         search,
         usage,
         users,
-        oauth2callback,
     )
     from app.helpers._accesscontroller import AccessController
 
@@ -189,7 +189,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         app.include_router(router=files.router, tags=["Legacy"], prefix="/v1")
 
     if settings.oauth2 and ROUTER__OAUTH2 not in settings.general.disabled_routers:
-        add_hooks(router=oauth2callback.router)
-        app.include_router(router=oauth2callback.router, tags=[ROUTER__OAUTH2.title()], prefix="/v1")
+        add_hooks(router=oauth2.router)
+        app.include_router(router=oauth2.router, tags=[ROUTER__OAUTH2.title()], prefix="/v1")
 
     return app
