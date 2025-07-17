@@ -1,4 +1,3 @@
-import functools
 from abc import ABC
 import ast
 import asyncio
@@ -38,15 +37,6 @@ from app.utils.variables import (
 from app.utils.configuration import configuration
 
 logger = logging.getLogger(__name__)
-
-
-def sync(f):
-    @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        # TODO create new event loop each time sucks
-        return asyncio.new_event_loop().run_until_complete(f(*args, **kwargs))
-    return wrapper
-
 
 class BaseModelClient(ABC):
     ENDPOINT_TABLE = {
