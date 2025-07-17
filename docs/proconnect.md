@@ -86,6 +86,6 @@ sequenceDiagram
 }
 ```
 
-* Do we create a default role (and associated limits) for a Proconnect user or do we create / associate a role base on USERINFO [when we create a user](../app/endpoints/oauth2callback.py#L49) ?
-* In current POC, you can plugs several applications ([you can authorize different origins](../app/endpoints/oauth2callback.py#L66) to use Albert API call back URL). Is it a good pattern ?
-* Is OK to add API key in [redirection URL](../app/endpoints/oauth2callback.py#L70) ?
+* Do we create a default role (and associated limits) for a Proconnect user or do we create / associate a role base on USERINFO [when we create a user](../app/endpoints/oauth2.py#L49) ?
+* In current POC, you can plugs several applications ([you can authorize different origins](../app/endpoints/oauth2.py#L66) to use Albert API call back URL). Is it a good pattern ?
+* Is OK to add API key in [redirection URL](../app/endpoints/oauth2.py#L70) ?
