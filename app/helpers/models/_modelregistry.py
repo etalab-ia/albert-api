@@ -1,6 +1,8 @@
 from asyncio import Lock, wait_for
 from typing import List, Optional, Callable, Union, Awaitable, TYPE_CHECKING
 
+import aio_pika
+
 from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
@@ -8,8 +10,7 @@ from app.utils.configuration import configuration
 from app.utils.exceptions import ModelNotFoundException
 
 from app.helpers.models.routers import ModelRouter
-from app.utils.rabbitmq import SenderRabbitMQConnection
-
+from app.utils.rabbitmq import SenderRabbitMQConnection, AsyncRabbitMQConnection
 
 if TYPE_CHECKING:
     # only for type‐checkers and linters, not at runtime
@@ -284,9 +285,10 @@ class ModelRegistry:
                 await model_router.register_context(ctx)
 
                 try:
-                    with SenderRabbitMQConnection() as conn:
-                        conn.channel.queue_declare(queue=model_router.queue_name)  # Make sure the queue exists (probably useless)
-                        conn.channel.basic_publish(exchange='', routing_key=model_router.queue_name, body=str(ctx.id))
+                    await AsyncRabbitMQConnection().publish_default_exchange(
+                        message=aio_pika.Message(body=ctx.id.encode('utf8')),
+                        routing_key=model_router.queue_name
+                    )
 
                     result = await wait_for(ctx.result, timeout=5.0)
                     await model_router.pop_context(ctx)  # free space once finished

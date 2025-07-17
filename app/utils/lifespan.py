@@ -25,6 +25,7 @@ from app.schemas.core.context import GlobalContext
 from app.utils.configuration import get_configuration
 from app.utils.context import global_context
 from app.utils.logging import init_logger
+from app.utils.rabbitmq import AsyncRabbitMQConnection
 
 logger = init_logger(name=__name__)
 
@@ -52,7 +53,6 @@ async def lifespan(app: FastAPI):
         redis=redis,
         vector_store=vector_store,
         web_search_engine=web_search_engine,
-        rabbitmq=None,
     )
 
     # setup global context
@@ -63,11 +63,17 @@ async def lifespan(app: FastAPI):
     await _setup_agent_manager(configuration=configuration, global_context=global_context, dependencies=dependencies)
     await _setup_document_manager(configuration=configuration, global_context=global_context, dependencies=dependencies)
 
+    if configuration.dependencies.rabbitmq:
+        await AsyncRabbitMQConnection().connect()
+
     yield
 
     # cleanup resources when app shuts down
     if vector_store:
         await vector_store.close()
+
+    if configuration.dependencies.rabbitmq:
+        await AsyncRabbitMQConnection().connection.close()
 
 
 async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):

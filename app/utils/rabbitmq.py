@@ -6,6 +6,8 @@ TODO: maybe a dedicated thread, wrapped in a class with locks?
 Consumers need their own channel to run in a separated thread though.
 """
 import pika
+import aio_pika
+import asyncio
 from app.utils.configuration import configuration
 
 rmq_config = configuration.dependencies.rabbitmq
@@ -39,3 +41,63 @@ class ConsumerRabbitMQConnection:
     def __init__(self):
         self.connection = pika.BlockingConnection(parameters=_parameters)
         self.channel = self.connection.channel()
+
+
+class AsyncRabbitMQConnection:
+
+    # Singleton pattern
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(AsyncRabbitMQConnection, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        if getattr(self, '_initialized', False):  # Call init once
+            return
+
+        self.connection = None
+
+        # To send request down to Router and then clients, we use a pool of channels,
+        # as they are only sending one message.
+        self.sender_pool = None
+        self.loop = None
+
+        # Call init once
+        self._initialized = True
+
+    async def connect(self):
+        self.connection = await aio_pika.connect_robust(
+            host=rmq_config.host,
+            port=rmq_config.port,
+            login=configuration.settings.auth_master_username,
+            password=configuration.settings.auth_master_key,
+        )
+
+        self.loop = asyncio.get_event_loop()  # FastAPI event loop
+        # TODO: same loop or another one running in a dedicated thread?
+
+        self.sender_pool = aio_pika.pool.Pool(
+            self.connection.channel,
+            max_size=100,  # TODO config parameter?
+            loop=self.loop
+        )
+
+    async def publish_default_exchange(self, routing_key: str, message: aio_pika.Message):
+
+        async def do_publish():
+            print("Acquiring a mofo channel")
+            async with self.sender_pool.acquire() as channel:
+                print("[*] Sending...")
+                ex = channel.default_exchange
+                await ex.publish(
+                    message,
+                    routing_key=routing_key
+                )
+                print("[*] Sent!")
+
+        print("[!] Attaching to loop...")
+        # self.loop.call_soon_threadsafe(lambda: self.loop.create_task(do_publish()))
+        self.loop.create_task(do_publish())
+        print("I've done my part!")

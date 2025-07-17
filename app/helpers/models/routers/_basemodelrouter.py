@@ -9,12 +9,13 @@ from typing import Callable, Union, Awaitable, TYPE_CHECKING
 import inspect
 from uuid import uuid4
 
+import aio_pika
 import pika
 
 from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.models import ModelType
 from app.utils.configuration import configuration
-from app.utils.rabbitmq import ConsumerRabbitMQConnection, SenderRabbitMQConnection
+from app.utils.rabbitmq import ConsumerRabbitMQConnection, SenderRabbitMQConnection, AsyncRabbitMQConnection
 
 if TYPE_CHECKING:
     # only for type‐checkers and linters, not at runtime
@@ -107,9 +108,11 @@ class BaseModelRouter(ABC):
         async with self._lock:
             client = self.get_client(ctx.endpoint)
             await client.register_context(ctx)
-            with SenderRabbitMQConnection() as conn:
-                conn.channel.queue_declare(queue=client.queue_name)  # Make sure the queue exists (probably useless)
-                conn.channel.basic_publish(exchange='', routing_key=client.queue_name, body=str(ctx.id))
+
+            await AsyncRabbitMQConnection().publish_default_exchange(
+                message=aio_pika.Message(body=ctx.id.encode('utf8')),
+                routing_key=client.queue_name
+            )
 
     @abstractmethod
     def get_client(self, endpoint: str) -> "BaseModelClient":
