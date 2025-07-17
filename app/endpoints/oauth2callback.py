@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 import logging
 from urllib.parse import urlparse
 import time
@@ -80,7 +79,6 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
         email = user_info.get("email")
         given_name = user_info.get("given_name")
         usual_name = user_info.get("usual_name")
-        expires_at = int((datetime.now() + timedelta(days=1)).timestamp())
 
         # Verify required information
         if not sub:
@@ -94,12 +92,9 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
 
         # If no user is found, create a new one
         if not user:
-            user = await create_user(session, iam, given_name, usual_name, email, sub, expires_at)
+            user = await create_user(session, iam, given_name, usual_name, email, sub)
 
-        # Delete previous ProConnect tokens for this user
-        await iam.delete_tokens(session=session, user_id=user.id, name="ProConnect Token")
-        # Create a token for the user
-        token_id, app_token = await iam.create_token(session=session, user_id=user.id, name="ProConnect Token", expires_at=expires_at)
+        token_id, app_token = await iam.refresh_token(session=session, user_id=user.id, name="playground")
 
         # Validate the origin of the request with state information
         redirect_url = generate_redirect_url(request, app_token, token_id, state=state)
