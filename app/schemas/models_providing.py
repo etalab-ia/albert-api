@@ -3,10 +3,10 @@ from typing import List, Optional, Dict, Any
 
 from app.schemas import BaseModel
 from app.schemas.core.configuration import RoutingStrategy, ModelProviderType, CountryCodes
-from app.schemas.models import ModelType, ModelCosts
-
+from app.schemas.models import ModelType
 
 URL_PATTERN = r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+
 
 class ModelClientSchema(BaseModel):
     name: str = Field(min_length=1, description="Name of the model.")
