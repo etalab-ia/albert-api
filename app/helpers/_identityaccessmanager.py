@@ -1,4 +1,5 @@
 import datetime as dt
+from datetime import datetime, timedelta
 from typing import List, Literal, Optional, Tuple
 
 from jose import JWTError, jwt
@@ -12,6 +13,7 @@ from app.sql.models import Limit as LimitTable
 from app.sql.models import Permission as PermissionTable
 from app.sql.models import Role as RoleTable
 from app.sql.models import Token as TokenTable
+from app.sql.models import Usage as UsageTable
 from app.sql.models import User as UserTable
 from app.utils.exceptions import (
     DeleteRoleWithUsersException,
@@ -384,6 +386,41 @@ class IdentityAccessManager:
         await session.commit()
 
         return token_id, token
+
+    async def refresh_token(self, session: AsyncSession, user_id: int, name: str, days: int = 1) -> Tuple[int, str]:
+        """
+        Create a new token with the same name, update Usage table references,
+        and delete old tokens with the same name and user_id.
+
+        Args:
+            session: Database session
+            user_id: ID of the user
+            name: Name of the token to refresh
+            days: Number of days the new token should be valid for
+
+        Returns:
+            Tuple containing the new token_id and app_token
+        """
+        # Get the old token_id for tokens with the same name and user_id
+        old_token_result = await session.execute(statement=select(TokenTable.id).where(TokenTable.user_id == user_id, TokenTable.name == name))
+        old_token_ids = [row[0] for row in old_token_result.all()]
+
+        expires_at = int((datetime.now() + timedelta(days=days)).timestamp())
+        # Create a new token
+        new_token_id, app_token = await self.create_token(session, user_id, name, expires_at=expires_at)
+
+        # Update Usage table to point to the new token_id for old token references
+        if old_token_ids:
+            await session.execute(statement=update(UsageTable).values(token_id=new_token_id).where(UsageTable.token_id.in_(old_token_ids)))
+
+        # Delete all old tokens with the same name and user_id (excluding the newly created one)
+        if old_token_ids:
+            await session.execute(
+                statement=delete(TokenTable).where(TokenTable.user_id == user_id, TokenTable.name == name, TokenTable.id.in_(old_token_ids))
+            )
+            await session.commit()
+
+        return new_token_id, app_token
 
     async def delete_token(self, session: AsyncSession, user_id: int, token_id: int) -> None:
         # check if token exists
