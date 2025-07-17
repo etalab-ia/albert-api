@@ -103,12 +103,6 @@ class BaseModelClient(ABC):
         if configuration.dependencies.rabbitmq:  # RabbitMQ enabled
             self.working_task = AsyncRabbitMQConnection().consumer_loop.create_task(self._rabbitmq_worker())
 
-            # channel = ConsumerRabbitMQConnection().channel
-            # channel.queue_declare(queue=self.queue_name)
-            # channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=self._rabbitmq_worker)
-            # threading.Thread(target=channel.start_consuming).start()
-
-
     async def _rabbitmq_worker(self):
         channel = await AsyncRabbitMQConnection().connection.channel()
         await channel.set_qos(prefetch_count=1)
@@ -118,7 +112,6 @@ class BaseModelClient(ABC):
         await self.queue.consume(self._rabbitmq_callback, no_ack=False)
         await self.shutdown_future  # keep this coroutine alive
         await channel.close()
-
 
     async def _rabbitmq_callback(self, message: IncomingMessage):
         async with message.process():

@@ -1,5 +1,4 @@
 import asyncio
-import functools
 from abc import ABC, abstractmethod
 from itertools import cycle
 import time
@@ -8,27 +7,17 @@ import inspect
 from uuid import uuid4
 
 import aio_pika
-import pika
 from aio_pika import IncomingMessage
 
 from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.models import ModelType
 from app.utils.configuration import configuration
-from app.utils.rabbitmq import SenderRabbitMQConnection, AsyncRabbitMQConnection
+from app.utils.rabbitmq import AsyncRabbitMQConnection
 
 if TYPE_CHECKING:
     # only for type‐checkers and linters, not at runtime
     # Used to break circular import
     from app.clients.model import BaseModelClient
-
-
-def sync(f):
-    @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        # TODO create new event loop each time sucks
-        return asyncio.new_event_loop().run_until_complete(f(*args, **kwargs))
-    return wrapper
-
 
 class BaseModelRouter(ABC):
     def __init__(
@@ -86,20 +75,16 @@ class BaseModelRouter(ABC):
         self.queue_name = str(uuid4())  # TODO maybe use type + name?
 
         if configuration.dependencies.rabbitmq:
-            self._dispatch_task = AsyncRabbitMQConnection().consumer_loop.create_task(self.dispatch_callback())
-            # channel = ConsumerRabbitMQConnection().channel
-            # channel.queue_declare(queue=self.queue_name)
-            # channel.basic_consume(queue=self.queue_name, auto_ack=True, on_message_callback=self._queue_callback)
-            # threading.Thread(target=channel.start_consuming).start()
+            self._dispatch_task = AsyncRabbitMQConnection().consumer_loop.create_task(self._dispatch_callback())
 
-    async def dispatch_callback(self):
+    async def _dispatch_callback(self):
         channel = await AsyncRabbitMQConnection().connection.channel()
         await channel.set_qos(prefetch_count=1)
         self.queue = await channel.declare_queue(self.queue_name, robust=True)
 
         # No need to bind as we are using the default_exchange
         await self.queue.consume(self._dispatch, no_ack=False)
-        await self.shutdown_future  # keep this coroutine alive
+        await self.shutdown_future  # blocked until a 'result' is set
 
         await self.queue.purge()
         await channel.close()
@@ -206,35 +191,28 @@ class BaseModelRouter(ABC):
 
             # Cleaning RabbitMQ setup
             if configuration.dependencies.rabbitmq:
-                # Send shutdown for background thread to stop
-                with SenderRabbitMQConnection() as conn:
-                    conn.channel.queue_declare(client.queue_name)
-                    conn.channel.basic_publish(
-                        exchange='',
-                        routing_key=client.queue_name,
-                        body=WorkingContext.SHUTDOWN_MESSAGE,
-                        properties=pika.BasicProperties(priority=10)  # Max priority
+
+                while True:
+                    incoming = await client.queue.get(no_ack=False, fail=False)
+                    if incoming is None:
+                        break
+
+                    await incoming.ack()
+
+                    # Reroute pending messages
+                    ctx = await client.get_context(incoming.body.decode('utf8'))
+
+                    if ctx is None:
+                        continue
+
+                    await self.register_context(ctx)
+                    await AsyncRabbitMQConnection().publish_default_exchange(
+                        message=aio_pika.Message(body=ctx.id.encode('utf8')),
+                        routing_key=self.queue_name
                     )
 
-                    # Retrieve existing in the queue to republish them
-                    pending = []
-                    while True:
-                        method, header, body = conn.channel.basic_get(queue=client.queue_name, auto_ack=False)
-                        if method:
-                            pending.append(body)
-                            conn.channel.basic_ack(method.delivery_tag)
-                        else:
-                            break
-
-                    # Republishing. Processed request have had their context popped
-                    for message in pending:
-                        ctx = await client.get_context(message.decode('utf8'))
-
-                        if ctx is None:
-                            continue
-
-                        await self.register_context(ctx)
-                        conn.channel.basic_publish(exchange='', routing_key=self.queue_name, body=message)
+                client.shutdown_future.set_result(True)  # stop coroutine
+                await client.working_task  # wait for complete shutdown
 
             if len(self._providers) == 0:
                 # No more clients, the ModelRouter is about to get deleted.
@@ -245,14 +223,8 @@ class BaseModelRouter(ABC):
 
                 # Requests might be pending if we are using RabbitMQ
                 if configuration.dependencies.rabbitmq:
-                    with SenderRabbitMQConnection() as conn:
-                        conn.channel.basic_publish(
-                            exchange='',
-                            routing_key=self.queue_name,
-                            body=WorkingContext.SHUTDOWN_MESSAGE,
-                            properties=pika.BasicProperties(priority=10)  # Max priority
-                        )
-
+                    self.shutdown_future.set_result(True)  # stop coroutine
+                    await self._dispatch_task  # wait for complete shutdown
 
                 client.lock.release()  # Who knows
                 return False
