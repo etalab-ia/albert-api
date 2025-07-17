@@ -10,7 +10,7 @@ from app.utils.configuration import configuration
 from app.utils.exceptions import ModelNotFoundException
 
 from app.helpers.models.routers import ModelRouter
-from app.utils.rabbitmq import SenderRabbitMQConnection, AsyncRabbitMQConnection
+from app.utils.rabbitmq import AsyncRabbitMQConnection
 
 if TYPE_CHECKING:
     # only for type‐checkers and linters, not at runtime

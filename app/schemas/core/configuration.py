@@ -295,6 +295,7 @@ class RedisDependency(ConfigBaseModel):
 class RabbitMQDependency(ConfigBaseModel):
     host: Optional[str] = Field(default="localhost", required=False, description="RabbitMQ host.")
     port: Optional[int] = Field(default=5672, required=False, description="Port RabbitMQ listens to.")
+    sender_pool_size: Optional[int] = Field(default=100, required=False, description="How many AMQP channel the pool used by 'sender' contains.")
 
 @custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#dependencies")
 class Dependencies(ConfigBaseModel):
