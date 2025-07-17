@@ -253,7 +253,7 @@ async def retrieve_user_info(token):
     raise HTTPException(status_code=400, detail="Unable to retrieve user information")
 
 
-async def create_user(session: AsyncSession, iam: IdentityAccessManager, given_name: str, usual_name: str, email: str, sub: str, expires_at: int):
+async def create_user(session: AsyncSession, iam: IdentityAccessManager, given_name: str, usual_name: str, email: str, sub: str):
     """
     Create a new user with default role
     """
@@ -279,7 +279,6 @@ async def create_user(session: AsyncSession, iam: IdentityAccessManager, given_n
         role_id=default_role_id,
         email=email,
         sub=sub,
-        expires_at=expires_at,
     )
     user = await session.get(UserTable, user_id)
     return user
