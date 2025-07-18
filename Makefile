@@ -45,6 +45,9 @@ env-ci-up:
 	fi
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach
 
+env-ci-down:
+	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci down
+
 install:
 	pip install ".[app,ui,dev,test]"
 
@@ -82,10 +85,10 @@ test-integ:
 	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
 
 test-ci:
-	docker exec albert-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
+	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci exec -ti api pytest app/tests --cov=./app --cov-report=xml
 
 create-user:
-	docker exec -ti albert-api-api-1 python scripts/create_first_user.py --playground_postgres_host postgres
+	docker compose exec -ti api python scripts/create_first_user.py --playground_postgres_host postgres
 
 setup: install configuration install-lint env-services-up db-app-migrate db-ui-migrate
 
