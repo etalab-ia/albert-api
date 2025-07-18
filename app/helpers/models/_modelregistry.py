@@ -66,17 +66,17 @@ class ModelRegistry:
                 # Avoid self.__call__, deadlock otherwise
                 model = self._routers[self.aliases.get(model, model)]
 
-            data.append(
-                ModelSchema(
-                    id=model.name,
-                    type=model.type,
-                    max_context_length=model.max_context_length,
-                    owned_by=model.owned_by,
-                    created=model.created,
-                    aliases=model.aliases,
-                    costs={"prompt_tokens": model.cost_prompt_tokens, "completion_tokens": model.cost_completion_tokens},
+                data.append(
+                    ModelSchema(
+                        id=model.name,
+                        type=model.type,
+                        max_context_length=model.max_context_length,
+                        owned_by=model.owned_by,
+                        created=model.created,
+                        aliases=model.aliases,
+                        costs={"prompt_tokens": model.cost_prompt_tokens, "completion_tokens": model.cost_completion_tokens},
+                    )
                 )
-            )
 
         return data
 
