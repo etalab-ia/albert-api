@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import Field, ConfigDict
 from typing import List, Optional, Dict, Any
 
 from app.schemas import BaseModel
@@ -8,7 +8,6 @@ from app.schemas.models import ModelType, ModelCosts
 
 URL_PATTERN = r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 
-# TODO refacto: ModelCost and ModelClientCarbonFootprint were deleted, and several field names changed.
 class ModelClientSchema(BaseModel):
     name: str = Field(min_length=1, description="Name of the model.")
     url: str | None = Field(pattern=URL_PATTERN, description="URL to the model API.")
@@ -27,6 +26,7 @@ class ModelClientSchema(BaseModel):
     carbon_footprint_active_params: Optional[int] = Field(default=None, description="Active parameters, for carbon footprint calculation")
     carbon_footprint_total_params: Optional[int] = Field(default=None, description="Total parameters, for carbon footprint calculation")
 
+    model_config = ConfigDict(from_attributes=True)
 
 class AddModelRequest(BaseModel):
     router_id: str = Field(min_length=1, description="ID of the ModelRouter to add the ModelClient to.")
