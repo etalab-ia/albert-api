@@ -90,6 +90,44 @@ class ModelDatabaseManager:
         await session.commit()
 
     @staticmethod
+    async def add_client(session: AsyncSession, router_name: str, client: ModelClient):
+        client_result = (await session.execute(select(ModelClientTable)
+                                  .where(ModelClientTable.router_name == router_name)
+                                  .where(ModelClientTable.model_name == client.name)
+                                  .where(ModelClientTable.url == client.url))).fetchall()
+
+        assert not client_result, "tried adding already existing client"
+
+        await session.execute(
+            insert(ModelClientTable).values(
+                url = client.url,
+                key = client.key,
+                timeout = client.timeout,
+                model_name = client.name,
+                model_carbon_footprint_zone = client.carbon_footprint_zone,
+                model_carbon_footprint_total_params = client.carbon_footprint_total_params,
+                model_carbon_footprint_active_params = client.carbon_footprint_active_params,
+                model_cost_prompt_tokens = client.cost_prompt_tokens,
+                model_cost_completion_tokens = client.cost_completion_tokens,
+                metrics_retention_ms = client.metrics_retention_ms,
+                type = type(client).__name__.removesuffix("ModelClient").lower(),
+                model_router_name = router_name
+            )
+        )
+        await session.commit()
+
+    @staticmethod
+    async def add_alias(session: AsyncSession, router_name: str, alias: str):
+        alias_result = (await session.execute(select(ModelRouterAliasTable)
+                                  .where(ModelRouterAliasTable.router_name == router_name)
+                                  .where(ModelRouterAliasTable.alias == alias))).fetchall()
+
+        assert not alias_result, "tried to add already-existing alias"
+        await session.execute(insert(ModelRouterAliasTable).values(alias=alias, model_router_name=router_name))
+    
+        await session.commit()
+
+    @staticmethod
     async def delete_router(session: AsyncSession, router_name: str):
         # Check if objects exist
         router_result = (await session.execute(select(ModelRouterTable).where(ModelRouterTable.name == router_name))).fetchall()
