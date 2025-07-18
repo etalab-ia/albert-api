@@ -79,6 +79,25 @@ class BaseModelClient(ABC):
         self.endpoint = None
         self.lock = Lock()  # Used by ModelRouter to determine whether the Client is in use
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, BaseModelClient):
+            return False
+
+        return (
+            self.name == other.name and
+            self.cost_prompt_tokens == other.cost_prompt_tokens and
+            self.cost_completion_tokens == other.cost_completion_tokens and
+            self.carbon_footprint_zone == other.carbon_footprint_zone and
+            self.carbon_footprint_total_params == other.carbon_footprint_total_params and
+            self.carbon_footprint_active_params == other.carbon_footprint_active_params and
+            self.url == other.url and
+            self.key == other.key and
+            self.timeout == other.timeout and
+            self.vector_size == other.vector_size and
+            self.max_context_length == other.max_context_length and
+            self.metrics_retention_ms == other.metrics_retention_ms
+        )
+
     @staticmethod
     def import_module(type: ModelProviderType) -> "Type[BaseModelClient]":
         """

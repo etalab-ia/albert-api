@@ -59,6 +59,24 @@ class BaseModelRouter(ABC):
 
         self._lock = Lock()
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, BaseModelRouter):
+            return False
+
+        return (
+            self.name == other.name and
+            self.type == other.type and
+            self.owned_by == other.owned_by and
+            set(self.aliases) == set(other.aliases) and
+            self.routing_strategy == other.routing_strategy and
+            self.from_config == other.from_config and
+            self.vector_size == other.vector_size and
+            self.max_context_length == other.max_context_length and
+            self.cost_prompt_tokens == other.cost_prompt_tokens and
+            self.cost_completion_tokens == other.cost_completion_tokens and
+            self._providers == other._providers
+        )
+
     @abstractmethod
     def get_client(self, endpoint: str) -> ModelClient:
         """
