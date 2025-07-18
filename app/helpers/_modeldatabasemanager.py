@@ -151,13 +151,13 @@ class ModelDatabaseManager:
             await session.execute(select(ModelClientTable)
                                   .where(ModelClientTable.router_name == router_name)
                                   .where(ModelClientTable.model_name == model_name)
-                                  .where(ModelClientTable.router_name == model_url))).fetchall()
+                                  .where(ModelClientTable.model_url == model_url))).fetchall()
 
         assert client_result, "tried to delete non-existing client"
         await session.execute(delete(ModelClientTable)
                                 .where(ModelClientTable.router_name == router_name)
                                 .where(ModelClientTable.model_name == model_name)
-                                .where(ModelClientTable.router_name == model_url))
+                                .where(ModelClientTable.model_url == model_url))
         
         await session.commit()
 
