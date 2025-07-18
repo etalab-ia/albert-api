@@ -108,17 +108,33 @@ class ModelDatabaseManager:
         await session.commit()
 
     @staticmethod
-    async def delete_client(session: AsyncSession, router_name: str, client_identifier):
+    async def delete_client(session: AsyncSession, router_name: str, model_name: str, model_url: str):
+        client_result = (
+            await session.execute(select(ModelClientTable)
+                                  .where(ModelClientTable.router_name == router_name)
+                                  .where(ModelClientTable.model_name == model_name)
+                                  .where(ModelClientTable.router_name == model_url))).fetchall()
 
-        await session.execute(delete(ModelClientTable).where(ModelClientTable.model_router_name == router_name))
+        assert client_result, "tried to delete non-existing client"
+        await session.execute(delete(ModelClientTable)
+                                .where(ModelClientTable.router_name == router_name)
+                                .where(ModelClientTable.model_name == model_name)
+                                .where(ModelClientTable.router_name == model_url))
         
         await session.commit()
 
     @staticmethod
-    async def delete_alias(session: AsyncSession, router_name: str, alias_identifier):
-        await session.execute(delete(ModelRouterAliasTable).where(ModelRouterAliasTable.model_router_name == router_name))
-        
-        await session.commit()
+    async def delete_alias(session: AsyncSession, router_name: str, alias: str):
+        alias_result = (
+            await session.execute(select(ModelRouterAliasTable)
+                                  .where(ModelRouterAliasTable.router_name == router_name)
+                                  .where(ModelRouterAliasTable.alias == alias))).fetchall()
 
+        assert alias_result, "tried to delete non-existing alias"
+        await session.execute(delete(ModelRouterAliasTable)
+                                .where(ModelRouterAliasTable.router_name == router_name)
+                                .where(ModelRouterAliasTable.alias == alias))
+    
+        await session.commit()
     
 
