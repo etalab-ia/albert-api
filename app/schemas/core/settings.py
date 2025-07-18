@@ -283,6 +283,9 @@ class OAuth2(ConfigBaseModel):
     scope: str = Field(default="openid profile email")
     allowed_domains: List[str] = Field(default=["localhost", "gouv.fr"], description="List of allowed domains for OAuth2 login. This is used to restrict the domains that can use the OAuth2 login flow.")  # fmt: off
     default_role: str = Field(default="Freemium", description="Default role assigned to users when they log in for the first time.")
+    encryption_key: str = Field(
+        default="changeme", description="Secret key for encrypting OAuth2 redirect parameters. Must be 32 url-safe base64-encoded bytes."
+    )
 
 
 class Config(ConfigBaseModel):

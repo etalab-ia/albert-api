@@ -69,6 +69,7 @@ class Playground(ConfigBaseModel):
     menu_items: MenuItems = MenuItems()
     logo: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"
     cache_ttl: int = 1800  # 30 minutes
+    encryption_key: str = "changeme"  # Secret key for decrypting OAuth2 redirect parameters
 
 
 class Config(ConfigBaseModel):
