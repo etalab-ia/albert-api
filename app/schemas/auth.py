@@ -172,3 +172,13 @@ class Token(BaseModel):
 class Tokens(BaseModel):
     object: Literal["list"] = "list"
     data: List[Token]
+
+
+class OAuth2LogoutRequest(BaseModel):
+    proconnect_token: Optional[str] = Field(default=None, description="ProConnect ID token used for logout")
+
+    @field_validator("proconnect_token", mode="after")
+    def validate_token(cls, token):
+        if token is not None and token.strip() == "":
+            raise ValueError("ProConnect token cannot be empty")
+        return token.strip() if token else None

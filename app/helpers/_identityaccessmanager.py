@@ -501,6 +501,18 @@ class IdentityAccessManager:
 
         return claims["user_id"], claims["token_id"]
 
+    async def invalidate_token(self, session: AsyncSession, token_id: int, user_id: int) -> None:
+        """
+        Invalidate a token by setting its expires_at to the current timestamp
+
+        Args:
+            session: Database session
+            token_id: ID of the token to invalidate
+            user_id: ID of the user who owns the token (for security)
+        """
+        await session.execute(update(TokenTable).where(TokenTable.id == token_id).where(TokenTable.user_id == user_id).values(expires_at=func.now()))
+        await session.commit()
+
     async def get_user(
         self,
         session: AsyncSession,
