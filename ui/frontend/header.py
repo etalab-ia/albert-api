@@ -6,11 +6,15 @@ import hashlib
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 from cryptography.fernet import Fernet
+import requests
 
 from ui.backend.login import login, oauth_login
 from ui.backend.sql.session import get_session
 from .css import css_proconnect
 from ui.settings import settings  # Ensure settings is imported
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def header():
@@ -20,18 +24,45 @@ def header():
         """
         try:
             # If the key is "changeme", generate a proper key (same logic as backend)
-            if settings.playground.oauth2_encryption_key == "changeme":
+            if settings.playground.encryption_key == "changeme":
                 # Generate a consistent key from the default string for development
                 key_bytes = hashlib.sha256("changeme".encode()).digest()
                 key = base64.urlsafe_b64encode(key_bytes)
             else:
                 # Use the provided key
-                key = settings.playground.oauth2_encryption_key.encode()
+                key = settings.playground.encryption_key.encode()
 
             return Fernet(key)
         except Exception as e:
             st.error(f"Failed to initialize encryption: {e}")
             return None
+
+    def call_oauth2_logout(api_token: str, proconnect_token: str = None):
+        """
+        Call the logout endpoint to properly terminate OAuth2 session
+
+        Args:
+            api_token: The API token for authentication
+            proconnect_token: Optional ProConnect token for ProConnect logout
+        """
+        logout_url = f"{settings.playground.api_url}/v1/oauth2/logout"
+
+        headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
+
+        # Prepare payload with optional ProConnect token
+        payload = {}
+        if proconnect_token:
+            payload["proconnect_token"] = proconnect_token
+
+        try:
+            response = requests.post(logout_url, headers=headers, json=payload, timeout=10)
+            if response.status_code == 200:
+                logger.info("Logout successful")
+            else:
+                logger.warning(f"Logout endpoint returned status {response.status_code}: {response.text}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to call logout endpoint: {e}")
+            raise
 
     def decrypt_oauth_token(encrypted_token: str) -> dict:
         """
@@ -109,25 +140,14 @@ def header():
         # Access the encrypted token parameter
         encrypted_token = st.query_params.get("encrypted_token", None)
 
-        # Legacy parameters for backward compatibility
-        api_key = st.query_params.get("token", None)
-        api_key_id = st.query_params.get("token_id", None)
-
         if st.session_state.get("login_status") is None and encrypted_token:
             # Decrypt the token
             decrypted_data = decrypt_oauth_token(encrypted_token)
             if decrypted_data:
-                api_key = decrypted_data.get("app_token")
-                api_key_id = decrypted_data.get("token_id")
-                proconnect_token = decrypted_data.get("proconnect_token")
-
-                if api_key and api_key_id:
-                    # Store ProConnect token for future logout functionality
-                    st.session_state["proconnect_token"] = proconnect_token
-                    oauth_login(session, api_key, api_key_id)
-        elif st.session_state.get("login_status") is None and api_key and api_key_id:
-            # Legacy login for backward compatibility
-            oauth_login(session, api_key, api_key_id)
+                api_key = st.session_state["api_key"] = decrypted_data.get("app_token")
+                api_key_id = st.session_state["api_key_id"] = decrypted_data.get("token_id")
+                st.session_state["proconnect_token"] = decrypted_data.get("proconnect_token")
+                oauth_login(session, api_key, api_key_id)
 
         if st.session_state.get("login_status") is None:
             login_form()
@@ -145,6 +165,20 @@ def header():
         with col2:
             logout = st.button("Logout")
         if logout:
+            # Get stored tokens for logout
+            api_token = st.session_state.get("api_key")
+            proconnect_token = st.session_state.get("proconnect_token")
+
+            # Call logout endpoint if we have an API token
+            if api_token:
+                with st.spinner("Déconnexion en cours..."):
+                    try:
+                        # Call logout endpoint with optional ProConnect token
+                        call_oauth2_logout(api_token, proconnect_token)
+                    except Exception as e:
+                        st.warning(f"Erreur lors de la déconnexion: {e}")
+
+            # Always perform local logout regardless of API result
             st.session_state.pop("login_status", default=None)
             st.session_state.pop("user", default=None)
             st.session_state.pop("api_key", default=None)

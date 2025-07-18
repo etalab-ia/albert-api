@@ -51,6 +51,18 @@ playground:
 4. **Redirection**: The user is redirected to the UI with the encrypted token
 5. **Decryption**: The UI decrypts the token and extracts the information
 6. **Session**: A user session is created with the tokens
+7. **Logout**: When logging out, the UI calls the logout endpoint to disconnect from ProConnect before local cleanup
+
+## Logout Process
+
+### From Streamlit UI
+
+When a user clicks the "Logout" button in the Streamlit interface:
+
+1. **ProConnect Logout**: The UI automatically calls `/v1/oauth2/logout` with the stored ProConnect token
+2. **Progress Indicator**: A spinner shows "Déconnexion en cours..." during the process
+3. **Local Cleanup**: Regardless of ProConnect logout success, local session data is cleared
+4. **User Feedback**: Success/warning messages inform the user of the logout status
 
 ## Error Handling
 
@@ -63,3 +75,33 @@ The ProConnect token (id_token) is stored to enable ProConnect-side logout in th
 ```python
 proconnect_token = st.session_state.get("proconnect_token")
 ```
+
+## Logout Endpoint
+
+A logout endpoint is available at `/v1/oauth2/logout` that requires authentication and performs both local and ProConnect logout.
+
+### Usage
+
+```bash
+curl -X POST "https://your-domain.gouv.fr/v1/oauth2/logout" \
+  -H "Authorization: Bearer your_api_token" \
+  -H "Content-Type: application/json" \
+  -d '{"proconnect_token": "your_proconnect_id_token"}'
+```
+
+### Response
+
+```json
+{
+  "status": "success",
+  "message": "Successfully logged out from ProConnect"
+}
+```
+
+### Error Handling
+
+- **400**: Missing or invalid ProConnect token
+- **401**: Invalid or expired API token
+- **500**: Internal server error during logout process
+
+The endpoint will attempt to logout from ProConnect using the `end_session_endpoint` from the ProConnect metadata. If ProConnect logout fails, it will still return a warning status indicating that local logout was successful.

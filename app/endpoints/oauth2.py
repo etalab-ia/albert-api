@@ -7,7 +7,7 @@ import json
 
 from authlib.integrations.starlette_client import OAuth
 from cryptography.fernet import Fernet
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Security
 from fastapi.responses import RedirectResponse
 from jose import jwt, jwk
 from jose.exceptions import JWTError
@@ -15,10 +15,13 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.helpers._accesscontroller import AccessController
 from app.helpers._identityaccessmanager import IdentityAccessManager
+from app.schemas.auth import OAuth2LogoutRequest, User
 from app.sql.models import Role
 from app.sql.models import User as UserTable
 from app.sql.session import get_db_session
+from app.utils.context import request_context
 from app.utils.settings import settings
 from app.utils.variables import ROUTER__OAUTH2
 
@@ -311,7 +314,7 @@ async def create_user(session: AsyncSession, iam: IdentityAccessManager, given_n
         )
 
     # Generate a default username if information is missing
-    display_name = f"{given_name or ""} {usual_name or ""}".strip()
+    display_name = f"{given_name or ''} {usual_name or ''}".strip()
     if not display_name:
         display_name = email or f"User-{sub[:8]}" if sub else "Unknown User"
 
@@ -324,3 +327,93 @@ async def create_user(session: AsyncSession, iam: IdentityAccessManager, given_n
     )
     user = await session.get(UserTable, user_id)
     return user
+
+
+@router.post(f"/{ROUTER__OAUTH2}/logout", dependencies=[Security(dependency=AccessController())], status_code=200)
+async def logout(
+    request: Request, logout_request: OAuth2LogoutRequest, user: User = Security(AccessController()), session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Logout and expire the current token, optionally logout from ProConnect
+    """
+    try:
+        logger.info(f"Processing logout for user {user.id}")
+
+        # Get the current token ID from request context
+        context = request_context.get()
+        current_token_id = context.token_id
+
+        # Initialize IdentityAccessManager and invalidate the current token
+        if current_token_id:
+            iam = IdentityAccessManager()
+            await iam.invalidate_token(session=session, token_id=current_token_id, user_id=user.id)
+            logger.info(f"Expired token {current_token_id} for user {user.id}")
+
+        # Get ProConnect token from request (optional)
+        proconnect_token = logout_request.proconnect_token
+        proconnect_logout_success = False
+
+        # Attempt ProConnect logout if token is provided
+        if proconnect_token:
+            logger.info(f"Attempting ProConnect logout for user {user.id}")
+            proconnect_logout_success = await perform_proconnect_logout(proconnect_token)
+
+            if proconnect_logout_success:
+                logger.info(f"Successfully logged out user {user.id} from ProConnect")
+            else:
+                logger.warning(f"ProConnect logout failed for user {user.id}")
+        else:
+            logger.info(f"No ProConnect token provided for user {user.id}, skipping ProConnect logout")
+
+        # Return appropriate response
+        if proconnect_token and proconnect_logout_success:
+            return {"status": "success", "message": "Successfully logged out from ProConnect and expired token"}
+        elif proconnect_token and not proconnect_logout_success:
+            return {"status": "warning", "message": "Token expired successfully, but ProConnect logout may have failed"}
+        else:
+            return {"status": "success", "message": "Token expired successfully"}
+
+    except Exception as e:
+        logger.exception(f"Error during logout for user {user.id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Logout failed: {str(e)}")
+
+
+async def perform_proconnect_logout(proconnect_token: str) -> bool:
+    """
+    Perform the actual logout call to ProConnect using the existing OAuth2 client
+    """
+    try:
+        # The OAuth2 client should already have server metadata loaded
+        # We can access it directly without reloading
+        if hasattr(oauth2, "server_metadata") and oauth2.server_metadata:
+            server_metadata = oauth2.server_metadata
+        else:
+            # Fallback: load metadata if not available
+            server_metadata = await oauth2.load_server_metadata()
+
+        end_session_endpoint = server_metadata.get("end_session_endpoint")
+
+        if not end_session_endpoint:
+            logger.warning("No end_session_endpoint found in ProConnect metadata")
+            return False
+
+        # Prepare logout parameters
+        logout_params = {"id_token_hint": proconnect_token, "client_id": settings.oauth2.client_id}
+
+        # Use httpx directly but maintain consistency with OAuth2 client approach
+        async with httpx.AsyncClient() as client:
+            logout_response = await client.post(
+                end_session_endpoint, data=logout_params, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+
+            # ProConnect may return various response codes for successful logout
+            if logout_response.status_code in [200, 204, 302]:
+                logger.info(f"ProConnect logout successful, status: {logout_response.status_code}")
+                return True
+            else:
+                logger.warning(f"ProConnect logout returned status: {logout_response.status_code}")
+                return False
+
+    except Exception as e:
+        logger.error(f"Failed to call ProConnect logout endpoint: {e}")
+        return False
