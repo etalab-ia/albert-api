@@ -2,9 +2,11 @@ import logging
 from urllib.parse import urlparse
 import time
 import base64
+import hashlib
 import json
 
 from authlib.integrations.starlette_client import OAuth
+from cryptography.fernet import Fernet
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from jose import jwt, jwk
@@ -34,6 +36,43 @@ if settings.oauth2 is not None:
         server_metadata_url=settings.oauth2.server_metadata_url,
         client_kwargs={"scope": settings.oauth2.scope},
     )
+
+
+def get_fernet():
+    """
+    Initialize Fernet encryption using the OAuth2 encryption key from settings
+    """
+    try:
+        # If the key is "changeme", generate a proper key
+        if settings.oauth2.encryption_key == "changeme":
+            logger.warning("Using default encryption key 'changeme'. This is not secure for production.")
+            # Generate a consistent key from the default string for development
+            key_bytes = hashlib.sha256("changeme".encode()).digest()
+            key = base64.urlsafe_b64encode(key_bytes)
+        else:
+            # Use the provided key - it should be 32 url-safe base64-encoded bytes
+            key = settings.oauth2.encryption_key.encode()
+
+        return Fernet(key)
+    except Exception as e:
+        logger.error(f"Failed to initialize Fernet encryption: {e}")
+        raise HTTPException(status_code=500, detail="Encryption initialization failed")
+
+
+def encrypt_redirect_data(app_token: str, token_id: str, proconnect_token: str) -> str:
+    """
+    Encrypt redirect data into a single token
+    """
+    try:
+        fernet = get_fernet()
+        data = {"app_token": app_token, "token_id": token_id, "proconnect_token": proconnect_token, "timestamp": int(time.time())}
+
+        json_data = json.dumps(data)
+        encrypted_data = fernet.encrypt(json_data.encode())
+        return base64.urlsafe_b64encode(encrypted_data).decode()
+    except Exception as e:
+        logger.error(f"Failed to encrypt redirect data: {e}")
+        raise HTTPException(status_code=500, detail="Encryption failed")
 
 
 @router.get(f"/{ROUTER__OAUTH2}/login")
@@ -96,15 +135,18 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
 
         token_id, app_token = await iam.refresh_token(session=session, user_id=user.id, name="playground")
 
+        # Extract ProConnect token (id_token for logout functionality)
+        proconnect_token = token.get("id_token", "")
+
         # Validate the origin of the request with state information
-        redirect_url = generate_redirect_url(request, app_token, token_id, state=state)
+        redirect_url = generate_redirect_url(request, app_token, token_id, proconnect_token, state=state)
         return RedirectResponse(url=redirect_url)
     except Exception as e:
         logger.exception(f"General error: {e}")
         raise HTTPException(status_code=400, detail=f"OAuth2 callback failed: {str(e)}")
 
 
-def generate_redirect_url(request, app_token, token_id, state=None):
+def generate_redirect_url(request, app_token, token_id, proconnect_token, state=None):
     original_url = None
 
     # Try to decode the state parameter to get the original URL
@@ -142,9 +184,12 @@ def generate_redirect_url(request, app_token, token_id, state=None):
     if not domain_allowed:
         raise HTTPException(status_code=400, detail=f"Invalid domain: {request_domain} not in allowed domains or their subdomains")
 
-    # Generate a redirect URL to the origin with the app token
+    # Encrypt the tokens into a single parameter
+    encrypted_data = encrypt_redirect_data(app_token, token_id, proconnect_token)
+
+    # Generate a redirect URL to the origin with the encrypted data
     origin = f"{parsed_url.scheme}://{parsed_url.netloc}"
-    redirect_url = f"{origin}?token={app_token}&token_id={token_id}"
+    redirect_url = f"{origin}?encrypted_token={encrypted_data}"
     return redirect_url
 
 

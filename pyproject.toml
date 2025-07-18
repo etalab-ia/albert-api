@@ -23,6 +23,7 @@ ui = [
     "streamlit==1.45.1",
     "streamlit-extras==0.5.0", 
     "bcrypt==4.3.0",
+    "cryptography>=3.4.8",
 ]
 app = [
     # auth
@@ -34,6 +35,7 @@ app = [
     "ecologits==0.6.2",
     "pycountry==24.6.1",
     "itsdangerous>=2.2.0",
+    "cryptography>=3.4.8",
 
     # data
     "langchain-text-splitters==0.3.8",

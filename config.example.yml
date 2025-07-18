@@ -38,6 +38,48 @@ dependencies:
   redis: # required
       host: ${REDIS_HOST:-localhost}
       port: ${REDIS_PORT:-6379}
+playground:
+  api_url: http://${API_HOST}:8000
+
+auth:
+  master_username: master
+  master_key: changeme
+
+oauth2:
+  client_id: ${PROCONNECT_CLIENT_ID}
+  client_secret: ${PROCONNECT_CLIENT_SECRET}
+  server_metadata_url: https://identite-sandbox.proconnect.gouv.fr/.well-known/openid-configuration
+  redirect_uri: ${OAUTH2_REDIRECT_URI}
+  scope: "openid profile email"
+  allowed_domains:
+    - localhost
+    - gouv.fr
+  default_role: Freemium
+  encryption_key: ${OAUTH2_ENCRYPTION_KEY}  # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+session_secret_key: ${SESSION_SECRET_KEY}
+
+monitoring:
+  postgres:
+    enabled: true
+
+mcp:
+  mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
+
+databases:
+  - type: elasticsearch
+    context: api
+    model: my-embeddings-model
+    args:
+      hosts: http://${ELASTICSEARCH_HOST}:9200
+      basic_auth:
+        - "elastic"
+        - "changeme"
+
+  - type: redis
+    context: api
+    args:
+      host: ${REDIS_HOST}
       password: changeme
 
   # qdrant: # optional

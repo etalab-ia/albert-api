@@ -1,7 +1,11 @@
 import time
+import base64
+import json
+import hashlib
 
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
+from cryptography.fernet import Fernet
 
 from ui.backend.login import login, oauth_login
 from ui.backend.sql.session import get_session
@@ -10,6 +14,49 @@ from ui.settings import settings  # Ensure settings is imported
 
 
 def header():
+    def get_fernet():
+        """
+        Initialize Fernet encryption using the OAuth2 encryption key from settings
+        """
+        try:
+            # If the key is "changeme", generate a proper key (same logic as backend)
+            if settings.playground.oauth2_encryption_key == "changeme":
+                # Generate a consistent key from the default string for development
+                key_bytes = hashlib.sha256("changeme".encode()).digest()
+                key = base64.urlsafe_b64encode(key_bytes)
+            else:
+                # Use the provided key
+                key = settings.playground.oauth2_encryption_key.encode()
+
+            return Fernet(key)
+        except Exception as e:
+            st.error(f"Failed to initialize encryption: {e}")
+            return None
+
+    def decrypt_oauth_token(encrypted_token: str) -> dict:
+        """
+        Decrypt OAuth2 redirect token with TTL validation
+        """
+        try:
+            fernet = get_fernet()
+            if not fernet:
+                return None
+
+            # Decode from base64
+            encrypted_data = base64.urlsafe_b64decode(encrypted_token.encode())
+
+            # Decrypt with TTL (5 minutes = 300 seconds)
+            decrypted_data = fernet.decrypt(encrypted_data, ttl=300)
+
+            # Parse JSON
+            data = json.loads(decrypted_data.decode())
+
+            return data
+        except Exception as e:
+            st.warning("Une erreur est survenue lors de l'authentification. Veuillez réessayer.")
+            st.error(f"Erreur de déchiffrement: {e}")
+            return None
+
     def authenticate():
         session = next(get_session())
 
@@ -59,11 +106,27 @@ def header():
                 if submit:
                     login(user_name, user_password, session)
 
-        # Access the 'api_key' parameter
+        # Access the encrypted token parameter
+        encrypted_token = st.query_params.get("encrypted_token", None)
+
+        # Legacy parameters for backward compatibility
         api_key = st.query_params.get("token", None)
         api_key_id = st.query_params.get("token_id", None)
 
-        if st.session_state.get("login_status") is None and api_key and api_key_id:
+        if st.session_state.get("login_status") is None and encrypted_token:
+            # Decrypt the token
+            decrypted_data = decrypt_oauth_token(encrypted_token)
+            if decrypted_data:
+                api_key = decrypted_data.get("app_token")
+                api_key_id = decrypted_data.get("token_id")
+                proconnect_token = decrypted_data.get("proconnect_token")
+
+                if api_key and api_key_id:
+                    # Store ProConnect token for future logout functionality
+                    st.session_state["proconnect_token"] = proconnect_token
+                    oauth_login(session, api_key, api_key_id)
+        elif st.session_state.get("login_status") is None and api_key and api_key_id:
+            # Legacy login for backward compatibility
             oauth_login(session, api_key, api_key_id)
 
         if st.session_state.get("login_status") is None:
@@ -85,6 +148,7 @@ def header():
             st.session_state.pop("login_status", default=None)
             st.session_state.pop("user", default=None)
             st.session_state.pop("api_key", default=None)
+            st.session_state.pop("proconnect_token", default=None)  # Clean ProConnect token
             st.cache_data.clear()
             st.rerun()
 
