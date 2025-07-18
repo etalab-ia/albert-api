@@ -6,7 +6,12 @@ To contribute to the project, please follow the instructions below.
 
 1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)* with your models.
 
-    For more information on deploying services, please consult the [dedicated documentation](./docs/deployment.md).
+```bash
+cp config.example.yml config.yml && export CONFIG_FILE=./config.yml
+cp .env.example .env && export APP_ENV_FILE=.env
+```
+
+Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.
 
     > **❗️Note**<br>
     > The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can use it as inspiration to configure your own configuration file.
@@ -14,7 +19,7 @@ To contribute to the project, please follow the instructions below.
 2. Set up dependencies
 
     ```bash
-    docker compose up --detach # run the databases
+    docker compose --env-file .env up postgres redis elasticsearch secretiveshell --detach 
 
     pip install ".[app,ui,dev,test]" # install the dependencies
 
@@ -25,7 +30,7 @@ To contribute to the project, please follow the instructions below.
 3. Launch the API
 
     ```bash
-    uvicorn app.main:app --port 8000 --log-level debug --reload
+    uvicorn app.main:app --port 8080 --log-level debug --reload
     ```
 
 4. Launch the playground
@@ -70,54 +75,52 @@ alembic -c ui/alembic.ini upgrade head
 
 ## Tests
 
-> **❗️Note**<br>
-> The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can modify it to run the tests on your machine.
-> You need set `$BRAVE_API_KEY` and `$ALBERT_API_KEY` environment variables to run the tests.
-
 ### In Docker environment
 
 ```bash
-docker compose --file ./.github/compose.test.yml up --detach
-docker exec -it 
--1 pytest app/tests
+make env-ci-up
+docker exec albert-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
 ```
 
+> **❗️Note**<br>
+> It will create a .github/.env.ci file.
+> The configuration file for running tests is [config.test.yml](app/tests/integ/config.test.yml). You can modify it to run the tests on your machine.
+> You need set `$BRAVE_API_KEY` and `$ALBERT_API_KEY` environment variables in `.github/.env.ci` to run the tests.
 ### Outside Docker environment
 
-1. Run the databases services and export environment variables
+1. Create a `.env.test` file and run the databases services:
 
     ```bash 
-    docker compose --file .github/compose.test.yml up postgres qdrant redis --detach
-
-    export POSTGRES_HOST=localhost
-    export REDIS_HOST=localhost
-    export QDRANT_HOST=localhost
-    export POSTGRES_PORT=8432
-    export REDIS_PORT=8335
-    export QDRANT_PORT=8333
-    export QDRANT_GRPC_PORT=8334
-    ```
-
-2. To run the unit and integration tests together:
-
-    ```bash
-    CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml
+    cp .env.example .env.test
+    make env-test-services-up
     ```
    
-3. To run the unit tests:
+2. Install the python packages:
+
+   ```bash
+   make install
+   ```
+
+3. To run the unit and integration tests together:
 
     ```bash
-    CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest app/tests/unit --config-file=pyproject.toml
+    make test-all
+    ```
+   
+4. To run the unit tests:
+
+    ```bash
+    make test-unit
     ```
  
-4. To run the integration tests:
+5. To run the integration tests:
 
     ```bash
-    CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest app/tests/integ --config-file=pyproject.toml
+    make test-integ
     ```
 
 
-5. To update the snapshots, run the following command:
+6. To update the snapshots, run the following command:
 
     ```bash
     CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
@@ -242,10 +245,10 @@ models:
 The API keys can be defined directement in the `config.yml` file or in a `.env` file
 
 ```bash
-cp .env.test.example .env.test
+cp .env.example .env
 
-echo 'ALBERT_API_KEY=my_albert_api_key' >> .env.test
-echo 'OPENAI_API_KEY=my_openai_api_key' >> .env.test
+echo 'ALBERT_API_KEY=my_albert_api_key' >> .env
+echo 'OPENAI_API_KEY=my_openai_api_key' >> .env
 ```
 
 ### Running
