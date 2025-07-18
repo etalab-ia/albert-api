@@ -144,6 +144,7 @@ class ModelRouterAlias(Base):
 
     model_router = relationship(argument="ModelRouter", backref=backref(name="alias", cascade="all, delete-orphan"))
 
+
 class ModelClient(Base):
     __tablename__ = "modelclient"
 

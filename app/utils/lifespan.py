@@ -67,10 +67,8 @@ async def lifespan(app: FastAPI):
 
 
 async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
-    # async for session in get_db_session():
-    #     await dependencies.model_database_manager.delete_router(session=session, router_name="albert-testbed")
-    
-    routers = []
+
+    db_routers = []
 
     async for session in get_db_session():
         db_routers = await dependencies.model_database_manager.get_routers(session=session, configuration=configuration, dependencies=dependencies)
@@ -87,15 +85,18 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
 
         for router in db_routers: 
             logger.info(msg=f"add model {router.name} from DB.")
+
         routers = db_routers
     else:
-      logger.warning(msg="no modelrouter found in database. Populating DB from configuration file.")
-      routers = config_routers
-      for router in routers:
-        async for session in get_db_session():
-            await dependencies.model_database_manager.add_router(session=session, router=router)
+        logger.warning(msg="no ModelRouters found in database. Populating DB from configuration file.")
+        routers = config_routers
+
+        for router in routers:
+            async for session in get_db_session():
+                await dependencies.model_database_manager.add_router(session=session, router=router)
 
     global_context.model_registry = ModelRegistry(routers=routers)
+
 
 async def _get_routers_from_config(configuration: Configuration, dependencies: SimpleNamespace):
     routers = []
@@ -134,7 +135,9 @@ async def _get_routers_from_config(configuration: Configuration, dependencies: S
         model["from_config"] = True
         model = ModelRouter(**model)
         routers.append(model)
+
     return routers
+
 
 async def _setup_identity_access_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
     global_context.identity_access_manager = IdentityAccessManager(

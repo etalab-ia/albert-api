@@ -18,7 +18,7 @@ class ModelDatabaseManager:
     @staticmethod
     async def get_routers(session: AsyncSession, configuration: Configuration, dependencies: SimpleNamespace):
         routers = []
-        # Get all ModelRouter rows and cnvert it from a list of 1-dimensional vectors to a list of ModelRouters
+        # Get all ModelRouter rows and convert it from a list of 1-dimensional vectors to a list of ModelRouters
         db_routers = [row[0] for row in (await session.execute(select(ModelRouterTable))).fetchall()]
 
         if not db_routers:
