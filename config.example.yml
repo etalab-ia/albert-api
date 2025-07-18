@@ -27,7 +27,7 @@ models:
 # -------------------------------- dependencies ---------------------------------
 dependencies:
   postgres: # required
-    url: postgresql+asyncpg://postgres@localhost:5432/api
+    url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/api
     echo: False
     pool_size: 5
     connect_args:
@@ -36,7 +36,9 @@ dependencies:
       command_timeout: 60
 
   redis: # required
-    host: localhost
+      host: ${REDIS_HOST:-localhost}
+      port: ${REDIS_PORT:-6379}
+      password: changeme
 
   # rabbitmq: # optional
   # qdrant: # optional
@@ -91,6 +93,6 @@ dependencies:
 playground:
   api_url: http://${API_HOST:-localhost}:8080
   postgres:
-    url: postgresql+asyncpg://postgres:@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/playground
+    url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/playground
   # auth_master_username: master # optional - default: master
   # auth_master_key: changeme # optional - default: changeme
