@@ -60,8 +60,11 @@ class ModelDatabaseManager:
     
     @staticmethod
     async def add_router(session: AsyncSession, router: ModelRouter):
-        # @TODO Throw an error if the model already exists or let the db unique name requirement handle it ? 
-        print(router.from_config)
+        router_result = (await session.execute(select(ModelRouterTable)
+                            .where(ModelRouterTable.router_name == router.name))).fetchall()
+
+        assert not router_result, "tried adding already existing router"
+        
         await session.execute(
             insert(ModelRouterTable).values(name=router.name, type=router.type, routing_strategy=router.routing_strategy, from_config=router.from_config, owned_by=router.owned_by)
         )
