@@ -72,7 +72,7 @@ class BaseModelRouter(ABC):
 
         self.queue = None
         self.shutdown_future = asyncio.Future()
-        self.queue_name = str(uuid4())  # TODO maybe use type + name?
+        self.queue_name = str(uuid4())  # Maybe use type + name for more explicit logs.
 
         if configuration.dependencies.rabbitmq:
             self._dispatch_task = AsyncRabbitMQConnection().consumer_loop.create_task(self._dispatch_callback())
