@@ -25,10 +25,11 @@ class ModelRouter(BaseModelRouter):
         aliases: list[str],
         routing_strategy: str,
         providers: list[ModelClient],
+        from_config: bool = False,
         *args,
         **kwargs,
     ) -> None:
-        super().__init__(name=name, type=type, owned_by=owned_by, aliases=aliases, routing_strategy=routing_strategy, providers=providers)
+        super().__init__(name=name, type=type, owned_by=owned_by, aliases=aliases, routing_strategy=routing_strategy, providers=providers, from_config=from_config)
 
     def get_client(self, endpoint: str) -> ModelClient:
         if endpoint and self.type not in self.ENDPOINT_MODEL_TYPE_TABLE[endpoint]:
