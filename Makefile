@@ -14,7 +14,7 @@ ci_services="api postgres redis elasticsearch secretiveshell"
 quickstart:
 	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
 	@echo "API URL: http://localhost:8080"
-	@echo "Playground URL: http://localhost:8501/playground"
+	@echo "Playground URL: http://localhost:8081/playground"
 
 quickstart-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE)
@@ -83,6 +83,9 @@ test-integ:
 
 test-ci:
 	docker exec albert-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
+
+create-user:
+	docker exec -ti albert-api-ci-api-1 python scripts/create_first_user.py --playground_postgres_host postgres
 
 setup: install configuration install-lint env-services-up db-app-migrate db-ui-migrate
 
