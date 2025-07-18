@@ -67,26 +67,34 @@ async def lifespan(app: FastAPI):
 
 
 async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
+    # async for session in get_db_session():
+    #     await dependencies.model_database_manager.delete_router(session=session, router_name="albert-testbed")
+    
     routers = []
 
     async for session in get_db_session():
-        db_routers = await dependencies.model_database_manager.get_routers(session)
+        db_routers = await dependencies.model_database_manager.get_routers(session=session, configuration=configuration, dependencies=dependencies)
     
     db_routers_from_config = [router for router in db_routers if router.from_config == True]
 
     config_routers = await _get_routers_from_config(configuration=configuration, dependencies=dependencies)
 
     if db_routers:
-      for router in config_routers:
-          # @TODO show diff, log when adding model
-          assert router in db_routers_from_config, f"{router}" # requires defining equality
-      routers = db_routers
+        for router in config_routers:
+            # @TODO show diff, log when adding model
+            assert router in db_routers_from_config, f"Incoherent data between config and DB for router {router.name}"
+            logger.info(msg="model {router.name} from config is coherent with DB data.")
+
+        for router in db_routers: 
+            logger.info(msg=f"add model {router.name} from DB.")
+        routers = db_routers
     else:
-      logger.warning(msg="no modelrouter found in database. initializing from configuration file.")
+      logger.warning(msg="no modelrouter found in database. Populating DB from configuration file.")
       routers = config_routers
       for router in routers:
-        await dependencies.model_database_manager.add_router(router)
-    
+        async for session in get_db_session():
+            await dependencies.model_database_manager.add_router(session=session, router=router)
+
     global_context.model_registry = ModelRegistry(routers=routers)
 
 async def _get_routers_from_config(configuration: Configuration, dependencies: SimpleNamespace):
@@ -120,10 +128,12 @@ async def _get_routers_from_config(configuration: Configuration, dependencies: S
 
             continue
 
-        logger.info(msg=f"add model {model.name} ({len(providers)}/{len(model.providers)} providers).")
+        logger.info(msg=f"found model {model.name} in config file with ({len(providers)}/{len(model.providers)} providers).")
         model = model.model_dump()
         model["providers"] = providers
-        routers.append(ModelRouter(**model))
+        model["from_config"] = True
+        model = ModelRouter(**model)
+        routers.append(model)
     return routers
 
 async def _setup_identity_access_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
