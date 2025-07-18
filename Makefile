@@ -85,7 +85,7 @@ test-ci:
 	docker exec albert-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
 
 create-user:
-	docker exec -ti albert-api-ci-api-1 python scripts/create_first_user.py --playground_postgres_host postgres
+	docker exec -ti albert-api-api-1 python scripts/create_first_user.py --playground_postgres_host postgres
 
 setup: install configuration install-lint env-services-up db-app-migrate db-ui-migrate
 
