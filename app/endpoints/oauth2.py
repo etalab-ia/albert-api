@@ -225,32 +225,29 @@ async def verify_jwt_signature(id_token: str) -> dict:
 async def retrieve_user_info(token):
     try:
         user_info = await oauth2.userinfo(token=token)
-        logger.debug(f"SUCCESS with oauth2.userinfo - User info: {user_info}")
+        logger.info(f"SUCCESS with oauth2.userinfo - User info: {user_info}")
         return user_info
     except Exception as userinfo_error:
-        logger.debug(f"ERROR calling oauth2.userinfo: {userinfo_error}")
+        logger.exception(f"ERROR calling oauth2.userinfo: {userinfo_error}")
         # Fallback: use token info if available
         id_token = token.get("id_token")
         if id_token:
             # Decode the ID token (JWT) with signature verification
             try:
                 user_info = await verify_jwt_signature(id_token)
-                logger.debug(f"Fallback - Using verified ID token: {user_info}")
+                logger.info(f"Fallback - Using verified ID token: {user_info}")
                 return user_info
             except Exception as jwt_error:
-                logger.debug(f"Error verifying ID token: {jwt_error}")
+                logger.exception(f"Error verifying ID token: {jwt_error}")
                 # Last fallback: use available token info
                 user_info = token.get("userinfo", {})
-                logger.debug(f"Fallback - Using userinfo from token: {user_info}")
+                logger.info(f"Fallback - Using userinfo from token: {user_info}")
                 return user_info
         else:
             # Last fallback: use available token info
             user_info = token.get("userinfo", {})
-            logger.debug(f"Fallback - Using userinfo from token: {user_info}")
+            logger.info(f"Fallback - Using userinfo from token: {user_info}")
             return user_info
-
-    # This should not be reached, but just in case
-    raise HTTPException(status_code=400, detail="Unable to retrieve user information")
 
 
 async def create_user(session: AsyncSession, iam: IdentityAccessManager, given_name: str, usual_name: str, email: str, sub: str):
