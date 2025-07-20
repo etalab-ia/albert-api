@@ -2,7 +2,7 @@ from pydantic import Field
 from typing import List, Optional, Dict, Any
 
 from app.schemas import BaseModel
-from app.schemas.core.configuration import RoutingStrategy, CountryCodes
+from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.core.configuration import ModelProvider as ModelClientSchema, Model as ModelRouterSchema
 from app.schemas.models import ModelType
 
