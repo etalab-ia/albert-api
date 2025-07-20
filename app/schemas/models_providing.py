@@ -16,7 +16,7 @@ class AddModelRequest(BaseModel):
     model_type: Optional[ModelType] = Field(default=None, description="Model type. Required when creating a new ModelRouter.")
     aliases: Optional[List[str]] = Field(default=[], description="Aliases, to add for existing router, to set for new instance.")
     routing_strategy: Optional[RoutingStrategy] = Field(default=RoutingStrategy.ROUND_ROBIN, description="Routing Strategy when creating a new router.")
-    owner: Optional[str] = Field(default="Albert API", description="ModelRouter owner when creating a new one.")
+    owner: Optional[str] = Field(default=None, description="ModelRouter owner when creating a new one.")
 
     additional_field: Optional[Dict[str, Any]] = Field(default=None, description="Additional or specific data")
 

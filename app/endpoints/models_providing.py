@@ -17,6 +17,7 @@ from app.utils.variables import (
 )
 
 from app.utils.context import global_context
+from app.utils.variables import DEFAULT_APP_NAME
 
 router = APIRouter()
 
@@ -28,7 +29,7 @@ async def add_model(
     body: AddModelRequest,
 ) -> Response:
 
-    if body.owner == "Albert API":
+    if body.owner == DEFAULT_APP_NAME:
         raise HTTPException(status_code=401, detail="Owner cannot be the API itself")
 
     client_kwargs = body.additional_field if body.additional_field is not None else {}

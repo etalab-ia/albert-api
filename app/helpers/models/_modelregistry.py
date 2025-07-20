@@ -9,6 +9,7 @@ from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.exceptions import ModelNotFoundException
 
 from app.helpers.models.routers import ModelRouter
+from app.utils.variables import DEFAULT_APP_NAME
 
 
 class ModelRegistry:
@@ -99,7 +100,7 @@ class ModelRegistry:
         model_type: ModelType = None,
         aliases: List[str] = None,
         routing_strategy: RoutingStrategy = RoutingStrategy.ROUND_ROBIN,
-        owner: str = "Albert API",
+        owner: str = None,
         **__
     ):
         """
@@ -116,6 +117,7 @@ class ModelRegistry:
 
         assert model_type is not None, "A ModelType needs to be provided"
         assert router_id not in self._routers, "A ModelRouter with id {router_id} already exists"
+        assert owner, "An owner needs to be provided to create a ModelRouter"
 
         if aliases is None:
             aliases = []
@@ -183,7 +185,7 @@ class ModelRegistry:
 
             router = self._routers[router_id]
 
-            if router.owned_by == "Albert API":
+            if router.owned_by == DEFAULT_APP_NAME:
                 raise HTTPException(status_code=401, detail="Owner cannot be the API itself")
 
             # ModelClient is removed within instance lock to prevent
