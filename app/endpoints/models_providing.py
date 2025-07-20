@@ -57,6 +57,8 @@ async def add_model(
             owner=body.owner
         )
     except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
     return Response(status_code=201)
@@ -74,6 +76,8 @@ async def delete_model(
             model_name=body.model_name,
         )
     except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
     return Response(status_code=204)
@@ -84,10 +88,16 @@ async def add_alias(
     request: Request,
     body: AddAliasesRequest,
 ) -> Response:
-    await global_context.model_registry.add_aliases(
-        router_id=body.router_id,
-        aliases=body.aliases,
-    )
+    try:
+        await global_context.model_registry.add_aliases(
+            router_id=body.router_id,
+            aliases=body.aliases,
+        )
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
     return Response(status_code=201)
 
 
@@ -96,10 +106,16 @@ async def delete_alias(
     request: Request,
     body: DeleteAliasesRequest,
 ) -> Response:
-    await global_context.model_registry.delete_aliases(
-        router_id=body.router_id,
-        aliases=body.aliases,
-    )
+    try:
+        await global_context.model_registry.delete_aliases(
+            router_id=body.router_id,
+            aliases=body.aliases,
+        )
+    except AssertionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
     return Response(status_code=204)
 
 
