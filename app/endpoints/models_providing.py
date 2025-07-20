@@ -22,7 +22,7 @@ from app.utils.variables import DEFAULT_APP_NAME
 router = APIRouter()
 
 
-# @router.post(path=ENDPOINT__DOCUMENTS + "/{document:path}", dependencies=[Security(dependency=AccessController())], status_code=201)
+# @router.post(path=ENDPOINT__MODEL_ADD, dependencies=[Security(dependency=AccessController())], status_code=201)
 @router.post(path=ENDPOINT__MODEL_ADD, status_code=201)
 async def add_model(
     request: Request,
@@ -68,6 +68,7 @@ async def add_model(
     return Response(status_code=201)
 
 
+# @router.delete(path=ENDPOINT__MODEL_DELETE, dependencies=[Security(dependency=AccessController())], status_code=204)
 @router.delete(path=ENDPOINT__MODEL_DELETE, status_code=204)
 async def delete_model(
     request: Request,
@@ -87,6 +88,7 @@ async def delete_model(
     return Response(status_code=204)
 
 
+# @router.post(path=ENDPOINT__ALIAS_ADD, dependencies=[Security(dependency=AccessController())], status_code=201)
 @router.post(path=ENDPOINT__ALIAS_ADD, status_code=201)
 async def add_alias(
     request: Request,
@@ -105,6 +107,7 @@ async def add_alias(
     return Response(status_code=201)
 
 
+# @router.delete(path=ENDPOINT__ALIAS_DELETE, dependencies=[Security(dependency=AccessController())], status_code=204)
 @router.delete(path=ENDPOINT__ALIAS_DELETE, status_code=204)
 async def delete_alias(
     request: Request,
@@ -123,6 +126,7 @@ async def delete_alias(
     return Response(status_code=204)
 
 
+# @router.get(path=ENDPOINT__ROUTERS, status_code=200, dependencies=[Security(dependency=AccessController())], response_model=RoutersResponse)
 @router.get(path=ENDPOINT__ROUTERS, status_code=200, response_model=RoutersResponse)
 async def get_routers(
     request: Request
