@@ -118,7 +118,6 @@ class BaseModelRouter(ABC):
             cost_prompt_tokens = self.cost_prompt_tokens
             cost_completion_tokens = self.cost_completion_tokens
             max_context_length = self.max_context_length
-            max_context_lengths = []
 
             for c in self._providers:
                 if c.url == api_url and c.name == name:
