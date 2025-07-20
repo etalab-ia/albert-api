@@ -1,6 +1,8 @@
 from asyncio import Lock
 from typing import List, Optional
 
+from fastapi import HTTPException
+
 from app.clients.model import BaseModelClient
 from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
@@ -180,6 +182,9 @@ class ModelRegistry:
             assert router_id in self._routers, f"No ModelRouter has ID {router_id}"
 
             router = self._routers[router_id]
+
+            if router.owned_by == "Albert API":
+                raise HTTPException(status_code=401, detail="Owner cannot be the API itself")
 
             # ModelClient is removed within instance lock to prevent
             # any other threads to access self._routers or self.router_ids before we completely removed

@@ -28,6 +28,9 @@ async def add_model(
     body: AddModelRequest,
 ) -> Response:
 
+    if body.owner == "Albert API":
+        raise HTTPException(status_code=401, detail="Owner cannot be the API itself")
+
     client_kwargs = body.additional_field if body.additional_field is not None else {}
 
     redis = global_context.limiter.connection_pool  # not quite clean
