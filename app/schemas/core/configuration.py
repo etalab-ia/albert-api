@@ -119,7 +119,7 @@ class ModelProvider(ConfigBaseModel):
     @model_validator(mode="after")
     def complete_values(cls, values):
         # complete url
-        if values.url is None:
+        if values.url is None and not hasattr(values, 'hide_url'):
             if values.type == ModelProviderType.OPENAI:
                 values.url = "https://api.openai.com"
             elif values.type == ModelProviderType.ALBERT:
@@ -157,6 +157,10 @@ class Model(ConfigBaseModel):
     owned_by: constr(strip_whitespace=True, min_length=1, max_length=64) = Field(default=DEFAULT_APP_NAME, required=False, description="Owner of the model displayed in `/v1/models` endpoint.", examples=["my-app"])  # fmt: off
     routing_strategy: RoutingStrategy = Field(default=RoutingStrategy.SHUFFLE, required=False, description="Routing strategy for load balancing between providers of the model. It will be used to identify the model type.", examples=["round_robin"])  # fmt: off
     providers: List[ModelProvider] = Field(required=True, description="API providers of the model. If there are multiple providers, the model will be load balanced between them according to the routing strategy. The different models have to the same type.")  # fmt: off
+
+    vector_size: Optional[int] = Field(default=None, required=False, description="Dimension of the vectors, if the models are embeddings. Makes just it is the same for all models.")
+    max_context_length: Optional[int] = Field(default=None, required=False, description="Maximum amount of tokens a context could contains. Makes sure it is the same for all models.")
+    created: Optional[int] = Field(default=None, required=False, description="Time of creation, as Unix timestamp.")
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
