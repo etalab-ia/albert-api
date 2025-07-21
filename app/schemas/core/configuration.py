@@ -116,6 +116,8 @@ class ModelProvider(ConfigBaseModel):
     model_carbon_footprint_zone: CountryCodes = Field(default=CountryCodes.WOR, required=False, description="Model hosting zone for carbon footprint computation (with ISO 3166-1 alpha-3 code format). For more information, see https://ecologits.ai", examples=["WOR"])  # fmt: off
     model_carbon_footprint_total_params: Optional[float] = Field(default=None, required=False, ge=0.0, description="Total params of the model in billions of parameters for carbon footprint computation. If not provided, the active params will be used if provided, else carbon footprint will not be computed. For more information, see https://ecologits.ai", examples=[8])  # fmt: off
     model_carbon_footprint_active_params: Optional[float] = Field(default=None, required=False, ge=0.0, description="Active params of the model in billions of parameters for carbon footprint computation. If not provided, the total params will be used if provided, else carbon footprint will not be computed. For more information, see https://ecologits.ai", examples=[8])  # fmt: off
+    
+    model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode="after")
     def complete_values(cls, values):
@@ -162,6 +164,7 @@ class Model(ConfigBaseModel):
     vector_size: Optional[int] = Field(default=None, required=False, description="Dimension of the vectors, if the models are embeddings. Makes just it is the same for all models.")
     max_context_length: Optional[int] = Field(default=None, required=False, description="Maximum amount of tokens a context could contains. Makes sure it is the same for all models.")
     created: Optional[datetime] = Field(default=None, required=False, description="Time of creation, as Unix timestamp.")
+    model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
