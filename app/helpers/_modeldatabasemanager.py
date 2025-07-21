@@ -39,7 +39,7 @@ class ModelDatabaseManager:
 
             providers = [ModelProviderSchema.model_validate(client) for client in db_clients]
 
-            routers.append(ModelRouterSchema.model_validate(router, providers=providers, aliases=db_aliases))
+            routers.append(ModelRouterSchema.model_validate({**router.__dict__, "providers": providers, "aliases": db_aliases}))
 
         return routers
     
