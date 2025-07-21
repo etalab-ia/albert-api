@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, constr, field_validator, mode
 from pydantic import ValidationError as PydanticValidationError
 from pydantic_settings import BaseSettings
 import yaml
+from datetime import datetime
 
 from app.schemas.models import ModelType
 from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS
@@ -160,7 +161,7 @@ class Model(ConfigBaseModel):
 
     vector_size: Optional[int] = Field(default=None, required=False, description="Dimension of the vectors, if the models are embeddings. Makes just it is the same for all models.")
     max_context_length: Optional[int] = Field(default=None, required=False, description="Maximum amount of tokens a context could contains. Makes sure it is the same for all models.")
-    created: Optional[int] = Field(default=None, required=False, description="Time of creation, as Unix timestamp.")
+    created: Optional[datetime] = Field(default=None, required=False, description="Time of creation, as Unix timestamp.")
 
     @model_validator(mode="after")
     def validate_model_type(cls, values):
