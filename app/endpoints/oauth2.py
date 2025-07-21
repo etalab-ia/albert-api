@@ -96,9 +96,17 @@ async def oauth2_login(request: Request):
         # Base64 encode the state to pass it safely
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
 
-        # Redirect the user to the authorization URL with state
-        return await oauth2.authorize_redirect(request, redirect_uri, state=state)
+        # Try to explicitly pass the scope
+        redirect_response = await oauth2.authorize_redirect(
+            request,
+            redirect_uri,
+            state=state,
+            scope=settings.oauth2.scope,  # Explicitly pass the scope
+        )
+
+        return redirect_response
     except Exception as e:
+        logger.exception(f"OAuth2 login failed: {e}")
         raise HTTPException(status_code=400, detail=f"OAuth2 login failed: {str(e)}")
 
 
@@ -297,7 +305,6 @@ async def retrieve_user_info(token):
             # Check if response is a JWT (starts with typical JWT pattern)
             response_text = response.text.strip()
             # Response is a JWT, decode it
-            logger.info("Response is a JWT, decoding...")
             user_info = await verify_jwt_signature(response_text)
             logger.info(f"Decoded JWT user info: {user_info}")
 
