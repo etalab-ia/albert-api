@@ -272,11 +272,39 @@ async def verify_jwt_signature(id_token: str) -> dict:
 
 async def retrieve_user_info(token):
     try:
-        user_info = await oauth2.userinfo(token=token)
-        logger.info(f"SUCCESS with oauth2.userinfo - User info: {user_info}")
+        # Extract access_token from the token dict for userinfo call
+        access_token = token.get("access_token")
+        if not access_token:
+            raise Exception("No access_token found in token")
+
+        # Get userinfo endpoint from server metadata
+        if hasattr(oauth2, "server_metadata") and oauth2.server_metadata:
+            server_metadata = oauth2.server_metadata
+        else:
+            # Fallback: load metadata if not available
+            server_metadata = await oauth2.load_server_metadata()
+
+        userinfo_endpoint = server_metadata.get("userinfo_endpoint")
+        if not userinfo_endpoint:
+            raise Exception("No userinfo_endpoint found in server metadata")
+
+        # Make direct HTTP request with Bearer token
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {access_token}"}
+            response = await client.get(userinfo_endpoint, headers=headers)
+            response.raise_for_status()
+
+            # Check if response is a JWT (starts with typical JWT pattern)
+            response_text = response.text.strip()
+            # Response is a JWT, decode it
+            logger.info("Response is a JWT, decoding...")
+            user_info = await verify_jwt_signature(response_text)
+            logger.info(f"Decoded JWT user info: {user_info}")
+
+        logger.info(f"SUCCESS with direct userinfo request - User info: {user_info}")
         return user_info
     except Exception as userinfo_error:
-        logger.exception(f"ERROR calling oauth2.userinfo: {userinfo_error}")
+        logger.exception(f"ERROR calling userinfo endpoint: {userinfo_error}")
         # Fallback: use token info if available
         id_token = token.get("id_token")
         if id_token:
