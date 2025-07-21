@@ -184,6 +184,21 @@ class Model(ConfigBaseModel):
 
         return values
 
+    def __eq__(self, other):
+        if not isinstance(other, Model):
+            return NotImplemented
+
+        return (
+            self.name == other.name and
+            self.type == other.type and
+            set(self.aliases) == set(other.aliases) and
+            self.owned_by == other.owned_by and
+            self.routing_strategy == other.routing_strategy and
+            self.providers == other.providers and
+            self.vector_size == other.vector_size and
+            self.max_context_length == other.max_context_length            
+        )
+
 
 # dependencies ---------------------------------------------------------------------------------------------------------------------------------------
 class MCPBridgeType(str, Enum):
