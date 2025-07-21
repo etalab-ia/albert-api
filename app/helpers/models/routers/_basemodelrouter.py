@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from asyncio import Lock
+from fastapi import HTTPException
 from itertools import cycle
 import time
 from typing import Callable, Union, Awaitable
@@ -138,24 +139,22 @@ class BaseModelRouter(ABC):
             cost_prompt_tokens = self.cost_prompt_tokens
             cost_completion_tokens = self.cost_completion_tokens
             max_context_length = self.max_context_length
-            costs = []
-            max_context_lengths = []
 
             for c in self._providers:
                 if c.url == api_url and c.name == name:
                     client = c
                 else:
-                    if c.max_context_length is not None and c.max_context_length > max_context_length:
+                    if c.max_context_length is not None and c.max_context_length < max_context_length:
                         max_context_length = c.max_context_length
 
                     if c.cost_prompt_tokens > cost_prompt_tokens:
                         cost_prompt_tokens = c.cost_prompt_tokens
 
-                    if c.cost_completion_tokens > c.cost_completion_tokens:
+                    if c.cost_completion_tokens > cost_completion_tokens:
                         cost_completion_tokens = c.cost_completion_tokens
 
             if client is None:
-                return len(self._providers) > 0
+                raise HTTPException(status_code=404, detail=f"Model with name \"{name}\" and URL \"{api_url}\" not found")
 
             await client.lock.acquire()
             self._providers.remove(client)
@@ -169,9 +168,7 @@ class BaseModelRouter(ABC):
                 client.lock.release()  # Who knows
                 return False
 
-            self.max_context_length = min(max_context_lengths) if max_context_lengths else None
             self._cycle = cycle(self._providers)
-
             self.cost_prompt_tokens = cost_prompt_tokens
             self.cost_completion_tokens = cost_completion_tokens
             self.max_context_length = max_context_length
