@@ -64,7 +64,6 @@ def custom_validation_error(url: Optional[str] = None):
 
         cls.__init__ = new_init
         return cls
-
     return decorator
 
 
@@ -140,7 +139,6 @@ class ModelProvider(ConfigBaseModel):
             values.model_carbon_footprint_active_params = values.model_carbon_footprint_total_params
 
         return values
-
 
 @custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#model")
 class Model(ConfigBaseModel):

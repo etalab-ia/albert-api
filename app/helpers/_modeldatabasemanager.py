@@ -1,7 +1,7 @@
 from sqlalchemy import select, insert, delete  # Integer, cast, delete, distinct, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.sql.models import ModelRouter as ModelRouterTable
+from app.sql.models import Model as ModelRouterTable
 from app.sql.models import ModelRouterAlias as ModelRouterAliasTable
 from app.sql.models import ModelClient as ModelClientTable
 from app.helpers.models.routers import ModelRouter
@@ -12,9 +12,7 @@ from app.schemas.core.configuration import ModelProvider as ModelProviderSchema
 from app.schemas.core.configuration import Configuration, ModelProviderType
 
 class ModelDatabaseManager:
-    def __init__(self):
-        pass
-    
+
     @staticmethod
     async def get_routers(session: AsyncSession, configuration: Configuration, dependencies: SimpleNamespace):
         routers = []

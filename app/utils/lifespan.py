@@ -28,7 +28,8 @@ from app.utils.context import global_context
 from app.utils.logging import init_logger
 from app.sql.session import get_db_session
 
-from app.schemas.core.configuration import Model, ModelProvider
+from app.schemas.core.configuration import Model as ModelRouterSchema
+from app.schemas.core.configuration import ModelProvider as ModelProviderSchema
 
 
 logger = init_logger(name=__name__)
@@ -81,7 +82,7 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
     if db_routers:
 
         for router in configuration.models:
-            # @TODO show diff, log when adding model
+            # @TODO show precise diff
 
             assert router in db_routers_from_config, f"Incoherent data between config and DB for router {router.name}"
             logger.info(msg=f"model {router.name} from config is coherent with DB data.")
