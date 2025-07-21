@@ -44,33 +44,23 @@ class ModelDatabaseManager:
         return routers
     
     @staticmethod
-    async def add_router(session: AsyncSession, router: ModelRouter):
+    async def add_router(session: AsyncSession, router: ModelRouterSchema):
+
         router_result = (await session.execute(select(ModelRouterTable)
-                            .where(ModelRouterTable.router_name == router.name))).fetchall()
+                            .where(ModelRouterTable.name == router.name))).fetchall()
 
         assert not router_result, "tried adding already existing router"
 
         await session.execute(
-            insert(ModelRouterTable).values(name=router.name, type=router.type, routing_strategy=router.routing_strategy, from_config=router.from_config, owned_by=router.owned_by)
+            insert(ModelRouterTable).values(**router.model_dump(include={"name", "type", "routing_strategy", "owned_by", "from_config"}))
         )
 
         for alias in router.aliases:
             await session.execute(insert(ModelRouterAliasTable).values(alias=alias, model_router_name=router.name))
 
-        for client in router._providers:
+        for client in router.providers:
             await session.execute(
-                insert(ModelClientTable).values(
-                    url = client.url,
-                    key = client.key,
-                    timeout = client.timeout,
-                    model_name = client.name,
-                    model_carbon_footprint_zone = client.carbon_footprint_zone,
-                    model_carbon_footprint_total_params = client.carbon_footprint_total_params,
-                    model_carbon_footprint_active_params = client.carbon_footprint_active_params,
-                    model_cost_prompt_tokens = client.cost_prompt_tokens,
-                    model_cost_completion_tokens = client.cost_completion_tokens,
-                    metrics_retention_ms = client.metrics_retention_ms,
-                    type = type(client).__name__.removesuffix("ModelClient").lower(),
+                insert(ModelClientTable).values(**client.model_dump(),
                     model_router_name = router.name
                 )
             )
