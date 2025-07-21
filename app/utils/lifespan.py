@@ -28,6 +28,9 @@ from app.utils.context import global_context
 from app.utils.logging import init_logger
 from app.sql.session import get_db_session
 
+from app.schemas.core.configuration import Model, ModelProvider
+
+
 logger = init_logger(name=__name__)
 
 
@@ -75,68 +78,31 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
     
     db_routers_from_config = [router for router in db_routers if router.from_config == True]
 
-    config_routers = await _get_routers_from_config(configuration=configuration, dependencies=dependencies)
-
     if db_routers:
-        for router in config_routers:
-            # @TODO show diff, log when adding model
-            assert router in db_routers_from_config, f"Incoherent data between config and DB for router {router.name}"
-            logger.info(msg="model {router.name} from config is coherent with DB data.")
 
-        for router in db_routers: 
+        for router in configuration.models:
+            # @TODO show diff, log when adding model
+
+            # The check will be different, see how it works 
+            assert router in db_routers_from_config, f"Incoherent data between config and DB for router {router.name}"
+            logger.info(msg=f"model {router.name} from config is coherent with DB data.")
+
+        for router in db_routers:
             logger.info(msg=f"add model {router.name} from DB.")
 
         routers = db_routers
     else:
         logger.warning(msg="no ModelRouters found in database. Populating DB from configuration file.")
-        routers = config_routers
+        routers = configuration.models
 
         for router in routers:
             async for session in get_db_session():
+                # change input router to be a ModelRouterSchema
                 await dependencies.model_database_manager.add_router(session=session, router=router)
+    
+    # Somehow convert the List of ModelRouterSchema to a List of ModelRouter
 
     global_context.model_registry = ModelRegistry(routers=routers)
-
-
-async def _get_routers_from_config(configuration: Configuration, dependencies: SimpleNamespace):
-    routers = []
-    for model in configuration.models:
-        providers = []
-        for provider in model.providers:
-            try:
-                # model provider can be not reatachable to API start up
-                provider = ModelClient.import_module(type=provider.type)(
-                    redis=dependencies.redis,
-                    metrics_retention_ms=configuration.settings.metrics_retention_ms,
-                    **provider.model_dump(),
-                )
-                providers.append(provider)
-            except Exception:
-                logger.debug(msg=traceback.format_exc())
-                continue
-        if not providers:
-            logger.error(msg=f"skip model {model.name} (0/{len(model.providers)} providers).")
-
-            # check if models specified in configuration are reachable
-            if configuration.settings.search_web_query_model and model.name == configuration.settings.search_web_query_model:
-                raise ValueError(f"Query web search model ({model.name}) must be reachable.")
-            if configuration.settings.vector_store_model and model.name == configuration.settings.vector_store_model:
-                raise ValueError(f"Vector store embedding model ({model.name}) must be reachable.")
-            if model.name == configuration.settings.search_multi_agents_synthesis_model:
-                raise ValueError(f"Multi agents synthesis model ({model.name}) must be reachable.")
-            if model.name == configuration.settings.search_multi_agents_reranker_model:
-                raise ValueError(f"Multi agents reranker model ({model.name}) must be reachable.")
-
-            continue
-
-        logger.info(msg=f"found model {model.name} in config file with ({len(providers)}/{len(model.providers)} providers).")
-        model = model.model_dump()
-        model["providers"] = providers
-        model["from_config"] = True
-        model = ModelRouter(**model)
-        routers.append(model)
-
-    return routers
 
 
 async def _setup_identity_access_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):

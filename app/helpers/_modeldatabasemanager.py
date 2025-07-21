@@ -7,9 +7,9 @@ from app.sql.models import ModelClient as ModelClientTable
 from app.helpers.models.routers import ModelRouter
 from app.clients.model import BaseModelClient as ModelClient
 from types import SimpleNamespace
-from app.schemas.core.configuration import Configuration
-from app.schemas.models_providing import ModelClientSchema
-from app.schemas.core.configuration import ModelProviderType
+from app.schemas.core.configuration import Model as ModelRouterSchema
+from app.schemas.core.configuration import ModelProvider as ModelProviderSchema
+from app.schemas.core.configuration import Configuration, ModelProviderType
 
 class ModelDatabaseManager:
     def __init__(self):
@@ -37,25 +37,10 @@ class ModelDatabaseManager:
             
             assert db_clients, f"No ModelClients found in database for ModelRouter {router.name}"
 
-            providers = []
-            for client in db_clients:
-                providers.append(ModelClient.import_module(type=ModelProviderType(client.type))(
-                    redis=dependencies.redis,
-                    metrics_retention_ms=configuration.settings.metrics_retention_ms,
-                    model_name=client.model_name,
-                    url=client.url,
-                    key=client.key,
-                    timeout=client.timeout,
-                    model_cost_prompt_tokens=client.model_cost_prompt_tokens,
-                    model_cost_completion_tokens=client.model_cost_completion_tokens,
-                    model_carbon_footprint_zone=client.model_carbon_footprint_zone,
-                    model_carbon_footprint_active_params=client.model_carbon_footprint_active_params,
-                    model_carbon_footprint_total_params=client.model_carbon_footprint_total_params,
-                ))
+            providers = [ModelProviderSchema.model_validate(client) for client in db_clients]
 
-            routers.append(
-               ModelRouter(name=router.name, type=router.type, aliases=db_aliases, routing_strategy=router.routing_strategy, providers=providers, owned_by=router.owned_by, from_config=router.from_config)
-            )
+            routers.append(ModelRouterSchema.model_validate(router, providers=providers, aliases=db_aliases))
+
         return routers
     
     @staticmethod
@@ -64,7 +49,7 @@ class ModelDatabaseManager:
                             .where(ModelRouterTable.router_name == router.name))).fetchall()
 
         assert not router_result, "tried adding already existing router"
-        
+
         await session.execute(
             insert(ModelRouterTable).values(name=router.name, type=router.type, routing_strategy=router.routing_strategy, from_config=router.from_config, owned_by=router.owned_by)
         )
@@ -72,7 +57,6 @@ class ModelDatabaseManager:
         for alias in router.aliases:
             await session.execute(insert(ModelRouterAliasTable).values(alias=alias, model_router_name=router.name))
 
-        # @TODO Check why clients is private
         for client in router._providers:
             await session.execute(
                 insert(ModelClientTable).values(
