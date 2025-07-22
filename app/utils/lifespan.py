@@ -29,7 +29,6 @@ from app.utils.logging import init_logger
 from app.sql.session import get_db_session
 
 from app.schemas.core.configuration import Model as ModelRouterSchema
-from app.schemas.core.configuration import ModelProvider as ModelProviderSchema
 
 
 logger = init_logger(name=__name__)
@@ -77,7 +76,7 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
     async for session in get_db_session():
         db_routers = await dependencies.model_database_manager.get_routers(session=session, configuration=configuration, dependencies=dependencies)
     
-    db_routers_from_config = [router for router in db_routers if router.from_config == True]
+    db_routers_from_config = [router for router in db_routers if router.from_config]
 
     if db_routers:
 
@@ -104,11 +103,12 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
     
     global_context.model_registry = ModelRegistry(routers=routers)
 
+
 async def _convert_modelrouterschema_to_modelrouter(configuration: Configuration, model: ModelRouterSchema, dependencies: SimpleNamespace):
     providers = []
     for provider in model.providers:
         try:
-            # model provider can be not reatachable to API start up
+            # model provider can be not reachable to API start up
             provider = ModelClient.import_module(type=provider.type)(
                 redis=dependencies.redis,
                 metrics_retention_ms=configuration.settings.metrics_retention_ms,
@@ -136,6 +136,7 @@ async def _convert_modelrouterschema_to_modelrouter(configuration: Configuration
     model["providers"] = providers
 
     return ModelRouter(**model)
+
 
 async def _setup_identity_access_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
     global_context.identity_access_manager = IdentityAccessManager(
