@@ -18,7 +18,7 @@
 ## 🔥 Why Albert API?
 
 - 🌐 **OpenAI standards**: based on OpenAI API conventions. Easy to use with OpenAI SDKs, LangChain, LlamaIndex, etc.
--🚦 **Robust API Gateway:** Load balancing, authentication, and seamless integration with OpenAI, vLLM, HuggingFace TEI.
+- 🚦 **Robust API Gateway:** Load balancing, authentication, and seamless integration with OpenAI, vLLM, HuggingFace TEI.
 - 📖 **Open Source**: developed by the French Government, fully open-source forever.
 - ⚙️ **Production-ready**: ready to serve your models in production.
 - 📚 **Full stack genAI API:** Built-in Retrieval-Augmented Generation (RAG), OCR, audio transcription, and more.
