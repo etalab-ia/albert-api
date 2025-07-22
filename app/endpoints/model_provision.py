@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from app.clients.model import BaseModelClient
-from app.schemas.models_providing import AddModelRequest, DeleteModelRequest, AddAliasesRequest, DeleteAliasesRequest, \
+from app.schemas.model_provision import AddModelRequest, DeleteModelRequest, AddAliasesRequest, DeleteAliasesRequest, \
     RoutersResponse
 from app.sql.session import get_db_session
 
