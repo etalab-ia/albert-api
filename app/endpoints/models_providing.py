@@ -67,7 +67,7 @@ async def delete_model(
 ) -> Response:
     try:
         await global_context.model_registry.delete_client(
-            router_id=body.router_name,
+            router_name=body.router_name,
             api_url=body.api_url,
             model_name=body.model_name,
             session=session,
@@ -75,7 +75,6 @@ async def delete_model(
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise e
         raise HTTPException(status_code=500, detail=str(e))
 
     return Response(status_code=204)
@@ -90,7 +89,7 @@ async def add_alias(
 ) -> Response:
     try:
         await global_context.model_registry.add_aliases(
-            router_id=body.router_id,
+            router_name=body.router_id,
             aliases=body.aliases,
             session=session,
         )
@@ -111,7 +110,7 @@ async def delete_alias(
 ) -> Response:
     try:
         await global_context.model_registry.delete_aliases(
-            router_id=body.router_id,
+            router_name=body.router_id,
             aliases=body.aliases,
             session=session,
         )

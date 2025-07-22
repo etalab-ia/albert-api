@@ -126,7 +126,6 @@ class BaseModelRouter(ABC):
             self._cycle = cycle(self._providers)
             self.cost_prompt_tokens = max(self.cost_prompt_tokens, client.cost_prompt_tokens)
             self.cost_completion_tokens = max(self.cost_completion_tokens, client.cost_completion_tokens)
-            # TODO: add to DB (with lock, in case delete is called right after)
 
     async def delete_client(self, api_url: str, name: str) -> bool:
         """
@@ -176,7 +175,6 @@ class BaseModelRouter(ABC):
             self.max_context_length = max_context_length
 
             client.lock.release()
-            # TODO: remove from DB
             return True
 
     async def add_alias(self, alias: str):

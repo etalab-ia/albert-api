@@ -25,7 +25,7 @@ class ModelDatabaseManager:
         for router in db_routers:
             # Get all ModelAlias rows and convert from a list of 1-dimensional vectors to a list of values
             db_aliases = [
-                row[0]
+                row[0].alias  # Get alias directly, instead of ModelRouterAlias object
                 for row in (await session.execute(select(ModelRouterAliasTable).where(ModelRouterAliasTable.model_router_name == router.name))).fetchall()
             ]
 
@@ -37,7 +37,11 @@ class ModelDatabaseManager:
             assert db_clients, f"No ModelClients found in database for ModelRouter {router.name}"
 
             providers = [ModelProviderSchema.model_validate(client) for client in db_clients]
-            routers.append(ModelRouterSchema.model_validate({**router.__dict__, "providers": providers, "aliases": db_aliases}))
+            routers.append(ModelRouterSchema.model_validate({
+                **router.__dict__,
+                "providers": providers,
+                "aliases": db_aliases,
+            }))
 
         return routers
     
