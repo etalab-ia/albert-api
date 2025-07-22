@@ -23,7 +23,7 @@ class AddModelRequest(BaseModel):
 
 class DeleteModelRequest(BaseModel):
     router_name: str = Field(min_length=1, description="ID of the ModelRouter to delete the ModelClient from.")
-    api_url: str = Field(pattern=URL_PATTERN, description="URL of the model API.")
+    url: str = Field(pattern=URL_PATTERN, description="URL of the model API.")
     model_name: str = Field(min_length=1, description="Name of the model to delete.")
 
 

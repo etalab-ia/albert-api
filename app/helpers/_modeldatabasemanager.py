@@ -6,10 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.sql.models import Model as ModelRouterTable
 from app.sql.models import ModelRouterAlias as ModelRouterAliasTable
 from app.sql.models import ModelClient as ModelClientTable
-from types import SimpleNamespace
 from app.schemas.core.configuration import Model as ModelRouterSchema
 from app.schemas.core.configuration import ModelProvider as ModelProviderSchema
-from app.schemas.core.configuration import Configuration
 
 
 class ModelDatabaseManager:

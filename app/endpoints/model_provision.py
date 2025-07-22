@@ -76,7 +76,7 @@ async def delete_model(
     try:
         await global_context.model_registry.delete_client(
             router_name=body.router_name,
-            api_url=body.api_url,
+            api_url=body.url,
             model_name=body.model_name,
             session=session,
         )
