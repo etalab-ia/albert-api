@@ -134,7 +134,7 @@ class Model(Base):
     owned_by = Column(String, nullable=False)
     vector_size = Column(Integer, nullable=True)
     max_context_length = Column(Integer, nullable=True)
-    created = Column(DateTime, default=func.now(), nullable=False)
+    created = Column(Integer, nullable=False)
     from_config = Column(Boolean, nullable=False)
 
 class ModelRouterAlias(Base):

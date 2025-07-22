@@ -161,7 +161,7 @@ class Model(ConfigBaseModel):
 
     vector_size: Optional[int] = Field(default=None, required=False, description="Dimension of the vectors, if the models are embeddings. Makes just it is the same for all models.")
     max_context_length: Optional[int] = Field(default=None, required=False, description="Maximum amount of tokens a context could contains. Makes sure it is the same for all models.")
-    created: Optional[datetime] = Field(default=None, required=False, description="Time of creation, as Unix timestamp.")
+    created: Optional[int] = Field(default=None, required=False, description="Time of creation, as Unix timestamp.")
     from_config: Optional[bool] = Field(default=False, required=False, description="Whether this model was defined in configuration, meaning it should be checked against the database.")
 
     model_config = ConfigDict(from_attributes=True)
