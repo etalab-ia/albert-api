@@ -223,8 +223,9 @@ class ModelRegistry:
         """
         async with self._lock:
             assert router_name in self.aliases or router_name in self._router_ids, f"ModelRouter \"{router_name}\" does not exist."
-
             router_name = self.aliases.get(router_name, router_name)
+
+            assert self._routers[router_name].owned_by != DEFAULT_APP_NAME, "Cannot edit API routers aliases."
 
             for al in aliases:
                 if al not in self.aliases:  # Error when alias linked to another ModelRouter?
@@ -243,13 +244,15 @@ class ModelRegistry:
         """
         async with self._lock:
             assert router_name in self.aliases or router_name in self._router_ids, f"ModelRouter \"{router_name}\" does not exist."
-            real_id = self.aliases.get(router_name, router_name)
+            router_name = self.aliases.get(router_name, router_name)
+
+            assert self._routers[router_name].owned_by != DEFAULT_APP_NAME, "Cannot edit API routers aliases."
 
             for al in aliases:
-                if al in self.aliases:  # Error when alias linked to another ModelRouter?
+                if al in self.aliases and self.aliases[al]:  # Error when alias linked to another ModelRouter?
                     await ModelDatabaseManager.delete_alias(session, router_name, al)
                     del self.aliases[al]
-                    await self._routers[real_id].delete_alias(al)
+                    await self._routers[router_name].delete_alias(al)
 
     async def get_models(self) -> List[str]:
         """
