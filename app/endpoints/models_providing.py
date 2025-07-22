@@ -89,7 +89,7 @@ async def add_alias(
 ) -> Response:
     try:
         await global_context.model_registry.add_aliases(
-            router_name=body.router_id,
+            router_name=body.router_name,
             aliases=body.aliases,
             session=session,
         )
@@ -110,7 +110,7 @@ async def delete_alias(
 ) -> Response:
     try:
         await global_context.model_registry.delete_aliases(
-            router_name=body.router_id,
+            router_name=body.router_name,
             aliases=body.aliases,
             session=session,
         )

@@ -28,12 +28,12 @@ class DeleteModelRequest(BaseModel):
 
 
 class AddAliasesRequest(BaseModel):
-    router_id: str = Field(min_length=1, description="ID of the targeted ModelRouter.")
+    router_name: str = Field(min_length=1, description="ID of the targeted ModelRouter.")
     aliases: List[str] = Field(default=[], description="Aliases to add.")
 
 
 class DeleteAliasesRequest(BaseModel):
-    router_id: str = Field(min_length=1, description="ID of the targeted ModelRouter.")
+    router_name: str = Field(min_length=1, description="ID of the targeted ModelRouter.")
     aliases: List[str] = Field(default=[], description="Aliases to delete.")
 
 
