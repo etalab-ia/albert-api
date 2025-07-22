@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 import traceback
 from types import SimpleNamespace
+import time
 
 from coredis import ConnectionPool, Redis
 from fastapi import FastAPI
@@ -88,8 +89,11 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
         logger.warning(msg="no ModelRouters found in database. Populating DB from configuration file.")
         models = configuration.models
 
+        current_timestamp = int(time.time())
+
         for router in models:
             router.from_config = True
+            router.created = current_timestamp
             async for session in get_db_session():
                 await dependencies.model_database_manager.add_router(session=session, router=router)
             logger.info(msg=f"save model {router.name} to DB.")
@@ -103,7 +107,7 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
 
 async def _convert_modelrouterschema_to_modelrouter(configuration: Configuration, router: ModelRouterSchema, dependencies: SimpleNamespace):
     '''Handles the conversion from the pydantic schema to the object ModelRouter.'''
-    
+
     providers = []
     for provider in router.providers:
         try:

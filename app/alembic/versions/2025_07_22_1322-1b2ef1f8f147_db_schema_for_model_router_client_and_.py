@@ -1,8 +1,8 @@
 """db schema for model router, client and routeralias
 
-Revision ID: 7a0cb766ba1e
+Revision ID: 1b2ef1f8f147
 Revises: 37d92be0a44c
-Create Date: 2025-07-21 14:04:32.227699
+Create Date: 2025-07-22 13:22:29.386641
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '7a0cb766ba1e'
+revision: str = '1b2ef1f8f147'
 down_revision: Union[str, None] = '37d92be0a44c'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -28,7 +28,7 @@ def upgrade() -> None:
     sa.Column('owned_by', sa.String(), nullable=False),
     sa.Column('vector_size', sa.Integer(), nullable=True),
     sa.Column('max_context_length', sa.Integer(), nullable=True),
-    sa.Column('created', sa.DateTime(), nullable=False),
+    sa.Column('created', sa.Integer(), nullable=False),
     sa.Column('from_config', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('name')
     )

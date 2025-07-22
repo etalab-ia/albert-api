@@ -49,7 +49,7 @@ class ModelDatabaseManager:
         assert not router_result, "tried adding already existing router"
 
         await session.execute(
-            insert(ModelRouterTable).values(**router.model_dump(include={"name", "type", "routing_strategy", "owned_by", "from_config"}))
+            insert(ModelRouterTable).values(**router.model_dump(exclude={"providers", "aliases"}))
         )
 
         for alias in router.aliases:
