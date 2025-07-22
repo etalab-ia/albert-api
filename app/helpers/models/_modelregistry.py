@@ -2,6 +2,7 @@ from asyncio import Lock
 from typing import List, Optional
 
 from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.model import BaseModelClient
 from app.schemas.core.configuration import RoutingStrategy
@@ -10,6 +11,8 @@ from app.utils.exceptions import ModelNotFoundException
 
 from app.helpers.models.routers import ModelRouter
 from app.utils.variables import DEFAULT_APP_NAME
+
+from app.helpers._modeldatabasemanager import ModelDatabaseManager
 
 
 class ModelRegistry:
@@ -78,6 +81,7 @@ class ModelRegistry:
         self,
         router_id: str,
         model_client: BaseModelClient,
+        session: AsyncSession,
         **__
     ):
         """
@@ -86,6 +90,7 @@ class ModelRegistry:
         Args:
             model_client(ModelClient): The model client itself.
             router_id(str): The id of the ModelRouter.
+            session(AsyncSession): Database session.
         """
         assert router_id in self._routers, f"No ModelRouter has ID {router_id}."
 
@@ -97,6 +102,7 @@ class ModelRegistry:
         self,
         router_id: str,
         model_client: BaseModelClient,
+        session: AsyncSession,
         model_type: ModelType = None,
         aliases: List[str] = None,
         routing_strategy: RoutingStrategy = RoutingStrategy.ROUND_ROBIN,
@@ -109,6 +115,7 @@ class ModelRegistry:
         Args:
             model_client(ModelClient): The model client itself.
             model_type(ModelType): The type of model.
+            session(AsyncSession): Database session.
             router_id(str): The id of the ModelRouter.
             aliases(List[str]): The list of aliases of the ModelRouter.
             routing_strategy: The routing strategy (ie how a ModelRouter choose a ModelClient).
@@ -141,8 +148,9 @@ class ModelRegistry:
 
     async def add_client(
         self,
-        router_id: str,
+        router_name: str,
         model_client: BaseModelClient,
+        session: AsyncSession,
         **kwargs
     ):
         """
@@ -151,27 +159,28 @@ class ModelRegistry:
 
         Args:
             model_client(ModelClient): The model client itself.
-            router_id(str): ID of the targeted ModelRouter. IT can be an alias.
+            router_name(str): ID of the targeted ModelRouter. IT can be an alias.
+            session(AsyncSession): Database session.
             kwargs: Additional arguments, mainly for ModelRouter creation.
                 Must contain at least a model_type to create a ModelRouter.
         """
 
         async with self._lock:
 
-            router_id = self.aliases.get(router_id, router_id)  # If alias, gets id.
+            router_name = self.aliases.get(router_name, router_name)  # If alias, gets id.
 
-            if router_id in self._routers: # ModelRouter exists
+            if router_name in self._routers: # ModelRouter exists
                 await self.__add_client_to_existing_router(
-                    router_id, model_client, **kwargs
+                    router_name, model_client, session, **kwargs
                 )
             else:
                 await self.__add_client_to_new_router(
-                    router_id, model_client, **kwargs
+                    router_name, model_client, session, **kwargs
                 )
 
-            self._router_ids.append(router_id)
+            self._router_ids.append(router_name)
 
-    async def delete_client(self, router_id: str, api_url: str, model_name: str):
+    async def delete_client(self, router_id: str, api_url: str, model_name: str, session: AsyncSession):
         """
         Removes a client.
 
@@ -179,6 +188,7 @@ class ModelRegistry:
             router_id(str): id of the ModelRouter instance, where lies the ModelClient.
             api_url(str): The model API URL.
             model_name(str): The model name.
+            session(AsyncSession): Database session.
         """
         async with self._lock:
             assert router_id in self._routers, f"No ModelRouter has ID {router_id}"
@@ -205,13 +215,14 @@ class ModelRegistry:
                 self._router_ids.remove(router_id)
                 # TODO remove ModelRouter from db.
 
-    async def add_aliases(self, router_id: str, aliases: List[str]):
+    async def add_aliases(self, router_id: str, aliases: List[str], session: AsyncSession):
         """
         Adds aliases of a ModelRouter.
 
         Args:
             router_id(str): The ID of a ModelRouter. Can also be an alias itself.
             aliases(List(str)): aliases to add.
+            session(AsyncSession): Database session.
         """
         # TODO update db?
         async with self._lock:
@@ -224,13 +235,14 @@ class ModelRegistry:
                     self.aliases[al] = router_id
                     await self._routers[router_id].add_alias(al)
 
-    async def delete_aliases(self, router_id: str, aliases: List[str]):
+    async def delete_aliases(self, router_id: str, aliases: List[str], session: AsyncSession):
         """
         Removes aliases of a ModelRouter.
 
         Args:
             router_id(str): The ID of a ModelRouter. Can also be an alias itself.
             aliases(List(str)): aliases to remove.
+            session(AsyncSession): Database session.
         """
         # TODO update db?
         async with self._lock:

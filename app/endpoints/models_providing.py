@@ -1,11 +1,13 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 from fastapi import APIRouter, Request, Response
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from app.clients.model import BaseModelClient
 from app.schemas.models_providing import AddModelRequest, DeleteModelRequest, AddAliasesRequest, DeleteAliasesRequest, \
     RoutersResponse, ModelRouterSchema, ModelClientSchema
+from app.sql.session import get_db_session
 from app.utils.configuration import configuration
 
 from app.utils.variables import (
@@ -27,6 +29,7 @@ router = APIRouter()
 async def add_model(
     request: Request,
     body: AddModelRequest,
+    session: AsyncSession = Depends(get_db_session),
 ) -> Response:
 
     if body.owner == DEFAULT_APP_NAME:
@@ -36,13 +39,16 @@ async def add_model(
 
     redis = global_context.limiter.connection_pool  # not quite clean
 
+    act_params = int(body.model.model_carbon_footprint_active_params) if body.model.model_carbon_footprint_active_params else None
+    tot_params = int(body.model.model_carbon_footprint_total_params) if body.model.model_carbon_footprint_total_params else None
+
     client = BaseModelClient.import_module(type=body.model.type)(
         model_name=body.model.model_name,
         model_cost_prompt_tokens=body.model.model_cost_prompt_tokens,
         model_cost_completion_tokens=body.model.model_cost_completion_tokens,
         model_carbon_footprint_zone=body.model.model_carbon_footprint_zone,
-        model_carbon_footprint_active_params=int(body.model.model_carbon_footprint_active_params),
-        model_carbon_footprint_total_params=int(body.model.model_carbon_footprint_total_params),
+        model_carbon_footprint_active_params=act_params,
+        model_carbon_footprint_total_params=tot_params,
         url=body.model.url,
         key=body.model.key,
         timeout=body.model.timeout,
@@ -53,12 +59,13 @@ async def add_model(
 
     try:
         await global_context.model_registry.add_client(
-            body.router_name,
-            client,
+            router_name=body.router_name,
+            model_client=client,
+            session=session,
             model_type=body.model_type,
             aliases=body.aliases,
             routing_strategy=body.routing_strategy,
-            owner=body.owner
+            owner=body.owner,
         )
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -73,12 +80,14 @@ async def add_model(
 async def delete_model(
     request: Request,
     body: DeleteModelRequest,
+    session: AsyncSession = Depends(get_db_session),
 ) -> Response:
     try:
         await global_context.model_registry.delete_client(
             router_id=body.router_name,
             api_url=body.api_url,
             model_name=body.model_name,
+            session=session,
         )
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -93,11 +102,13 @@ async def delete_model(
 async def add_alias(
     request: Request,
     body: AddAliasesRequest,
+    session: AsyncSession = Depends(get_db_session),
 ) -> Response:
     try:
         await global_context.model_registry.add_aliases(
             router_id=body.router_id,
             aliases=body.aliases,
+            session=session,
         )
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -112,11 +123,13 @@ async def add_alias(
 async def delete_alias(
     request: Request,
     body: DeleteAliasesRequest,
+    session: AsyncSession = Depends(get_db_session),
 ) -> Response:
     try:
         await global_context.model_registry.delete_aliases(
             router_id=body.router_id,
             aliases=body.aliases,
+            session=session,
         )
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
