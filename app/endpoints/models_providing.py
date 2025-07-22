@@ -30,6 +30,9 @@ async def add_model(
     body: AddModelRequest,
     session: AsyncSession = Depends(get_db_session),
 ) -> Response:
+    """
+    Adds a new provider. NB: the config's routers and providers are read-only, and cannot be altered.
+    """
 
     if body.owner == DEFAULT_APP_NAME:
         raise HTTPException(status_code=401, detail="Owner cannot be the API itself")
@@ -52,6 +55,8 @@ async def add_model(
         )
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -65,6 +70,9 @@ async def delete_model(
     body: DeleteModelRequest,
     session: AsyncSession = Depends(get_db_session),
 ) -> Response:
+    """
+    Removes a provider. NB: the config's routers and providers are read-only, and cannot be altered.
+    """
     try:
         await global_context.model_registry.delete_client(
             router_name=body.router_name,
@@ -74,6 +82,8 @@ async def delete_model(
         )
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -87,6 +97,9 @@ async def add_alias(
     body: AddAliasesRequest,
     session: AsyncSession = Depends(get_db_session),
 ) -> Response:
+    """
+    Adds an alias to a router. NB: the config's routers and providers are read-only, and cannot be altered.
+    """
     try:
         await global_context.model_registry.add_aliases(
             router_name=body.router_name,
@@ -95,6 +108,8 @@ async def add_alias(
         )
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -108,6 +123,9 @@ async def delete_alias(
     body: DeleteAliasesRequest,
     session: AsyncSession = Depends(get_db_session),
 ) -> Response:
+    """
+    Removes an alias from a router. NB: the config's routers and providers are read-only, and cannot be altered.
+    """
     try:
         await global_context.model_registry.delete_aliases(
             router_name=body.router_name,
@@ -116,6 +134,8 @@ async def delete_alias(
         )
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -127,6 +147,10 @@ async def delete_alias(
 async def get_routers(
     request: Request
 ) -> JSONResponse:
+    """
+    Gives all the existing routers, with their clients.
+    Sensitive information, such as providers' URL and API keys, are censored.
+    """
     # We get client & router "quickly" (before processing data) to avoid
     # weird data and inconsistency due to concurrence.
     routers = await global_context.model_registry.get_router_instances()
