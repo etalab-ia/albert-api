@@ -60,7 +60,13 @@ class BaseModelRouter(ABC):
 
         self._lock = Lock()
 
-    async def as_schema(self, censored: bool = True):
+    async def as_schema(self, censored: bool = True) -> ModelRouterSchema:
+        """
+        Gets a ModelRouterSchema that represents the current instance.
+
+        Args:
+            censored(bool): Whether sensitive information needs to be hidden.
+        """
 
         providers = await self.get_clients()
         schemas = []

@@ -97,7 +97,18 @@ class BaseModelClient(ABC):
         return getattr(module, f"{type.capitalize()}ModelClient")
     
     @staticmethod
-    def from_schema(schema: ModelClientSchema, redis: ConnectionPool, **init_kwargs):
+    def from_schema(schema: ModelClientSchema, redis: ConnectionPool, **init_kwargs) -> "BaseModelClient":
+        """
+        Static method to construct a BaseModelClient instance from a ModelClientSchema.
+
+        Args:
+            schema(ModelClientSchema): A schema, that contains "dead" information.
+            redis(ConnectionPool): The redis connection object.
+            **init_kwargs: Additional arguments to pass to the BaseModelClient's constructor.
+
+        Returns:
+            A ModelClient instance. The constructor used depends on the "type" field of the schema.
+        """
         act_params = int(
             schema.model_carbon_footprint_active_params) if schema.model_carbon_footprint_active_params else None
         tot_params = int(
@@ -118,7 +129,13 @@ class BaseModelClient(ABC):
             **init_kwargs,
         )
 
-    def as_schema(self, censored: bool = True):
+    def as_schema(self, censored: bool = True) -> ModelClientSchema:
+        """
+        Gets a ModelClientSchema that represents the current instance.
+
+        Args:
+            censored(bool): Whether sensitive information needs to be hidden.
+        """
         return ModelClientSchema(
             type=ModelProviderType(type(self).__name__.removesuffix("ModelClient").lower()),
             url="hidd.en/v1" if censored else self.url,
