@@ -28,11 +28,11 @@ jobs:
         for i in {1..30}; do
           curl -s http://localhost:8080/health -H "Authorization: Bearer changeme" > /dev/null && echo "API is ready" && break || echo "Waiting for API..." && sleep 2;
         done
-        echo $(docker logs albert-ci-api-1)
+        echo $(docker compose -f .github/compose.ci.yml --env-file .github/.env.ci logs api)
 
     - name: Generate configuration documentation
       run: |
-        CONFIGURATION_DOCUMENTATION=$(docker compose exec -ti api python /scripts/generate_configuration_documentation.py --output /app/configuration.md && docker exec albert-ci-api-1 cat /app/configuration.md)
+        CONFIGURATION_DOCUMENTATION=$(docker compose -f .github/compose.ci.yml --env-file .github/.env.ci exec api python /scripts/generate_configuration_documentation.py --output /app/configuration.md && docker exec albert-ci-api-1 cat /app/configuration.md)
         echo "${CONFIGURATION_DOCUMENTATION}" > ./docs/configuration.md
 
     - name: Commit configuration documentation
