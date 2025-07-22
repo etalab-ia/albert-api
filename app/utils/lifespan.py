@@ -76,14 +76,10 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
     async for session in get_db_session():
         db_routers = await dependencies.model_database_manager.get_routers(session=session, configuration=configuration, dependencies=dependencies)
     
-    db_routers_from_config = [router for router in db_routers if router.from_config]
-
     if db_routers:
 
         for router in configuration.models:
-            # @TODO show precise diff
-
-            assert router in db_routers_from_config, f"Incoherent data between config and DB for router {router.name}"
+            assert router in db_routers, f"router {router.name} not found in DB"
             logger.info(msg=f"model {router.name} from config is coherent with DB data.")
 
         models = db_routers
