@@ -70,6 +70,7 @@ async def lifespan(app: FastAPI):
 
 
 async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
+    '''Setup the model registry by fetching the models defined in the DB and the configuration. Basic conflict handling between the DB and config.'''
 
     db_routers = []
 
@@ -101,6 +102,8 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
 
 
 async def _convert_modelrouterschema_to_modelrouter(configuration: Configuration, router: ModelRouterSchema, dependencies: SimpleNamespace):
+    '''Handles the conversion from the pydantic schema to the object ModelRouter.'''
+    
     providers = []
     for provider in router.providers:
         try:
