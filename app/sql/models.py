@@ -140,7 +140,7 @@ class Model(Base):
 class ModelRouterAlias(Base):
     __tablename__ = "model_alias"
 
-    name = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     alias = Column(String, nullable=False)
     model_router_name = Column(String, ForeignKey(column="model.name", ondelete="CASCADE"), nullable=False)
 
