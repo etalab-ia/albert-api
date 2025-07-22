@@ -1,7 +1,6 @@
 from asyncio import Lock
 from typing import List, Optional
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.model import BaseModelClient
