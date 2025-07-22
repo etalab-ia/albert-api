@@ -99,14 +99,14 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
     
     routers = []
     for router in models:
-        routers.append(await _convert_modelrouterschema_to_modelrouter(configuration=configuration, model=router, dependencies=dependencies))
+        routers.append(await _convert_modelrouterschema_to_modelrouter(configuration=configuration, router=router, dependencies=dependencies))
     
     global_context.model_registry = ModelRegistry(routers=routers)
 
 
-async def _convert_modelrouterschema_to_modelrouter(configuration: Configuration, model: ModelRouterSchema, dependencies: SimpleNamespace):
+async def _convert_modelrouterschema_to_modelrouter(configuration: Configuration, router: ModelRouterSchema, dependencies: SimpleNamespace):
     providers = []
-    for provider in model.providers:
+    for provider in router.providers:
         try:
             # model provider can be not reachable to API start up
             provider = ModelClient.import_module(type=provider.type)(
@@ -119,23 +119,23 @@ async def _convert_modelrouterschema_to_modelrouter(configuration: Configuration
             logger.debug(msg=traceback.format_exc())
             continue
     if not providers:
-        logger.error(msg=f"skip model {model.name} (0/{len(model.providers)} providers).")
+        logger.error(msg=f"skip model {router.name} (0/{len(router.providers)} providers).")
 
         # check if models specified in configuration are reachable
-        if configuration.settings.search_web_query_model and model.name == configuration.settings.search_web_query_model:
-            raise ValueError(f"Query web search model ({model.name}) must be reachable.")
-        if configuration.settings.vector_store_model and model.name == configuration.settings.vector_store_model:
-            raise ValueError(f"Vector store embedding model ({model.name}) must be reachable.")
-        if model.name == configuration.settings.search_multi_agents_synthesis_model:
-            raise ValueError(f"Multi agents synthesis model ({model.name}) must be reachable.")
-        if model.name == configuration.settings.search_multi_agents_reranker_model:
-            raise ValueError(f"Multi agents reranker model ({model.name}) must be reachable.")
+        if configuration.settings.search_web_query_model and router.name == configuration.settings.search_web_query_model:
+            raise ValueError(f"Query web search model ({router.name}) must be reachable.")
+        if configuration.settings.vector_store_model and router.name == configuration.settings.vector_store_model:
+            raise ValueError(f"Vector store embedding model ({router.name}) must be reachable.")
+        if router.name == configuration.settings.search_multi_agents_synthesis_model:
+            raise ValueError(f"Multi agents synthesis model ({router.name}) must be reachable.")
+        if router.name == configuration.settings.search_multi_agents_reranker_model:
+            raise ValueError(f"Multi agents reranker model ({router.name}) must be reachable.")
 
-    logger.info(msg=f"add model {model.name} ({len(providers)}/{len(model.providers)} providers).")
-    model = model.model_dump()
-    model["providers"] = providers
+    logger.info(msg=f"add model {router.name} ({len(providers)}/{len(router.providers)} providers).")
+    router = router.model_dump()
+    router["providers"] = providers
 
-    return ModelRouter(**model)
+    return ModelRouter(**router)
 
 
 async def _setup_identity_access_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
