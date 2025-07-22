@@ -9,6 +9,7 @@ from app.schemas.core.configuration import Model as ModelRouterSchema
 from app.schemas.core.configuration import ModelProvider as ModelProviderSchema
 from app.schemas.core.configuration import Configuration
 
+
 class ModelDatabaseManager:
 
     @staticmethod
