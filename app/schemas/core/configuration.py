@@ -10,7 +10,6 @@ from pydantic import BaseModel, ConfigDict, Field, constr, field_validator, mode
 from pydantic import ValidationError as PydanticValidationError
 from pydantic_settings import BaseSettings
 import yaml
-from datetime import datetime
 
 from app.schemas.models import ModelType
 from app.utils.variables import DEFAULT_APP_NAME, DEFAULT_TIMEOUT, ROUTERS

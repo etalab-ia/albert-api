@@ -6,9 +6,8 @@ from starlette.responses import JSONResponse
 
 from app.clients.model import BaseModelClient
 from app.schemas.models_providing import AddModelRequest, DeleteModelRequest, AddAliasesRequest, DeleteAliasesRequest, \
-    RoutersResponse, ModelRouterSchema, ModelClientSchema
+    RoutersResponse
 from app.sql.session import get_db_session
-from app.utils.configuration import configuration
 
 from app.utils.variables import (
     ENDPOINT__MODEL_ADD,
@@ -39,23 +38,7 @@ async def add_model(
 
     redis = global_context.limiter.connection_pool  # not quite clean
 
-    act_params = int(body.model.model_carbon_footprint_active_params) if body.model.model_carbon_footprint_active_params else None
-    tot_params = int(body.model.model_carbon_footprint_total_params) if body.model.model_carbon_footprint_total_params else None
-
-    client = BaseModelClient.import_module(type=body.model.type)(
-        model_name=body.model.model_name,
-        model_cost_prompt_tokens=body.model.model_cost_prompt_tokens,
-        model_cost_completion_tokens=body.model.model_cost_completion_tokens,
-        model_carbon_footprint_zone=body.model.model_carbon_footprint_zone,
-        model_carbon_footprint_active_params=act_params,
-        model_carbon_footprint_total_params=tot_params,
-        url=body.model.url,
-        key=body.model.key,
-        timeout=body.model.timeout,
-        redis=redis,
-        metrics_retention_ms=configuration.settings.metrics_retention_ms,
-        **client_kwargs,
-    )
+    client = BaseModelClient.from_schema(body.model, redis, **client_kwargs)
 
     try:
         await global_context.model_registry.add_client(
@@ -92,6 +75,7 @@ async def delete_model(
     except AssertionError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        raise e
         raise HTTPException(status_code=500, detail=str(e))
 
     return Response(status_code=204)
@@ -157,39 +141,6 @@ async def get_routers(
             # No clients, ModelRouter is about to get deleted
             continue
 
-        client_schemas = []
-
-        for c in clients[i]:
-
-            client_type = type(c).__name__.removesuffix("ModelClient").lower()
-
-            schema = ModelClientSchema(
-                model_name=c.name,
-                type=client_type,
-                url="hidd.en/v1",
-                # hide_url=True,
-                timeout=c.timeout,
-                model_prompt_tokens=c.cost_prompt_tokens,
-                model_completion_tokens=c.cost_completion_tokens,
-                model_carbon_footprint_zone=c.carbon_footprint_zone,
-                model_carbon_footprint_total_params=c.carbon_footprint_total_params,
-                model_carbon_footprint_active_params=c.carbon_footprint_active_params,
-            )
-
-            # del schema.hide_url
-
-            client_schemas.append(schema)
-
-        router_schemas.append(ModelRouterSchema(
-            name=r.name,
-            type=r.type,
-            owned_by=r.owned_by,
-            aliases=r.aliases,
-            routing_strategy=r.routing_strategy,
-            vector_size=r.vector_size,
-            max_context_length=r.max_context_length,
-            created=r.created,
-            providers=client_schemas
-        ))
+        router_schemas.append((await r.as_schema()))
 
     return JSONResponse(content=RoutersResponse(routers=router_schemas).model_dump(), status_code=200)

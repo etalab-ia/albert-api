@@ -102,7 +102,7 @@ class ModelDatabaseManager:
     async def delete_router(session: AsyncSession, router_name: str):
         # Check if objects exist
         router_result = (await session.execute(select(ModelRouterTable).where(ModelRouterTable.name == router_name))).fetchall()
-        alias_result = (await session.execute(delete(ModelRouterAliasTable).where(ModelRouterAliasTable.model_router_name == router_name))).fetchall()
+        alias_result = (await session.execute(select(ModelRouterAliasTable).where(ModelRouterAliasTable.model_router_name == router_name))).fetchall()
         client_result = (await session.execute(select(ModelClientTable).where(ModelClientTable.model_router_name == router_name))).fetchall()
         
         assert router_result, f"ModelRouter {router_name} not found in DB"

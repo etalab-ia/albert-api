@@ -9,6 +9,8 @@ import inspect
 from app.clients.model import BaseModelClient as ModelClient
 from app.schemas.models import ModelType
 
+from app.schemas.core.configuration import Model as ModelRouterSchema, RoutingStrategy
+
 
 class BaseModelRouter(ABC):
     def __init__(
@@ -57,6 +59,26 @@ class BaseModelRouter(ABC):
         self._providers = providers
 
         self._lock = Lock()
+
+    async def as_schema(self, censored: bool = True):
+
+        providers = await self.get_clients()
+        schemas = []
+
+        for p in providers:
+            schemas.append(p.as_schema(censored))
+
+        return ModelRouterSchema(
+            name=self.name,
+            type=self.type,
+            owned_by=self.owned_by,
+            aliases=self.aliases,
+            routing_strategy=RoutingStrategy(self.routing_strategy),
+            vector_size=self.vector_size,
+            max_context_length=self.max_context_length,
+            created=self.created,
+            providers=schemas
+        )
 
     @abstractmethod
     def get_client(self, endpoint: str) -> ModelClient:

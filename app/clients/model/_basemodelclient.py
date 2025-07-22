@@ -16,7 +16,8 @@ from coredis import ConnectionPool, Redis
 from fastapi import HTTPException
 import httpx
 
-from app.schemas.core.configuration import ModelProviderType
+from app.schemas.core.configuration import ModelProviderType, ModelProvider as ModelClientSchema
+from app.utils.configuration import configuration
 from app.schemas.core.metric import Metric
 from app.schemas.usage import Detail, Usage
 from app.utils.carbon import get_carbon_footprint
@@ -94,6 +95,42 @@ class BaseModelClient(ABC):
         module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
 
         return getattr(module, f"{type.capitalize()}ModelClient")
+    
+    @staticmethod
+    def from_schema(schema: ModelClientSchema, redis: ConnectionPool, **init_kwargs):
+        act_params = int(
+            schema.model_carbon_footprint_active_params) if schema.model_carbon_footprint_active_params else None
+        tot_params = int(
+            schema.model_carbon_footprint_total_params) if schema.model_carbon_footprint_total_params else None
+
+        return BaseModelClient.import_module(type=schema.type)(
+            model_name=schema.model_name,
+            model_cost_prompt_tokens=schema.model_cost_prompt_tokens,
+            model_cost_completion_tokens=schema.model_cost_completion_tokens,
+            model_carbon_footprint_zone=schema.model_carbon_footprint_zone,
+            model_carbon_footprint_active_params=act_params,
+            model_carbon_footprint_total_params=tot_params,
+            url=schema.url,
+            key=schema.key,
+            timeout=schema.timeout,
+            redis=redis,
+            metrics_retention_ms=configuration.settings.metrics_retention_ms,
+            **init_kwargs,
+        )
+
+    def as_schema(self, censored: bool = True):
+        return ModelClientSchema(
+            type=ModelProviderType(type(self).__name__.removesuffix("ModelClient").lower()),
+            url="hidd.en/v1" if censored else self.url,
+            key=None if censored else self.key,
+            timeout=self.timeout,
+            model_name=self.name,
+            model_cost_prompt_tokens=self.cost_prompt_tokens,
+            model_cost_completion_tokens=self.cost_completion_tokens,
+            model_carbon_footprint_zone=self.carbon_footprint_zone,
+            model_carbon_footprint_total_params=self.carbon_footprint_total_params,
+            model_carbon_footprint_active_params=self.carbon_footprint_active_params,
+        )
 
     async def setup_metrics_storage(self) -> None:
         time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{self.name}:{self.url}"
