@@ -151,7 +151,6 @@ class Model(ConfigBaseModel):
     For more information to configure model providers, see the [ModelProvider section](#modelprovider).
     """
 
-    name: constr(strip_whitespace=True, min_length=1, max_length=64) = Field(required=True, description="Display name of the model in `/v1/models` endpoint. It will be used in the API to identify the model by users.", examples=["my-model"])  # fmt: off
     type: ModelType = Field(required=True, description="Type of the model. It will be used to identify the model type.", examples=["text-generation"])  # fmt: off
     aliases: List[constr(strip_whitespace=True, min_length=1, max_length=64)] = Field(default_factory=list, required=False, description="Aliases of the model. It will be used to identify the model by users.", examples=[["model-alias", "model-alias-2"]])  # fmt: off
     owned_by: constr(strip_whitespace=True, min_length=1, max_length=64) = Field(default=DEFAULT_APP_NAME, required=False, description="Owner of the model displayed in `/v1/models` endpoint.", examples=["my-app"])  # fmt: off
@@ -293,6 +292,18 @@ class RedisDependency(ConfigBaseModel):
 
 
 @custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#dependencies")
+class OAuth2(ConfigBaseModel):
+    client_id: str = Field(default="")
+    client_secret: str = Field(default="")
+    # OpenID Connect discovery endpoint for server metadata
+    server_metadata_url: str = Field(default="https://identite-sandbox.proconnect.gouv.fr/.well-known/openid-configuration")
+    redirect_uri: str = Field(default="https://albert.api.etalab.gouv.fr/v1/oauth2/callback")
+    scope: str = Field(default="openid email given_name usual_name siret organizational_unit belonging_population chorusdt")
+    allowed_domains: str = Field(default="localhost,gouv.fr", description="List of allowed domains for OAuth2 login. This is used to restrict the domains that can use the OAuth2 login flow.")  # fmt: off
+    default_role: str = Field(default="Freemium", description="Default role assigned to users when they log in for the first time.")
+
+
+@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#dependencies")
 class Dependencies(ConfigBaseModel):
     albert: Optional[AlbertDependency] = Field(default=None, required=False, description="If provided, Albert API is used to parse pdf documents. Cannot be used with Marker dependency concurrently. Pass arguments to call Albert API in this section.")  # fmt: off
     brave: Optional[BraveDependency] = Field(default=None, required=False, description="If provided, Brave API is used to web search. Cannot be used with DuckDuckGo dependency concurrently. Pass arguments to call API in this section. All query parameters are supported, see https://api-dashboard.search.brave.com/app/documentation/web-search/query for more information.")  # fmt: off
@@ -305,6 +316,11 @@ class Dependencies(ConfigBaseModel):
     redis: RedisDependency  = Field(required=True, description="Pass all redis python SDK arguments, see https://redis.readthedocs.io/en/stable/connections.html for more information.")  # fmt: off
     secretiveshell: Optional[SecretiveshellDependency] = Field(default=None, required=False, description="If provided, MCP agents can use tools from SecretiveShell MCP Bridge. Pass arguments to call Secretiveshell API in this section, see https://github.com/SecretiveShell/MCP-Bridge for more information.")  # fmt: off
     sentry: Optional[SentryDependency] = Field(default=None, required=False, description="Pass all sentry python SDK arguments, see https://docs.sentry.io/platforms/python/configuration/options/ for more information.")  # fmt: off
+    oauth2: OAuth2 = Field(
+        default_factory=OAuth2,
+        required=False,
+        description="OAuth2 configuration for the API. See https://github.com/etalab-ia/albert-api/blob/main/docs/oauth2_encryption.md for more information.",
+    )
 
     @model_validator(mode="after")
     def validate_dependencies(cls, values):
@@ -417,6 +433,9 @@ class Settings(ConfigBaseModel):
     # search - multi agents
     search_multi_agents_synthesis_model: Optional[str] = Field(default=None, required=False, description="Model used to synthesize the results of multi-agents search. If not provided, multi-agents search is disabled. This model must be defined in the `models` section and have type `text-generation` or `image-text-to-text`.")  # fmt: off
     search_multi_agents_reranker_model: Optional[str] = Field(default=None, required=False, description="Model used to rerank the results of multi-agents search. If not provided, multi-agents search is disabled. This model must be defined in the `models` section and have type `text-generation` or `image-text-to-text`.")  # fmt: off
+
+    session_secret_key: str = Field(description="Secret key for session middleware.")
+    encryption_key: str = Field(description="Secret key for encrypting between FastAPI and Playground. Must be 32 url-safe base64-encoded bytes.")
 
 
 # load config ----------------------------------------------------------------------------------------------------------------------------------------

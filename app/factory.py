@@ -64,7 +64,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         redoc_url=configuration.settings.swagger_redoc_url,
         lifespan=lifespan,
     )
-    app.add_middleware(SessionMiddleware, secret_key=settings.session_secret_key)
+    app.add_middleware(SessionMiddleware, secret_key=configuration.settings.session_secret_key)
 
     # Set up database dependency
     # If no db_func provided, the depends module will fall back to default
@@ -188,7 +188,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         # hooks does not work with files endpoint (request is overwritten by the file upload)
         app.include_router(router=files.router, tags=["Legacy"], prefix="/v1")
 
-    if settings.oauth2 and ROUTER__OAUTH2 not in settings.general.disabled_routers:
+    if configuration.dependencies.oauth2 and ROUTER__OAUTH2 not in configuration.settings.disabled_routers:
         add_hooks(router=oauth2.router)
         app.include_router(router=oauth2.router, tags=[ROUTER__OAUTH2.title()], prefix="/v1")
 

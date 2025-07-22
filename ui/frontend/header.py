@@ -11,7 +11,7 @@ import requests
 from ui.backend.login import login, oauth_login
 from ui.backend.sql.session import get_session
 from .css import css_proconnect
-from ui.settings import settings  # Ensure settings is imported
+from ui.configuration import configuration  # Ensure configuration is imported
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,17 +20,17 @@ logger = logging.getLogger(__name__)
 def header():
     def get_fernet():
         """
-        Initialize Fernet encryption using the OAuth2 encryption key from settings
+        Initialize Fernet encryption using the OAuth2 encryption key from configuration
         """
         try:
             # If the key is "changeme", generate a proper key (same logic as backend)
-            if settings.playground.encryption_key == "changeme":
+            if configuration.playground.encryption_key == "changeme":
                 # Generate a consistent key from the default string for development
                 key_bytes = hashlib.sha256("changeme".encode()).digest()
                 key = base64.urlsafe_b64encode(key_bytes)
             else:
                 # Use the provided key
-                key = settings.playground.encryption_key.encode()
+                key = configuration.playground.encryption_key.encode()
 
             return Fernet(key)
         except Exception as e:
@@ -45,7 +45,7 @@ def header():
             api_token: The API token for authentication
             proconnect_token: Optional ProConnect token for ProConnect logout
         """
-        logout_url = f"{settings.playground.api_url}/v1/oauth2/logout"
+        logout_url = f"{configuration.playground.api_url}/v1/oauth2/logout"
 
         headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
 
@@ -96,7 +96,7 @@ def header():
             with st.form(key="login"):  # ProConnect login
                 with stylable_container(key="ProConnect", css_styles=css_proconnect):
                     # Determine the API base URL
-                    proconnect_login_url = f"{settings.playground.api_url}/v1/oauth2/login"
+                    proconnect_login_url = f"{configuration.playground.api_url}/v1/oauth2/login"
 
                     st.markdown(
                         f"""
