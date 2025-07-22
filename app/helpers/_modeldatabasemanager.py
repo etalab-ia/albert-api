@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import select, insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +15,15 @@ from app.schemas.core.configuration import Configuration
 class ModelDatabaseManager:
 
     @staticmethod
-    async def get_routers(session: AsyncSession, configuration: Configuration, dependencies: SimpleNamespace):
+    async def get_routers(
+        session: AsyncSession,
+    ) -> List[ModelRouterSchema]:
+        """
+        Returns the ModelRouterSchemas stored in the database.
+
+        Args:
+            session(AsyncSession): The database session.
+        """
         routers = []
 
         # Get all ModelRouter rows and convert it from a list of 1-dimensional vectors to a list of ModelRouters
@@ -47,6 +57,13 @@ class ModelDatabaseManager:
     
     @staticmethod
     async def add_router(session: AsyncSession, router: ModelRouterSchema):
+        """
+        Adds a ModelRouterSchema to the database.
+
+        Args:
+            session(AsyncSession): The database session.
+            router(ModelRouterSchema): the schema (= row) to add.
+        """
 
         router_result = (await session.execute(select(ModelRouterTable).where(ModelRouterTable.name == router.name))).fetchall()
 
@@ -69,6 +86,14 @@ class ModelDatabaseManager:
 
     @staticmethod
     async def add_client(session: AsyncSession, router_name: str, client: ModelProviderSchema):
+        """
+        Adds a ModelProviderSchema to a ModelRouter.
+
+        Args:
+            session(AsyncSession): The database session.
+            router_name(str): the name (= id) of the ModelRouterSchema to add the provider to.
+            client(ModelProviderSchema): the provider to add.
+        """
         client_result = (
             await session.execute(
                 select(ModelClientTable)
@@ -89,6 +114,14 @@ class ModelDatabaseManager:
 
     @staticmethod
     async def add_alias(session: AsyncSession, router_name: str, alias: str):
+        """
+        Adds an alias to an existing router.
+
+        Args:
+            session(AsyncSession): The database session.
+            router_name(str): The name (= id) of the ModelRouterSchema to add the alias to.
+            alias(str): The alias to add.
+        """
         alias_result = (
             await session.execute(
                 select(ModelRouterAliasTable)
@@ -104,6 +137,13 @@ class ModelDatabaseManager:
 
     @staticmethod
     async def delete_router(session: AsyncSession, router_name: str):
+        """
+        Deletes a router.
+
+        Args:
+            session(AsyncSession): The database session.
+            router_name(str): the name (= id) of the ModelRouterSchema to delete.
+        """
         # Check if objects exist
         router_result = (await session.execute(select(ModelRouterTable).where(ModelRouterTable.name == router_name))).fetchall()
         alias_result = (await session.execute(select(ModelRouterAliasTable).where(ModelRouterAliasTable.model_router_name == router_name))).fetchall()
@@ -122,6 +162,16 @@ class ModelDatabaseManager:
 
     @staticmethod
     async def delete_client(session: AsyncSession, router_name: str, model_name: str, model_url: str):
+        """
+        Deletes a ModelProviderSchema from a ModelRouter.
+
+        Args:
+            session(AsyncSession): The database session.
+            router_name(str): the name (= id) of the ModelRouterSchema that manages the targeted provider.
+            model_name(str): the name of the targeted provider.
+            model_url(str): the url of the targeted provider.
+                model_name and model_url together uniquely identify a provider.
+        """
         client_result = (
             await session.execute(
                 select(ModelClientTable)
@@ -143,6 +193,14 @@ class ModelDatabaseManager:
 
     @staticmethod
     async def delete_alias(session: AsyncSession, router_name: str, alias: str):
+        """
+        Deletes an alias of an existing router.
+
+        Args:
+            session(AsyncSession): The database session.
+            router_name(str): The name (= id) of the ModelRouterSchema to delete the alias from.
+            alias(str): The alias to delete.
+        """
         alias_result = (
             await session.execute(
                 select(ModelRouterAliasTable)

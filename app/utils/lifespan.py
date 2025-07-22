@@ -76,7 +76,7 @@ async def _setup_model_registry(configuration: Configuration, global_context: Gl
     db_routers = []
 
     async for session in get_db_session():
-        db_routers = await dependencies.model_database_manager.get_routers(session=session, configuration=configuration, dependencies=dependencies)
+        db_routers = await dependencies.model_database_manager.get_routers(session=session)
     
     if db_routers:
 
