@@ -168,6 +168,10 @@ class ModelRegistry:
             router_name = self.aliases.get(router_name, router_name)  # If alias, gets id.
 
             if router_name in self._routers: # ModelRouter exists
+                # For now, there is no "owned_by" field in ModelClient, so config's ModelClient
+                # are not distinguishable from provider's. Thus, no ModelClient can be removed from config's
+                # ModelRouter for safety, so we have to prevent their addition too.
+                assert self._routers[router_name].owned_by != DEFAULT_APP_NAME, "Owner cannot be the API itself"
                 await self.__add_client_to_existing_router(
                     router_name, model_client, session, **kwargs
                 )
@@ -193,8 +197,7 @@ class ModelRegistry:
 
             router = self._routers[router_name]
 
-            if router.owned_by == DEFAULT_APP_NAME:
-                raise HTTPException(status_code=401, detail="Owner cannot be the API itself")
+            assert router.owned_by != DEFAULT_APP_NAME, "Owner cannot be the API itself"
 
             # ModelClient is removed within instance lock to prevent
             # any other threads to access self._routers or self.router_ids before we completely removed
