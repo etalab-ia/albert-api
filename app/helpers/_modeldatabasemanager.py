@@ -73,7 +73,7 @@ class ModelDatabaseManager:
             await session.execute(
                 select(ModelClientTable)
                     .where(ModelClientTable.model_router_name == router_name)
-                    .where(ModelClientTable.model_name == client.name)
+                    .where(ModelClientTable.model_name == client.model_name)
                     .where(ModelClientTable.url == client.url)
             )
         ).fetchall()
