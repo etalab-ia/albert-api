@@ -46,6 +46,7 @@ WORKDIR /
 
 # Copy application from builder
 COPY --from=builder --chown=albert:albert /app /app
+COPY ./scripts/ /scripts
 COPY --from=builder --chown=albert:albert /.venv /.venv
 ENV PATH="/.venv/bin:${PATH}"
 ENV PYTHONPATH="/app:${PYTHONPATH}"
