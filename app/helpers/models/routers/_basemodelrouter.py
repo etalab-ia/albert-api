@@ -110,12 +110,10 @@ class BaseModelRouter(ABC):
                 if c.url == client.url and c.name == client.name: # The client already exists; we don't want to double it
                     return
 
+            # consistency check
+            assert client.vector_size == self.vector_size, "All embeddings models in the same model group must have the same vector size."
+
             self._providers.append(client)
-
-            # consistency checks
-
-            if client.vector_size != self.vector_size:
-                raise ValueError("All embeddings models in the same model group must have the same vector size.")
 
             if client.max_context_length is not None:
                 if self.max_context_length is None:
@@ -137,9 +135,9 @@ class BaseModelRouter(ABC):
         """
         async with self._lock:
             client = None
-            cost_prompt_tokens = self.cost_prompt_tokens
-            cost_completion_tokens = self.cost_completion_tokens
-            max_context_length = self.max_context_length
+            cost_prompt_tokens = float("-inf")
+            cost_completion_tokens = float("-inf")
+            max_context_length = float("+inf")
 
             for c in self._providers:
                 if c.url == api_url and c.name == name:
