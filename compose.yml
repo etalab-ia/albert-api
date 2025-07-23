@@ -32,6 +32,9 @@ services:
       - 8081:8501
     volumes:
       - "./${CONFIG_FILE:-config.example.yml}:/config.yml:ro"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:16.5

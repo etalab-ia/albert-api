@@ -19,6 +19,7 @@ class PermissionType(str, Enum):
     DELETE_USER = "delete_user"
     CREATE_PUBLIC_COLLECTION = "create_public_collection"
     READ_METRIC = "read_metric"
+    PROVIDE_MODELS = "provide_models"
 
 
 class LimitType(str, Enum):

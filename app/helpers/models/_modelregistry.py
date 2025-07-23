@@ -4,6 +4,9 @@ from typing import List, Optional, Callable, Union, Awaitable, TYPE_CHECKING
 import aio_pika
 
 from app.helpers.models._workingcontext import WorkingContext
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.clients.model import BaseModelClient
 from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.configuration import configuration
@@ -16,6 +19,9 @@ if TYPE_CHECKING:
     # only for type‐checkers and linters, not at runtime
     # Used to break circular import
     from app.clients.model import BaseModelClient
+from app.utils.variables import DEFAULT_APP_NAME
+
+from app.helpers._modeldatabasemanager import ModelDatabaseManager
 
 
 class ModelRegistry:
@@ -82,8 +88,9 @@ class ModelRegistry:
 
     async def __add_client_to_existing_router(
         self,
-        router_id: str,
+        router_name: str,
         model_client: "BaseModelClient",
+        session: AsyncSession,
         **__
     ):
         """
@@ -91,22 +98,23 @@ class ModelRegistry:
 
         Args:
             model_client(ModelClient): The model client itself.
-            router_id(str): The id of the ModelRouter.
+            router_name(str): The id of the ModelRouter.
+            session(AsyncSession): Database session.
         """
-        assert router_id in self._routers, f"No ModelRouter has ID {router_id}."
+        assert router_name in self._routers, f"No ModelRouter has ID {router_name}."
 
-        await self._routers[router_id].add_client(model_client)
-        # TODO: add ModelClient to DB.
-
+        await ModelDatabaseManager.add_client(session, router_name, model_client.as_schema(censored=False))
+        await self._routers[router_name].add_client(model_client)
 
     async def __add_client_to_new_router(
         self,
-        router_id: str,
+        router_name: str,
         model_client: "BaseModelClient",
+        session: AsyncSession,
         model_type: ModelType = None,
         aliases: List[str] = None,
         routing_strategy: RoutingStrategy = RoutingStrategy.ROUND_ROBIN,
-        owner: str = "Albert API",
+        owner: str = None,
         **__
     ):
         """
@@ -115,39 +123,41 @@ class ModelRegistry:
         Args:
             model_client(ModelClient): The model client itself.
             model_type(ModelType): The type of model.
-            router_id(str): The id of the ModelRouter.
+            session(AsyncSession): Database session.
+            router_name(str): The id of the ModelRouter.
             aliases(List[str]): The list of aliases of the ModelRouter.
             routing_strategy: The routing strategy (ie how a ModelRouter choose a ModelClient).
             owner: The owner of the ModelRouter.
         """
 
         assert model_type is not None, "A ModelType needs to be provided"
-        assert router_id not in self._routers, "A ModelRouter with id {router_id} already exists"
+        assert router_name not in self._routers, "A ModelRouter with id {router_id} already exists"
+        assert owner, "An owner needs to be provided to create a ModelRouter"
 
         if aliases is None:
             aliases = []
 
         router = ModelRouter(
-            name=router_id,
+            name=router_name,
             type=model_type,
             owned_by=owner,
             aliases=aliases,
             routing_strategy=routing_strategy,
             providers=[model_client],
         )
-        self._routers[router_id] = router
+        await ModelDatabaseManager.add_router(session, await router.as_schema(censored=False))
+
+        self._routers[router_name] = router
 
         for a in aliases:
             if a not in self.aliases:
-                self.aliases[a] = router_id
-
-        # TODO: add ModelRouter to db
-        # TODO: add ModelClient to db
+                self.aliases[a] = router_name
 
     async def add_client(
         self,
-        router_id: str,
+        router_name: str,
         model_client: "BaseModelClient",
+        session: AsyncSession,
         **kwargs
     ):
         """
@@ -156,94 +166,105 @@ class ModelRegistry:
 
         Args:
             model_client(ModelClient): The model client itself.
-            router_id(str): ID of the targeted ModelRouter. IT can be an alias.
+            router_name(str): ID of the targeted ModelRouter. IT can be an alias.
+            session(AsyncSession): Database session.
             kwargs: Additional arguments, mainly for ModelRouter creation.
                 Must contain at least a model_type to create a ModelRouter.
         """
 
         async with self._lock:
 
-            router_id = self.aliases.get(router_id, router_id)  # If alias, gets id.
+            router_name = self.aliases.get(router_name, router_name)  # If alias, gets id.
 
-            if router_id in self._routers: # ModelRouter exists
+            if router_name in self._routers: # ModelRouter exists
+                # For now, there is no "owned_by" field in ModelClient, so config's ModelClient
+                # are not distinguishable from provider's. Thus, no ModelClient can be removed from config's
+                # ModelRouter for safety, so we have to prevent their addition too.
+                assert self._routers[router_name].owned_by != DEFAULT_APP_NAME, "Owner cannot be the API itself"
                 await self.__add_client_to_existing_router(
-                    router_id, model_client, **kwargs
+                    router_name, model_client, session, **kwargs
                 )
             else:
                 await self.__add_client_to_new_router(
-                    router_id, model_client, **kwargs
+                    router_name, model_client, session, **kwargs
                 )
 
-            self._router_ids.append(router_id)
+            self._router_ids.append(router_name)
 
-    async def delete_client(self, router_id: str, api_url: str, model_name: str):
+    async def delete_client(self, router_name: str, api_url: str, model_name: str, session: AsyncSession):
         """
         Removes a client.
 
         Args:
-            router_id(str): id of the ModelRouter instance, where lies the ModelClient.
+            router_name(str): id of the ModelRouter instance, where lies the ModelClient.
             api_url(str): The model API URL.
             model_name(str): The model name.
+            session(AsyncSession): Database session.
         """
         async with self._lock:
-            assert router_id in self._routers, f"No ModelRouter has ID {router_id}"
+            assert router_name in self._routers, f"No ModelRouter has ID {router_name}"
 
-            router = self._routers[router_id]
+            router = self._routers[router_name]
+
+            assert router.owned_by != DEFAULT_APP_NAME, "Owner cannot be the API itself"
 
             # ModelClient is removed within instance lock to prevent
             # any other threads to access self._routers or self.router_ids before we completely removed
             # the client.
+            await ModelDatabaseManager.delete_client(session, router_name, model_name, api_url)
             still_has_clients = await router.delete_client(api_url, model_name)
-
-            # TODO ModelClient remove from db.
 
             if not still_has_clients:
                 # ModelRouter with no clients left gets wipe out.
-                aliases = [al for al, model_id in self.aliases.items() if model_id == router_id]
+                await ModelDatabaseManager.delete_router(session, router_name)
+                aliases = [al for al, model_id in self.aliases.items() if model_id == router_name]
                 for a in aliases:
                     del self.aliases[a]
 
-                del self._routers[router_id]
-                self._router_ids.remove(router_id)
-                # TODO remove ModelRouter from db.
+                del self._routers[router_name]
+                self._router_ids.remove(router_name)
 
-    async def add_aliases(self, router_id: str, aliases: List[str]):
+    async def add_aliases(self, router_name: str, aliases: List[str], session: AsyncSession):
         """
         Adds aliases of a ModelRouter.
 
         Args:
-            router_id(str): The ID of a ModelRouter. Can also be an alias itself.
+            router_name(str): The ID of a ModelRouter. Can also be an alias itself.
             aliases(List(str)): aliases to add.
+            session(AsyncSession): Database session.
         """
-        # TODO update db?
         async with self._lock:
-            assert router_id in self.aliases or router_id in self._router_ids, f"ModelRouter \"{router_id}\" does not exist."
+            assert router_name in self.aliases or router_name in self._router_ids, f"ModelRouter \"{router_name}\" does not exist."
+            router_name = self.aliases.get(router_name, router_name)
 
-            router_id = self.aliases.get(router_id, router_id)
+            assert self._routers[router_name].owned_by != DEFAULT_APP_NAME, "Cannot edit API routers aliases."
 
             for al in aliases:
                 if al not in self.aliases:  # Error when alias linked to another ModelRouter?
-                    self.aliases[al] = router_id
-                    await self._routers[router_id].add_alias(al)
+                    await ModelDatabaseManager.add_alias(session, router_name, al)
+                    self.aliases[al] = router_name
+                    await self._routers[router_name].add_alias(al)
 
-    async def delete_aliases(self, router_id: str, aliases: List[str]):
+    async def delete_aliases(self, router_name: str, aliases: List[str], session: AsyncSession):
         """
         Removes aliases of a ModelRouter.
 
         Args:
-            router_id(str): The ID of a ModelRouter. Can also be an alias itself.
+            router_name(str): The ID of a ModelRouter. Can also be an alias itself.
             aliases(List(str)): aliases to remove.
+            session(AsyncSession): Database session.
         """
-        # TODO update db?
         async with self._lock:
-            assert router_id in self.aliases or router_id in self._router_ids, f"ModelRouter \"{router_id}\" does not exist."
+            assert router_name in self.aliases or router_name in self._router_ids, f"ModelRouter \"{router_name}\" does not exist."
+            router_name = self.aliases.get(router_name, router_name)
 
-            real_id = self.aliases.get(router_id, router_id)
+            assert self._routers[router_name].owned_by != DEFAULT_APP_NAME, "Cannot edit API routers aliases."
 
             for al in aliases:
-                if al in self.aliases:  # Error when alias linked to another ModelRouter?
+                if al in self.aliases and self.aliases[al]:  # Error when alias linked to another ModelRouter?
+                    await ModelDatabaseManager.delete_alias(session, router_name, al)
                     del self.aliases[al]
-                    await self._routers[real_id].delete_alias(al)
+                    await self._routers[router_name].delete_alias(al)
 
     async def get_models(self) -> List[str]:
         """

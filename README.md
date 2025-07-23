@@ -18,10 +18,10 @@
 ## 🔥 Why Albert API?
 
 - 🌐 **OpenAI standards**: based on OpenAI API conventions. Easy to use with OpenAI SDKs, LangChain, LlamaIndex, etc.
-* 🚦 **Robust API Gateway:** Load balancing, authentication, and seamless integration with OpenAI, vLLM, HuggingFace TEI.
+- 🚦 **Robust API Gateway:** Load balancing, authentication, and seamless integration with OpenAI, vLLM, HuggingFace TEI.
 - 📖 **Open Source**: developed by the French Government, fully open-source forever.
 - ⚙️ **Production-ready**: ready to serve your models in production.
-* 📚 **Full stack genAI API:** Built-in Retrieval-Augmented Generation (RAG), OCR, audio transcription, and more.
+- 📚 **Full stack genAI API:** Built-in Retrieval-Augmented Generation (RAG), OCR, audio transcription, and more.
 - ✍️ **High code standards**
 
 ## 🎯 Key Features
@@ -75,37 +75,50 @@ make quickstart
 Test the API:
 
 ```bash 
-curl -X POST "http://localhost:8000/v1/chat/completions" \
+curl -X POST "http://localhost:8080/v1/chat/completions" \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer changeme" \
 -d '{"model": "albert-testbed", "messages": [{"role": "user", "content": "Hello, how are you?"}]}'
 ```
 The default master API key is `changeme`.
 
+### User interface
+
+A user interface is available at: http://localhost:8081/playground
+
+User: master
+Password: changeme
+
 ### Create a first user
 
 ```bash
-python scripts/create_first_user.py
+make create-user
 ```
 
 ### Configure your models and add features
 
-With configuration file, you can connect to your own models and add addtionnal services to Albert API. Start by creating a configuration file:
+With configuration file, you can connect to your own models and add addtionnal services to Albert API. 
+Start by creating a configuration file and a .env dedicated:
 
 ```bash
-cp config.example.yml config.yml && export CONFIG_FILE=config.yml
+cp config.example.yml config.yml && export CONFIG_FILE=./config.yml
+cp .env.example .env && export APP_ENV_FILE=.env
 ```
 
 Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.
 
-Then, add additional services to Albert API in regard of your configuration file with the following command:
+Vou can then set your environment variables in .env according to your needs.
 
+You can run the services you need by running:
 ```bash
-make add service=<service_name>
-
-# example:
-make add service=elasticsearch
+docker compose --env-file .env up <services_you_need> --detach 
 ```
+
+For instance:
+```bash
+docker compose --env-file .env up api playground postgres redis elasticsearch secretiveshell --detach 
+```
+
 
 ## 🤝 Contribute
 

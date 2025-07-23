@@ -82,7 +82,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         search,
         usage,
         users,
-        models_providing,
+        model_provision,
     )
     from app.helpers._accesscontroller import AccessController
 
@@ -173,8 +173,8 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         app.include_router(router=usage.router, tags=[ROUTER__USAGE.title()], prefix="/v1")
 
     if ROUTER__MODEL_PROVIDING not in configuration.settings.disabled_routers:
-        add_hooks(router=models_providing.router)
-        app.include_router(router=models_providing.router, tags=[ROUTER__MODEL_PROVIDING.title()], prefix="/v1")
+        add_hooks(router=model_provision.router)
+        app.include_router(router=model_provision.router, tags=[ROUTER__MODEL_PROVIDING.title()], prefix="/v1")
 
     if ROUTER__USERS not in configuration.settings.disabled_routers:
         add_hooks(router=users.router)

@@ -1,5 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
+from fastapi import HTTPException
 from itertools import cycle
 import time
 from typing import Callable, Union, Awaitable, TYPE_CHECKING
@@ -13,6 +14,8 @@ from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.models import ModelType
 from app.utils.configuration import configuration
 from app.utils.rabbitmq import AsyncRabbitMQConnection
+
+from app.schemas.core.configuration import Model as ModelRouterSchema, RoutingStrategy
 
 if TYPE_CHECKING:
     # only for type‐checkers and linters, not at runtime
@@ -106,6 +109,32 @@ class BaseModelRouter(ABC):
                     routing_key=client.queue_name
                 )
 
+    async def as_schema(self, censored: bool = True) -> ModelRouterSchema:
+        """
+        Gets a ModelRouterSchema that represents the current instance.
+
+        Args:
+            censored(bool): Whether sensitive information needs to be hidden.
+        """
+
+        providers = await self.get_clients()
+        schemas = []
+
+        for p in providers:
+            schemas.append(p.as_schema(censored))
+
+        return ModelRouterSchema(
+            name=self.name,
+            type=self.type,
+            owned_by=self.owned_by,
+            aliases=self.aliases,
+            routing_strategy=RoutingStrategy(self.routing_strategy),
+            vector_size=self.vector_size,
+            max_context_length=self.max_context_length,
+            created=self.created,
+            providers=schemas
+        )
+
     @abstractmethod
     def get_client(self, endpoint: str) -> "BaseModelClient":
         """
@@ -136,12 +165,10 @@ class BaseModelRouter(ABC):
                 if c.url == client.url and c.name == client.name: # The client already exists; we don't want to double it
                     return
 
+            # consistency check
+            assert client.vector_size == self.vector_size, "All embeddings models in the same model group must have the same vector size."
+
             self._providers.append(client)
-
-            # consistency checks
-
-            if client.vector_size != self.vector_size:
-                raise ValueError("All embeddings models in the same model group must have the same vector size.")
 
             if client.max_context_length is not None:
                 if self.max_context_length is None:
@@ -152,7 +179,6 @@ class BaseModelRouter(ABC):
             self._cycle = cycle(self._providers)
             self.cost_prompt_tokens = max(self.cost_prompt_tokens, client.cost_prompt_tokens)
             self.cost_completion_tokens = max(self.cost_completion_tokens, client.cost_completion_tokens)
-            # TODO: add to DB (with lock, in case delete is called right after)
 
     async def delete_client(self, api_url: str, name: str) -> bool:
         """
@@ -164,10 +190,9 @@ class BaseModelRouter(ABC):
         """
         async with self._lock:
             client = None
-            cost_prompt_tokens = self.cost_prompt_tokens
-            cost_completion_tokens = self.cost_completion_tokens
-            max_context_length = self.max_context_length
-            max_context_lengths = []
+            cost_prompt_tokens = float("-inf")
+            cost_completion_tokens = float("-inf")
+            max_context_length = float("+inf")
 
             for c in self._providers:
                 if c.url == api_url and c.name == name:
@@ -183,7 +208,7 @@ class BaseModelRouter(ABC):
                         cost_completion_tokens = c.cost_completion_tokens
 
             if client is None:
-                return len(self._providers) > 0
+                raise HTTPException(status_code=404, detail=f"Model with name \"{name}\" and URL \"{api_url}\" not found")
 
             await client.lock.acquire()
             self._providers.remove(client)
@@ -234,7 +259,6 @@ class BaseModelRouter(ABC):
             self.max_context_length = max_context_length
 
             client.lock.release()
-            # TODO: remove from DB
             return True
 
     async def add_alias(self, alias: str):
