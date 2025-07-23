@@ -124,6 +124,8 @@ dependencies:
 
 # ---------------------------------- settings -----------------------------------
 settings:
+  session_secret_key: -ftzKBct7qN22sgnkI9ApWD2ny_dHQVlPd2OPDSk5MM # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))
+  encryption_key: 5Uwc8CRD5cca8D8_tB5zrgLdXk7sWz3foaeHBuc17eg= # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
   usage_tokenizer: tiktoken_gpt2
   log_level: DEBUG
   auth_max_token_expiration_days: 365
