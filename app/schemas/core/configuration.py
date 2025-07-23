@@ -291,12 +291,11 @@ class RedisDependency(ConfigBaseModel):
     # All args of pydantic redis client is allowed
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#dependencies")
-class OAuth2(ConfigBaseModel):
+class ProConnect(ConfigBaseModel):
     client_id: str = Field(default="")
     client_secret: str = Field(default="")
     # OpenID Connect discovery endpoint for server metadata
-    server_metadata_url: str = Field(default="https://identite-sandbox.proconnect.gouv.fr/.well-known/openid-configuration")
+    server_metadata_url: str = Field(default="https://identite-sandbox.p^noconnect.gouv.fr/.well-known/openid-configuration")
     redirect_uri: str = Field(default="https://albert.api.etalab.gouv.fr/v1/oauth2/callback")
     scope: str = Field(default="openid email given_name usual_name siret organizational_unit belonging_population chorusdt")
     allowed_domains: str = Field(default="localhost,gouv.fr", description="List of allowed domains for OAuth2 login. This is used to restrict the domains that can use the OAuth2 login flow.")  # fmt: off
@@ -316,10 +315,10 @@ class Dependencies(ConfigBaseModel):
     redis: RedisDependency  = Field(required=True, description="Pass all redis python SDK arguments, see https://redis.readthedocs.io/en/stable/connections.html for more information.")  # fmt: off
     secretiveshell: Optional[SecretiveshellDependency] = Field(default=None, required=False, description="If provided, MCP agents can use tools from SecretiveShell MCP Bridge. Pass arguments to call Secretiveshell API in this section, see https://github.com/SecretiveShell/MCP-Bridge for more information.")  # fmt: off
     sentry: Optional[SentryDependency] = Field(default=None, required=False, description="Pass all sentry python SDK arguments, see https://docs.sentry.io/platforms/python/configuration/options/ for more information.")  # fmt: off
-    oauth2: OAuth2 = Field(
-        default_factory=OAuth2,
+    proconnect: ProConnect = Field(
+        default_factory=ProConnect,
         required=False,
-        description="OAuth2 configuration for the API. See https://github.com/etalab-ia/albert-api/blob/main/docs/oauth2_encryption.md for more information.",
+        description="ProConnect configuration for the API. See https://github.com/etalab-ia/albert-api/blob/main/docs/oauth2_encryption.md for more information.",
     )
 
     @model_validator(mode="after")

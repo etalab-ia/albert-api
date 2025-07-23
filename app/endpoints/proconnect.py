@@ -30,14 +30,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # TODO : we should not initialize OAuth2 on module import, but rather on application startup
-if configuration.dependencies.oauth2 is not None:
+if configuration.dependencies.proconnect is not None:
     oauth = OAuth()
     oauth2 = oauth.register(
         name="proconnect",
-        client_id=configuration.dependencies.oauth2.client_id,
-        client_secret=configuration.dependencies.oauth2.client_secret,
-        server_metadata_url=configuration.dependencies.oauth2.server_metadata_url,
-        client_kwargs={"scope": configuration.dependencies.oauth2.scope.split(",")},
+        client_id=configuration.dependencies.proconnect.client_id,
+        client_secret=configuration.dependencies.proconnect.client_secret,
+        server_metadata_url=configuration.dependencies.proconnect.server_metadata_url,
+        client_kwargs={"scope": configuration.dependencies.proconnect.scope.split(",")},
     )
 
 
@@ -47,14 +47,14 @@ def get_fernet():
     """
     try:
         # If the key is "changeme", generate a proper key
-        if configuration.dependencies.oauth2.encryption_key == "changeme":
+        if configuration.dependencies.proconnect.encryption_key == "changeme":
             logger.warning("Using default encryption key 'changeme'. This is not secure for production.")
             # Generate a consistent key from the default string for development
             key_bytes = hashlib.sha256("changeme".encode()).digest()
             key = base64.urlsafe_b64encode(key_bytes)
         else:
             # Use the provided key - it should be 32 url-safe base64-encoded bytes
-            key = configuration.dependencies.oauth2.encryption_key.encode()
+            key = configuration.dependencies.proconnect.encryption_key.encode()
 
         return Fernet(key)
     except Exception as e:
@@ -85,7 +85,7 @@ async def oauth2_login(request: Request):
     """
     try:
         # Use the configured redirect URL rather than generating it dynamically
-        redirect_uri = configuration.dependencies.oauth2.redirect_uri
+        redirect_uri = configuration.dependencies.proconnect.redirect_uri
 
         # Get the original URL from the referer header or a query parameter
         original_url = request.headers.get("referer") or request.query_params.get("origin")
@@ -101,7 +101,7 @@ async def oauth2_login(request: Request):
             request,
             redirect_uri,
             state=state,
-            scope=configuration.dependencies.oauth2.scope,  # Explicitly pass the scope
+            scope=configuration.dependencies.proconnect.scope,  # Explicitly pass the scope
         )
 
         return redirect_response
@@ -178,7 +178,7 @@ def generate_redirect_url(request, app_token, token_id, proconnect_token, state=
     request_domain = parsed_url.netloc.split(":")[0]  # Extract domain without port
 
     # Get allowed domains from configuration and parse them if it's a string
-    allowed_domains_config = configuration.dependencies.oauth2.allowed_domains
+    allowed_domains_config = configuration.dependencies.proconnect.allowed_domains
     if isinstance(allowed_domains_config, str):
         # Split the comma-separated string and strip whitespace
         allowed_domains = [domain.strip() for domain in allowed_domains_config.split(",")]
@@ -217,7 +217,7 @@ async def get_jwks_keys():
     try:
         # Get the JWKS URL from the server metadata
         async with httpx.AsyncClient() as client:
-            response = await client.get(configuration.dependencies.oauth2.server_metadata_url)
+            response = await client.get(configuration.dependencies.proconnect.server_metadata_url)
             metadata = response.json()
             jwks_uri = metadata.get("jwks_uri")
 
@@ -269,7 +269,7 @@ async def verify_jwt_signature(id_token: str) -> dict:
             id_token,
             key,
             algorithms=["RS256", "ES256"],  # Common algorithms for OIDC
-            audience=configuration.dependencies.oauth2.client_id,
+            audience=configuration.dependencies.proconnect.client_id,
             issuer=None,  # You might want to verify issuer too
         )
 
@@ -344,14 +344,14 @@ async def create_user(session: AsyncSession, iam: IdentityAccessManager, given_n
     Create a new user with default role
     """
     # Get the default role ID
-    default_role_query = select(Role.id).where(Role.name == configuration.dependencies.oauth2.default_role)
+    default_role_query = select(Role.id).where(Role.name == configuration.dependencies.proconnect.default_role)
     default_role_result = await session.execute(default_role_query)
     default_role_id = default_role_result.scalar_one_or_none()
 
     if default_role_id is None:
         raise HTTPException(
             status_code=500,
-            detail=f"Default role for OAuth user not found in database, please create a role named {configuration.dependencies.oauth2.default_role} in the database or update the configuration.",
+            detail=f"Default role for OAuth user not found in database, please create a role named {configuration.dependencies.proconnect.default_role} in the database or update the configuration.",
         )
 
     # Generate a default username if information is missing
@@ -439,7 +439,7 @@ async def perform_proconnect_logout(proconnect_token: str) -> bool:
             return False
 
         # Prepare logout parameters
-        logout_params = {"id_token_hint": proconnect_token, "client_id": configuration.dependencies.oauth2.client_id}
+        logout_params = {"id_token_hint": proconnect_token, "client_id": configuration.dependencies.proconnect.client_id}
 
         # Use httpx directly but maintain consistency with OAuth2 client approach
         async with httpx.AsyncClient() as client:

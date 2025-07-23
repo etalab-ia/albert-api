@@ -6,7 +6,7 @@ from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.endpoints.oauth2 import (
+from app.endpoints.proconnect import (
     get_fernet,
     encrypt_redirect_data,
     oauth2_login,
@@ -27,17 +27,17 @@ class TestOAuth2Module:
     """Test suite for OAuth2 module functionality"""
 
     @pytest.fixture
-    def mock_configuration(self):
+    def mock_config(self):
         """Mock configuration for OAuth2"""
         config = MagicMock()
-        config.dependencies.oauth2.client_id = "test_client_id"
-        config.dependencies.oauth2.client_secret = "test_client_secret"
-        config.dependencies.oauth2.server_metadata_url = "https://test-provider.com/.well-known/openid_configuration"
-        config.dependencies.oauth2.scope = "openid,email,profile"
-        config.dependencies.oauth2.redirect_uri = "https://test-app.com/callback"
-        config.dependencies.oauth2.encryption_key = "test_key_for_encryption_purposes_32"
-        config.dependencies.oauth2.allowed_domains = "test-domain.com,localhost"
-        config.dependencies.oauth2.default_role = "Freemium"
+        config.dependencies.proconnect.client_id = "test_client_id"
+        config.dependencies.proconnect.client_secret = "test_client_secret"
+        config.dependencies.proconnect.server_metadata_url = "https://test-provider.com/.well-known/openid_configuration"
+        config.dependencies.proconnect.scope = "openid,email,profile"
+        config.dependencies.proconnect.redirect_uri = "https://test-app.com/callback"
+        config.dependencies.proconnect.encryption_key = "test_key_for_encryption_purposes_32"
+        config.dependencies.proconnect.allowed_domains = "test-domain.com,localhost"
+        config.dependencies.proconnect.default_role = "Freemium"
         return config
 
     @pytest.fixture
@@ -90,32 +90,32 @@ class TestOAuth2Module:
         user.sub = "test_sub_id"
         return user
 
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.configuration")
     def test_get_fernet_with_default_key(self, mock_config):
         """Test Fernet initialization with default 'changeme' key"""
-        mock_config.dependencies.oauth2.encryption_key = "changeme"
+        mock_config.dependencies.proconnect.encryption_key = "changeme"
 
-        with patch("app.endpoints.oauth2.logger") as mock_logger:
+        with patch("app.endpoints.proconnect.logger") as mock_logger:
             fernet = get_fernet()
 
             assert fernet is not None
             mock_logger.warning.assert_called_once()
             assert "Using default encryption key" in mock_logger.warning.call_args[0][0]
 
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.configuration")
     def test_get_fernet_with_custom_key(self, mock_config):
         """Test Fernet initialization with custom key"""
         # Generate a proper 32-byte key
         key = base64.urlsafe_b64encode(b"0" * 32).decode()
-        mock_config.dependencies.oauth2.encryption_key = key
+        mock_config.dependencies.proconnect.encryption_key = key
 
         fernet = get_fernet()
         assert fernet is not None
 
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.configuration")
     def test_get_fernet_invalid_key(self, mock_config):
         """Test Fernet initialization with invalid key"""
-        mock_config.dependencies.oauth2.encryption_key = "invalid_key"
+        mock_config.dependencies.proconnect.encryption_key = "invalid_key"
 
         with pytest.raises(HTTPException) as exc_info:
             get_fernet()
@@ -123,7 +123,7 @@ class TestOAuth2Module:
         assert exc_info.value.status_code == 500
         assert "Encryption initialization failed" in exc_info.value.detail
 
-    @patch("app.endpoints.oauth2.get_fernet")
+    @patch("app.endpoints.proconnect.get_fernet")
     def test_encrypt_redirect_data_success(self, mock_get_fernet):
         """Test successful encryption of redirect data"""
         # Mock Fernet instance
@@ -137,7 +137,7 @@ class TestOAuth2Module:
         assert isinstance(result, str)
         mock_fernet.encrypt.assert_called_once()
 
-    @patch("app.endpoints.oauth2.get_fernet")
+    @patch("app.endpoints.proconnect.get_fernet")
     def test_encrypt_redirect_data_failure(self, mock_get_fernet):
         """Test encryption failure"""
         mock_get_fernet.side_effect = Exception("Encryption error")
@@ -149,12 +149,12 @@ class TestOAuth2Module:
         assert "Encryption failed" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.configuration")
     async def test_oauth2_login_success(self, mock_config, mock_oauth2, mock_request):
         """Test successful OAuth2 login initiation"""
-        mock_config.dependencies.oauth2.redirect_uri = "https://test-app.com/callback"
-        mock_config.dependencies.oauth2.scope = "openid,email"
+        mock_config.dependencies.proconnect.redirect_uri = "https://test-app.com/callback"
+        mock_config.dependencies.proconnect.scope = "openid,email"
 
         mock_oauth2.authorize_redirect = AsyncMock(return_value=RedirectResponse(url="https://provider.com/auth"))
 
@@ -164,7 +164,7 @@ class TestOAuth2Module:
         mock_oauth2.authorize_redirect.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
+    @patch("app.endpoints.proconnect.oauth2")
     async def test_oauth2_login_failure(self, mock_oauth2, mock_request):
         """Test OAuth2 login failure"""
         mock_oauth2.authorize_redirect.side_effect = Exception("OAuth2 error")
@@ -176,11 +176,11 @@ class TestOAuth2Module:
         assert "OAuth2 login failed" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
-    @patch("app.endpoints.oauth2.retrieve_user_info")
-    @patch("app.endpoints.oauth2.IdentityAccessManager")
-    @patch("app.endpoints.oauth2.create_user")
-    @patch("app.endpoints.oauth2.generate_redirect_url")
+    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.retrieve_user_info")
+    @patch("app.endpoints.proconnect.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.create_user")
+    @patch("app.endpoints.proconnect.generate_redirect_url")
     async def test_oauth2_callback_existing_user(
         self,
         mock_generate_redirect,
@@ -215,11 +215,11 @@ class TestOAuth2Module:
         mock_create_user.assert_not_called()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
-    @patch("app.endpoints.oauth2.retrieve_user_info")
-    @patch("app.endpoints.oauth2.IdentityAccessManager")
-    @patch("app.endpoints.oauth2.create_user")
-    @patch("app.endpoints.oauth2.generate_redirect_url")
+    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.retrieve_user_info")
+    @patch("app.endpoints.proconnect.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.create_user")
+    @patch("app.endpoints.proconnect.generate_redirect_url")
     async def test_oauth2_callback_new_user(
         self,
         mock_generate_redirect,
@@ -255,13 +255,13 @@ class TestOAuth2Module:
         mock_create_user.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
+    @patch("app.endpoints.proconnect.oauth2")
     async def test_oauth2_callback_missing_sub(self, mock_oauth2, mock_request, mock_session):
         """Test OAuth2 callback with missing subject"""
         mock_token = {"access_token": "access_token"}
         mock_oauth2.authorize_access_token = AsyncMock(return_value=mock_token)
 
-        with patch("app.endpoints.oauth2.retrieve_user_info") as mock_retrieve:
+        with patch("app.endpoints.proconnect.retrieve_user_info") as mock_retrieve:
             mock_retrieve.return_value = {"email": "test@example.com"}  # Missing 'sub'
 
             with pytest.raises(HTTPException) as exc_info:
@@ -270,26 +270,26 @@ class TestOAuth2Module:
             assert exc_info.value.status_code == 400
             assert "Missing subject (sub)" in exc_info.value.detail
 
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.configuration")
     def test_generate_redirect_url_valid_domain(self, mock_config):
         """Test redirect URL generation with valid domain"""
-        mock_config.dependencies.oauth2.allowed_domains = "test-domain.com,localhost"
+        mock_config.dependencies.proconnect.allowed_domains = "test-domain.com,localhost"
 
         mock_request = MagicMock()
         state_data = {"original_url": "https://test-domain.com/app"}
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
 
-        with patch("app.endpoints.oauth2.encrypt_redirect_data") as mock_encrypt:
+        with patch("app.endpoints.proconnect.encrypt_redirect_data") as mock_encrypt:
             mock_encrypt.return_value = "encrypted_token"
 
             result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", state)
 
             assert result == "https://test-domain.com?encrypted_token=encrypted_token"
 
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.configuration")
     def test_generate_redirect_url_invalid_domain(self, mock_config):
         """Test redirect URL generation with invalid domain"""
-        mock_config.dependencies.oauth2.allowed_domains = "allowed-domain.com"
+        mock_config.dependencies.proconnect.allowed_domains = "allowed-domain.com"
 
         mock_request = MagicMock()
         state_data = {"original_url": "https://malicious-domain.com/app"}
@@ -312,11 +312,11 @@ class TestOAuth2Module:
         assert "No original URL found" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.configuration")
     @patch("httpx.AsyncClient")
     async def test_get_jwks_keys_success(self, mock_client_class, mock_config):
         """Test successful JWKS retrieval"""
-        mock_config.dependencies.oauth2.server_metadata_url = "https://provider.com/.well-known"
+        mock_config.dependencies.proconnect.server_metadata_url = "https://provider.com/.well-known"
 
         mock_client = MagicMock()
         mock_client_class.return_value.__aenter__.return_value = mock_client
@@ -349,13 +349,13 @@ class TestOAuth2Module:
         assert result is None
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.get_jwks_keys")
-    @patch("app.endpoints.oauth2.jwt")
-    @patch("app.endpoints.oauth2.jwk")
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.get_jwks_keys")
+    @patch("app.endpoints.proconnect.jwt")
+    @patch("app.endpoints.proconnect.jwk")
+    @patch("app.endpoints.proconnect.configuration")
     async def test_verify_jwt_signature_success(self, mock_config, mock_jwk, mock_jwt, mock_get_jwks):
         """Test successful JWT signature verification"""
-        mock_config.dependencies.oauth2.client_id = "test_client"
+        mock_config.dependencies.proconnect.client_id = "test_client"
 
         mock_get_jwks.return_value = {"keys": [{"kid": "key1", "kty": "RSA", "n": "test", "e": "AQAB"}]}
 
@@ -370,8 +370,8 @@ class TestOAuth2Module:
         assert result == {"sub": "test_user", "aud": "test_client"}
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.get_jwks_keys")
-    @patch("app.endpoints.oauth2.jwt")
+    @patch("app.endpoints.proconnect.get_jwks_keys")
+    @patch("app.endpoints.proconnect.jwt")
     async def test_verify_jwt_signature_fallback(self, mock_jwt, mock_get_jwks):
         """Test JWT verification fallback to unverified claims"""
         mock_get_jwks.return_value = None
@@ -383,9 +383,9 @@ class TestOAuth2Module:
         mock_jwt.get_unverified_claims.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
+    @patch("app.endpoints.proconnect.oauth2")
     @patch("httpx.AsyncClient")
-    @patch("app.endpoints.oauth2.verify_jwt_signature")
+    @patch("app.endpoints.proconnect.verify_jwt_signature")
     async def test_retrieve_user_info_success(self, mock_verify_jwt, mock_client_class, mock_oauth2):
         """Test successful user info retrieval"""
         token = {"access_token": "access_token"}
@@ -409,8 +409,8 @@ class TestOAuth2Module:
         assert result == {"sub": "test_user", "email": "test@example.com"}
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
-    @patch("app.endpoints.oauth2.verify_jwt_signature")
+    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.verify_jwt_signature")
     async def test_retrieve_user_info_fallback_to_id_token(self, mock_verify_jwt, mock_oauth2):
         """Test user info retrieval fallback to ID token"""
         token = {"access_token": "access_token", "id_token": "id_token"}
@@ -432,11 +432,11 @@ class TestOAuth2Module:
             assert result == {"sub": "test_user", "email": "test@example.com"}
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.configuration")
-    @patch("app.endpoints.oauth2.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.configuration")
+    @patch("app.endpoints.proconnect.IdentityAccessManager")
     async def test_create_user_success(self, mock_iam_class, mock_config, mock_session):
         """Test successful user creation"""
-        mock_config.dependencies.oauth2.default_role = "Freemium"
+        mock_config.dependencies.proconnect.default_role = "Freemium"
 
         # Mock role query result
         mock_result = MagicMock()
@@ -458,10 +458,10 @@ class TestOAuth2Module:
         mock_iam.create_user.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.configuration")
     async def test_create_user_no_default_role(self, mock_config, mock_session):
         """Test user creation failure when default role doesn't exist"""
-        mock_config.dependencies.oauth2.default_role = "NonExistentRole"
+        mock_config.dependencies.proconnect.default_role = "NonExistentRole"
 
         # Mock role query returning None
         mock_result = MagicMock()
@@ -477,8 +477,8 @@ class TestOAuth2Module:
         assert "Default role for OAuth user not found" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.request_context")
-    @patch("app.endpoints.oauth2.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.request_context")
+    @patch("app.endpoints.proconnect.IdentityAccessManager")
     async def test_logout_success(self, mock_iam_class, mock_request_context, mock_session, mock_user):
         """Test successful logout"""
         mock_request = MagicMock()
@@ -502,9 +502,9 @@ class TestOAuth2Module:
         mock_iam.invalidate_token.assert_called_once_with(session=mock_session, token_id="token123", user_id=mock_user.id)
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.request_context")
-    @patch("app.endpoints.oauth2.IdentityAccessManager")
-    @patch("app.endpoints.oauth2.perform_proconnect_logout")
+    @patch("app.endpoints.proconnect.request_context")
+    @patch("app.endpoints.proconnect.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.perform_proconnect_logout")
     async def test_logout_with_proconnect_success(self, mock_perform_logout, mock_iam_class, mock_request_context, mock_session, mock_user):
         """Test successful logout with ProConnect"""
         mock_request = MagicMock()
@@ -531,9 +531,9 @@ class TestOAuth2Module:
         mock_perform_logout.assert_called_once_with("proconnect_token")
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.request_context")
-    @patch("app.endpoints.oauth2.IdentityAccessManager")
-    @patch("app.endpoints.oauth2.perform_proconnect_logout")
+    @patch("app.endpoints.proconnect.request_context")
+    @patch("app.endpoints.proconnect.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.perform_proconnect_logout")
     async def test_logout_with_proconnect_failure(self, mock_perform_logout, mock_iam_class, mock_request_context, mock_session, mock_user):
         """Test logout with ProConnect failure"""
         mock_request = MagicMock()
@@ -559,12 +559,12 @@ class TestOAuth2Module:
         assert "ProConnect logout may have failed" in result["message"]
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
-    @patch("app.endpoints.oauth2.configuration")
+    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.configuration")
     @patch("httpx.AsyncClient")
     async def test_perform_proconnect_logout_success(self, mock_client_class, mock_config, mock_oauth2):
         """Test successful ProConnect logout"""
-        mock_config.dependencies.oauth2.client_id = "test_client"
+        mock_config.dependencies.proconnect.client_id = "test_client"
 
         mock_oauth2.server_metadata = {"end_session_endpoint": "https://provider.com/logout"}
 
@@ -583,7 +583,7 @@ class TestOAuth2Module:
         mock_client.post.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
+    @patch("app.endpoints.proconnect.oauth2")
     async def test_perform_proconnect_logout_no_endpoint(self, mock_oauth2):
         """Test ProConnect logout with no end session endpoint"""
         mock_oauth2.server_metadata = {}
@@ -593,7 +593,7 @@ class TestOAuth2Module:
         assert result is False
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.oauth2.oauth2")
+    @patch("app.endpoints.proconnect.oauth2")
     @patch("httpx.AsyncClient")
     async def test_perform_proconnect_logout_failure(self, mock_client_class, mock_oauth2):
         """Test ProConnect logout failure"""
@@ -612,14 +612,14 @@ class TestOAuth2Module:
 
     def test_generate_redirect_url_subdomain_allowed(self):
         """Test redirect URL generation with allowed subdomain"""
-        with patch("app.endpoints.oauth2.configuration") as mock_config:
-            mock_config.dependencies.oauth2.allowed_domains = "gouv.fr"
+        with patch("app.endpoints.proconnect.configuration") as mock_config:
+            mock_config.dependencies.proconnect.allowed_domains = "gouv.fr"
 
             mock_request = MagicMock()
             state_data = {"original_url": "https://api.gouv.fr/app"}
             state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
 
-            with patch("app.endpoints.oauth2.encrypt_redirect_data") as mock_encrypt:
+            with patch("app.endpoints.proconnect.encrypt_redirect_data") as mock_encrypt:
                 mock_encrypt.return_value = "encrypted_token"
 
                 result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", state)
@@ -628,14 +628,14 @@ class TestOAuth2Module:
 
     def test_generate_redirect_url_list_domains(self):
         """Test redirect URL generation with domain list configuration"""
-        with patch("app.endpoints.oauth2.configuration") as mock_config:
-            mock_config.dependencies.oauth2.allowed_domains = ["test-domain.com", "localhost"]
+        with patch("app.endpoints.proconnect.configuration") as mock_config:
+            mock_config.dependencies.proconnect.allowed_domains = ["test-domain.com", "localhost"]
 
             mock_request = MagicMock()
             state_data = {"original_url": "https://test-domain.com/app"}
             state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
 
-            with patch("app.endpoints.oauth2.encrypt_redirect_data") as mock_encrypt:
+            with patch("app.endpoints.proconnect.encrypt_redirect_data") as mock_encrypt:
                 mock_encrypt.return_value = "encrypted_token"
 
                 result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", state)
@@ -644,8 +644,8 @@ class TestOAuth2Module:
 
     def test_generate_redirect_url_malformed_state(self):
         """Test redirect URL generation with malformed state"""
-        with patch("app.endpoints.oauth2.configuration") as mock_config:
-            mock_config.dependencies.oauth2.allowed_domains = "test-domain.com"
+        with patch("app.endpoints.proconnect.configuration") as mock_config:
+            mock_config.dependencies.proconnect.allowed_domains = "test-domain.com"
 
             mock_request = MagicMock()
             malformed_state = "invalid_base64_state"
@@ -659,8 +659,8 @@ class TestOAuth2Module:
     @pytest.mark.asyncio
     async def test_create_user_with_minimal_info(self, mock_session):
         """Test user creation with minimal information"""
-        with patch("app.endpoints.oauth2.configuration") as mock_config:
-            mock_config.dependencies.oauth2.default_role = "Freemium"
+        with patch("app.endpoints.proconnect.configuration") as mock_config:
+            mock_config.dependencies.proconnect.default_role = "Freemium"
 
             # Mock role query result
             mock_result = MagicMock()
