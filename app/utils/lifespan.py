@@ -80,6 +80,12 @@ async def lifespan(app: FastAPI):
         await vector_store.close()
 
     if configuration.dependencies.rabbitmq:
+
+        logger.info("RabbitMQ: shutting down consumers and deleting existing queues.")
+        for router in (await global_context.model_registry.get_router_instances()):
+            await router.rabbitmq_shutdown()
+
+        logger.info("RabbitMQ: closing connection.")
         await AsyncRabbitMQConnection().close()
 
 

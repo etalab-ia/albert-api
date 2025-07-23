@@ -86,10 +86,13 @@ class BaseModelRouter(ABC):
         self.queue = await channel.declare_queue(self.queue_name, robust=True)
 
         # No need to bind as we are using the default_exchange
-        await self.queue.consume(self._dispatch, no_ack=False)
+        consumer_tag = await self.queue.consume(self._dispatch, no_ack=False)
         await self.shutdown_future  # blocked until a 'result' is set
 
+        # Clean shutdown
+        await self.queue.cancel(consumer_tag)
         await self.queue.purge()
+        await self.queue.delete()
         await channel.close()
 
     async def _dispatch(self, message: IncomingMessage):
@@ -108,6 +111,14 @@ class BaseModelRouter(ABC):
                     message=aio_pika.Message(body=ctx.id.encode('utf8')),
                     routing_key=client.queue_name
                 )
+
+    async def rabbitmq_shutdown(self):
+
+        for client in self._providers:
+            await client.rabbitmq_shutdown()
+
+        self.shutdown_future.set_result(True)  # stop coroutine
+        await self._dispatch_task  # wait for complete shutdown
 
     async def as_schema(self, censored: bool = True) -> ModelRouterSchema:
         """
@@ -235,8 +246,7 @@ class BaseModelRouter(ABC):
                         routing_key=self.queue_name
                     )
 
-                client.shutdown_future.set_result(True)  # stop coroutine
-                await client.working_task  # wait for complete shutdown
+                await client.rabbitmq_shutdown()
 
             if len(self._providers) == 0:
                 # No more clients, the ModelRouter is about to get deleted.

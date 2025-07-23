@@ -100,8 +100,12 @@ class BaseModelClient(ABC):
         self.queue = await channel.declare_queue(self.queue_name, robust=True)
 
         # No need to bind as we are using the default_exchange
-        await self.queue.consume(self._rabbitmq_callback, no_ack=False)
-        await self.shutdown_future  # keep this coroutine alive
+        consumer_tag = await self.queue.consume(self._rabbitmq_callback, no_ack=False)
+        await self.shutdown_future  # blocked until a 'result' is set
+
+        # Clean shutdown
+        await self.queue.cancel(consumer_tag)
+        await self.queue.delete()
         await channel.close()
 
     async def _rabbitmq_callback(self, message: IncomingMessage):
@@ -112,6 +116,10 @@ class BaseModelClient(ABC):
                 return
 
             ctx.complete(self)
+
+    async def rabbitmq_shutdown(self):
+        self.shutdown_future.set_result(True)  # stop coroutine
+        await self.working_task  # wait for complete shutdown
 
     @staticmethod
     def import_module(type: ModelProviderType) -> "Type[BaseModelClient]":
