@@ -93,7 +93,7 @@ class TestOAuth2Module:
     @patch("app.endpoints.proconnect.configuration")
     def test_get_fernet_with_default_key(self, mock_config):
         """Test Fernet initialization with default 'changeme' key"""
-        mock_config.dependencies.proconnect.encryption_key = "changeme"
+        mock_config.settings.encryption_key = "changeme"
 
         with patch("app.endpoints.proconnect.logger") as mock_logger:
             fernet = get_fernet()
@@ -107,7 +107,7 @@ class TestOAuth2Module:
         """Test Fernet initialization with custom key"""
         # Generate a proper 32-byte key
         key = base64.urlsafe_b64encode(b"0" * 32).decode()
-        mock_config.dependencies.proconnect.encryption_key = key
+        mock_config.settings.encryption_key = key
 
         fernet = get_fernet()
         assert fernet is not None
@@ -178,14 +178,14 @@ class TestOAuth2Module:
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.oauth2")
     @patch("app.endpoints.proconnect.retrieve_user_info")
-    @patch("app.endpoints.proconnect.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.global_context")
     @patch("app.endpoints.proconnect.create_user")
     @patch("app.endpoints.proconnect.generate_redirect_url")
     async def test_oauth2_callback_existing_user(
         self,
         mock_generate_redirect,
         mock_create_user,
-        mock_iam_class,
+        mock_global_context,
         mock_retrieve_user_info,
         mock_oauth2,
         mock_request,
@@ -203,7 +203,7 @@ class TestOAuth2Module:
         mock_iam = MagicMock()
         mock_iam.get_user = AsyncMock(return_value=mock_user_table)
         mock_iam.refresh_token = AsyncMock(return_value=("token_id", "app_token"))
-        mock_iam_class.return_value = mock_iam
+        mock_global_context.identity_access_manager = mock_iam
 
         mock_generate_redirect.return_value = "https://test-domain.com?encrypted_token=xyz"
         mock_request.query_params = {"state": "encoded_state"}
@@ -217,14 +217,14 @@ class TestOAuth2Module:
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.oauth2")
     @patch("app.endpoints.proconnect.retrieve_user_info")
-    @patch("app.endpoints.proconnect.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.global_context")
     @patch("app.endpoints.proconnect.create_user")
     @patch("app.endpoints.proconnect.generate_redirect_url")
     async def test_oauth2_callback_new_user(
         self,
         mock_generate_redirect,
         mock_create_user,
-        mock_iam_class,
+        mock_global_context,
         mock_retrieve_user_info,
         mock_oauth2,
         mock_request,
@@ -242,7 +242,7 @@ class TestOAuth2Module:
         mock_iam = MagicMock()
         mock_iam.get_user = AsyncMock(return_value=None)  # No existing user
         mock_iam.refresh_token = AsyncMock(return_value=("token_id", "app_token"))
-        mock_iam_class.return_value = mock_iam
+        mock_global_context.identity_access_manager = mock_iam
 
         mock_create_user.return_value = mock_user_table
         mock_generate_redirect.return_value = "https://test-domain.com?encrypted_token=xyz"
@@ -477,9 +477,9 @@ class TestOAuth2Module:
         assert "Default role for OAuth user not found" in exc_info.value.detail
 
     @pytest.mark.asyncio
+    @patch("app.endpoints.proconnect.global_context")
     @patch("app.endpoints.proconnect.request_context")
-    @patch("app.endpoints.proconnect.IdentityAccessManager")
-    async def test_logout_success(self, mock_iam_class, mock_request_context, mock_session, mock_user):
+    async def test_logout_success(self, mock_request_context, mock_global_context, mock_session, mock_user):
         """Test successful logout"""
         mock_request = MagicMock()
 
@@ -491,7 +491,7 @@ class TestOAuth2Module:
         # Mock IAM
         mock_iam = MagicMock()
         mock_iam.invalidate_token = AsyncMock()
-        mock_iam_class.return_value = mock_iam
+        mock_global_context.identity_access_manager = mock_iam
 
         logout_request = OAuth2LogoutRequest(proconnect_token=None)
 
@@ -502,10 +502,10 @@ class TestOAuth2Module:
         mock_iam.invalidate_token.assert_called_once_with(session=mock_session, token_id="token123", user_id=mock_user.id)
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.request_context")
-    @patch("app.endpoints.proconnect.IdentityAccessManager")
     @patch("app.endpoints.proconnect.perform_proconnect_logout")
-    async def test_logout_with_proconnect_success(self, mock_perform_logout, mock_iam_class, mock_request_context, mock_session, mock_user):
+    @patch("app.endpoints.proconnect.global_context")
+    @patch("app.endpoints.proconnect.request_context")
+    async def test_logout_with_proconnect_success(self, mock_request_context, mock_global_context, mock_perform_logout, mock_session, mock_user):
         """Test successful logout with ProConnect"""
         mock_request = MagicMock()
 
@@ -517,7 +517,7 @@ class TestOAuth2Module:
         # Mock IAM
         mock_iam = MagicMock()
         mock_iam.invalidate_token = AsyncMock()
-        mock_iam_class.return_value = mock_iam
+        mock_global_context.identity_access_manager = mock_iam
 
         # Mock ProConnect logout success
         mock_perform_logout.return_value = True
@@ -531,10 +531,10 @@ class TestOAuth2Module:
         mock_perform_logout.assert_called_once_with("proconnect_token")
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.request_context")
-    @patch("app.endpoints.proconnect.IdentityAccessManager")
     @patch("app.endpoints.proconnect.perform_proconnect_logout")
-    async def test_logout_with_proconnect_failure(self, mock_perform_logout, mock_iam_class, mock_request_context, mock_session, mock_user):
+    @patch("app.endpoints.proconnect.global_context")
+    @patch("app.endpoints.proconnect.request_context")
+    async def test_logout_with_proconnect_failure(self, mock_request_context, mock_global_context, mock_perform_logout, mock_session, mock_user):
         """Test logout with ProConnect failure"""
         mock_request = MagicMock()
 
@@ -546,7 +546,7 @@ class TestOAuth2Module:
         # Mock IAM
         mock_iam = MagicMock()
         mock_iam.invalidate_token = AsyncMock()
-        mock_iam_class.return_value = mock_iam
+        mock_global_context.identity_access_manager = mock_iam
 
         # Mock ProConnect logout failure
         mock_perform_logout.return_value = False
