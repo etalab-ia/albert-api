@@ -7,16 +7,20 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.endpoints.proconnect import (
-    get_fernet,
-    encrypt_redirect_data,
     oauth2_login,
     oauth2_callback,
     generate_redirect_url,
+    logout,
+)
+from app.endpoints.proconnect.encryption import (
+    get_fernet,
+    encrypt_redirect_data,
+)
+from app.endpoints.proconnect.token import (
     get_jwks_keys,
     verify_jwt_signature,
     retrieve_user_info,
     create_user,
-    logout,
     perform_proconnect_logout,
 )
 from app.schemas.auth import OAuth2LogoutRequest, User
@@ -90,19 +94,19 @@ class TestOAuth2Module:
         user.sub = "test_sub_id"
         return user
 
-    @patch("app.endpoints.proconnect.configuration")
+    @patch("app.endpoints.proconnect.encryption.configuration")
     def test_get_fernet_with_default_key(self, mock_config):
         """Test Fernet initialization with default 'changeme' key"""
         mock_config.settings.encryption_key = "changeme"
 
-        with patch("app.endpoints.proconnect.logger") as mock_logger:
+        with patch("app.endpoints.proconnect.encryption.logger") as mock_logger:
             fernet = get_fernet()
 
             assert fernet is not None
             mock_logger.warning.assert_called_once()
             assert "Using default encryption key" in mock_logger.warning.call_args[0][0]
 
-    @patch("app.endpoints.proconnect.configuration")
+    @patch("app.endpoints.proconnect.encryption.configuration")
     def test_get_fernet_with_custom_key(self, mock_config):
         """Test Fernet initialization with custom key"""
         # Generate a proper 32-byte key
@@ -112,7 +116,7 @@ class TestOAuth2Module:
         fernet = get_fernet()
         assert fernet is not None
 
-    @patch("app.endpoints.proconnect.configuration")
+    @patch("app.endpoints.proconnect.encryption.configuration")
     def test_get_fernet_invalid_key(self, mock_config):
         """Test Fernet initialization with invalid key"""
         mock_config.dependencies.proconnect.encryption_key = "invalid_key"
@@ -123,7 +127,7 @@ class TestOAuth2Module:
         assert exc_info.value.status_code == 500
         assert "Encryption initialization failed" in exc_info.value.detail
 
-    @patch("app.endpoints.proconnect.get_fernet")
+    @patch("app.endpoints.proconnect.encryption.get_fernet")
     def test_encrypt_redirect_data_success(self, mock_get_fernet):
         """Test successful encryption of redirect data"""
         # Mock Fernet instance
@@ -137,7 +141,7 @@ class TestOAuth2Module:
         assert isinstance(result, str)
         mock_fernet.encrypt.assert_called_once()
 
-    @patch("app.endpoints.proconnect.get_fernet")
+    @patch("app.endpoints.proconnect.encryption.get_fernet")
     def test_encrypt_redirect_data_failure(self, mock_get_fernet):
         """Test encryption failure"""
         mock_get_fernet.side_effect = Exception("Encryption error")
@@ -319,7 +323,7 @@ class TestOAuth2Module:
         assert "No original URL found" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.configuration")
+    @patch("app.endpoints.proconnect.token.configuration")
     @patch("httpx.AsyncClient")
     async def test_get_jwks_keys_success(self, mock_client_class, mock_config):
         """Test successful JWKS retrieval"""
@@ -356,10 +360,10 @@ class TestOAuth2Module:
         assert result is None
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.get_jwks_keys")
-    @patch("app.endpoints.proconnect.jwt")
-    @patch("app.endpoints.proconnect.jwk")
-    @patch("app.endpoints.proconnect.configuration")
+    @patch("app.endpoints.proconnect.token.get_jwks_keys")
+    @patch("app.endpoints.proconnect.token.jwt")
+    @patch("app.endpoints.proconnect.token.jwk")
+    @patch("app.endpoints.proconnect.token.configuration")
     async def test_verify_jwt_signature_success(self, mock_config, mock_jwk, mock_jwt, mock_get_jwks):
         """Test successful JWT signature verification"""
         mock_config.dependencies.proconnect.client_id = "test_client"
@@ -377,8 +381,8 @@ class TestOAuth2Module:
         assert result == {"sub": "test_user", "aud": "test_client"}
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.get_jwks_keys")
-    @patch("app.endpoints.proconnect.jwt")
+    @patch("app.endpoints.proconnect.token.get_jwks_keys")
+    @patch("app.endpoints.proconnect.token.jwt")
     async def test_verify_jwt_signature_fallback(self, mock_jwt, mock_get_jwks):
         """Test JWT verification fallback to unverified claims"""
         mock_get_jwks.return_value = None
@@ -392,7 +396,7 @@ class TestOAuth2Module:
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("httpx.AsyncClient")
-    @patch("app.endpoints.proconnect.verify_jwt_signature")
+    @patch("app.endpoints.proconnect.token.verify_jwt_signature")
     async def test_retrieve_user_info_success(self, mock_verify_jwt, mock_client_class, mock_get_oauth2_client, mock_oauth2_client):
         """Test successful user info retrieval"""
         token = {"access_token": "access_token"}
@@ -418,7 +422,7 @@ class TestOAuth2Module:
 
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.get_oauth2_client")
-    @patch("app.endpoints.proconnect.verify_jwt_signature")
+    @patch("app.endpoints.proconnect.token.verify_jwt_signature")
     async def test_retrieve_user_info_fallback_to_id_token(self, mock_verify_jwt, mock_get_oauth2_client, mock_oauth2_client):
         """Test user info retrieval fallback to ID token"""
         token = {"access_token": "access_token", "id_token": "id_token"}
@@ -441,8 +445,8 @@ class TestOAuth2Module:
             assert result == {"sub": "test_user", "email": "test@example.com"}
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.configuration")
-    @patch("app.endpoints.proconnect.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.token.configuration")
+    @patch("app.endpoints.proconnect.token.IdentityAccessManager")
     async def test_create_user_success(self, mock_iam_class, mock_config, mock_session):
         """Test successful user creation"""
         mock_config.dependencies.proconnect.default_role = "Freemium"
@@ -467,7 +471,7 @@ class TestOAuth2Module:
         mock_iam.create_user.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.configuration")
+    @patch("app.endpoints.proconnect.token.configuration")
     async def test_create_user_no_default_role(self, mock_config, mock_session):
         """Test user creation failure when default role doesn't exist"""
         mock_config.dependencies.proconnect.default_role = "NonExistentRole"
@@ -548,7 +552,7 @@ class TestOAuth2Module:
         mock_perform_logout.assert_called_once_with("proconnect_token", mock_oauth2_client)
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.perform_proconnect_logout")
+    @patch("app.endpoints.proconnect.token.perform_proconnect_logout")
     @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("app.endpoints.proconnect.global_context")
     @patch("app.endpoints.proconnect.request_context")
@@ -581,7 +585,7 @@ class TestOAuth2Module:
 
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.get_oauth2_client")
-    @patch("app.endpoints.proconnect.configuration")
+    @patch("app.endpoints.proconnect.token.configuration")
     @patch("httpx.AsyncClient")
     async def test_perform_proconnect_logout_success(self, mock_client_class, mock_config, mock_get_oauth2_client, mock_oauth2_client):
         """Test successful ProConnect logout"""

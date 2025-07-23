@@ -48,8 +48,6 @@ dependencies:
       host: ${REDIS_HOST:-localhost}
       port: ${REDIS_PORT:-6379}
       password: ${REDIS_PASSWORD:-changeme}
-playground:
-  api_url: http://${API_HOST}:8000
 
 auth:
   master_username: master
