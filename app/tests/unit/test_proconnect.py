@@ -19,9 +19,11 @@ from app.endpoints.proconnect.encryption import (
 from app.endpoints.proconnect.token import (
     get_jwks_keys,
     verify_jwt_signature,
+    perform_proconnect_logout,
+)
+from app.endpoints.proconnect.user import (
     retrieve_user_info,
     create_user,
-    perform_proconnect_logout,
 )
 from app.schemas.auth import OAuth2LogoutRequest, User
 from app.sql.models import User as UserTable
@@ -396,7 +398,7 @@ class TestOAuth2Module:
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("httpx.AsyncClient")
-    @patch("app.endpoints.proconnect.token.verify_jwt_signature")
+    @patch("app.endpoints.proconnect.user.verify_jwt_signature")
     async def test_retrieve_user_info_success(self, mock_verify_jwt, mock_client_class, mock_get_oauth2_client, mock_oauth2_client):
         """Test successful user info retrieval"""
         token = {"access_token": "access_token"}
@@ -422,7 +424,7 @@ class TestOAuth2Module:
 
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.get_oauth2_client")
-    @patch("app.endpoints.proconnect.token.verify_jwt_signature")
+    @patch("app.endpoints.proconnect.user.verify_jwt_signature")
     async def test_retrieve_user_info_fallback_to_id_token(self, mock_verify_jwt, mock_get_oauth2_client, mock_oauth2_client):
         """Test user info retrieval fallback to ID token"""
         token = {"access_token": "access_token", "id_token": "id_token"}
@@ -445,8 +447,8 @@ class TestOAuth2Module:
             assert result == {"sub": "test_user", "email": "test@example.com"}
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.token.configuration")
-    @patch("app.endpoints.proconnect.token.IdentityAccessManager")
+    @patch("app.endpoints.proconnect.user.configuration")
+    @patch("app.endpoints.proconnect.user.IdentityAccessManager")
     async def test_create_user_success(self, mock_iam_class, mock_config, mock_session):
         """Test successful user creation"""
         mock_config.dependencies.proconnect.default_role = "Freemium"
@@ -471,7 +473,7 @@ class TestOAuth2Module:
         mock_iam.create_user.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.token.configuration")
+    @patch("app.endpoints.proconnect.user.configuration")
     async def test_create_user_no_default_role(self, mock_config, mock_session):
         """Test user creation failure when default role doesn't exist"""
         mock_config.dependencies.proconnect.default_role = "NonExistentRole"
@@ -687,7 +689,7 @@ class TestOAuth2Module:
     @pytest.mark.asyncio
     async def test_create_user_with_minimal_info(self, mock_session):
         """Test user creation with minimal information"""
-        with patch("app.endpoints.proconnect.configuration") as mock_config:
+        with patch("app.endpoints.proconnect.user.configuration") as mock_config:
             mock_config.dependencies.proconnect.default_role = "Freemium"
 
             # Mock role query result

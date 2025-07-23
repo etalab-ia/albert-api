@@ -17,7 +17,8 @@ from app.utils.configuration import configuration
 from app.utils.variables import ROUTER__OAUTH2
 
 from .encryption import encrypt_redirect_data
-from .token import retrieve_user_info, create_user, perform_proconnect_logout
+from .token import perform_proconnect_logout
+from .user import retrieve_user_info, create_user
 
 logger = logging.getLogger(__name__)
 
