@@ -16,8 +16,8 @@ jobs:
     name: Build and push from ${{ github.ref_name }}/${{ github.sha }}
     runs-on: ubuntu-latest
     env:
-      APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app
-      UI_IMAGE_NAME: ghcr.io/${{ github.repository }}/ui
+      APP_IMAGE_NAME: ghcr.io/etalab-ia/opengatellm/app
+      UI_IMAGE_NAME: ghcr.io/etalab-ia/opengatellm/ui
       IMAGE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || 'latest' }}
     outputs:
       commit_title: ${{ steps.get_head_commit_title.outputs.title }}
@@ -73,7 +73,7 @@ jobs:
             --form ref=main \
             --form 'variables[pipeline_name]=${{ github.event.repository.name }} - ${{ needs.build-and-push.outputs.commit_title }}' \
             --form 'variables[docker_image_tag]=latest' \
-            --form 'variables[application_to_deploy]=${{ github.event.repository.name }}' \
+            --form 'variables[application_to_deploy]=albert-api' \
             --form 'variables[deployment_environment]=dev' \
             'https://gitlab.com/api/v4/projects/58117805/trigger/pipeline')"
 
