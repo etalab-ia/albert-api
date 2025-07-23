@@ -12,8 +12,8 @@ quickstart_services="api postgres redis playground"
 ci_services="api postgres redis elasticsearch secretiveshell"
 
 quickstart:
-	cp --update=none config.example.yml config.yml
-	cp --update=none .env.example .env
+	@cp --update=none config.example.yml config.yml
+	@cp --update=none .env.example .env
 	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE) services=$(quickstart_services)
 	@echo "API URL: http://localhost:8080"
 	@echo "API token: changeme"

@@ -44,7 +44,10 @@ sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env
     ```bash
     uvicorn app.main:app --port 8080 --log-level debug --reload
     ```
-
+   ⚠️ **Warning :** You might need to remove the api container:
+    ```bash
+    docker compose down api
+    ```
 5. Launch the playground
 
     In another terminal, launch the playground with the following command:
@@ -52,7 +55,10 @@ sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env
     ```bash
     streamlit run ui/main.py --server.port 8501 --theme.base light
     ```
-
+   ⚠️ **Warning :** You might need to remove the playground container:
+    ```bash
+    docker compose down playground
+    ```
     To connect to the playground for the first time, use the login *master* and password *changeme* (defined in the configuration file).
 
 ## Modifications to SQL database structure
