@@ -3,9 +3,9 @@
 
 # OpenGateLLM
 
-[![Version](https://img.shields.io/github/v/release/etalab-ia/albert-api?color=orange&label=version)](https://github.com/etalab-ia/albert-api/releases) 
-[![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/albert-api/refs/heads/main/.github/badges/coverage.json)](https://github.com/etalab-ia/albert-api)
-[![License](https://img.shields.io/github/license/etalab-ia/albert-api?color=red&label=license)](https://github.com/etalab-ia/albert-api/blob/main/LICENSE)
+[![Version](https://img.shields.io/github/v/release/etalab-ia/OpenGateLLM?color=orange&label=version)](https://github.com/etalab-ia/OpenGateLLM/releases) 
+[![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/OpenGateLLM/refs/heads/main/.github/badges/coverage.json)](https://github.com/etalab-ia/OpenGateLLM)
+[![License](https://img.shields.io/github/license/etalab-ia/OpenGateLLM?color=red&label=license)](https://github.com/etalab-ia/OpenGateLLM/blob/main/LICENSE)
 [![French version](https://img.shields.io/badge/🇫🇷-French%20version-blue)](./docs/README_fr.md)
 
 ### *✨ Serve all your self-hosted models in one place and manage your users ✨*
