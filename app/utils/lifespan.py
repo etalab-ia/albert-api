@@ -21,7 +21,6 @@ from app.helpers.models.routers import ModelRouter
 from app.utils.context import global_context
 from app.utils.logging import init_logger
 from app.utils.settings import settings
-from app.helpers._deepsearch import DeepSearchAgent
 
 logger = init_logger(name=__name__)
 
@@ -79,14 +78,36 @@ async def lifespan(app: FastAPI):
     # Global context: documents
 
     ## documents dependancy: web search
-    web_search = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump()) if settings.web_search else None  # fmt: off
-    if web_search:
-        web_search = WebSearchManager(
-            web_search=web_search,
-            model=global_context.models(model=settings.web_search.query_model),
-            limited_domains=settings.web_search.limited_domains,
-            user_agent=settings.web_search.user_agent,
-        )
+    web_search = None
+    if settings.web_search:
+        web_search_client = WebSearchClient.import_module(type=settings.web_search.client.type)(**settings.web_search.client.args.model_dump())
+        
+        # Pour le WebSearchManager, nous devons déterminer quel modèle utiliser
+        # En se basant sur la configuration web_search ou multi_agents
+        web_search_model_id = getattr(settings.web_search, 'query_model', None)
+        if not web_search_model_id:
+            web_search_model_id = os.getenv('WEB_SEARCH_MODEL_ID')
+        if not web_search_model_id and settings.multi_agents_search:
+            web_search_model_id = settings.multi_agents_search.model
+        elif not web_search_model_id and routers:
+            # Utiliser le premier modèle disponible si aucun n'est spécifié
+            web_search_model_id = routers[0].id
+        
+        if web_search_model_id and global_context.models:
+            try:
+                web_search_model = global_context.models(model=web_search_model_id)
+                web_search = WebSearchManager(
+                    web_search=web_search_client,
+                    model=web_search_model,
+                    limited_domains=getattr(settings.web_search, 'limited_domains', None),
+                    user_agent=getattr(settings.web_search, 'user_agent', None)
+                )
+                logger.info(f"✅ WebSearchManager initialized with model {web_search_model_id}")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to initialize WebSearchManager with model {web_search_model_id}: {e}")
+                web_search = None
+        else:
+            logger.warning("⚠️ No model available for WebSearchManager - web search features will be limited")
 
     ## documents dependancy: parser
     parser = ParserClient.import_module(type=settings.parser.type)(**settings.parser.args.model_dump()) if settings.parser else None
@@ -111,46 +132,17 @@ async def lifespan(app: FastAPI):
         multi_agents_reranker_model=multi_agents_reranker_model,
     )
 
-    deepsearch_agent = None
-    try:
-        # Vérifier si WebSearchManager est disponible et configuré
-        if web_search and global_context.models:
-            # Obtenir le modèle pour DeepSearch
-            deepsearch_model_id = os.getenv('DEEPSEARCH_MODEL_ID')
-            
-            # Utiliser le modèle configuré ou le modèle par défaut de multi_agents
-            if not deepsearch_model_id:
-                if settings.multi_agents_search:
-                    deepsearch_model_id = settings.multi_agents_search.model
-                else:
-                    # Utiliser le premier modèle disponible
-                    deepsearch_model_id = routers[0].id if routers else None
-            
-            if deepsearch_model_id:
-                try:
-                    deepsearch_model = global_context.models(model=deepsearch_model_id)
-                    deepsearch_agent = DeepSearchAgent(
-                        model=deepsearch_model,
-                        web_search_manager=web_search  # Utilise votre WebSearchManager
-                    )
-                    logger.info(f"✅ DeepSearch agent initialized with WebSearchManager and model {deepsearch_model_id}")
-                except Exception as e:
-                    logger.warning(f"⚠️ Failed to initialize DeepSearch with model {deepsearch_model_id}: {e}")
-            else:
-                logger.warning("⚠️ No model available for DeepSearch")
-        else:
-            if not web_search:
-                logger.info("ℹ️ Web search not configured - DeepSearch disabled")
-            if not global_context.models:
-                logger.warning("⚠️ No models available for DeepSearch")
-    except Exception as e:
-        logger.error(f"❌ Error initializing DeepSearch: {e}")
-
-    global_context.deepsearch_agent = deepsearch_agent
+    # Log DeepSearch availability
+    if web_search and global_context.models:
+        logger.info("✅ DeepSearch service ready - will create agents on-demand per request")
+    else:
+        if not web_search:
+            logger.info("ℹ️ Web search not configured - DeepSearch disabled")
+        if not global_context.models:
+            logger.warning("⚠️ No models available for DeepSearch")
 
     yield
 
     # cleanup resources when app shuts down
     if vector_store:
         await vector_store.close()
-

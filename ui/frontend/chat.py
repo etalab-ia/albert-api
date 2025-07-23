@@ -125,29 +125,33 @@ with st.sidebar:
     params["sampling_params"]["max_tokens"] = max_tokens if max_tokens_active else None
 
     st.subheader(body="RAG parameters")
-    
-    # NOUVEAU: Gestion du statut DeepSearch
-    deepsearch_status = check_deepsearch_status()
-    if not deepsearch_status.get("available", False):
-        # Retirer deepsearch des options si non disponible
-        available_methods = [m for m in SEARCH_METHODS if m != "deepsearch"]
-        default_index = 0
-        help_text = f"DeepSearch indisponible: {deepsearch_status.get('message', 'Non configuré')}"
-    else:
-        available_methods = SEARCH_METHODS
-        default_index = 0
-        help_text = "DeepSearch disponible pour recherche web approfondie"
+
     
     params["rag_params"]["method"] = st.selectbox(
         label="Search method", 
-        options=available_methods, 
-        index=default_index,
-        help=help_text
+        options=SEARCH_METHODS,  # Garde toutes les méthodes y compris deepsearch
+        index=0,
+        help="DeepSearch = recherche web approfondie avec domaines configurés"
     )
 
-    # NOUVEAU: Paramètres spécifiques à DeepSearch
     if params["rag_params"]["method"] == "deepsearch":
         with st.expander("🔍 Paramètres DeepSearch", expanded=True):
+            # Sélecteur de modèle spécifique pour DeepSearch
+            st.write("**🤖 Modèle pour DeepSearch**")
+            params["rag_params"]["deepsearch_model"] = st.selectbox(
+                "Modèle DeepSearch",
+                options=models,
+                index=models.index(params["sampling_params"]["model"]) if params["sampling_params"]["model"] in models else 0,
+                help="Modèle utilisé pour la génération de requêtes, évaluation et synthèse",
+                key="deepsearch_model_selector"
+            )
+            
+            st.divider()
+            
+            # Information sur les domaines
+            st.info("🔒 **Domaines de recherche :** Configuration par défaut (domaines restreints depuis config.yml)")
+            
+            # Paramètres de recherche
             col1, col2 = st.columns(2)
             with col1:
                 params["rag_params"]["iteration_limit"] = st.number_input(
@@ -180,7 +184,7 @@ with st.sidebar:
                 )
         
         # Note d'information pour DeepSearch
-        st.info("🌐 **DeepSearch** effectue une recherche web approfondie avec évaluation intelligente des sources.")
+        st.info(f"🌐 **DeepSearch** avec **{params['rag_params']['deepsearch_model']}** - Recherche web sur domaines configurés")
         
     else:
         # Paramètres RAG classiques
@@ -236,13 +240,12 @@ with st.sidebar:
 
     # Gestion de l'activation RAG
     if params["rag_params"]["method"] == "deepsearch":
-        rag = st.toggle(label="Activated DeepSearch", value=True, help="DeepSearch effectue une recherche web, pas besoin de collections.")
+        rag = st.toggle(label="Activated DeepSearch", value=True, help="DeepSearch effectue une recherche web avec les domaines configurés.")
     else:
         if st.session_state.selected_collections:
             rag = st.toggle(label="Activated RAG", value=True, disabled=not bool(params["rag_params"]["collections"]))
         else:
             rag = st.toggle(label="Activated RAG", value=False, disabled=True, help="You need to select at least one collection to activate RAG.")
-
     # Section discrète pour les statistiques RAG/DeepSearch
     if rag and (st.session_state.get("rag_chunks") or st.session_state.get("deepsearch_metadata")):
         with st.expander("📊 Statistiques", expanded=False):

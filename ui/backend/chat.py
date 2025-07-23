@@ -5,6 +5,7 @@ import streamlit as st
 
 from ui.settings import settings
 
+
 def generate_stream(messages: List[dict], params: dict, rag: bool, rerank: bool) -> Tuple[str, List[str], List[Dict[str, Any]]]:
     """
     Génère un stream de réponse avec les sources et les détails des chunks utilisés.
@@ -16,22 +17,18 @@ def generate_stream(messages: List[dict], params: dict, rag: bool, rerank: bool)
         - La liste des chunks détaillés utilisés dans le RAG
     """
     sources = []
-    rag_chunks = []  # Nouveau : stockage des chunks détaillés
-    
-    # NOUVEAU: Gestion DeepSearch
+    rag_chunks = []  
     if rag and params["rag_params"]["method"] == "deepsearch":
         return generate_deepsearch_stream(messages, params)
     
-    # Code RAG existant inchangé
     if rag:
         prompt = messages[-1]["content"]
-        # Use "rag_params" instead of "rag"
         k = params["rag_params"]["k"] * 4 if rerank else params["rag_params"]["k"]
         data = {
             "collections": params["rag_params"]["collections"],
             "k": k,
             "prompt": messages[-1]["content"],
-            "method": params["rag_params"]["method"],  # Add method from rag_params
+            "method": params["rag_params"]["method"],  
             "score_threshold": None,
         }
         response = requests.post(
@@ -72,10 +69,8 @@ Les documents sont :
             assert response.status_code == 200, f"{response.status_code} - {response.json()}"
 
             rerank_scores = sorted(response.json()["data"], key=lambda x: x["score"])
-            # Use "rag_params" instead of "rag"
             chunks = [chunks[result["index"]] for result in rerank_scores[: params["rag_params"]["k"]]]
             
-            # Réorganiser les chunks détaillés selon le reranking
             reranked_chunks = []
             for result in rerank_scores[: params["rag_params"]["k"]]:
                 original_chunk = rag_chunks[result["index"]]
@@ -106,13 +101,14 @@ def generate_deepsearch_stream(messages: List[dict], params: dict) -> Tuple[str,
     """
     prompt = messages[-1]["content"]
     
-    # Appel à l'endpoint DeepSearch
     data = {
         "prompt": prompt,
+        "model": params["rag_params"].get("deepsearch_model", params["sampling_params"]["model"]),
         "k": params["rag_params"].get("k", 5),
         "iteration_limit": params["rag_params"].get("iteration_limit", 2),
         "num_queries": params["rag_params"].get("num_queries", 2),
-        "lang": params["rag_params"].get("lang", "fr")
+        "lang": params["rag_params"].get("lang", "fr"),
+        "limited_domains": True  
     }
     
     response = requests.post(
@@ -127,20 +123,16 @@ def generate_deepsearch_stream(messages: List[dict], params: dict) -> Tuple[str,
     
     result = response.json()
     
-    # Extraire les données
     deepsearch_response = result["response"]
     sources = result["sources"]
     metadata = result["metadata"]
     
-    # Stocker les métadonnées dans la session pour affichage
     if "deepsearch_metadata" not in st.session_state:
         st.session_state["deepsearch_metadata"] = []
     st.session_state["deepsearch_metadata"].append(metadata)
     
-    # Pas de chunks pour DeepSearch (recherche web directe)
     rag_chunks = []
     
-    # Retourner directement la réponse (pas de stream pour DeepSearch)
     return deepsearch_response, sources, rag_chunks
 
 
@@ -209,6 +201,8 @@ def format_deepsearch_metadata(metadata: Dict[str, Any]) -> str:
     return f"""
 ### 🔍 Métadonnées DeepSearch
 
+- **Modèle utilisé :** {metadata.get('model_used', 'Unknown')}
+- **Domaines :** Configuration par défaut (domaines restreints)
 - **Temps d'exécution :** {metadata['elapsed_time']:.1f}s
 - **Itérations :** {metadata['iterations']}
 - **Requêtes générées :** {metadata['total_queries']}
