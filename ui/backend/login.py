@@ -102,13 +102,13 @@ def generate_random_password(length: int = 16) -> str:
 
 def oauth_login(session: Session, api_key: str, api_key_id: str):
     """After OAuth2 login, backend will provide api_key and api_key_id in URL parameters and we use it to process the login"""
-    response = requests.get(url=f"{settings.playground.api_url}/users/me", headers={"Authorization": f"Bearer {api_key}"})
+    response = requests.get(url=f"{configuration.playground.api_url}/users/me", headers={"Authorization": f"Bearer {api_key}"})
     if response.status_code != 200:
         st.error(response.json()["detail"])
         st.stop()
     user = response.json()
 
-    response = requests.get(url=f"{settings.playground.api_url}/roles/me", headers={"Authorization": f"Bearer {api_key}"})
+    response = requests.get(url=f"{configuration.playground.api_url}/roles/me", headers={"Authorization": f"Bearer {api_key}"})
     if response.status_code != 200:
         st.error(response.json()["detail"])
         st.stop()
