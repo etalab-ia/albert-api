@@ -95,6 +95,9 @@ class BaseModelClient(ABC):
             self.working_task = AsyncRabbitMQConnection().consumer_loop.create_task(self._rabbitmq_worker())
 
     async def _rabbitmq_worker(self):
+        """
+        The working consumer's coroutine.
+        """
         channel = await AsyncRabbitMQConnection().connection.channel()
         await channel.set_qos(prefetch_count=1)
         self.queue = await channel.declare_queue(self.queue_name, robust=True)
@@ -109,15 +112,19 @@ class BaseModelClient(ABC):
         await channel.close()
 
     async def _rabbitmq_callback(self, message: IncomingMessage):
+        """
+        RabbitMQ consumer callback: triggers whenever a message is received on the concerned queue.
+        """
         async with message.process():
             content = message.body.decode('utf8')
             ctx = await self.pop_context(content)
             if ctx is None:
                 return
 
-            ctx.complete(self)
+            ctx.complete(self)  # Execute the user's request.
 
     async def rabbitmq_shutdown(self):
+        """Cleanly shuts down the consumer coroutine"""
         self.shutdown_future.set_result(True)  # stop coroutine
         await self.working_task  # wait for complete shutdown
 
@@ -191,14 +198,23 @@ class BaseModelClient(ABC):
         )
 
     async def register_context(self, req_ctx: WorkingContext):
+        """Adds a WorkingContext to instance's register."""
         async with self._context_lock:  # We use a different lock as this operation has nothing to do with other fields
             self._context_register[req_ctx.id] = req_ctx
 
     async def pop_context(self, ctx_id: str) -> WorkingContext | None:
+        """
+        Pops (= gets and deletes) a WorkingContext to instance's register.
+        Returns None if the given id was not found.
+        """
         async with self._context_lock:
             return self._context_register.pop(ctx_id, None)
 
     async def get_context(self, ctx_id: str) -> WorkingContext | None:
+        """
+        Gets a WorkingContext to instance's register.
+        Returns None if the given id was not found.
+        """
         async with self._context_lock:
             return self._context_register.get(ctx_id, None)
 

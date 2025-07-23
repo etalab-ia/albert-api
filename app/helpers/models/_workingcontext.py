@@ -12,8 +12,19 @@ if TYPE_CHECKING:
 
 
 class WorkingContext:
+    """
+    When RabbitMQ is enabled, the user request does not travel the API's layers in a classical way:
+      the request is sent through the queue, and get caught by consumers, using callback architectures.
+    It would be way too complex, rigid and inefficient to pass the request itself through RabbitMQ,  so it is
+      represented as a unique uuid4. But once the request is about to get executed, the API needs its actual content
+      and context, specifically the handler the user gave.
+    To reconcile both sides (a simple message vs a complex and abstract request), the user adds its handler and
+      its (thread) context to a register, managed by the objects that, on the other hand, consume a queue
+      (ModelRouter and ModelClient). This way, when the consumer callback is called, it gets request content
+      through this inner register.
 
-    SHUTDOWN_MESSAGE = "shutdown"
+    This class gathers both the context and the content of the user's request.
+    """
 
     def __init__[R](
         self,
@@ -25,12 +36,13 @@ class WorkingContext:
 
         self.id = str(uuid4())
 
-        self.loop = asyncio.get_running_loop()  # get the loop the RequestContext was created in
+        self.loop = asyncio.get_running_loop()  # get the loop the WorkingContext was created in
         self.result = self.loop.create_future()
 
     def _get_callback(self, client: "BaseModelClient"):
         """
-        Returns a synchronous callback, and adapts when the handler is async.
+        Returns a synchronous callback that executes the handler and sets its result.
+            It adapts when the handler is async.
         """
         if inspect.iscoroutinefunction(self.handler):
             def _shim():
@@ -57,6 +69,9 @@ class WorkingContext:
 
 
     def complete(self, client: "BaseModelClient"):
+        """
+        Completes the request, ie executes the handler, in the right thread.
+        """
         if self.loop.is_closed():
             return
 

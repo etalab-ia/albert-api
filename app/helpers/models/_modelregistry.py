@@ -284,7 +284,23 @@ class ModelRegistry:
         router_id: str,
         endpoint: str,
         handler: Callable[["BaseModelClient"], Union[R, Awaitable[R]]]
-    ):
+    ) -> R:
+        """
+        Execute an endpoint's request at the right location.
+            If RabbitMQ is enabled, it passes the request to the right queue, and wait for the result.
+            If not, it directly gets a ModelClient to send the request.
+
+        In both case, this method is thread-safe, and should be the main way to send a request to a
+          remote LLM and retrieve the result.
+
+        Args:
+              router_id(str): the ModelRouter name the end user wants to access.
+              endpoint(str): the AI API endpoint to send the request to.
+              handler(callable): A callback that, given a ModelClient, returns the wished result.
+                It describes the actual "work" to be done.
+
+        Returns: Whatever the handler returns.
+        """
 
         # We lock to prevent any race condition while working
         async with self._lock:
