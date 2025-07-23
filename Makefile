@@ -19,14 +19,14 @@ quickstart:
 quickstart-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE)
 
-docker-compose-albert-api-up:
+docker-compose-opengatellm-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
 
-docker-compose-albert-api-down env-services-down:
+docker-compose-opengatellm-down env-services-down:
 	@$(MAKE) --silent .docker-compose-down env_file=$(APP_ENV_FILE)
 
 env-services-up:
-	@$(MAKE) --silent docker-compose-albert-api-up services=$(external_services)
+	@$(MAKE) --silent docker-compose-opengatellm-up services=$(external_services)
 
 env-test-services-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(TEST_ENV_FILE) services=$(external_services)
@@ -41,7 +41,7 @@ env-ci-up:
 	@if [ ! -f .github/.env.ci ]; then \
 		cp .env.example .github/.env.ci; \
 		sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
-		sed -i 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=albert-api-ci/' .github/.env.ci; \
+		sed -i 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=opengatellm-ci/' .github/.env.ci; \
 	fi
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach
 
@@ -92,4 +92,4 @@ create-user:
 
 setup: install configuration install-lint env-services-up db-app-migrate db-ui-migrate
 
-.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ lint setup docker-compose-albert-api-up docker-compose-albert-api-down env-services-down env-services-up env-test-services-up env-test-services-down quickstart env-ci-up env-ci-down
+.PHONY: run-api run-ui db-app-migrate db-ui-migrate test-all test-unit test-integ lint setup docker-compose-opengatellm-up docker-compose-opengatellm-down env-services-down env-services-up env-test-services-up env-test-services-down quickstart env-ci-up env-ci-down

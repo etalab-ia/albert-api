@@ -1,7 +1,7 @@
 [project]
-name = "albert-api"
+name = "opengatellm"
 version = "0.1.6"
-description = "Albert API projects"
+description = "OpenGateLLM project"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 dependencies = [

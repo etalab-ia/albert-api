@@ -29,6 +29,7 @@ class Playground(ConfigBaseModel):
     logo: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"
     cache_ttl: int = 1800  # 30 minutes
     postgres: dict = {}
+    default_model: Optional[str] = "albert-small"
 
     @field_validator("postgres", mode="after")
     def validate_postgres(cls, postgres):
