@@ -4,7 +4,9 @@ To contribute to the project, please follow the instructions below.
 
 ## Development environment
 
-1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)* with your models.
+It is recommended to use a Python [virtualenv](https://docs.python.org/3/library/venv.html).
+
+1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)*. You can use the default testbed model or configure your own models.
 
 ```bash
 cp config.example.yml config.yml
