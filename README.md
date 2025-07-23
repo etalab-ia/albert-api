@@ -103,8 +103,8 @@ With configuration file, you can connect to your own models and add addtionnal s
 Start by creating a configuration file and a .env dedicated:
 
 ```bash
-cp config.example.yml config.yml && export CONFIG_FILE=./config.yml
-cp .env.example .env && export APP_ENV_FILE=.env
+cp --update=none config.example.yml config.yml
+cp --update=none .env.example .env
 ```
 
 Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.

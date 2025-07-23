@@ -7,16 +7,26 @@ To contribute to the project, please follow the instructions below.
 1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)* with your models.
 
 ```bash
-cp config.example.yml config.yml && export CONFIG_FILE=./config.yml
-cp .env.example .env && export APP_ENV_FILE=.env
+cp config.example.yml config.yml
+cp .env.example .env
 ```
 
 Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.
 
     > **❗️Note**<br>
-    > The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can use it as inspiration to configure your own configuration file.
+    > The configuration file for running tests is [config.test.yml](app/tests/integ/config.test.yml). You can use it as inspiration to configure your own configuration file.
 
-2. Set up dependencies
+2. Update all the `_HOST` variables:
+```bash
+sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+```
+
+   > If you need to revert your changes:
+   > ```bash
+   > sed -i 's/^\([A-Z_]*\)_HOST=localhost/\1_HOST=\L\1/' .env
+   > ```
+
+3. Set up dependencies
 
     ```bash
     docker compose --env-file .env up postgres redis elasticsearch secretiveshell --detach 
@@ -27,13 +37,13 @@ Check the [configuration documentation](./docs/configuration.md) to configure yo
     alembic -c ui/alembic.ini upgrade head # create the Playground tables
     ```
 
-3. Launch the API
+4. Launch the API
 
     ```bash
     uvicorn app.main:app --port 8080 --log-level debug --reload
     ```
 
-4. Launch the playground
+5. Launch the playground
 
     In another terminal, launch the playground with the following command:
 
@@ -94,33 +104,37 @@ docker exec opengatellm-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
     cp .env.example .env.test
     make env-test-services-up
     ```
-   
-2. Install the python packages:
+2. Update all the `_HOST` variables:
+```bash
+sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+```
+
+3. Install the python packages:
 
    ```bash
    make install
    ```
 
-3. To run the unit and integration tests together:
+4. To run the unit and integration tests together:
 
     ```bash
     make test-all
     ```
    
-4. To run the unit tests:
+5. To run the unit tests:
 
     ```bash
     make test-unit
     ```
  
-5. To run the integration tests:
+6. To run the integration tests:
 
     ```bash
     make test-integ
     ```
 
 
-6. To update the snapshots, run the following command:
+7. To update the snapshots, run the following command:
 
     ```bash
     CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
@@ -210,7 +224,7 @@ make install
 
 OpenGateLLM supports OpenAI and OpenGateLLM models, defined in the `config.yml` file :
 ```bash
-cp config.example.yml config.yml
+cp  config.example.yml config.yml
 ```
 
 And modify the `models` section in the `config.yml` file:
@@ -263,7 +277,11 @@ make docker-compose-opengatellm-down
 ```
 
 #### Option 2: Local development
-
+Update all the `_HOST` variables in `.env` file:
+```bash
+sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+```
+Then, run the following commands:
 ```bash
 # 1. Start only external services (Redis, Qdrant, PostgreSQL, MCP Bridge)
 make docker-compose-services-up
