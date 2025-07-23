@@ -5,13 +5,13 @@ services:
   api:
     image: ghcr.io/etalab-ia/opengatellm/app:latest
     restart: always
-    env_file: "${APP_ENV_FILE:-./.env.example}"
+    env_file: "${APP_ENV_FILE:-./.env}"
     environment:
       - "CONFIG_FILE=config.yml" # inside the container, do not change this line
     ports:
       - 8080:8080
     volumes:
-      - "${CONFIG_FILE:-./config.example.yml}:/config.yml:ro" # outside the container, do not change this line
+      - "${CONFIG_FILE:-./config.yml}:/config.yml:ro" # outside the container, do not change this line
     depends_on:
       redis:
         condition: service_healthy
@@ -31,7 +31,7 @@ services:
     ports:
       - 8081:8501
     volumes:
-      - "./${CONFIG_FILE:-config.example.yml}:/config.yml:ro"
+      - "./${CONFIG_FILE:-config.yml}:/config.yml:ro"
     depends_on:
       postgres:
         condition: service_healthy

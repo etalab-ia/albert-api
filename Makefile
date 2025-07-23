@@ -12,12 +12,18 @@ quickstart_services="api postgres redis playground"
 ci_services="api postgres redis elasticsearch secretiveshell"
 
 quickstart:
-	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
+	cp --update=none config.example.yml config.yml
+	cp --update=none .env.example .env
+	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE) services=$(quickstart_services)
 	@echo "API URL: http://localhost:8080"
+	@echo "API token: changeme"
 	@echo "Playground URL: http://localhost:8081/playground"
+	@echo "Playground user: master"
+	@echo "Playground password: changeme"
+
 
 quickstart-down:
-	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE)
+	@$(MAKE) --silent .docker-compose-down env_file=$(APP_ENV_FILE)
 
 docker-compose-opengatellm-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
