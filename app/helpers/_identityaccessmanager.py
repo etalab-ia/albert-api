@@ -535,14 +535,5 @@ class IdentityAccessManager:
 
         # Build query with OR conditions
         query = select(UserTable).where(or_(*conditions))
-
         result = await session.execute(query)
-        user = result.scalar_one_or_none()
-
-        # Check expiration using Python datetime comparison : disabled because ProConnect returns an expiration of 1 minute
-        # if user and user.expires_at:
-        #     current_time = datetime.now(timezone.utc)
-        #     if user.expires_at.replace(tzinfo=timezone.utc) < current_time:
-        #         return None
-
-        return user
+        return result.scalar_one_or_none()
