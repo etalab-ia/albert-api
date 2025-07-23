@@ -1,5 +1,6 @@
 import pytest
 import json
+import time
 import base64
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import HTTPException, Request
@@ -217,7 +218,7 @@ class TestProConnect:
 
         mock_generate_redirect.return_value = "https://test-domain.com?encrypted_token=xyz"
         # Create a valid base64-encoded state
-        state_data = {"original_url": "https://test-domain.com/app"}
+        state_data = {"original_url": "https://test-domain.com/app", "timestamp": int(time.time())}
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
         mock_request.query_params = {"state": state}
 
@@ -262,7 +263,7 @@ class TestProConnect:
         mock_create_user.return_value = mock_user_table
         mock_generate_redirect.return_value = "https://test-domain.com?encrypted_token=xyz"
         # Create a valid base64-encoded state
-        state_data = {"original_url": "https://test-domain.com/app"}
+        state_data = {"original_url": "https://test-domain.com/app", "timestamp": int(time.time())}
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
         mock_request.query_params = {"state": state}
 
@@ -281,7 +282,7 @@ class TestProConnect:
         mock_get_oauth2_client.return_value = mock_oauth2_client
 
         # Create a valid base64-encoded state to pass the initial validation
-        state_data = {"original_url": "https://test-domain.com/app"}
+        state_data = {"original_url": "https://test-domain.com/app", "timestamp": int(time.time())}
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
         mock_request.query_params = {"state": state}
 

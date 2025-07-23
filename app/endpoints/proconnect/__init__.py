@@ -78,22 +78,13 @@ def generate_redirect_url(request, app_token, token_id, proconnect_token, origin
 @router.get(f"/{ROUTER__OAUTH2}/login")
 async def oauth2_login(request: Request, oauth2_client=Depends(get_oauth2_client)):
     """
-    Initiate the OAuth2 login flow with ProConnect
+    Initiate the OAuth2 login flow with ProConnect with time-stamped state to invalidate old requests
     """
     try:
-        # Use the configured redirect URL rather than generating it dynamically
         redirect_uri = configuration.dependencies.proconnect.redirect_uri
-
-        # Get the original URL from the referer header or a query parameter
         original_url = request.headers.get("referer") or request.query_params.get("origin")
-
-        # Encode the original URL in the state parameter for security
         state_data = {"original_url": original_url, "timestamp": int(time.time())}
-
-        # Base64 encode the state to pass it safely
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
-
-        # Try to explicitly pass the scope
         redirect_response = await oauth2_client.authorize_redirect(
             request,
             redirect_uri,
@@ -112,13 +103,23 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
     """
     Handle OAuth2 callback from ProConnect
     """
-    # Try to decode the state parameter to get the original URL
+    # Try to decode the state parameter to get the original URL and validate timestamp
     try:
-        # Get the state parameter
         state = request.query_params.get("state")
         decoded_state = base64.urlsafe_b64decode(state.encode()).decode()
         state_data = json.loads(decoded_state)
         original_url = state_data.get("original_url")
+        timestamp = state_data.get("timestamp")
+        if timestamp is None:
+            raise HTTPException(status_code=400, detail="Missing timestamp in state parameter")
+        current_time = int(time.time())
+        # Allow a 10-minute window for the OAuth2 flow to complete
+        timestamp_expiry = 600  # 10 minutes in seconds
+        if current_time - timestamp > timestamp_expiry:
+            raise HTTPException(status_code=400, detail="OAuth2 request has expired. Please try again.")
+
+    except HTTPException:
+        raise  # Re-raise HTTPException as-is
     except Exception as e:
         logger.error(f"Could not decode state parameter: {e}")
         raise HTTPException(status_code=400, detail="No original URL found in state or request")
@@ -129,10 +130,7 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
         user_info = await retrieve_user_info(token, oauth2_client)
 
         # Extract user information
-        sub = user_info.get("sub")
-        email = user_info.get("email")
-        given_name = user_info.get("given_name")
-        usual_name = user_info.get("usual_name")
+        sub, email, given_name, usual_name = (user_info.get(key) for key in ("sub", "email", "given_name", "usual_name"))
 
         # Verify required information
         if not sub:
