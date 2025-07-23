@@ -29,8 +29,8 @@ from app.schemas.auth import OAuth2LogoutRequest, User
 from app.sql.models import User as UserTable
 
 
-class TestOAuth2Module:
-    """Test suite for OAuth2 module functionality"""
+class TestProConnect:
+    """Test suite for ProConnect module functionality"""
 
     @pytest.fixture
     def mock_config(self):
