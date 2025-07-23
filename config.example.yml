@@ -35,7 +35,7 @@ dependencies:
         statement_timeout: "120s"
       command_timeout: 60
 
-  oauth2:
+  proconnect:
     client_id: ${PROCONNECT_CLIENT_ID}
     client_secret: ${PROCONNECT_CLIENT_SECRET}
     server_metadata_url: ${PROCONNECT_SERVER_METADATA_URL}
@@ -135,5 +135,6 @@ playground:
   api_url: http://${API_HOST:-localhost}:8080
   postgres:
     url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/playground
+  encryption_key: ${ENCRYPTION_KEY}  # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
   # auth_master_username: master # optional - default: master
   # auth_master_key: changeme # optional - default: changeme
