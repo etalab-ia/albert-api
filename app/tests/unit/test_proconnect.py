@@ -216,7 +216,10 @@ class TestProConnect:
         mock_global_context.identity_access_manager = mock_iam
 
         mock_generate_redirect.return_value = "https://test-domain.com?encrypted_token=xyz"
-        mock_request.query_params = {"state": "encoded_state"}
+        # Create a valid base64-encoded state
+        state_data = {"original_url": "https://test-domain.com/app"}
+        state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
+        mock_request.query_params = {"state": state}
 
         result = await oauth2_callback(mock_request, mock_session, mock_oauth2_client)
 
@@ -258,7 +261,10 @@ class TestProConnect:
 
         mock_create_user.return_value = mock_user_table
         mock_generate_redirect.return_value = "https://test-domain.com?encrypted_token=xyz"
-        mock_request.query_params = {"state": "encoded_state"}
+        # Create a valid base64-encoded state
+        state_data = {"original_url": "https://test-domain.com/app"}
+        state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
+        mock_request.query_params = {"state": state}
 
         result = await oauth2_callback(mock_request, mock_session, mock_oauth2_client)
 
@@ -273,6 +279,11 @@ class TestProConnect:
         mock_token = {"access_token": "access_token"}
         mock_oauth2_client.authorize_access_token = AsyncMock(return_value=mock_token)
         mock_get_oauth2_client.return_value = mock_oauth2_client
+
+        # Create a valid base64-encoded state to pass the initial validation
+        state_data = {"original_url": "https://test-domain.com/app"}
+        state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
+        mock_request.query_params = {"state": state}
 
         with patch("app.endpoints.proconnect.retrieve_user_info") as mock_retrieve:
             mock_retrieve.return_value = {"email": "test@example.com"}  # Missing 'sub'
@@ -289,13 +300,12 @@ class TestProConnect:
         mock_config.dependencies.proconnect.allowed_domains = "test-domain.com,localhost"
 
         mock_request = MagicMock()
-        state_data = {"original_url": "https://test-domain.com/app"}
-        state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
+        original_url = "https://test-domain.com/app"
 
         with patch("app.endpoints.proconnect.encrypt_redirect_data") as mock_encrypt:
             mock_encrypt.return_value = "encrypted_token"
 
-            result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", state)
+            result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", original_url)
 
             assert result == "https://test-domain.com?encrypted_token=encrypted_token"
 
@@ -313,16 +323,6 @@ class TestProConnect:
 
         assert exc_info.value.status_code == 400
         assert "Invalid domain" in exc_info.value.detail
-
-    def test_generate_redirect_url_no_original_url(self):
-        """Test redirect URL generation without original URL in state"""
-        mock_request = MagicMock()
-
-        with pytest.raises(HTTPException) as exc_info:
-            generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", None)
-
-        assert exc_info.value.status_code == 400
-        assert "No original URL found" in exc_info.value.detail
 
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.token.configuration")
@@ -646,45 +646,29 @@ class TestProConnect:
             mock_config.dependencies.proconnect.allowed_domains = "gouv.fr"
 
             mock_request = MagicMock()
-            state_data = {"original_url": "https://api.gouv.fr/app"}
-            state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
+            original_url = "https://api.gouv.fr/app"
 
             with patch("app.endpoints.proconnect.encrypt_redirect_data") as mock_encrypt:
                 mock_encrypt.return_value = "encrypted_token"
 
-                result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", state)
+                result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", original_url)
 
                 assert result == "https://api.gouv.fr?encrypted_token=encrypted_token"
 
     def test_generate_redirect_url_list_domains(self):
         """Test redirect URL generation with domain list configuration"""
         with patch("app.endpoints.proconnect.configuration") as mock_config:
-            mock_config.dependencies.proconnect.allowed_domains = ["test-domain.com", "localhost"]
+            mock_config.dependencies.proconnect.allowed_domains = "test-domain.com,localhost"
 
             mock_request = MagicMock()
-            state_data = {"original_url": "https://test-domain.com/app"}
-            state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
+            original_url = "https://test-domain.com/app"
 
             with patch("app.endpoints.proconnect.encrypt_redirect_data") as mock_encrypt:
                 mock_encrypt.return_value = "encrypted_token"
 
-                result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", state)
+                result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", original_url)
 
                 assert result == "https://test-domain.com?encrypted_token=encrypted_token"
-
-    def test_generate_redirect_url_malformed_state(self):
-        """Test redirect URL generation with malformed state"""
-        with patch("app.endpoints.proconnect.configuration") as mock_config:
-            mock_config.dependencies.proconnect.allowed_domains = "test-domain.com"
-
-            mock_request = MagicMock()
-            malformed_state = "invalid_base64_state"
-
-            with pytest.raises(HTTPException) as exc_info:
-                generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", malformed_state)
-
-            assert exc_info.value.status_code == 400
-            assert "No original URL found" in exc_info.value.detail
 
     @pytest.mark.asyncio
     async def test_create_user_with_minimal_info(self, mock_session):

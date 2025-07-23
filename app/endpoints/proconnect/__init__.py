@@ -50,51 +50,20 @@ def get_oauth2_client():
     return _oauth2_client
 
 
-def generate_redirect_url(request, app_token, token_id, proconnect_token, state=None):
+def generate_redirect_url(request, app_token, token_id, proconnect_token, original_url=None):
     """
     Generate redirect URL with domain validation and token encryption
     """
-    original_url = None
-
-    # Try to decode the state parameter to get the original URL
-    if state:
-        try:
-            decoded_state = base64.urlsafe_b64decode(state.encode()).decode()
-            state_data = json.loads(decoded_state)
-            original_url = state_data.get("original_url")
-        except Exception as e:
-            logger.warning(f"Could not decode state parameter: {e}")
-
-    # If we have an original URL, use it; otherwise fallback to current request
-    if original_url:
-        parsed_url = urlparse(original_url)
-    else:
-        raise HTTPException(status_code=400, detail="No original URL found in state or request")
-
+    parsed_url = urlparse(original_url)
     request_domain = parsed_url.netloc.split(":")[0]  # Extract domain without port
 
     # Get allowed domains from configuration and parse them if it's a string
     allowed_domains_config = configuration.dependencies.proconnect.allowed_domains
-    if isinstance(allowed_domains_config, str):
-        # Split the comma-separated string and strip whitespace
-        allowed_domains = [domain.strip() for domain in allowed_domains_config.split(",")]
-    else:
-        # Assume it's already a list
-        allowed_domains = allowed_domains_config
+    # Split the comma-separated string and strip whitespace
+    allowed_domains = [domain.strip() for domain in allowed_domains_config.split(",")]
 
     # Check if the request domain or its parent domain is allowed
-    domain_allowed = False
-    for allowed_domain in allowed_domains:
-        # Exact match
-        if request_domain == allowed_domain:
-            domain_allowed = True
-            break
-            # Subdomain match (e.g., api.gouv.fr matches gouv.fr)
-        if request_domain.endswith(f".{allowed_domain}"):
-            domain_allowed = True
-            break
-
-    if not domain_allowed:
+    if not any(request_domain == allowed_domain or request_domain.endswith(f".{allowed_domain}") for allowed_domain in allowed_domains):
         raise HTTPException(status_code=400, detail=f"Invalid domain: {request_domain} not in allowed domains or their subdomains")
 
     # Encrypt the tokens into a single parameter
@@ -149,8 +118,14 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
 
         # Get the state parameter
         state = request.query_params.get("state")
-
-        logger.debug(f"Token: {token}")
+        # Try to decode the state parameter to get the original URL
+        try:
+            decoded_state = base64.urlsafe_b64decode(state.encode()).decode()
+            state_data = json.loads(decoded_state)
+            original_url = state_data.get("original_url")
+        except Exception as e:
+            logger.error(f"Could not decode state parameter: {e}")
+            raise HTTPException(status_code=400, detail="No original URL found in state or request")
 
         # Retrieve user information via oauth2.userinfo()
         user_info = await retrieve_user_info(token, oauth2_client)
@@ -180,7 +155,7 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
         proconnect_token = token.get("id_token", "")
 
         # Validate the origin of the request with state information
-        redirect_url = generate_redirect_url(request, app_token, token_id, proconnect_token, state=state)
+        redirect_url = generate_redirect_url(request, app_token, token_id, proconnect_token, original_url)
         return RedirectResponse(url=redirect_url)
     except Exception as e:
         logger.exception(f"General error: {e}")
