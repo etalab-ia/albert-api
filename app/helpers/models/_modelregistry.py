@@ -6,7 +6,6 @@ import aio_pika
 from app.helpers.models._workingcontext import WorkingContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.clients.model import BaseModelClient
 from app.schemas.core.configuration import RoutingStrategy
 from app.schemas.models import Model as ModelSchema, ModelType
 from app.utils.configuration import configuration
