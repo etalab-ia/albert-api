@@ -149,34 +149,36 @@ class TestOAuth2Module:
         assert "Encryption failed" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("app.endpoints.proconnect.configuration")
-    async def test_oauth2_login_success(self, mock_config, mock_oauth2, mock_request):
+    async def test_oauth2_login_success(self, mock_config, mock_get_oauth2_client, mock_request, mock_oauth2_client):
         """Test successful OAuth2 login initiation"""
         mock_config.dependencies.proconnect.redirect_uri = "https://test-app.com/callback"
         mock_config.dependencies.proconnect.scope = "openid,email"
 
-        mock_oauth2.authorize_redirect = AsyncMock(return_value=RedirectResponse(url="https://provider.com/auth"))
+        mock_oauth2_client.authorize_redirect = AsyncMock(return_value=RedirectResponse(url="https://provider.com/auth"))
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
-        result = await oauth2_login(mock_request)
+        result = await oauth2_login(mock_request, mock_oauth2_client)
 
         assert isinstance(result, RedirectResponse)
-        mock_oauth2.authorize_redirect.assert_called_once()
+        mock_oauth2_client.authorize_redirect.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
-    async def test_oauth2_login_failure(self, mock_oauth2, mock_request):
+    @patch("app.endpoints.proconnect.get_oauth2_client")
+    async def test_oauth2_login_failure(self, mock_get_oauth2_client, mock_request, mock_oauth2_client):
         """Test OAuth2 login failure"""
-        mock_oauth2.authorize_redirect.side_effect = Exception("OAuth2 error")
+        mock_oauth2_client.authorize_redirect.side_effect = Exception("OAuth2 error")
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
         with pytest.raises(HTTPException) as exc_info:
-            await oauth2_login(mock_request)
+            await oauth2_login(mock_request, mock_oauth2_client)
 
         assert exc_info.value.status_code == 400
         assert "OAuth2 login failed" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("app.endpoints.proconnect.retrieve_user_info")
     @patch("app.endpoints.proconnect.global_context")
     @patch("app.endpoints.proconnect.create_user")
@@ -187,15 +189,17 @@ class TestOAuth2Module:
         mock_create_user,
         mock_global_context,
         mock_retrieve_user_info,
-        mock_oauth2,
+        mock_get_oauth2_client,
         mock_request,
         mock_session,
         mock_user_table,
+        mock_oauth2_client,
     ):
         """Test OAuth2 callback with existing user"""
         # Setup mocks
         mock_token = {"access_token": "access_token", "id_token": "id_token"}
-        mock_oauth2.authorize_access_token = AsyncMock(return_value=mock_token)
+        mock_oauth2_client.authorize_access_token = AsyncMock(return_value=mock_token)
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
         mock_user_info = {"sub": "test_sub", "email": "test@example.com", "given_name": "John", "usual_name": "Doe"}
         mock_retrieve_user_info.return_value = mock_user_info
@@ -208,14 +212,14 @@ class TestOAuth2Module:
         mock_generate_redirect.return_value = "https://test-domain.com?encrypted_token=xyz"
         mock_request.query_params = {"state": "encoded_state"}
 
-        result = await oauth2_callback(mock_request, mock_session)
+        result = await oauth2_callback(mock_request, mock_session, mock_oauth2_client)
 
         assert isinstance(result, RedirectResponse)
         mock_iam.get_user.assert_called_once()
         mock_create_user.assert_not_called()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("app.endpoints.proconnect.retrieve_user_info")
     @patch("app.endpoints.proconnect.global_context")
     @patch("app.endpoints.proconnect.create_user")
@@ -226,15 +230,17 @@ class TestOAuth2Module:
         mock_create_user,
         mock_global_context,
         mock_retrieve_user_info,
-        mock_oauth2,
+        mock_get_oauth2_client,
         mock_request,
         mock_session,
         mock_user_table,
+        mock_oauth2_client,
     ):
         """Test OAuth2 callback with new user creation"""
         # Setup mocks
         mock_token = {"access_token": "access_token", "id_token": "id_token"}
-        mock_oauth2.authorize_access_token = AsyncMock(return_value=mock_token)
+        mock_oauth2_client.authorize_access_token = AsyncMock(return_value=mock_token)
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
         mock_user_info = {"sub": "test_sub", "email": "test@example.com", "given_name": "John", "usual_name": "Doe"}
         mock_retrieve_user_info.return_value = mock_user_info
@@ -248,24 +254,25 @@ class TestOAuth2Module:
         mock_generate_redirect.return_value = "https://test-domain.com?encrypted_token=xyz"
         mock_request.query_params = {"state": "encoded_state"}
 
-        result = await oauth2_callback(mock_request, mock_session)
+        result = await oauth2_callback(mock_request, mock_session, mock_oauth2_client)
 
         assert isinstance(result, RedirectResponse)
         mock_iam.get_user.assert_called_once()
         mock_create_user.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
-    async def test_oauth2_callback_missing_sub(self, mock_oauth2, mock_request, mock_session):
+    @patch("app.endpoints.proconnect.get_oauth2_client")
+    async def test_oauth2_callback_missing_sub(self, mock_get_oauth2_client, mock_request, mock_session, mock_oauth2_client):
         """Test OAuth2 callback with missing subject"""
         mock_token = {"access_token": "access_token"}
-        mock_oauth2.authorize_access_token = AsyncMock(return_value=mock_token)
+        mock_oauth2_client.authorize_access_token = AsyncMock(return_value=mock_token)
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
         with patch("app.endpoints.proconnect.retrieve_user_info") as mock_retrieve:
             mock_retrieve.return_value = {"email": "test@example.com"}  # Missing 'sub'
 
             with pytest.raises(HTTPException) as exc_info:
-                await oauth2_callback(mock_request, mock_session)
+                await oauth2_callback(mock_request, mock_session, mock_oauth2_client)
 
             assert exc_info.value.status_code == 400
             assert "Missing subject (sub)" in exc_info.value.detail
@@ -383,14 +390,15 @@ class TestOAuth2Module:
         mock_jwt.get_unverified_claims.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("httpx.AsyncClient")
     @patch("app.endpoints.proconnect.verify_jwt_signature")
-    async def test_retrieve_user_info_success(self, mock_verify_jwt, mock_client_class, mock_oauth2):
+    async def test_retrieve_user_info_success(self, mock_verify_jwt, mock_client_class, mock_get_oauth2_client, mock_oauth2_client):
         """Test successful user info retrieval"""
         token = {"access_token": "access_token"}
 
-        mock_oauth2.server_metadata = {"userinfo_endpoint": "https://provider.com/userinfo"}
+        mock_oauth2_client.server_metadata = {"userinfo_endpoint": "https://provider.com/userinfo"}
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
         mock_client = AsyncMock()
         mock_response = MagicMock()
@@ -404,18 +412,19 @@ class TestOAuth2Module:
 
         mock_verify_jwt.return_value = {"sub": "test_user", "email": "test@example.com"}
 
-        result = await retrieve_user_info(token)
+        result = await retrieve_user_info(token, mock_oauth2_client)
 
         assert result == {"sub": "test_user", "email": "test@example.com"}
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("app.endpoints.proconnect.verify_jwt_signature")
-    async def test_retrieve_user_info_fallback_to_id_token(self, mock_verify_jwt, mock_oauth2):
+    async def test_retrieve_user_info_fallback_to_id_token(self, mock_verify_jwt, mock_get_oauth2_client, mock_oauth2_client):
         """Test user info retrieval fallback to ID token"""
         token = {"access_token": "access_token", "id_token": "id_token"}
 
-        mock_oauth2.server_metadata = {"userinfo_endpoint": "https://provider.com/userinfo"}
+        mock_oauth2_client.server_metadata = {"userinfo_endpoint": "https://provider.com/userinfo"}
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
@@ -427,7 +436,7 @@ class TestOAuth2Module:
 
             mock_verify_jwt.return_value = {"sub": "test_user", "email": "test@example.com"}
 
-            result = await retrieve_user_info(token)
+            result = await retrieve_user_info(token, mock_oauth2_client)
 
             assert result == {"sub": "test_user", "email": "test@example.com"}
 
@@ -477,11 +486,15 @@ class TestOAuth2Module:
         assert "Default role for OAuth user not found" in exc_info.value.detail
 
     @pytest.mark.asyncio
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("app.endpoints.proconnect.global_context")
     @patch("app.endpoints.proconnect.request_context")
-    async def test_logout_success(self, mock_request_context, mock_global_context, mock_session, mock_user):
+    async def test_logout_success(
+        self, mock_request_context, mock_global_context, mock_get_oauth2_client, mock_session, mock_user, mock_oauth2_client
+    ):
         """Test successful logout"""
         mock_request = MagicMock()
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
         # Mock request context
         mock_context = MagicMock()
@@ -495,7 +508,7 @@ class TestOAuth2Module:
 
         logout_request = OAuth2LogoutRequest(proconnect_token=None)
 
-        result = await logout(mock_request, logout_request, mock_user, mock_session)
+        result = await logout(mock_request, logout_request, mock_user, mock_session, mock_oauth2_client)
 
         assert result["status"] == "success"
         assert "Token expired successfully" in result["message"]
@@ -503,11 +516,15 @@ class TestOAuth2Module:
 
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.perform_proconnect_logout")
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("app.endpoints.proconnect.global_context")
     @patch("app.endpoints.proconnect.request_context")
-    async def test_logout_with_proconnect_success(self, mock_request_context, mock_global_context, mock_perform_logout, mock_session, mock_user):
+    async def test_logout_with_proconnect_success(
+        self, mock_request_context, mock_global_context, mock_get_oauth2_client, mock_perform_logout, mock_session, mock_user, mock_oauth2_client
+    ):
         """Test successful logout with ProConnect"""
         mock_request = MagicMock()
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
         # Mock request context
         mock_context = MagicMock()
@@ -524,19 +541,23 @@ class TestOAuth2Module:
 
         logout_request = OAuth2LogoutRequest(proconnect_token="proconnect_token")
 
-        result = await logout(mock_request, logout_request, mock_user, mock_session)
+        result = await logout(mock_request, logout_request, mock_user, mock_session, mock_oauth2_client)
 
         assert result["status"] == "success"
         assert "Successfully logged out from ProConnect" in result["message"]
-        mock_perform_logout.assert_called_once_with("proconnect_token")
+        mock_perform_logout.assert_called_once_with("proconnect_token", mock_oauth2_client)
 
     @pytest.mark.asyncio
     @patch("app.endpoints.proconnect.perform_proconnect_logout")
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("app.endpoints.proconnect.global_context")
     @patch("app.endpoints.proconnect.request_context")
-    async def test_logout_with_proconnect_failure(self, mock_request_context, mock_global_context, mock_perform_logout, mock_session, mock_user):
+    async def test_logout_with_proconnect_failure(
+        self, mock_request_context, mock_global_context, mock_get_oauth2_client, mock_perform_logout, mock_session, mock_user, mock_oauth2_client
+    ):
         """Test logout with ProConnect failure"""
         mock_request = MagicMock()
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
         # Mock request context
         mock_context = MagicMock()
@@ -553,20 +574,21 @@ class TestOAuth2Module:
 
         logout_request = OAuth2LogoutRequest(proconnect_token="proconnect_token")
 
-        result = await logout(mock_request, logout_request, mock_user, mock_session)
+        result = await logout(mock_request, logout_request, mock_user, mock_session, mock_oauth2_client)
 
         assert result["status"] == "warning"
         assert "ProConnect logout may have failed" in result["message"]
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("app.endpoints.proconnect.configuration")
     @patch("httpx.AsyncClient")
-    async def test_perform_proconnect_logout_success(self, mock_client_class, mock_config, mock_oauth2):
+    async def test_perform_proconnect_logout_success(self, mock_client_class, mock_config, mock_get_oauth2_client, mock_oauth2_client):
         """Test successful ProConnect logout"""
         mock_config.dependencies.proconnect.client_id = "test_client"
+        mock_get_oauth2_client.return_value = mock_oauth2_client
 
-        mock_oauth2.server_metadata = {"end_session_endpoint": "https://provider.com/logout"}
+        mock_oauth2_client.server_metadata = {"end_session_endpoint": "https://provider.com/logout"}
 
         mock_client = AsyncMock()
         mock_response = MagicMock()
@@ -577,27 +599,29 @@ class TestOAuth2Module:
         mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
 
-        result = await perform_proconnect_logout("proconnect_token")
+        result = await perform_proconnect_logout("proconnect_token", mock_oauth2_client)
 
         assert result is True
         mock_client.post.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
-    async def test_perform_proconnect_logout_no_endpoint(self, mock_oauth2):
+    @patch("app.endpoints.proconnect.get_oauth2_client")
+    async def test_perform_proconnect_logout_no_endpoint(self, mock_get_oauth2_client, mock_oauth2_client):
         """Test ProConnect logout with no end session endpoint"""
-        mock_oauth2.server_metadata = {}
+        mock_get_oauth2_client.return_value = mock_oauth2_client
+        mock_oauth2_client.server_metadata = {}
 
-        result = await perform_proconnect_logout("proconnect_token")
+        result = await perform_proconnect_logout("proconnect_token", mock_oauth2_client)
 
         assert result is False
 
     @pytest.mark.asyncio
-    @patch("app.endpoints.proconnect.oauth2")
+    @patch("app.endpoints.proconnect.get_oauth2_client")
     @patch("httpx.AsyncClient")
-    async def test_perform_proconnect_logout_failure(self, mock_client_class, mock_oauth2):
+    async def test_perform_proconnect_logout_failure(self, mock_client_class, mock_get_oauth2_client, mock_oauth2_client):
         """Test ProConnect logout failure"""
-        mock_oauth2.server_metadata = {"end_session_endpoint": "https://provider.com/logout"}
+        mock_get_oauth2_client.return_value = mock_oauth2_client
+        mock_oauth2_client.server_metadata = {"end_session_endpoint": "https://provider.com/logout"}
 
         mock_client = AsyncMock()
         mock_client.post.side_effect = Exception("Network error")
@@ -606,7 +630,7 @@ class TestOAuth2Module:
         mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
 
-        result = await perform_proconnect_logout("proconnect_token")
+        result = await perform_proconnect_logout("proconnect_token", mock_oauth2_client)
 
         assert result is False
 

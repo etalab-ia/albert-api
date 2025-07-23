@@ -30,16 +30,30 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# TODO : we should not initialize OAuth2 on module import, but rather on application startup
-if configuration.dependencies.proconnect is not None:
-    oauth = OAuth()
-    oauth2 = oauth.register(
-        name="proconnect",
-        client_id=configuration.dependencies.proconnect.client_id,
-        client_secret=configuration.dependencies.proconnect.client_secret,
-        server_metadata_url=configuration.dependencies.proconnect.server_metadata_url,
-        client_kwargs={"scope": configuration.dependencies.proconnect.scope},
-    )
+# Singleton pattern for OAuth2 client
+_oauth2_client = None
+
+
+def get_oauth2_client():
+    """
+    Dependency to get the OAuth2 client for ProConnect (singleton pattern)
+    """
+    global _oauth2_client
+
+    if _oauth2_client is None:
+        if configuration.dependencies.proconnect is None:
+            raise HTTPException(status_code=500, detail="ProConnect is not configured")
+
+        oauth = OAuth()
+        _oauth2_client = oauth.register(
+            name="proconnect",
+            client_id=configuration.dependencies.proconnect.client_id,
+            client_secret=configuration.dependencies.proconnect.client_secret,
+            server_metadata_url=configuration.dependencies.proconnect.server_metadata_url,
+            client_kwargs={"scope": configuration.dependencies.proconnect.scope},
+        )
+
+    return _oauth2_client
 
 
 def get_fernet():
@@ -80,7 +94,7 @@ def encrypt_redirect_data(app_token: str, token_id: str, proconnect_token: str) 
 
 
 @router.get(f"/{ROUTER__OAUTH2}/login")
-async def oauth2_login(request: Request):
+async def oauth2_login(request: Request, oauth2_client=Depends(get_oauth2_client)):
     """
     Initiate the OAuth2 login flow with ProConnect
     """
@@ -98,7 +112,7 @@ async def oauth2_login(request: Request):
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
 
         # Try to explicitly pass the scope
-        redirect_response = await oauth2.authorize_redirect(
+        redirect_response = await oauth2_client.authorize_redirect(
             request,
             redirect_uri,
             state=state,
@@ -112,10 +126,10 @@ async def oauth2_login(request: Request):
 
 
 @router.get(f"/{ROUTER__OAUTH2}/callback")
-async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_db_session)):
+async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_db_session), oauth2_client=Depends(get_oauth2_client)):
     try:
         # Exchange the authorization code for a token
-        token = await oauth2.authorize_access_token(request)
+        token = await oauth2_client.authorize_access_token(request)
 
         # Get the state parameter
         state = request.query_params.get("state")
@@ -123,7 +137,7 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
         logger.debug(f"Token: {token}")
 
         # Retrieve user information via oauth2.userinfo()
-        user_info = await retrieve_user_info(token)
+        user_info = await retrieve_user_info(token, oauth2_client)
 
         # Extract user information
         sub = user_info.get("sub")
@@ -284,7 +298,7 @@ async def verify_jwt_signature(id_token: str) -> dict:
         return jwt.get_unverified_claims(id_token)
 
 
-async def retrieve_user_info(token):
+async def retrieve_user_info(token, oauth2_client):
     try:
         # Extract access_token from the token dict for userinfo call
         access_token = token.get("access_token")
@@ -292,11 +306,11 @@ async def retrieve_user_info(token):
             raise Exception("No access_token found in token")
 
         # Get userinfo endpoint from server metadata
-        if hasattr(oauth2, "server_metadata") and oauth2.server_metadata:
-            server_metadata = oauth2.server_metadata
+        if hasattr(oauth2_client, "server_metadata") and oauth2_client.server_metadata:
+            server_metadata = oauth2_client.server_metadata
         else:
             # Fallback: load metadata if not available
-            server_metadata = await oauth2.load_server_metadata()
+            server_metadata = await oauth2_client.load_server_metadata()
 
         userinfo_endpoint = server_metadata.get("userinfo_endpoint")
         if not userinfo_endpoint:
@@ -372,7 +386,11 @@ async def create_user(session: AsyncSession, iam: IdentityAccessManager, given_n
 
 @router.post(f"/{ROUTER__OAUTH2}/logout", dependencies=[Security(dependency=AccessController())], status_code=200)
 async def logout(
-    request: Request, logout_request: OAuth2LogoutRequest, user: User = Security(AccessController()), session: AsyncSession = Depends(get_db_session)
+    request: Request,
+    logout_request: OAuth2LogoutRequest,
+    user: User = Security(AccessController()),
+    session: AsyncSession = Depends(get_db_session),
+    oauth2_client=Depends(get_oauth2_client),
 ):
     """
     Logout and expire the current token, optionally logout from ProConnect
@@ -397,7 +415,7 @@ async def logout(
         # Attempt ProConnect logout if token is provided
         if proconnect_token:
             logger.info(f"Attempting ProConnect logout for user {user.id}")
-            proconnect_logout_success = await perform_proconnect_logout(proconnect_token)
+            proconnect_logout_success = await perform_proconnect_logout(proconnect_token, oauth2_client)
 
             if proconnect_logout_success:
                 logger.info(f"Successfully logged out user {user.id} from ProConnect")
@@ -419,18 +437,18 @@ async def logout(
         raise HTTPException(status_code=500, detail=f"Logout failed: {str(e)}")
 
 
-async def perform_proconnect_logout(proconnect_token: str) -> bool:
+async def perform_proconnect_logout(proconnect_token: str, oauth2_client) -> bool:
     """
     Perform the actual logout call to ProConnect using the existing OAuth2 client
     """
     try:
         # The OAuth2 client should already have server metadata loaded
         # We can access it directly without reloading
-        if hasattr(oauth2, "server_metadata") and oauth2.server_metadata:
-            server_metadata = oauth2.server_metadata
+        if hasattr(oauth2_client, "server_metadata") and oauth2_client.server_metadata:
+            server_metadata = oauth2_client.server_metadata
         else:
             # Fallback: load metadata if not available
-            server_metadata = await oauth2.load_server_metadata()
+            server_metadata = await oauth2_client.load_server_metadata()
 
         end_session_endpoint = server_metadata.get("end_session_endpoint")
 
