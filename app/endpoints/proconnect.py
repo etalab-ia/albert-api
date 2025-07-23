@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers._accesscontroller import AccessController
 from app.helpers._identityaccessmanager import IdentityAccessManager
+from app.utils.context import global_context
 from app.schemas.auth import OAuth2LogoutRequest, User
 from app.sql.models import Role
 from app.sql.models import User as UserTable
@@ -37,7 +38,7 @@ if configuration.dependencies.proconnect is not None:
         client_id=configuration.dependencies.proconnect.client_id,
         client_secret=configuration.dependencies.proconnect.client_secret,
         server_metadata_url=configuration.dependencies.proconnect.server_metadata_url,
-        client_kwargs={"scope": configuration.dependencies.proconnect.scope.split(",")},
+        client_kwargs={"scope": configuration.dependencies.proconnect.scope},
     )
 
 
@@ -47,14 +48,14 @@ def get_fernet():
     """
     try:
         # If the key is "changeme", generate a proper key
-        if configuration.dependencies.proconnect.encryption_key == "changeme":
+        if configuration.settings.encryption_key == "changeme":
             logger.warning("Using default encryption key 'changeme'. This is not secure for production.")
             # Generate a consistent key from the default string for development
             key_bytes = hashlib.sha256("changeme".encode()).digest()
             key = base64.urlsafe_b64encode(key_bytes)
         else:
             # Use the provided key - it should be 32 url-safe base64-encoded bytes
-            key = configuration.dependencies.proconnect.encryption_key.encode()
+            key = configuration.settings.encryption_key.encode()
 
         return Fernet(key)
     except Exception as e:
@@ -134,8 +135,7 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
         if not sub:
             raise HTTPException(status_code=400, detail="Missing subject (sub) in user info")
 
-        # Initialize IdentityAccessManager
-        iam = IdentityAccessManager()
+        iam = global_context.identity_access_manager
 
         # Search for an existing user
         user = await iam.get_user(session=session, sub=sub, email=email)
@@ -386,7 +386,7 @@ async def logout(
 
         # Initialize IdentityAccessManager and invalidate the current token
         if current_token_id:
-            iam = IdentityAccessManager()
+            iam = global_context.identity_access_manager
             await iam.invalidate_token(session=session, token_id=current_token_id, user_id=user.id)
             logger.info(f"Expired token {current_token_id} for user {user.id}")
 

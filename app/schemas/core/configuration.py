@@ -295,7 +295,7 @@ class ProConnect(ConfigBaseModel):
     client_id: str = Field(default="")
     client_secret: str = Field(default="")
     # OpenID Connect discovery endpoint for server metadata
-    server_metadata_url: str = Field(default="https://identite-sandbox.p^noconnect.gouv.fr/.well-known/openid-configuration")
+    server_metadata_url: str = Field(default="https://identite-sandbox.proconnect.gouv.fr/.well-known/openid-configuration")
     redirect_uri: str = Field(default="https://albert.api.etalab.gouv.fr/v1/oauth2/callback")
     scope: str = Field(default="openid email given_name usual_name siret organizational_unit belonging_population chorusdt")
     allowed_domains: str = Field(default="localhost,gouv.fr", description="List of allowed domains for OAuth2 login. This is used to restrict the domains that can use the OAuth2 login flow.")  # fmt: off
