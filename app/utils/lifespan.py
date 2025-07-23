@@ -73,34 +73,23 @@ async def lifespan(app: FastAPI):
 async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
     '''Setup the model registry by fetching the models defined in the DB and the configuration. Basic conflict handling between the DB and config.'''
 
-    db_routers = []
+    db_models = []
 
     async for session in get_db_session():
-        db_routers = await dependencies.model_database_manager.get_routers(session=session, configuration=configuration, dependencies=dependencies)
-    
-    if db_routers:
+        db_models = await dependencies.model_database_manager.get_routers(session=session, configuration=configuration, dependencies=dependencies)
 
-        for router in configuration.models:
-            assert router in db_routers, f"router {router.name} not found in DB"
-            logger.info(msg=f"model {router.name} from config is coherent with DB data.")
+    if not db_models:
+        logger.warning(msg="no ModelRouters found in database.")
 
-        models = db_routers
-    else:
-        logger.warning(msg="no ModelRouters found in database. Populating DB from configuration file.")
-        models = configuration.models
 
-        current_timestamp = int(time.time())
+    db_names = {model.name for model in db_models}
+    config_names = {model.name for model in configuration.models}
 
-        for router in models:
-            router.from_config = True
-            router.created = current_timestamp
-            async for session in get_db_session():
-                await dependencies.model_database_manager.add_router(session=session, router=router)
-            logger.info(msg=f"save model {router.name} to DB.")
-    
-    routers = []
-    for router in models:
-        routers.append(await _convert_modelrouterschema_to_modelrouter(configuration=configuration, router=router, dependencies=dependencies))
+    assert not db_names & config_names, f"found duplicate model names {', '.join(db_names & config_names)}"
+
+    models = configuration.models + db_models
+
+    routers = [await _convert_modelrouterschema_to_modelrouter(configuration=configuration, router=router, dependencies=dependencies) for router in models]
     
     global_context.model_registry = ModelRegistry(routers=routers)
 
