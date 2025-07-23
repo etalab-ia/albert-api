@@ -1,7 +1,7 @@
 <div id="toc">
   <ul align="center" style="list-style: none">
 
-# Albert API
+# OpenGateLLM
 
 [![Version](https://img.shields.io/github/v/release/etalab-ia/albert-api?color=orange&label=version)](https://github.com/etalab-ia/albert-api/releases) 
 [![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/albert-api/refs/heads/main/.github/badges/coverage.json)](https://github.com/etalab-ia/albert-api)
@@ -15,7 +15,7 @@
   </ul>
 </div>
 
-## 🔥 Why Albert API?
+## 🔥 Why OpenGateLLM?
 
 - 🌐 **OpenAI standards**: based on OpenAI API conventions. Easy to use with OpenAI SDKs, LangChain, LlamaIndex, etc.
 - 🚦 **Robust API Gateway:** Load balancing, authentication, and seamless integration with OpenAI, vLLM, HuggingFace TEI.
@@ -30,7 +30,7 @@
 
 | Provider | Supported endpoints |
 | -------- | ------------------- |
-| Albert   | Language, Embeddings, Reranking, Transcription |
+| Albert API (French Public Administration)   | Language, Embeddings, Reranking, Transcription |
 | OpenAI   | Language, Embeddings, Reranking, Transcription |
 | vLLM     | Language |
 | HuggingFace TEI | Embeddings, Reranking |
@@ -43,7 +43,7 @@
 
 ## 📊 Comparison
 
-| Feature              | Albert API ✅ | LiteLLM   | OpenRouter | OpenAI API |
+| Feature              | OpenGateLLM ✅ | LiteLLM   | OpenRouter | OpenAI API |
 | -------------------- | ------------ | --------- | ---------- | ---------- |
 | Fully Open Source    | ✔️ | ❌ | ❌ | ❌ |
 | Data Sovereignty     | ✔️ | ✔️ | ❌ | ❌ |
@@ -67,7 +67,7 @@ Explore practical use cases:
 
 ## 🚀 Quickstart
 
-Deploy Albert API quickly with Docker connected to own free model and start using it:
+Deploy OpenGateLLM quickly with Docker connected to own free model and start using it:
 
 ```bash
 make quickstart
@@ -97,7 +97,7 @@ make create-user
 
 ### Configure your models and add features
 
-With configuration file, you can connect to your own models and add addtionnal services to Albert API. 
+With configuration file, you can connect to your own models and add addtionnal services to OpenGateLLM. 
 Start by creating a configuration file and a .env dedicated:
 
 ```bash
@@ -122,7 +122,7 @@ docker compose --env-file .env up api playground postgres redis elasticsearch se
 
 ## 🤝 Contribute
 
-This project exists thanks to all the people who contribute. Albert API thrives on open-source contributions. Join our community!
+This project exists thanks to all the people who contribute. OpenGateLLM thrives on open-source contributions. Join our community!
 
 * [Contribution Guide](./CONTRIBUTING.md)
 
