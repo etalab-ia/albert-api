@@ -224,7 +224,7 @@ class TestProConnect:
         result = await oauth2_callback(mock_request, mock_session, mock_oauth2_client)
 
         assert isinstance(result, RedirectResponse)
-        mock_iam.get_user.assert_called_once()
+        mock_iam.get_user.assert_called()
         mock_create_user.assert_not_called()
 
     @pytest.mark.asyncio
@@ -269,7 +269,7 @@ class TestProConnect:
         result = await oauth2_callback(mock_request, mock_session, mock_oauth2_client)
 
         assert isinstance(result, RedirectResponse)
-        mock_iam.get_user.assert_called_once()
+        mock_iam.get_user.assert_called()
         mock_create_user.assert_called_once()
 
     @pytest.mark.asyncio

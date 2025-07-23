@@ -112,22 +112,20 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
     """
     Handle OAuth2 callback from ProConnect
     """
+    # Try to decode the state parameter to get the original URL
+    try:
+        # Get the state parameter
+        state = request.query_params.get("state")
+        decoded_state = base64.urlsafe_b64decode(state.encode()).decode()
+        state_data = json.loads(decoded_state)
+        original_url = state_data.get("original_url")
+    except Exception as e:
+        logger.error(f"Could not decode state parameter: {e}")
+        raise HTTPException(status_code=400, detail="No original URL found in state or request")
+
     try:
         # Exchange the authorization code for a token
         token = await oauth2_client.authorize_access_token(request)
-
-        # Get the state parameter
-        state = request.query_params.get("state")
-        # Try to decode the state parameter to get the original URL
-        try:
-            decoded_state = base64.urlsafe_b64decode(state.encode()).decode()
-            state_data = json.loads(decoded_state)
-            original_url = state_data.get("original_url")
-        except Exception as e:
-            logger.error(f"Could not decode state parameter: {e}")
-            raise HTTPException(status_code=400, detail="No original URL found in state or request")
-
-        # Retrieve user information via oauth2.userinfo()
         user_info = await retrieve_user_info(token, oauth2_client)
 
         # Extract user information
@@ -140,13 +138,20 @@ async def oauth2_callback(request: Request, session: AsyncSession = Depends(get_
         if not sub:
             raise HTTPException(status_code=400, detail="Missing subject (sub) in user info")
 
-        iam = global_context.identity_access_manager
-
         # Search for an existing user
-        user = await iam.get_user(session=session, sub=sub, email=email)
-
-        # If no user is found, create a new one
-        if not user:
+        iam = global_context.identity_access_manager
+        user = await iam.get_user(session=session, sub=sub)
+        if user and user.email != email:
+            logger.info(f"User {user.id} email mismatch: {user.email} != {email}. Updating email.")
+            user.email = email
+            session.add(user)
+            await session.commit()
+        elif user := await iam.get_user(session=session, email=email):
+            logger.info(f"Found user {user.id} by email: {email}, setting sub to {sub}")
+            user.sub = sub
+            session.add(user)
+            await session.commit()
+        else:
             user = await create_user(session, iam, given_name, usual_name, email, sub)
 
         token_id, app_token = await iam.refresh_token(session=session, user_id=user.id, name="playground")
