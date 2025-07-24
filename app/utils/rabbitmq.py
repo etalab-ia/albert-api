@@ -6,6 +6,10 @@ rmq_config = configuration.dependencies.rabbitmq
 
 
 class AsyncRabbitMQConnection:
+    """
+    This class represents the link between the API and RabbitMQ.
+    It is a singleton, as we only open one (robust) connection.
+    """
 
     # Singleton pattern
     _instance = None
@@ -32,6 +36,9 @@ class AsyncRabbitMQConnection:
         self._initialized = True
 
     async def setup(self):
+        """
+        Sets up the AMQP connection to RabbitMQ, and initializes the pools.
+        """
         self.connection = await aio_pika.connect_robust(
             host=rmq_config.host,
             port=rmq_config.port,
@@ -52,7 +59,13 @@ class AsyncRabbitMQConnection:
         # If using dedicated event loop, they need to be started
 
     async def publish_default_exchange(self, routing_key: str, message: aio_pika.Message):
+        """
+        Sends a message, to the default exchange.
 
+        Args:
+            routing_key(str): The key that represents the targeted queue.
+            message(aio_pika.Message): The message to send.
+        """
         async def do_publish():
             async with self.sender_pool.acquire() as channel:
                 ex = channel.default_exchange
@@ -65,5 +78,8 @@ class AsyncRabbitMQConnection:
         self.sender_loop.create_task(do_publish())
 
     async def close(self):
+        """
+        Close AMQP connection.
+        """
         await self.connection.close()
         # Careful if using dedicated loop, shutdown needed here
