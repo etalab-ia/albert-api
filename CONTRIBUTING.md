@@ -121,10 +121,28 @@ alembic -c ui/alembic.ini upgrade head
 
 ### In Docker environment
 
-```bash
-make env-ci-up
-docker exec opengatellm-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
-```
+1. Launch the ci environment:
+   <details>
+   <summary> Linux </summary>
+   
+   ```bash
+   make env-ci-up
+   ```
+   </details>
+   
+   <details>
+   <summary> MacOs</summary>
+   
+   ```bash
+   make env-ci-up-macos
+   ```
+   
+   </details>
+
+2. Run the tests:
+   ```bash
+   docker exec opengatellm-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
+   ```
 
 > **❗️Note**
 > It will create a .github/.env.ci file.

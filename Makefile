@@ -44,13 +44,29 @@ env-test-services-up:
 	docker compose --env-file $(env_file) down
 
 env-ci-up:
-	@SED_INPLACE=$$(if [ "$$(uname)" = "Darwin" ]; then echo "sed -i ''"; else echo "sed -i"; fi); \
 	@if [ ! -f .github/.env.ci ]; then \
 		cp .env.example .github/.env.ci; \
-		$$SED_INPLACE 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
-		$$SED_INPLACE 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=opengatellm-ci/' .github/.env.ci; \
+		sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
+		sed -i 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=opengatellm-ci/' .github/.env.ci; \
 	fi
-	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach
+
+	@if [ -f .github/.env.ci ] && (grep -Eq "^ALBERT_API_KEY=.+$$" .github/.env.ci || [ -n "${ALBERT_API_KEY}" ] ); then \
+		docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach;\
+	else \
+		echo "❌: ALBERT_API_KEY must be defined in .github/.env.ci. in order to run the ci test environment";\
+	fi
+
+env-ci-up-macos:
+	@if [ ! -f .github/.env.ci ]; then \
+		cp .env.example .github/.env.ci; \
+		sed -i '' 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
+		sed -i '' 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=opengatellm-ci/' .github/.env.ci; \
+	fi
+	@if [ -f .github/.env.ci ] && (grep -Eq "^ALBERT_API_KEY=.+$$" .github/.env.ci || [ -n "${ALBERT_API_KEY}" ] ); then \
+		docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach;\
+	else \
+		echo "❌: ALBERT_API_KEY must be defined in .github/.env.ci. in order to run the ci test environment";\
+	fi
 
 env-ci-down:
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci down
