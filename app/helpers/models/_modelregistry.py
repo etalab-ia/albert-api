@@ -326,7 +326,7 @@ class ModelRegistry:
                         routing_key=model_router.queue_name
                     )
 
-                    result = await wait_for(ctx.result, timeout=5.0)
+                    result = await wait_for(ctx.result, timeout=configuration.dependencies.rabbitmq.timeout)
                     await model_router.pop_context(ctx)  # free space once finished
                     return result
 

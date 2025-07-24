@@ -313,11 +313,14 @@ class RedisDependency(ConfigBaseModel):
     pass
     # All args of pydantic redis client is allowed
 
+
 # TODO: add link to documentation once written
 class RabbitMQDependency(ConfigBaseModel):
     host: Optional[str] = Field(default="localhost", required=False, description="RabbitMQ host.")
     port: Optional[int] = Field(default=5672, required=False, description="Port RabbitMQ listens to.")
     sender_pool_size: Optional[int] = Field(default=100, required=False, description="How many AMQP channel the pool used by 'sender' contains.")
+    timeout: Optional[float] = Field(default=20.0, required=False, description="How long should a result be waited, before considering the request to be expired.")
+
 
 @custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#dependencies")
 class Dependencies(ConfigBaseModel):
