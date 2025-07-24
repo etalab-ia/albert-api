@@ -63,7 +63,6 @@ def custom_validation_error(url: Optional[str] = None):
 
         cls.__init__ = new_init
         return cls
-
     return decorator
 
 
@@ -115,11 +114,13 @@ class ModelProvider(ConfigBaseModel):
     model_carbon_footprint_zone: CountryCodes = Field(default=CountryCodes.WOR, required=False, description="Model hosting zone for carbon footprint computation (with ISO 3166-1 alpha-3 code format). For more information, see https://ecologits.ai", examples=["WOR"])  # fmt: off
     model_carbon_footprint_total_params: Optional[float] = Field(default=None, required=False, ge=0.0, description="Total params of the model in billions of parameters for carbon footprint computation. If not provided, the active params will be used if provided, else carbon footprint will not be computed. For more information, see https://ecologits.ai", examples=[8])  # fmt: off
     model_carbon_footprint_active_params: Optional[float] = Field(default=None, required=False, ge=0.0, description="Active params of the model in billions of parameters for carbon footprint computation. If not provided, the total params will be used if provided, else carbon footprint will not be computed. For more information, see https://ecologits.ai", examples=[8])  # fmt: off
+    
+    model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode="after")
     def complete_values(cls, values):
         # complete url
-        if values.url is None:
+        if values.url is None and not hasattr(values, 'hide_url'):
             if values.type == ModelProviderType.OPENAI:
                 values.url = "https://api.openai.com"
             elif values.type == ModelProviderType.ALBERT:
@@ -137,7 +138,6 @@ class ModelProvider(ConfigBaseModel):
             values.model_carbon_footprint_active_params = values.model_carbon_footprint_total_params
 
         return values
-
 
 @custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#model")
 class Model(ConfigBaseModel):
@@ -158,6 +158,13 @@ class Model(ConfigBaseModel):
     routing_strategy: RoutingStrategy = Field(default=RoutingStrategy.SHUFFLE, required=False, description="Routing strategy for load balancing between providers of the model. It will be used to identify the model type.", examples=["round_robin"])  # fmt: off
     providers: List[ModelProvider] = Field(required=True, description="API providers of the model. If there are multiple providers, the model will be load balanced between them according to the routing strategy. The different models have to the same type.")  # fmt: off
 
+    vector_size: Optional[int] = Field(default=None, required=False, description="Dimension of the vectors, if the models are embeddings. Makes just it is the same for all models.")
+    max_context_length: Optional[int] = Field(default=None, required=False, description="Maximum amount of tokens a context could contains. Makes sure it is the same for all models.")
+    created: Optional[int] = Field(default=None, required=False, description="Time of creation, as Unix timestamp.")
+    from_config: Optional[bool] = Field(default=False, required=False, description="Whether this model was defined in configuration, meaning it should be checked against the database.")
+
+    model_config = ConfigDict(from_attributes=True)
+
     @model_validator(mode="after")
     def validate_model_type(cls, values):
         for provider in values.providers:
@@ -173,6 +180,21 @@ class Model(ConfigBaseModel):
                     provider.model_carbon_footprint_total_params = None
 
         return values
+
+    def __eq__(self, other):
+        if not isinstance(other, Model):
+            return NotImplemented
+
+        return (
+            self.name == other.name and
+            self.type == other.type and
+            set(self.aliases) == set(other.aliases) and
+            self.owned_by == other.owned_by and
+            self.routing_strategy == other.routing_strategy and
+            self.providers == other.providers and
+            self.vector_size == other.vector_size and
+            self.max_context_length == other.max_context_length            
+        )
 
 
 # dependencies ---------------------------------------------------------------------------------------------------------------------------------------

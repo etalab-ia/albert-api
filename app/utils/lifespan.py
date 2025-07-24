@@ -18,6 +18,7 @@ from app.helpers._multiagentmanager import MultiAgentManager
 from app.helpers._parsermanager import ParserManager
 from app.helpers._usagetokenizer import UsageTokenizer
 from app.helpers._websearchmanager import WebSearchManager
+from app.helpers._modeldatabasemanager import ModelDatabaseManager
 from app.helpers.models import ModelRegistry
 from app.helpers.models.routers import ModelRouter
 from app.schemas.core.configuration import Configuration
@@ -25,6 +26,10 @@ from app.schemas.core.context import GlobalContext
 from app.utils.configuration import get_configuration
 from app.utils.context import global_context
 from app.utils.logging import init_logger
+from app.sql.session import get_db_session
+
+from app.schemas.core.configuration import Model as ModelRouterSchema
+
 
 logger = init_logger(name=__name__)
 
@@ -41,12 +46,13 @@ async def lifespan(app: FastAPI):
     redis = ConnectionPool(**configuration.dependencies.redis.model_dump())
     vector_store = VectorStoreClient.import_module(type=configuration.dependencies.vector_store.type)(**configuration.dependencies.vector_store.model_dump()) if configuration.dependencies.vector_store else None  # fmt: off
     web_search_engine = WebSearchEngineClient.import_module(type=configuration.dependencies.web_search_engine.type)(**configuration.dependencies.web_search_engine.model_dump()) if configuration.dependencies.web_search_engine else None  # fmt: off
+    model_database_manager = ModelDatabaseManager()
 
     redis_test_client = Redis(connection_pool=redis)
     assert (await redis_test_client.ping()).decode("ascii") == "PONG", "Redis database is not reachable."
     assert await vector_store.check() if vector_store else True, "Vector store database is not reachable."
 
-    dependencies = SimpleNamespace(mcp_bridge=mcp_bridge, parser=parser, redis=redis, vector_store=vector_store, web_search_engine=web_search_engine)
+    dependencies = SimpleNamespace(mcp_bridge=mcp_bridge, parser=parser, redis=redis, vector_store=vector_store, web_search_engine=web_search_engine, model_database_manager=model_database_manager)
 
     # setup global context
     await _setup_model_registry(configuration=configuration, global_context=global_context, dependencies=dependencies)
@@ -64,42 +70,68 @@ async def lifespan(app: FastAPI):
 
 
 async def _setup_model_registry(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
-    routers = []
-    for model in configuration.models:
-        providers = []
-        for provider in model.providers:
-            try:
-                # model provider can be not reatachable to API start up
-                provider = ModelClient.import_module(type=provider.type)(
-                    redis=dependencies.redis,
-                    metrics_retention_ms=configuration.settings.metrics_retention_ms,
-                    **provider.model_dump(),
-                )
-                providers.append(provider)
-            except Exception:
-                logger.debug(msg=traceback.format_exc())
-                continue
-        if not providers:
-            logger.error(msg=f"skip model {model.name} (0/{len(model.providers)} providers).")
+    """
+    Sets up the model registry by fetching the models defined in the database and the configuration file.
+    Basic conflict handling between the database and the config.yml.
+    """
 
-            # check if models specified in configuration are reachable
-            if configuration.settings.search_web_query_model and model.name == configuration.settings.search_web_query_model:
-                raise ValueError(f"Query web search model ({model.name}) must be reachable.")
-            if configuration.settings.vector_store_model and model.name == configuration.settings.vector_store_model:
-                raise ValueError(f"Vector store embedding model ({model.name}) must be reachable.")
-            if model.name == configuration.settings.search_multi_agents_synthesis_model:
-                raise ValueError(f"Multi agents synthesis model ({model.name}) must be reachable.")
-            if model.name == configuration.settings.search_multi_agents_reranker_model:
-                raise ValueError(f"Multi agents reranker model ({model.name}) must be reachable.")
+    db_models = []
 
-            continue
+    async for session in get_db_session():
+        db_models = await dependencies.model_database_manager.get_routers(session=session)
 
-        logger.info(msg=f"add model {model.name} ({len(providers)}/{len(model.providers)} providers).")
-        model = model.model_dump()
-        model["providers"] = providers
-        routers.append(ModelRouter(**model))
+    if not db_models:
+        logger.warning(msg="no ModelRouters found in database.")
 
+
+    db_names = {model.name for model in db_models}
+    config_names = {model.name for model in configuration.models}
+
+    assert not db_names & config_names, f"found duplicate model names {', '.join(db_names & config_names)}"
+
+    models = configuration.models + db_models
+
+    routers = [await _convert_modelrouterschema_to_modelrouter(configuration=configuration, router=router, dependencies=dependencies) for router in models]
+    
     global_context.model_registry = ModelRegistry(routers=routers)
+
+
+async def _convert_modelrouterschema_to_modelrouter(configuration: Configuration, router: ModelRouterSchema, dependencies: SimpleNamespace):
+    """
+    Handles the conversion from the pydantic schema to the object ModelRouter.
+    """
+
+    providers = []
+    for provider in router.providers:
+        try:
+            # model provider can be not reachable to API start up
+            provider = ModelClient.import_module(type=provider.type)(
+                redis=dependencies.redis,
+                metrics_retention_ms=configuration.settings.metrics_retention_ms,
+                **provider.model_dump(),
+            )
+            providers.append(provider)
+        except Exception:
+            logger.debug(msg=traceback.format_exc())
+            continue
+    if not providers:
+        logger.error(msg=f"skip model {router.name} (0/{len(router.providers)} providers).")
+
+        # check if models specified in configuration are reachable
+        if configuration.settings.search_web_query_model and router.name == configuration.settings.search_web_query_model:
+            raise ValueError(f"Query web search model ({router.name}) must be reachable.")
+        if configuration.settings.vector_store_model and router.name == configuration.settings.vector_store_model:
+            raise ValueError(f"Vector store embedding model ({router.name}) must be reachable.")
+        if router.name == configuration.settings.search_multi_agents_synthesis_model:
+            raise ValueError(f"Multi agents synthesis model ({router.name}) must be reachable.")
+        if router.name == configuration.settings.search_multi_agents_reranker_model:
+            raise ValueError(f"Multi agents reranker model ({router.name}) must be reachable.")
+
+    logger.info(msg=f"add model {router.name} ({len(providers)}/{len(router.providers)} providers).")
+    router = router.model_dump()
+    router["providers"] = providers
+
+    return ModelRouter(**router)
 
 
 async def _setup_identity_access_manager(configuration: Configuration, global_context: GlobalContext, dependencies: SimpleNamespace):
@@ -140,7 +172,7 @@ async def _setup_document_manager(configuration: Configuration, global_context: 
     if dependencies.web_search_engine:
         web_search_manager = WebSearchManager(
             web_search_engine=dependencies.web_search_engine,
-            query_model=global_context.model_registry(model=configuration.settings.search_web_query_model),
+            query_model=await global_context.model_registry(model=configuration.settings.search_web_query_model),
             limited_domains=configuration.settings.search_web_limited_domains,
             user_agent=configuration.settings.search_web_user_agent,
         )
@@ -150,13 +182,13 @@ async def _setup_document_manager(configuration: Configuration, global_context: 
 
     if configuration.settings.search_multi_agents_synthesis_model:
         multi_agent_manager = MultiAgentManager(
-            synthesis_model=global_context.model_registry(model=configuration.settings.search_multi_agents_synthesis_model),
-            reranker_model=global_context.model_registry(model=configuration.settings.search_multi_agents_reranker_model),
+            synthesis_model=await global_context.model_registry(model=configuration.settings.search_multi_agents_synthesis_model),
+            reranker_model=await global_context.model_registry(model=configuration.settings.search_multi_agents_reranker_model),
         )
 
     global_context.document_manager = DocumentManager(
         vector_store=dependencies.vector_store,
-        vector_store_model=global_context.model_registry(model=configuration.settings.vector_store_model),
+        vector_store_model=await global_context.model_registry(model=configuration.settings.vector_store_model),
         parser_manager=parser_manager,
         web_search_manager=web_search_manager,
         multi_agent_manager=multi_agent_manager,

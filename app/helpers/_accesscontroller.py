@@ -17,7 +17,7 @@ from app.utils.exceptions import (
     InsufficientPermissionException,
     InvalidAPIKeyException,
     InvalidAuthenticationSchemeException,
-    RateLimitExceeded,
+    RateLimitExceeded, ModelNotFoundException,
 )
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
@@ -31,6 +31,11 @@ from app.utils.variables import (
     ENDPOINT__SEARCH,
     ENDPOINT__TOKENS,
     ENDPOINT__USERS_ME,
+    ENDPOINT__MODEL_ADD,
+    ENDPOINT__MODEL_DELETE,
+    ENDPOINT__ALIAS_ADD,
+    ENDPOINT__ALIAS_DELETE,
+    ENDPOINT__ROUTERS,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,11 +109,22 @@ class AccessController:
         if request.url.path.endswith(ENDPOINT__TOKENS) and request.method == "POST":
             await self._check_tokens_post(user=user, role=role, limits=limits, request=request)
 
+        if request.url.path.endswith(ENDPOINT__ROUTERS) and request.method == "GET" or (
+            (
+                request.url.path.endswith(ENDPOINT__MODEL_ADD) or
+                request.url.path.endswith(ENDPOINT__MODEL_DELETE) or
+                request.url.path.endswith(ENDPOINT__ALIAS_ADD) or
+                request.url.path.endswith(ENDPOINT__ALIAS_DELETE)
+            ) and request.method == "POST"
+        ):
+            await self._check_provider(user=user, role=role, limits=limits, request=request)
+
         return user
 
-    def __get_user_limits(self, role: Role) -> Dict[str, UserModelLimits]:
+    async def __get_user_limits(self, role: Role) -> Dict[str, UserModelLimits]:
         limits = {}
-        for model in global_context.model_registry.models:
+        models = await global_context.model_registry.get_models()
+        for model in models:
             limits[model] = UserModelLimits()
             for limit in role.limits:
                 if limit.model == model and limit.type == LimitType.TPM:
@@ -140,12 +156,13 @@ class AccessController:
             raise InvalidAPIKeyException()
 
         if api_key.credentials == global_context.identity_access_manager.master_key:  # master user can do anything
-            limits = [Limit(model=model, type=type, value=None) for model in global_context.model_registry.models for type in LimitType]
+            models = await global_context.model_registry.get_models()
+            limits = [Limit(model=model, type=lim_type, value=None) for model in models for lim_type in LimitType]
             permissions = [permission for permission in PermissionType]
 
             master_role = Role(id=0, name="master", permissions=permissions, limits=limits)
             master_user = User(id=0, name="master", role=0, expires_at=None, created_at=0, updated_at=0)
-            master_limits = self.__get_user_limits(role=master_role)
+            master_limits = await self.__get_user_limits(role=master_role)
 
             return master_user, master_role, master_limits, None
 
@@ -159,7 +176,7 @@ class AccessController:
         roles = await global_context.identity_access_manager.get_roles(session=session, role_id=user.role)
         role = roles[0]
 
-        limits = self.__get_user_limits(role=role)
+        limits = await self.__get_user_limits(role=role)
 
         return user, role, limits, token_id
 
@@ -171,7 +188,7 @@ class AccessController:
         if not model:
             return
 
-        model = global_context.model_registry.aliases.get(model, model)
+        model = await global_context.model_registry.get_original_name(model)
 
         if model not in limits:  # unknown model (404 will be raised by the model client)
             return
@@ -193,7 +210,7 @@ class AccessController:
         if not model or not prompt_tokens:
             return
 
-        model = global_context.model_registry.aliases.get(model, model)
+        model = await global_context.model_registry.get_original_name(model)
 
         if model not in limits:  # unknown model (404 will be raised by the model client)
             return
@@ -217,12 +234,11 @@ class AccessController:
         if not model:
             return
 
-        model = global_context.model_registry.aliases.get(model, model)
-
-        if model not in global_context.model_registry.models:
+        try:
+            model = await global_context.model_registry(model=model)
+        except ModelNotFoundException:
             return
 
-        model = global_context.model_registry(model=model)
         if model.cost_prompt_tokens == 0 and model.cost_completion_tokens == 0:  # free model
             return
 
@@ -325,6 +341,12 @@ class AccessController:
         # if the token is for another user, we don't check the expiration date
         if body.get("user") and PermissionType.CREATE_USER not in role.permissions:
             raise InsufficientPermissionException("Missing permission to create token for another user.")
+
+    async def _check_provider(self, user: User, role: Role, limit: Dict[str, UserModelLimits], request: Request) -> None:
+        body = await self._safely_parse_body(request)
+
+        if body.get("user") and PermissionType.PROVIDE_MODELS not in role.permissions:
+            raise InsufficientPermissionException("Missing permission to interact with provider's endpoints.")
 
     async def _safely_parse_body(self, request: Request) -> Dict:
         """Safely parse request body as JSON or form data, handling encoding errors."""
