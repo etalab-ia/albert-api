@@ -35,7 +35,10 @@ def get_fernet():
 
 def encrypt_redirect_data(app_token: str, token_id: str, proconnect_token: str) -> str:
     """
-    Encrypt redirect data into a single token
+    Encrypt data for playground :
+    * app_token: The application token (ie. API key)
+    * token_id: The ID of the token in the database
+    * proconnect_token: The ProConnect token for OAuth2 session to be used for logout
     """
     try:
         fernet = get_fernet()
@@ -47,3 +50,26 @@ def encrypt_redirect_data(app_token: str, token_id: str, proconnect_token: str) 
     except Exception as e:
         logger.error(f"Failed to encrypt redirect data: {e}")
         raise HTTPException(status_code=500, detail="Encryption failed")
+
+
+def decrypt_playground_data(encrypted_token: str, ttl: int = 300) -> dict:
+    """
+    Decrypt redirect data from encrypted token with TTL validation
+
+    Args:
+        encrypted_token: The encrypted token to decrypt
+        ttl: Time to live in seconds (default 5 minutes)
+
+    Returns:
+        Dictionary containing decrypted data
+    """
+    try:
+        fernet = get_fernet()
+        encrypted_data = base64.urlsafe_b64decode(encrypted_token.encode())
+        decrypted_data = fernet.decrypt(encrypted_data, ttl=ttl)
+        data = json.loads(decrypted_data.decode())
+
+        return data
+    except Exception as e:
+        logger.error(f"Failed to decrypt redirect data: {e}")
+        raise HTTPException(status_code=400, detail="Invalid or expired token")

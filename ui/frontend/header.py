@@ -1,93 +1,19 @@
+import logging
 import time
-import base64
-import json
-import hashlib
 
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
-from cryptography.fernet import Fernet
-import requests
 
-from ui.backend.login import login, oauth_login
+from ui.backend.login import call_oauth2_logout, decrypt_oauth_token, login, oauth_login
 from ui.backend.sql.session import get_session
-from .css import css_proconnect
 from ui.configuration import configuration  # Ensure configuration is imported
-import logging
+
+from .css import css_proconnect
 
 logger = logging.getLogger(__name__)
 
 
 def header():
-    def get_fernet():
-        """
-        Initialize Fernet encryption using the OAuth2 encryption key from configuration
-        """
-        try:
-            # If the key is "changeme", generate a proper key (same logic as backend)
-            if configuration.playground.encryption_key == "changeme":
-                # Generate a consistent key from the default string for development
-                key_bytes = hashlib.sha256("changeme".encode()).digest()
-                key = base64.urlsafe_b64encode(key_bytes)
-            else:
-                # Use the provided key
-                key = configuration.playground.encryption_key.encode()
-
-            return Fernet(key)
-        except Exception as e:
-            st.error(f"Failed to initialize encryption: {e}")
-            return None
-
-    def call_oauth2_logout(api_token: str, proconnect_token: str = None):
-        """
-        Call the logout endpoint to properly terminate OAuth2 session
-
-        Args:
-            api_token: The API token for authentication
-            proconnect_token: Optional ProConnect token for ProConnect logout
-        """
-        logout_url = f"{configuration.playground.api_url}/v1/oauth2/logout"
-
-        headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
-
-        # Prepare payload with optional ProConnect token
-        payload = {}
-        if proconnect_token:
-            payload["proconnect_token"] = proconnect_token
-
-        try:
-            response = requests.post(logout_url, headers=headers, json=payload, timeout=10)
-            if response.status_code == 200:
-                logger.info("Logout successful")
-            else:
-                logger.warning(f"Logout endpoint returned status {response.status_code}: {response.text}")
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to call logout endpoint: {e}")
-            raise
-
-    def decrypt_oauth_token(encrypted_token: str) -> dict:
-        """
-        Decrypt OAuth2 redirect token with TTL validation
-        """
-        try:
-            fernet = get_fernet()
-            if not fernet:
-                return None
-
-            # Decode from base64
-            encrypted_data = base64.urlsafe_b64decode(encrypted_token.encode())
-
-            # Decrypt with TTL (5 minutes = 300 seconds)
-            decrypted_data = fernet.decrypt(encrypted_data, ttl=300)
-
-            # Parse JSON
-            data = json.loads(decrypted_data.decode())
-
-            return data
-        except Exception as e:
-            st.warning("Une erreur est survenue lors de l'authentification. Veuillez réessayer.")
-            st.error(f"Erreur de déchiffrement: {e}")
-            return None
-
     def authenticate():
         session = next(get_session())
 

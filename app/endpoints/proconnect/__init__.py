@@ -16,7 +16,7 @@ from app.sql.session import get_db_session
 from app.utils.configuration import configuration
 from app.utils.variables import ROUTER__OAUTH2
 
-from .encryption import encrypt_redirect_data
+from .encryption import encrypt_redirect_data, decrypt_playground_data
 from .token import perform_proconnect_logout
 from .user import retrieve_user_info, create_user
 
@@ -96,6 +96,50 @@ async def oauth2_login(request: Request, oauth2_client=Depends(get_oauth2_client
     except Exception as e:
         logger.exception(f"OAuth2 login failed: {e}")
         raise HTTPException(status_code=400, detail=f"OAuth2 login failed: {str(e)}")
+
+
+@router.get(f"/{ROUTER__OAUTH2}/playground-login")
+async def playground_login(request: Request, session: AsyncSession = Depends(get_db_session)):
+    """
+    Receive encrypted token from playground encoded with shared key. The token contains
+    user id. Refresh and return playground api key associated with the user.
+    """
+    try:
+        # Get encrypted token from query parameters
+        encrypted_token = request.query_params.get("encrypted_token")
+        if not encrypted_token:
+            raise HTTPException(status_code=400, detail="Missing encrypted_token parameter")
+
+        # Decrypt the token to get user data
+        try:
+            decrypted_data = decrypt_playground_data(encrypted_token, ttl=600)  # 10 minutes TTL
+        except Exception as e:
+            logger.error(f"Failed to decrypt playground token: {e}")
+            raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+        # Extract user ID from decrypted data
+        user_id = decrypted_data.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Missing user_id in token")
+
+        # Get user from database
+        iam = global_context.identity_access_manager
+        user = await iam.get_user(session=session, user_id=user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Refresh the playground token for this user
+        token_id, app_token = await iam.refresh_token(session=session, user_id=user.id, name="playground")
+
+        logger.info(f"Successfully refreshed playground token for user {user.id}")
+
+        return {"status": "success", "api_key": app_token, "token_id": token_id, "user_id": user.id}
+
+    except HTTPException:
+        raise  # Re-raise HTTPException as-is
+    except Exception as e:
+        logger.exception(f"Playground login failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Playground login failed: {str(e)}")
 
 
 @router.get(f"/{ROUTER__OAUTH2}/callback")
