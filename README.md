@@ -8,7 +8,9 @@
 [![License](https://img.shields.io/github/license/etalab-ia/OpenGateLLM?color=red&label=license)](https://github.com/etalab-ia/OpenGateLLM/blob/main/LICENSE)
 [![French version](https://img.shields.io/badge/🇫🇷-French%20version-blue)](./docs/README_fr.md)
 
-### *✨ One place to serve your models, manage usage, and build production-ready products on top — with RAG, OCR, Whisper & more. ✨*
+### *✨ One place to serve your models, manage usage, and build production-ready products on top 
+
+— with RAG, OCR, Whisper & more. ✨*
 
 [**API Reference**](https://albert.api.etalab.gouv.fr/documentation) | [**Swagger**](https://albert.api.etalab.gouv.fr/swagger)
 
