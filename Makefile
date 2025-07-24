@@ -12,8 +12,8 @@ quickstart_services="api postgres redis playground"
 ci_services="api postgres redis elasticsearch secretiveshell"
 
 quickstart:
-	@cp --update=none config.example.yml config.yml
-	@cp --update=none .env.example .env
+	@if [ ! -f config.yml ]; then cp config.example.yml config.yml; fi
+	@if [ ! -f .env ]; then cp .env.example .env; fi
 	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE) services=$(quickstart_services)
 	@echo "API URL: http://localhost:8080"
 	@echo "API token: changeme"
@@ -44,10 +44,11 @@ env-test-services-up:
 	docker compose --env-file $(env_file) down
 
 env-ci-up:
+	@SED_INPLACE=$$(if [ "$$(uname)" = "Darwin" ]; then echo "sed -i ''"; else echo "sed -i"; fi); \
 	@if [ ! -f .github/.env.ci ]; then \
 		cp .env.example .github/.env.ci; \
-		sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
-		sed -i 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=opengatellm-ci/' .github/.env.ci; \
+		$$SED_INPLACE 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
+		$$SED_INPLACE 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=opengatellm-ci/' .github/.env.ci; \
 	fi
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach
 

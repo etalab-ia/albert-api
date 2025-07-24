@@ -15,18 +15,46 @@ cp .env.example .env
 
 Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.
 
-    > **❗️Note**<br>
+    > **❗️Note**
     > The configuration file for running tests is [config.test.yml](app/tests/integ/config.test.yml). You can use it as inspiration to configure your own configuration file.
 
-2. Update all the `_HOST` variables:
-```bash
-sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
-```
+2. Set hosts as localhost as we will be running everything locally for dev purposes
+   <details>
+   <summary> Linux </summary>
+   
+   ```bash
+   sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+   ```
+   </details>
+   
+   <details>
+   <summary> MacOs</summary>
+   
+   ```bash
+   sed -i '' 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+   ```
+   
+   </details>
+
 
    > If you need to revert your changes:
+   > <details>
+   > <summary> Linux </summary>
+   > 
    > ```bash
    > sed -i 's/^\([A-Z_]*\)_HOST=localhost/\1_HOST=\L\1/' .env
    > ```
+   > </details>
+   > 
+   > <details>
+   > <summary> MacOs</summary>
+   > 
+   > ```bash
+   > sed -i '' 's/^\([A-Z_]*\)_HOST=localhost/\1_HOST=\L\1/' .env
+   > ```
+   > < /details>
+
+
 
 3. Set up dependencies
 
@@ -38,16 +66,17 @@ sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env
     alembic -c app/alembic.ini upgrade head # create the API tables
     alembic -c ui/alembic.ini upgrade head # create the Playground tables
     ```
+   ⚠️ **Warning :** If you ran the make quickstart before, remove all existing containers
+    ```bash
+    docker compose down api playground
+    ```
 
 4. Launch the API
 
     ```bash
     uvicorn app.main:app --port 8080 --log-level debug --reload
     ```
-   ⚠️ **Warning :** You might need to remove the api container:
-    ```bash
-    docker compose down api
-    ```
+   
 5. Launch the playground
 
     In another terminal, launch the playground with the following command:
@@ -55,10 +84,7 @@ sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env
     ```bash
     streamlit run ui/main.py --server.port 8501 --theme.base light
     ```
-   ⚠️ **Warning :** You might need to remove the playground container:
-    ```bash
-    docker compose down playground
-    ```
+
     To connect to the playground for the first time, use the login *master* and password *changeme* (defined in the configuration file).
 
 ## Modifications to SQL database structure
@@ -100,7 +126,7 @@ make env-ci-up
 docker exec opengatellm-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
 ```
 
-> **❗️Note**<br>
+> **❗️Note**
 > It will create a .github/.env.ci file.
 > The configuration file for running tests is [config.test.yml](app/tests/integ/config.test.yml). You can modify it to run the tests on your machine.
 > You need set `$BRAVE_API_KEY` and `$ALBERT_API_KEY` environment variables in `.github/.env.ci` to run the tests.
@@ -112,10 +138,24 @@ docker exec opengatellm-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
     cp .env.example .env.test
     make env-test-services-up
     ```
-2. Update all the `_HOST` variables:
-```bash
-sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
-```
+2. Set the HOST variables to localhost:
+
+   <details>
+   <summary> Linux </summary>
+   
+   ```bash
+   sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+   ```
+   </details>
+   
+   <details>
+   <summary> MacOs</summary>
+   
+   ```bash
+   sed -i '' 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+   ```
+   
+   </details>
 
 3. Install the python packages:
 
