@@ -16,6 +16,7 @@ Refer to the [configuration example file](../../../config.example.yml) for an ex
 | auth_master_key | string | Master key for the API. This key has all permissions and cannot be modified or deleted. This key is used to create the first role and the first user. This key is also used to encrypt user tokens, watch out if you modify the master key, you'll need to update all user API keys. | False | changeme |  |  |
 | auth_max_token_expiration_days | integer | Maximum number of days for a token to be valid. |  | None |  |  |
 | disabled_routers | array | Disabled routers to limits services of the API. |  |  | • agents<br/>• audio<br/>• auth<br/>• chat<br/>• chunks<br/>• collections<br/>• completions<br/>• documents<br/>• ... | ['agents', 'embeddings'] |
+| encryption_key | string | Secret key for encrypting between FastAPI and Playground. Must be 32 url-safe base64-encoded bytes. |  |  |  |  |
 | log_format | string | Logging format of the API. | False | [%(asctime)s][%(process)d:%(name)s][%(levelname)s] %(client_ip)s - %(message)s |  |  |
 | log_level | string | Logging level of the API. | False | INFO | • DEBUG<br/>• INFO<br/>• WARNING<br/>• ERROR<br/>• CRITICAL |  |
 | mcp_max_iterations | integer | Maximum number of iterations for MCP agents in `/v1/agents/completions` endpoint. |  | 2 |  |  |
@@ -28,6 +29,7 @@ Refer to the [configuration example file](../../../config.example.yml) for an ex
 | search_web_limited_domains | array | Limited domains for the web search. If provided, the web search will be limited to these domains. |  |  |  |  |
 | search_web_query_model | string | Model used to query the web in the web search. Is required if a web search dependency is provided (Brave or DuckDuckGo). This model must be defined in the `models` section and have type `text-generation` or `image-text-to-text`. | False | None |  |  |
 | search_web_user_agent | string | User agent to scrape the web. If provided, the web search will use this user agent. | False | None |  |  |
+| session_secret_key | string | Secret key for session middleware. |  |  |  |  |
 | swagger_contact | object | Contact informations of the API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information. |  | None |  |  |
 | swagger_description | string | Display description of your API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information. |  | [See documentation](https://github.com/etalab-ia/opengatellm/blob/main/README.md) |  | [See documentation](https://github.com/etalab-ia/opengatellm/blob/main/README.md) |
 | swagger_docs_url | string | Docs URL of swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information. |  | /docs |  |  |
@@ -57,7 +59,6 @@ For more information to configure model providers, see the [ModelProvider sectio
 | Attribute | Type | Description | Required | Default | Values | Examples |
 | --- | --- | --- | --- | --- | --- | --- |
 | aliases | array | Aliases of the model. It will be used to identify the model by users. | False |  |  | ['model-alias', 'model-alias-2'] |
-| name | string | Display name of the model in `/v1/models` endpoint. It will be used in the API to identify the model by users. | True |  |  | my-model |
 | owned_by | string | Owner of the model displayed in `/v1/models` endpoint. | False | Albert API |  | my-app |
 | providers | array | API providers of the model. If there are multiple providers, the model will be load balanced between them according to the routing strategy. The different models have to the same type. For details of configuration, see the [ModelProvider section](#modelprovider). | True |  |  |  |
 | routing_strategy | string | Routing strategy for load balancing between providers of the model. It will be used to identify the model type. | False | shuffle | • round_robin<br/>• shuffle | round_robin |
@@ -89,7 +90,8 @@ For more information to configure model providers, see the [ModelProvider sectio
 | duckduckgo | object | If provided, DuckDuckGo API is used to web search. Cannot be used with Brave dependency concurrently. Pass arguments to call API in this section. All query parameters are supported, see https://www.searchapi.io/docs/duckduckgo-api for more information. For details of configuration, see the [DuckDuckGoDependency section](#duckduckgodependency). | False | None |  |  |
 | elasticsearch | object | Pass all elastic python SDK arguments, see https://elasticsearch-py.readthedocs.io/en/v9.0.2/api/elasticsearch.html#elasticsearch.Elasticsearch for more information. For details of configuration, see the [ElasticsearchDependency section](#elasticsearchdependency). | False | None |  |  |
 | marker | object | If provided, Marker API is used to parse pdf documents. Cannot be used with Albert dependency concurrently. Pass arguments to call Marker API in this section. For details of configuration, see the [MarkerDependency section](#markerdependency). | False | None |  |  |
-| postgres | object | Pass all postgres python SDK arguments, see https://github.com/etalab-ia/opengatellm/blob/main/docs/dependencies/postgres.md for more information. For details of configuration, see the [PostgresDependency section](#postgresdependency). | True |  |  |  |
+| postgres | object | Pass all postgres python SDK arguments, see https://github.com/etalab-ia/albert-api/blob/main/docs/dependencies/postgres.md for more information. For details of configuration, see the [PostgresDependency section](#postgresdependency). | True |  |  |  |
+| proconnect | object | ProConnect configuration for the API. See https://github.com/etalab-ia/albert-api/blob/main/docs/oauth2_encryption.md for more information. For details of configuration, see the [ProConnect section](#proconnect). | False |  |  |  |
 | qdrant | object | Pass all qdrant python SDK arguments, see https://python-client.qdrant.tech/qdrant_client.qdrant_client for more information. For details of configuration, see the [QdrantDependency section](#qdrantdependency). | False | None |  |  |
 | redis | object | Pass all redis python SDK arguments, see https://redis.readthedocs.io/en/stable/connections.html for more information. For details of configuration, see the [RedisDependency section](#redisdependency). | True |  |  |  |
 | secretiveshell | object | If provided, MCP agents can use tools from SecretiveShell MCP Bridge. Pass arguments to call Secretiveshell API in this section, see https://github.com/SecretiveShell/MCP-Bridge for more information. For details of configuration, see the [SecretiveshellDependency section](#secretiveshelldependency). | False | None |  |  |
@@ -118,6 +120,19 @@ See https://github.com/SecretiveShell/MCP-Bridge for more information.
 <br>
 
 ### QdrantDependency
+
+<br>
+
+### ProConnect
+| Attribute | Type | Description | Required | Default | Values | Examples |
+| --- | --- | --- | --- | --- | --- | --- |
+| allowed_domains | string | List of allowed domains for OAuth2 login. This is used to restrict the domains that can use the OAuth2 login flow. |  | localhost,gouv.fr |  |  |
+| client_id | string |  |  |  |  |  |
+| client_secret | string |  |  |  |  |  |
+| default_role | string | Default role assigned to users when they log in for the first time. |  | Freemium |  |  |
+| redirect_uri | string |  |  | https://albert.api.etalab.gouv.fr/v1/oauth2/callback |  |  |
+| scope | string |  |  | openid email given_name usual_name siret organizational_unit belonging_population chorusdt |  |  |
+| server_metadata_url | string |  |  | https://identite-sandbox.proconnect.gouv.fr/.well-known/openid-configuration |  |  |
 
 <br>
 
