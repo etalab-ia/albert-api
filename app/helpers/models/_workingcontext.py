@@ -39,40 +39,37 @@ class WorkingContext:
         self.loop = asyncio.get_running_loop()  # get the loop the WorkingContext was created in
         self.result = self.loop.create_future()
 
-    def _get_callback(self, client: "BaseModelClient"):
+    async def work[R](self, client: "BaseModelClient") -> R | Exception:
         """
-        Returns a synchronous callback that executes the handler and sets its result.
-            It adapts when the handler is async.
+        Actually executes the user request.
+
+        Args:
+            client(BaseModelClient): the client to send to heavy work to.
+
+        Returns:
+            Either the result of the handler, or an Exception, if one is raised.
         """
-        if inspect.iscoroutinefunction(self.handler):
-            def _shim():
-                async def _run_and_set_async():
-                    try:
-                        result = await self.handler(client)
-                        self.result.set_result(result)
-                    except Exception as exc:
-                        self.result.set_exception(exc)
+        try:
+            if inspect.iscoroutinefunction(self.handler):
+                return await self.handler(client)
 
-                # schedule the coroutine on the same loop
-                self.loop.create_task(_run_and_set_async())
+            return self.handler(client)
+        except Exception as e:
+            return e
 
-            return _shim
+    def send_result[R](self, result: R | Exception):
+        """
+        Sets a result or an exception to the promise, within the right event loop.
 
-        def _run_and_set():
-            try:
-                result = self.handler(client)
+        Args:
+            result(R | Exception): Either the wished result, or an exception, if something went wrong.
+        """
+        if isinstance(result, Exception):
+            def _set():
+                self.result.set_exception(result)
+        else:
+            def _set():
                 self.result.set_result(result)
-            except Exception as exc:
-                self.result.set_exception(exc)
 
-        return _run_and_set
+        self.loop.call_soon_threadsafe(_set)
 
-
-    def complete(self, client: "BaseModelClient"):
-        """
-        Completes the request, ie executes the handler, in the right thread.
-        """
-        if self.loop.is_closed():
-            return
-
-        self.loop.call_soon_threadsafe(self._get_callback(client))

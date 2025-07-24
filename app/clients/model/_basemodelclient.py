@@ -121,7 +121,8 @@ class BaseModelClient(ABC):
             if ctx is None:
                 return
 
-            ctx.complete(self)  # Execute the user's request.
+            result = await ctx.work(self)  # Execute the user's request; blocking
+            ctx.send_result(result)  # Sets the result, not blocking
 
     async def rabbitmq_shutdown(self):
         """Cleanly shuts down the consumer coroutine"""
@@ -256,6 +257,9 @@ class BaseModelClient(ABC):
         if self.endpoint in global_context.tokenizer.USAGE_COMPLETION_ENDPOINTS:
             try:
                 usage = request_context.get().usage
+
+                if not usage:
+                    return None
 
                 # compute usage for the current (add a detail object)
                 detail_id = data[0].get("id", generate_request_id()) if stream else data.get("id", generate_request_id())
