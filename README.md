@@ -119,6 +119,10 @@ For instance:
 docker compose --env-file .env up api playground postgres redis elasticsearch secretiveshell --detach 
 ```
 
+### Alternative: use kubernetes
+
+You can check our helmchart and instructions here: [https://github.com/etalab-ia/albert-api-helm](https://github.com/etalab-ia/opengatellm-helm)
+
 
 ## 🤝 Contribute
 
