@@ -130,8 +130,18 @@ services:
     volumes:
       - ./mcp/config.json:/mcp_bridge/config.json
 
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    env_file: "${APP_ENV_FILE:-./.env.example}"
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+
 volumes:
   elasticsearch:
   qdrant:
   postgres:
   redis:
+  rabbitmq:

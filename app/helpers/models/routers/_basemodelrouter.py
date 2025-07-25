@@ -1,10 +1,26 @@
+import asyncio
 from abc import ABC, abstractmethod
+from fastapi import HTTPException
 from itertools import cycle
 import time
+from typing import Callable, Union, Awaitable, TYPE_CHECKING
+import inspect
+from uuid import uuid4
 
-from app.clients.model import BaseModelClient as ModelClient
+import aio_pika
+from aio_pika import IncomingMessage
+
+from app.helpers.models._workingcontext import WorkingContext
 from app.schemas.models import ModelType
+from app.utils.configuration import configuration
+from app.utils.rabbitmq import AsyncRabbitMQConnection
 
+from app.schemas.core.configuration import Model as ModelRouterSchema, RoutingStrategy
+
+if TYPE_CHECKING:
+    # only for type‐checkers and linters, not at runtime
+    # Used to break circular import
+    from app.clients.model import BaseModelClient
 
 class BaseModelRouter(ABC):
     def __init__(
@@ -14,7 +30,7 @@ class BaseModelRouter(ABC):
         owned_by: str,
         aliases: list[str],
         routing_strategy: str,
-        providers: list[ModelClient],
+        providers: list["BaseModelClient"],
         *args,
         **kwargs,
     ) -> None:
@@ -47,15 +63,100 @@ class BaseModelRouter(ABC):
         self.cost_prompt_tokens = prompt_tokens
         self.cost_completion_tokens = completion_tokens
 
-        self._vector_size = vector_sizes[0]
-        self._routing_strategy = routing_strategy
+        self.vector_size = vector_sizes[0]
+        self.routing_strategy = routing_strategy
         self._cycle = cycle(providers)
         self._providers = providers
 
-    @abstractmethod
-    def get_client(self, endpoint: str) -> ModelClient:
+        self._lock = asyncio.Lock()
+
+        self._context_lock = asyncio.Lock()
+        self._context_register = dict()
+
+        self.queue = None
+        self.shutdown_future = asyncio.Future()
+        self.queue_name = str(uuid4())  # Maybe use type + name for more explicit logs.
+
+        if configuration.dependencies.rabbitmq:
+            self._dispatch_task = AsyncRabbitMQConnection().consumer_loop.create_task(self._dispatch_callback())
+
+    async def _dispatch_callback(self):
         """
-        Get a client to handle the request
+        The working consumer's coroutine.
+        """
+        channel = await AsyncRabbitMQConnection().connection.channel()
+        await channel.set_qos(prefetch_count=1)
+        self.queue = await channel.declare_queue(self.queue_name, robust=True)
+
+        # No need to bind as we are using the default_exchange
+        consumer_tag = await self.queue.consume(self._dispatch, no_ack=False)
+        await self.shutdown_future  # blocked until a 'result' is set
+
+        # Clean shutdown
+        await self.queue.cancel(consumer_tag)
+        await self.queue.purge()
+        await self.queue.delete()
+        await channel.close()
+
+    async def _dispatch(self, message: IncomingMessage):
+        """
+        RabbitMQ consumer callback: triggers whenever a message is received on the concerned queue.
+        """
+        async with message.process():
+            content = message.body.decode('utf8')
+
+            ctx = await self.pop_context(content)
+            if ctx is None:
+                return
+
+            async with self._lock:
+                client = self.get_client(ctx.endpoint)
+                await client.register_context(ctx)
+
+                await AsyncRabbitMQConnection().publish_default_exchange(
+                    message=aio_pika.Message(body=ctx.id.encode('utf8')),
+                    routing_key=client.queue_name
+                )
+
+    async def rabbitmq_shutdown(self):
+        """Cleanly shuts down the consumer coroutine, after shutting down all the instance's clients ones."""
+        for client in self._providers:
+            await client.rabbitmq_shutdown()
+
+        self.shutdown_future.set_result(True)  # stop coroutine
+        await self._dispatch_task  # wait for complete shutdown
+
+    async def as_schema(self, censored: bool = True) -> ModelRouterSchema:
+        """
+        Gets a ModelRouterSchema that represents the current instance.
+
+        Args:
+            censored(bool): Whether sensitive information needs to be hidden.
+        """
+
+        providers = await self.get_clients()
+        schemas = []
+
+        for p in providers:
+            schemas.append(p.as_schema(censored))
+
+        return ModelRouterSchema(
+            name=self.name,
+            type=self.type,
+            owned_by=self.owned_by,
+            aliases=self.aliases,
+            routing_strategy=RoutingStrategy(self.routing_strategy),
+            vector_size=self.vector_size,
+            max_context_length=self.max_context_length,
+            created=self.created,
+            providers=schemas
+        )
+
+    @abstractmethod
+    def get_client(self, endpoint: str) -> "BaseModelClient":
+        """
+        Get a client to handle the request.
+        NB: this method is not thread-safe, you probably want to use safe_client_access.
 
         Args:
             endpoint(str): The type of endpoint called
@@ -64,3 +165,176 @@ class BaseModelRouter(ABC):
             BaseModelClient: The available client
         """
         pass
+
+    async def get_clients(self):
+        """
+        Return the current list of ModelClient thread-safely.
+        """
+        async with self._lock:
+            return self._providers
+
+    async def add_client(self, client: "BaseModelClient"):
+        """
+        Adds a new client.
+        """
+        async with self._lock:
+            for c in self._providers:
+                if c.url == client.url and c.name == client.name: # The client already exists; we don't want to double it
+                    return
+
+            # consistency check
+            assert client.vector_size == self.vector_size, "All embeddings models in the same model group must have the same vector size."
+
+            self._providers.append(client)
+
+            if client.max_context_length is not None:
+                if self.max_context_length is None:
+                    self.max_context_length = client.max_context_length
+                else:
+                    self.max_context_length = min(self.max_context_length, client.max_context_length)
+
+            self._cycle = cycle(self._providers)
+            self.cost_prompt_tokens = max(self.cost_prompt_tokens, client.cost_prompt_tokens)
+            self.cost_completion_tokens = max(self.cost_completion_tokens, client.cost_completion_tokens)
+
+    async def delete_client(self, api_url: str, name: str) -> bool:
+        """
+        Delete a client.
+
+        Returns:
+            True if the router still has active ModelClients
+            False otherwise
+        """
+        async with self._lock:
+            client = None
+            cost_prompt_tokens = float("-inf")
+            cost_completion_tokens = float("-inf")
+            max_context_length = float("+inf")
+
+            for c in self._providers:
+                if c.url == api_url and c.name == name:
+                    client = c
+                else:
+                    if c.max_context_length is not None and c.max_context_length < max_context_length:
+                        max_context_length = c.max_context_length
+
+                    if c.cost_prompt_tokens > cost_prompt_tokens:
+                        cost_prompt_tokens = c.cost_prompt_tokens
+
+                    if c.cost_completion_tokens > cost_completion_tokens:
+                        cost_completion_tokens = c.cost_completion_tokens
+
+            if client is None:
+                raise HTTPException(status_code=404, detail=f"Model with name \"{name}\" and URL \"{api_url}\" not found")
+
+            await client.lock.acquire()
+            self._providers.remove(client)
+
+            # Cleaning RabbitMQ setup
+            if configuration.dependencies.rabbitmq:
+
+                while True:
+                    incoming = await client.queue.get(no_ack=False, fail=False)
+                    if incoming is None:
+                        break
+
+                    await incoming.ack()
+
+                    # Reroute pending messages
+                    ctx = await client.get_context(incoming.body.decode('utf8'))
+
+                    if ctx is None:
+                        continue
+
+                    await self.register_context(ctx)
+                    await AsyncRabbitMQConnection().publish_default_exchange(
+                        message=aio_pika.Message(body=ctx.id.encode('utf8')),
+                        routing_key=self.queue_name
+                    )
+
+                await client.rabbitmq_shutdown()
+
+            if len(self._providers) == 0:
+                # No more clients, the ModelRouter is about to get deleted.
+                # There is no need to try to "update" it further.
+                # NB: there is no chance that another ModelClient gets added right after,
+                # as ModelRegistry's requires its lock for the whole removing process.
+                # If needed, "this" router will be recreated.
+
+                # Requests might be pending if we are using RabbitMQ
+                if configuration.dependencies.rabbitmq:
+                    self.shutdown_future.set_result(True)  # stop coroutine
+                    await self._dispatch_task  # wait for complete shutdown
+
+                client.lock.release()  # Who knows
+                return False
+
+            self._cycle = cycle(self._providers)
+            self.cost_prompt_tokens = cost_prompt_tokens
+            self.cost_completion_tokens = cost_completion_tokens
+            self.max_context_length = max_context_length
+
+            client.lock.release()
+            return True
+
+    async def add_alias(self, alias: str):
+        """
+        Thread-safely adds an alias.
+        """
+        async with self._lock:
+            if alias not in self.aliases:  # Silent error?
+                self.aliases.append(alias)
+
+    async def delete_alias(self, alias):
+        """
+        Thread-safely removes an alias.
+        """
+        async with self._lock:
+            if alias in self.aliases:  # Silent error?
+                self.aliases.remove(alias)
+
+    async def register_context(self, req_ctx: WorkingContext):
+        """Adds a WorkingContext to instance's register."""
+        async with self._context_lock:  # We use a different lock as this operation has nothing to do with other fields
+            self._context_register[req_ctx.id] = req_ctx
+
+    async def pop_context(self, ctx_id: str) -> WorkingContext | None:
+        """
+        Pops (= gets and deletes) a WorkingContext to instance's register.
+        Returns None if the given id was not found.
+        """
+        async with self._context_lock:
+            return self._context_register.pop(ctx_id, None)
+
+    async def get_context(self, ctx_id: str) -> WorkingContext | None:
+        """
+        Gets a WorkingContext to instance's register.
+        Returns None if the given id was not found.
+        """
+        async with self._context_lock:
+            return self._context_register.get(ctx_id, None)
+
+    async def safe_client_access[R](
+            self,
+            endpoint: str,
+            handler: Callable[["BaseModelClient"], Union[R, Awaitable[R]]]
+    ) -> R:
+        """
+        Thread-safely access a BaseModelClient.
+        This method calls the given callback with the current instance and BaseModelClient
+            lock acquired just in time, to prevent race conditions on the selected BaseModelClient.
+        Unattended disconnections may still happen (the function may raise an HTTPException).
+        """
+        async with self._lock:
+            client = self.get_client(endpoint)
+            # Client lock is acquired within this block to prevent
+            # another thread to remove it while in use
+            await client.lock.acquire()
+
+        if inspect.iscoroutinefunction(handler):
+            result = await handler(client)
+        else:
+            result = handler(client)
+
+        client.lock.release()
+        return result

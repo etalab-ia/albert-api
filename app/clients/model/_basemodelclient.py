@@ -11,15 +11,21 @@ import traceback
 from typing import Any, Dict, Optional, Tuple, Type
 from urllib.parse import urljoin
 
+from aio_pika import IncomingMessage
 from coredis import ConnectionPool, Redis
 from fastapi import HTTPException
 import httpx
 
-from app.schemas.core.configuration import ModelProviderType
+from uuid import uuid4
+
+from app.helpers.models import WorkingContext
+from app.schemas.core.configuration import ModelProviderType, ModelProvider as ModelClientSchema
+from app.utils.configuration import configuration
 from app.schemas.core.metric import Metric
 from app.schemas.usage import Detail, Usage
 from app.utils.carbon import get_carbon_footprint
 from app.utils.context import generate_request_id, global_context, request_context
+from app.utils.rabbitmq import AsyncRabbitMQConnection
 from app.utils.variables import (
     ENDPOINT__AUDIO_TRANSCRIPTIONS,
     ENDPOINT__CHAT_COMPLETIONS,
@@ -75,6 +81,53 @@ class BaseModelClient(ABC):
         self.metrics_retention_ms = metrics_retention_ms
 
         self.headers = {"Authorization": f"Bearer {self.key}"} if self.key else {}
+        self.endpoint = None
+        self.lock = asyncio.Lock()  # Used by ModelRouter to determine whether the Client is in use
+
+        self._context_register = {}  # One per client to avoid competition between threads
+        self._context_lock = asyncio.Lock()
+        self.queue_name = str(uuid4())
+
+        self.queue = None
+        self.shutdown_future = asyncio.Future()
+
+        if configuration.dependencies.rabbitmq:  # RabbitMQ enabled
+            self.working_task = AsyncRabbitMQConnection().consumer_loop.create_task(self._rabbitmq_worker())
+
+    async def _rabbitmq_worker(self):
+        """
+        The working consumer's coroutine.
+        """
+        channel = await AsyncRabbitMQConnection().connection.channel()
+        await channel.set_qos(prefetch_count=1)
+        self.queue = await channel.declare_queue(self.queue_name, robust=True)
+
+        # No need to bind as we are using the default_exchange
+        consumer_tag = await self.queue.consume(self._rabbitmq_callback, no_ack=False)
+        await self.shutdown_future  # blocked until a 'result' is set
+
+        # Clean shutdown
+        await self.queue.cancel(consumer_tag)
+        await self.queue.delete()
+        await channel.close()
+
+    async def _rabbitmq_callback(self, message: IncomingMessage):
+        """
+        RabbitMQ consumer callback: triggers whenever a message is received on the concerned queue.
+        """
+        async with message.process():
+            content = message.body.decode('utf8')
+            ctx = await self.pop_context(content)
+            if ctx is None:
+                return
+
+            result = await ctx.work(self)  # Execute the user's request; blocking
+            ctx.send_result(result)  # Sets the result, not blocking
+
+    async def rabbitmq_shutdown(self):
+        """Cleanly shuts down the consumer coroutine"""
+        self.shutdown_future.set_result(True)  # stop coroutine
+        await self.working_task  # wait for complete shutdown
 
     @staticmethod
     def import_module(type: ModelProviderType) -> "Type[BaseModelClient]":
@@ -91,6 +144,80 @@ class BaseModelClient(ABC):
         module = importlib.import_module(f"app.clients.model._{type.value}modelclient")
 
         return getattr(module, f"{type.capitalize()}ModelClient")
+
+    @staticmethod
+    def from_schema(schema: ModelClientSchema, redis: ConnectionPool, **init_kwargs) -> "BaseModelClient":
+        """
+        Static method to construct a BaseModelClient instance from a ModelClientSchema.
+
+        Args:
+            schema(ModelClientSchema): A schema, that contains "dead" information.
+            redis(ConnectionPool): The redis connection object.
+            **init_kwargs: Additional arguments to pass to the BaseModelClient's constructor.
+
+        Returns:
+            A ModelClient instance. The constructor used depends on the "type" field of the schema.
+        """
+        act_params = int(
+            schema.model_carbon_footprint_active_params) if schema.model_carbon_footprint_active_params else None
+        tot_params = int(
+            schema.model_carbon_footprint_total_params) if schema.model_carbon_footprint_total_params else None
+
+        return BaseModelClient.import_module(type=schema.type)(
+            model_name=schema.model_name,
+            model_cost_prompt_tokens=schema.model_cost_prompt_tokens,
+            model_cost_completion_tokens=schema.model_cost_completion_tokens,
+            model_carbon_footprint_zone=schema.model_carbon_footprint_zone,
+            model_carbon_footprint_active_params=act_params,
+            model_carbon_footprint_total_params=tot_params,
+            url=schema.url,
+            key=schema.key,
+            timeout=schema.timeout,
+            redis=redis,
+            metrics_retention_ms=configuration.settings.metrics_retention_ms,
+            **init_kwargs,
+        )
+
+    def as_schema(self, censored: bool = True) -> ModelClientSchema:
+        """
+        Gets a ModelClientSchema that represents the current instance.
+
+        Args:
+            censored(bool): Whether sensitive information needs to be hidden.
+        """
+        return ModelClientSchema(
+            type=ModelProviderType(type(self).__name__.removesuffix("ModelClient").lower()),
+            url="hidd.en/v1" if censored else self.url,
+            key=None if censored else self.key,
+            timeout=self.timeout,
+            model_name=self.name,
+            model_cost_prompt_tokens=self.cost_prompt_tokens,
+            model_cost_completion_tokens=self.cost_completion_tokens,
+            model_carbon_footprint_zone=self.carbon_footprint_zone,
+            model_carbon_footprint_total_params=self.carbon_footprint_total_params,
+            model_carbon_footprint_active_params=self.carbon_footprint_active_params,
+        )
+
+    async def register_context(self, req_ctx: WorkingContext):
+        """Adds a WorkingContext to instance's register."""
+        async with self._context_lock:  # We use a different lock as this operation has nothing to do with other fields
+            self._context_register[req_ctx.id] = req_ctx
+
+    async def pop_context(self, ctx_id: str) -> WorkingContext | None:
+        """
+        Pops (= gets and deletes) a WorkingContext to instance's register.
+        Returns None if the given id was not found.
+        """
+        async with self._context_lock:
+            return self._context_register.pop(ctx_id, None)
+
+    async def get_context(self, ctx_id: str) -> WorkingContext | None:
+        """
+        Gets a WorkingContext to instance's register.
+        Returns None if the given id was not found.
+        """
+        async with self._context_lock:
+            return self._context_register.get(ctx_id, None)
 
     async def setup_metrics_storage(self) -> None:
         time_to_first_token_ts_key = f"metrics_ts:time_to_first_token:{self.name}:{self.url}"
@@ -130,6 +257,9 @@ class BaseModelClient(ABC):
         if self.endpoint in global_context.tokenizer.USAGE_COMPLETION_ENDPOINTS:
             try:
                 usage = request_context.get().usage
+
+                if not usage:
+                    return None
 
                 # compute usage for the current (add a detail object)
                 detail_id = data[0].get("id", generate_request_id()) if stream else data.get("id", generate_request_id())

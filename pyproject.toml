@@ -48,8 +48,8 @@ app = [
     "pyyaml==6.0.2",
     "uvicorn==0.34.0",
     "python-multipart==0.0.20",
-    "html-to-markdown==1.4.0"
-
+    "html-to-markdown==1.4.0",
+    "aio-pika==9.5.5",
 ]
 dev = [
     "uvicorn==0.34.0",
