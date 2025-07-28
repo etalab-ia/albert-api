@@ -60,12 +60,12 @@
 
 Explore practical use cases:
 
-* [**Chat Completions**](https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/chat_completions.ipynb)
-* [**Multi-Model Access**](https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/models.ipynb)
-* [**Retrieval-Augmented Generation (RAG)**](https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/retrieval_augmented_generation.ipynb)
-* [**Knowledge Database Import**](https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/import_knowledge_database.ipynb)
-* [**Audio Transcriptions**](https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/audio_transcriptions.ipynb)
-* [**PDF OCR**](https://colab.research.google.com/github/etalab-ia/albert-api/blob/main/docs/tutorials/pdf_ocr.ipynb)
+* [**Chat Completions**](https://colab.research.google.com/github/etalab-ia/opengatellm/blob/main/docs/tutorials/chat_completions.ipynb)
+* [**Multi-Model Access**](https://colab.research.google.com/github/etalab-ia/opengatellm/blob/main/docs/tutorials/models.ipynb)
+* [**Retrieval-Augmented Generation (RAG)**](https://colab.research.google.com/github/etalab-ia/opengatellm/blob/main/docs/tutorials/retrieval_augmented_generation.ipynb)
+* [**Knowledge Database Import**](https://colab.research.google.com/github/etalab-ia/opengatellm/blob/main/docs/tutorials/import_knowledge_database.ipynb)
+* [**Audio Transcriptions**](https://colab.research.google.com/github/etalab-ia/opengatellm/blob/main/docs/tutorials/audio_transcriptions.ipynb)
+* [**PDF OCR**](https://colab.research.google.com/github/etalab-ia/opengatellm/blob/main/docs/tutorials/pdf_ocr.ipynb)
 
 ## 🚀 Quickstart
 

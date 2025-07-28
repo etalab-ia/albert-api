@@ -24,9 +24,9 @@ class Playground(ConfigBaseModel):
     auth_max_token_expiration_days: Optional[int] = Field(default=None, ge=0)
     api_url: str = "http://localhost:8000"
     home_url: str = "http://localhost:8501"
-    page_icon: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"
+    page_icon: str = "https://github.com/etalab-ia/opengatellm/blob/main/docs/assets/logo.png?raw=true"
     menu_items: MenuItems = MenuItems()
-    logo: str = "https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"
+    logo: str = "https://github.com/etalab-ia/opengatellm/blob/main/docs/assets/logo.png?raw=true"
     cache_ttl: int = 1800  # 30 minutes
     postgres: dict = {}
     default_model: Optional[str] = "albert-small"

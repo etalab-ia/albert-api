@@ -1,8 +1,8 @@
-# 🇫🇷 Albert API
+# 🇫🇷 OpenGateLLM
 
 **API open source pour modèles d'IA générative | Infrastructure souveraine**
 
-Albert API, porté par l'[OPI de la DINUM](https://www.numerique.gouv.fr/dinum/), est le service d'IA générative de référence de l'État français, homologué pour des traitements sécurisés. Il propose une solution prête pour la production destinée à l’hébergement souverain et performant d’IA génératives avancées sur votre infrastructure.
+OpenGateLLM, porté par l'[OPI de la DINUM](https://www.numerique.gouv.fr/dinum/), est le service d'IA générative de référence de l'État français, homologué pour des traitements sécurisés. Il propose une solution prête pour la production destinée à l’hébergement souverain et performant d’IA génératives avancées sur votre infrastructure.
 
 ## Points forts
 

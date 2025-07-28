@@ -103,7 +103,7 @@ CountryCodes = {str(lang).upper(): str(lang) for lang in sorted(set(CountryCodes
 CountryCodes = Enum("CountryCodes", CountryCodes, type=str)
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#modelprovider")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#modelprovider")
 class ModelProvider(ConfigBaseModel):
     type: ModelProviderType = Field(required=True, description="Model provider type.", examples=["openai"])  # fmt: off
     url: Optional[constr(strip_whitespace=True, min_length=1)] = Field(default=None, required=False, description="Model provider API url. The url must only contain the domain name (without `/v1` suffix for example). Depends of the model provider type, the url can be optional (Albert, OpenAI).", examples=["https://api.openai.com"])  # fmt: off
@@ -139,7 +139,7 @@ class ModelProvider(ConfigBaseModel):
         return values
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#model")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#model")
 class Model(ConfigBaseModel):
     """
     In the models section, you define a list of models. Each model is a set of API providers for that model. Users will access the models specified in
@@ -208,34 +208,34 @@ class DependencyType(str, Enum):
     SENTRY = "sentry"
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#albert")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#albert")
 class AlbertDependency(ConfigBaseModel):
     url: constr(strip_whitespace=True, min_length=1) = Field(default="https://albert.api.etalab.gouv.fr", required=False, description="Albert API url.")  # fmt: off
     headers: Dict[str, str] = Field(default_factory=dict, required=False, description="Albert API request headers.", examples=[{"Authorization": "Bearer my-api-key"}])  # fmt: off
     timeout: int = Field(default=DEFAULT_TIMEOUT, ge=1, required=False, description="Timeout for the Albert API requests.", examples=[10])  # fmt: off
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#brave")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#brave")
 class BraveDependency(ConfigBaseModel):
     url: constr(strip_whitespace=True, min_length=1) = Field(default="https://api.search.brave.com/res/v1/web/search", required=False, description="Brave API url.")  # fmt: off
     headers: Dict[str, str] = Field(default_factory=dict, required = True, description="Brave API request headers.", examples=[{"X-Subscription-Token": "my-api-key"}])  # fmt: off
     timeout: int = Field(default=DEFAULT_TIMEOUT, ge=1, required=False, description="Timeout for the Brave API requests.", examples=[10])  # fmt: off
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#duckduckgodependency")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#duckduckgodependency")
 class DuckDuckGoDependency(ConfigBaseModel):
     url: constr(strip_whitespace=True, min_length=1) = Field(default="https://api.duckduckgo.com/", required=False, description="DuckDuckGo API url.")  # fmt: off
     headers: Dict[str, str] = Field(default_factory=dict, required = False, description="DuckDuckGo API request headers.", examples=[{}])  # fmt: off
     timeout: int = Field(default=DEFAULT_TIMEOUT, ge=1, required=False, description="Timeout for the DuckDuckGo API requests.", examples=[10])  # fmt: off
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#elasticsearchdependency")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#elasticsearchdependency")
 class ElasticsearchDependency(ConfigBaseModel):
     # All args of pydantic elastic client is allowed
     pass
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#qdrantdependency")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#qdrantdependency")
 class QdrantDependency(ConfigBaseModel):
     # All args of pydantic qdrant client is allowed
 
@@ -248,14 +248,14 @@ class QdrantDependency(ConfigBaseModel):
         return values
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#markerdependency")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#markerdependency")
 class MarkerDependency(ConfigBaseModel):
     url: constr(strip_whitespace=True, min_length=1) = Field(required=True, description="Marker API url.")  # fmt: off
     headers: Dict[str, str] = Field(default_factory=dict, required=False, description="Marker API request headers.", examples=[{"Authorization": "Bearer my-api-key"}])  # fmt: off
     timeout: int = Field(default=DEFAULT_TIMEOUT, ge=1, required=False, description="Timeout for the Marker API requests.", examples=[10])  # fmt: off
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#postgresdependency")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#postgresdependency")
 class PostgresDependency(ConfigBaseModel):
     # All args of pydantic postgres client is allowed
     url: constr(strip_whitespace=True, min_length=1) = Field(pattern=r"^postgresql", required=True, description="PostgreSQL connection url.")  # fmt: off
@@ -269,7 +269,7 @@ class PostgresDependency(ConfigBaseModel):
         return url
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#secretiveshelldependency")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#secretiveshelldependency")
 class SecretiveshellDependency(ConfigBaseModel):
     """
     See https://github.com/SecretiveShell/MCP-Bridge for more information.
@@ -280,19 +280,19 @@ class SecretiveshellDependency(ConfigBaseModel):
     timeout: int = Field(default=DEFAULT_TIMEOUT, ge=1, required=False, description="Timeout for the Secretiveshell API requests.", examples=[10])  # fmt: off
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#sentrydependency")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#sentrydependency")
 class SentryDependency(ConfigBaseModel):
     pass
     # All args of pydantic sentry client is allowed
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#redisdependency")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#redisdependency")
 class RedisDependency(ConfigBaseModel):
     pass
     # All args of pydantic redis client is allowed
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#dependencies")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#dependencies")
 class Dependencies(ConfigBaseModel):
     albert: Optional[AlbertDependency] = Field(default=None, required=False, description="If provided, Albert API is used to parse pdf documents. Cannot be used with Marker dependency concurrently. Pass arguments to call Albert API in this section.")  # fmt: off
     brave: Optional[BraveDependency] = Field(default=None, required=False, description="If provided, Brave API is used to web search. Cannot be used with DuckDuckGo dependency concurrently. Pass arguments to call API in this section. All query parameters are supported, see https://api-dashboard.search.brave.com/app/documentation/web-search/query for more information.")  # fmt: off
@@ -300,7 +300,7 @@ class Dependencies(ConfigBaseModel):
     elasticsearch: Optional[ElasticsearchDependency] = Field(default=None, required=False, description="Pass all elastic python SDK arguments, see https://elasticsearch-py.readthedocs.io/en/v9.0.2/api/elasticsearch.html#elasticsearch.Elasticsearch for more information.")  # fmt: off
     qdrant: Optional[QdrantDependency] = Field(default=None, required=False, description="Pass all qdrant python SDK arguments, see https://python-client.qdrant.tech/qdrant_client.qdrant_client for more information.")  # fmt: off
     marker: Optional[MarkerDependency] = Field(default=None, required=False, description="If provided, Marker API is used to parse pdf documents. Cannot be used with Albert dependency concurrently. Pass arguments to call Marker API in this section.")  # fmt: off
-    postgres: PostgresDependency = Field(required=True, description="Pass all postgres python SDK arguments, see https://github.com/etalab-ia/albert-api/blob/main/docs/dependencies/postgres.md for more information.")  # fmt: off
+    postgres: PostgresDependency = Field(required=True, description="Pass all postgres python SDK arguments, see https://github.com/etalab-ia/opengatellm/blob/main/docs/dependencies/postgres.md for more information.")  # fmt: off
     # @TODO: support optional redis dependency with set redis in cache
     redis: RedisDependency  = Field(required=True, description="Pass all redis python SDK arguments, see https://redis.readthedocs.io/en/stable/connections.html for more information.")  # fmt: off
     secretiveshell: Optional[SecretiveshellDependency] = Field(default=None, required=False, description="If provided, MCP agents can use tools from SecretiveShell MCP Bridge. Pass arguments to call Secretiveshell API in this section, see https://github.com/SecretiveShell/MCP-Bridge for more information.")  # fmt: off
@@ -364,7 +364,7 @@ class Tokenizer(str, Enum):
     TIKTOKEN_O200K_BASE = "tiktoken_o200k_base"
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#settings")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#settings")
 class Settings(ConfigBaseModel):
     # other
     disabled_routers: List[Routers] = Field(default_factory=list, description="Disabled routers to limits services of the API.", examples=[["agents", "embeddings"]])  # fmt: off
@@ -383,9 +383,9 @@ class Settings(ConfigBaseModel):
     swagger_title: Optional[str] = Field(default="Albert API", description="Display title of your API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.", examples=["Albert API"])  # fmt: off
     swagger_summary: Optional[str] = Field(default="Albert API connect to your models.", description="Display summary of your API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.", examples=["Albert API connect to your models."])  # fmt: off
     swagger_version: Optional[str] = Field(default="latest", description="Display version of your API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.", examples=["2.5.0"])  # fmt: off
-    swagger_description: Optional[str] = Field(default="[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)", description="Display description of your API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.", examples=["[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"])  # fmt: off
+    swagger_description: Optional[str] = Field(default="[See documentation](https://github.com/etalab-ia/opengatellm/blob/main/README.md)", description="Display description of your API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.", examples=["[See documentation](https://github.com/etalab-ia/opengatellm/blob/main/README.md)"])  # fmt: off
     swagger_contact: Optional[Dict] = Field(default=None, description="Contact informations of the API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.")  # fmt: off
-    swagger_license_info: Optional[Dict] = Field(default={"name": "MIT Licence", "identifier": "MIT", "url": "https://raw.githubusercontent.com/etalab-ia/albert-api/refs/heads/main/LICENSE"}, description="Licence informations of the API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.")  # fmt: off
+    swagger_license_info: Optional[Dict] = Field(default={"name": "MIT Licence", "identifier": "MIT", "url": "https://raw.githubusercontent.com/etalab-ia/opengatellm/refs/heads/main/LICENSE"}, description="Licence informations of the API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.")  # fmt: off
     swagger_terms_of_service: Optional[str] = Field(default=None, description="A URL to the Terms of Service for the API in swagger UI. If provided, this has to be a URL.", examples=["https://example.com/terms-of-service"])  # fmt: off
     swagger_openapi_tags: List[Dict[str, Any]] = Field(default_factory=list, description="OpenAPI tags of the API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.")  # fmt: off
     swagger_openapi_url: Optional[str] = Field(default="/openapi.json", pattern=r"^/", description="OpenAPI URL of swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information.")  # fmt: off
@@ -422,7 +422,7 @@ class Settings(ConfigBaseModel):
 # load config ----------------------------------------------------------------------------------------------------------------------------------------
 
 
-@custom_validation_error(url="https://github.com/etalab-ia/albert-api/blob/main/docs/configuration.md#all-configuration")
+@custom_validation_error(url="https://github.com/etalab-ia/opengatellm/blob/main/docs/configuration.md#all-configuration")
 class ConfigFile(ConfigBaseModel):
     """
     Refer to the [configuration example file](../../../config.example.yml) for an example of configuration.

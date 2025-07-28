@@ -59,9 +59,9 @@ dependencies:
   # log_level: # optional - default: INFO - values: DEBUG, INFO, WARNING, ERROR, CRITICAL
   # log_format: # optional - default: "[%(asctime)s][%(process)d:%(name)s][%(levelname)s] %(client_ip)s - %(message)s"
 
-  # swagger_title: # optional - default: Albert API
+  # swagger_title: # optional - default: OpenGateLLM
   # swagger_version: # optional - default: 1.0.0
-  # swagger_contact_url: # optional - default: https://github.com/etalab-ia/albert-api
+  # swagger_contact_url: # optional - default: https://github.com/etalab-ia/OpenGateLLM
   # swagger_contact_email: # optional - default: None - example: john.doe@example.com
   # swagger_docs_url: # optional - default: /docs
   # swagger_redoc_url: # optional - default: /redoc

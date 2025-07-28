@@ -2,7 +2,7 @@
 
 ## Overview
 
-Albert API implements a security system based on users, roles, and permissions. This documentation explains how to manage security within the system, with special focus on the master key, user authentication, and role-based access control.
+OpenGateLLM implements a security system based on users, roles, and permissions. This documentation explains how to manage security within the system, with special focus on the master key, user authentication, and role-based access control.
 
 ## Authentication System
 

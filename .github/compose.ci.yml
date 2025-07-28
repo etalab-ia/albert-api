@@ -1,4 +1,4 @@
-name: albert-ci
+name: opengatellm-ci
 
 services:
   api:

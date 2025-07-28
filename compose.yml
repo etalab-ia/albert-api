@@ -1,9 +1,9 @@
-name: albert-api
+name: opengatellm
 
 services:
 # quickstart services --------------------------------------------------------------------------------------------------------------------------------
   api:
-    image: ghcr.io/etalab-ia/albert-api/app:latest
+    image: ghcr.io/etalab-ia/opengatellm/app:latest
     restart: always
     env_file: "${APP_ENV_FILE:-./.env.example}"
     environment:
@@ -19,7 +19,7 @@ services:
         condition: service_healthy
 
   playground:
-    image: ghcr.io/etalab-ia/albert-api/ui:latest
+    image: ghcr.io/etalab-ia/opengatellm/ui:latest
     environment:
       - MASTER_KEY=master_key
       - "POSTGRES_HOST=${POSTGRES_HOST:-postgres}"
