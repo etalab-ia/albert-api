@@ -32,8 +32,11 @@ jobs:
 
     - name: Generate configuration documentation
       run: |
-        CONFIGURATION_DOCUMENTATION=$(docker compose -f .github/compose.ci.yml --env-file .github/.env.ci exec api python /scripts/generate_configuration_documentation.py --output /app/configuration.md && docker exec albert-ci-api-1 cat /app/configuration.md)
-        echo "${CONFIGURATION_DOCUMENTATION}" > ./docs/configuration.md
+        docker compose -f .github/compose.ci.yml --env-file .github/.env.ci exec -T api \
+          python /scripts/generate_configuration_documentation.py --output /app/configuration.md
+        
+        docker compose -f .github/compose.ci.yml --env-file .github/.env.ci exec -T api \
+          cat /app/configuration.md > ./docs/configuration.md
 
     - name: Commit configuration documentation
       uses: stefanzweifel/git-auto-commit-action@v4
