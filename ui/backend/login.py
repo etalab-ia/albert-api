@@ -174,6 +174,10 @@ def login(user_name: str, user_password: str, session: Session, oauth2=False) ->
         st.error(f"Authentication failed: {str(e)}")
         st.stop()
 
+    if not api_key or not api_key_id:
+        st.error("Failed to retrieve API key. Please try again.")
+        st.stop()
+
     response = requests.get(url=f"{configuration.playground.api_url}/users/me", headers={"Authorization": f"Bearer {api_key}"})
     if response.status_code != 200:
         st.error(response.json()["detail"])
