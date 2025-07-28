@@ -231,7 +231,7 @@ async def logout(
         if current_token_id:
             iam = global_context.identity_access_manager
             await iam.invalidate_token(session=session, token_id=current_token_id, user_id=user.id)
-            logger.info(f"Expired token {current_token_id} for user {user.id}")
+            logger.info("Expired token for user %s", user.id)
 
         # Get ProConnect token from request (optional)
         proconnect_token = logout_request.proconnect_token
@@ -239,15 +239,15 @@ async def logout(
 
         # Attempt ProConnect logout if token is provided
         if proconnect_token:
-            logger.info(f"Attempting ProConnect logout for user {user.id}")
+            logger.info("Attempting ProConnect logout for user %s", user.id)
             proconnect_logout_success = await perform_proconnect_logout(proconnect_token, oauth2_client)
 
             if proconnect_logout_success:
-                logger.info(f"Successfully logged out user {user.id} from ProConnect")
+                logger.info("Successfully logged out user %s from ProConnect", user.id)
             else:
-                logger.warning(f"ProConnect logout failed for user {user.id}")
+                logger.warning("ProConnect logout failed for user %s", user.id)
         else:
-            logger.info(f"No ProConnect token provided for user {user.id}, skipping ProConnect logout")
+            logger.info("No ProConnect token provided for user %s, skipping ProConnect logout", user.id)
 
         # Return appropriate response
         if proconnect_token and proconnect_logout_success:
@@ -258,5 +258,5 @@ async def logout(
             return {"status": "success", "message": "Token expired successfully"}
 
     except Exception as e:
-        logger.exception(f"Error during logout for user {user.id}: {e}")
+        logger.exception("Error during logout for user %s: %s", user.id, str(e))
         raise HTTPException(status_code=500, detail=f"Logout failed: {str(e)}")
