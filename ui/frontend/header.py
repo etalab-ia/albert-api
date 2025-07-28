@@ -49,10 +49,10 @@ def header():
             # Decrypt the token
             decrypted_data = decrypt_oauth_token(encrypted_token)
             if decrypted_data:
-                api_key = st.session_state["api_key"] = decrypted_data.get("app_token")
-                api_key_id = st.session_state["api_key_id"] = decrypted_data.get("token_id")
-                st.session_state["proconnect_token"] = decrypted_data.get("proconnect_token")
-                oauth_login(session, api_key, api_key_id)
+                api_key = decrypted_data.get("app_token")
+                api_key_id = decrypted_data.get("token_id")
+                proconnect_token = decrypted_data.get("proconnect_token")
+                oauth_login(session, api_key, api_key_id, proconnect_token)
 
         if st.session_state.get("login_status") is None:
             login_form()
@@ -71,23 +71,24 @@ def header():
             logout = st.button("Logout")
         if logout:
             # Get stored tokens for logout
-            api_token = st.session_state.get("api_key")
-            proconnect_token = st.session_state.get("proconnect_token")
+            api_key = None
+            proconnect_token = None
+            if st.session_state.get("user"):
+                api_key = st.session_state["user"].api_key
+                proconnect_token = st.session_state["user"].proconnect_token
 
             # Call logout endpoint if we have an API token
-            if api_token:
+            if api_key:
                 with st.spinner("Déconnexion en cours..."):
                     try:
                         # Call logout endpoint with optional ProConnect token
-                        call_oauth2_logout(api_token, proconnect_token)
+                        call_oauth2_logout(api_key, proconnect_token)
                     except Exception as e:
                         st.warning(f"Erreur lors de la déconnexion: {e}")
 
             # Always perform local logout regardless of API result
-            st.session_state.pop("login_status", default=None)
-            st.session_state.pop("user", default=None)
-            st.session_state.pop("api_key", default=None)
-            st.session_state.pop("proconnect_token", default=None)  # Clean ProConnect token
+            st.session_state.pop("login_status", None)
+            st.session_state.pop("user", None)
             st.cache_data.clear()
             st.rerun()
 

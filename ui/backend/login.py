@@ -26,6 +26,8 @@ class User(BaseModel):
     name: str
     api_key_id: int
     api_key: str
+    proconnect_token: str = None
+
     role: dict
     user: dict
 
@@ -108,7 +110,7 @@ def check_password(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password=password.encode(encoding="utf-8"), hashed_password=hashed_password.encode(encoding="utf-8"))
 
 
-def login(user_name: str, user_password: str, session: Session, oauth2=False) -> dict:
+def login(user_name: str, user_password: str, session: Session, proconnect_token=None) -> dict:
     # master login flow
     if user_name == configuration.playground.auth_master_username:
         response = requests.get(url=f"{configuration.playground.api_url}/users/me", headers={"Authorization": f"Bearer {user_password}"})
@@ -135,6 +137,7 @@ def login(user_name: str, user_password: str, session: Session, oauth2=False) ->
             name=configuration.playground.auth_master_username,
             api_key=user_password,
             api_key_id=0,
+            proconnect_token=proconnect_token,
             user={"expires_at": None, "budget": None},
             role=role,
         )
@@ -149,7 +152,7 @@ def login(user_name: str, user_password: str, session: Session, oauth2=False) ->
         st.error("Invalid username or password")
         st.stop()
 
-    if not oauth2 and not check_password(password=user_password, hashed_password=db_user.password):
+    if proconnect_token is None and not check_password(password=user_password, hashed_password=db_user.password):
         st.error("Invalid username or password")
         st.stop()
 
@@ -190,7 +193,7 @@ def login(user_name: str, user_password: str, session: Session, oauth2=False) ->
         st.stop()
     role = response.json()
 
-    user = User(id=db_user.id, name=db_user.name, api_key_id=api_key_id, api_key=api_key, user=user, role=role)
+    user = User(id=db_user.id, name=db_user.name, api_key_id=api_key_id, api_key=api_key, proconnect_token=proconnect_token, user=user, role=role)
 
     st.session_state["login_status"] = True
     st.session_state["user"] = user
@@ -203,7 +206,7 @@ def generate_random_password(length: int = 16) -> str:
     return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
-def oauth_login(session: Session, api_key: str, api_key_id: str):
+def oauth_login(session: Session, api_key: str, api_key_id: str, proconnect_token: str = None):
     """After OAuth2 login, backend will provide api_key and api_key_id in URL parameters and we use it to process the login"""
     response = requests.get(url=f"{configuration.playground.api_url}/users/me", headers={"Authorization": f"Bearer {api_key}"})
     if response.status_code != 200:
@@ -245,10 +248,10 @@ def oauth_login(session: Session, api_key: str, api_key_id: str):
 
     # Clear the URL parameters after processing
     st.query_params.clear()
-    login(user["name"], None, session, oauth2=True)
+    login(user["name"], None, session, proconnect_token=proconnect_token)
 
 
-def call_oauth2_logout(api_token: str, proconnect_token: str = None):
+def call_oauth2_logout(api_key: str, proconnect_token: str = None):
     """
     Call the logout endpoint to properly terminate OAuth2 session
 
@@ -258,7 +261,7 @@ def call_oauth2_logout(api_token: str, proconnect_token: str = None):
     """
     logout_url = f"{configuration.playground.api_url}/v1/oauth2/logout"
 
-    headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
     # Prepare payload with optional ProConnect token
     payload = {}
