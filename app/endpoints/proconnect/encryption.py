@@ -71,5 +71,5 @@ def decrypt_playground_data(encrypted_token: str, ttl: int = 300) -> dict:
 
         return data
     except Exception as e:
-        logger.error(f"Failed to decrypt redirect data: {e}")
+        logger.error(f"Failed to decrypt playground data: {e}")
         raise HTTPException(status_code=400, detail="Invalid or expired token")

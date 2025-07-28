@@ -134,5 +134,6 @@ playground:
   postgres:
     url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/playground
   encryption_key: ${ENCRYPTION_KEY}  # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  proconnect_enabled: ${PROCONNECT_ENABLED:-False}  # Enable or disable ProConnect integration
   # auth_master_username: master # optional - default: master
   # auth_master_key: changeme # optional - default: changeme

@@ -31,6 +31,7 @@ class Playground(ConfigBaseModel):
     postgres: dict = {}
     default_model: Optional[str] = "albert-small"
     encryption_key: str = Field(description="Secret key for encrypting between FastAPI and Playground. Must be 32 url-safe base64-encoded bytes.")
+    proconnect_enabled: bool = False
 
     @field_validator("postgres", mode="after")
     def validate_postgres(cls, postgres):
