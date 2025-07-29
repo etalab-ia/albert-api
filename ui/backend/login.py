@@ -26,7 +26,7 @@ class User(BaseModel):
     name: str
     api_key_id: int
     api_key: str
-    proconnect_token: str = None
+    proconnect_token: str | None = None
 
     role: dict
     user: dict
@@ -229,7 +229,6 @@ def oauth_login(session: Session, api_key: str, api_key_id: str, proconnect_toke
                 api_user_id=user["id"],
                 api_role_id=role["id"],
                 api_key_id=api_key_id,
-                api_key=api_key,
             )
         )
         session.commit()
@@ -238,7 +237,6 @@ def oauth_login(session: Session, api_key: str, api_key_id: str, proconnect_toke
             UserTable.__table__.update()
             .where(UserTable.id == db_user.id)
             .values(
-                api_key=api_key,
                 api_key_id=api_key_id,
                 api_user_id=user["id"],
                 api_role_id=role["id"],
