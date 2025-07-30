@@ -15,8 +15,8 @@ cp .env.example .env
 
 Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.
 
-    > **❗️Note**
-    > The configuration file for running tests is [config.test.yml](app/tests/integ/config.test.yml). You can use it as inspiration to configure your own configuration file.
+**❗️Note**
+The configuration file for running tests is [config.test.yml](app/tests/integ/config.test.yml). You can use it as inspiration to configure your own configuration file.
 
 2. Set hosts as localhost as we will be running everything locally for dev purposes
    <details>
