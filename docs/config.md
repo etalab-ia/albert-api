@@ -1,6 +1,6 @@
 # Configuration
 
-The Albert API requires configuring a configuration file. This defines models, dependencies, and settings parameters.
+OpenGateLLM requires a configuration file which defines models, dependencies and settings parameters.
 
 By default, the configuration file must be `./config.yml` file.
 

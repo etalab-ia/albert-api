@@ -26,7 +26,7 @@ Connect to the playground UI (http://localhost:8501) with the master username as
 
 ### Configuration
 
-The Albert API requires configuring a configuration file (config.yml). This defines third-party clients and configuration parameters.
+OpenGateLLM requires a configuration file (config.yml) which defines third-party clients and configuration parameters.
 **The configuration file is a YAML file that can combine the configuration of the playground and the API.**
 
 You can consult the Pydantic schema of the configuration for the API [here](../app/schemas/core/settings.py) and for the playground [here](../ui/settings.py).
@@ -62,14 +62,14 @@ The configuration file has the following sections:
 
 | Argument | Required | Description | Type | Values | Default |
 | --- | --- | --- | --- | --- | --- |
-| title | Optional | API title. | str | | `"Albert API"` |
+| title | Optional | API title. | str | | `"OpenGateLLM"` |
 | version | Optional | API version. | str | | `"latest"` |
-| summary | Optional | API summary. | str | | `"Albert API connect to your models."` |
-| description | Optional | API description. | str | | `"[See documentation](https://github.com/etalab-ia/albert-api/blob/main/README.md)"` |
+| summary | Optional | API summary. | str | | `"OpenGateLLM connect to your models."` |
+| description | Optional | API description. | str | | `"[See documentation](https://github.com/etalab-ia/opengatellm/blob/main/README.md)"` |
 | terms_of_service | Optional | API terms of service. | str | | `None` |
 | licence_name | Optional | API licence name. | str | | `"MIT License"` |
 | licence_identifier | Optional | API licence identifier. | str | | `"MIT"` |
-| licence_url | Optional | API licence URL. | str | | `"https://raw.githubusercontent.com/etalab-ia/albert-api/refs/heads/main/LICENSE"` |
+| licence_url | Optional | API licence URL. | str | | `"https://raw.githubusercontent.com/etalab-ia/opengatellm/refs/heads/main/LICENSE"` |
 | contact_name | Optional | API contact name. | str | | `None` |
 | contact_url | Optional | API contact URL. | str | | `None` |
 | contact_email | Optional | API contact email. | str | | `None` |
@@ -211,7 +211,7 @@ See [routing - Configuration Example](routing.md#exemple-de-configuration).
 | `openai` | [OpenAI](https://openai.com/) |
 | `vllm` | [vLLM](https://github.com/vllm-project/vllm) |
 | `tei` | [HuggingFace Text Embeddings Inference](https://github.com/huggingface/text-embeddings-inference) |
-| `albert` | [Albert API](https://github.com/etalab/albert-api) |
+| `albert` | [Albert API](https://github.com/etalab/opengatellm) |
 
 For more information, see [models](./models.md).
 
@@ -308,8 +308,8 @@ The `playground` section allows you to configure the playground.
 | --- | --- | --- | --- | --- | --- |
 | api_url | Required | Playground API URL. | str | | `"http://localhost:8000"` |
 | home_url | Required | Playground home URL to redirect to when user click on the logo. | str | | `"http://localhost:8501"` |
-| page_icon | Required | Playground page icon URL. | str | | `"https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"` |
-| logo | Required | Playground logo URL. | str | | `"https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true"` |
+| page_icon | Required | Playground page icon URL. | str | | `"https://github.com/etalab-ia/opengatellm/blob/main/docs/assets/logo.png?raw=true"` |
+| logo | Required | Playground logo URL. | str | | `"https://github.com/etalab-ia/opengatellm/blob/main/docs/assets/logo.png?raw=true"` |
 | menu_items | Optional | Configure the menu that appears on the top-right side of this app. See [Streamlit st.set_page_config documentation](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config) for more information. | list[dict] | | `[]` |
 | menu_items.get_help | Optional | The URL this menu item should point to. If None, hides this menu item. The URL may also refer to an email address e.g. `mailto:john@example.com.` | str | | `None` |
 | menu_items.report_a_bug | Optional | The URL this menu item should point to. If None, hides this menu item. The URL may also refer to an email address e.g. `mailto:john@example.com.` | str | | `None` |
@@ -322,12 +322,12 @@ The `playground` section allows you to configure the playground.
 playground:
   api_url: http://localhost:8081
   home_url: http://localhost:8501/playground
-  page_icon: https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true
-  logo: https://github.com/etalab-ia/albert-api/blob/main/docs/assets/logo.png?raw=true
+  page_icon: https://github.com/etalab-ia/opengatellm/blob/main/docs/assets/logo.png?raw=true
+  logo: https://github.com/etalab-ia/opengatellm/blob/main/docs/assets/logo.png?raw=true
   menu_items:
     get_help: mailto:contact@example.com
-    report_a_bug: https://github.com/etalab-ia/albert-api/issues
-    about: "This is a playground for the Albert API."
+    report_a_bug: https://github.com/etalab-ia/opengatellm/issues
+    about: "This is a playground for OpenGateLLM."
   cache_ttl: 1800
 ```
 
@@ -347,7 +347,7 @@ If `router` is set to `all`, all routers will be logged. This option is exclusiv
 
 #### web_search
 
-The Albert API allows searching the internet to enrich API responses. For this, it is necessary to configure a search engine API client in the `web_search` section.
+OpenGateLLM allows searching the internet to enrich API responses. For this, it is necessary to configure a search engine API client in the `web_search` section.
 
 Prerequisites:
 - Qdrant database

@@ -1,6 +1,6 @@
 # Routing
 
-L'API Albert permet de configurer pour chaque modèle un ou plusieurs clients vers des API externes. Ces clients sont définis dans le fichier de configuration (voir [deployment](./deployment.md)). Un modèle peut avoir plusieurs clients.
+OpenGateLLM permet de configurer pour chaque modèle un ou plusieurs clients vers des API externes. Ces clients sont définis dans le fichier de configuration (voir [deployment](./deployment.md)). Un modèle peut avoir plusieurs clients.
 
 ## Exemple de configuration
 
@@ -80,7 +80,7 @@ L'objet `ModelClient` est un objet de type `AsyncOpenAI` qui permet d'appeler l'
 - `api_key` : la clé API de l'API externe
 - `model` : le modèle ID de l'API externe
 
-Il y existe plusieurs classes de ModelClient, par exemple `VllmModelClient` ou `OpenAIModelClient`. Chacun définit une variable `ENDPOINT_TABLE` qui contient les endpoints de l'API externe qui sont supportés par le client et permet de faire la correspondance entre l'endpoint de l'API externe et l'endpoint de l'API Albert.
+Il y existe plusieurs classes de ModelClient, par exemple `VllmModelClient` ou `OpenAIModelClient`. Chacun définit une variable `ENDPOINT_TABLE` qui contient les endpoints de l'API externe qui sont supportés par le client et permet de faire la correspondance entre l'endpoint de l'API externe et l'endpoint de OpenGateLLM.
 
 ## Stratégies de routage
 

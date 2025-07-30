@@ -79,7 +79,7 @@ alembic -c ui/alembic.ini upgrade head
 
 ```bash
 make env-ci-up
-docker exec albert-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
+docker exec opengatellm-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
 ```
 
 > **❗️Note**<br>
@@ -183,12 +183,12 @@ echo 'OPENAI_API_KEY=my_openai_api_key' >> .env.test
 
 Finally, run the application:
 ```bash
-make docker-compose-albert-api-up
+make docker-compose-opengatellm-up
 ```
 
 To stop the application, run:
 ```bash
-make docker-compose-albert-api-down
+make docker-compose-opengatellm-down
 ```
 
 
@@ -208,7 +208,7 @@ make install
 
 #### 2. Configuration
 
-Albert-API supports OpenAI and Albert-API models, defined in the `config.yml` file :
+OpenGateLLM supports OpenAI and OpenGateLLM models, defined in the `config.yml` file :
 ```bash
 cp config.example.yml config.yml
 ```
@@ -257,9 +257,9 @@ echo 'OPENAI_API_KEY=my_openai_api_key' >> .env
 
 ```bash
 # Start all services (API, playground and external services)
-make docker-compose-albert-api-up
+make docker-compose-opengatellm-up
 # Stop all services
-make docker-compose-albert-api-down
+make docker-compose-opengatellm-down
 ```
 
 #### Option 2: Local development
