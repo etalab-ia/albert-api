@@ -69,11 +69,14 @@ Explore practical use cases:
 
 ## 🚀 Quickstart
 
-Deploy OpenGateLLM quickly with Docker connected to own free model and start using it:
+Deploy OpenGateLLM quickly with Docker connected to our own free model and start using it:
 
 ```bash
 make quickstart
 ```
+
+ℹ️ **Info :** It will copy the `config.example.yml` and `.env.example` files into `config.yml` and `.env` files if they don't already exist.
+
 Test the API:
 
 ```bash 
@@ -103,8 +106,8 @@ With configuration file, you can connect to your own models and add addtionnal s
 Start by creating a configuration file and a .env dedicated:
 
 ```bash
-cp config.example.yml config.yml && export CONFIG_FILE=./config.yml
-cp .env.example .env && export APP_ENV_FILE=.env
+cp config.example.yml config.yml
+cp .env.example .env
 ```
 
 Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.
