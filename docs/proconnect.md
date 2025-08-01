@@ -328,11 +328,8 @@ allowed_domains: "localhost,albert.gouv.fr,playground.gouv.fr"
 # Albert API
 PROCONNECT_CLIENT_ID=your_client_id
 PROCONNECT_CLIENT_SECRET=your_client_secret
-PROCONNECT_ENCRYPTION_KEY=your_encryption_key
+ENCRYPTION_KEY=your_encryption_key
 SESSION_SECRET_KEY=your_session_secret
-
-# Streamlit UI
-OAUTH2_ENCRYPTION_KEY=your_encryption_key  # Same as backend
 ```
 
 ### Docker Configuration
