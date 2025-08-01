@@ -105,7 +105,7 @@ test-unit:
 	PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)
 
 test-integ:
-	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
+	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ --config-file=$(PYPROJECT)'
 
 test-ci:
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci exec -ti api pytest app/tests --cov=./app --cov-report=xml

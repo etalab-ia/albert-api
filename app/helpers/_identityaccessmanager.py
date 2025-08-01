@@ -1,4 +1,5 @@
 import datetime as dt
+from datetime import datetime, timedelta
 from typing import List, Literal, Optional, Tuple
 
 from jose import JWTError, jwt
@@ -12,6 +13,7 @@ from app.sql.models import Limit as LimitTable
 from app.sql.models import Permission as PermissionTable
 from app.sql.models import Role as RoleTable
 from app.sql.models import Token as TokenTable
+from app.sql.models import Usage as UsageTable
 from app.sql.models import User as UserTable
 from app.utils.exceptions import (
     DeleteRoleWithUsersException,
@@ -212,6 +214,8 @@ class IdentityAccessManager:
         role_id: int,
         budget: Optional[float] = None,
         expires_at: Optional[int] = None,
+        sub: Optional[str] = None,
+        email: Optional[str] = None,
     ) -> int:
         expires_at = func.to_timestamp(expires_at) if expires_at is not None else None
 
@@ -231,12 +235,14 @@ class IdentityAccessManager:
                     role_id=role_id,
                     budget=budget,
                     expires_at=expires_at,
+                    sub=sub,
+                    email=email,
                 )
                 .returning(UserTable.id)
             )
             user_id = result.scalar_one()
-        except IntegrityError:
-            raise UserAlreadyExistsException()
+        except IntegrityError as e:
+            raise UserAlreadyExistsException(detail=str(e))
 
         await session.commit()
 
@@ -329,6 +335,8 @@ class IdentityAccessManager:
                 cast(func.extract("epoch", UserTable.expires_at), Integer).label("expires_at"),
                 cast(func.extract("epoch", UserTable.created_at), Integer).label("created_at"),
                 cast(func.extract("epoch", UserTable.updated_at), Integer).label("updated_at"),
+                UserTable.email,
+                UserTable.sub,
             )
             .offset(offset=offset)
             .limit(limit=limit)
@@ -379,6 +387,41 @@ class IdentityAccessManager:
 
         return token_id, token
 
+    async def refresh_token(self, session: AsyncSession, user_id: int, name: str, days: int = 1) -> Tuple[int, str]:
+        """
+        Create a new token with the same name, update Usage table references,
+        and delete old tokens with the same name and user_id.
+
+        Args:
+            session: Database session
+            user_id: ID of the user
+            name: Name of the token to refresh
+            days: Number of days the new token should be valid for
+
+        Returns:
+            Tuple containing the new token_id and app_token
+        """
+        # Get the old token_id for tokens with the same name and user_id
+        old_token_result = await session.execute(statement=select(TokenTable.id).where(TokenTable.user_id == user_id, TokenTable.name == name))
+        old_token_ids = [row[0] for row in old_token_result.all()]
+
+        expires_at = int((datetime.now() + timedelta(days=days)).timestamp())
+        # Create a new token
+        new_token_id, app_token = await self.create_token(session, user_id, name, expires_at=expires_at)
+
+        # Update Usage table to point to the new token_id for old token references
+        if old_token_ids:
+            await session.execute(statement=update(UsageTable).values(token_id=new_token_id).where(UsageTable.token_id.in_(old_token_ids)))
+
+        # Delete all old tokens with the same name and user_id (excluding the newly created one)
+        if old_token_ids:
+            await session.execute(
+                statement=delete(TokenTable).where(TokenTable.user_id == user_id, TokenTable.name == name, TokenTable.id.in_(old_token_ids))
+            )
+            await session.commit()
+
+        return new_token_id, app_token
+
     async def delete_token(self, session: AsyncSession, user_id: int, token_id: int) -> None:
         # check if token exists
         result = await session.execute(statement=select(TokenTable.id).where(TokenTable.id == token_id).where(TokenTable.user_id == user_id))
@@ -389,6 +432,20 @@ class IdentityAccessManager:
 
         # delete the token
         await session.execute(statement=delete(table=TokenTable).where(TokenTable.id == token_id))
+        await session.commit()
+
+    async def delete_tokens(self, session: AsyncSession, user_id: int, name: str):
+        """
+        Delete tokens for a specific user, optionally filtered by token name
+
+        Args:
+            session: Database session
+            user_id: ID of the user whose tokens should be deleted
+            name: name filter for tokens to delete
+        """
+        query = delete(TokenTable).where(TokenTable.user_id == user_id).where(TokenTable.name == name)
+
+        await session.execute(query)
         await session.commit()
 
     async def get_tokens(
@@ -443,3 +500,40 @@ class IdentityAccessManager:
             return None, None
 
         return claims["user_id"], claims["token_id"]
+
+    async def invalidate_token(self, session: AsyncSession, token_id: int, user_id: int) -> None:
+        """
+        Invalidate a token by setting its expires_at to the current timestamp
+
+        Args:
+            session: Database session
+            token_id: ID of the token to invalidate
+            user_id: ID of the user who owns the token (for security)
+        """
+        await session.execute(update(TokenTable).where(TokenTable.id == token_id).where(TokenTable.user_id == user_id).values(expires_at=func.now()))
+        await session.commit()
+
+    async def get_user(
+        self,
+        session: AsyncSession,
+        user_id: Optional[int] = None,
+        sub: Optional[str] = None,
+        email: Optional[str] = None,
+    ) -> Optional[User]:
+        # Build conditions list only for non-None values
+        conditions = []
+        if user_id is not None:
+            conditions.append(UserTable.id == user_id)
+        if sub is not None:
+            conditions.append(UserTable.sub == sub)
+        if email is not None:
+            conditions.append(UserTable.email == email)
+
+        # If no conditions, return None
+        if not conditions:
+            return None
+
+        # Build query with OR conditions
+        query = select(UserTable).where(or_(*conditions))
+        result = await session.execute(query)
+        return result.scalar_one_or_none()

@@ -4,7 +4,10 @@ from fastapi import APIRouter, Depends, FastAPI, Request, Response, Security
 from fastapi.dependencies.utils import get_dependant
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
+from starlette.middleware.sessions import SessionMiddleware
 
+
+from app.endpoints import proconnect
 from app.schemas.auth import PermissionType
 from app.schemas.core.context import RequestContext
 from app.schemas.usage import Usage
@@ -30,6 +33,7 @@ from app.utils.variables import (
     ROUTER__RERANK,
     ROUTER__SEARCH,
     ROUTER__USERS,
+    ROUTER__OAUTH2,
 )
 
 logger = logging.getLogger(__name__)
@@ -60,6 +64,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         redoc_url=configuration.settings.swagger_redoc_url,
         lifespan=lifespan,
     )
+    app.add_middleware(SessionMiddleware, secret_key=configuration.settings.session_secret_key)
 
     # Set up database dependency
     # If no db_func provided, the depends module will fall back to default
@@ -182,5 +187,9 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
     if ROUTER__FILES not in configuration.settings.disabled_routers:
         # hooks does not work with files endpoint (request is overwritten by the file upload)
         app.include_router(router=files.router, tags=["Legacy"], prefix="/v1")
+
+    if configuration.dependencies.proconnect and ROUTER__OAUTH2 not in configuration.settings.disabled_routers:
+        add_hooks(router=proconnect.router)
+        app.include_router(router=proconnect.router, tags=[ROUTER__OAUTH2.title()], prefix="/v1")
 
     return app
