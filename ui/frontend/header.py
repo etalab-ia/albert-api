@@ -1,5 +1,6 @@
 import logging
 import time
+from urllib.parse import urlparse
 
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
@@ -22,8 +23,9 @@ def header():
             with st.form(key="login"):  # ProConnect login
                 if configuration.playground.proconnect_enabled:
                     with stylable_container(key="ProConnect", css_styles=css_proconnect):
-                        # Determine the API base URL
-                        proconnect_login_url = f"{configuration.playground.api_url}/v1/oauth2/login"
+                        parsed_home_url = urlparse(configuration.playground.home_url)
+                        api_base_url = f"{parsed_home_url.scheme}://{parsed_home_url.netloc}"
+                        proconnect_login_url = f"{api_base_url}/v1/oauth2/login"
                         st.markdown(
                             html_proconnect.format(
                                 proconnect_login_url=proconnect_login_url,
