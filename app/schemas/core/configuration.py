@@ -436,6 +436,8 @@ class Settings(ConfigBaseModel):
     session_secret_key: str = Field(description="Secret key for session middleware.")
     encryption_key: str = Field(description="Secret key for encrypting between FastAPI and Playground. Must be 32 url-safe base64-encoded bytes.")
 
+    front_url: str = Field(default="http://localhost:8501", description="Front-end URL for the application.")
+
 
 # load config ----------------------------------------------------------------------------------------------------------------------------------------
 

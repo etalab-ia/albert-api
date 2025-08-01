@@ -296,24 +296,10 @@ class TestProConnect:
             assert "Missing subject (sub)" in exc_info.value.detail
 
     @patch("app.endpoints.proconnect.configuration")
-    def test_generate_redirect_url_valid_domain(self, mock_config):
-        """Test redirect URL generation with valid domain"""
-        mock_config.dependencies.proconnect.allowed_domains = "test-domain.com,localhost"
-
-        mock_request = MagicMock()
-        original_url = "https://test-domain.com/app"
-
-        with patch("app.endpoints.proconnect.encrypt_redirect_data") as mock_encrypt:
-            mock_encrypt.return_value = "encrypted_token"
-
-            result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", original_url)
-
-            assert result == "https://test-domain.com?encrypted_token=encrypted_token"
-
-    @patch("app.endpoints.proconnect.configuration")
     def test_generate_redirect_url_invalid_domain(self, mock_config):
         """Test redirect URL generation with invalid domain"""
         mock_config.dependencies.proconnect.allowed_domains = "allowed-domain.com"
+        mock_config.settings.front_url = "https://test-domain.com"
 
         mock_request = MagicMock()
         state_data = {"original_url": "https://malicious-domain.com/app"}
@@ -648,18 +634,20 @@ class TestProConnect:
 
             mock_request = MagicMock()
             original_url = "https://api.gouv.fr/app"
+            mock_config.settings.front_url = "https://api.gouv.fr"
 
             with patch("app.endpoints.proconnect.encrypt_redirect_data") as mock_encrypt:
                 mock_encrypt.return_value = "encrypted_token"
 
                 result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", original_url)
 
-                assert result == "https://api.gouv.fr?encrypted_token=encrypted_token"
+                assert result == "https://api.gouv.fr/?encrypted_token=encrypted_token"
 
     def test_generate_redirect_url_list_domains(self):
         """Test redirect URL generation with domain list configuration"""
         with patch("app.endpoints.proconnect.configuration") as mock_config:
             mock_config.dependencies.proconnect.allowed_domains = "test-domain.com,localhost"
+            mock_config.settings.front_url = "https://test-domain.com"
 
             mock_request = MagicMock()
             original_url = "https://test-domain.com/app"
@@ -669,7 +657,7 @@ class TestProConnect:
 
                 result = generate_redirect_url(mock_request, "app_token", "token_id", "proconnect_token", original_url)
 
-                assert result == "https://test-domain.com?encrypted_token=encrypted_token"
+                assert result == "https://test-domain.com/?encrypted_token=encrypted_token"
 
     @pytest.mark.asyncio
     async def test_create_user_with_minimal_info(self, mock_session):

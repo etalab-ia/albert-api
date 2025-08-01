@@ -71,7 +71,8 @@ def generate_redirect_url(request, app_token, token_id, proconnect_token, origin
 
     # Generate a redirect URL to the origin with the encrypted data
     origin = f"{parsed_url.scheme}://{parsed_url.netloc}"
-    redirect_url = f"{origin}?encrypted_token={encrypted_data}"
+    redirect_url = f"{configuration.settings.front_url}/?encrypted_token={encrypted_data}"
+
     return redirect_url
 
 
