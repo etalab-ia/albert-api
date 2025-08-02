@@ -17,6 +17,7 @@ Refer to the [configuration example file](../../../config.example.yml) for an ex
 | auth_max_token_expiration_days | integer | Maximum number of days for a token to be valid. |  | None |  |  |
 | disabled_routers | array | Disabled routers to limits services of the API. |  |  | • agents<br/>• audio<br/>• auth<br/>• chat<br/>• chunks<br/>• collections<br/>• completions<br/>• documents<br/>• ... | ['agents', 'embeddings'] |
 | encryption_key | string | Secret key for encrypting between FastAPI and Playground. Must be 32 url-safe base64-encoded bytes. |  |  |  |  |
+| front_url | string | Front-end URL for the application. |  | http://localhost:8501 |  |  |
 | log_format | string | Logging format of the API. | False | [%(asctime)s][%(process)d:%(name)s][%(levelname)s] %(client_ip)s - %(message)s |  |  |
 | log_level | string | Logging level of the API. | False | INFO | • DEBUG<br/>• INFO<br/>• WARNING<br/>• ERROR<br/>• CRITICAL |  |
 | mcp_max_iterations | integer | Maximum number of iterations for MCP agents in `/v1/agents/completions` endpoint. |  | 2 |  |  |
