@@ -186,7 +186,7 @@ class ElasticsearchVectorStoreClient(BaseVectorStoreClient, AsyncElasticsearch):
         search_map = {}
         for searches in [lexical_searches, semantic_searches]:
             for rank, search in enumerate(searches):
-                chunk_id = search.chunk.id
+                chunk_id = search.chunk.metadata.get("document_id") + search.chunk.id
                 if chunk_id not in combined_scores:
                     combined_scores[chunk_id] = 0
                     search_map[chunk_id] = search

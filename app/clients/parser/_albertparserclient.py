@@ -60,7 +60,11 @@ class AlbertParserClient(BaseParserClient):
                 timeout=self.timeout,
             )
             if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code, detail=json.loads(response.text).get("detail", "Parsing failed."))
+                try:
+                    detail = json.loads(response.text).get("detail", "Parsing failed.")
+                except:
+                    detail = response.text
+                raise HTTPException(status_code=response.status_code, detail=detail)
 
             result = response.json()
 
