@@ -4,7 +4,7 @@ import os
 from app.schemas.core.configuration import ConfigFile
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--output", type=str, default="docs/configuration.md")
+parser.add_argument("--output", type=str, default="docs-legacy/configuration.md")
 
 
 def get_documentation_data(title: str, data: list, properties: dict, defs: dict, header: str = "", level: int = 1):
