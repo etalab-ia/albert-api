@@ -20,6 +20,7 @@ from app.utils.variables import (
     ROUTER__CHUNKS,
     ROUTER__COLLECTIONS,
     ROUTER__COMPLETIONS,
+    ROUTER__DEEPWEBSEARCH,
     ROUTER__DOCUMENTS,
     ROUTER__EMBEDDINGS,
     ROUTER__FILES,
@@ -30,6 +31,7 @@ from app.utils.variables import (
     ROUTER__RERANK,
     ROUTER__SEARCH,
     ROUTER__USERS,
+    
 )
 
 logger = logging.getLogger(__name__)
@@ -70,6 +72,7 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
         chunks,
         collections,
         completions,
+        deepwebsearch,
         documents,
         embeddings,
         files,
@@ -128,7 +131,11 @@ def create_app(db_func=None, *args, **kwargs) -> FastAPI:
     if ROUTER__COLLECTIONS not in configuration.settings.disabled_routers:
         add_hooks(router=collections.router)
         app.include_router(router=collections.router, tags=[ROUTER__COLLECTIONS.title()], prefix="/v1")
-
+        
+    if ROUTER__DEEPWEBSEARCH not in configuration.settings.disabled_routers:
+        add_hooks(router=deepwebsearch.router)
+        app.include_router(router=deepwebsearch.router, tags=[ROUTER__DEEPWEBSEARCH.title()], prefix="/v1")
+        
     if ROUTER__DOCUMENTS not in configuration.settings.disabled_routers:
         add_hooks(router=documents.router)
         app.include_router(router=documents.router, tags=[ROUTER__DOCUMENTS.title()], prefix="/v1")
