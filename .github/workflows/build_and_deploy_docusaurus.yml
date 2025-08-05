@@ -45,11 +45,12 @@ jobs:
       - name: Build and push docusaurus
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./docs/
           file: ./docs/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ env.APP_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          target: serve
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
