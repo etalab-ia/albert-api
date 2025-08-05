@@ -27,8 +27,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Final stage
 FROM python:3.12-slim
 
-RUN groupadd --gid 1100 albert && \
-    useradd --home /ui --gid 1100 --uid 1100 albert
+RUN groupadd --gid 1100 opengatellm && \
+    useradd --home /ui --gid 1100 --uid 1100 opengatellm
 
 # Only runtime dependencies
 RUN apt-get update && apt-get install -y \
@@ -36,16 +36,16 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY scripts/startup_ui.sh /startup.sh
-RUN chown albert:albert /startup.sh
+RUN chown opengatellm:opengatellm /startup.sh
 RUN chmod u+x /startup.sh
 
 # Set a non-root user
-USER albert
+USER opengatellm
 WORKDIR /
 
 # Copy application from builder
-COPY --from=builder --chown=albert:albert /ui /ui
-COPY --from=builder --chown=albert:albert /.venv /.venv
+COPY --from=builder --chown=opengatellm:opengatellm /ui /ui
+COPY --from=builder --chown=opengatellm:opengatellm /.venv /.venv
 ENV PATH="/.venv/bin:${PATH}"
 ENV PYTHONPATH="/ui:${PYTHONPATH}"
 

@@ -45,6 +45,7 @@ ROUTER__SEARCH = "search"
 ROUTER__USAGE = "usage"
 ROUTER__USERS = "users"
 ROUTER__MULTIAGENTS = "multiagents"
+ROUTER__OAUTH2 = "oauth2"
 ROUTER__DEEPWEBSEARCH = "deepwebsearch"
 
 

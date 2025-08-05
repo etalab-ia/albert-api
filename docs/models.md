@@ -1,6 +1,6 @@
 # Models
 
-L'API Albert permet de configurer 4 types de modèles :
+OpenGateLLM permet de configurer 4 types de modèles :
 - text-generation : modèle de language
 - text-embeddings-inference : modèle d'embeddings
 - automatic-speech-recognition : modèle de transcription audio.

@@ -12,12 +12,18 @@ quickstart_services="api postgres redis playground"
 ci_services="api postgres redis elasticsearch secretiveshell"
 
 quickstart:
-	@$(MAKE) --silent .docker-compose-up env_file=$(QUICKSTART_ENV_FILE) services=$(quickstart_services)
+	@if [ ! -f config.yml ]; then cp config.example.yml config.yml; fi
+	@if [ ! -f .env ]; then cp .env.example .env; fi
+	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE) services=$(quickstart_services)
 	@echo "API URL: http://localhost:8080"
+	@echo "API token: changeme"
 	@echo "Playground URL: http://localhost:8081/playground"
+	@echo "Playground user: master"
+	@echo "Playground password: changeme"
+
 
 quickstart-down:
-	@$(MAKE) --silent .docker-compose-down env_file=$(QUICKSTART_ENV_FILE)
+	@$(MAKE) --silent .docker-compose-down env_file=$(APP_ENV_FILE)
 
 docker-compose-opengatellm-up:
 	@$(MAKE) --silent .docker-compose-up env_file=$(APP_ENV_FILE)
@@ -43,7 +49,24 @@ env-ci-up:
 		sed -i 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
 		sed -i 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=opengatellm-ci/' .github/.env.ci; \
 	fi
-	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach
+
+	@if [ -f .github/.env.ci ] && (grep -Eq "^ALBERT_API_KEY=.+$$" .github/.env.ci || [ -n "${ALBERT_API_KEY}" ] ); then \
+		docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach;\
+	else \
+		echo "❌: ALBERT_API_KEY must be defined in .github/.env.ci. in order to run the ci test environment";\
+	fi
+
+env-ci-up-macos:
+	@if [ ! -f .github/.env.ci ]; then \
+		cp .env.example .github/.env.ci; \
+		sed -i '' 's/CONFIG_FILE=.*/CONFIG_FILE=app\/tests\/integ\/config.test.yml/' .github/.env.ci; \
+		sed -i '' 's/COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=opengatellm-ci/' .github/.env.ci; \
+	fi
+	@if [ -f .github/.env.ci ] && (grep -Eq "^ALBERT_API_KEY=.+$$" .github/.env.ci || [ -n "${ALBERT_API_KEY}" ] ); then \
+		docker compose -f .github/compose.ci.yml --env-file .github/.env.ci up --build --force-recreate --detach;\
+	else \
+		echo "❌: ALBERT_API_KEY must be defined in .github/.env.ci. in order to run the ci test environment";\
+	fi
 
 env-ci-down:
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci down
@@ -82,7 +105,7 @@ test-unit:
 	PYTHONPATH=. pytest app/tests/unit --config-file=$(PYPROJECT)
 
 test-integ:
-	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ--config-file=$(PYPROJECT)'
+	bash -c 'set -a; . $(TEST_ENV_FILE); CONFIG_FILE=$(CONFIG_TEST_FILE) PYTHONPATH=. pytest app/tests/integ --config-file=$(PYPROJECT)'
 
 test-ci:
 	docker compose -f .github/compose.ci.yml --env-file .github/.env.ci exec -ti api pytest app/tests --cov=./app --cov-report=xml

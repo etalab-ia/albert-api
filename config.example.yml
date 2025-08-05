@@ -35,9 +35,47 @@ dependencies:
         statement_timeout: "120s"
       command_timeout: 60
 
+  proconnect:
+    client_id: ${PROCONNECT_CLIENT_ID}
+    client_secret: ${PROCONNECT_CLIENT_SECRET}
+    server_metadata_url: ${PROCONNECT_SERVER_METADATA_URL}
+    redirect_uri: ${PROCONNECT_REDIRECT_URI}
+    scope: ${PROCONNECT_SCOPE}
+    allowed_domains: ${PROCONNECT_ALLOWED_DOMAINS}
+    default_role: ${PROCONNECT_DEFAULT_ROLE}
+
   redis: # required
       host: ${REDIS_HOST:-localhost}
       port: ${REDIS_PORT:-6379}
+      password: ${REDIS_PASSWORD:-changeme}
+
+auth:
+  master_username: master
+  master_key: changeme
+
+
+
+monitoring:
+  postgres:
+    enabled: true
+
+mcp:
+  mcp_bridge_url: http://${MCP_BRIDGE_HOST}:${MCP_BRIDGE_PORT}
+
+databases:
+  - type: elasticsearch
+    context: api
+    model: my-embeddings-model
+    args:
+      hosts: http://${ELASTICSEARCH_HOST}:9200
+      basic_auth:
+        - "elastic"
+        - "changeme"
+
+  - type: redis
+    context: api
+    args:
+      host: ${REDIS_HOST}
       password: changeme
 
   # qdrant: # optional
@@ -50,7 +88,9 @@ dependencies:
   # sentry: # optional
 
 # ---------------------------------- settings -----------------------------------
-# settings:
+settings:
+  session_secret_key: ${SESSION_SECRET_KEY}  # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+  encryption_key: ${ENCRYPTION_KEY}  # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 
   # disabled_routers: # optional - default: [] - values: ["agents", "audio", "chat", "chunks", "collections", "completions", "documents", "embeddings", "files", "models", "ocr", "parse", "rerank", "roles", "search", "tokens", "users", "usage"]
 
@@ -59,9 +99,9 @@ dependencies:
   # log_level: # optional - default: INFO - values: DEBUG, INFO, WARNING, ERROR, CRITICAL
   # log_format: # optional - default: "[%(asctime)s][%(process)d:%(name)s][%(levelname)s] %(client_ip)s - %(message)s"
 
-  # swagger_title: # optional - default: Albert API
+  # swagger_title: # optional - default: OpenGateLLM
   # swagger_version: # optional - default: 1.0.0
-  # swagger_contact_url: # optional - default: https://github.com/etalab-ia/albert-api
+  # swagger_contact_url: # optional - default: https://github.com/etalab-ia/OpenGateLLM
   # swagger_contact_email: # optional - default: None - example: john.doe@example.com
   # swagger_docs_url: # optional - default: /docs
   # swagger_redoc_url: # optional - default: /redoc
@@ -93,5 +133,7 @@ playground:
   api_url: http://${API_HOST:-localhost}:8080
   postgres:
     url: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/playground
+  encryption_key: ${ENCRYPTION_KEY}  # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  proconnect_enabled: ${PROCONNECT_ENABLED:-False}  # Enable or disable ProConnect integration
   # auth_master_username: master # optional - default: master
   # auth_master_key: changeme # optional - default: changeme

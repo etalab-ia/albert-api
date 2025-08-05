@@ -4,19 +4,59 @@ To contribute to the project, please follow the instructions below.
 
 ## Development environment
 
-1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)* with your models.
+It is recommended to use a Python [virtualenv](https://docs.python.org/3/library/venv.html).
+
+1. Create a *config.yml* file based on the example configuration file *[config.example.yml](./config.example.yml)*. You can use the default testbed model or configure your own models.
 
 ```bash
-cp config.example.yml config.yml && export CONFIG_FILE=./config.yml
-cp .env.example .env && export APP_ENV_FILE=.env
+cp config.example.yml config.yml
+cp .env.example .env
 ```
 
 Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.
 
-    > **❗️Note**<br>
-    > The configuration file for running tests is [config.test.yml](./.github/config.test.yml). You can use it as inspiration to configure your own configuration file.
+**❗️Note**
+The configuration file for running tests is [config.test.yml](app/tests/integ/config.test.yml). You can use it as inspiration to configure your own configuration file.
 
-2. Set up dependencies
+2. Set hosts as localhost as we will be running everything locally for dev purposes
+   <details>
+   <summary> Linux </summary>
+   
+   ```bash
+   sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+   ```
+   </details>
+   
+   <details>
+   <summary> MacOs</summary>
+   
+   ```bash
+   sed -i '' 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+   ```
+   
+   </details>
+
+
+   > If you need to revert your changes:
+   > <details>
+   > <summary> Linux </summary>
+   > 
+   > ```bash
+   > sed -i 's/^\([A-Z_]*\)_HOST=localhost/\1_HOST=\L\1/' .env
+   > ```
+   > </details>
+   > 
+   > <details>
+   > <summary> MacOs</summary>
+   > 
+   > ```bash
+   > sed -i '' 's/^\([A-Z_]*\)_HOST=localhost/\1_HOST=\L\1/' .env
+   > ```
+   > < /details>
+
+
+
+3. Set up dependencies
 
     ```bash
     docker compose --env-file .env up postgres redis elasticsearch secretiveshell --detach 
@@ -26,14 +66,18 @@ Check the [configuration documentation](./docs/configuration.md) to configure yo
     alembic -c app/alembic.ini upgrade head # create the API tables
     alembic -c ui/alembic.ini upgrade head # create the Playground tables
     ```
+   ⚠️ **Warning :** If you ran the make quickstart before, remove all existing containers
+    ```bash
+    docker compose down api playground
+    ```
 
-3. Launch the API
+4. Launch the API
 
     ```bash
     uvicorn app.main:app --port 8080 --log-level debug --reload
     ```
-
-4. Launch the playground
+   
+5. Launch the playground
 
     In another terminal, launch the playground with the following command:
 
@@ -77,12 +121,30 @@ alembic -c ui/alembic.ini upgrade head
 
 ### In Docker environment
 
-```bash
-make env-ci-up
-docker exec albert-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
-```
+1. Launch the ci environment:
+   <details>
+   <summary> Linux </summary>
+   
+   ```bash
+   make env-ci-up
+   ```
+   </details>
+   
+   <details>
+   <summary> MacOs</summary>
+   
+   ```bash
+   make env-ci-up-macos
+   ```
+   
+   </details>
 
-> **❗️Note**<br>
+2. Run the tests:
+   ```bash
+   docker exec opengatellm-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
+   ```
+
+> **❗️Note**
 > It will create a .github/.env.ci file.
 > The configuration file for running tests is [config.test.yml](app/tests/integ/config.test.yml). You can modify it to run the tests on your machine.
 > You need set `$BRAVE_API_KEY` and `$ALBERT_API_KEY` environment variables in `.github/.env.ci` to run the tests.
@@ -94,33 +156,51 @@ docker exec albert-ci-api-1 pytest app/tests --cov=./app --cov-report=xml
     cp .env.example .env.test
     make env-test-services-up
     ```
+2. Set the HOST variables to localhost:
+
+   <details>
+   <summary> Linux </summary>
    
-2. Install the python packages:
+   ```bash
+   sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+   ```
+   </details>
+   
+   <details>
+   <summary> MacOs</summary>
+   
+   ```bash
+   sed -i '' 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+   ```
+   
+   </details>
+
+3. Install the python packages:
 
    ```bash
    make install
    ```
 
-3. To run the unit and integration tests together:
+4. To run the unit and integration tests together:
 
     ```bash
     make test-all
     ```
    
-4. To run the unit tests:
+5. To run the unit tests:
 
     ```bash
     make test-unit
     ```
  
-5. To run the integration tests:
+6. To run the integration tests:
 
     ```bash
     make test-integ
     ```
 
 
-6. To update the snapshots, run the following command:
+7. To update the snapshots, run the following command:
 
     ```bash
     CONFIG_FILE=./.github/config.test.yml PYTHONPATH=. pytest --config-file=pyproject.toml --snapshot-update
@@ -183,12 +263,12 @@ echo 'OPENAI_API_KEY=my_openai_api_key' >> .env.test
 
 Finally, run the application:
 ```bash
-make docker-compose-albert-api-up
+make docker-compose-opengatellm-up
 ```
 
 To stop the application, run:
 ```bash
-make docker-compose-albert-api-down
+make docker-compose-opengatellm-down
 ```
 
 
@@ -208,9 +288,9 @@ make install
 
 #### 2. Configuration
 
-Albert-API supports OpenAI and Albert-API models, defined in the `config.yml` file :
+OpenGateLLM supports OpenAI and OpenGateLLM models, defined in the `config.yml` file :
 ```bash
-cp config.example.yml config.yml
+cp  config.example.yml config.yml
 ```
 
 And modify the `models` section in the `config.yml` file:
@@ -257,13 +337,17 @@ echo 'OPENAI_API_KEY=my_openai_api_key' >> .env
 
 ```bash
 # Start all services (API, playground and external services)
-make docker-compose-albert-api-up
+make docker-compose-opengatellm-up
 # Stop all services
-make docker-compose-albert-api-down
+make docker-compose-opengatellm-down
 ```
 
 #### Option 2: Local development
-
+Update all the `_HOST` variables in `.env` file:
+```bash
+sed -i 's/^\([A-Z_]*_HOST\)=.*/\1=localhost/' .env 
+```
+Then, run the following commands:
 ```bash
 # 1. Start only external services (Redis, Qdrant, PostgreSQL, MCP Bridge)
 make docker-compose-services-up

@@ -111,7 +111,6 @@ def create_user(name: str, password: str, role: int, expires_at: Optional[int] =
             api_user_id=user_id,
             api_role_id=role,
             api_key_id=api_key_id,
-            api_key=api_key,
         )
     )
     session.commit()
@@ -195,7 +194,6 @@ def refresh_playground_api_key(user: int):
     session.execute(
         update(UserTable)
         .values(
-            api_key=api_key,
             api_key_id=api_key_id,
         )
         .where(UserTable.api_user_id == user)

@@ -8,7 +8,7 @@ import streamlit as st
 from ui.configuration import configuration
 
 st.set_page_config(
-    page_title="Albert playground",
+    page_title="OpenGateLLM playground",
     page_icon=configuration.playground.page_icon,
     layout="wide",
     initial_sidebar_state="expanded",

@@ -1,6 +1,6 @@
 # Search
 
-L'API Albert propose d'interagir avec une base de données vectorielle (*vector store*) pour permettre de réaliser du [RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation). L'API propose de nourrir ce vector store en important des fichiers qui seront automatiquement traités et insérés dans le *vector store*.
+OpenGateLLM propose d'interagir avec une base de données vectorielle (*vector store*) pour permettre de réaliser du [RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation). L'API propose de nourrir ce vector store en important des fichiers qui seront automatiquement traités et insérés dans le *vector store*.
 
 Les collections sont les espaces de stockage dans ce *vector store*. Elles sont utilisées pour organiser les fichiers qui sont importés par l'API. Ces fichiers sont convertis en documents, contenant le texte extrait. Ces documents sont alors découpés en chunks et convertis en vecteurs à l'aide d'un modèle d'embeddings. Ces vecteurs ainsi que le texte qui a été vectorisé sont enregistrés dans la base de données vectorielle.
 
@@ -59,7 +59,7 @@ Vous pouvez consulter les documents importés dans une collection à l'aide du e
 
 **Cas spécifique des JSON**
 
-Le format JSON est adapté pour importer massivement de la donnée dans l'API Albert. En effet, contrairement aux autres types de fichiers, le JSON va être décomposé par l'API en plusieurs documents, chacun de ces documents sera alors converti en chunks. Ce JSON doit respecter une structure définie.
+Le format JSON est adapté pour importer massivement de la donnée via OpenGateLLM. En effet, contrairement aux autres types de fichiers, le JSON va être décomposé par l'API en plusieurs documents, chacun de ces documents sera alors converti en chunks. Ce JSON doit respecter une structure définie.
 
 ![](./assets/collections_004.png)
 

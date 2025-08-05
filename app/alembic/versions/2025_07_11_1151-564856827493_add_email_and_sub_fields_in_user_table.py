@@ -1,0 +1,42 @@
+"""Add email and sub fields in User table
+
+Revision ID: 564856827493
+Revises: 37d92be0a44c
+Create Date: 2025-07-11 11:51:12.806220
+
+"""
+
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+import sqlalchemy_utils
+
+
+# revision identifiers, used by Alembic.
+revision: str = "564856827493"
+down_revision: Union[str, None] = "37d92be0a44c"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    """Upgrade schema."""
+    # First, add the new columns as nullable to avoid constraint violations
+    op.add_column("user", sa.Column("email", sqlalchemy_utils.types.email.EmailType(length=255), nullable=True))
+    op.add_column("user", sa.Column("sub", sa.String(), nullable=True))
+
+    # Move data from name to email
+    connection = op.get_bind()
+    connection.execute(sa.text('UPDATE "user" SET email = name'))
+    op.create_unique_constraint("uq_user_sub", "user", ["sub"])
+    # ### end Alembic commands ###
+
+
+def downgrade() -> None:
+    """Downgrade schema."""
+    # Drop constraints and columns
+    op.drop_constraint("uq_user_sub", "user", type_="unique")
+    op.drop_column("user", "sub")
+    op.drop_column("user", "email")
+    # ### end Alembic commands ###

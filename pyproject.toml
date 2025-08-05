@@ -23,15 +23,19 @@ ui = [
     "streamlit==1.45.1",
     "streamlit-extras==0.5.0", 
     "bcrypt==4.3.0",
+    "cryptography>=3.4.8",
 ]
 app = [
     # auth
+    "authlib>=1.6.0",
     "python-jose==3.4.0",
     "limits==5.1.0",
     "coredis==4.20.0",
     "tiktoken==0.9.0",
     "ecologits==0.6.2",
     "pycountry==24.6.1",
+    "itsdangerous>=2.2.0",
+    "cryptography>=3.4.8",
 
     # data
     "langchain-text-splitters==0.3.8",
