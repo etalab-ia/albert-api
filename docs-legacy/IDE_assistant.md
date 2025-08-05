@@ -50,7 +50,7 @@ models:
 
 context:
   - provider: code
-  - provider: docs
+  - provider: docs-legacy
   - provider: diff
   - provider: terminal
   - provider: problems

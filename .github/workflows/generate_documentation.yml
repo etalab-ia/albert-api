@@ -42,4 +42,4 @@ jobs:
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: Update configuration documentation
-        file_pattern: ./docs/configuration.md
+        file_pattern: ./docs-legacy/configuration.md
