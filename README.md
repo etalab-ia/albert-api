@@ -6,7 +6,7 @@
 [![Version](https://img.shields.io/github/v/release/etalab-ia/OpenGateLLM?color=orange&label=version)](https://github.com/etalab-ia/OpenGateLLM/releases) 
 [![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/OpenGateLLM/refs/heads/main/.github/badges/coverage.json)](https://github.com/etalab-ia/OpenGateLLM)
 [![License](https://img.shields.io/github/license/etalab-ia/OpenGateLLM?color=red&label=license)](https://github.com/etalab-ia/OpenGateLLM/blob/main/LICENSE)
-[![French version](https://img.shields.io/badge/🇫🇷-French%20version-blue)](./docs/README_fr.md)
+[![French version](https://img.shields.io/badge/🇫🇷-French%20version-blue)](docs-legacy/README_fr.md)
 
 [**API Reference**](https://albert.api.etalab.gouv.fr/documentation) | [**Swagger**](https://albert.api.etalab.gouv.fr/swagger)
 
@@ -110,7 +110,7 @@ cp config.example.yml config.yml
 cp .env.example .env
 ```
 
-Check the [configuration documentation](./docs/configuration.md) to configure your configuration file.
+Check the [configuration documentation](docs-legacy/configuration.md) to configure your configuration file.
 
 Vou can then set your environment variables in .env according to your needs.
 
