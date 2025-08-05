@@ -12,7 +12,6 @@ from app.utils.variables import ENDPOINT__CHAT_COMPLETIONS
 
 logger = logging.getLogger(__name__)
 
-# Prompts pour le deepsearch
 class DeepSearchPrompts:
     @staticmethod
     def researcher(num_queries: int, lang: str = 'fr') -> str:
@@ -107,7 +106,6 @@ class DeepSearchAgent:
         try:
             logger.info(f"Démarrage de la recherche approfondie pour : {prompt}")
             
-            # Générer les requêtes de recherche initiales
             new_search_queries = await self._generate_search_queries(
                 token_counter, prompt, num_queries, lang
             )
@@ -123,32 +121,25 @@ class DeepSearchAgent:
                 logger.info(f"=== Itération {iteration + 1} ===")
                 iteration_contexts = []
                 
-                # Effectuer les recherches web via WebSearchManager
                 for search_query in new_search_queries[:num_queries]:
                     logger.info(f"Recherche pour : {search_query}")
                     
-                    # Obtenir la requête optimisée via WebSearchManager
                     web_query = await self.web_search_manager.get_web_query(search_query)
                     logger.info(f"Requête web optimisée : {web_query}")
                     
-                    # Obtenir les résultats via WebSearchManager
                     results = await self.web_search_manager.get_results(web_query, k)
                     logger.info(f"Trouvé {len(results)} résultats pour '{web_query}'")
                     
-                    # Traiter chaque résultat
                     for upload_file in results:
                         url = upload_file.filename.replace('.html', '') if upload_file.filename else 'unknown'
                         aggregated_sources.append(url)
                         
-                        # Lire le contenu du fichier
                         content = await upload_file.read()
                         if isinstance(content, bytes):
                             content = content.decode('utf-8', errors='ignore')
                         
-                        # Remettre le pointeur au début pour une éventuelle réutilisation
                         await upload_file.seek(0)
                         
-                        # Traiter le contenu
                         context = await self._process_content(
                             token_counter, url, prompt, search_query, content, lang
                         )
@@ -161,7 +152,6 @@ class DeepSearchAgent:
                 else:
                     logger.info(f"Aucun contexte utile trouvé dans l'itération {iteration + 1}.")
 
-                # Vérifier si nous avons besoin d'autres itérations
                 if iteration_limit > 1:
                     new_search_queries = await self._get_new_search_queries(
                         token_counter, prompt, all_search_queries, aggregated_contexts, lang
@@ -181,7 +171,6 @@ class DeepSearchAgent:
 
                 iteration += 1
 
-            # Générer le rapport final
             logger.info("Génération du rapport final...")
             final_report = await self._generate_final_report(
                 token_counter, prompt, aggregated_contexts, lang
@@ -206,7 +195,6 @@ class DeepSearchAgent:
             logger.exception(f"Erreur lors de la recherche approfondie : {e}")
             raise
 
-    # --- Méthodes de traitement ---
 
     async def _generate_search_queries(
         self, token_counter: TokenCounter, user_query: str, num_queries: int = 2, lang: str = 'fr'
@@ -237,12 +225,10 @@ class DeepSearchAgent:
             from bs4 import BeautifulSoup
             soup = BeautifulSoup(html_content, 'html.parser')
             
-            # Supprimer les éléments non-content
             for element in soup(['script', 'style', 'meta', 'link', 'noscript', 'header', 'footer', 'aside']):
                 element.decompose()
             
             text = soup.get_text(separator='\n')
-            # Nettoyer les espaces
             cleaned_text = '\n'.join(line.strip() for line in text.splitlines() if line.strip())
             return cleaned_text
         except ImportError:
@@ -292,14 +278,12 @@ class DeepSearchAgent:
     ) -> str:
         logger.info(f"Traitement du contenu de : {url}")
         
-        # Nettoyer le contenu HTML
         cleaned_content = self._clean_html_content(content)
         
         if not cleaned_content:
             logger.warning(f"Aucun contenu exploitable pour : {url}")
             return ''
         
-        # Évaluer l'utilité
         is_useful = await self._is_content_useful(token_counter, user_query, cleaned_content, lang)
         logger.info(f"Utilité du contenu pour {url} : {is_useful}")
         
@@ -363,7 +347,7 @@ class DeepSearchAgent:
     async def _call_model_async(
         self, token_counter: TokenCounter, messages: List[dict], max_tokens: int = 2048
     ) -> Optional[str]:
-        await asyncio.sleep(0.1)  # Limitation du taux
+        await asyncio.sleep(0.1) 
         try:
             client = self.model.get_client(endpoint=ENDPOINT__CHAT_COMPLETIONS)
             resp = await client.forward_request(

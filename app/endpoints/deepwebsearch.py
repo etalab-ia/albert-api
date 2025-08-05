@@ -15,7 +15,6 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Schemas spécifiques pour DeepSearch
 class DeepSearchRequest(BaseModel):
     prompt: str = Field(description="Question ou requête pour la recherche approfondie")
     model: str = Field(description="ID du modèle à utiliser pour DeepSearch")
@@ -88,7 +87,6 @@ async def deepsearch(
         if not global_context.document_manager.web_search_manager:
             raise HTTPException(status_code=500, detail="WebSearchManager non configuré")
         
-        # Récupérer le modèle spécifié
         try:
             model = global_context.model_registry(model=body.model)
             logger.info(f"Using model for DeepSearch: {body.model}")
@@ -96,11 +94,9 @@ async def deepsearch(
             logger.error(f"Failed to get model '{body.model}': {e}")
             raise HTTPException(status_code=400, detail=f"Modèle '{body.model}' non trouvé: {str(e)}")
         
-        # Gérer la configuration des domaines
         web_search_manager = global_context.document_manager.web_search_manager
         
         if body.limited_domains is False:
-            # Autoriser tous les domaines (pas de restrictions)
             logger.info("Creating WebSearchManager with no domain restrictions")
             web_search_manager = WebSearchManager(
                 web_search_engine=web_search_manager.web_search_engine,
@@ -109,7 +105,6 @@ async def deepsearch(
                 user_agent=getattr(web_search_manager, 'user_agent', None)
             )
         elif isinstance(body.limited_domains, list):
-            # Utiliser les domaines personnalisés fournis
             logger.info(f"Creating WebSearchManager with custom domains: {len(body.limited_domains)} domains")
             web_search_manager = WebSearchManager(
                 web_search_engine=web_search_manager.web_search_engine,
@@ -117,9 +112,7 @@ async def deepsearch(
                 limited_domains=body.limited_domains,
                 user_agent=getattr(web_search_manager, 'user_agent', None)
             )
-        # Si body.limited_domains est True, on utilise le WebSearchManager par défaut
         
-        # Créer l'agent DeepSearch
         deepsearch_agent = DeepSearchAgent(
             model=model,
             web_search_manager=web_search_manager
@@ -127,7 +120,6 @@ async def deepsearch(
         
         logger.info(f"Starting DeepSearch with model: {body.model} for prompt: {body.prompt[:100]}...")
         
-        # Effectuer la recherche approfondie
         final_response, sources, metadata = await deepsearch_agent.deep_search(
             prompt=body.prompt,
             session=session,
@@ -137,10 +129,8 @@ async def deepsearch(
             lang=body.lang
         )
         
-        # Ajouter le modèle utilisé dans les métadonnées
         metadata["model_used"] = body.model
         
-        # Créer la réponse
         deep_search_metadata = DeepSearchMetadata(**metadata)
         usage = Usage(
             prompt_tokens=metadata["total_input_tokens"],
@@ -148,7 +138,6 @@ async def deepsearch(
             total_tokens=metadata["total_input_tokens"] + metadata["total_output_tokens"]
         )
         
-        # Mettre à jour l'usage dans le contexte de la requête
         ctx = request_context.get()
         if ctx and ctx.usage:
             ctx.usage.prompt_tokens += usage.prompt_tokens
@@ -167,7 +156,6 @@ async def deepsearch(
         return JSONResponse(content=result.model_dump(), status_code=200)
         
     except HTTPException:
-        # Re-lever les HTTPException sans les modifier
         raise
     except Exception as e:
         logger.error(f"DeepSearch failed for prompt '{body.prompt}' with model '{body.model}': {str(e)}", exc_info=True)
@@ -205,33 +193,27 @@ async def deepsearch_status(request: Request) -> JSONResponse:
         "message": ""
     }
     
-    # Vérifier le ModelRegistry
     if global_context.model_registry:
         status["model_registry_initialized"] = True
         
-        # Lister les modèles disponibles
         try:
             if hasattr(global_context.model_registry, 'routers'):
                 status["available_models"] = [router.id for router in global_context.model_registry.routers if hasattr(router, 'id')]
         except Exception as e:
             logger.warning(f"Could not retrieve available models: {e}")
     
-    # Vérifier le DocumentManager
     if global_context.document_manager:
         status["document_manager_initialized"] = True
         
-        # Vérifier la configuration WebSearchManager
         if global_context.document_manager.web_search_manager:
             status["web_search_manager_configured"] = True
             
-            # Récupérer les informations de configuration
             web_search_manager = global_context.document_manager.web_search_manager
             if hasattr(web_search_manager, 'limited_domains'):
                 status["default_limited_domains"] = web_search_manager.limited_domains
             if hasattr(web_search_manager, 'user_agent'):
                 status["web_search_user_agent"] = web_search_manager.user_agent
     
-    # Déterminer la disponibilité générale
     if (status["model_registry_initialized"] and 
         status["document_manager_initialized"] and 
         status["web_search_manager_configured"] and 
