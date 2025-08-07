@@ -3,7 +3,9 @@ import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const github_url = 'https://github.com/etalab-ia/OpenGateLLM';
-const albert_api_url = 'https://albert.api.etalab.gouv.fr';
+const albert_api_url =  process.env.ALBERT_API_URL || 'https://albert.api.etalab.gouv.fr';
+
+const baseUrl = process.env.DOCUSAURUS_BASE_URL || '/';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 const { themes } = require('prism-react-renderer');
@@ -21,7 +23,7 @@ const config: Config = {
   url: albert_api_url,
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: baseUrl,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
