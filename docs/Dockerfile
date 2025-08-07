@@ -1,20 +1,24 @@
+
 # syntax=docker/dockerfile:1
 
 FROM node:lts-alpine AS base
 ENV FORCE_COLOR=0
 RUN corepack enable
+
+FROM base AS deps
 WORKDIR /opt/docusaurus
+COPY package.json yarn.lock* ./
+RUN yarn install --immutable --frozen-lockfile
 
 FROM base AS dev
 WORKDIR /opt/docusaurus
 EXPOSE 3000
 CMD [ -d "node_modules" ] && yarn start --host 0.0.0.0 --poll 1000 || yarn install && yarn start --host 0.0.0.0 --poll 1000
 
-FROM base AS prod
+FROM deps AS prod
 ARG DOCUSAURUS_BASE_URL
 WORKDIR /opt/docusaurus
 COPY . /opt/docusaurus/
-RUN yarn install --immutable
 RUN yarn build
 
 FROM prod AS serve

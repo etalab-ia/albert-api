@@ -47,14 +47,20 @@ jobs:
         with:
           context: ./docs/
           file: ./docs/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ env.APP_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           target: serve
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.APP_IMAGE_NAME }}:cache
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=${{ env.APP_IMAGE_NAME }}:cache,mode=max
           build-args: |
             DOCUSAURUS_BASE_URL=/docusaurus/
+          outputs: type=registry
+          provenance: false
 
 #  deploy-dev:
 #    if: github.event_name == 'push'
