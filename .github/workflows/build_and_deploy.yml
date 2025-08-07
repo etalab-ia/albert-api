@@ -10,7 +10,6 @@ on:
       - edited
   workflow_dispatch: # Add this to allow manual triggering
 
-
 jobs:
   build-and-push:
     name: Build and push from ${{ github.ref_name }}/${{ github.sha }}

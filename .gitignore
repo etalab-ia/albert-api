@@ -206,12 +206,11 @@ terraform.rc
 /docs/tutorials/*.wav
 /docs/tutorials/*.mp3
 uv.lock
-
 .envrc
 **/.env*
 !.env.example
+!.github/.env.ci.example
 .direnv/
-
-
+compose.yml
 *.ipynb
 !docs/tutorials/*.ipynb

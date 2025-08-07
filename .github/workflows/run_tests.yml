@@ -14,26 +14,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-  
+
     - name: Set up Docker Compose
       run: |
-        make env-ci-up
+        cp .github/.env.ci.example .github/.env.ci
+        make test-integ action=up execute=docker
       env:
         BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
         ALBERT_API_KEY: ${{ secrets.ALBERT_API_KEY }}
 
-    - name: Wait for API to start
-      run: |
-        echo $(ls -la)
-        for i in {1..30}; do
-          curl -s http://localhost:8080/health -H "Authorization: Bearer changeme" > /dev/null && echo "API is ready" && break || echo "Waiting for API..." && sleep 2;
-        done
-        echo $(docker compose -f .github/compose.ci.yml --env-file .github/.env.ci logs api)
-
     - name: Run tests
       run: |
-        docker ps
-        make test-ci
+        make test-integ action=run execute=docker
 
     - name: Create coverage badge
       run: |
@@ -52,4 +44,4 @@ jobs:
     - name: Tear down Docker Compose
       if: always()
       run: |
-        make env-ci-down
+        make test-integ action=down execute=docker

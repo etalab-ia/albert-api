@@ -1,7 +1,7 @@
-import logging
 import base64
 import hashlib
 import json
+import logging
 import time
 
 from cryptography.fernet import Fernet
@@ -17,15 +17,9 @@ def get_fernet():
     Initialize Fernet encryption using the OAuth2 encryption key from configuration
     """
     try:
-        # If the key is "changeme", generate a proper key
-        if configuration.settings.encryption_key == "changeme":
-            logger.warning("Using default encryption key 'changeme'. This is not secure for production.")
-            # Generate a consistent key from the default string for development
-            key_bytes = hashlib.sha256("changeme".encode()).digest()
-            key = base64.urlsafe_b64encode(key_bytes)
-        else:
-            # Use the provided key - it should be 32 url-safe base64-encoded bytes
-            key = configuration.settings.encryption_key.encode()
+        # Use the provided key - it should be 32 url-safe base64-encoded bytes
+        key_bytes = hashlib.sha256(data=configuration.settings.oauth2_encryption_key.encode()).digest()
+        key = base64.urlsafe_b64encode(key_bytes)
 
         return Fernet(key)
     except Exception as e:

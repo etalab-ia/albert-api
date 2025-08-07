@@ -315,11 +315,7 @@ class Dependencies(ConfigBaseModel):
     redis: RedisDependency  = Field(required=True, description="Pass all redis python SDK arguments, see https://redis.readthedocs.io/en/stable/connections.html for more information.")  # fmt: off
     secretiveshell: Optional[SecretiveshellDependency] = Field(default=None, required=False, description="If provided, MCP agents can use tools from SecretiveShell MCP Bridge. Pass arguments to call Secretiveshell API in this section, see https://github.com/SecretiveShell/MCP-Bridge for more information.")  # fmt: off
     sentry: Optional[SentryDependency] = Field(default=None, required=False, description="Pass all sentry python SDK arguments, see https://docs.sentry.io/platforms/python/configuration/options/ for more information.")  # fmt: off
-    proconnect: ProConnect = Field(
-        default_factory=ProConnect,
-        required=False,
-        description="ProConnect configuration for the API. See https://github.com/etalab-ia/albert-api/blob/main/docs/oauth2_encryption.md for more information.",
-    )
+    proconnect: ProConnect = Field(default_factory=ProConnect, required=False, description="ProConnect configuration for the API. See https://github.com/etalab-ia/albert-api/blob/main/docs/oauth2_encryption.md for more information.")  # fmt: off
 
     @model_validator(mode="after")
     def validate_dependencies(cls, values):
@@ -433,10 +429,24 @@ class Settings(ConfigBaseModel):
     search_multi_agents_synthesis_model: Optional[str] = Field(default=None, required=False, description="Model used to synthesize the results of multi-agents search. If not provided, multi-agents search is disabled. This model must be defined in the `models` section and have type `text-generation` or `image-text-to-text`.")  # fmt: off
     search_multi_agents_reranker_model: Optional[str] = Field(default=None, required=False, description="Model used to rerank the results of multi-agents search. If not provided, multi-agents search is disabled. This model must be defined in the `models` section and have type `text-generation` or `image-text-to-text`.")  # fmt: off
 
-    session_secret_key: str = Field(description="Secret key for session middleware.")
-    encryption_key: str = Field(description="Secret key for encrypting between FastAPI and Playground. Must be 32 url-safe base64-encoded bytes.")
+    # session
+    session_secret_key: Optional[str] = Field(default=None, description='Secret key for session middleware. If not provided, the master key will be used.', examples=["knBnU1foGtBEwnOGTOmszldbSwSYLTcE6bdibC8bPGM"])  # fmt: off
+
+    # oauth2
+    oauth2_encryption_key: Optional[str] = Field(default=None, description="Secret key for encrypting between API and Playground. If not provided, the master key will be used.", examples=["changeme"])  # fmt: off
 
     front_url: str = Field(default="http://localhost:8501", description="Front-end URL for the application.")
+
+    @model_validator(mode="after")
+    def validate_secret_keys(cls, values) -> Any:
+        if values.session_secret_key is None:
+            logging.warning("Session secret key not provided, using master key.")  # fmt: off
+            values.session_secret_key = values.auth_master_key
+        if values.oauth2_encryption_key is None:
+            logging.warning("OAuth2 encryption key not provided, using master key.")  # fmt: off
+            values.oauth2_encryption_key = values.auth_master_key
+
+        return values
 
 
 # load config ----------------------------------------------------------------------------------------------------------------------------------------
@@ -450,7 +460,13 @@ class ConfigFile(ConfigBaseModel):
 
     models: List[Model] = Field(min_length=1, description="Models used by the API. At least one model must be defined.")  # fmt: off
     dependencies: Dependencies = Field(default_factory=Dependencies, description="Dependencies used by the API.")  # fmt: off
-    settings: Settings = Field(default_factory=Settings, description="Settings used by the API.")  # fmt: off
+    settings: Optional[Settings] = Field(default_factory=Settings, description="Settings used by the API.")  # fmt: off
+
+    @field_validator("settings", mode="before")
+    def set_default_settings(cls, settings) -> Any:
+        if settings is None:
+            return Settings()
+        return settings
 
     @model_validator(mode="after")
     def validate_models(cls, values) -> Any:
