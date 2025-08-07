@@ -11,6 +11,7 @@ EXPOSE 3000
 CMD [ -d "node_modules" ] && yarn start --host 0.0.0.0 --poll 1000 || yarn install && yarn start --host 0.0.0.0 --poll 1000
 
 FROM base AS prod
+ARG DOCUSAURUS_BASE_URL
 WORKDIR /opt/docusaurus
 COPY . /opt/docusaurus/
 RUN yarn install --immutable

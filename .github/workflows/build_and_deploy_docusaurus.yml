@@ -53,6 +53,8 @@ jobs:
           target: serve
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            DOCUSAURUS_BASE_URL=/docusaurus/
 
 #  deploy-dev:
 #    if: github.event_name == 'push'

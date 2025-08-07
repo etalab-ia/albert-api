@@ -72,7 +72,7 @@ const config: Config = {
       logo: {
         alt: 'OpenGateLLM Logo',
         src: 'img/favicon.ico',
-        href: '/',
+        href: baseUrl,
       },
       items: [
         {
