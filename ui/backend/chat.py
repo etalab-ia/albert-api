@@ -88,6 +88,58 @@ Les documents sont :
     return stream, sources, rag_chunks
 
 
+def generate_deepsearch_response(prompt: str, params: dict) -> Tuple[str, List[str], Dict[str, Any]]:
+    """
+    Génère une réponse avec DeepSearch en utilisant le modèle sélectionné dans l'interface.
+    
+    Returns:
+        Tuple contenant:
+        - La réponse générée
+        - La liste des sources (URLs)
+        - Les métadonnées de la recherche
+    """
+    # Utiliser le même modèle que celui sélectionné dans l'interface principale
+    selected_model = params["sampling_params"]["model"]
+    
+    # Préparer les paramètres pour DeepSearch
+    data = {
+        "prompt": prompt,
+        "model": selected_model,  # Utilise le modèle déjà sélectionné
+        "k": params.get("deepsearch_params", {}).get("k", 5),
+        "iteration_limit": params.get("deepsearch_params", {}).get("iteration_limit", 2),
+        "num_queries": params.get("deepsearch_params", {}).get("num_queries", 2),
+        "lang": params.get("deepsearch_params", {}).get("lang", "fr"),
+        "limited_domains": params.get("deepsearch_params", {}).get("limited_domains", True)
+    }
+    
+    # Appel à l'API DeepSearch
+    try:
+        response = requests.post(
+            url=f"{configuration.playground.api_url}/v1/deepsearch",
+            json=data,
+            headers={"Authorization": f"Bearer {st.session_state['user'].api_key}"},
+            timeout=300  # Timeout de 5 minutes pour les recherches longues
+        )
+        
+        if response.status_code != 200:
+            error_detail = "Erreur inconnue"
+            try:
+                error_data = response.json()
+                error_detail = error_data.get("detail", response.text)
+            except:
+                error_detail = response.text
+            
+            raise Exception(f"Erreur DeepSearch ({response.status_code}): {error_detail}")
+        
+        result = response.json()
+        return result["response"], result["sources"], result["metadata"]
+        
+    except requests.exceptions.Timeout:
+        raise Exception("Timeout: La recherche DeepSearch a pris trop de temps (>5 minutes)")
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Erreur de connexion DeepSearch: {str(e)}")
+
+
 def format_chunk_for_display(chunk: Dict[str, Any], index: int) -> str:
     """
     Formate un chunk pour l'affichage dans l'interface.
