@@ -46,6 +46,7 @@ ROUTER__USAGE = "usage"
 ROUTER__USERS = "users"
 ROUTER__MULTIAGENTS = "multiagents"
 ROUTER__OAUTH2 = "oauth2"
+ROUTER__DEEPSEARCH = "deepsearch"
 
 
 ROUTERS = [value for name, value in locals().items() if name.startswith("ROUTER__")]
