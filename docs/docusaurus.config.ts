@@ -38,7 +38,7 @@ const config: Config = {
   // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'fr'],
+    locales: ['en'],
   },
 
   presets: [
@@ -83,7 +83,7 @@ const config: Config = {
         },
         {
           label: 'API Reference',
-          href: albert_api_url + '/swagger',
+          href: albert_api_url + '/reference',
           position: 'left',
         },
         {
@@ -135,11 +135,11 @@ const config: Config = {
             },
             {
               label: 'API Reference',
-              href: albert_api_url + '/redoc',
+              href: albert_api_url + '/reference',
             },
             {
               label: 'API Swagger',
-              href: albert_api_url + '/docs',
+              href: albert_api_url + '/swagger',
             },
             {
               label: 'Github',

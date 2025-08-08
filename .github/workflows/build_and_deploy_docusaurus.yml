@@ -58,7 +58,7 @@ jobs:
             type=gha,mode=max
             type=registry,ref=${{ env.APP_IMAGE_NAME }}:cache,mode=max
           build-args: |
-            DOCUSAURUS_BASE_URL=/docusaurus/
+            DOCUSAURUS_BASE_URL=/documentation/
           outputs: type=registry
           provenance: false
 
