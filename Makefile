@@ -123,6 +123,11 @@ dev:
 		cp config.example.yml "$$CONFIG_FILE"; \
 	fi'
 
+	@if [ ! -f $(compose) ]; then \
+		echo "🔄 Creating $(compose) file from compose.example.yml and using it"; \
+		cp compose.example.yml $(compose); \
+	fi
+
 	@# Start services
 	@services=$$(docker compose --file $(compose) config --services | grep -v -E '^(api|playground)$$' | tr '\n' ' '); \
 	echo "🔄 Starting services: $$services"; \
@@ -162,6 +167,11 @@ quickstart:
 		echo "🔄 Creating $$CONFIG_FILE file from config.example.yml and using it"; \
 		cp config.example.yml "$$CONFIG_FILE"; \
 	fi'
+
+	@if [ ! -f $(compose) ]; then \
+		echo "🔄 Creating $(compose) file from compose.example.yml and using it"; \
+		cp compose.example.yml $(compose); \
+	fi
 
 	@# Start services
 	@echo "🚀 Starting services with $(env) file and $(compose) file"; \
