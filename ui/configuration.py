@@ -30,7 +30,7 @@ class Playground(ConfigBaseModel):
     cache_ttl: int = 1800  # 30 minutes
     postgres: dict = {}
     default_model: Optional[str] = "albert-small"
-    encryption_key: str = Field(description="Secret key for encrypting between FastAPI and Playground. Must be 32 url-safe base64-encoded bytes.")
+    encryption_key: Optional[str] = Field(default=None, description="Secret key for encrypting between FastAPI and Playground. Must be 32 url-safe base64-encoded bytes.")  # fmt: off
     proconnect_enabled: bool = False
 
     @field_validator("postgres", mode="after")

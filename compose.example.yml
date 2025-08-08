@@ -1,0 +1,76 @@
+name: opengatellm
+
+services:
+# quickstart services --------------------------------------------------------------------------------------------------------------------------------
+  api:
+    image: ghcr.io/etalab-ia/opengatellm/app:latest
+    restart: always
+    env_file: "${APP_ENV_FILE:-./.env}"
+    environment:
+      - "CONFIG_FILE=config.yml" # inside the container, do not change this line
+    ports:
+      - 8080:8080
+    volumes:
+      - "${CONFIG_FILE:-./config.yml}:/config.yml:ro" # outside the container, do not change this line
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  playground:
+    image: ghcr.io/etalab-ia/opengatellm/ui:latest
+    environment:
+      - "MASTER_KEY=master_key"
+      - "POSTGRES_HOST=${POSTGRES_HOST:-postgres}"
+      - "API_HOST=${API_HOST:-api}"
+      - "POSTGRES_PORT=${POSTGRES_PORT:-5432}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}"
+      - "TZ=Europe/Paris"
+    ports:
+      - 8081:8501
+    volumes:
+      - "./${CONFIG_FILE:-config.yml}:/config.yml:ro"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16.5
+    restart: always
+    user: postgres
+    environment:
+      - "CREATE_DB=api,playground"
+      - "POSTGRES_USER=${POSTGRES_USER:-postgres}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}"
+      - "POSTGRES_DB=postgres"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./scripts/postgres_entrypoint.sh:/docker-entrypoint-initdb.d/postgres_entrypoint.sh
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-U", "postgres" ]
+      interval: 4s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  redis:
+    image: redis/redis-stack-server:7.2.0-v11
+    restart: always
+    environment:
+      REDIS_ARGS: "--dir /data --requirepass ${REDIS_PASSWORD:-changeme} --user ${REDIS_USER:-redis} on >password ~* allcommands --save 60 1 --appendonly yes"
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 4s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres:
+  redis:

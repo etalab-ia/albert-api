@@ -1,16 +1,12 @@
 <div id="toc">
   <ul align="center" style="list-style: none">
 
-# OpenGateLLM
+<img src="./docs/assets/banner.png" alt="OpenGateLLM" width="100%">
 
 [![Version](https://img.shields.io/github/v/release/etalab-ia/OpenGateLLM?color=orange&label=version)](https://github.com/etalab-ia/OpenGateLLM/releases) 
 [![Code Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/etalab-ia/OpenGateLLM/refs/heads/main/.github/badges/coverage.json)](https://github.com/etalab-ia/OpenGateLLM)
 [![License](https://img.shields.io/github/license/etalab-ia/OpenGateLLM?color=red&label=license)](https://github.com/etalab-ia/OpenGateLLM/blob/main/LICENSE)
 [![French version](https://img.shields.io/badge/🇫🇷-French%20version-blue)](./docs/README_fr.md)
-
-### *✨ One place to serve your models, manage usage, and build production-ready products on top 
-
-— with RAG, OCR, Whisper & more. ✨*
 
 [**API Reference**](https://albert.api.etalab.gouv.fr/documentation) | [**Swagger**](https://albert.api.etalab.gouv.fr/swagger)
 
@@ -75,7 +71,11 @@ Deploy OpenGateLLM quickly with Docker connected to our own free model and start
 make quickstart
 ```
 
-ℹ️ **Info :** It will copy the `config.example.yml` and `.env.example` files into `config.yml` and `.env` files if they don't already exist.
+> [!NOTE]
+> It will copy the `config.example.yml` and `.env.example` files into `config.yml` and `.env` files if they don't already exist.
+
+> [!TIP]
+> Use `make help` to see all available commands.
 
 Test the API:
 
@@ -127,7 +127,6 @@ docker compose --env-file .env up api playground postgres redis elasticsearch se
 ### Alternative: use kubernetes
 
 You can check our helmchart and instructions here: [https://github.com/etalab-ia/albert-api-helm](https://github.com/etalab-ia/opengatellm-helm)
-
 
 ## 🤝 Contribute
 
