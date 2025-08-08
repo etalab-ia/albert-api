@@ -16,7 +16,6 @@ Refer to the [configuration example file](../../../config.example.yml) for an ex
 | auth_master_key | string | Master key for the API. This key has all permissions and cannot be modified or deleted. This key is used to create the first role and the first user. This key is also used to encrypt user tokens, watch out if you modify the master key, you'll need to update all user API keys. | False | changeme |  |  |
 | auth_max_token_expiration_days | integer | Maximum number of days for a token to be valid. |  | None |  |  |
 | disabled_routers | array | Disabled routers to limits services of the API. |  |  | • agents<br/>• audio<br/>• auth<br/>• chat<br/>• chunks<br/>• collections<br/>• completions<br/>• documents<br/>• ... | ['agents', 'embeddings'] |
-| encryption_key | string | Secret key for encrypting between FastAPI and Playground. Must be 32 url-safe base64-encoded bytes. |  |  |  |  |
 | front_url | string | Front-end URL for the application. |  | http://localhost:8501 |  |  |
 | log_format | string | Logging format of the API. | False | [%(asctime)s][%(process)d:%(name)s][%(levelname)s] %(client_ip)s - %(message)s |  |  |
 | log_level | string | Logging level of the API. | False | INFO | • DEBUG<br/>• INFO<br/>• WARNING<br/>• ERROR<br/>• CRITICAL |  |
@@ -24,13 +23,14 @@ Refer to the [configuration example file](../../../config.example.yml) for an ex
 | metrics_retention_ms | integer | Retention time for metrics in milliseconds. |  | 40000 |  |  |
 | monitoring_postgres_enabled | boolean | If true, the log usage will be written in the PostgreSQL database. | False | True |  |  |
 | monitoring_prometheus_enabled | boolean | If true, Prometheus metrics will be exposed in the `/metrics` endpoint. | False | True |  |  |
+| oauth2_encryption_key | string | Secret key for encrypting between API and Playground. If not provided, the master key will be used. |  | None |  | changeme |
 | rate_limiting_strategy | string | Rate limiting strategy for the API. | False | fixed_window | • moving_window<br/>• fixed_window<br/>• sliding_window |  |
 | search_multi_agents_reranker_model | string | Model used to rerank the results of multi-agents search. If not provided, multi-agents search is disabled. This model must be defined in the `models` section and have type `text-generation` or `image-text-to-text`. | False | None |  |  |
 | search_multi_agents_synthesis_model | string | Model used to synthesize the results of multi-agents search. If not provided, multi-agents search is disabled. This model must be defined in the `models` section and have type `text-generation` or `image-text-to-text`. | False | None |  |  |
 | search_web_limited_domains | array | Limited domains for the web search. If provided, the web search will be limited to these domains. |  |  |  |  |
 | search_web_query_model | string | Model used to query the web in the web search. Is required if a web search dependency is provided (Brave or DuckDuckGo). This model must be defined in the `models` section and have type `text-generation` or `image-text-to-text`. | False | None |  |  |
 | search_web_user_agent | string | User agent to scrape the web. If provided, the web search will use this user agent. | False | None |  |  |
-| session_secret_key | string | Secret key for session middleware. |  |  |  |  |
+| session_secret_key | string | Secret key for session middleware. If not provided, the master key will be used. |  | None |  | knBnU1foGtBEwnOGTOmszldbSwSYLTcE6bdibC8bPGM |
 | swagger_contact | object | Contact informations of the API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information. |  | None |  |  |
 | swagger_description | string | Display description of your API in swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information. |  | [See documentation](https://github.com/etalab-ia/opengatellm/blob/main/README.md) |  | [See documentation](https://github.com/etalab-ia/opengatellm/blob/main/README.md) |
 | swagger_docs_url | string | Docs URL of swagger UI, see https://fastapi.tiangolo.com/tutorial/metadata for more information. |  | /docs |  |  |
