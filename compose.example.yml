@@ -1,7 +1,6 @@
 name: opengatellm
 
 services:
-# quickstart services --------------------------------------------------------------------------------------------------------------------------------
   api:
     image: ghcr.io/etalab-ia/opengatellm/app:latest
     restart: always
